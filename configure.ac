@@ -1,0 +1,142 @@
+AC_PREREQ([2.58])
+AC_INIT(orc,0.3.14.1)
+
+AS_NANO(ORC_CVS=no,ORC_CVS=yes)
+
+AC_CANONICAL_HOST([])
+AM_INIT_AUTOMAKE(1.6)
+
+AM_MAINTAINER_MODE
+
+ORC_MAJORMINOR=0.3
+AC_SUBST(ORC_MAJORMINOR)
+
+AM_CONFIG_HEADER(config.h)
+
+dnl CURRENT, REVISION, AGE
+dnl - library source changed -> increment REVISION
+dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
+dnl - interfaces added -> increment AGE
+dnl - interfaces removed -> AGE = 0
+ORC_LIBVERSION="2:0:2"
+AC_SUBST(ORC_LIBVERSION)
+AC_LIBTOOL_WIN32_DLL
+AC_LIBTOOL_TAGS([])
+AC_PROG_LIBTOOL
+AM_PROG_AS
+
+AC_CONFIG_SRCDIR([orc/orc.h])
+
+ACLOCAL_AMFLAGS="-I m4 $ACLOCAL_AMFLAGS"
+AC_SUBST(ACLOCAL_AMFLAGS)
+
+PKG_CHECK_MODULES(GLIB, glib-2.0, HAVE_GLIB=yes, HAVE_GLIB=no)
+AC_SUBST(GLIB_LIBS)
+AC_SUBST(GLIB_CFLAGS)
+AC_ARG_ENABLE(glib,
+AC_HELP_STRING([--disable-glib],[disable usage of glib]),
+[case "${enableval}" in
+  yes) HAVE_GLIB=yes ;;
+  no) HAVE_GLIB=no ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --disable-glib) ;;
+esac])
+AM_CONDITIONAL(HAVE_GLIB, test "x$HAVE_GLIB" = "xyes")
+
+##################################################
+# Check for gtk-doc.
+##################################################
+
+if test "x$cross_compiling" = "xyes" ; then
+  enable_gtk_doc=no
+fi
+GTK_DOC_CHECK([1.0])
+
+
+AS_HOST_DEFINES()
+
+AC_C_BIGENDIAN
+
+AC_LTDL_SYMBOL_USCORE
+if test x${ac_cv_sys_symbol_underscore} = xyes ; then
+  AC_DEFINE(HAVE_SYMBOL_UNDERSCORE, 1, [Define if C symbols have leading underscore])
+fi
+
+AX_CREATE_STDINT_H([orc/orc-stdint.h])
+
+AC_FUNC_MMAP()
+AC_CHECK_LIB(m, rint,
+  AC_DEFINE(HAVE_RINT, 1, [Define if rint() is available]))
+AC_CHECK_LIB(m, rintf,
+  AC_DEFINE(HAVE_RINTF, 1, [Define if rintf() is available]))
+AC_CHECK_LIB(m, lrint,
+  AC_DEFINE(HAVE_LRINT, 1, [Define if lrint() is available]))
+AC_CHECK_LIB(m, lrintf,
+  AC_DEFINE(HAVE_LRINTF, 1, [Define if lrintf() is available]))
+AC_CHECK_LIB(m, sincos,
+  AC_DEFINE(HAVE_SINCOS, 1, [Define if sincos() is available]))
+
+AC_CHECK_HEADER(ieee754.h,
+  AC_DEFINE(HAVE_IEEE754_H, 1, [Define if ieee754.h exists]))
+
+AC_CHECK_HEADERS([inttypes.h])
+AC_CHECK_HEADERS([sys/time.h])
+AC_CHECK_HEADERS([unistd.h])
+
+AC_CHECK_FUNCS([gettimeofday])
+AC_CHECK_FUNCS([sigaction])
+AC_CHECK_FUNCS([sigsetjmp])
+
+AC_CHECK_LIBM
+AC_SUBST(LIBM)
+
+AC_CHECK_LIB(rt, clock_gettime,
+   AC_DEFINE(HAVE_CLOCK_GETTIME, 1, [Defined if we have clock_gettime()])
+   LIBRT=-lrt
+   )
+AC_SUBST(LIBRT)
+
+AC_CACHE_CHECK(for monotonic clocks,
+    orc_cv_monotonic_clock,AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+#include <time.h>
+#include <unistd.h>
+int main() {
+#if !(defined(_POSIX_MONOTONIC_CLOCK) && _POSIX_MONOTONIC_CLOCK >= 0 && defined(CLOCK_MONOTONIC))
+        #error No monotonic clock
+#endif
+        return 0;
+}
+]])],orc_cv_monotonic_clock=yes,orc_cv_monotonic_clock=no))
+if test "$orc_cv_monotonic_clock" = "yes"; then
+  AC_DEFINE(HAVE_MONOTONIC_CLOCK,1,[Defined if we have a monotonic clock])
+fi
+
+AS_COMPILER_FLAG(-Wall, ORC_CFLAGS="$ORC_CFLAGS -Wall")
+if test "x$ORC_CVS" = "xyes"
+then
+  AS_COMPILER_FLAG(-Werror, ORC_CFLAGS="$ORC_CFLAGS -Werror")
+fi
+
+AC_DEFINE(ORC_EXPORTS, 1, [Defined for compiling internal code])
+
+ORC_CFLAGS="$ORC_CFLAGS -D_BSD_SOURCE -D_GNU_SOURCE -I\$(top_srcdir) -DORC_ENABLE_UNSTABLE_API"
+AC_SUBST(ORC_CFLAGS)
+
+ORC_LIBS="\$(top_builddir)/orc/orc-$ORC_MAJORMINOR.la $LIBM $LIBRT"
+AC_SUBST(ORC_LIBS)
+
+pkgconfigdir="\$(libdir)/pkgconfig"
+AC_SUBST(pkgconfigdir)
+
+AC_CONFIG_FILES([
+Makefile 
+doc/Makefile
+orc/Makefile
+testsuite/Makefile
+examples/Makefile
+orc-uninstalled.pc
+orc.pc
+])
+AC_OUTPUT
+
+
+
