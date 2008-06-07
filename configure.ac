@@ -121,7 +121,7 @@ AC_DEFINE(ORC_EXPORTS, 1, [Defined for compiling internal code])
 ORC_CFLAGS="$ORC_CFLAGS -D_BSD_SOURCE -D_GNU_SOURCE -I\$(top_srcdir) -DORC_ENABLE_UNSTABLE_API"
 AC_SUBST(ORC_CFLAGS)
 
-ORC_LIBS="\$(top_builddir)/orc/orc-$ORC_MAJORMINOR.la $LIBM $LIBRT"
+ORC_LIBS="\$(top_builddir)/orc/liborc-$ORC_MAJORMINOR.la $LIBM $LIBRT"
 AC_SUBST(ORC_LIBS)
 
 pkgconfigdir="\$(libdir)/pkgconfig"
