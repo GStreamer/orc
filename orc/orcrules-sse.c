@@ -153,20 +153,14 @@ orc_program_sse_register_rules (void)
 {
   int i;
 
-  orc_rule_register ("_loadi_s16", ORC_RULE_SSE_4, sse_rule_loadi_s16, NULL,
-      ORC_RULE_REG_IMM);
+  orc_rule_register ("_loadi_s16", ORC_RULE_SSE_4, sse_rule_loadi_s16, NULL);
 
   for(i=ORC_RULE_SSE_1; i <= ORC_RULE_SSE_8; i++) {
-    orc_rule_register ("add_s16", i, sse_rule_add_s16, NULL,
-        ORC_RULE_REG_REG);
-    orc_rule_register ("sub_s16", i, sse_rule_sub_s16, NULL,
-        ORC_RULE_REG_REG);
-    orc_rule_register ("mul_s16", i, sse_rule_mul_s16, NULL,
-        ORC_RULE_REG_REG);
-    orc_rule_register ("lshift_s16", i, sse_rule_lshift_s16, NULL,
-        ORC_RULE_REG_REG);
-    orc_rule_register ("rshift_s16", i, sse_rule_rshift_s16, NULL,
-        ORC_RULE_REG_REG);
+    orc_rule_register ("add_s16", i, sse_rule_add_s16, NULL);
+    orc_rule_register ("sub_s16", i, sse_rule_sub_s16, NULL);
+    orc_rule_register ("mul_s16", i, sse_rule_mul_s16, NULL);
+    orc_rule_register ("lshift_s16", i, sse_rule_lshift_s16, NULL);
+    orc_rule_register ("rshift_s16", i, sse_rule_rshift_s16, NULL);
   }
 }
 

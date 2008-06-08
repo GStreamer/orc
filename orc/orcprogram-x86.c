@@ -75,8 +75,8 @@ void orc_program_dump (OrcProgram *program);
 void
 x86_emit_prologue (OrcProgram *program)
 {
-  printf(".global test\n");
-  printf("test:\n");
+  orc_program_append_code(program,".global test\n");
+  orc_program_append_code(program,"test:\n");
   if (x86_64) {
 
   } else {
@@ -137,7 +137,6 @@ x86_do_fixups (OrcProgram *program)
 void
 orc_x86_init (void)
 {
-  orc_program_x86_register_rules ();
   orc_program_mmx_register_rules ();
   orc_program_sse_register_rules ();
 }
@@ -185,7 +184,13 @@ orc_program_x86_init (OrcProgram *program)
     program->used_regs[i] = 0;
   }
 
-  program->data_register_class = 2;
+  if (program->target == ORC_TARGET_MMX) {
+    program->data_register_class = 2;
+    program->rule_set = ORC_RULE_MMX_1;
+  } else {
+    program->data_register_class = 3;
+    program->rule_set = ORC_RULE_SSE_1;
+  }
 }
 
 void
@@ -314,6 +319,12 @@ orc_program_assemble_x86 (OrcProgram *program)
 {
   x86_emit_prologue (program);
 
+  if (program->target == ORC_TARGET_SSE) {
+    program->loop_shift = 3;
+  } else {
+    program->loop_shift = 2;
+  }
+
   x86_emit_mov_memoffset_reg (program, 4, (int)ORC_STRUCT_OFFSET(OrcExecutor,n),
       x86_exec_ptr, X86_ECX);
   x86_emit_sar_imm_reg (program, 4, program->loop_shift, X86_ECX);
@@ -332,15 +343,19 @@ orc_program_assemble_x86 (OrcProgram *program)
       (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1), x86_exec_ptr);
   x86_emit_je (program, 1);
 
-  program->rule_set = ORC_RULE_MMX_1;
-  program->n_per_loop = 1;
-  program->loop_shift = 0;
+  if (program->target == ORC_TARGET_SSE) {
+    program->rule_set = ORC_RULE_SSE_1;
+    program->n_per_loop = 1;
+    program->loop_shift = 0;
+  } else {
+    program->rule_set = ORC_RULE_MMX_1;
+    program->n_per_loop = 1;
+    program->loop_shift = 0;
+  }
+
   x86_emit_label (program, 0);
   x86_emit_loop (program);
   x86_emit_dec_memoffset (program, 4,
-      (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1),
-      x86_exec_ptr);
-  x86_emit_cmp_imm_memoffset (program, 4, 0,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1),
       x86_exec_ptr);
   x86_emit_jne (program, 0);
@@ -350,9 +365,16 @@ orc_program_assemble_x86 (OrcProgram *program)
       (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2), x86_exec_ptr);
   x86_emit_je (program, 3);
 
-  program->rule_set = ORC_RULE_MMX_4;
-  program->n_per_loop = 4;
-  program->loop_shift = 2;
+  if (program->target == ORC_TARGET_SSE) {
+    program->rule_set = ORC_RULE_SSE_8;
+    program->n_per_loop = 8;
+    program->loop_shift = 3;
+  } else {
+    program->rule_set = ORC_RULE_MMX_4;
+    program->n_per_loop = 4;
+    program->loop_shift = 2;
+  }
+
   x86_emit_label (program, 2);
   x86_emit_loop (program);
   x86_emit_dec_memoffset (program, 4,
@@ -380,18 +402,18 @@ x86_emit_loop (OrcProgram *program)
     insn = program->insns + j;
     opcode = insn->opcode;
 
-    printf("# %d: %s", j, insn->opcode->name);
+    orc_program_append_code(program,"# %d: %s", j, insn->opcode->name);
 
     /* set up args */
     for(k=0;k<opcode->n_src + opcode->n_dest;k++){
       args[k] = program->vars + insn->args[k];
-      printf(" %d", args[k]->alloc);
+      orc_program_append_code(program," %d", args[k]->alloc);
       if (args[k]->is_chained) {
-        printf(" (chained)");
+        orc_program_append_code(program," (chained)");
       }
     }
-    printf(" rule_flag=%d", insn->rule_flag);
-    printf("\n");
+    orc_program_append_code(program," rule_flag=%d", insn->rule_flag);
+    orc_program_append_code(program,"\n");
 
     for(k=opcode->n_dest;k<opcode->n_src + opcode->n_dest;k++){
       switch (args[k]->vartype) {
@@ -409,12 +431,12 @@ x86_emit_loop (OrcProgram *program)
 
     rule = insn->rule;
     if (rule) {
-      if (!(rule->flags & ORC_RULE_3REG) && args[0]->alloc != args[1]->alloc) {
+      if (args[0]->alloc != args[1]->alloc) {
         x86_emit_mov_reg_reg (program, 2, args[1]->alloc, args[0]->alloc);
       }
       rule->emit (program, rule->emit_user, insn);
     } else {
-      printf("No rule for: %s\n", opcode->name);
+      orc_program_append_code(program,"No rule for: %s\n", opcode->name);
     }
 
     for(k=0;k<opcode->n_dest;k++){

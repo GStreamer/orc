@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #include <orc/orcprogram.h>
 
@@ -20,6 +21,8 @@ orc_program_new (void)
 
   p = malloc(sizeof(OrcProgram));
   memset (p, 0, sizeof(OrcProgram));
+
+  p->target = ORC_TARGET_C;
 
   return p;
 }
@@ -214,36 +217,60 @@ orc_program_allocate_register (OrcProgram *program, int data_reg)
 void
 orc_program_compile (OrcProgram *program)
 {
-#if defined(HAVE_POWERPC)
-  orc_program_powerpc_init (program);
-#elif defined(HAVE_I386)
-  orc_program_x86_init (program);
-#elif defined(HAVE_AMD64)
-  orc_program_x86_init (program);
-#else
-#error FIXME
-#endif
+  int i;
+
+  for(i=0;i<32;i++) {
+    program->valid_regs[i] = 1;
+  }
+
+  switch (program->target) {
+    case ORC_TARGET_C:
+      orc_program_c_init (program);
+      break;
+    case ORC_TARGET_ALTIVEC:
+      orc_program_powerpc_init (program);
+      break;
+    case ORC_TARGET_SSE:
+      orc_program_x86_init (program);
+      break;
+    case ORC_TARGET_MMX:
+      orc_program_x86_init (program);
+      break;
+    default:
+      break;
+  }
 
   orc_program_assign_rules (program);
   orc_program_rewrite_vars (program);
 
-  orc_program_global_reg_alloc (program);
+  if (program->target != ORC_TARGET_C) {
+    orc_program_global_reg_alloc (program);
 
-  orc_program_do_regs (program);
+    orc_program_do_regs (program);
+  }
 
   orc_program_rewrite_vars2 (program);
 
-  orc_program_allocate_codemem (program);
-#if defined(HAVE_POWERPC)
-  orc_program_assemble_powerpc (program);
-#elif defined(HAVE_I386)
-  orc_program_assemble_x86 (program);
-#elif defined(HAVE_AMD64)
-  orc_program_assemble_x86 (program);
-#else
-#error FIXME
-#endif
-  //orc_program_assemble_c (program);
+  if (program->target != ORC_TARGET_C) {
+    orc_program_allocate_codemem (program);
+  }
+
+  switch (program->target) {
+    case ORC_TARGET_C:
+      orc_program_assemble_c (program);
+      break;
+    case ORC_TARGET_ALTIVEC:
+      orc_program_assemble_powerpc (program);
+      break;
+    case ORC_TARGET_MMX:
+      orc_program_assemble_x86 (program);
+      break;
+    case ORC_TARGET_SSE:
+      orc_program_assemble_x86 (program);
+      break;
+    default:
+      break;
+  }
 
   orc_program_dump_code (program);
 }
@@ -255,17 +282,8 @@ orc_program_assign_rules (OrcProgram *program)
 
   for(i=0;i<program->n_insns;i++) {
     OrcInstruction *insn = program->insns + i;
-    unsigned int flags;
 
     insn->rule = insn->opcode->rules + program->rule_set;
-
-    flags = insn->rule->flags;
-    if (flags & ORC_RULE_REG_IMM &&
-        program->vars[insn->args[2]].vartype == ORC_VAR_TYPE_CONST) {
-      program->insns[i].rule_flag = ORC_RULE_REG_IMM;
-    } else {
-      program->insns[i].rule_flag = ORC_RULE_REG_REG;
-    }
   }
 }
 
@@ -409,7 +427,7 @@ orc_program_rewrite_vars2 (OrcProgram *program)
      *  - rule must handle it
      *  - src1 must be last_use
      */
-    if (1 || program->insns[j].rule->flags & ORC_RULE_REG_REG) {
+    if (1) {
       int src1 = program->insns[j].args[1];
       int dest = program->insns[j].args[0];
       if (program->vars[src1].last_use == j) {
@@ -423,7 +441,7 @@ orc_program_rewrite_vars2 (OrcProgram *program)
     }
 #endif
 
-    if (program->insns[j].rule_flag == ORC_RULE_REG_IMM) {
+    if (0) {
       /* immediate operand, don't load */
       int src2 = program->insns[j].args[2];
       program->vars[src2].alloc = 1;
@@ -512,5 +530,15 @@ int
 orc_variable_get_size (OrcVariable *var)
 {
   return 2;
+}
+
+void
+orc_program_append_code (OrcProgram *p, const char *fmt, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, fmt);
+  vprintf(fmt, varargs);
+  va_end (varargs);
 }
 

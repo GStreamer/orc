@@ -10,7 +10,7 @@
 
 void
 orc_rule_register (const char *opcode_name, unsigned int mode,
-    OrcRuleEmitFunc emit, void *emit_user, unsigned int flags)
+    OrcRuleEmitFunc emit, void *emit_user)
 {
   OrcOpcode *opcode;
 
@@ -18,6 +18,5 @@ orc_rule_register (const char *opcode_name, unsigned int mode,
 
   opcode->rules[mode].emit = emit;
   opcode->rules[mode].emit_user = emit_user;
-  opcode->rules[mode].flags = flags;
 }
 

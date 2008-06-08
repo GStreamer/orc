@@ -59,6 +59,13 @@ enum {
   ORC_RULE_ALTIVEC_1
 };
 
+enum {
+  ORC_TARGET_C = 0,
+  ORC_TARGET_ALTIVEC = 1,
+  ORC_TARGET_MMX = 2,
+  ORC_TARGET_SSE = 3
+};
+
 struct _OrcType {
   char *name;
   int size;
@@ -94,7 +101,6 @@ struct _OrcVariable {
 };
 
 struct _OrcRule {
-  unsigned int flags;
   OrcRuleEmitFunc emit;
   void *emit_user;
 };
@@ -178,6 +184,7 @@ struct _OrcProgram {
   int used_regs[ORC_N_REGS];
   int alloc_regs[ORC_N_REGS];
 
+  int target;
   int loop_shift;
   int n_per_loop;
 };
@@ -194,16 +201,6 @@ struct _OrcExecutor {
   OrcVariable vars[ORC_N_VARIABLES];
   OrcVariable *args[ORC_OPCODE_N_ARGS];
 
-};
-
-enum {
-  ORC_RULE_3REG = (1<<0),
-  ORC_RULE_REG_REG = (1<<1),
-  ORC_RULE_MEM_REG = (1<<2),
-  ORC_RULE_REG_MEM = (1<<3),
-  ORC_RULE_REG_IMM = (1<<4),
-  ORC_RULE_MEM_IMM = (1<<5),
-  ORC_RULE_REG_CL = (1<<6)
 };
 
 
@@ -223,7 +220,10 @@ void orc_x86_init (void);
 void orc_powerpc_init (void);
 void orc_c_init (void);
 
+void orc_program_set_target (OrcProgram *p, const char *target);
+
 void orc_program_compile (OrcProgram *p);
+void orc_program_c_init (OrcProgram *p);
 void orc_program_x86_init (OrcProgram *p);
 void orc_program_powerpc_init (OrcProgram *p);
 void orc_program_assemble_x86 (OrcProgram *p);
@@ -257,7 +257,7 @@ void orc_executor_emulate (OrcExecutor *ex);
 void orc_executor_run (OrcExecutor *ex);
 
 void orc_rule_register (const char *opcode_name, unsigned int mode,
-    OrcRuleEmitFunc emit, void *emit_user, unsigned int flags);
+    OrcRuleEmitFunc emit, void *emit_user);
 
 int orc_program_allocate_register (OrcProgram *program, int is_data);
 int orc_program_x86_allocate_register (OrcProgram *program, int is_data);
@@ -268,6 +268,8 @@ void orc_program_allocate_codemem (OrcProgram *program);
 void orc_program_dump_code (OrcProgram *program);
 
 int orc_variable_get_size (OrcVariable *var);
+
+void orc_program_append_code (OrcProgram *p, const char *fmt, ...);
  
 #endif
 

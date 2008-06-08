@@ -677,16 +677,11 @@ powerpc_rule_rshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 void
 orc_program_powerpc_register_rules (void)
 {
-  orc_rule_register ("add_s16", ORC_RULE_ALTIVEC_1, powerpc_rule_add_s16, NULL,
-      ORC_RULE_REG_REG);
-  orc_rule_register ("sub_s16", ORC_RULE_ALTIVEC_1, powerpc_rule_sub_s16, NULL,
-      ORC_RULE_REG_REG);
-  orc_rule_register ("mul_s16", ORC_RULE_ALTIVEC_1, powerpc_rule_mul_s16, NULL,
-      ORC_RULE_REG_REG);
-  orc_rule_register ("lshift_s16", ORC_RULE_ALTIVEC_1, powerpc_rule_lshift_s16, NULL,
-      ORC_RULE_REG_REG);
-  orc_rule_register ("rshift_s16", ORC_RULE_ALTIVEC_1, powerpc_rule_rshift_s16, NULL,
-      ORC_RULE_REG_REG);
+  orc_rule_register ("add_s16", ORC_RULE_ALTIVEC_1, powerpc_rule_add_s16, NULL);
+  orc_rule_register ("sub_s16", ORC_RULE_ALTIVEC_1, powerpc_rule_sub_s16, NULL);
+  orc_rule_register ("mul_s16", ORC_RULE_ALTIVEC_1, powerpc_rule_mul_s16, NULL);
+  orc_rule_register ("lshift_s16", ORC_RULE_ALTIVEC_1, powerpc_rule_lshift_s16, NULL);
+  orc_rule_register ("rshift_s16", ORC_RULE_ALTIVEC_1, powerpc_rule_rshift_s16, NULL);
 }
 
 /* code generation */
