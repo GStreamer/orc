@@ -1,0 +1,4 @@
+
+bin_PROGRAMS = orcc
+
+

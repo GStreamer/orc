@@ -133,6 +133,7 @@ doc/Makefile
 orc/Makefile
 testsuite/Makefile
 examples/Makefile
+tools/Makefile
 orc-uninstalled.pc
 orc.pc
 ])
