@@ -13,13 +13,12 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orctype.c \
 	orcprogram.c \
 	orcprogram-c.c \
-	orcprogram-x86.c \
 	orcprogram-powerpc.c \
+	orcprogram-x86.c \
 	orcprogram.h \
 	orcopcodes.c \
 	orcprogram-linux.c \
 	orcrules-mmx.c \
-	orcrules-x86.c \
 	orcrules-sse.c \
 	x86.c
 
