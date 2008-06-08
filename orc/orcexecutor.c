@@ -35,7 +35,11 @@ orc_executor_run (OrcExecutor *ex)
   void (*func) (OrcExecutor *);
 
   func = ex->program->code_exec;
-  func (ex);
+  if (func) {
+    func (ex);
+  } else {
+    orc_executor_emulate (ex);
+  }
 }
 
 void
