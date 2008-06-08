@@ -64,19 +64,6 @@ fi
 AX_CREATE_STDINT_H([orc/orc-stdint.h])
 
 AC_FUNC_MMAP()
-AC_CHECK_LIB(m, rint,
-  AC_DEFINE(HAVE_RINT, 1, [Define if rint() is available]))
-AC_CHECK_LIB(m, rintf,
-  AC_DEFINE(HAVE_RINTF, 1, [Define if rintf() is available]))
-AC_CHECK_LIB(m, lrint,
-  AC_DEFINE(HAVE_LRINT, 1, [Define if lrint() is available]))
-AC_CHECK_LIB(m, lrintf,
-  AC_DEFINE(HAVE_LRINTF, 1, [Define if lrintf() is available]))
-AC_CHECK_LIB(m, sincos,
-  AC_DEFINE(HAVE_SINCOS, 1, [Define if sincos() is available]))
-
-AC_CHECK_HEADER(ieee754.h,
-  AC_DEFINE(HAVE_IEEE754_H, 1, [Define if ieee754.h exists]))
 
 AC_CHECK_HEADERS([inttypes.h])
 AC_CHECK_HEADERS([sys/time.h])
