@@ -1,0 +1,24 @@
+
+Projects:
+
+* Memory management for executable sections of code.
+
+* Parser
+
+* APIs to handle the following use cases:
+ - replacement for normal functions (schro)
+ - construct function at runtime (pixman)
+
+* Handle compilation failure
+ - fallback to emulation
+
+* Automatic testing of compiled code
+
+* Automatic speed measurement
+
+* Better MMX and SSE engine latency/throughput measurement
+
+* SSE write alignment
+
+
+
