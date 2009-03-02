@@ -283,7 +283,7 @@ orc_program_assign_rules (OrcProgram *program)
   for(i=0;i<program->n_insns;i++) {
     OrcInstruction *insn = program->insns + i;
 
-    insn->rule = insn->opcode->rules + program->rule_set;
+    insn->rule = insn->opcode->rules + program->target;
   }
 }
 

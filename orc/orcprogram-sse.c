@@ -128,7 +128,7 @@ orc_program_sse_init (OrcProgram *program)
     program->used_regs[i] = 0;
   }
 
-  program->rule_set = ORC_RULE_SSE_1;
+  program->loop_shift = 3;
 }
 
 void
@@ -169,18 +169,18 @@ sse_emit_load_src (OrcProgram *program, OrcVariable *var)
   } else {
     ptr_reg = var->ptr_register;
   }
-  switch (program->rule_set) {
-    case ORC_RULE_SSE_1:
+  switch (program->loop_shift) {
+    case 0:
       x86_emit_mov_memoffset_reg (program, 2, 0, ptr_reg, X86_ECX);
       x86_emit_mov_reg_sse (program, X86_ECX, var->alloc);
       break;
-    case ORC_RULE_SSE_2:
+    case 1:
       x86_emit_mov_memoffset_sse (program, 4, 0, ptr_reg, var->alloc);
       break;
-    case ORC_RULE_SSE_4:
+    case 2:
       x86_emit_mov_memoffset_sse (program, 8, 0, ptr_reg, var->alloc);
       break;
-    case ORC_RULE_SSE_8:
+    case 3:
       x86_emit_mov_memoffset_sse (program, 16, 0, ptr_reg, var->alloc);
       break;
     default:
@@ -199,8 +199,8 @@ sse_emit_store_dest (OrcProgram *program, OrcVariable *var)
   } else {
     ptr_reg = var->ptr_register;
   }
-  switch (program->rule_set) {
-    case ORC_RULE_SSE_1:
+  switch (program->loop_shift) {
+    case 0:
       /* FIXME we might be using ecx twice here */
       if (ptr_reg == X86_ECX) {
         printf("ERROR\n");
@@ -208,13 +208,13 @@ sse_emit_store_dest (OrcProgram *program, OrcVariable *var)
       x86_emit_mov_sse_reg (program, var->alloc, X86_ECX);
       x86_emit_mov_reg_memoffset (program, 2, X86_ECX, 0, ptr_reg);
       break;
-    case ORC_RULE_SSE_2:
+    case 1:
       x86_emit_mov_sse_memoffset (program, 4, var->alloc, 0, ptr_reg);
       break;
-    case ORC_RULE_SSE_4:
+    case 2:
       x86_emit_mov_sse_memoffset (program, 8, var->alloc, 0, ptr_reg);
       break;
-    case ORC_RULE_SSE_8:
+    case 3:
       x86_emit_mov_sse_memoffset (program, 16, var->alloc, 0, ptr_reg);
       break;
     default:
@@ -226,12 +226,6 @@ void
 orc_program_sse_assemble (OrcProgram *program)
 {
   sse_emit_prologue (program);
-
-  if (program->target == ORC_TARGET_SSE) {
-    program->loop_shift = 3;
-  } else {
-    program->loop_shift = 2;
-  }
 
   x86_emit_mov_memoffset_reg (program, 4, (int)ORC_STRUCT_OFFSET(OrcExecutor,n),
       x86_exec_ptr, X86_ECX);
@@ -247,29 +241,31 @@ orc_program_sse_assemble (OrcProgram *program)
 
   sse_load_constants (program);
 
-  x86_emit_cmp_imm_memoffset (program, 4, 0,
-      (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1), x86_exec_ptr);
-  x86_emit_je (program, 1);
+  if (program->loop_shift > 0) {
+    int save_loop_shift;
 
-  program->rule_set = ORC_RULE_SSE_1;
-  program->n_per_loop = 1;
-  program->loop_shift = 0;
+    x86_emit_cmp_imm_memoffset (program, 4, 0,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1), x86_exec_ptr);
+    x86_emit_je (program, 1);
 
-  x86_emit_label (program, 0);
-  sse_emit_loop (program);
-  x86_emit_dec_memoffset (program, 4,
-      (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1),
-      x86_exec_ptr);
-  x86_emit_jne (program, 0);
+    save_loop_shift = program->loop_shift;
+    program->loop_shift = 0;
+
+    x86_emit_label (program, 0);
+    sse_emit_loop (program);
+    x86_emit_dec_memoffset (program, 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1),
+        x86_exec_ptr);
+    x86_emit_jne (program, 0);
+
+    program->loop_shift = save_loop_shift;
+  }
+
   x86_emit_label (program, 1);
 
   x86_emit_cmp_imm_memoffset (program, 4, 0,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2), x86_exec_ptr);
   x86_emit_je (program, 3);
-
-  program->rule_set = ORC_RULE_SSE_8;
-  program->n_per_loop = 8;
-  program->loop_shift = 3;
 
   x86_emit_label (program, 2);
   sse_emit_loop (program);
@@ -353,11 +349,11 @@ sse_emit_loop (OrcProgram *program)
         program->vars[k].vartype == ORC_VAR_TYPE_DEST) {
       if (program->vars[k].ptr_register) {
         x86_emit_add_imm_reg (program, x86_ptr_size,
-            orc_variable_get_size(program->vars + k) * program->n_per_loop,
+            orc_variable_get_size(program->vars + k) << program->loop_shift,
             program->vars[k].ptr_register);
       } else {
         x86_emit_add_imm_memoffset (program, x86_ptr_size,
-            orc_variable_get_size(program->vars + k) * program->n_per_loop,
+            orc_variable_get_size(program->vars + k) << program->loop_shift,
             (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]),
             x86_exec_ptr);
       }

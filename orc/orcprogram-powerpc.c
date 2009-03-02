@@ -342,8 +342,6 @@ orc_program_powerpc_init (OrcProgram *program)
     program->save_regs[POWERPC_V0 + i] = 1;
   }
 
-  program->rule_set = ORC_RULE_ALTIVEC_1;
-  program->n_per_loop = 4;
   program->loop_shift = 2;
 }
 
@@ -385,8 +383,8 @@ powerpc_emit_load_src (OrcProgram *program, OrcVariable *var)
   int ptr_reg;
   ptr_reg = var->ptr_register;
 
-  switch (program->rule_set) {
-    case ORC_RULE_ALTIVEC_1:
+  switch (program->loop_shift) {
+    case 0:
       printf("  lvehx %s, 0, %s\n", 
           powerpc_get_regname (var->alloc),
           powerpc_get_regname (ptr_reg));
@@ -419,8 +417,8 @@ powerpc_emit_store_dest (OrcProgram *program, OrcVariable *var)
   int ptr_reg;
   ptr_reg = var->ptr_register;
 
-  switch (program->rule_set) {
-    case ORC_RULE_ALTIVEC_1:
+  switch (program->loop_shift) {
+    case 0:
       printf("  lvsr %s, 0, %s\n", 
           powerpc_get_regname (POWERPC_V0),
           powerpc_get_regname (ptr_reg));
@@ -641,11 +639,11 @@ powerpc_rule_rshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 void
 orc_program_powerpc_register_rules (void)
 {
-  orc_rule_register ("add_s16", ORC_RULE_ALTIVEC_1, powerpc_rule_add_s16, NULL);
-  orc_rule_register ("sub_s16", ORC_RULE_ALTIVEC_1, powerpc_rule_sub_s16, NULL);
-  orc_rule_register ("mul_s16", ORC_RULE_ALTIVEC_1, powerpc_rule_mul_s16, NULL);
-  orc_rule_register ("lshift_s16", ORC_RULE_ALTIVEC_1, powerpc_rule_lshift_s16, NULL);
-  orc_rule_register ("rshift_s16", ORC_RULE_ALTIVEC_1, powerpc_rule_rshift_s16, NULL);
+  orc_rule_register ("add_s16", ORC_TARGET_ALTIVEC, powerpc_rule_add_s16, NULL);
+  orc_rule_register ("sub_s16", ORC_TARGET_ALTIVEC, powerpc_rule_sub_s16, NULL);
+  orc_rule_register ("mul_s16", ORC_TARGET_ALTIVEC, powerpc_rule_mul_s16, NULL);
+  orc_rule_register ("lshift_s16", ORC_TARGET_ALTIVEC, powerpc_rule_lshift_s16, NULL);
+  orc_rule_register ("rshift_s16", ORC_TARGET_ALTIVEC, powerpc_rule_rshift_s16, NULL);
 }
 
 /* code generation */

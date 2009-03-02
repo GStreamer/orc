@@ -25,7 +25,32 @@ sse_emit_loadi_s16 (OrcProgram *p, int reg, int value)
     *p->codeptr++ = 0x0f;
     *p->codeptr++ = 0xef;
     x86_emit_modrm_reg (p, reg, reg);
+  } else if (value == -1) {
+    printf("  pcmpeqw %%%s, %%%s\n", x86_get_regname_sse(reg),
+        x86_get_regname_sse(reg));
+    *p->codeptr++ = 0x66;
+    *p->codeptr++ = 0x0f;
+    *p->codeptr++ = 0x75;
+    x86_emit_modrm_reg (p, reg, reg);
+
+  } else if (value == 1) {
+    printf("  pcmpeqw %%%s, %%%s\n", x86_get_regname_sse(reg),
+        x86_get_regname_sse(reg));
+    *p->codeptr++ = 0x66;
+    *p->codeptr++ = 0x0f;
+    *p->codeptr++ = 0x75;
+    x86_emit_modrm_reg (p, reg, reg);
+
+    printf("  psrlw $15, %%%s\n", x86_get_regname_sse(reg));
+    *p->codeptr++ = 0x66;
+    *p->codeptr++ = 0x0f;
+    *p->codeptr++ = 0x71;
+    x86_emit_modrm_reg (p, reg, 2);
+    *p->codeptr++ = 15;
   } else {
+    value &= 0xffff;
+    value |= (value<<16);
+
     x86_emit_mov_imm_reg (p, 4, value, X86_ECX);
 
     printf("  movd %%ecx, %%%s\n", x86_get_regname_sse(reg));
@@ -50,6 +75,22 @@ sse_rule_loadi_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   sse_emit_loadi_s16 (p, p->vars[insn->args[0]].alloc,
       p->vars[insn->args[2]].s16);
+}
+
+static void
+sse_rule_copy_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+{
+  printf("  movdqa %%%s, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->args[1]].alloc),
+      x86_get_regname_sse(p->vars[insn->args[0]].alloc));
+
+  *p->codeptr++ = 0x66;
+  x86_emit_rex (p, p->vars[insn->args[1]].alloc,
+      p->vars[insn->args[0]].alloc);
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x6f;
+  x86_emit_modrm_reg (p, p->vars[insn->args[1]].alloc,
+      p->vars[insn->args[0]].alloc);
 }
 
 static void
@@ -165,17 +206,14 @@ sse_rule_convert_u8_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 void
 orc_program_sse_register_rules (void)
 {
-  int i;
+  orc_rule_register ("_loadi_s16", ORC_TARGET_SSE, sse_rule_loadi_s16, NULL);
 
-  orc_rule_register ("_loadi_s16", ORC_RULE_SSE_4, sse_rule_loadi_s16, NULL);
-
-  for(i=ORC_RULE_SSE_1; i <= ORC_RULE_SSE_8; i++) {
-    orc_rule_register ("add_s16", i, sse_rule_add_s16, NULL);
-    orc_rule_register ("sub_s16", i, sse_rule_sub_s16, NULL);
-    orc_rule_register ("mul_s16", i, sse_rule_mul_s16, NULL);
-    orc_rule_register ("lshift_s16", i, sse_rule_lshift_s16, NULL);
-    orc_rule_register ("rshift_s16", i, sse_rule_rshift_s16, NULL);
-    orc_rule_register ("convert_u8_s16", i, sse_rule_convert_u8_s16, NULL);
-  }
+  orc_rule_register ("copy_s16", ORC_TARGET_SSE, sse_rule_copy_s16, NULL);
+  orc_rule_register ("add_s16", ORC_TARGET_SSE, sse_rule_add_s16, NULL);
+  orc_rule_register ("sub_s16", ORC_TARGET_SSE, sse_rule_sub_s16, NULL);
+  orc_rule_register ("mul_s16", ORC_TARGET_SSE, sse_rule_mul_s16, NULL);
+  orc_rule_register ("lshift_s16", ORC_TARGET_SSE, sse_rule_lshift_s16, NULL);
+  orc_rule_register ("rshift_s16", ORC_TARGET_SSE, sse_rule_rshift_s16, NULL);
+  orc_rule_register ("convert_u8_s16", ORC_TARGET_SSE, sse_rule_convert_u8_s16, NULL);
 }
 

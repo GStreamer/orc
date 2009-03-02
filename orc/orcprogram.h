@@ -45,21 +45,6 @@ typedef void (*OrcRuleEmitFunc)(OrcProgram *p, void *user, OrcInstruction *insn)
 #endif
 
 enum {
-  ORC_RULE_C = 0,
-  ORC_RULE_SCALAR_1,
-  ORC_RULE_SCALAR_2,
-  ORC_RULE_MMX_1,
-  ORC_RULE_MMX_2,
-  ORC_RULE_MMX_4,
-  ORC_RULE_MMX_8,
-  ORC_RULE_SSE_1,
-  ORC_RULE_SSE_2,
-  ORC_RULE_SSE_4,
-  ORC_RULE_SSE_8,
-  ORC_RULE_ALTIVEC_1
-};
-
-enum {
   ORC_TARGET_C = 0,
   ORC_TARGET_ALTIVEC = 1,
   ORC_TARGET_MMX = 2,
@@ -162,7 +147,6 @@ struct _OrcProgram {
   int n_vars;
 
   OrcInstruction *insn;
-  int rule_set;
 
   OrcRegister registers[ORC_N_REGISTERS];
   int n_regs;
@@ -185,7 +169,6 @@ struct _OrcProgram {
 
   int target;
   int loop_shift;
-  int n_per_loop;
 };
 
 struct _OrcExecutor {

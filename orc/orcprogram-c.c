@@ -98,6 +98,17 @@ c_get_name (char *name, OrcProgram *p, int var)
 }
 
 static void
+c_rule_copy_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+{
+  char dest[20], src1[20];
+
+  c_get_name (dest, p, insn->args[0]);
+  c_get_name (src1, p, insn->args[1]);
+
+  orc_program_append_code(p,"    %s = %s;\n", dest, src1);
+}
+
+static void
 c_rule_add_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   char dest[20], src1[20], src2[20];
@@ -161,10 +172,11 @@ c_rule_rshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 void
 orc_c_init (void)
 {
-  orc_rule_register ("add_s16", ORC_RULE_C, c_rule_add_s16, NULL);
-  orc_rule_register ("sub_s16", ORC_RULE_C, c_rule_sub_s16, NULL);
-  orc_rule_register ("mul_s16", ORC_RULE_C, c_rule_mul_s16, NULL);
-  orc_rule_register ("lshift_s16", ORC_RULE_C, c_rule_lshift_s16, NULL);
-  orc_rule_register ("rshift_s16", ORC_RULE_C, c_rule_rshift_s16, NULL);
+  orc_rule_register ("copy_s16", ORC_TARGET_C, c_rule_copy_s16, NULL);
+  orc_rule_register ("add_s16", ORC_TARGET_C, c_rule_add_s16, NULL);
+  orc_rule_register ("sub_s16", ORC_TARGET_C, c_rule_sub_s16, NULL);
+  orc_rule_register ("mul_s16", ORC_TARGET_C, c_rule_mul_s16, NULL);
+  orc_rule_register ("lshift_s16", ORC_TARGET_C, c_rule_lshift_s16, NULL);
+  orc_rule_register ("rshift_s16", ORC_TARGET_C, c_rule_rshift_s16, NULL);
 }
 

@@ -150,7 +150,7 @@ test3(void)
   OrcExecutor *ex;
   int s1, s2, d1;
   int t1, t2;
-  int c1;
+  int c1, c2;
   int n;
 
   p = orc_program_new ();
@@ -158,13 +158,14 @@ test3(void)
   d1 = orc_program_add_destination (p, "s16", "d1");
   s1 = orc_program_add_source (p, "s16", "s1");
   s2 = orc_program_add_source (p, "s16", "s2");
-  c1 = orc_program_add_constant (p, "s16", 1, "c1");
+  c1 = orc_program_add_constant (p, "s16", -1, "c1");
+  c2 = orc_program_add_constant (p, "s16", 1, "c2");
   t1 = orc_program_add_temporary (p, "s16", "t1");
   t2 = orc_program_add_temporary (p, "s16", "t2");
 
   orc_program_append (p, "add_s16", t1, s1, s2);
   orc_program_append (p, "add_s16", t2, t1, c1);
-  orc_program_append (p, "rshift_s16", d1, t2, c1);
+  orc_program_append (p, "rshift_s16", d1, t2, c2);
 
   orc_program_compile (p);
 
@@ -188,7 +189,7 @@ test3(void)
     orc_executor_emulate (ex);
 #if 1
     for(i=0;i<n;i++){
-      dest_ref[i] = ((src1[i+1]+src1[i])+1)>>1;
+      dest_ref[i] = (src1[i+1]+src1[i]-1)>>1;
     }
 #endif
     
