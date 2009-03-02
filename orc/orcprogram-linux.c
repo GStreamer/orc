@@ -19,6 +19,7 @@ orc_program_allocate_codemem (OrcProgram *program)
 {
   char filename[32] = "/tmp/orcexecXXXXXX";
   int fd;
+  int n;
 
   fd = mkstemp (filename);
   if (fd == -1) {
@@ -29,7 +30,7 @@ orc_program_allocate_codemem (OrcProgram *program)
   }
   unlink (filename);
 
-  ftruncate (fd, SIZE);
+  n = ftruncate (fd, SIZE);
 
   program->code = mmap (NULL, SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
   if (program->code == MAP_FAILED) {

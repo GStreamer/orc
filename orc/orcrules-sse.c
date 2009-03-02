@@ -16,7 +16,7 @@
 
 /* sse rules */
 
-static void
+void
 sse_emit_loadi_s16 (OrcProgram *p, int reg, int value)
 {
   if (value == 0) {
@@ -34,7 +34,7 @@ sse_emit_loadi_s16 (OrcProgram *p, int reg, int value)
     *p->codeptr++ = 0x6e;
     x86_emit_modrm_reg (p, X86_ECX, reg);
 
-    printf("  pshufw $0, %%%s, %%%s\n", x86_get_regname_sse(reg),
+    printf("  pshufd $0, %%%s, %%%s\n", x86_get_regname_sse(reg),
         x86_get_regname_sse(reg));
 
     *p->codeptr++ = 0x66;
@@ -148,6 +148,20 @@ sse_rule_rshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
   }
 }
 
+static void
+sse_rule_convert_u8_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+{
+  printf("  packuswb %%%s, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->args[1]].alloc),
+      x86_get_regname_sse(p->vars[insn->args[0]].alloc));
+
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x67;
+  x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc,
+      p->vars[insn->args[1]].alloc);
+}
+
 void
 orc_program_sse_register_rules (void)
 {
@@ -161,6 +175,7 @@ orc_program_sse_register_rules (void)
     orc_rule_register ("mul_s16", i, sse_rule_mul_s16, NULL);
     orc_rule_register ("lshift_s16", i, sse_rule_lshift_s16, NULL);
     orc_rule_register ("rshift_s16", i, sse_rule_rshift_s16, NULL);
+    orc_rule_register ("convert_u8_s16", i, sse_rule_convert_u8_s16, NULL);
   }
 }
 

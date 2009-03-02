@@ -12,7 +12,8 @@ void
 orc_init (void)
 {
   orc_opcode_init();
-  orc_x86_init();
+  orc_mmx_init();
+  orc_sse_init();
   orc_powerpc_init();
   orc_c_init();
 }

@@ -14,6 +14,8 @@ void orc_program_rewrite_vars (OrcProgram *program);
 void orc_program_rewrite_vars2 (OrcProgram *program);
 void orc_program_do_regs (OrcProgram *program);
 
+int _orc_default_target = ORC_TARGET_MMX;
+
 OrcProgram *
 orc_program_new (void)
 {
@@ -22,7 +24,7 @@ orc_program_new (void)
   p = malloc(sizeof(OrcProgram));
   memset (p, 0, sizeof(OrcProgram));
 
-  p->target = ORC_TARGET_C;
+  p->target = _orc_default_target;
 
   return p;
 }
@@ -231,10 +233,10 @@ orc_program_compile (OrcProgram *program)
       orc_program_powerpc_init (program);
       break;
     case ORC_TARGET_SSE:
-      orc_program_x86_init (program);
+      orc_program_sse_init (program);
       break;
     case ORC_TARGET_MMX:
-      orc_program_x86_init (program);
+      orc_program_mmx_init (program);
       break;
     default:
       break;
@@ -263,10 +265,10 @@ orc_program_compile (OrcProgram *program)
       orc_program_assemble_powerpc (program);
       break;
     case ORC_TARGET_MMX:
-      orc_program_assemble_x86 (program);
+      orc_program_mmx_assemble (program);
       break;
     case ORC_TARGET_SSE:
-      orc_program_assemble_x86 (program);
+      orc_program_sse_assemble (program);
       break;
     default:
       break;
@@ -482,10 +484,11 @@ void
 orc_program_dump_code (OrcProgram *program)
 {
   FILE *file;
+  int n;
 
   file = fopen("dump","w");
 
-  fwrite (program->code, 1, program->codeptr - program->code, file);
+  n = fwrite (program->code, 1, program->codeptr - program->code, file);
   fclose (file);
 }
 

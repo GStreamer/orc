@@ -95,6 +95,7 @@ struct _OrcVariable {
   int is_chained;
 
   int16_t s16;
+  unsigned char u8;
 
   int ptr_register;
   int ptr_offset;
@@ -216,7 +217,8 @@ void orc_program_append (OrcProgram *p, const char *opcode, int arg0, int arg1, 
 void orc_program_append_str (OrcProgram *p, const char *opcode,
     const char * arg0, const char * arg1, const char * arg2);
 
-void orc_x86_init (void);
+void orc_mmx_init (void);
+void orc_sse_init (void);
 void orc_powerpc_init (void);
 void orc_c_init (void);
 
@@ -224,9 +226,11 @@ void orc_program_set_target (OrcProgram *p, const char *target);
 
 void orc_program_compile (OrcProgram *p);
 void orc_program_c_init (OrcProgram *p);
-void orc_program_x86_init (OrcProgram *p);
+void orc_program_mmx_init (OrcProgram *p);
+void orc_program_sse_init (OrcProgram *p);
 void orc_program_powerpc_init (OrcProgram *p);
-void orc_program_assemble_x86 (OrcProgram *p);
+void orc_program_mmx_assemble (OrcProgram *p);
+void orc_program_sse_assemble (OrcProgram *p);
 void orc_program_assemble_powerpc (OrcProgram *p);
 void orc_program_assemble_c (OrcProgram *p);
 void orc_program_free (OrcProgram *program);

@@ -86,6 +86,12 @@ rshift_s16 (OrcExecutor *ex, void *user)
   ex->args[0]->s16 = (int16_t)(ex->args[1]->s16 >> ex->args[2]->s16);
 }
 
+static void
+convert_u8_s16 (OrcExecutor *ex, void *user)
+{
+  ex->args[0]->u8 = (int16_t)(ex->args[1]->s16);
+}
+
 void
 orc_opcode_init (void)
 {
@@ -96,6 +102,7 @@ orc_opcode_init (void)
   orc_opcode_register("mul_s16", 1, 2, mul_s16, NULL);
   orc_opcode_register("lshift_s16", 1, 2, lshift_s16, NULL);
   orc_opcode_register("rshift_s16", 1, 2, rshift_s16, NULL);
+  orc_opcode_register("convert_u8_s16", 1, 1, convert_u8_s16, NULL);
 }
 
 

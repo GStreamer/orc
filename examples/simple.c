@@ -18,13 +18,14 @@ int16_t dest[N];
 
 void test1(void);
 void test2(void);
+void test3(void);
 
 int
 main (int argc, char *argv[])
 {
   orc_init ();
 
-  test1();
+  test3();
 
   exit(0);
 }
@@ -122,9 +123,72 @@ test2(void)
     orc_executor_set_n (ex, n);
     orc_executor_set_array (ex, d1, dest_ref);
     orc_executor_emulate (ex);
-#if 0
+#if 1
     for(i=0;i<n;i++){
       dest_ref[i] = (3*(src1[i+1]+src1[i+2])-(src1[i]+src1[i+3])+4)>>3;
+    }
+#endif
+    
+    orc_executor_set_array (ex, d1, dest_test);
+    orc_executor_run (ex);
+
+    for(i=0;i<n+4;i++){
+      printf("# %d: %4d %4d %4d %c\n", i, src1[i], dest_ref[i], dest_test[i],
+          (dest_ref[i] == dest_test[i])?' ':'*');
+    }
+  }
+
+  orc_executor_free (ex);
+  orc_program_free (p);
+}
+
+
+void
+test3(void)
+{
+  OrcProgram *p;
+  OrcExecutor *ex;
+  int s1, s2, d1;
+  int t1, t2;
+  int c1;
+  int n;
+
+  p = orc_program_new ();
+
+  d1 = orc_program_add_destination (p, "s16", "d1");
+  s1 = orc_program_add_source (p, "s16", "s1");
+  s2 = orc_program_add_source (p, "s16", "s2");
+  c1 = orc_program_add_constant (p, "s16", 1, "c1");
+  t1 = orc_program_add_temporary (p, "s16", "t1");
+  t2 = orc_program_add_temporary (p, "s16", "t2");
+
+  orc_program_append (p, "add_s16", t1, s1, s2);
+  orc_program_append (p, "add_s16", t2, t1, c1);
+  orc_program_append (p, "rshift_s16", d1, t2, c1);
+
+  orc_program_compile (p);
+
+  ex = orc_executor_new (p);
+  orc_executor_set_n (ex, N);
+  orc_executor_set_array (ex, s1, src1);
+  orc_executor_set_array (ex, s2, src1 + 1);
+
+  for(n=0;n<20;n++) {
+    int i;
+
+    for(i=0;i<n+1;i++){
+      src1[i] = rand()&0xff;
+    }
+    for(i=0;i<n+4;i++){
+      dest[i] = 0;
+    }
+
+    orc_executor_set_n (ex, n);
+    orc_executor_set_array (ex, d1, dest_ref);
+    orc_executor_emulate (ex);
+#if 1
+    for(i=0;i<n;i++){
+      dest_ref[i] = ((src1[i+1]+src1[i])+1)>>1;
     }
 #endif
     

@@ -14,16 +14,38 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orcprogram.c \
 	orcprogram-c.c \
 	orcprogram-powerpc.c \
-	orcprogram-x86.c \
+	orcprogram-mmx.c \
+	orcprogram-sse.c \
 	orcprogram.h \
 	orcopcodes.c \
 	orcprogram-linux.c \
 	orcrules-mmx.c \
 	orcrules-sse.c \
+	orcdebug.c \
+	orccpu.c \
 	x86.c
+
+if HAVE_I386
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-x86.c
+else
+if HAVE_AMD64
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-x86.c
+else
+if HAVE_POWERPC
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-powerpc.c
+else
+if HAVE_ARM
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-arm.c
+else
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-misc.c
+endif
+endif
+endif
+endif
 
 pkginclude_HEADERS = \
 	orc.h \
+	orcdebug.h \
 	orcprogram.h \
 	x86.h
 

@@ -12,6 +12,17 @@
 #include <orc/orcprogram.h>
 #include <orc/x86.h>
 
+#ifdef HAVE_AMD64
+int x86_64 = 1;
+int x86_ptr_size = 8;
+int x86_exec_ptr = X86_EDI;
+#else
+int x86_64 = 0;
+int x86_ptr_size = 4;
+int x86_exec_ptr = X86_EBP;
+#endif
+
+
 const char *
 x86_get_regname(int i)
 {
@@ -385,6 +396,29 @@ void x86_emit_mov_reg_reg (OrcProgram *program, int size, int reg1, int reg2)
   x86_emit_rex(program, size, reg2, 0, reg1);
   *program->codeptr++ = 0x89;
   x86_emit_modrm_reg (program, reg2, reg1);
+}
+
+void x86_emit_mov_sse_reg_reg (OrcProgram *program, int reg1, int reg2)
+{
+  printf("  movdqa %%%s, %%%s\n", x86_get_regname_sse(reg1),
+        x86_get_regname_sse(reg2));
+
+  *program->codeptr++ = 0x66;
+  x86_emit_rex(program, 0, reg1, 0, reg2);
+  *program->codeptr++ = 0x0f;
+  *program->codeptr++ = 0x6f;
+  x86_emit_modrm_reg (program, reg1, reg2);
+}
+
+void x86_emit_mov_mmx_reg_reg (OrcProgram *program, int reg1, int reg2)
+{
+  printf("  movq %%%s, %%%s\n", x86_get_regname_mmx(reg1),
+        x86_get_regname_mmx(reg2));
+
+  x86_emit_rex(program, 0, reg1, 0, reg2);
+  *program->codeptr++ = 0x0f;
+  *program->codeptr++ = 0x6f;
+  x86_emit_modrm_reg (program, reg1, reg2);
 }
 
 void x86_emit_mov_reg_mmx (OrcProgram *program, int reg1, int reg2)

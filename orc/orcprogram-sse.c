@@ -14,26 +14,14 @@
 
 #define SIZE 65536
 
-void x86_emit_loop (OrcProgram *program);
 
+void sse_emit_loop (OrcProgram *program);
 
-void orc_program_x86_register_rules (void);
-void orc_program_mmx_register_rules (void);
 void orc_program_sse_register_rules (void);
-
-#ifdef HAVE_AMD64
-int x86_64 = 1;
-int x86_ptr_size = 8;
-int x86_exec_ptr = X86_EDI;
-#else
-int x86_64 = 0;
-int x86_ptr_size = 4;
-int x86_exec_ptr = X86_EBP;
-#endif
 
 
 int
-orc_program_x86_allocate_register (OrcProgram *program, int data_reg)
+orc_program_sse_allocate_register (OrcProgram *program, int data_reg)
 {
   int i;
   int klass;
@@ -73,7 +61,7 @@ void orc_program_rewrite_vars (OrcProgram *program);
 void orc_program_dump (OrcProgram *program);
 
 void
-x86_emit_prologue (OrcProgram *program)
+sse_emit_prologue (OrcProgram *program)
 {
   orc_program_append_code(program,".global test\n");
   orc_program_append_code(program,"test:\n");
@@ -95,14 +83,8 @@ x86_emit_prologue (OrcProgram *program)
 }
 
 void
-x86_emit_epilogue (OrcProgram *program)
+sse_emit_epilogue (OrcProgram *program)
 {
-  if (program->rule_set == ORC_RULE_MMX_1 ||
-      program->rule_set == ORC_RULE_MMX_2 ||
-      program->rule_set == ORC_RULE_MMX_4 ||
-      program->rule_set == ORC_RULE_MMX_8) {
-    x86_emit_emms (program);
-  }
   if (x86_64) {
 
   } else {
@@ -121,7 +103,7 @@ x86_emit_epilogue (OrcProgram *program)
 }
 
 void
-x86_do_fixups (OrcProgram *program)
+sse_do_fixups (OrcProgram *program)
 {
   int i;
   for(i=0;i<program->n_fixups;i++){
@@ -135,14 +117,13 @@ x86_do_fixups (OrcProgram *program)
 }
 
 void
-orc_x86_init (void)
+orc_sse_init (void)
 {
-  orc_program_mmx_register_rules ();
   orc_program_sse_register_rules ();
 }
 
 void
-orc_program_x86_init (OrcProgram *program)
+orc_program_sse_init (OrcProgram *program)
 {
   int i;
 
@@ -184,23 +165,18 @@ orc_program_x86_init (OrcProgram *program)
     program->used_regs[i] = 0;
   }
 
-  if (program->target == ORC_TARGET_MMX) {
-    program->data_register_class = 2;
-    program->rule_set = ORC_RULE_MMX_1;
-  } else {
-    program->data_register_class = 3;
-    program->rule_set = ORC_RULE_SSE_1;
-  }
+  program->data_register_class = 3;
+  program->rule_set = ORC_RULE_SSE_1;
 }
 
 void
-x86_load_constants (OrcProgram *program)
+sse_load_constants (OrcProgram *program)
 {
   int i;
   for(i=0;i<program->n_vars;i++){
     switch (program->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:
-        mmx_emit_loadi_s16 (program, program->vars[i].alloc,
+        sse_emit_loadi_s16 (program, program->vars[i].alloc,
             program->vars[i].s16);
         break;
       case ORC_VAR_TYPE_SRC:
@@ -221,7 +197,7 @@ x86_load_constants (OrcProgram *program)
 }
 
 void
-x86_emit_load_src (OrcProgram *program, OrcVariable *var)
+sse_emit_load_src (OrcProgram *program, OrcVariable *var)
 {
   int ptr_reg;
   if (var->ptr_register == 0) {
@@ -232,19 +208,6 @@ x86_emit_load_src (OrcProgram *program, OrcVariable *var)
     ptr_reg = var->ptr_register;
   }
   switch (program->rule_set) {
-    case ORC_RULE_SCALAR_1:
-      x86_emit_mov_memoffset_reg (program, 2, 0, ptr_reg, var->alloc);
-      break;
-    case ORC_RULE_MMX_1:
-      x86_emit_mov_memoffset_reg (program, 2, 0, ptr_reg, X86_ECX);
-      x86_emit_mov_reg_mmx (program, X86_ECX, var->alloc);
-      break;
-    case ORC_RULE_MMX_2:
-      x86_emit_mov_memoffset_mmx (program, 4, 0, ptr_reg, var->alloc);
-      break;
-    case ORC_RULE_MMX_4:
-      x86_emit_mov_memoffset_mmx (program, 8, 0, ptr_reg, var->alloc);
-      break;
     case ORC_RULE_SSE_1:
       x86_emit_mov_memoffset_reg (program, 2, 0, ptr_reg, X86_ECX);
       x86_emit_mov_reg_sse (program, X86_ECX, var->alloc);
@@ -264,7 +227,7 @@ x86_emit_load_src (OrcProgram *program, OrcVariable *var)
 }
 
 void
-x86_emit_store_dest (OrcProgram *program, OrcVariable *var)
+sse_emit_store_dest (OrcProgram *program, OrcVariable *var)
 {
   int ptr_reg;
   if (var->ptr_register == 0) {
@@ -275,23 +238,6 @@ x86_emit_store_dest (OrcProgram *program, OrcVariable *var)
     ptr_reg = var->ptr_register;
   }
   switch (program->rule_set) {
-    case ORC_RULE_SCALAR_1:
-      x86_emit_mov_reg_memoffset (program, 2, var->alloc, 0, ptr_reg);
-      break;
-    case ORC_RULE_MMX_1:
-      /* FIXME we might be using ecx twice here */
-      if (ptr_reg == X86_ECX) {
-        printf("ERROR\n");
-      }
-      x86_emit_mov_mmx_reg (program, var->alloc, X86_ECX);
-      x86_emit_mov_reg_memoffset (program, 2, X86_ECX, 0, ptr_reg);
-      break;
-    case ORC_RULE_MMX_2:
-      x86_emit_mov_mmx_memoffset (program, 4, var->alloc, 0, ptr_reg);
-      break;
-    case ORC_RULE_MMX_4:
-      x86_emit_mov_mmx_memoffset (program, 8, var->alloc, 0, ptr_reg);
-      break;
     case ORC_RULE_SSE_1:
       /* FIXME we might be using ecx twice here */
       if (ptr_reg == X86_ECX) {
@@ -315,9 +261,9 @@ x86_emit_store_dest (OrcProgram *program, OrcVariable *var)
 }
 
 void
-orc_program_assemble_x86 (OrcProgram *program)
+orc_program_sse_assemble (OrcProgram *program)
 {
-  x86_emit_prologue (program);
+  sse_emit_prologue (program);
 
   if (program->target == ORC_TARGET_SSE) {
     program->loop_shift = 3;
@@ -337,24 +283,18 @@ orc_program_assemble_x86 (OrcProgram *program)
   x86_emit_mov_reg_memoffset (program, 4, X86_ECX,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1), x86_exec_ptr);
 
-  x86_load_constants (program);
+  sse_load_constants (program);
 
   x86_emit_cmp_imm_memoffset (program, 4, 0,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1), x86_exec_ptr);
   x86_emit_je (program, 1);
 
-  if (program->target == ORC_TARGET_SSE) {
-    program->rule_set = ORC_RULE_SSE_1;
-    program->n_per_loop = 1;
-    program->loop_shift = 0;
-  } else {
-    program->rule_set = ORC_RULE_MMX_1;
-    program->n_per_loop = 1;
-    program->loop_shift = 0;
-  }
+  program->rule_set = ORC_RULE_SSE_1;
+  program->n_per_loop = 1;
+  program->loop_shift = 0;
 
   x86_emit_label (program, 0);
-  x86_emit_loop (program);
+  sse_emit_loop (program);
   x86_emit_dec_memoffset (program, 4,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1),
       x86_exec_ptr);
@@ -365,31 +305,25 @@ orc_program_assemble_x86 (OrcProgram *program)
       (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2), x86_exec_ptr);
   x86_emit_je (program, 3);
 
-  if (program->target == ORC_TARGET_SSE) {
-    program->rule_set = ORC_RULE_SSE_8;
-    program->n_per_loop = 8;
-    program->loop_shift = 3;
-  } else {
-    program->rule_set = ORC_RULE_MMX_4;
-    program->n_per_loop = 4;
-    program->loop_shift = 2;
-  }
+  program->rule_set = ORC_RULE_SSE_8;
+  program->n_per_loop = 8;
+  program->loop_shift = 3;
 
   x86_emit_label (program, 2);
-  x86_emit_loop (program);
+  sse_emit_loop (program);
   x86_emit_dec_memoffset (program, 4,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2),
       x86_exec_ptr);
   x86_emit_jne (program, 2);
   x86_emit_label (program, 3);
 
-  x86_emit_epilogue (program);
+  sse_emit_epilogue (program);
 
-  x86_do_fixups (program);
+  sse_do_fixups (program);
 }
 
 void
-x86_emit_loop (OrcProgram *program)
+sse_emit_loop (OrcProgram *program)
 {
   int j;
   int k;
@@ -418,7 +352,7 @@ x86_emit_loop (OrcProgram *program)
     for(k=opcode->n_dest;k<opcode->n_src + opcode->n_dest;k++){
       switch (args[k]->vartype) {
         case ORC_VAR_TYPE_SRC:
-          x86_emit_load_src (program, args[k]);
+          sse_emit_load_src (program, args[k]);
           break;
         case ORC_VAR_TYPE_CONST:
           break;
@@ -432,7 +366,7 @@ x86_emit_loop (OrcProgram *program)
     rule = insn->rule;
     if (rule) {
       if (args[0]->alloc != args[1]->alloc) {
-        x86_emit_mov_reg_reg (program, 2, args[1]->alloc, args[0]->alloc);
+        x86_emit_mov_sse_reg_reg (program, args[1]->alloc, args[0]->alloc);
       }
       rule->emit (program, rule->emit_user, insn);
     } else {
@@ -442,7 +376,7 @@ x86_emit_loop (OrcProgram *program)
     for(k=0;k<opcode->n_dest;k++){
       switch (args[k]->vartype) {
         case ORC_VAR_TYPE_DEST:
-          x86_emit_store_dest (program, args[k]);
+          sse_emit_store_dest (program, args[k]);
           break;
         case ORC_VAR_TYPE_TEMP:
           break;

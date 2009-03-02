@@ -6,6 +6,7 @@
 
 extern int x86_64;
 extern int x86_exec_ptr;
+extern int x86_ptr_size;
 
 void x86_emit_push (OrcProgram *program, int size, int reg);
 void x86_emit_pop (OrcProgram *program, int size, int reg);
@@ -21,6 +22,8 @@ void x86_emit_mov_sse_memoffset (OrcProgram *program, int size, int reg1, int of
     int reg2);
 void x86_emit_mov_imm_reg (OrcProgram *program, int size, int value, int reg1);
 void x86_emit_mov_reg_reg (OrcProgram *program, int size, int reg1, int reg2);
+void x86_emit_mov_sse_reg_reg (OrcProgram *program, int reg1, int reg2);
+void x86_emit_mov_mmx_reg_reg (OrcProgram *program, int reg1, int reg2);
 void x86_emit_mov_reg_mmx (OrcProgram *program, int reg1, int reg2);
 void x86_emit_mov_mmx_reg (OrcProgram *program, int reg1, int reg2);
 void x86_emit_mov_reg_sse (OrcProgram *program, int reg1, int reg2);
@@ -45,6 +48,7 @@ void x86_emit_modrm_reg (OrcProgram *program, int reg1, int reg2);
 void x86_test (OrcProgram *program);
 
 void mmx_emit_loadi_s16 (OrcProgram *p, int reg, int value);
+void sse_emit_loadi_s16 (OrcProgram *p, int reg, int value);
 
 enum {
   X86_EAX = ORC_GP_REG_BASE,
