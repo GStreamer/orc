@@ -66,16 +66,22 @@ enum {
   X86_R12,
   X86_R13,
   X86_R14,
-  X86_R15,
-  X86_MM0 = ORC_VEC1_REG_BASE,
+  X86_R15
+};
+
+enum {
+  X86_MM0 = ORC_VEC_REG_BASE,
   X86_MM1,
   X86_MM2,
   X86_MM3,
   X86_MM4,
   X86_MM5,
   X86_MM6,
-  X86_MM7,
-  X86_XMM0 = ORC_VEC2_REG_BASE,
+  X86_MM7
+};
+
+enum {
+  X86_XMM0 = ORC_VEC_REG_BASE,
   X86_XMM1,
   X86_XMM2,
   X86_XMM3,

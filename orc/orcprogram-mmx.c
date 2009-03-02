@@ -21,43 +21,6 @@ void orc_program_mmx_register_rules (void);
 
 
 
-int
-orc_program_mmx_allocate_register (OrcProgram *program, int data_reg)
-{
-  int i;
-  int klass;
-  int offset;
-
-  if (data_reg) {
-    klass = program->data_register_class;
-  } else {
-    klass = ORC_REGCLASS_GP;
-  }
-  offset = klass << 5;
-
-  for(i=offset;i<offset+32;i++){
-    if (program->valid_regs[i] &&
-        !program->save_regs[i] &&
-        program->alloc_regs[i] == 0) {
-      program->alloc_regs[i]++;
-      program->used_regs[i] = 1;
-      return i;
-    }
-  }
-  for(i=offset;i<offset+32;i++){
-    if (program->valid_regs[i] &&
-        program->alloc_regs[i] == 0) {
-      program->alloc_regs[i]++;
-      program->used_regs[i] = 1;
-      return i;
-    }
-  }
-
-  printf("register overflow\n");
-  return 0;
-}
-
-
 void orc_program_rewrite_vars (OrcProgram *program);
 void orc_program_dump (OrcProgram *program);
 
@@ -172,7 +135,6 @@ orc_program_mmx_init (OrcProgram *program)
     program->used_regs[i] = 0;
   }
 
-  program->data_register_class = 2;
   program->rule_set = ORC_RULE_MMX_1;
 }
 

@@ -26,10 +26,10 @@ typedef void (*OrcRuleEmitFunc)(OrcProgram *p, void *user, OrcInstruction *insn)
 #define ORC_N_LABELS 100
 
 #define ORC_GP_REG_BASE 32
-#define ORC_VEC1_REG_BASE 64
-#define ORC_VEC2_REG_BASE 96
+#define ORC_VEC_REG_BASE 64
 
 #define ORC_REGCLASS_GP 1
+#define ORC_REGCLASS_VEC 2
 
 #define ORC_OPCODE_N_ARGS 4
 #define ORC_OPCODE_N_RULES 12
@@ -177,8 +177,6 @@ struct _OrcProgram {
   unsigned char *labels[ORC_N_LABELS];
 
   int error;
-
-  int data_register_class;
 
   int valid_regs[ORC_N_REGS];
   int save_regs[ORC_N_REGS];

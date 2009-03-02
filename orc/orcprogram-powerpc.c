@@ -57,7 +57,7 @@ enum {
   POWERPC_R29,
   POWERPC_R30,
   POWERPC_R31,
-  POWERPC_V0 = ORC_VEC1_REG_BASE,
+  POWERPC_V0 = ORC_VEC_REG_BASE,
   POWERPC_V1,
   POWERPC_V2,
   POWERPC_V3,
@@ -88,39 +88,7 @@ enum {
   POWERPC_V28,
   POWERPC_V29,
   POWERPC_V30,
-  POWERPC_V31,
-  POWERPC_F0 = ORC_VEC2_REG_BASE,
-  POWERPC_F1,
-  POWERPC_F2,
-  POWERPC_F3,
-  POWERPC_F4,
-  POWERPC_F5,
-  POWERPC_F6,
-  POWERPC_F7,
-  POWERPC_F8,
-  POWERPC_F9,
-  POWERPC_F10,
-  POWERPC_F11,
-  POWERPC_F12,
-  POWERPC_F13,
-  POWERPC_F14,
-  POWERPC_F15,
-  POWERPC_F16,
-  POWERPC_F17,
-  POWERPC_F18,
-  POWERPC_F19,
-  POWERPC_F20,
-  POWERPC_F21,
-  POWERPC_F22,
-  POWERPC_F23,
-  POWERPC_F24,
-  POWERPC_F25,
-  POWERPC_F26,
-  POWERPC_F27,
-  POWERPC_F28,
-  POWERPC_F29,
-  POWERPC_F30,
-  POWERPC_F31
+  POWERPC_V31
 };
 
 const char *
@@ -358,7 +326,6 @@ orc_program_powerpc_init (OrcProgram *program)
 
   for(i=0;i<32;i++){
     program->valid_regs[POWERPC_R0+i] = 1;
-    program->valid_regs[POWERPC_F0+i] = 1;
     program->valid_regs[POWERPC_V0+i] = 1;
   }
   program->valid_regs[POWERPC_R0] = 0; /* used for temp space */
@@ -370,13 +337,10 @@ orc_program_powerpc_init (OrcProgram *program)
 
   for(i=14;i<32;i++){
     program->save_regs[POWERPC_R0 + i] = 1;
-    program->save_regs[POWERPC_F0 + i] = 1;
   }
   for(i=20;i<32;i++){
     program->save_regs[POWERPC_V0 + i] = 1;
   }
-
-  program->data_register_class = 2;
 
   program->rule_set = ORC_RULE_ALTIVEC_1;
   program->n_per_loop = 4;
