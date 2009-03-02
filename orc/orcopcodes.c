@@ -95,8 +95,6 @@ convert_u8_s16 (OrcExecutor *ex, void *user)
 void
 orc_opcode_init (void)
 {
-  orc_opcode_register("_loadi_s16", 1, 1, move_s16, NULL);
-
   orc_opcode_register("copy_s16", 1, 2, copy_s16, NULL);
   orc_opcode_register("add_s16", 1, 2, add_s16, NULL);
   orc_opcode_register("sub_s16", 1, 2, sub_s16, NULL);

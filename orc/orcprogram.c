@@ -30,16 +30,15 @@ orc_program_new (void)
 }
 
 OrcProgram *
-orc_program_new_dss (const char *type_d1, const char *type_s1,
-    const char *type_s2)
+orc_program_new_dss (int size1, int size2, int size3)
 {
   OrcProgram *p;
 
   p = orc_program_new ();
 
-  orc_program_add_destination (p, type_d1, "d1");
-  orc_program_add_source (p, type_d1, "s1");
-  orc_program_add_source (p, type_d1, "s2");
+  orc_program_add_destination (p, size1, "d1");
+  orc_program_add_source (p, size2, "s1");
+  orc_program_add_source (p, size3, "s2");
 
   return p;
 }
@@ -55,12 +54,12 @@ orc_program_free (OrcProgram *program)
 }
 
 int
-orc_program_add_temporary (OrcProgram *program, const char *type, const char *name)
+orc_program_add_temporary (OrcProgram *program, int size, const char *name)
 {
   int i = program->n_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_TEMP;
-  program->vars[i].type = orc_type_get(type);
+  program->vars[i].size = size;
   program->vars[i].name = strdup(name);
   program->n_vars++;
 
@@ -73,7 +72,7 @@ orc_program_dup_temporary (OrcProgram *program, int var, int j)
   int i = program->n_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_TEMP;
-  program->vars[i].type = program->vars[var].type;
+  program->vars[i].size = program->vars[var].size;
   program->vars[i].name = malloc (strlen(program->vars[var].name) + 10);
   sprintf(program->vars[i].name, "%s.dup%d", program->vars[var].name, j);
   program->n_vars++;
@@ -82,12 +81,12 @@ orc_program_dup_temporary (OrcProgram *program, int var, int j)
 }
 
 int
-orc_program_add_source (OrcProgram *program, const char *type, const char *name)
+orc_program_add_source (OrcProgram *program, int size, const char *name)
 {
   int i = program->n_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_SRC;
-  program->vars[i].type = orc_type_get(type);
+  program->vars[i].size = size;
   program->vars[i].name = strdup(name);
   program->n_vars++;
 
@@ -95,12 +94,12 @@ orc_program_add_source (OrcProgram *program, const char *type, const char *name)
 }
 
 int
-orc_program_add_destination (OrcProgram *program, const char *type, const char *name)
+orc_program_add_destination (OrcProgram *program, int size, const char *name)
 {
   int i = program->n_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_DEST;
-  program->vars[i].type = orc_type_get(type);
+  program->vars[i].size = size;
   program->vars[i].name = strdup(name);
   program->n_vars++;
 
@@ -108,12 +107,12 @@ orc_program_add_destination (OrcProgram *program, const char *type, const char *
 }
 
 int
-orc_program_add_constant (OrcProgram *program, const char *type, int value, const char *name)
+orc_program_add_constant (OrcProgram *program, int size, int value, const char *name)
 {
   int i = program->n_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_CONST;
-  program->vars[i].type = orc_type_get(type);
+  program->vars[i].size = size;
   program->vars[i].s16 = value;
   program->vars[i].name = strdup(name);
   program->n_vars++;
@@ -122,7 +121,8 @@ orc_program_add_constant (OrcProgram *program, const char *type, int value, cons
 }
 
 int
-orc_program_add_parameter (OrcProgram *program, OrcType *type, int value, const char *name)
+orc_program_add_parameter (OrcProgram *program, int size, int value,
+    const char *name)
 {
 
   return 0;

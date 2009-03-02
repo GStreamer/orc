@@ -10,7 +10,6 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orc.c \
 	orcexecutor.c \
 	orcrule.c \
-	orctype.c \
 	orcprogram.c \
 	orcprogram-c.c \
 	orcprogram-powerpc.c \

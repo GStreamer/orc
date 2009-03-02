@@ -71,13 +71,6 @@ sse_emit_loadi_s16 (OrcProgram *p, int reg, int value)
 }
 
 static void
-sse_rule_loadi_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
-{
-  sse_emit_loadi_s16 (p, p->vars[insn->args[0]].alloc,
-      p->vars[insn->args[2]].s16);
-}
-
-static void
 sse_rule_copy_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   printf("  movdqa %%%s, %%%s\n",
@@ -85,7 +78,7 @@ sse_rule_copy_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
       x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
   *p->codeptr++ = 0x66;
-  x86_emit_rex (p, p->vars[insn->args[1]].alloc,
+  x86_emit_rex (p, 0, p->vars[insn->args[1]].alloc, 0,
       p->vars[insn->args[0]].alloc);
   *p->codeptr++ = 0x0f;
   *p->codeptr++ = 0x6f;
@@ -206,8 +199,6 @@ sse_rule_convert_u8_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 void
 orc_program_sse_register_rules (void)
 {
-  orc_rule_register ("_loadi_s16", ORC_TARGET_SSE, sse_rule_loadi_s16, NULL);
-
   orc_rule_register ("copy_s16", ORC_TARGET_SSE, sse_rule_copy_s16, NULL);
   orc_rule_register ("add_s16", ORC_TARGET_SSE, sse_rule_add_s16, NULL);
   orc_rule_register ("sub_s16", ORC_TARGET_SSE, sse_rule_sub_s16, NULL);

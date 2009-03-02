@@ -37,7 +37,7 @@ test1(void)
   OrcProgram *p;
   OrcExecutor *ex;
 
-  p = orc_program_new_dss ("s16", "s16", "s16");
+  p = orc_program_new_dss (2, 2, 2);
 
   orc_program_append_str (p, "add_s16", "d1", "s1", "s2");
 
@@ -83,16 +83,16 @@ test2(void)
 
   p = orc_program_new ();
 
-  d1 = orc_program_add_destination (p, "s16", "d1");
-  s1 = orc_program_add_source (p, "s16", "s1");
-  s2 = orc_program_add_source (p, "s16", "s2");
-  s3 = orc_program_add_source (p, "s16", "s3");
-  s4 = orc_program_add_source (p, "s16", "s4");
-  c1 = orc_program_add_constant (p, "s16", 3, "c1");
-  c2 = orc_program_add_constant (p, "s16", 4, "c2");
-  c3 = orc_program_add_constant (p, "s16", 3, "c3");
-  t1 = orc_program_add_temporary (p, "s16", "t1");
-  t2 = orc_program_add_temporary (p, "s16", "t2");
+  d1 = orc_program_add_destination (p, 2, "d1");
+  s1 = orc_program_add_source (p, 2, "s1");
+  s2 = orc_program_add_source (p, 2, "s2");
+  s3 = orc_program_add_source (p, 2, "s3");
+  s4 = orc_program_add_source (p, 2, "s4");
+  c1 = orc_program_add_constant (p, 2, 3, "c1");
+  c2 = orc_program_add_constant (p, 2, 4, "c2");
+  c3 = orc_program_add_constant (p, 2, 3, "c3");
+  t1 = orc_program_add_temporary (p, 2, "t1");
+  t2 = orc_program_add_temporary (p, 2, "t2");
 
   orc_program_append (p, "add_s16", t1, s2, s3);
   orc_program_append (p, "add_s16", t2, s1, s4);
@@ -155,13 +155,13 @@ test3(void)
 
   p = orc_program_new ();
 
-  d1 = orc_program_add_destination (p, "s16", "d1");
-  s1 = orc_program_add_source (p, "s16", "s1");
-  s2 = orc_program_add_source (p, "s16", "s2");
-  c1 = orc_program_add_constant (p, "s16", -1, "c1");
-  c2 = orc_program_add_constant (p, "s16", 1, "c2");
-  t1 = orc_program_add_temporary (p, "s16", "t1");
-  t2 = orc_program_add_temporary (p, "s16", "t2");
+  d1 = orc_program_add_destination (p, 2, "d1");
+  s1 = orc_program_add_source (p, 2, "s1");
+  s2 = orc_program_add_source (p, 2, "s2");
+  c1 = orc_program_add_constant (p, 2, -1, "c1");
+  c2 = orc_program_add_constant (p, 2, 1, "c2");
+  t1 = orc_program_add_temporary (p, 2, "t1");
+  t2 = orc_program_add_temporary (p, 2, "t2");
 
   orc_program_append (p, "add_s16", t1, s1, s2);
   orc_program_append (p, "add_s16", t2, t1, c1);

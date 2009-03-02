@@ -48,13 +48,6 @@ mmx_emit_loadi_s16 (OrcProgram *p, int reg, int value)
 }
 
 static void
-mmx_rule_loadi_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
-{
-  mmx_emit_loadi_s16 (p, p->vars[insn->args[0]].alloc,
-      p->vars[insn->args[2]].s16);
-}
-
-static void
 mmx_rule_add_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   printf("  paddw %%%s, %%%s\n",
@@ -146,7 +139,6 @@ mmx_rule_rshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 void
 orc_program_mmx_register_rules (void)
 {
-  orc_rule_register ("_loadi_s16", ORC_TARGET_MMX, mmx_rule_loadi_s16, NULL);
   orc_rule_register ("add_s16", ORC_TARGET_MMX, mmx_rule_add_s16, NULL);
   orc_rule_register ("sub_s16", ORC_TARGET_MMX, mmx_rule_sub_s16, NULL);
   orc_rule_register ("mul_s16", ORC_TARGET_MMX, mmx_rule_mul_s16, NULL);

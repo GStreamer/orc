@@ -4,7 +4,6 @@
 
 //#include <glib.h>
 
-typedef struct _OrcType OrcType;
 typedef struct _OrcExecutor OrcExecutor;
 typedef struct _OrcVariable OrcVariable;
 typedef struct _OrcOpcode OrcOpcode;
@@ -32,7 +31,7 @@ typedef void (*OrcRuleEmitFunc)(OrcProgram *p, void *user, OrcInstruction *insn)
 #define ORC_REGCLASS_VEC 2
 
 #define ORC_OPCODE_N_ARGS 4
-#define ORC_OPCODE_N_RULES 12
+#define ORC_OPCODE_N_TARGETS 10
 
 #define ORC_STRUCT_OFFSET(struct_type, member)    \
       ((long) ((unsigned int *) &((struct_type*) 0)->member))
@@ -51,11 +50,6 @@ enum {
   ORC_TARGET_SSE = 3
 };
 
-struct _OrcType {
-  char *name;
-  int size;
-};
-
 typedef enum {
   ORC_VAR_TYPE_TEMP,
   ORC_VAR_TYPE_SRC,
@@ -67,7 +61,7 @@ typedef enum {
 struct _OrcVariable {
   char *name;
 
-  OrcType *type;
+  int size;
   OrcVarType vartype;
 
   int used;
@@ -95,9 +89,9 @@ struct _OrcOpcode {
   char *name;
   int n_src;
   int n_dest;
-  OrcType *arg_types[ORC_OPCODE_N_ARGS];
+  int *arg_sizes[ORC_OPCODE_N_ARGS];
 
-  OrcRule rules[ORC_OPCODE_N_RULES];
+  OrcRule rules[ORC_OPCODE_N_TARGETS];
 
   OrcOpcodeEmulateFunc emulate;
   void *emulate_user;
@@ -189,8 +183,7 @@ struct _OrcExecutor {
 void orc_init (void);
 
 OrcProgram * orc_program_new (void);
-OrcProgram * orc_program_new_dss (const char *type1, const char *type2,
-    const char *type3);
+OrcProgram * orc_program_new_dss (int size1, int size2, int size3);
 OrcOpcode * orc_opcode_find_by_name (const char *name);
 void orc_opcode_init (void);
 
@@ -218,20 +211,17 @@ void orc_program_free (OrcProgram *program);
 
 int orc_program_find_var_by_name (OrcProgram *program, const char *name);
 
-int orc_program_add_temporary (OrcProgram *program, const char *type, const char *name);
+int orc_program_add_temporary (OrcProgram *program, int size, const char *name);
 int orc_program_dup_temporary (OrcProgram *program, int i, int j);
-int orc_program_add_source (OrcProgram *program, const char *type, const char *name);
-int orc_program_add_destination (OrcProgram *program, const char *type, const char *name);
-int orc_program_add_constant (OrcProgram *program, const char *type, int value, const char *name);
+int orc_program_add_source (OrcProgram *program, int size, const char *name);
+int orc_program_add_destination (OrcProgram *program, int size, const char *name);
+int orc_program_add_constant (OrcProgram *program, int size, int value, const char *name);
 void orc_program_append (OrcProgram *program, const char *opcode, int arg0,
     int arg1, int arg2);
 
 void orc_program_x86_reset_alloc (OrcProgram *program);
 void orc_program_powerpc_reset_alloc (OrcProgram *program);
 
-
-OrcType * orc_type_get (const char *name);
-void orc_type_register (const char *name, int size);
 
 OrcExecutor * orc_executor_new (OrcProgram *program);
 void orc_executor_free (OrcExecutor *ex);

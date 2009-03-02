@@ -28,12 +28,12 @@ main (int argc, char *argv[])
 
   p = orc_program_new ();
 
-  d1 = orc_program_add_destination (p, "s16", "d1");
-  s1 = orc_program_add_source (p, "s16", "s1");
-  s2 = orc_program_add_source (p, "s16", "s2");
-  t1 = orc_program_add_temporary (p, "s16", "t1");
-  offset = orc_program_add_constant (p, "s16", 1, "offset");
-  shift = orc_program_add_constant (p, "s16", 1, "shift");
+  d1 = orc_program_add_destination (p, 2, "d1");
+  s1 = orc_program_add_source (p, 2, "s1");
+  s2 = orc_program_add_source (p, 2, "s2");
+  t1 = orc_program_add_temporary (p, 2, "t1");
+  offset = orc_program_add_constant (p, 2, 1, "offset");
+  shift = orc_program_add_constant (p, 2, 1, "shift");
 
   orc_program_append (p, "add_s16", t1, s1, s2);
   orc_program_append (p, "add_s16", t1, t1, offset);
