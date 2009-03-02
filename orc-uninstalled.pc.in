@@ -3,8 +3,8 @@ exec_prefix=
 libdir=${pcfiledir}/orc/
 includedir=${pcfiledir}/
 
-Name: orc-@LIBOIL_MAJORMINOR@ uninstalled
+Name: orc-@ORC_MAJORMINOR@ uninstalled
 Description: Library of Optimized Inner Loops Runtime Compiler
 Version: @VERSION@
-Libs: -L${libdir} -lorc-@LIBOIL_MAJORMINOR@ @LIBM@ @LIBRT@
+Libs: -L${libdir} -lorc-@ORC_MAJORMINOR@ @LIBM@ @LIBRT@
 Cflags: -I${includedir}
