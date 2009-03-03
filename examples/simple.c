@@ -20,13 +20,16 @@ void test1(void);
 void test2(void);
 void test3(void);
 void test4(void);
+void test5(void);
+void test6(void);
+void test7(void);
 
 int
 main (int argc, char *argv[])
 {
   orc_init ();
 
-  test4();
+  test7();
 
   exit(0);
 }
@@ -261,4 +264,239 @@ test4(void)
   orc_executor_free (ex);
   orc_program_free (p);
 }
+
+
+void
+test5(void)
+{
+  OrcProgram *p;
+  OrcExecutor *ex;
+  int s1, s2, d1;
+  int t1;
+  int n;
+
+  p = orc_program_new ();
+
+  d1 = orc_program_add_destination (p, 2, "d1");
+  s1 = orc_program_add_source (p, 2, "s1");
+  s2 = orc_program_add_source (p, 2, "s2");
+  t1 = orc_program_add_temporary (p, 2, "t1");
+
+  orc_program_append (p, "addw", t1, s1, s2);
+  orc_program_append (p, "addssw", t1, s1, s2);
+  orc_program_append (p, "addusw", t1, s1, s2);
+  orc_program_append (p, "andw", t1, s1, s2);
+  orc_program_append (p, "andnw", t1, s1, s2);
+  //orc_program_append (p, "avgsw", t1, s1, s2);
+  orc_program_append (p, "avguw", t1, s1, s2);
+  orc_program_append (p, "cmpeqw", t1, s1, s2);
+  orc_program_append (p, "cmpgtsw", t1, s1, s2);
+  orc_program_append (p, "maxsw", t1, s1, s2);
+  orc_program_append (p, "maxuw", t1, s1, s2);
+  orc_program_append (p, "minsw", t1, s1, s2);
+  orc_program_append (p, "minuw", t1, s1, s2);
+  orc_program_append (p, "mullw", t1, s1, s2);
+  orc_program_append (p, "mulhsw", t1, s1, s2);
+  orc_program_append (p, "mulhuw", t1, s1, s2);
+  orc_program_append (p, "orw", t1, s1, s2);
+  orc_program_append (p, "subw", t1, s1, s2);
+  orc_program_append (p, "subssw", t1, s1, s2);
+  orc_program_append (p, "subusw", t1, s1, s2);
+  orc_program_append (p, "xorw", t1, s1, s2);
+
+  orc_program_compile (p);
+
+  ex = orc_executor_new (p);
+  orc_executor_set_n (ex, N);
+  orc_executor_set_array (ex, s1, src1);
+  orc_executor_set_array (ex, s2, src1 + 1);
+
+  for(n=0;n<20;n++) {
+    int i;
+
+    for(i=0;i<n+1;i++){
+      src1[i] = rand()&0xff;
+    }
+    for(i=0;i<n+4;i++){
+      dest[i] = 0;
+    }
+
+    orc_executor_set_n (ex, n);
+    orc_executor_set_array (ex, d1, dest_ref);
+    orc_executor_emulate (ex);
+#if 1
+    for(i=0;i<n;i++){
+      dest_ref[i] = (src1[i+1]+src1[i]-1)>>1;
+    }
+#endif
+    
+    orc_executor_set_array (ex, d1, dest_test);
+    //orc_executor_run (ex);
+
+    for(i=0;i<n+4;i++){
+      printf("# %d: %4d %4d %4d %c\n", i, src1[i], dest_ref[i], dest_test[i],
+          (dest_ref[i] == dest_test[i])?' ':'*');
+    }
+  }
+
+  orc_executor_free (ex);
+  orc_program_free (p);
+}
+
+
+void
+test6(void)
+{
+  OrcProgram *p;
+  OrcExecutor *ex;
+  int s1, s2, d1;
+  int t1;
+  int n;
+
+  p = orc_program_new ();
+
+  d1 = orc_program_add_destination (p, 1, "d1");
+  s1 = orc_program_add_source (p, 1, "s1");
+  s2 = orc_program_add_source (p, 1, "s2");
+  t1 = orc_program_add_temporary (p, 1, "t1");
+
+  orc_program_append (p, "addb", t1, s1, s2);
+  orc_program_append (p, "addssb", t1, s1, s2);
+  orc_program_append (p, "addusb", t1, s1, s2);
+  orc_program_append (p, "andb", t1, s1, s2);
+  orc_program_append (p, "andnb", t1, s1, s2);
+  //orc_program_append (p, "avgsb", t1, s1, s2);
+  orc_program_append (p, "avgub", t1, s1, s2);
+  orc_program_append (p, "cmpeqb", t1, s1, s2);
+  orc_program_append (p, "cmpgtsb", t1, s1, s2);
+  orc_program_append (p, "maxsb", t1, s1, s2);
+  orc_program_append (p, "maxub", t1, s1, s2);
+  orc_program_append (p, "minsb", t1, s1, s2);
+  orc_program_append (p, "minub", t1, s1, s2);
+  //orc_program_append (p, "mullb", t1, s1, s2);
+  //orc_program_append (p, "mulhsb", t1, s1, s2);
+  //orc_program_append (p, "mulhub", t1, s1, s2);
+  orc_program_append (p, "orb", t1, s1, s2);
+  orc_program_append (p, "subb", t1, s1, s2);
+  orc_program_append (p, "subssb", t1, s1, s2);
+  orc_program_append (p, "subusb", t1, s1, s2);
+  orc_program_append (p, "xorb", t1, s1, s2);
+
+  orc_program_compile (p);
+
+  ex = orc_executor_new (p);
+  orc_executor_set_n (ex, N);
+  orc_executor_set_array (ex, s1, src1);
+  orc_executor_set_array (ex, s2, src1 + 1);
+
+  for(n=0;n<20;n++) {
+    int i;
+
+    for(i=0;i<n+1;i++){
+      src1[i] = rand()&0xff;
+    }
+    for(i=0;i<n+4;i++){
+      dest[i] = 0;
+    }
+
+    orc_executor_set_n (ex, n);
+    orc_executor_set_array (ex, d1, dest_ref);
+    orc_executor_emulate (ex);
+#if 1
+    for(i=0;i<n;i++){
+      dest_ref[i] = (src1[i+1]+src1[i]-1)>>1;
+    }
+#endif
+    
+    orc_executor_set_array (ex, d1, dest_test);
+    //orc_executor_run (ex);
+
+    for(i=0;i<n+4;i++){
+      printf("# %d: %4d %4d %4d %c\n", i, src1[i], dest_ref[i], dest_test[i],
+          (dest_ref[i] == dest_test[i])?' ':'*');
+    }
+  }
+
+  orc_executor_free (ex);
+  orc_program_free (p);
+}
+
+
+void
+test7(void)
+{
+  OrcProgram *p;
+  OrcExecutor *ex;
+  int s1, s2, d1;
+  int t1;
+  int n;
+
+  p = orc_program_new ();
+
+  d1 = orc_program_add_destination (p, 1, "d1");
+  s1 = orc_program_add_source (p, 1, "s1");
+  s2 = orc_program_add_source (p, 1, "s2");
+  t1 = orc_program_add_temporary (p, 1, "t1");
+
+  orc_program_append (p, "addl", t1, s1, s2);
+  //orc_program_append (p, "addssl", t1, s1, s2);
+  //orc_program_append (p, "addusl", t1, s1, s2);
+  orc_program_append (p, "andl", t1, s1, s2);
+  orc_program_append (p, "andnl", t1, s1, s2);
+  //orc_program_append (p, "avgsl", t1, s1, s2);
+  //orc_program_append (p, "avgul", t1, s1, s2);
+  orc_program_append (p, "cmpeql", t1, s1, s2);
+  orc_program_append (p, "cmpgtsl", t1, s1, s2);
+  orc_program_append (p, "maxsl", t1, s1, s2);
+  orc_program_append (p, "maxul", t1, s1, s2);
+  orc_program_append (p, "minsl", t1, s1, s2);
+  orc_program_append (p, "minul", t1, s1, s2);
+  orc_program_append (p, "mulll", t1, s1, s2);
+  //orc_program_append (p, "mulhsl", t1, s1, s2);
+  //orc_program_append (p, "mulhul", t1, s1, s2);
+  orc_program_append (p, "orl", t1, s1, s2);
+  orc_program_append (p, "subl", t1, s1, s2);
+  //orc_program_append (p, "subssl", t1, s1, s2);
+  //orc_program_append (p, "subusl", t1, s1, s2);
+  orc_program_append (p, "xorl", t1, s1, s2);
+
+  orc_program_compile (p);
+
+  ex = orc_executor_new (p);
+  orc_executor_set_n (ex, N);
+  orc_executor_set_array (ex, s1, src1);
+  orc_executor_set_array (ex, s2, src1 + 1);
+
+  for(n=0;n<20;n++) {
+    int i;
+
+    for(i=0;i<n+1;i++){
+      src1[i] = rand()&0xff;
+    }
+    for(i=0;i<n+4;i++){
+      dest[i] = 0;
+    }
+
+    orc_executor_set_n (ex, n);
+    orc_executor_set_array (ex, d1, dest_ref);
+    orc_executor_emulate (ex);
+#if 1
+    for(i=0;i<n;i++){
+      dest_ref[i] = (src1[i+1]+src1[i]-1)>>1;
+    }
+#endif
+    
+    orc_executor_set_array (ex, d1, dest_test);
+    //orc_executor_run (ex);
+
+    for(i=0;i<n+4;i++){
+      printf("# %d: %4d %4d %4d %c\n", i, src1[i], dest_ref[i], dest_test[i],
+          (dest_ref[i] == dest_test[i])?' ':'*');
+    }
+  }
+
+  orc_executor_free (ex);
+  orc_program_free (p);
+}
+
 
