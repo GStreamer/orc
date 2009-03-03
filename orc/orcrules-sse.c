@@ -133,14 +133,14 @@ sse_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_CONST) {
     printf("  psllw $%d, %%%s\n",
-        p->vars[insn->args[2]].s16,
+        p->vars[insn->args[2]].value,
         x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
     *p->codeptr++ = 0x66;
     *p->codeptr++ = 0x0f;
     *p->codeptr++ = 0x71;
     x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc, 6);
-    *p->codeptr++ = p->vars[insn->args[2]].s16;
+    *p->codeptr++ = p->vars[insn->args[2]].value;
   } else {
     /* FIXME this doesn't work quite right */
     printf("  psllw %%%s, %%%s\n",
@@ -160,14 +160,14 @@ sse_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_CONST) {
     printf("  psraw $%d, %%%s\n",
-        p->vars[insn->args[2]].s16,
+        p->vars[insn->args[2]].value,
         x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
     *p->codeptr++ = 0x66;
     *p->codeptr++ = 0x0f;
     *p->codeptr++ = 0x71;
     x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc, 4);
-    *p->codeptr++ = p->vars[insn->args[2]].s16;
+    *p->codeptr++ = p->vars[insn->args[2]].value;
   } else {
     /* FIXME this doesn't work quite right */
     printf("  psraw %%%s, %%%s\n",
@@ -196,6 +196,20 @@ sse_rule_convsuswb (OrcProgram *p, void *user, OrcInstruction *insn)
       p->vars[insn->args[1]].alloc);
 }
 
+static void
+sse_rule_addb (OrcProgram *p, void *user, OrcInstruction *insn)
+{
+  printf("  paddb %%%s, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->args[2]].alloc),
+      x86_get_regname_sse(p->vars[insn->args[0]].alloc));
+
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0xfc;
+  x86_emit_modrm_reg (p, p->vars[insn->args[2]].alloc,
+      p->vars[insn->args[0]].alloc);
+}
+
 void
 orc_program_sse_register_rules (void)
 {
@@ -206,5 +220,7 @@ orc_program_sse_register_rules (void)
   orc_rule_register ("shlw", ORC_TARGET_SSE, sse_rule_shlw, NULL);
   orc_rule_register ("shrsw", ORC_TARGET_SSE, sse_rule_shrsw, NULL);
   orc_rule_register ("convsuswb", ORC_TARGET_SSE, sse_rule_convsuswb, NULL);
+
+  orc_rule_register ("addb", ORC_TARGET_SSE, sse_rule_addb, NULL);
 }
 

@@ -113,7 +113,7 @@ orc_program_add_constant (OrcProgram *program, int size, int value, const char *
 
   program->vars[i].vartype = ORC_VAR_TYPE_CONST;
   program->vars[i].size = size;
-  program->vars[i].s16 = value;
+  program->vars[i].value = value;
   program->vars[i].name = strdup(name);
   program->n_vars++;
 
@@ -525,12 +525,6 @@ orc_program_dump (OrcProgram *program)
     printf("\n");
   }
 
-}
-
-int
-orc_variable_get_size (OrcVariable *var)
-{
-  return 2;
 }
 
 void

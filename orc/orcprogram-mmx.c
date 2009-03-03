@@ -142,7 +142,7 @@ mmx_load_constants (OrcProgram *program)
     switch (program->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:
         mmx_emit_loadiw (program, program->vars[i].alloc,
-            program->vars[i].s16);
+            (int)program->vars[i].value);
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
@@ -301,7 +301,6 @@ mmx_emit_loop (OrcProgram *program)
         orc_program_append_code(program," (chained)");
       }
     }
-    orc_program_append_code(program," rule_flag=%d", insn->rule_flag);
     orc_program_append_code(program,"\n");
 
     for(k=opcode->n_dest;k<opcode->n_src + opcode->n_dest;k++){
@@ -346,11 +345,11 @@ mmx_emit_loop (OrcProgram *program)
         program->vars[k].vartype == ORC_VAR_TYPE_DEST) {
       if (program->vars[k].ptr_register) {
         x86_emit_add_imm_reg (program, x86_ptr_size,
-            orc_variable_get_size(program->vars + k) << program->loop_shift,
+            program->vars[k].size << program->loop_shift,
             program->vars[k].ptr_register);
       } else {
         x86_emit_add_imm_memoffset (program, x86_ptr_size,
-            orc_variable_get_size(program->vars + k) << program->loop_shift,
+            program->vars[k].size << program->loop_shift,
             (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]),
             x86_exec_ptr);
       }

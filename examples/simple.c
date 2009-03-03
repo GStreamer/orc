@@ -19,13 +19,14 @@ int16_t dest[N];
 void test1(void);
 void test2(void);
 void test3(void);
+void test4(void);
 
 int
 main (int argc, char *argv[])
 {
   orc_init ();
 
-  test3();
+  test4();
 
   exit(0);
 }
@@ -206,4 +207,58 @@ test3(void)
   orc_program_free (p);
 }
 
+
+uint8_t bsrc1[N+4];
+uint8_t bsrc2[N];
+uint8_t bdest_test[N];
+uint8_t bdest_ref[N];
+uint8_t bdest[N];
+
+void
+test4(void)
+{
+  OrcProgram *p;
+  OrcExecutor *ex;
+  int n;
+
+  p = orc_program_new_dss (1, 1, 1);
+
+  orc_program_append_str (p, "addb", "d1", "s1", "s2");
+
+  orc_program_compile (p);
+
+  ex = orc_executor_new (p);
+  orc_executor_set_n (ex, N - 4);
+  orc_executor_set_array_str (ex, "s1", bsrc1);
+  orc_executor_set_array_str (ex, "s2", bsrc2);
+  orc_executor_set_array_str (ex, "d1", bdest);
+
+  for(n=0;n<20;n++) {
+    int i;
+
+    for(i=0;i<n;i++){
+      bsrc1[i] = rand()&0xf;
+      bsrc2[i] = rand()&0xf;
+    }
+    for(i=0;i<n+4;i++){
+      bdest[i] = 0;
+    }
+
+    orc_executor_set_n (ex, n);
+    orc_executor_set_array_str (ex, "d1", bdest_ref);
+    orc_executor_emulate (ex);
+
+    orc_executor_set_array_str (ex, "d1", bdest_test);
+    orc_executor_run (ex);
+
+    for(i=0;i<n+4;i++){
+      printf("#  %4d %4d %4d %4d %c\n", bsrc1[i], bsrc2[i], bdest_ref[i],
+          bdest_test[i], 
+          (bdest_ref[i] == bdest_test[i])?' ':'*');
+    }
+  }
+
+  orc_executor_free (ex);
+  orc_program_free (p);
+}
 

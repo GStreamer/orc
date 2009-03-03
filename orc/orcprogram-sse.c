@@ -139,7 +139,7 @@ sse_load_constants (OrcProgram *program)
     switch (program->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:
         sse_emit_loadiw (program, program->vars[i].alloc,
-            program->vars[i].s16);
+            (int)program->vars[i].value);
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
@@ -169,18 +169,22 @@ sse_emit_load_src (OrcProgram *program, OrcVariable *var)
   } else {
     ptr_reg = var->ptr_register;
   }
-  switch (program->loop_shift) {
-    case 0:
+  switch (var->size << program->loop_shift) {
+    case 1:
+      x86_emit_mov_memoffset_reg (program, 1, 0, ptr_reg, X86_ECX);
+      x86_emit_mov_reg_sse (program, X86_ECX, var->alloc);
+      break;
+    case 2:
       x86_emit_mov_memoffset_reg (program, 2, 0, ptr_reg, X86_ECX);
       x86_emit_mov_reg_sse (program, X86_ECX, var->alloc);
       break;
-    case 1:
+    case 4:
       x86_emit_mov_memoffset_sse (program, 4, 0, ptr_reg, var->alloc);
       break;
-    case 2:
+    case 8:
       x86_emit_mov_memoffset_sse (program, 8, 0, ptr_reg, var->alloc);
       break;
-    case 3:
+    case 16:
       x86_emit_mov_memoffset_sse (program, 16, 0, ptr_reg, var->alloc);
       break;
     default:
@@ -199,8 +203,16 @@ sse_emit_store_dest (OrcProgram *program, OrcVariable *var)
   } else {
     ptr_reg = var->ptr_register;
   }
-  switch (program->loop_shift) {
-    case 0:
+  switch (var->size << program->loop_shift) {
+    case 1:
+      /* FIXME we might be using ecx twice here */
+      if (ptr_reg == X86_ECX) {
+        printf("ERROR\n");
+      }
+      x86_emit_mov_sse_reg (program, var->alloc, X86_ECX);
+      x86_emit_mov_reg_memoffset (program, 1, X86_ECX, 0, ptr_reg);
+      break;
+    case 2:
       /* FIXME we might be using ecx twice here */
       if (ptr_reg == X86_ECX) {
         printf("ERROR\n");
@@ -208,13 +220,13 @@ sse_emit_store_dest (OrcProgram *program, OrcVariable *var)
       x86_emit_mov_sse_reg (program, var->alloc, X86_ECX);
       x86_emit_mov_reg_memoffset (program, 2, X86_ECX, 0, ptr_reg);
       break;
-    case 1:
+    case 4:
       x86_emit_mov_sse_memoffset (program, 4, var->alloc, 0, ptr_reg);
       break;
-    case 2:
+    case 8:
       x86_emit_mov_sse_memoffset (program, 8, var->alloc, 0, ptr_reg);
       break;
-    case 3:
+    case 16:
       x86_emit_mov_sse_memoffset (program, 16, var->alloc, 0, ptr_reg);
       break;
     default:
@@ -304,7 +316,6 @@ sse_emit_loop (OrcProgram *program)
         orc_program_append_code(program," (chained)");
       }
     }
-    orc_program_append_code(program," rule_flag=%d", insn->rule_flag);
     orc_program_append_code(program,"\n");
 
     for(k=opcode->n_dest;k<opcode->n_src + opcode->n_dest;k++){
@@ -349,11 +360,11 @@ sse_emit_loop (OrcProgram *program)
         program->vars[k].vartype == ORC_VAR_TYPE_DEST) {
       if (program->vars[k].ptr_register) {
         x86_emit_add_imm_reg (program, x86_ptr_size,
-            orc_variable_get_size(program->vars + k) << program->loop_shift,
+            program->vars[k].size << program->loop_shift,
             program->vars[k].ptr_register);
       } else {
         x86_emit_add_imm_memoffset (program, x86_ptr_size,
-            orc_variable_get_size(program->vars + k) << program->loop_shift,
+            program->vars[k].size << program->loop_shift,
             (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]),
             x86_exec_ptr);
       }

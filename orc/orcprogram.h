@@ -2,11 +2,13 @@
 #ifndef _ORC_PROGRAM_H_
 #define _ORC_PROGRAM_H_
 
+#include <orc/orc-stdint.h>
 //#include <glib.h>
 
 typedef struct _OrcExecutor OrcExecutor;
 typedef struct _OrcVariable OrcVariable;
 typedef struct _OrcOpcode OrcOpcode;
+typedef struct _OrcStaticOpcode OrcStaticOpcode;
 typedef struct _OrcArgument OrcArgument;
 typedef struct _OrcInstruction OrcInstruction;
 typedef struct _OrcProgram OrcProgram;
@@ -30,11 +32,18 @@ typedef void (*OrcRuleEmitFunc)(OrcProgram *p, void *user, OrcInstruction *insn)
 #define ORC_REGCLASS_GP 1
 #define ORC_REGCLASS_VEC 2
 
+#define ORC_STATIC_OPCODE_N_SRC 4
+#define ORC_STATIC_OPCODE_N_DEST 2
+
+#define ORC_OPCODE_N_SRC 4
+#define ORC_OPCODE_N_DEST 4
+
 #define ORC_OPCODE_N_ARGS 4
 #define ORC_OPCODE_N_TARGETS 10
 
 #define ORC_STRUCT_OFFSET(struct_type, member)    \
       ((long) ((unsigned int *) &((struct_type*) 0)->member))
+
 
 #ifndef TRUE
 #define TRUE 1
@@ -73,8 +82,7 @@ struct _OrcVariable {
   int alloc;
   int is_chained;
 
-  int16_t s16;
-  unsigned char u8;
+  int value;
 
   int ptr_register;
   int ptr_offset;
@@ -89,12 +97,22 @@ struct _OrcOpcode {
   char *name;
   int n_src;
   int n_dest;
-  int *arg_sizes[ORC_OPCODE_N_ARGS];
+
+  int dest_size[ORC_OPCODE_N_DEST];
+  int src_size[ORC_OPCODE_N_SRC];
 
   OrcRule rules[ORC_OPCODE_N_TARGETS];
 
   OrcOpcodeEmulateFunc emulate;
   void *emulate_user;
+};
+
+struct _OrcStaticOpcode {
+  char name[16];
+  OrcOpcodeEmulateFunc emulate;
+  void *emulate_user;
+  int dest_size[ORC_STATIC_OPCODE_N_DEST];
+  int src_size[ORC_STATIC_OPCODE_N_SRC];
 };
 
 struct _OrcArgument {
@@ -113,7 +131,6 @@ struct _OrcInstruction {
   int args[3];
 
   OrcRule *rule;
-  unsigned int rule_flag;
 };
 
 struct _OrcFixup {
@@ -241,8 +258,6 @@ int orc_program_powerpc_allocate_register (OrcProgram *program, int is_data);
 void orc_program_x86_register_rules (void);
 void orc_program_allocate_codemem (OrcProgram *program);
 void orc_program_dump_code (OrcProgram *program);
-
-int orc_variable_get_size (OrcVariable *var);
 
 void orc_program_append_code (OrcProgram *p, const char *fmt, ...);
  

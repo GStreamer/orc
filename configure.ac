@@ -105,7 +105,7 @@ fi
 
 AC_DEFINE(ORC_EXPORTS, 1, [Defined for compiling internal code])
 
-ORC_CFLAGS="$ORC_CFLAGS -D_BSD_SOURCE -D_GNU_SOURCE -I\$(top_srcdir) -DORC_ENABLE_UNSTABLE_API"
+ORC_CFLAGS="$ORC_CFLAGS -I\$(top_srcdir) -DORC_ENABLE_UNSTABLE_API"
 AC_SUBST(ORC_CFLAGS)
 
 ORC_LIBS="\$(top_builddir)/orc/liborc-$ORC_MAJORMINOR.la $LIBM $LIBRT"

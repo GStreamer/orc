@@ -354,10 +354,10 @@ powerpc_load_constants (OrcProgram *program)
       case ORC_VAR_TYPE_CONST:
         printf("  vspltish %s, %d\n",
             powerpc_get_regname(program->vars[i].alloc),
-            program->vars[i].s16);
+            (int)program->vars[i].value);
         powerpc_emit_655510 (program, 4,
             powerpc_regnum(program->vars[i].alloc),
-            program->vars[i].s16, 0, 844);
+            (int)program->vars[i].value, 0, 844);
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
@@ -486,7 +486,6 @@ orc_program_assemble_powerpc (OrcProgram *program)
         printf(" (chained)");
       }
     }
-    printf(" rule_flag=%d", insn->rule_flag);
     printf("\n");
 
     for(k=opcode->n_dest;k<opcode->n_src + opcode->n_dest;k++){
@@ -530,7 +529,7 @@ orc_program_assemble_powerpc (OrcProgram *program)
         powerpc_emit_addi (program,
             program->vars[k].ptr_register,
             program->vars[k].ptr_register,
-            orc_variable_get_size(program->vars + k) << program->loop_shift);
+            program->vars[k].size << program->loop_shift);
       } else {
         printf("ERROR\n");
       }

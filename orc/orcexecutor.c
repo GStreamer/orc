@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #include <orc/orcprogram.h>
+#include <orc/orcdebug.h>
 
 
 OrcExecutor *
@@ -90,10 +91,22 @@ orc_executor_emulate (OrcExecutor *ex)
         //    k, insn->args[k], ex->args[k]->vartype);
 
         if (ex->args[k]->vartype == ORC_VAR_TYPE_SRC) {
-          void *ptr = ex->arrays[insn->args[k]] + 2*i;
+          void *ptr = ex->arrays[insn->args[k]] + ex->args[k]->size*i;
 
           //printf("load %p\n", ptr);
-          ex->args[k]->s16 = *(int16_t *)ptr;
+          switch (ex->args[k]->size) {
+            case 1:
+              ex->args[k]->value = *(int8_t *)ptr;
+              break;
+            case 2:
+              ex->args[k]->value = *(int16_t *)ptr;
+              break;
+            case 4:
+              ex->args[k]->value = *(int32_t *)ptr;
+              break;
+            default:
+              ORC_ERROR("ack");
+          }
         }
       }
 
@@ -103,10 +116,23 @@ orc_executor_emulate (OrcExecutor *ex)
 
       for(k=0;k<opcode->n_src + opcode->n_dest;k++){
         if (ex->args[k]->vartype == ORC_VAR_TYPE_DEST) {
-          void *ptr = ex->arrays[insn->args[k]] + 2*i;
+          void *ptr = ex->arrays[insn->args[k]] + ex->args[k]->size*i;
 
           //printf("store %p\n", ptr);
-          *(int16_t *)ptr = ex->args[k]->s16;
+          *(int16_t *)ptr = ex->args[k]->value;
+          switch (ex->args[k]->size) {
+            case 1:
+              *(int8_t *)ptr = ex->args[k]->value;
+              break;
+            case 2:
+              *(int16_t *)ptr = ex->args[k]->value;
+              break;
+            case 4:
+              *(int32_t *)ptr = ex->args[k]->value;
+              break;
+            default:
+              ORC_ERROR("ack");
+          }
         }
       }
     }

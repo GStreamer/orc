@@ -34,7 +34,8 @@ orc_program_assemble_c (OrcProgram *program)
     OrcVariable *var = program->vars + i;
     switch (var->vartype) {
       case ORC_VAR_TYPE_CONST:
-        orc_program_append_code(program,"  int16_t var%d = %d;\n", i, var->s16);
+        orc_program_append_code(program,"  int16_t var%d = %d;\n", i,
+            (int16_t)var->value);
         break;
       case ORC_VAR_TYPE_TEMP:
         orc_program_append_code(program,"  int16_t var%d;\n", i);

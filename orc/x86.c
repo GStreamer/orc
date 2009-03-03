@@ -49,6 +49,23 @@ x86_get_regnum(int i)
 }
 
 const char *
+x86_get_regname_8(int i)
+{
+  static const char *x86_regs[] = { "al", "cl", "dl", "bl",
+    "ah", "ch", "dh", "bh" };
+
+  if (i>=ORC_GP_REG_BASE && i<ORC_GP_REG_BASE + 8) return x86_regs[i - ORC_GP_REG_BASE];
+  switch (i) {
+    case 0:
+      return "UNALLOCATED";
+    case 1:
+      return "direct";
+    default:
+      return "ERROR";
+  }
+}
+
+const char *
 x86_get_regname_16(int i)
 {
   static const char *x86_regs[] = { "ax", "cx", "dx", "bx",
@@ -219,16 +236,29 @@ x86_emit_mov_memoffset_reg (OrcProgram *program, int size, int offset,
     int reg1, int reg2)
 {
 
-  if (size == 2) {
-    printf("  movw %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
-        x86_get_regname_16(reg2));
-    *program->codeptr++ = 0x66;
-  } else if (size == 4) {
-    printf("  movl %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
-        x86_get_regname(reg2));
-  } else {
-    printf("  mov %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
-        x86_get_regname_64(reg2));
+  switch (size) {
+    case 1:
+      printf("  movb %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
+          x86_get_regname_8(reg2));
+      *program->codeptr++ = 0x8a;
+      x86_emit_modrm_memoffset (program, reg2, offset, reg1);
+      return;
+    case 2:
+      printf("  movw %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
+          x86_get_regname_16(reg2));
+      *program->codeptr++ = 0x66;
+      break;
+    case 4:
+      printf("  movl %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
+          x86_get_regname(reg2));
+      break;
+    case 8:
+      printf("  mov %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
+          x86_get_regname_64(reg2));
+      break;
+    default:
+      printf("ERROR\n");
+      break;
   }
 
   x86_emit_rex(program, size, reg2, 0, reg1);
@@ -260,27 +290,33 @@ void
 x86_emit_mov_memoffset_sse (OrcProgram *program, int size, int offset,
     int reg1, int reg2)
 {
-  if (size == 4) {
-    printf("  movd %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
-        x86_get_regname_sse(reg2));
-    *program->codeptr++ = 0x66;
-    x86_emit_rex(program, 0, reg2, 0, reg1);
-    *program->codeptr++ = 0x0f;
-    *program->codeptr++ = 0x6e;
-  } else if (size == 8) {
-    printf("  movq %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
-        x86_get_regname_sse(reg2));
-    *program->codeptr++ = 0x66;
-    x86_emit_rex(program, 0, reg2, 0, reg1);
-    *program->codeptr++ = 0x0f;
-    *program->codeptr++ = 0x6f;
-  } else {
-    printf("  movdqu %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
-        x86_get_regname_sse(reg2));
-    x86_emit_rex(program, 0, reg2, 0, reg1);
-    *program->codeptr++ = 0xf3;
-    *program->codeptr++ = 0x0f;
-    *program->codeptr++ = 0x6f;
+  switch (size) {
+    case 4:
+      printf("  movd %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
+          x86_get_regname_sse(reg2));
+      *program->codeptr++ = 0x66;
+      x86_emit_rex(program, 0, reg2, 0, reg1);
+      *program->codeptr++ = 0x0f;
+      *program->codeptr++ = 0x6e;
+      break;
+    case 8:
+      printf("  movq %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
+          x86_get_regname_sse(reg2));
+      *program->codeptr++ = 0xf3;
+      *program->codeptr++ = 0x0f;
+      *program->codeptr++ = 0x7e;
+      break;
+    case 16:
+      printf("  movdqu %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
+          x86_get_regname_sse(reg2));
+      x86_emit_rex(program, 0, reg2, 0, reg1);
+      *program->codeptr++ = 0xf3;
+      *program->codeptr++ = 0x0f;
+      *program->codeptr++ = 0x6f;
+      break;
+    default:
+      printf("ERROR\n");
+      break;
   }
   x86_emit_modrm_memoffset (program, reg2, offset, reg1);
 }
@@ -289,16 +325,29 @@ void
 x86_emit_mov_reg_memoffset (OrcProgram *program, int size, int reg1, int offset,
     int reg2)
 {
-  if (size == 2) {
-    printf("  movw %%%s, %d(%%%s)\n", x86_get_regname_16(reg1), offset,
-        x86_get_regname_ptr(reg2));
-    *program->codeptr++ = 0x66;
-  } else if (size == 4) {
-    printf("  movl %%%s, %d(%%%s)\n", x86_get_regname(reg1), offset,
-        x86_get_regname_ptr(reg2));
-  } else {
-    printf("  mov %%%s, %d(%%%s)\n", x86_get_regname(reg1), offset,
-        x86_get_regname_ptr(reg2));
+  switch (size) {
+    case 1:
+      printf("  movb %%%s, %d(%%%s)\n", x86_get_regname_8(reg1), offset,
+          x86_get_regname_ptr(reg2));
+      *program->codeptr++ = 0x88;
+      x86_emit_modrm_memoffset (program, reg1, offset, reg2);
+      return;
+    case 2:
+      printf("  movw %%%s, %d(%%%s)\n", x86_get_regname_16(reg1), offset,
+          x86_get_regname_ptr(reg2));
+      *program->codeptr++ = 0x66;
+      break;
+    case 4:
+      printf("  movl %%%s, %d(%%%s)\n", x86_get_regname(reg1), offset,
+          x86_get_regname_ptr(reg2));
+      break;
+    case 8:
+      printf("  mov %%%s, %d(%%%s)\n", x86_get_regname(reg1), offset,
+          x86_get_regname_ptr(reg2));
+      break;
+    default:
+      printf("ERROR\n");
+      break;
   }
 
   x86_emit_rex(program, size, reg1, 0, reg2);
@@ -330,26 +379,32 @@ void
 x86_emit_mov_sse_memoffset (OrcProgram *program, int size, int reg1, int offset,
     int reg2)
 {
-  if (size == 4) {
-    printf("  movd %%%s, %d(%%%s)\n", x86_get_regname_sse(reg1), offset,
-        x86_get_regname_ptr(reg2));
-    *program->codeptr++ = 0x66;
-    x86_emit_rex(program, 0, reg1, 0, reg2);
-    *program->codeptr++ = 0x0f;
-    *program->codeptr++ = 0x7e;
-  } else if (size == 8) {
-    printf("  movq %%%s, %d(%%%s)\n", x86_get_regname_sse(reg1), offset,
-        x86_get_regname_ptr(reg2));
-    *program->codeptr++ = 0x66;
-    x86_emit_rex(program, 0, reg1, 0, reg2);
-    *program->codeptr++ = 0x0f;
-    *program->codeptr++ = 0x7f;
-  } else {
-    printf("  movdqu %%%s, %d(%%%s)\n", x86_get_regname_sse(reg1), offset,
-        x86_get_regname_ptr(reg2));
-    *program->codeptr++ = 0xf3;
-    *program->codeptr++ = 0x0f;
-    *program->codeptr++ = 0x7f;
+  switch (size) {
+    case 4:
+      printf("  movd %%%s, %d(%%%s)\n", x86_get_regname_sse(reg1), offset,
+          x86_get_regname_ptr(reg2));
+      *program->codeptr++ = 0x66;
+      x86_emit_rex(program, 0, reg1, 0, reg2);
+      *program->codeptr++ = 0x0f;
+      *program->codeptr++ = 0x7e;
+      break;
+    case 8:
+      printf("  movq %%%s, %d(%%%s)\n", x86_get_regname_sse(reg1), offset,
+          x86_get_regname_ptr(reg2));
+      *program->codeptr++ = 0x66;
+      x86_emit_rex(program, 0, reg1, 0, reg2);
+      *program->codeptr++ = 0x0f;
+      *program->codeptr++ = 0xd6;
+      break;
+    case 16:
+      printf("  movdqu %%%s, %d(%%%s)\n", x86_get_regname_sse(reg1), offset,
+          x86_get_regname_ptr(reg2));
+      *program->codeptr++ = 0xf3;
+      *program->codeptr++ = 0x0f;
+      *program->codeptr++ = 0x7f;
+      break;
+    default:
+      printf("ERROR\n");
   }
 
   x86_emit_modrm_memoffset (program, reg1, offset, reg2);

@@ -91,13 +91,13 @@ mmx_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_CONST) {
     printf("  psllw $%d, %%%s\n",
-        p->vars[insn->args[2]].s16,
+        p->vars[insn->args[2]].value,
         x86_get_regname_mmx(p->vars[insn->args[0]].alloc));
 
     *p->codeptr++ = 0x0f;
     *p->codeptr++ = 0x71;
     x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc, 6);
-    *p->codeptr++ = p->vars[insn->args[2]].s16;
+    *p->codeptr++ = p->vars[insn->args[2]].value;
   } else {
     /* FIXME this doesn't work quite right */
     printf("  psllw %%%s, %%%s\n",
@@ -116,13 +116,13 @@ mmx_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_CONST) {
     printf("  psraw $%d, %%%s\n",
-        p->vars[insn->args[2]].s16,
+        p->vars[insn->args[2]].value,
         x86_get_regname_mmx(p->vars[insn->args[0]].alloc));
 
     *p->codeptr++ = 0x0f;
     *p->codeptr++ = 0x71;
     x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc, 4);
-    *p->codeptr++ = p->vars[insn->args[2]].s16;
+    *p->codeptr++ = p->vars[insn->args[2]].value;
   } else {
     /* FIXME this doesn't work quite right */
     printf("  psraw %%%s, %%%s\n",
