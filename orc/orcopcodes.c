@@ -51,43 +51,43 @@ orc_opcode_find_by_name (const char *name)
 }
 
 static void
-copy_s16 (OrcExecutor *ex, void *user)
+copyw (OrcExecutor *ex, void *user)
 {
   ex->args[0]->s16 = ex->args[1]->s16;
 }
 
 static void
-add_s16 (OrcExecutor *ex, void *user)
+addw (OrcExecutor *ex, void *user)
 {
   ex->args[0]->s16 = (int16_t)(ex->args[1]->s16 + ex->args[2]->s16);
 }
 
 static void
-sub_s16 (OrcExecutor *ex, void *user)
+subw (OrcExecutor *ex, void *user)
 {
   ex->args[0]->s16 = (int16_t)(ex->args[1]->s16 - ex->args[2]->s16);
 }
 
 static void
-mul_s16 (OrcExecutor *ex, void *user)
+mullw (OrcExecutor *ex, void *user)
 {
   ex->args[0]->s16 = (int16_t)(ex->args[1]->s16 * ex->args[2]->s16);
 }
 
 static void
-lshift_s16 (OrcExecutor *ex, void *user)
+shlw (OrcExecutor *ex, void *user)
 {
   ex->args[0]->s16 = (int16_t)(ex->args[1]->s16 << ex->args[2]->s16);
 }
 
 static void
-rshift_s16 (OrcExecutor *ex, void *user)
+shrsw (OrcExecutor *ex, void *user)
 {
-  ex->args[0]->s16 = (int16_t)(ex->args[1]->s16 >> ex->args[2]->s16);
+  ex->args[0]->s16 = (int16_t)(((int16_t)ex->args[1]->s16) >> ex->args[2]->s16);
 }
 
 static void
-convert_u8_s16 (OrcExecutor *ex, void *user)
+convsuswb (OrcExecutor *ex, void *user)
 {
   ex->args[0]->u8 = (int16_t)(ex->args[1]->s16);
 }
@@ -95,13 +95,13 @@ convert_u8_s16 (OrcExecutor *ex, void *user)
 void
 orc_opcode_init (void)
 {
-  orc_opcode_register("copy_s16", 1, 2, copy_s16, NULL);
-  orc_opcode_register("add_s16", 1, 2, add_s16, NULL);
-  orc_opcode_register("sub_s16", 1, 2, sub_s16, NULL);
-  orc_opcode_register("mul_s16", 1, 2, mul_s16, NULL);
-  orc_opcode_register("lshift_s16", 1, 2, lshift_s16, NULL);
-  orc_opcode_register("rshift_s16", 1, 2, rshift_s16, NULL);
-  orc_opcode_register("convert_u8_s16", 1, 1, convert_u8_s16, NULL);
+  orc_opcode_register("copyw", 1, 2, copyw, NULL);
+  orc_opcode_register("addw", 1, 2, addw, NULL);
+  orc_opcode_register("subw", 1, 2, subw, NULL);
+  orc_opcode_register("mullw", 1, 2, mullw, NULL);
+  orc_opcode_register("shlw", 1, 2, shlw, NULL);
+  orc_opcode_register("shrsw", 1, 2, shrsw, NULL);
+  orc_opcode_register("convsuswb", 1, 1, convsuswb, NULL);
 }
 
 

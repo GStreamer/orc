@@ -551,7 +551,7 @@ orc_program_assemble_powerpc (OrcProgram *program)
 /* rules */
 
 static void
-powerpc_rule_add_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+powerpc_rule_addw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   unsigned int x;
 
@@ -570,7 +570,7 @@ powerpc_rule_add_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-powerpc_rule_sub_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+powerpc_rule_subw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   printf("  vsubuhm %s, %s, %s\n",
       powerpc_get_regname(p->vars[insn->args[0]].alloc),
@@ -579,7 +579,7 @@ powerpc_rule_sub_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-powerpc_rule_mul_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+powerpc_rule_mullw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   printf("  vxor %s, %s, %s\n",
       powerpc_get_regname(POWERPC_V0),
@@ -604,7 +604,7 @@ powerpc_rule_mul_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-powerpc_rule_lshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+powerpc_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   printf("  vrlh %s, %s, %s\n",
       powerpc_get_regname(p->vars[insn->args[0]].alloc),
@@ -617,7 +617,7 @@ powerpc_rule_lshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-powerpc_rule_rshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+powerpc_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   unsigned int x;
 
@@ -639,11 +639,11 @@ powerpc_rule_rshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 void
 orc_program_powerpc_register_rules (void)
 {
-  orc_rule_register ("add_s16", ORC_TARGET_ALTIVEC, powerpc_rule_add_s16, NULL);
-  orc_rule_register ("sub_s16", ORC_TARGET_ALTIVEC, powerpc_rule_sub_s16, NULL);
-  orc_rule_register ("mul_s16", ORC_TARGET_ALTIVEC, powerpc_rule_mul_s16, NULL);
-  orc_rule_register ("lshift_s16", ORC_TARGET_ALTIVEC, powerpc_rule_lshift_s16, NULL);
-  orc_rule_register ("rshift_s16", ORC_TARGET_ALTIVEC, powerpc_rule_rshift_s16, NULL);
+  orc_rule_register ("addw", ORC_TARGET_ALTIVEC, powerpc_rule_addw, NULL);
+  orc_rule_register ("subw", ORC_TARGET_ALTIVEC, powerpc_rule_subw, NULL);
+  orc_rule_register ("mullw", ORC_TARGET_ALTIVEC, powerpc_rule_mullw, NULL);
+  orc_rule_register ("shlw", ORC_TARGET_ALTIVEC, powerpc_rule_shlw, NULL);
+  orc_rule_register ("shrsw", ORC_TARGET_ALTIVEC, powerpc_rule_shrsw, NULL);
 }
 
 /* code generation */

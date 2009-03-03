@@ -17,7 +17,7 @@
 /* sse rules */
 
 void
-sse_emit_loadi_s16 (OrcProgram *p, int reg, int value)
+sse_emit_loadiw (OrcProgram *p, int reg, int value)
 {
   if (value == 0) {
     printf("  pxor %%%s, %%%s\n", x86_get_regname_sse(reg),
@@ -71,7 +71,7 @@ sse_emit_loadi_s16 (OrcProgram *p, int reg, int value)
 }
 
 static void
-sse_rule_copy_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+sse_rule_copyw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   printf("  movdqa %%%s, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[1]].alloc),
@@ -87,7 +87,7 @@ sse_rule_copy_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-sse_rule_add_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+sse_rule_addw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   printf("  paddw %%%s, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[2]].alloc),
@@ -101,7 +101,7 @@ sse_rule_add_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-sse_rule_sub_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+sse_rule_subw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   printf("  psubw %%%s, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[2]].alloc),
@@ -115,7 +115,7 @@ sse_rule_sub_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-sse_rule_mul_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+sse_rule_mullw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   printf("  pmullw %%%s, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[2]].alloc),
@@ -129,7 +129,7 @@ sse_rule_mul_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-sse_rule_lshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+sse_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_CONST) {
     printf("  psllw $%d, %%%s\n",
@@ -156,7 +156,7 @@ sse_rule_lshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-sse_rule_rshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+sse_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_CONST) {
     printf("  psraw $%d, %%%s\n",
@@ -183,7 +183,7 @@ sse_rule_rshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-sse_rule_convert_u8_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+sse_rule_convsuswb (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   printf("  packuswb %%%s, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[1]].alloc),
@@ -199,12 +199,12 @@ sse_rule_convert_u8_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 void
 orc_program_sse_register_rules (void)
 {
-  orc_rule_register ("copy_s16", ORC_TARGET_SSE, sse_rule_copy_s16, NULL);
-  orc_rule_register ("add_s16", ORC_TARGET_SSE, sse_rule_add_s16, NULL);
-  orc_rule_register ("sub_s16", ORC_TARGET_SSE, sse_rule_sub_s16, NULL);
-  orc_rule_register ("mul_s16", ORC_TARGET_SSE, sse_rule_mul_s16, NULL);
-  orc_rule_register ("lshift_s16", ORC_TARGET_SSE, sse_rule_lshift_s16, NULL);
-  orc_rule_register ("rshift_s16", ORC_TARGET_SSE, sse_rule_rshift_s16, NULL);
-  orc_rule_register ("convert_u8_s16", ORC_TARGET_SSE, sse_rule_convert_u8_s16, NULL);
+  orc_rule_register ("copyw", ORC_TARGET_SSE, sse_rule_copyw, NULL);
+  orc_rule_register ("addw", ORC_TARGET_SSE, sse_rule_addw, NULL);
+  orc_rule_register ("subw", ORC_TARGET_SSE, sse_rule_subw, NULL);
+  orc_rule_register ("mullw", ORC_TARGET_SSE, sse_rule_mullw, NULL);
+  orc_rule_register ("shlw", ORC_TARGET_SSE, sse_rule_shlw, NULL);
+  orc_rule_register ("shrsw", ORC_TARGET_SSE, sse_rule_shrsw, NULL);
+  orc_rule_register ("convsuswb", ORC_TARGET_SSE, sse_rule_convsuswb, NULL);
 }
 

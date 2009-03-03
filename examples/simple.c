@@ -39,7 +39,7 @@ test1(void)
 
   p = orc_program_new_dss (2, 2, 2);
 
-  orc_program_append_str (p, "add_s16", "d1", "s1", "s2");
+  orc_program_append_str (p, "addw", "d1", "s1", "s2");
 
   orc_program_compile (p);
 
@@ -94,12 +94,12 @@ test2(void)
   t1 = orc_program_add_temporary (p, 2, "t1");
   t2 = orc_program_add_temporary (p, 2, "t2");
 
-  orc_program_append (p, "add_s16", t1, s2, s3);
-  orc_program_append (p, "add_s16", t2, s1, s4);
-  orc_program_append (p, "mul_s16", t1, t1, c1);
-  orc_program_append (p, "sub_s16", t1, t1, t2);
-  orc_program_append (p, "add_s16", t1, t1, c2);
-  orc_program_append (p, "rshift_s16", d1, t1, c3);
+  orc_program_append (p, "addw", t1, s2, s3);
+  orc_program_append (p, "addw", t2, s1, s4);
+  orc_program_append (p, "mullw", t1, t1, c1);
+  orc_program_append (p, "subw", t1, t1, t2);
+  orc_program_append (p, "addw", t1, t1, c2);
+  orc_program_append (p, "shrsw", d1, t1, c3);
 
   orc_program_compile (p);
 
@@ -163,9 +163,9 @@ test3(void)
   t1 = orc_program_add_temporary (p, 2, "t1");
   t2 = orc_program_add_temporary (p, 2, "t2");
 
-  orc_program_append (p, "add_s16", t1, s1, s2);
-  orc_program_append (p, "add_s16", t2, t1, c1);
-  orc_program_append (p, "rshift_s16", d1, t2, c2);
+  orc_program_append (p, "addw", t1, s1, s2);
+  orc_program_append (p, "addw", t2, t1, c1);
+  orc_program_append (p, "shrsw", d1, t2, c2);
 
   orc_program_compile (p);
 

@@ -138,7 +138,7 @@ sse_load_constants (OrcProgram *program)
   for(i=0;i<program->n_vars;i++){
     switch (program->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:
-        sse_emit_loadi_s16 (program, program->vars[i].alloc,
+        sse_emit_loadiw (program, program->vars[i].alloc,
             program->vars[i].s16);
         break;
       case ORC_VAR_TYPE_SRC:

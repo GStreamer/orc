@@ -48,8 +48,8 @@ void x86_emit_modrm_memoffset (OrcProgram *program, int reg1, int offset, int re
 void x86_emit_modrm_reg (OrcProgram *program, int reg1, int reg2);
 void x86_test (OrcProgram *program);
 
-void mmx_emit_loadi_s16 (OrcProgram *p, int reg, int value);
-void sse_emit_loadi_s16 (OrcProgram *p, int reg, int value);
+void mmx_emit_loadiw (OrcProgram *p, int reg, int value);
+void sse_emit_loadiw (OrcProgram *p, int reg, int value);
 
 enum {
   X86_EAX = ORC_GP_REG_BASE,

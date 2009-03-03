@@ -98,7 +98,7 @@ c_get_name (char *name, OrcProgram *p, int var)
 }
 
 static void
-c_rule_copy_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+c_rule_copyw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   char dest[20], src1[20];
 
@@ -109,7 +109,7 @@ c_rule_copy_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-c_rule_add_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+c_rule_addw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   char dest[20], src1[20], src2[20];
 
@@ -121,7 +121,7 @@ c_rule_add_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-c_rule_sub_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+c_rule_subw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   char dest[20], src1[20], src2[20];
 
@@ -133,7 +133,7 @@ c_rule_sub_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-c_rule_mul_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+c_rule_mullw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   char dest[20], src1[20], src2[20];
 
@@ -145,7 +145,7 @@ c_rule_mul_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-c_rule_lshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+c_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   char dest[20], src1[20], src2[20];
 
@@ -157,7 +157,7 @@ c_rule_lshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-c_rule_rshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+c_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   char dest[20], src1[20], src2[20];
 
@@ -172,11 +172,11 @@ c_rule_rshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 void
 orc_c_init (void)
 {
-  orc_rule_register ("copy_s16", ORC_TARGET_C, c_rule_copy_s16, NULL);
-  orc_rule_register ("add_s16", ORC_TARGET_C, c_rule_add_s16, NULL);
-  orc_rule_register ("sub_s16", ORC_TARGET_C, c_rule_sub_s16, NULL);
-  orc_rule_register ("mul_s16", ORC_TARGET_C, c_rule_mul_s16, NULL);
-  orc_rule_register ("lshift_s16", ORC_TARGET_C, c_rule_lshift_s16, NULL);
-  orc_rule_register ("rshift_s16", ORC_TARGET_C, c_rule_rshift_s16, NULL);
+  orc_rule_register ("copyw", ORC_TARGET_C, c_rule_copyw, NULL);
+  orc_rule_register ("addw", ORC_TARGET_C, c_rule_addw, NULL);
+  orc_rule_register ("subw", ORC_TARGET_C, c_rule_subw, NULL);
+  orc_rule_register ("mullw", ORC_TARGET_C, c_rule_mullw, NULL);
+  orc_rule_register ("shlw", ORC_TARGET_C, c_rule_shlw, NULL);
+  orc_rule_register ("shrsw", ORC_TARGET_C, c_rule_shrsw, NULL);
 }
 

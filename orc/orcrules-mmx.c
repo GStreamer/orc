@@ -17,7 +17,7 @@
 /* mmx rules */
 
 void
-mmx_emit_loadi_s16 (OrcProgram *p, int reg, int value)
+mmx_emit_loadiw (OrcProgram *p, int reg, int value)
 {
   if (value == 0) {
     printf("  pxor %%%s, %%%s\n", x86_get_regname_mmx(reg),
@@ -48,7 +48,7 @@ mmx_emit_loadi_s16 (OrcProgram *p, int reg, int value)
 }
 
 static void
-mmx_rule_add_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+mmx_rule_addw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   printf("  paddw %%%s, %%%s\n",
       x86_get_regname_mmx(p->vars[insn->args[2]].alloc),
@@ -61,7 +61,7 @@ mmx_rule_add_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-mmx_rule_sub_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+mmx_rule_subw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   printf("  psubw %%%s, %%%s\n",
       x86_get_regname_mmx(p->vars[insn->args[2]].alloc),
@@ -74,7 +74,7 @@ mmx_rule_sub_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-mmx_rule_mul_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+mmx_rule_mullw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   printf("  pmullw %%%s, %%%s\n",
       x86_get_regname_mmx(p->vars[insn->args[2]].alloc),
@@ -87,7 +87,7 @@ mmx_rule_mul_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-mmx_rule_lshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+mmx_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_CONST) {
     printf("  psllw $%d, %%%s\n",
@@ -112,7 +112,7 @@ mmx_rule_lshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-mmx_rule_rshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
+mmx_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_CONST) {
     printf("  psraw $%d, %%%s\n",
@@ -139,10 +139,10 @@ mmx_rule_rshift_s16 (OrcProgram *p, void *user, OrcInstruction *insn)
 void
 orc_program_mmx_register_rules (void)
 {
-  orc_rule_register ("add_s16", ORC_TARGET_MMX, mmx_rule_add_s16, NULL);
-  orc_rule_register ("sub_s16", ORC_TARGET_MMX, mmx_rule_sub_s16, NULL);
-  orc_rule_register ("mul_s16", ORC_TARGET_MMX, mmx_rule_mul_s16, NULL);
-  orc_rule_register ("lshift_s16", ORC_TARGET_MMX, mmx_rule_lshift_s16, NULL);
-  orc_rule_register ("rshift_s16", ORC_TARGET_MMX, mmx_rule_rshift_s16, NULL);
+  orc_rule_register ("addw", ORC_TARGET_MMX, mmx_rule_addw, NULL);
+  orc_rule_register ("subw", ORC_TARGET_MMX, mmx_rule_subw, NULL);
+  orc_rule_register ("mullw", ORC_TARGET_MMX, mmx_rule_mullw, NULL);
+  orc_rule_register ("shlw", ORC_TARGET_MMX, mmx_rule_shlw, NULL);
+  orc_rule_register ("shrsw", ORC_TARGET_MMX, mmx_rule_shrsw, NULL);
 }
 
