@@ -12,6 +12,7 @@
 #include <orc/orcprogram.h>
 #include <orc/x86.h>
 #include <orc/orcutils.h>
+#include <orc/orcdebug.h>
 
 #define SIZE 65536
 
@@ -232,35 +233,98 @@ sse_emit_store_dest (OrcProgram *program, OrcVariable *var)
       x86_emit_mov_reg_memoffset (program, 2, X86_ECX, 0, ptr_reg);
       break;
     case 4:
-      x86_emit_mov_sse_memoffset (program, 4, var->alloc, 0, ptr_reg);
+      x86_emit_mov_sse_memoffset (program, 4, var->alloc, 0, ptr_reg,
+          var->is_aligned);
       break;
     case 8:
-      x86_emit_mov_sse_memoffset (program, 8, var->alloc, 0, ptr_reg);
+      x86_emit_mov_sse_memoffset (program, 8, var->alloc, 0, ptr_reg,
+          var->is_aligned);
       break;
     case 16:
-      x86_emit_mov_sse_memoffset (program, 16, var->alloc, 0, ptr_reg);
+      x86_emit_mov_sse_memoffset (program, 16, var->alloc, 0, ptr_reg,
+          var->is_aligned);
       break;
     default:
       printf("ERROR\n");
   }
 }
 
+int
+orc_program_get_dest (OrcProgram *program)
+{
+  int k;
+
+  for(k=0;k<program->n_vars;k++){
+    if (program->vars[k].vartype == ORC_VAR_TYPE_DEST) {
+      return k;
+    }
+  }
+
+  ORC_ERROR("can't find dest");
+  return -1;
+}
+
 void
 orc_program_sse_assemble (OrcProgram *program)
 {
+  int dest_var = orc_program_get_dest (program);
+
+  program->vars[dest_var].is_aligned = FALSE;
+
   sse_emit_prologue (program);
 
-  x86_emit_mov_memoffset_reg (program, 4, (int)ORC_STRUCT_OFFSET(OrcExecutor,n),
-      x86_exec_ptr, X86_ECX);
-  x86_emit_sar_imm_reg (program, 4, program->loop_shift, X86_ECX);
-  x86_emit_mov_reg_memoffset (program, 4, X86_ECX,
-      (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2), x86_exec_ptr);
+  if (program->loop_shift > 0) {
 
-  x86_emit_mov_memoffset_reg (program, 4,
-      (int)ORC_STRUCT_OFFSET(OrcExecutor,n), x86_exec_ptr, X86_ECX);
-  x86_emit_and_imm_reg (program, 4, (1<<program->loop_shift)-1, X86_ECX);
-  x86_emit_mov_reg_memoffset (program, 4, X86_ECX,
-      (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1), x86_exec_ptr);
+    x86_emit_mov_imm_reg (program, 4, 16, X86_EAX);
+    x86_emit_sub_memoffset_reg (program, 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[dest_var]),
+        x86_exec_ptr, X86_EAX);
+    x86_emit_and_imm_reg (program, 4, 15, X86_EAX);
+    /* FIXME size shift */
+    x86_emit_sar_imm_reg (program, 4, 1, X86_EAX);
+
+    x86_emit_cmp_reg_memoffset (program, 4, X86_EAX,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,n), x86_exec_ptr);
+
+    x86_emit_jle (program, 6);
+
+    x86_emit_mov_reg_memoffset (program, 4, X86_EAX,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1), x86_exec_ptr);
+    
+    x86_emit_mov_memoffset_reg (program, 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,n), x86_exec_ptr, X86_ECX);
+    x86_emit_sub_reg_reg (program, 4, X86_EAX, X86_ECX);
+
+    x86_emit_mov_reg_reg (program, 4, X86_ECX, X86_EAX);
+
+    x86_emit_sar_imm_reg (program, 4, program->loop_shift, X86_ECX);
+    x86_emit_mov_reg_memoffset (program, 4, X86_ECX,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2), x86_exec_ptr);
+
+    x86_emit_and_imm_reg (program, 4, (1<<program->loop_shift)-1, X86_EAX);
+    x86_emit_mov_reg_memoffset (program, 4, X86_EAX,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3), x86_exec_ptr);
+
+    x86_emit_jmp (program, 7);
+    x86_emit_label (program, 6);
+
+    x86_emit_mov_memoffset_reg (program, 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,n), x86_exec_ptr, X86_EAX);
+    x86_emit_mov_reg_memoffset (program, 4, X86_EAX,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1), x86_exec_ptr);
+    x86_emit_mov_imm_reg (program, 4, 0, X86_EAX);
+    x86_emit_mov_reg_memoffset (program, 4, X86_EAX,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2), x86_exec_ptr);
+    x86_emit_mov_reg_memoffset (program, 4, X86_EAX,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3), x86_exec_ptr);
+
+    x86_emit_label (program, 7);
+  } else {
+    x86_emit_mov_memoffset_reg (program, 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,n), x86_exec_ptr, X86_ECX);
+    x86_emit_mov_reg_memoffset (program, 4, X86_ECX,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2), x86_exec_ptr);
+  }
 
   sse_load_constants (program);
 
@@ -282,15 +346,16 @@ orc_program_sse_assemble (OrcProgram *program)
     x86_emit_jne (program, 0);
 
     program->loop_shift = save_loop_shift;
+    program->vars[dest_var].is_aligned = TRUE;
   }
 
-  x86_emit_align (program);
   x86_emit_label (program, 1);
 
   x86_emit_cmp_imm_memoffset (program, 4, 0,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2), x86_exec_ptr);
   x86_emit_je (program, 3);
 
+  x86_emit_align (program);
   x86_emit_label (program, 2);
   sse_emit_loop (program);
   x86_emit_dec_memoffset (program, 4,
@@ -298,6 +363,29 @@ orc_program_sse_assemble (OrcProgram *program)
       x86_exec_ptr);
   x86_emit_jne (program, 2);
   x86_emit_label (program, 3);
+
+  if (program->loop_shift > 0) {
+    int save_loop_shift;
+
+    program->vars[dest_var].is_aligned = FALSE;
+    x86_emit_cmp_imm_memoffset (program, 4, 0,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3), x86_exec_ptr);
+    x86_emit_je (program, 5);
+
+    save_loop_shift = program->loop_shift;
+    program->loop_shift = 0;
+
+    x86_emit_label (program, 4);
+    sse_emit_loop (program);
+    x86_emit_dec_memoffset (program, 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3),
+        x86_exec_ptr);
+    x86_emit_jne (program, 4);
+
+    x86_emit_label (program, 5);
+
+    program->loop_shift = save_loop_shift;
+  }
 
   sse_emit_epilogue (program);
 

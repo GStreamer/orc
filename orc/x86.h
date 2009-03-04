@@ -19,7 +19,7 @@ void x86_emit_mov_reg_memoffset (OrcProgram *program, int size, int reg1, int of
 void x86_emit_mov_mmx_memoffset (OrcProgram *program, int size, int reg1, int offset,
     int reg2);
 void x86_emit_mov_sse_memoffset (OrcProgram *program, int size, int reg1, int offset,
-    int reg2);
+    int reg2, int aligned);
 void x86_emit_mov_imm_reg (OrcProgram *program, int size, int value, int reg1);
 void x86_emit_mov_reg_reg (OrcProgram *program, int size, int reg1, int reg2);
 void x86_emit_mov_sse_reg_reg (OrcProgram *program, int reg1, int reg2);
@@ -35,12 +35,19 @@ void x86_emit_add_imm_memoffset (OrcProgram *program, int size, int value, int o
 void x86_emit_and_imm_memoffset (OrcProgram *program, int size, int value, int offset, int reg);
 void x86_emit_add_imm_reg (OrcProgram *program, int size, int value, int reg);
 void x86_emit_and_imm_reg (OrcProgram *program, int size, int value, int reg);
+void x86_emit_sub_reg_reg (OrcProgram *program, int size, int reg1, int reg2);
+void x86_emit_sub_memoffset_reg (OrcProgram *program, int size,
+    int offset, int reg, int destreg);
+void x86_emit_cmp_reg_memoffset (OrcProgram *program, int size, int reg1,
+    int offset, int reg);
 void x86_emit_cmp_imm_memoffset (OrcProgram *program, int size, int value,
     int offset, int reg);
 void x86_emit_emms (OrcProgram *program);
 void x86_emit_ret (OrcProgram *program);
+void x86_emit_jle (OrcProgram *program, int label);
 void x86_emit_je (OrcProgram *program, int label);
 void x86_emit_jne (OrcProgram *program, int label);
+void x86_emit_jmp (OrcProgram *program, int label);
 void x86_emit_label (OrcProgram *program, int label);
 void x86_emit_align (OrcProgram *program);
 

@@ -81,6 +81,8 @@ struct _OrcVariable {
 
   int alloc;
   int is_chained;
+  int is_aligned;
+  int is_uncached;
 
   int value;
 

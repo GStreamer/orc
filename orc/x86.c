@@ -377,7 +377,7 @@ x86_emit_mov_mmx_memoffset (OrcProgram *program, int size, int reg1, int offset,
 
 void
 x86_emit_mov_sse_memoffset (OrcProgram *program, int size, int reg1, int offset,
-    int reg2)
+    int reg2, int aligned)
 {
   switch (size) {
     case 4:
@@ -397,11 +397,19 @@ x86_emit_mov_sse_memoffset (OrcProgram *program, int size, int reg1, int offset,
       *program->codeptr++ = 0xd6;
       break;
     case 16:
-      printf("  movdqu %%%s, %d(%%%s)\n", x86_get_regname_sse(reg1), offset,
-          x86_get_regname_ptr(reg2));
-      *program->codeptr++ = 0xf3;
-      *program->codeptr++ = 0x0f;
-      *program->codeptr++ = 0x7f;
+      if (aligned) {
+        printf("  movdqa %%%s, %d(%%%s)\n", x86_get_regname_sse(reg1), offset,
+            x86_get_regname_ptr(reg2));
+        *program->codeptr++ = 0x66;
+        *program->codeptr++ = 0x0f;
+        *program->codeptr++ = 0x7f;
+      } else {
+        printf("  movdqu %%%s, %d(%%%s)\n", x86_get_regname_sse(reg1), offset,
+            x86_get_regname_ptr(reg2));
+        *program->codeptr++ = 0xf3;
+        *program->codeptr++ = 0x0f;
+        *program->codeptr++ = 0x7f;
+      }
       break;
     default:
       printf("ERROR\n");
@@ -691,6 +699,71 @@ x86_emit_add_imm_reg (OrcProgram *program, int size, int value, int reg)
 }
 
 void
+x86_emit_sub_reg_reg (OrcProgram *program, int size, int reg1, int reg2)
+{
+  if (size == 2) {
+    printf("  subw %%%s, %%%s\n", x86_get_regname_16(reg1),
+        x86_get_regname_16(reg2));
+    *program->codeptr++ = 0x66;
+  } else if (size == 4) {
+    printf("  subl %%%s, %%%s\n", x86_get_regname(reg1),
+        x86_get_regname(reg2));
+  } else {
+    printf("  sub %%%s, %%%s\n", x86_get_regname_64(reg1),
+        x86_get_regname_64(reg2));
+  }
+
+  x86_emit_rex(program, size, reg2, 0, reg1);
+  *program->codeptr++ = 0x29;
+  x86_emit_modrm_reg (program, reg2, reg1);
+}
+
+void
+x86_emit_sub_memoffset_reg (OrcProgram *program, int size,
+    int offset, int reg, int destreg)
+{
+  if (size == 2) {
+    printf("  subw %d(%%%s), %%%s\n", offset,
+        x86_get_regname_ptr(reg),
+        x86_get_regname_16(destreg));
+    *program->codeptr++ = 0x66;
+  } else if (size == 4) {
+    printf("  subl %d(%%%s), %%%s\n", offset,
+        x86_get_regname_ptr(reg),
+        x86_get_regname(destreg));
+  } else {
+    printf("  sub %d(%%%s), %%%s\n", offset,
+        x86_get_regname_ptr(reg),
+        x86_get_regname_64(destreg));
+  }
+
+  x86_emit_rex(program, size, 0, 0, reg);
+  *program->codeptr++ = 0x2b;
+  x86_emit_modrm_memoffset (program, destreg, offset, reg);
+}
+
+void
+x86_emit_cmp_reg_memoffset (OrcProgram *program, int size, int reg1,
+    int offset, int reg)
+{
+  if (size == 2) {
+    printf("  cmpw %%%s, %d(%%%s)\n", x86_get_regname_16(reg1), offset,
+        x86_get_regname_ptr(reg));
+    *program->codeptr++ = 0x66;
+  } else if (size == 4) {
+    printf("  cmpl %%%s, %d(%%%s)\n", x86_get_regname(reg1), offset,
+        x86_get_regname_ptr(reg));
+  } else {
+    printf("  cmp %%%s, %d(%%%s)\n", x86_get_regname_64(reg1), offset,
+        x86_get_regname_ptr(reg));
+  }
+
+  x86_emit_rex(program, size, 0, 0, reg);
+  *program->codeptr++ = 0x39;
+  x86_emit_modrm_memoffset (program, reg1, offset, reg);
+}
+
+void
 x86_emit_cmp_imm_memoffset (OrcProgram *program, int size, int value,
     int offset, int reg)
 {
@@ -759,11 +832,11 @@ void x86_emit_emms (OrcProgram *program)
 }
 
 void
-x86_add_fixup (OrcProgram *program, unsigned char *ptr, int label)
+x86_add_fixup (OrcProgram *program, unsigned char *ptr, int label, int type)
 {
   program->fixups[program->n_fixups].ptr = ptr;
   program->fixups[program->n_fixups].label = label;
-  program->fixups[program->n_fixups].type = 1;
+  program->fixups[program->n_fixups].type = type;
   program->n_fixups++;
 }
 
@@ -773,13 +846,31 @@ x86_add_label (OrcProgram *program, unsigned char *ptr, int label)
   program->labels[label] = ptr;
 }
 
+void x86_emit_jmp (OrcProgram *program, int label)
+{
+  printf("  jmp .L%d\n", label);
+
+  *program->codeptr++ = 0xeb;
+  x86_add_fixup (program, program->codeptr, label, 0);
+  *program->codeptr++ = 0xff;
+}
+
+void x86_emit_jle (OrcProgram *program, int label)
+{
+  printf("  jle .L%d\n", label);
+
+  *program->codeptr++ = 0x7e;
+  x86_add_fixup (program, program->codeptr, label, 0);
+  *program->codeptr++ = 0xff;
+}
+
 void x86_emit_je (OrcProgram *program, int label)
 {
   printf("  je .L%d\n", label);
 
   *program->codeptr++ = 0x0f;
   *program->codeptr++ = 0x84;
-  x86_add_fixup (program, program->codeptr, label);
+  x86_add_fixup (program, program->codeptr, label, 1);
   *program->codeptr++ = 0xfc;
   *program->codeptr++ = 0xff;
   *program->codeptr++ = 0xff;
@@ -791,7 +882,7 @@ void x86_emit_jne (OrcProgram *program, int label)
   printf("  jne .L%d\n", label);
   *program->codeptr++ = 0x0f;
   *program->codeptr++ = 0x85;
-  x86_add_fixup (program, program->codeptr, label);
+  x86_add_fixup (program, program->codeptr, label, 1);
   *program->codeptr++ = 0xfc;
   *program->codeptr++ = 0xff;
   *program->codeptr++ = 0xff;
