@@ -14,6 +14,9 @@
 
 #define SIZE 65536
 
+int ssse3 = TRUE;
+int sse41 = FALSE;
+
 /* sse rules */
 
 void
@@ -280,9 +283,9 @@ orc_program_sse_register_rules (void)
   REG(avgub);
   REG(cmpeqb);
   REG(cmpgtsb);
-  REG(maxsb);
+  if (sse41) REG(maxsb);
   REG(maxub);
-  REG(minsb);
+  if (sse41) REG(minsb);
   REG(minub);
   //REG(mullb);
   //REG(mulhsb);
@@ -303,9 +306,9 @@ orc_program_sse_register_rules (void)
   REG(cmpeqw);
   REG(cmpgtsw);
   REG(maxsw);
-  REG(maxuw);
+  if (sse41) REG(maxuw);
   REG(minsw);
-  REG(minuw);
+  if (sse41) REG(minuw);
   REG(mullw);
   REG(mulhsw);
   REG(mulhuw);
@@ -324,11 +327,11 @@ orc_program_sse_register_rules (void)
   //REG(avgul);
   REG(cmpeql);
   REG(cmpgtsl);
-  REG(maxsl);
-  REG(maxul);
-  REG(minsl);
-  REG(minul);
-  REG(mulll);
+  if (sse41) REG(maxsl);
+  if (sse41) REG(maxul);
+  if (sse41) REG(minsl);
+  if (sse41) REG(minul);
+  if (sse41) REG(mulll);
   REG(mulhsl);
   REG(mulhul);
   REG(orl);

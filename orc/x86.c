@@ -763,7 +763,7 @@ x86_add_fixup (OrcProgram *program, unsigned char *ptr, int label)
 {
   program->fixups[program->n_fixups].ptr = ptr;
   program->fixups[program->n_fixups].label = label;
-  program->fixups[program->n_fixups].type = 0;
+  program->fixups[program->n_fixups].type = 1;
   program->n_fixups++;
 }
 
@@ -777,17 +777,25 @@ void x86_emit_je (OrcProgram *program, int label)
 {
   printf("  je .L%d\n", label);
 
-  *program->codeptr++ = 0x74;
+  *program->codeptr++ = 0x0f;
+  *program->codeptr++ = 0x84;
   x86_add_fixup (program, program->codeptr, label);
-  *program->codeptr++ = -1;
+  *program->codeptr++ = 0xfc;
+  *program->codeptr++ = 0xff;
+  *program->codeptr++ = 0xff;
+  *program->codeptr++ = 0xff;
 }
 
 void x86_emit_jne (OrcProgram *program, int label)
 {
   printf("  jne .L%d\n", label);
-  *program->codeptr++ = 0x75;
+  *program->codeptr++ = 0x0f;
+  *program->codeptr++ = 0x85;
   x86_add_fixup (program, program->codeptr, label);
-  *program->codeptr++ = -1;
+  *program->codeptr++ = 0xfc;
+  *program->codeptr++ = 0xff;
+  *program->codeptr++ = 0xff;
+  *program->codeptr++ = 0xff;
 }
 
 void x86_emit_label (OrcProgram *program, int label)
@@ -795,6 +803,20 @@ void x86_emit_label (OrcProgram *program, int label)
   printf(".L%d:\n", label);
 
   x86_add_label (program, program->codeptr, label);
+}
+
+void
+x86_emit_align (OrcProgram *program)
+{
+  int diff;
+  int align_shift = 4;
+
+  diff = (program->code - program->codeptr)&((1<<align_shift) - 1);
+  while (diff) {
+    printf("  nop\n");
+    *program->codeptr++ = 0x90;
+    diff--;
+  }
 }
 
 void

@@ -59,6 +59,21 @@ typedef unsigned int orc_bool;
 #define ROUND_UP_8(x) ROUND_UP_POW2(x,3)
 #define ROUND_SHIFT(x,y) (((x) + (1<<((y)-1)))>>(y))
 
+#define ORC_READ_UINT32_LE(ptr) \
+  ((uint32_t)( \
+    ((uint8_t *)(ptr))[0] | \
+    (((uint8_t *)(ptr))[1]<<8) | \
+    (((uint8_t *)(ptr))[2]<<16) | \
+    (((uint8_t *)(ptr))[3]<<24)))
+
+#define ORC_WRITE_UINT32_LE(ptr,val) \
+  do { \
+    ((uint8_t *)ptr)[0] = ((val)>>0)&0xff; \
+    ((uint8_t *)ptr)[1] = ((val)>>8)&0xff; \
+    ((uint8_t *)ptr)[2] = ((val)>>16)&0xff; \
+    ((uint8_t *)ptr)[3] = ((val)>>24)&0xff; \
+  } while(0)
+
 #endif
 
 #if defined(__GNUC__) && defined(__GNUC_MINOR__)

@@ -29,7 +29,7 @@ main (int argc, char *argv[])
 {
   orc_init ();
 
-  test7();
+  test1();
 
   exit(0);
 }
@@ -292,9 +292,9 @@ test5(void)
   orc_program_append (p, "cmpeqw", t1, s1, s2);
   orc_program_append (p, "cmpgtsw", t1, s1, s2);
   orc_program_append (p, "maxsw", t1, s1, s2);
-  orc_program_append (p, "maxuw", t1, s1, s2);
+    //orc_program_append (p, "maxuw", t1, s1, s2);
   orc_program_append (p, "minsw", t1, s1, s2);
-  orc_program_append (p, "minuw", t1, s1, s2);
+    //orc_program_append (p, "minuw", t1, s1, s2);
   orc_program_append (p, "mullw", t1, s1, s2);
   orc_program_append (p, "mulhsw", t1, s1, s2);
   orc_program_append (p, "mulhuw", t1, s1, s2);
@@ -369,9 +369,9 @@ test6(void)
   orc_program_append (p, "avgub", t1, s1, s2);
   orc_program_append (p, "cmpeqb", t1, s1, s2);
   orc_program_append (p, "cmpgtsb", t1, s1, s2);
-  orc_program_append (p, "maxsb", t1, s1, s2);
+    //orc_program_append (p, "maxsb", t1, s1, s2);
   orc_program_append (p, "maxub", t1, s1, s2);
-  orc_program_append (p, "minsb", t1, s1, s2);
+    //orc_program_append (p, "minsb", t1, s1, s2);
   orc_program_append (p, "minub", t1, s1, s2);
   //orc_program_append (p, "mullb", t1, s1, s2);
   //orc_program_append (p, "mulhsb", t1, s1, s2);
@@ -447,11 +447,11 @@ test7(void)
   //orc_program_append (p, "avgul", t1, s1, s2);
   orc_program_append (p, "cmpeql", t1, s1, s2);
   orc_program_append (p, "cmpgtsl", t1, s1, s2);
-  orc_program_append (p, "maxsl", t1, s1, s2);
-  orc_program_append (p, "maxul", t1, s1, s2);
-  orc_program_append (p, "minsl", t1, s1, s2);
-  orc_program_append (p, "minul", t1, s1, s2);
-  orc_program_append (p, "mulll", t1, s1, s2);
+    //orc_program_append (p, "maxsl", t1, s1, s2);
+    //orc_program_append (p, "maxul", t1, s1, s2);
+    //orc_program_append (p, "minsl", t1, s1, s2);
+    //orc_program_append (p, "minul", t1, s1, s2);
+    //orc_program_append (p, "mulll", t1, s1, s2);
   //orc_program_append (p, "mulhsl", t1, s1, s2);
   //orc_program_append (p, "mulhul", t1, s1, s2);
   orc_program_append (p, "orl", t1, s1, s2);
@@ -487,7 +487,7 @@ test7(void)
 #endif
     
     orc_executor_set_array (ex, d1, dest_test);
-    //orc_executor_run (ex);
+    orc_executor_run (ex);
 
     for(i=0;i<n+4;i++){
       printf("# %d: %4d %4d %4d %c\n", i, src1[i], dest_ref[i], dest_test[i],

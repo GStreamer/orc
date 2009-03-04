@@ -11,6 +11,7 @@
 
 #include <orc/orcprogram.h>
 #include <orc/x86.h>
+#include <orc/orcutils.h>
 
 #define SIZE 65536
 
@@ -26,8 +27,8 @@ void orc_program_dump (OrcProgram *program);
 void
 sse_emit_prologue (OrcProgram *program)
 {
-  orc_program_append_code(program,".global test\n");
-  orc_program_append_code(program,"test:\n");
+  orc_program_append_code(program,".global _binary_dump_start\n");
+  orc_program_append_code(program,"_binary_dump_start:\n");
   if (x86_64) {
 
   } else {
@@ -75,6 +76,13 @@ sse_do_fixups (OrcProgram *program)
       unsigned char *ptr = program->fixups[i].ptr;
 
       ptr[0] += label - ptr;
+    } else if (program->fixups[i].type == 1) {
+      unsigned char *label = program->labels[program->fixups[i].label];
+      unsigned char *ptr = program->fixups[i].ptr;
+      int diff;
+
+      diff = ORC_READ_UINT32_LE (ptr) + (label - ptr);
+      ORC_WRITE_UINT32_LE(ptr, diff);
     }
   }
 }
@@ -149,7 +157,7 @@ sse_load_constants (OrcProgram *program)
               program->vars[i].ptr_register);
         } else {
           /* FIXME */
-          printf("ERROR");
+          printf("ERROR\n");
         }
         break;
       default:
@@ -163,8 +171,11 @@ sse_emit_load_src (OrcProgram *program, OrcVariable *var)
 {
   int ptr_reg;
   if (var->ptr_register == 0) {
+    int i;
+    i = var - program->vars;
     x86_emit_mov_memoffset_reg (program, x86_ptr_size,
-        var->ptr_offset, x86_exec_ptr, X86_ECX);
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]),
+        x86_exec_ptr, X86_ECX);
     ptr_reg = X86_ECX;
   } else {
     ptr_reg = var->ptr_register;
@@ -273,6 +284,7 @@ orc_program_sse_assemble (OrcProgram *program)
     program->loop_shift = save_loop_shift;
   }
 
+  x86_emit_align (program);
   x86_emit_label (program, 1);
 
   x86_emit_cmp_imm_memoffset (program, 4, 0,

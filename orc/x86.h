@@ -42,6 +42,7 @@ void x86_emit_ret (OrcProgram *program);
 void x86_emit_je (OrcProgram *program, int label);
 void x86_emit_jne (OrcProgram *program, int label);
 void x86_emit_label (OrcProgram *program, int label);
+void x86_emit_align (OrcProgram *program);
 
 void x86_emit_rex (OrcProgram *program, int size, int reg1, int reg2, int reg3);
 void x86_emit_modrm_memoffset (OrcProgram *program, int reg1, int offset, int reg2);

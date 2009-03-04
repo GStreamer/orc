@@ -43,6 +43,19 @@ orc_program_new_dss (int size1, int size2, int size3)
   return p;
 }
 
+OrcProgram *
+orc_program_new_ds (int size1, int size2)
+{
+  OrcProgram *p;
+
+  p = orc_program_new ();
+
+  orc_program_add_destination (p, size1, "d1");
+  orc_program_add_source (p, size2, "s1");
+
+  return p;
+}
+
 void
 orc_program_free (OrcProgram *program)
 {

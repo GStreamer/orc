@@ -200,6 +200,7 @@ struct _OrcExecutor {
 void orc_init (void);
 
 OrcProgram * orc_program_new (void);
+OrcProgram * orc_program_new_ds (int size1, int size2);
 OrcProgram * orc_program_new_dss (int size1, int size2, int size3);
 OrcOpcode * orc_opcode_find_by_name (const char *name);
 void orc_opcode_init (void);
