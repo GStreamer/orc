@@ -91,6 +91,19 @@ then
   AS_COMPILER_FLAG(-Werror, ORC_CFLAGS="$ORC_CFLAGS -Werror")
 fi
 
+case "${host_os}" in
+  mingw*|cygwin*)
+    CODEMEM_BACKEND=win32
+    ;;
+  linux*|darwin*|solaris*|netbsd*|freebsd*|openbsd*)
+    CODEMEM_BACKEND=linux
+    ;;
+  *)
+    AC_ERROR([no code allocation backend])
+    ;;
+esac
+AC_SUBST(CODEMEM_BACKEND)
+
 AC_DEFINE(ORC_EXPORTS, 1, [Defined for compiling internal code])
 
 ORC_CFLAGS="$ORC_CFLAGS -I\$(top_srcdir) -DORC_ENABLE_UNSTABLE_API"

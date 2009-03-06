@@ -25,12 +25,7 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orccpu.c \
 	x86.c
 
-if HAVE_OS_LINUX
-liborc_@ORC_MAJORMINOR@_la_SOURCES += orcprogram-linux.c
-endif
-if HAVE_OS_WIN32
-liborc_@ORC_MAJORMINOR@_la_SOURCES += orcprogram-win32.c
-endif
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orcprogram-$(CODEMEM_BACKEND).c
 
 if HAVE_I386
 liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-x86.c
