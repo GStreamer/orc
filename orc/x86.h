@@ -19,7 +19,7 @@ void x86_emit_mov_reg_memoffset (OrcProgram *program, int size, int reg1, int of
 void x86_emit_mov_mmx_memoffset (OrcProgram *program, int size, int reg1, int offset,
     int reg2);
 void x86_emit_mov_sse_memoffset (OrcProgram *program, int size, int reg1, int offset,
-    int reg2, int aligned);
+    int reg2, int aligned, int uncached);
 void x86_emit_mov_imm_reg (OrcProgram *program, int size, int value, int reg1);
 void x86_emit_mov_reg_reg (OrcProgram *program, int size, int reg1, int reg2);
 void x86_emit_mov_sse_reg_reg (OrcProgram *program, int reg1, int reg2);

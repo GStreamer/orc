@@ -7,7 +7,6 @@
 
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/mman.h>
 
 #include <orc/orcprogram.h>
 #include <orc/x86.h>
@@ -74,7 +73,7 @@ sse_emit_loadiw (OrcProgram *p, int reg, int value)
 }
 
 static void
-sse_rule_copyw (OrcProgram *p, void *user, OrcInstruction *insn)
+sse_rule_copyx (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   printf("  movdqa %%%s, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[1]].alloc),
@@ -129,6 +128,13 @@ sse_rule_mullw (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 #endif
 
+#define UNARY(opcode,insn_name,code) \
+static void \
+sse_rule_ ## opcode (OrcProgram *p, void *user, OrcInstruction *insn) \
+{ \
+  sse_emit_66_rex_0f (p, insn, code, insn_name); \
+}
+
 #define BINARY(opcode,insn_name,code) \
 static void \
 sse_rule_ ## opcode (OrcProgram *p, void *user, OrcInstruction *insn) \
@@ -136,6 +142,8 @@ sse_rule_ ## opcode (OrcProgram *p, void *user, OrcInstruction *insn) \
   sse_emit_66_rex_0f (p, insn, code, insn_name); \
 }
 
+
+UNARY(absb,"pabsb",0x381c)
 BINARY(addb,"paddb",0xfc)
 BINARY(addssb,"paddsb",0xec)
 BINARY(addusb,"paddusb",0xdc)
@@ -152,11 +160,13 @@ BINARY(minub,"pminub",0xda)
 //BINARY(mulhsb,"pmulhb",0xe5)
 //BINARY(mulhub,"pmulhub",0xe4)
 BINARY(orb,"por",0xeb)
+UNARY(signb,"psignb",0x3808)
 BINARY(subb,"psubb",0xf8)
 BINARY(subssb,"psubsb",0xe8)
 BINARY(subusb,"psubusb",0xd8)
 BINARY(xorb,"pxor",0xef)
 
+UNARY(absw,"pabsw",0x381d)
 BINARY(addw,"paddw",0xfd)
 BINARY(addssw,"paddsw",0xed)
 BINARY(addusw,"paddusw",0xdd)
@@ -173,11 +183,13 @@ BINARY(mullw,"pmullw",0xd5)
 BINARY(mulhsw,"pmulhw",0xe5)
 BINARY(mulhuw,"pmulhuw",0xe4)
 BINARY(orw,"por",0xeb)
+UNARY(signw,"psignw",0x3809)
 BINARY(subw,"psubw",0xf9)
 BINARY(subssw,"psubsw",0xe9)
 BINARY(subusw,"psubusw",0xd9)
 BINARY(xorw,"pxor",0xef)
 
+UNARY(absl,"pabsd",0x381e)
 BINARY(addl,"paddd",0xfe)
 //BINARY(addssl,"paddsd",0xed)
 //BINARY(addusl,"paddusd",0xdd)
@@ -194,6 +206,7 @@ BINARY(mulll,"pmulld",0x3840)
 BINARY(mulhsl,"pmulhd",0xe5)
 BINARY(mulhul,"pmulhud",0xe4)
 BINARY(orl,"por",0xeb)
+UNARY(signl,"psignd",0x380a)
 BINARY(subl,"psubd",0xfa)
 //BINARY(subssl,"psubsd",0xe9)
 //BINARY(subusl,"psubusd",0xd9)
@@ -255,6 +268,55 @@ sse_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
+sse_rule_convsbw (OrcProgram *p, void *user, OrcInstruction *insn)
+{
+  printf("  punpcklbw %%%s, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->args[1]].alloc),
+      x86_get_regname_sse(p->vars[insn->args[0]].alloc));
+
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x60;
+  x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc,
+      p->vars[insn->args[1]].alloc);
+
+  printf("  psraw $8, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->args[0]].alloc));
+  
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x71;
+  x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc, 4);
+  *p->codeptr++ = 8;
+}
+
+static void
+sse_rule_convubw (OrcProgram *p, void *user, OrcInstruction *insn)
+{
+  /* FIXME should do this by unpacking with a zero reg */
+
+  printf("  punpcklbw %%%s, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->args[1]].alloc),
+      x86_get_regname_sse(p->vars[insn->args[0]].alloc));
+
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x60;
+  x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc,
+      p->vars[insn->args[1]].alloc);
+
+  printf("  psrlw $8, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->args[0]].alloc));
+  
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x71;
+  x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc, 2);
+  *p->codeptr++ = 8;
+
+}
+
+static void
 sse_rule_convsuswb (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   printf("  packuswb %%%s, %%%s\n",
@@ -274,6 +336,7 @@ orc_program_sse_register_rules (void)
 #define REG(x) \
   orc_rule_register ( #x , ORC_TARGET_SSE, sse_rule_ ## x, NULL)
 
+  REG(absb);
   REG(addb);
   REG(addssb);
   REG(addusb);
@@ -291,11 +354,13 @@ orc_program_sse_register_rules (void)
   //REG(mulhsb);
   //REG(mulhub);
   REG(orb);
+  REG(signb);
   REG(subb);
   REG(subssb);
   REG(subusb);
   REG(xorb);
 
+  REG(absw);
   REG(addw);
   REG(addssw);
   REG(addusw);
@@ -313,11 +378,13 @@ orc_program_sse_register_rules (void)
   REG(mulhsw);
   REG(mulhuw);
   REG(orw);
+  REG(signw);
   REG(subw);
   REG(subssw);
   REG(subusw);
   REG(xorw);
 
+  REG(absl);
   REG(addl);
   //REG(addssl);
   //REG(addusl);
@@ -335,14 +402,21 @@ orc_program_sse_register_rules (void)
   REG(mulhsl);
   REG(mulhul);
   REG(orl);
+  REG(signl);
   REG(subl);
   //REG(subssl);
   //REG(subusl);
   REG(xorl);
 
-  orc_rule_register ("copyw", ORC_TARGET_SSE, sse_rule_copyw, NULL);
+  orc_rule_register ("copyb", ORC_TARGET_SSE, sse_rule_copyx, NULL);
+  orc_rule_register ("copyw", ORC_TARGET_SSE, sse_rule_copyx, NULL);
+  orc_rule_register ("copyl", ORC_TARGET_SSE, sse_rule_copyx, NULL);
+
   orc_rule_register ("shlw", ORC_TARGET_SSE, sse_rule_shlw, NULL);
   orc_rule_register ("shrsw", ORC_TARGET_SSE, sse_rule_shrsw, NULL);
+
+  orc_rule_register ("convsbw", ORC_TARGET_SSE, sse_rule_convsbw, NULL);
+  orc_rule_register ("convubw", ORC_TARGET_SSE, sse_rule_convubw, NULL);
   orc_rule_register ("convsuswb", ORC_TARGET_SSE, sse_rule_convsuswb, NULL);
 }
 

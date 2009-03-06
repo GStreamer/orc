@@ -210,6 +210,10 @@ void orc_opcode_init (void);
 void orc_program_append (OrcProgram *p, const char *opcode, int arg0, int arg1, int arg2);
 void orc_program_append_str (OrcProgram *p, const char *opcode,
     const char * arg0, const char * arg1, const char * arg2);
+void orc_program_append_ds (OrcProgram *program, const char *opcode, int arg0,
+    int arg1);
+void orc_program_append_ds_str (OrcProgram *p, const char *opcode,
+    const char * arg0, const char * arg1);
 
 void orc_mmx_init (void);
 void orc_sse_init (void);
@@ -236,8 +240,6 @@ int orc_program_dup_temporary (OrcProgram *program, int i, int j);
 int orc_program_add_source (OrcProgram *program, int size, const char *name);
 int orc_program_add_destination (OrcProgram *program, int size, const char *name);
 int orc_program_add_constant (OrcProgram *program, int size, int value, const char *name);
-void orc_program_append (OrcProgram *program, const char *opcode, int arg0,
-    int arg1, int arg2);
 
 void orc_program_x86_reset_alloc (OrcProgram *program);
 void orc_program_powerpc_reset_alloc (OrcProgram *program);

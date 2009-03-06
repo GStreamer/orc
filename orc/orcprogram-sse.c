@@ -7,7 +7,6 @@
 
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/mman.h>
 
 #include <orc/orcprogram.h>
 #include <orc/x86.h>
@@ -234,15 +233,15 @@ sse_emit_store_dest (OrcProgram *program, OrcVariable *var)
       break;
     case 4:
       x86_emit_mov_sse_memoffset (program, 4, var->alloc, 0, ptr_reg,
-          var->is_aligned);
+          var->is_aligned, var->is_uncached);
       break;
     case 8:
       x86_emit_mov_sse_memoffset (program, 8, var->alloc, 0, ptr_reg,
-          var->is_aligned);
+          var->is_aligned, var->is_uncached);
       break;
     case 16:
       x86_emit_mov_sse_memoffset (program, 16, var->alloc, 0, ptr_reg,
-          var->is_aligned);
+          var->is_aligned, var->is_uncached);
       break;
     default:
       printf("ERROR\n");

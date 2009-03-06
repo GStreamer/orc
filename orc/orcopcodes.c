@@ -91,7 +91,13 @@ convsuswb (OrcExecutor *ex, void *user)
 }
 
 static void
-convbw (OrcExecutor *ex, void *user)
+convsbw (OrcExecutor *ex, void *user)
+{
+  ex->args[0]->value = (int8_t)(ex->args[1]->value);
+}
+
+static void
+convubw (OrcExecutor *ex, void *user)
 {
   ex->args[0]->value = (uint8_t)(ex->args[1]->value);
 }
@@ -320,7 +326,8 @@ static OrcStaticOpcode opcodes[] = {
   { "subusl", subusl, NULL, { 4 }, { 4, 4 } },
   { "xorl", xorl, NULL, { 4 }, { 4, 4 } },
 
-  { "convbw", convbw, NULL, { 2 }, { 1 } },
+  { "convsbw", convsbw, NULL, { 2 }, { 1 } },
+  { "convubw", convubw, NULL, { 2 }, { 1 } },
   { "convsuswb", convsuswb, NULL, { 1 }, { 2 } },
 
   { "" }

@@ -7,7 +7,6 @@
 
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/mman.h>
 
 #include <orc/orcprogram.h>
 #include <orc/x86.h>
@@ -377,7 +376,7 @@ x86_emit_mov_mmx_memoffset (OrcProgram *program, int size, int reg1, int offset,
 
 void
 x86_emit_mov_sse_memoffset (OrcProgram *program, int size, int reg1, int offset,
-    int reg2, int aligned)
+    int reg2, int aligned, int uncached)
 {
   switch (size) {
     case 4:
@@ -398,11 +397,19 @@ x86_emit_mov_sse_memoffset (OrcProgram *program, int size, int reg1, int offset,
       break;
     case 16:
       if (aligned) {
-        printf("  movdqa %%%s, %d(%%%s)\n", x86_get_regname_sse(reg1), offset,
-            x86_get_regname_ptr(reg2));
-        *program->codeptr++ = 0x66;
-        *program->codeptr++ = 0x0f;
-        *program->codeptr++ = 0x7f;
+        if (uncached) {
+          printf("  movntdq %%%s, %d(%%%s)\n", x86_get_regname_sse(reg1), offset,
+              x86_get_regname_ptr(reg2));
+          *program->codeptr++ = 0x66;
+          *program->codeptr++ = 0x0f;
+          *program->codeptr++ = 0xe7;
+        } else {
+          printf("  movdqa %%%s, %d(%%%s)\n", x86_get_regname_sse(reg1), offset,
+              x86_get_regname_ptr(reg2));
+          *program->codeptr++ = 0x66;
+          *program->codeptr++ = 0x0f;
+          *program->codeptr++ = 0x7f;
+        }
       } else {
         printf("  movdqu %%%s, %d(%%%s)\n", x86_get_regname_sse(reg1), offset,
             x86_get_regname_ptr(reg2));
