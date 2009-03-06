@@ -4,6 +4,8 @@ pkgincludedir = $(includedir)/orc-@ORC_MAJORMINOR@/orc
 lib_LTLIBRARIES = liborc-@ORC_MAJORMINOR@.la
 
 liborc_@ORC_MAJORMINOR@_la_LIBS = $(ORC_LIBS)
+liborc_@ORC_MAJORMINOR@_la_LDFLAGS = \
+	-no-undefined -export-symbols-regex 'orc_'
 liborc_@ORC_MAJORMINOR@_la_CFLAGS = $(ORC_CFLAGS)
 
 liborc_@ORC_MAJORMINOR@_la_SOURCES = \
@@ -17,12 +19,18 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orcprogram-sse.c \
 	orcprogram.h \
 	orcopcodes.c \
-	orcprogram-linux.c \
 	orcrules-mmx.c \
 	orcrules-sse.c \
 	orcdebug.c \
 	orccpu.c \
 	x86.c
+
+if HAVE_OS_LINUX
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orcprogram-linux.c
+endif
+if HAVE_OS_WIN32
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orcprogram-win32.c
+endif
 
 if HAVE_I386
 liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-x86.c

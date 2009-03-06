@@ -7,7 +7,6 @@
 
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/mman.h>
 
 #include <orc/orcprogram.h>
 #include <orc/x86.h>

@@ -45,8 +45,8 @@ AM_CONDITIONAL(HAVE_ARM, test "x$HAVE_ARM" = "xyes")
       ;;
   esac
 
-AM_CONDITIONAL(HAVE_OS_WIN32, test "$HAVE_WIN32" = "yes")
-AM_CONDITIONAL(HAVE_OS_LINUX, test "$HAVE_LINUX" = "yes")
+AM_CONDITIONAL(HAVE_OS_WIN32, test "$HAVE_OS_WIN32" = "yes")
+AM_CONDITIONAL(HAVE_OS_LINUX, test "$HAVE_OS_LINUX" = "yes")
 
 ])
 
