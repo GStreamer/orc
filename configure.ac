@@ -30,18 +30,6 @@ AC_CONFIG_SRCDIR([orc/orc.h])
 ACLOCAL_AMFLAGS="-I m4 $ACLOCAL_AMFLAGS"
 AC_SUBST(ACLOCAL_AMFLAGS)
 
-PKG_CHECK_MODULES(GLIB, glib-2.0, HAVE_GLIB=yes, HAVE_GLIB=no)
-AC_SUBST(GLIB_LIBS)
-AC_SUBST(GLIB_CFLAGS)
-AC_ARG_ENABLE(glib,
-AC_HELP_STRING([--disable-glib],[disable usage of glib]),
-[case "${enableval}" in
-  yes) HAVE_GLIB=yes ;;
-  no) HAVE_GLIB=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --disable-glib) ;;
-esac])
-AM_CONDITIONAL(HAVE_GLIB, test "x$HAVE_GLIB" = "xyes")
-
 ##################################################
 # Check for gtk-doc.
 ##################################################
