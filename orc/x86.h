@@ -58,6 +58,7 @@ void x86_test (OrcProgram *program);
 
 void mmx_emit_loadiw (OrcProgram *p, int reg, int value);
 void sse_emit_loadiw (OrcProgram *p, int reg, int value);
+void sse_emit_loadw (OrcProgram *p, int reg, int offset, int reg1);
 
 enum {
   X86_EAX = ORC_GP_REG_BASE,

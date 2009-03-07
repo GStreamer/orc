@@ -29,13 +29,14 @@ void test5(void);
 void test6(void);
 void test7(void);
 void test8(void);
+void test9(void);
 
 int
 main (int argc, char *argv[])
 {
   orc_init ();
 
-  test8();
+  test9();
 
   exit(0);
 }
@@ -560,6 +561,47 @@ test8(void)
           (dest_ref[i] == dest_test[i])?' ':'*');
     }
 #endif
+  }
+
+  orc_executor_free (ex);
+  orc_program_free (p);
+}
+
+
+void
+test9(void)
+{
+  OrcProgram *p;
+  OrcExecutor *ex;
+  int value = 1;
+
+  p = orc_program_new_ds (2, 2);
+  orc_program_add_parameter (p, 2, "p1");
+
+  orc_program_append_str (p, "shrsw", "d1", "s1", "p1");
+
+  orc_program_compile (p);
+
+  ex = orc_executor_new (p);
+  orc_executor_set_n (ex, N - 4);
+  orc_executor_set_array_str (ex, "s1", src1);
+  orc_executor_set_param_str (ex, "p1", value);
+  orc_executor_set_array_str (ex, "d1", dest);
+
+  if (1) {
+    int i;
+
+    for(i=0;i<N;i++){
+      src1[i] = rand()&0xf;
+    }
+
+    orc_executor_run (ex);
+    //orc_executor_emulate (ex);
+
+    for(i=0;i<N;i++){
+      printf("#  %4d %4d %4d\n", src1[i], dest[i],
+          src1[i] >> value);
+    }
   }
 
   orc_executor_free (ex);

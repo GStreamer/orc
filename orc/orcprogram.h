@@ -21,10 +21,10 @@ typedef void (*OrcRuleEmitFunc)(OrcProgram *p, void *user, OrcInstruction *insn)
 
 #define ORC_N_REGS (32*4)
 #define ORC_N_INSNS 100
-#define ORC_N_VARIABLES 100
-#define ORC_N_REGISTERS 100
-#define ORC_N_FIXUPS 100
-#define ORC_N_LABELS 100
+#define ORC_N_VARIABLES 20
+#define ORC_N_REGISTERS 20
+#define ORC_N_FIXUPS 20
+#define ORC_N_LABELS 20
 
 #define ORC_GP_REG_BASE 32
 #define ORC_VEC_REG_BASE 64
@@ -192,6 +192,7 @@ struct _OrcExecutor {
   int counter3;
 
   void *arrays[ORC_N_VARIABLES];
+  int params[ORC_N_VARIABLES];
 
   OrcVariable vars[ORC_N_VARIABLES];
   OrcVariable *args[ORC_OPCODE_N_ARGS];
@@ -240,6 +241,7 @@ int orc_program_dup_temporary (OrcProgram *program, int i, int j);
 int orc_program_add_source (OrcProgram *program, int size, const char *name);
 int orc_program_add_destination (OrcProgram *program, int size, const char *name);
 int orc_program_add_constant (OrcProgram *program, int size, int value, const char *name);
+int orc_program_add_parameter (OrcProgram *program, int size, const char *name);
 
 void orc_program_x86_reset_alloc (OrcProgram *program);
 void orc_program_powerpc_reset_alloc (OrcProgram *program);
@@ -249,6 +251,8 @@ OrcExecutor * orc_executor_new (OrcProgram *program);
 void orc_executor_free (OrcExecutor *ex);
 void orc_executor_set_array (OrcExecutor *ex, int var, void *ptr);
 void orc_executor_set_array_str (OrcExecutor *ex, const char *name, void *ptr);
+void orc_executor_set_parameter (OrcExecutor *ex, int var, int value);
+void orc_executor_set_param_str (OrcExecutor *ex, const char *name, int value);
 void orc_executor_set_n (OrcExecutor *ex, int n);
 void orc_executor_emulate (OrcExecutor *ex);
 void orc_executor_run (OrcExecutor *ex);

@@ -149,6 +149,10 @@ sse_load_constants (OrcProgram *program)
         sse_emit_loadiw (program, program->vars[i].alloc,
             (int)program->vars[i].value);
         break;
+      case ORC_VAR_TYPE_PARAM:
+        sse_emit_loadw (program, program->vars[i].alloc,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[i]), x86_exec_ptr);
+        break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
         if (program->vars[i].ptr_register) {
@@ -423,6 +427,8 @@ sse_emit_loop (OrcProgram *program)
           sse_emit_load_src (program, args[k]);
           break;
         case ORC_VAR_TYPE_CONST:
+          break;
+        case ORC_VAR_TYPE_PARAM:
           break;
         case ORC_VAR_TYPE_TEMP:
           break;

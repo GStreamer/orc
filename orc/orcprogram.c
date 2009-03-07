@@ -134,11 +134,16 @@ orc_program_add_constant (OrcProgram *program, int size, int value, const char *
 }
 
 int
-orc_program_add_parameter (OrcProgram *program, int size, int value,
-    const char *name)
+orc_program_add_parameter (OrcProgram *program, int size, const char *name)
 {
+  int i = program->n_vars;
 
-  return 0;
+  program->vars[i].vartype = ORC_VAR_TYPE_PARAM;
+  program->vars[i].size = size;
+  program->vars[i].name = strdup(name);
+  program->n_vars++;
+
+  return i;
 }
 
 void
@@ -424,6 +429,11 @@ orc_program_global_reg_alloc (OrcProgram *program)
     var = program->vars + i;
     switch (var->vartype) {
       case ORC_VAR_TYPE_CONST:
+        var->first_use = -1;
+        var->last_use = -1;
+        var->alloc = orc_program_allocate_register (program, TRUE);
+        break;
+      case ORC_VAR_TYPE_PARAM:
         var->first_use = -1;
         var->last_use = -1;
         var->alloc = orc_program_allocate_register (program, TRUE);

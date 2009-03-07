@@ -72,6 +72,33 @@ sse_emit_loadiw (OrcProgram *p, int reg, int value)
   }
 }
 
+void
+sse_emit_loadw (OrcProgram *p, int reg, int offset, int reg1)
+{
+  printf("  movd %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
+      x86_get_regname_sse(reg));
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x6e;
+  x86_emit_modrm_memoffset (p, reg, offset, reg1);
+
+  printf("  pshuflw $0, %%%s, %%%s\n", x86_get_regname_sse(reg),
+      x86_get_regname_sse(reg));
+  *p->codeptr++ = 0xf2;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x70;
+  x86_emit_modrm_reg (p, reg, reg);
+  *p->codeptr++ = 0x00;
+
+  printf("  pshufd $0, %%%s, %%%s\n", x86_get_regname_sse(reg),
+      x86_get_regname_sse(reg));
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x70;
+  x86_emit_modrm_reg (p, reg, reg);
+  *p->codeptr++ = 0x00;
+}
+
 static void
 sse_rule_copyx (OrcProgram *p, void *user, OrcInstruction *insn)
 {
@@ -226,8 +253,21 @@ sse_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
     *p->codeptr++ = 0x71;
     x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc, 6);
     *p->codeptr++ = p->vars[insn->args[2]].value;
-  } else {
-    /* FIXME this doesn't work quite right */
+  } else if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_PARAM) {
+    /* FIXME this is a gross hack to reload the register with a
+     * 64-bit version of the parameter. */
+    printf("  movd %d(%%%s), %%%s\n",
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->args[2]]),
+        x86_get_regname_ptr(x86_exec_ptr),
+        x86_get_regname_sse(p->vars[insn->args[2]].alloc));
+    *p->codeptr++ = 0x66;
+    *p->codeptr++ = 0x0f;
+    *p->codeptr++ = 0x6e;
+    x86_emit_modrm_memoffset (p,
+        p->vars[insn->args[2]].alloc,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->args[2]]),
+        x86_exec_ptr);
+
     printf("  psllw %%%s, %%%s\n",
         x86_get_regname_sse(p->vars[insn->args[2]].alloc),
         x86_get_regname_sse(p->vars[insn->args[0]].alloc));
@@ -237,6 +277,8 @@ sse_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
     *p->codeptr++ = 0xf1;
     x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc,
         p->vars[insn->args[2]].alloc);
+  } else {
+    printf("ERROR\n");
   }
 }
 
@@ -253,8 +295,21 @@ sse_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
     *p->codeptr++ = 0x71;
     x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc, 4);
     *p->codeptr++ = p->vars[insn->args[2]].value;
-  } else {
-    /* FIXME this doesn't work quite right */
+  } else if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_PARAM) {
+    /* FIXME this is a gross hack to reload the register with a
+     * 64-bit version of the parameter. */
+    printf("  movd %d(%%%s), %%%s\n",
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->args[2]]),
+        x86_get_regname_ptr(x86_exec_ptr),
+        x86_get_regname_sse(p->vars[insn->args[2]].alloc));
+    *p->codeptr++ = 0x66;
+    *p->codeptr++ = 0x0f;
+    *p->codeptr++ = 0x6e;
+    x86_emit_modrm_memoffset (p,
+        p->vars[insn->args[2]].alloc,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->args[2]]),
+        x86_exec_ptr);
+
     printf("  psraw %%%s, %%%s\n",
         x86_get_regname_sse(p->vars[insn->args[2]].alloc),
         x86_get_regname_sse(p->vars[insn->args[0]].alloc));
@@ -262,8 +317,10 @@ sse_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
     *p->codeptr++ = 0x66;
     *p->codeptr++ = 0x0f;
     *p->codeptr++ = 0xe1;
-    x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc,
-        p->vars[insn->args[2]].alloc);
+    x86_emit_modrm_reg (p, p->vars[insn->args[2]].alloc,
+        p->vars[insn->args[0]].alloc);
+  } else {
+    printf("ERROR\n");
   }
 }
 

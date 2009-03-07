@@ -58,6 +58,20 @@ orc_executor_set_array_str (OrcExecutor *ex, const char *name, void *ptr)
 }
 
 void
+orc_executor_set_parameter (OrcExecutor *ex, int var, int value)
+{
+  ex->params[var] = value;
+}
+
+void
+orc_executor_set_param_str (OrcExecutor *ex, const char *name, int value)
+{
+  int var;
+  var = orc_program_find_var_by_name (ex->program, name);
+  ex->params[var] = value;
+}
+
+void
 orc_executor_set_n (OrcExecutor *ex, int n)
 {
   ex->n = n;
