@@ -127,16 +127,6 @@ orc_cpu_i386_getflags_cpuinfo (char *cpuinfo)
 }
 #endif
 
-#if 0
-static unsigned long
-orc_profile_stamp_rdtsc(void)
-{
-	unsigned long ts;
-	__asm__ __volatile__("rdtsc\n" : "=a" (ts) : : "edx");
-	return ts;
-}
-#endif
-
 #ifdef USE_I386_CPUID
 #ifdef __i386__
 static void
