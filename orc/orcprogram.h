@@ -183,6 +183,7 @@ struct _OrcProgram {
 
   int target;
   int loop_shift;
+  int long_jumps;
 };
 
 struct _OrcExecutor {
@@ -222,8 +223,6 @@ void orc_sse_init (void);
 void orc_arm_init (void);
 void orc_powerpc_init (void);
 void orc_c_init (void);
-
-void orc_program_set_target (OrcProgram *p, const char *target);
 
 void orc_program_compile (OrcProgram *p);
 void orc_program_c_init (OrcProgram *p);

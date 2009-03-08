@@ -74,8 +74,15 @@ sse_do_fixups (OrcProgram *program)
     if (program->fixups[i].type == 0) {
       unsigned char *label = program->labels[program->fixups[i].label];
       unsigned char *ptr = program->fixups[i].ptr;
+      int diff;
 
-      ptr[0] += label - ptr;
+      diff = ((int8_t)ptr[0]) + (label - ptr);
+      if (diff != (int8_t)diff) {
+        ORC_WARNING("short jump too long");
+        program->error = TRUE;
+      }
+
+      ptr[0] = diff;
     } else if (program->fixups[i].type == 1) {
       unsigned char *label = program->labels[program->fixups[i].label];
       unsigned char *ptr = program->fixups[i].ptr;

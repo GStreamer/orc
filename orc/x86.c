@@ -857,43 +857,64 @@ void x86_emit_jmp (OrcProgram *program, int label)
 {
   printf("  jmp .L%d\n", label);
 
-  *program->codeptr++ = 0xeb;
-  x86_add_fixup (program, program->codeptr, label, 0);
-  *program->codeptr++ = 0xff;
+  if (program->long_jumps) {
+    printf("ERROR\n");
+  } else {
+    *program->codeptr++ = 0xeb;
+    x86_add_fixup (program, program->codeptr, label, 0);
+    *program->codeptr++ = 0xff;
+  }
 }
 
 void x86_emit_jle (OrcProgram *program, int label)
 {
   printf("  jle .L%d\n", label);
 
-  *program->codeptr++ = 0x7e;
-  x86_add_fixup (program, program->codeptr, label, 0);
-  *program->codeptr++ = 0xff;
+  if (program->long_jumps) {
+    printf("ERROR\n");
+  } else {
+    *program->codeptr++ = 0x7e;
+    x86_add_fixup (program, program->codeptr, label, 0);
+    *program->codeptr++ = 0xff;
+  }
 }
 
 void x86_emit_je (OrcProgram *program, int label)
 {
   printf("  je .L%d\n", label);
 
-  *program->codeptr++ = 0x0f;
-  *program->codeptr++ = 0x84;
-  x86_add_fixup (program, program->codeptr, label, 1);
-  *program->codeptr++ = 0xfc;
-  *program->codeptr++ = 0xff;
-  *program->codeptr++ = 0xff;
-  *program->codeptr++ = 0xff;
+  if (program->long_jumps) {
+    *program->codeptr++ = 0x0f;
+    *program->codeptr++ = 0x84;
+    x86_add_fixup (program, program->codeptr, label, 1);
+    *program->codeptr++ = 0xfc;
+    *program->codeptr++ = 0xff;
+    *program->codeptr++ = 0xff;
+    *program->codeptr++ = 0xff;
+  } else {
+    *program->codeptr++ = 0x74;
+    x86_add_fixup (program, program->codeptr, label, 0);
+    *program->codeptr++ = 0xff;
+  }
 }
 
 void x86_emit_jne (OrcProgram *program, int label)
 {
   printf("  jne .L%d\n", label);
-  *program->codeptr++ = 0x0f;
-  *program->codeptr++ = 0x85;
-  x86_add_fixup (program, program->codeptr, label, 1);
-  *program->codeptr++ = 0xfc;
-  *program->codeptr++ = 0xff;
-  *program->codeptr++ = 0xff;
-  *program->codeptr++ = 0xff;
+
+  if (program->long_jumps) {
+    *program->codeptr++ = 0x0f;
+    *program->codeptr++ = 0x85;
+    x86_add_fixup (program, program->codeptr, label, 1);
+    *program->codeptr++ = 0xfc;
+    *program->codeptr++ = 0xff;
+    *program->codeptr++ = 0xff;
+    *program->codeptr++ = 0xff;
+  } else {
+    *program->codeptr++ = 0x75;
+    x86_add_fixup (program, program->codeptr, label, 0);
+    *program->codeptr++ = 0xff;
+  }
 }
 
 void x86_emit_label (OrcProgram *program, int label)
