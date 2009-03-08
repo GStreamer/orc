@@ -56,7 +56,8 @@ enum {
   ORC_TARGET_C = 0,
   ORC_TARGET_ALTIVEC = 1,
   ORC_TARGET_MMX = 2,
-  ORC_TARGET_SSE = 3
+  ORC_TARGET_SSE = 3,
+  ORC_TARGET_ARM = 4
 };
 
 typedef enum {
@@ -218,6 +219,7 @@ void orc_program_append_ds_str (OrcProgram *p, const char *opcode,
 
 void orc_mmx_init (void);
 void orc_sse_init (void);
+void orc_arm_init (void);
 void orc_powerpc_init (void);
 void orc_c_init (void);
 
@@ -227,14 +229,17 @@ void orc_program_compile (OrcProgram *p);
 void orc_program_c_init (OrcProgram *p);
 void orc_program_mmx_init (OrcProgram *p);
 void orc_program_sse_init (OrcProgram *p);
+void orc_program_arm_init (OrcProgram *p);
 void orc_program_powerpc_init (OrcProgram *p);
 void orc_program_mmx_assemble (OrcProgram *p);
 void orc_program_sse_assemble (OrcProgram *p);
+void orc_program_arm_assemble (OrcProgram *p);
 void orc_program_assemble_powerpc (OrcProgram *p);
 void orc_program_assemble_c (OrcProgram *p);
 void orc_program_free (OrcProgram *program);
 
 int orc_program_find_var_by_name (OrcProgram *program, const char *name);
+int orc_program_get_dest (OrcProgram *program);
 
 int orc_program_add_temporary (OrcProgram *program, int size, const char *name);
 int orc_program_dup_temporary (OrcProgram *program, int i, int j);

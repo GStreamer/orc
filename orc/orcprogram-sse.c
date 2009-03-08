@@ -252,21 +252,6 @@ sse_emit_store_dest (OrcProgram *program, OrcVariable *var)
   }
 }
 
-int
-orc_program_get_dest (OrcProgram *program)
-{
-  int k;
-
-  for(k=0;k<program->n_vars;k++){
-    if (program->vars[k].vartype == ORC_VAR_TYPE_DEST) {
-      return k;
-    }
-  }
-
-  ORC_ERROR("can't find dest");
-  return -1;
-}
-
 void
 orc_program_sse_assemble (OrcProgram *program)
 {

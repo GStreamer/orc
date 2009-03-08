@@ -7,6 +7,7 @@
 #include <stdarg.h>
 
 #include <orc/orcprogram.h>
+#include <orc/orcdebug.h>
 
 void orc_program_assign_rules (OrcProgram *program);
 void orc_program_global_reg_alloc (OrcProgram *program);
@@ -14,7 +15,7 @@ void orc_program_rewrite_vars (OrcProgram *program);
 void orc_program_rewrite_vars2 (OrcProgram *program);
 void orc_program_do_regs (OrcProgram *program);
 
-int _orc_default_target = ORC_TARGET_SSE;
+int _orc_default_target = ORC_TARGET_ARM;
 
 OrcProgram *
 orc_program_new (void)
@@ -197,6 +198,21 @@ orc_program_find_var_by_name (OrcProgram *program, const char *name)
   return -1;
 }
 
+int
+orc_program_get_dest (OrcProgram *program)
+{
+  int k;
+
+  for(k=0;k<program->n_vars;k++){
+    if (program->vars[k].vartype == ORC_VAR_TYPE_DEST) {
+      return k;
+    }
+  }
+
+  ORC_ERROR("can't find dest");
+  return -1;
+}
+
 void
 orc_program_append_str (OrcProgram *program, const char *name,
     const char *arg1, const char *arg2, const char *arg3)
@@ -242,6 +258,7 @@ orc_program_allocate_register (OrcProgram *program, int data_reg)
 
   if (data_reg) {
     offset = ORC_VEC_REG_BASE;
+offset = ORC_GP_REG_BASE;
   } else {
     offset = ORC_GP_REG_BASE;
   }
@@ -290,6 +307,9 @@ orc_program_compile (OrcProgram *program)
     case ORC_TARGET_MMX:
       orc_program_mmx_init (program);
       break;
+    case ORC_TARGET_ARM:
+      orc_program_arm_init (program);
+      break;
     default:
       break;
   }
@@ -321,6 +341,9 @@ orc_program_compile (OrcProgram *program)
       break;
     case ORC_TARGET_SSE:
       orc_program_sse_assemble (program);
+      break;
+    case ORC_TARGET_ARM:
+      orc_program_arm_assemble (program);
       break;
     default:
       break;

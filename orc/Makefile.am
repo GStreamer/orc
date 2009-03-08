@@ -13,6 +13,7 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orcexecutor.c \
 	orcrule.c \
 	orcprogram.c \
+	orcprogram-arm.c \
 	orcprogram-c.c \
 	orcprogram-powerpc.c \
 	orcprogram-mmx.c \
@@ -21,9 +22,11 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orcopcodes.c \
 	orcrules-mmx.c \
 	orcrules-sse.c \
+	orcrules-arm.c \
 	orcdebug.c \
 	orccpu.c \
-	x86.c
+	x86.c \
+	arm.c
 
 liborc_@ORC_MAJORMINOR@_la_SOURCES += orcprogram-$(CODEMEM_BACKEND).c
 
