@@ -24,64 +24,6 @@ void orc_program_rewrite_vars (OrcProgram *program);
 void orc_program_dump (OrcProgram *program);
 
 void
-mmx_emit_prologue (OrcProgram *program)
-{
-  orc_program_append_code(program,".global test\n");
-  orc_program_append_code(program,"test:\n");
-  if (x86_64) {
-
-  } else {
-    x86_emit_push (program, 4, X86_EBP);
-    x86_emit_mov_memoffset_reg (program, 4, 8, X86_ESP, X86_EBP);
-    if (program->used_regs[X86_EDI]) {
-      x86_emit_push (program, 4, X86_EDI);
-    }
-    if (program->used_regs[X86_ESI]) {
-      x86_emit_push (program, 4, X86_ESI);
-    }
-    if (program->used_regs[X86_EBX]) {
-      x86_emit_push (program, 4, X86_EBX);
-    }
-  }
-}
-
-void
-mmx_emit_epilogue (OrcProgram *program)
-{
-  x86_emit_emms (program);
-
-  if (x86_64) {
-
-  } else {
-    if (program->used_regs[X86_EBX]) {
-      x86_emit_pop (program, 4, X86_EBX);
-    }
-    if (program->used_regs[X86_ESI]) {
-      x86_emit_pop (program, 4, X86_ESI);
-    }
-    if (program->used_regs[X86_EDI]) {
-      x86_emit_pop (program, 4, X86_EDI);
-    }
-    x86_emit_pop (program, 4, X86_EBP);
-  }
-  x86_emit_ret (program);
-}
-
-void
-mmx_do_fixups (OrcProgram *program)
-{
-  int i;
-  for(i=0;i<program->n_fixups;i++){
-    if (program->fixups[i].type == 0) {
-      unsigned char *label = program->labels[program->fixups[i].label];
-      unsigned char *ptr = program->fixups[i].ptr;
-
-      ptr[0] += label - ptr;
-    }
-  }
-}
-
-void
 orc_mmx_init (void)
 {
   orc_program_mmx_register_rules ();
@@ -221,7 +163,7 @@ mmx_emit_store_dest (OrcProgram *program, OrcVariable *var)
 void
 orc_program_mmx_assemble (OrcProgram *program)
 {
-  mmx_emit_prologue (program);
+  x86_emit_prologue (program);
 
   x86_emit_mov_memoffset_reg (program, 4, (int)ORC_STRUCT_OFFSET(OrcExecutor,n),
       x86_exec_ptr, X86_ECX);
@@ -271,9 +213,10 @@ orc_program_mmx_assemble (OrcProgram *program)
   x86_emit_jne (program, 2);
   x86_emit_label (program, 3);
 
-  mmx_emit_epilogue (program);
+  x86_emit_emms (program);
+  x86_emit_epilogue (program);
 
-  mmx_do_fixups (program);
+  x86_do_fixups (program);
 }
 
 void

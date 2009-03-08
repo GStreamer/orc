@@ -25,76 +25,6 @@ void orc_program_rewrite_vars (OrcProgram *program);
 void orc_program_dump (OrcProgram *program);
 
 void
-sse_emit_prologue (OrcProgram *program)
-{
-  orc_program_append_code(program,".global _binary_dump_start\n");
-  orc_program_append_code(program,"_binary_dump_start:\n");
-  if (x86_64) {
-
-  } else {
-    x86_emit_push (program, 4, X86_EBP);
-    x86_emit_mov_memoffset_reg (program, 4, 8, X86_ESP, X86_EBP);
-    if (program->used_regs[X86_EDI]) {
-      x86_emit_push (program, 4, X86_EDI);
-    }
-    if (program->used_regs[X86_ESI]) {
-      x86_emit_push (program, 4, X86_ESI);
-    }
-    if (program->used_regs[X86_EBX]) {
-      x86_emit_push (program, 4, X86_EBX);
-    }
-  }
-}
-
-void
-sse_emit_epilogue (OrcProgram *program)
-{
-  if (x86_64) {
-
-  } else {
-    if (program->used_regs[X86_EBX]) {
-      x86_emit_pop (program, 4, X86_EBX);
-    }
-    if (program->used_regs[X86_ESI]) {
-      x86_emit_pop (program, 4, X86_ESI);
-    }
-    if (program->used_regs[X86_EDI]) {
-      x86_emit_pop (program, 4, X86_EDI);
-    }
-    x86_emit_pop (program, 4, X86_EBP);
-  }
-  x86_emit_ret (program);
-}
-
-void
-sse_do_fixups (OrcProgram *program)
-{
-  int i;
-  for(i=0;i<program->n_fixups;i++){
-    if (program->fixups[i].type == 0) {
-      unsigned char *label = program->labels[program->fixups[i].label];
-      unsigned char *ptr = program->fixups[i].ptr;
-      int diff;
-
-      diff = ((int8_t)ptr[0]) + (label - ptr);
-      if (diff != (int8_t)diff) {
-        ORC_WARNING("short jump too long");
-        program->error = TRUE;
-      }
-
-      ptr[0] = diff;
-    } else if (program->fixups[i].type == 1) {
-      unsigned char *label = program->labels[program->fixups[i].label];
-      unsigned char *ptr = program->fixups[i].ptr;
-      int diff;
-
-      diff = ORC_READ_UINT32_LE (ptr) + (label - ptr);
-      ORC_WRITE_UINT32_LE(ptr, diff);
-    }
-  }
-}
-
-void
 orc_sse_init (void)
 {
   orc_program_sse_register_rules ();
@@ -266,7 +196,7 @@ orc_program_sse_assemble (OrcProgram *program)
 
   program->vars[dest_var].is_aligned = FALSE;
 
-  sse_emit_prologue (program);
+  x86_emit_prologue (program);
 
   if (program->loop_shift > 0) {
 
@@ -382,9 +312,9 @@ orc_program_sse_assemble (OrcProgram *program)
     program->loop_shift = save_loop_shift;
   }
 
-  sse_emit_epilogue (program);
+  x86_emit_epilogue (program);
 
-  sse_do_fixups (program);
+  x86_do_fixups (program);
 }
 
 void
