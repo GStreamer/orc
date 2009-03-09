@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -e
+
+#prefix=/opt/arm-2008q3/bin/arm-none-linux-gnueabi-
+#archO=elf32-littlearm
+#archB=arm
+
+prefix=
+archO=elf32-i386
+archB=i386
+
+
+./simple >test.s
+#objcopy -I binary -O elf32-i386 -B i386 dump dump.o
+${prefix}objcopy -I binary -O $archO -B $archB dump dump.o
+${prefix}objdump -Dr dump.o | grep '^ *[0-9a-f]*:' | sed 's/^ *[0-9a-f]*:.//' >dump.dis
+${prefix}gcc -c -march=armv7-a test.s
+${prefix}objdump -dr test.o | grep '^ *[0-9a-f]*:' | sed 's/^ *[0-9a-f]*:.//' >test.dis
+
+diff -u test.dis dump.dis
+
