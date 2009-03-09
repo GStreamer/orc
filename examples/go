@@ -6,8 +6,12 @@ set -e
 #archO=elf32-littlearm
 #archB=arm
 
+#prefix=
+#archO=elf32-i386
+#archB=i386
+
 prefix=
-archO=elf32-i386
+archO=elf64-x86-64
 archB=i386
 
 

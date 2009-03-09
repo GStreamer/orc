@@ -28,7 +28,7 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	x86.c \
 	arm.c
 
-liborc_@ORC_MAJORMINOR@_la_SOURCES += orcprogram-$(CODEMEM_BACKEND).c
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orcprogram-@CODEMEM_BACKEND@.c
 
 if HAVE_I386
 liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-x86.c

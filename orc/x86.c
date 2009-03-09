@@ -309,8 +309,8 @@ x86_emit_mov_memoffset_sse (OrcProgram *program, int size, int offset,
     case 16:
       printf("  movdqu %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
           x86_get_regname_sse(reg2));
-      x86_emit_rex(program, 0, reg2, 0, reg1);
       *program->codeptr++ = 0xf3;
+      x86_emit_rex(program, 0, reg2, 0, reg1);
       *program->codeptr++ = 0x0f;
       *program->codeptr++ = 0x6f;
       break;
@@ -959,7 +959,13 @@ x86_emit_prologue (OrcProgram *program)
   orc_program_append_code(program,".global _binary_dump_start\n");
   orc_program_append_code(program,"_binary_dump_start:\n");
   if (x86_64) {
-
+    int i;
+    for(i=0;i<16;i++){
+      if (program->used_regs[ORC_GP_REG_BASE+i] &&
+          program->save_regs[ORC_GP_REG_BASE+i]) {
+        x86_emit_push (program, 8, ORC_GP_REG_BASE+i);
+      }
+    }
   } else {
     x86_emit_push (program, 4, X86_EBP);
     x86_emit_mov_memoffset_reg (program, 4, 8, X86_ESP, X86_EBP);
@@ -979,7 +985,13 @@ void
 x86_emit_epilogue (OrcProgram *program)
 {
   if (x86_64) {
-
+    int i;
+    for(i=15;i>=0;i--){
+      if (program->used_regs[ORC_GP_REG_BASE+i] &&
+          program->save_regs[ORC_GP_REG_BASE+i]) {
+        x86_emit_push (program, 8, ORC_GP_REG_BASE+i);
+      }
+    }
   } else {
     if (program->used_regs[X86_EBX]) {
       x86_emit_pop (program, 4, X86_EBX);
