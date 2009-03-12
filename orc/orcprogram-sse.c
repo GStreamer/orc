@@ -360,13 +360,14 @@ sse_emit_loop (OrcProgram *program)
     }
 
     rule = insn->rule;
-    if (rule) {
+    if (rule && rule->emit) {
       if (args[0]->alloc != args[1]->alloc) {
         x86_emit_mov_sse_reg_reg (program, args[1]->alloc, args[0]->alloc);
       }
       rule->emit (program, rule->emit_user, insn);
     } else {
       orc_program_append_code(program,"No rule for: %s\n", opcode->name);
+      program->error = TRUE;
     }
 
     for(k=0;k<opcode->n_dest;k++){
