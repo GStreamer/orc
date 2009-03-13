@@ -52,6 +52,7 @@ pkginclude_HEADERS = \
 	orc.h \
 	orcdebug.h \
 	orcprogram.h \
+	orcutils.h \
 	x86.h
 
 nodist_pkginclude_HEADERS = orc-stdint.h
