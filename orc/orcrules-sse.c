@@ -22,13 +22,13 @@ void
 sse_emit_loadiw (OrcProgram *p, int reg, int value)
 {
   if (value == 0) {
-    printf("  pxor %%%s, %%%s\n", x86_get_regname_sse(reg),
+    ORC_ASM_CODE(p,"  pxor %%%s, %%%s\n", x86_get_regname_sse(reg),
         x86_get_regname_sse(reg));
     *p->codeptr++ = 0x0f;
     *p->codeptr++ = 0xef;
     x86_emit_modrm_reg (p, reg, reg);
   } else if (value == -1) {
-    printf("  pcmpeqw %%%s, %%%s\n", x86_get_regname_sse(reg),
+    ORC_ASM_CODE(p,"  pcmpeqw %%%s, %%%s\n", x86_get_regname_sse(reg),
         x86_get_regname_sse(reg));
     *p->codeptr++ = 0x66;
     *p->codeptr++ = 0x0f;
@@ -36,14 +36,14 @@ sse_emit_loadiw (OrcProgram *p, int reg, int value)
     x86_emit_modrm_reg (p, reg, reg);
 
   } else if (value == 1) {
-    printf("  pcmpeqw %%%s, %%%s\n", x86_get_regname_sse(reg),
+    ORC_ASM_CODE(p,"  pcmpeqw %%%s, %%%s\n", x86_get_regname_sse(reg),
         x86_get_regname_sse(reg));
     *p->codeptr++ = 0x66;
     *p->codeptr++ = 0x0f;
     *p->codeptr++ = 0x75;
     x86_emit_modrm_reg (p, reg, reg);
 
-    printf("  psrlw $15, %%%s\n", x86_get_regname_sse(reg));
+    ORC_ASM_CODE(p,"  psrlw $15, %%%s\n", x86_get_regname_sse(reg));
     *p->codeptr++ = 0x66;
     *p->codeptr++ = 0x0f;
     *p->codeptr++ = 0x71;
@@ -55,13 +55,13 @@ sse_emit_loadiw (OrcProgram *p, int reg, int value)
 
     x86_emit_mov_imm_reg (p, 4, value, X86_ECX);
 
-    printf("  movd %%ecx, %%%s\n", x86_get_regname_sse(reg));
+    ORC_ASM_CODE(p,"  movd %%ecx, %%%s\n", x86_get_regname_sse(reg));
     *p->codeptr++ = 0x66;
     *p->codeptr++ = 0x0f;
     *p->codeptr++ = 0x6e;
     x86_emit_modrm_reg (p, X86_ECX, reg);
 
-    printf("  pshufd $0, %%%s, %%%s\n", x86_get_regname_sse(reg),
+    ORC_ASM_CODE(p,"  pshufd $0, %%%s, %%%s\n", x86_get_regname_sse(reg),
         x86_get_regname_sse(reg));
 
     *p->codeptr++ = 0x66;
@@ -75,14 +75,14 @@ sse_emit_loadiw (OrcProgram *p, int reg, int value)
 void
 sse_emit_loadw (OrcProgram *p, int reg, int offset, int reg1)
 {
-  printf("  movd %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
+  ORC_ASM_CODE(p,"  movd %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
       x86_get_regname_sse(reg));
   *p->codeptr++ = 0x66;
   *p->codeptr++ = 0x0f;
   *p->codeptr++ = 0x6e;
   x86_emit_modrm_memoffset (p, reg, offset, reg1);
 
-  printf("  pshuflw $0, %%%s, %%%s\n", x86_get_regname_sse(reg),
+  ORC_ASM_CODE(p,"  pshuflw $0, %%%s, %%%s\n", x86_get_regname_sse(reg),
       x86_get_regname_sse(reg));
   *p->codeptr++ = 0xf2;
   *p->codeptr++ = 0x0f;
@@ -90,7 +90,7 @@ sse_emit_loadw (OrcProgram *p, int reg, int offset, int reg1)
   x86_emit_modrm_reg (p, reg, reg);
   *p->codeptr++ = 0x00;
 
-  printf("  pshufd $0, %%%s, %%%s\n", x86_get_regname_sse(reg),
+  ORC_ASM_CODE(p,"  pshufd $0, %%%s, %%%s\n", x86_get_regname_sse(reg),
       x86_get_regname_sse(reg));
   *p->codeptr++ = 0x66;
   *p->codeptr++ = 0x0f;
@@ -102,7 +102,7 @@ sse_emit_loadw (OrcProgram *p, int reg, int offset, int reg1)
 static void
 sse_rule_copyx (OrcProgram *p, void *user, OrcInstruction *insn)
 {
-  printf("  movdqa %%%s, %%%s\n",
+  ORC_ASM_CODE(p,"  movdqa %%%s, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[1]].alloc),
       x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
@@ -119,7 +119,7 @@ static void
 sse_emit_66_rex_0f (OrcProgram *p, OrcInstruction *insn, int code,
     const char *insn_name)
 {
-  printf("  %s %%%s, %%%s\n", insn_name,
+  ORC_ASM_CODE(p,"  %s %%%s, %%%s\n", insn_name,
       x86_get_regname_sse(p->vars[insn->args[2]].alloc),
       x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
@@ -244,7 +244,7 @@ static void
 sse_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_CONST) {
-    printf("  psllw $%d, %%%s\n",
+    ORC_ASM_CODE(p,"  psllw $%d, %%%s\n",
         p->vars[insn->args[2]].value,
         x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
@@ -256,7 +256,7 @@ sse_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
   } else if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_PARAM) {
     /* FIXME this is a gross hack to reload the register with a
      * 64-bit version of the parameter. */
-    printf("  movd %d(%%%s), %%%s\n",
+    ORC_ASM_CODE(p,"  movd %d(%%%s), %%%s\n",
         (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->args[2]]),
         x86_get_regname_ptr(x86_exec_ptr),
         x86_get_regname_sse(p->vars[insn->args[2]].alloc));
@@ -268,7 +268,7 @@ sse_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
         (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->args[2]]),
         x86_exec_ptr);
 
-    printf("  psllw %%%s, %%%s\n",
+    ORC_ASM_CODE(p,"  psllw %%%s, %%%s\n",
         x86_get_regname_sse(p->vars[insn->args[2]].alloc),
         x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
@@ -278,7 +278,7 @@ sse_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
     x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc,
         p->vars[insn->args[2]].alloc);
   } else {
-    printf("ERROR\n");
+    ORC_ASM_CODE(p,"ERROR\n");
   }
 }
 
@@ -286,7 +286,7 @@ static void
 sse_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_CONST) {
-    printf("  psraw $%d, %%%s\n",
+    ORC_ASM_CODE(p,"  psraw $%d, %%%s\n",
         p->vars[insn->args[2]].value,
         x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
@@ -298,7 +298,7 @@ sse_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
   } else if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_PARAM) {
     /* FIXME this is a gross hack to reload the register with a
      * 64-bit version of the parameter. */
-    printf("  movd %d(%%%s), %%%s\n",
+    ORC_ASM_CODE(p,"  movd %d(%%%s), %%%s\n",
         (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->args[2]]),
         x86_get_regname_ptr(x86_exec_ptr),
         x86_get_regname_sse(p->vars[insn->args[2]].alloc));
@@ -310,7 +310,7 @@ sse_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
         (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->args[2]]),
         x86_exec_ptr);
 
-    printf("  psraw %%%s, %%%s\n",
+    ORC_ASM_CODE(p,"  psraw %%%s, %%%s\n",
         x86_get_regname_sse(p->vars[insn->args[2]].alloc),
         x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
@@ -320,14 +320,14 @@ sse_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
     x86_emit_modrm_reg (p, p->vars[insn->args[2]].alloc,
         p->vars[insn->args[0]].alloc);
   } else {
-    printf("ERROR\n");
+    ORC_ASM_CODE(p,"ERROR\n");
   }
 }
 
 static void
 sse_rule_convsbw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
-  printf("  punpcklbw %%%s, %%%s\n",
+  ORC_ASM_CODE(p,"  punpcklbw %%%s, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[1]].alloc),
       x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
@@ -337,7 +337,7 @@ sse_rule_convsbw (OrcProgram *p, void *user, OrcInstruction *insn)
   x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc,
       p->vars[insn->args[1]].alloc);
 
-  printf("  psraw $8, %%%s\n",
+  ORC_ASM_CODE(p,"  psraw $8, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[0]].alloc));
   
   *p->codeptr++ = 0x66;
@@ -352,7 +352,7 @@ sse_rule_convubw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   /* FIXME should do this by unpacking with a zero reg */
 
-  printf("  punpcklbw %%%s, %%%s\n",
+  ORC_ASM_CODE(p,"  punpcklbw %%%s, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[1]].alloc),
       x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
@@ -362,7 +362,7 @@ sse_rule_convubw (OrcProgram *p, void *user, OrcInstruction *insn)
   x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc,
       p->vars[insn->args[1]].alloc);
 
-  printf("  psrlw $8, %%%s\n",
+  ORC_ASM_CODE(p,"  psrlw $8, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[0]].alloc));
   
   *p->codeptr++ = 0x66;
@@ -376,7 +376,7 @@ sse_rule_convubw (OrcProgram *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_convsuswb (OrcProgram *p, void *user, OrcInstruction *insn)
 {
-  printf("  packuswb %%%s, %%%s\n",
+  ORC_ASM_CODE(p,"  packuswb %%%s, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[1]].alloc),
       x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 

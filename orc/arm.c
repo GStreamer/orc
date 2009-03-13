@@ -49,7 +49,7 @@ arm_emit (OrcProgram *program, uint32_t insn)
 void
 arm_emit_bx_lr (OrcProgram *program)
 {
-  printf("  bx lr\n");
+  ORC_ASM_CODE(program,"  bx lr\n");
   arm_emit (program, 0xe12fff1e);
 }
 
@@ -59,17 +59,17 @@ arm_emit_push (OrcProgram *program, int regs)
   int i;
   int x = 0;
 
-  printf("  push {");
+  ORC_ASM_CODE(program,"  push {");
   for(i=0;i<16;i++){
     if (regs & (1<<i)) {
       x |= (1<<i);
-      printf("r%d", i);
+      ORC_ASM_CODE(program,"r%d", i);
       if (x != regs) {
-        printf(", ");
+        ORC_ASM_CODE(program,", ");
       }
     }
   }
-  printf("}\n");
+  ORC_ASM_CODE(program,"}\n");
 
   arm_emit (program, 0xe92d0000 | regs);
 }
@@ -80,17 +80,17 @@ arm_emit_pop (OrcProgram *program, int regs)
   int i;
   int x = 0;
 
-  printf("  pop {");
+  ORC_ASM_CODE(program,"  pop {");
   for(i=0;i<16;i++){
     if (regs & (1<<i)) {
       x |= (1<<i);
-      printf("r%d", i);
+      ORC_ASM_CODE(program,"r%d", i);
       if (x != regs) {
-        printf(", ");
+        ORC_ASM_CODE(program,", ");
       }
     }
   }
-  printf("}\n");
+  ORC_ASM_CODE(program,"}\n");
 
   arm_emit (program, 0xe8bd0000 | regs);
 }
@@ -104,7 +104,7 @@ arm_emit_mov (OrcProgram *program, int dest, int src)
   code |= (src&0xf) << 0;
   code |= (dest&0xf) << 12;
 
-  printf("  mov %s, %s\n", arm_reg_name (dest), arm_reg_name (src));
+  ORC_ASM_CODE(program,"  mov %s, %s\n", arm_reg_name (dest), arm_reg_name (src));
 
   arm_emit (program, code);
 }
@@ -112,7 +112,7 @@ arm_emit_mov (OrcProgram *program, int dest, int src)
 void
 arm_emit_label (OrcProgram *program, int label)
 {
-  printf(".L%d:\n", label);
+  ORC_ASM_CODE(program,".L%d:\n", label);
 
   program->labels[label] = program->codeptr;
 }
@@ -156,7 +156,7 @@ arm_emit_branch (OrcProgram *program, int cond, int label)
   arm_add_fixup (program, label, 0);
   arm_emit (program, code);
 
-  printf("  b%s .L%d\n", cond_names[cond], label);
+  ORC_ASM_CODE(program,"  b%s .L%d\n", cond_names[cond], label);
 }
 
 void
@@ -176,7 +176,7 @@ arm_emit_loadimm (OrcProgram *program, int dest, int imm)
   code |= (((16-shift2)&0xf) << 8);
   code |= (imm&0xff);
 
-  printf("  mov %s, #0x%08x\n", arm_reg_name (dest), imm << (shift2*2));
+  ORC_ASM_CODE(program,"  mov %s, #0x%08x\n", arm_reg_name (dest), imm << (shift2*2));
   arm_emit (program, code);
 }
 
@@ -190,7 +190,7 @@ arm_emit_add (OrcProgram *program, int dest, int src1, int src2)
   code |= (dest&0xf) << 12;
   code |= (src2&0xf) << 0;
 
-  printf("  add %s, %s, %s\n",
+  ORC_ASM_CODE(program,"  add %s, %s, %s\n",
       arm_reg_name (dest),
       arm_reg_name (src1),
       arm_reg_name (src2));
@@ -207,7 +207,7 @@ arm_emit_sub (OrcProgram *program, int dest, int src1, int src2)
   code |= (dest&0xf) << 12;
   code |= (src2&0xf) << 0;
 
-  printf("  sub %s, %s, %s\n",
+  ORC_ASM_CODE(program,"  sub %s, %s, %s\n",
       arm_reg_name (dest),
       arm_reg_name (src1),
       arm_reg_name (src2));
@@ -224,7 +224,7 @@ arm_emit_sub_imm (OrcProgram *program, int dest, int src1, int value)
   code |= (dest&0xf) << 12;
   code |= (value) << 0;
 
-  printf("  subs %s, %s, #%d\n",
+  ORC_ASM_CODE(program,"  subs %s, %s, #%d\n",
       arm_reg_name (dest),
       arm_reg_name (src1),
       value);
@@ -240,7 +240,7 @@ arm_emit_cmp_imm (OrcProgram *program, int src1, int value)
   code |= (src1&0xf) << 16;
   code |= (value) << 0;
 
-  printf("  cmp %s, #%d\n",
+  ORC_ASM_CODE(program,"  cmp %s, #%d\n",
       arm_reg_name (src1),
       value);
   arm_emit (program, code);
@@ -256,7 +256,7 @@ arm_emit_load_reg (OrcProgram *program, int dest, int src1, int offset)
   code |= (dest&0xf) << 12;
   code |= offset&0xfff;
 
-  printf("  ldr %s, [%s, #%d]\n",
+  ORC_ASM_CODE(program,"  ldr %s, [%s, #%d]\n",
       arm_reg_name (dest),
       arm_reg_name (src1), offset);
   arm_emit (program, code);
@@ -290,13 +290,13 @@ arm_emit_dp_reg (OrcProgram *program, int cond, int opcode, int dest,
   code |= (src2&0xf) << 0;
 
   if (shift_expn[opcode]) {
-    printf("  %s%s %s, %s\n",
+    ORC_ASM_CODE(program,"  %s%s %s, %s\n",
         dp_insn_names[opcode],
         update ? "s" : "",
         arm_reg_name (src1),
         arm_reg_name (src2));
   } else {
-    printf("  %s%s %s, %s, %s\n",
+    ORC_ASM_CODE(program,"  %s%s %s, %s, %s\n",
         dp_insn_names[opcode],
         update ? "s" : "",
         arm_reg_name (dest),

@@ -8,7 +8,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 
-#include <orc/orcprogram.h>
+#include <orc/orc.h>
+#include <orc/orcdebug.h>
 #include <orc/x86.h>
 
 #define SIZE 65536
@@ -92,8 +93,7 @@ mmx_load_constants (OrcProgram *program)
               (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]), x86_exec_ptr,
               program->vars[i].ptr_register);
         } else {
-          /* FIXME */
-          printf("ERROR");
+          ORC_PROGRAM_ERROR(program, "unimplemented");
         }
         break;
       default:
@@ -125,7 +125,7 @@ mmx_emit_load_src (OrcProgram *program, OrcVariable *var)
       x86_emit_mov_memoffset_mmx (program, 8, 0, ptr_reg, var->alloc);
       break;
     default:
-      printf("ERROR\n");
+      ORC_PROGRAM_ERROR(program, "bad size");
   }
 }
 
@@ -144,7 +144,7 @@ mmx_emit_store_dest (OrcProgram *program, OrcVariable *var)
     case 0:
       /* FIXME we might be using ecx twice here */
       if (ptr_reg == X86_ECX) {
-        printf("ERROR\n");
+        ORC_PROGRAM_ERROR(program, "unimplemented");
       }
       x86_emit_mov_mmx_reg (program, var->alloc, X86_ECX);
       x86_emit_mov_reg_memoffset (program, 2, X86_ECX, 0, ptr_reg);
@@ -156,7 +156,7 @@ mmx_emit_store_dest (OrcProgram *program, OrcVariable *var)
       x86_emit_mov_mmx_memoffset (program, 8, var->alloc, 0, ptr_reg);
       break;
     default:
-      printf("ERROR\n");
+      ORC_PROGRAM_ERROR(program, "unimplemented");
   }
 }
 

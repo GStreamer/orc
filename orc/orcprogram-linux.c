@@ -10,6 +10,7 @@
 #include <sys/mman.h>
 
 #include <orc/orcprogram.h>
+#include <orc/orcdebug.h>
 
 #define SIZE 65536
 
@@ -24,7 +25,7 @@ orc_program_allocate_codemem (OrcProgram *program)
   fd = mkstemp (filename);
   if (fd == -1) {
     /* FIXME oh crap */
-    printf("failed to create temp file\n");
+    ORC_ERROR ("failed to create temp file");
     program->error = TRUE;
     return;
   }
@@ -35,14 +36,14 @@ orc_program_allocate_codemem (OrcProgram *program)
   program->code = mmap (NULL, SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
   if (program->code == MAP_FAILED) {
     /* FIXME oh crap */
-    printf("failed to create write map\n");
+    ORC_ERROR ("failed to create write map");
     program->error = TRUE;
     return;
   }
   program->code_exec = mmap (NULL, SIZE, PROT_READ|PROT_EXEC, MAP_SHARED, fd, 0);
   if (program->code_exec == MAP_FAILED) {
     /* FIXME oh crap */
-    printf("failed to create exec map\n");
+    ORC_ERROR ("failed to create exec map");
     program->error = TRUE;
     return;
   }

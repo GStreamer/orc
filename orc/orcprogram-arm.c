@@ -185,7 +185,7 @@ arm_emit_load_src (OrcProgram *program, OrcVariable *var)
       //arm_emit_mov_memoffset_arm (program, 16, 0, ptr_reg, var->alloc);
       break;
     default:
-      printf("ERROR bad size %d\n", var->size << program->loop_shift);
+      ORC_PROGRAM_ERROR(program, "bad size %d\n", var->size << program->loop_shift);
   }
 }
 
@@ -223,7 +223,7 @@ arm_emit_store_dest (OrcProgram *program, OrcVariable *var)
       //    var->is_aligned, var->is_uncached);
       break;
     default:
-      printf("ERROR\n");
+      ORC_PROGRAM_ERROR(program, "bad size %d\n", var->size << program->loop_shift);
   }
 }
 

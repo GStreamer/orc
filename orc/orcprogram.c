@@ -157,7 +157,7 @@ orc_program_append_ds (OrcProgram *program, const char *name, int arg0,
 
   insn->opcode = orc_opcode_find_by_name (name);
   if (!insn->opcode) {
-    printf("unknown opcode: %s\n", name);
+    ORC_ERROR ("unknown opcode: %s", name);
   }
   insn->args[0] = arg0;
   insn->args[1] = arg1;
@@ -175,7 +175,7 @@ orc_program_append (OrcProgram *program, const char *name, int arg0,
 
   insn->opcode = orc_opcode_find_by_name (name);
   if (!insn->opcode) {
-    printf("unknown opcode: %s\n", name);
+    ORC_ERROR ("unknown opcode: %s", name);
   }
   insn->args[0] = arg0;
   insn->args[1] = arg1;
@@ -209,7 +209,7 @@ orc_program_get_dest (OrcProgram *program)
     }
   }
 
-  ORC_ERROR("can't find dest");
+  ORC_PROGRAM_ERROR(program, "failed to find destination array");
   return -1;
 }
 
@@ -223,7 +223,7 @@ orc_program_append_str (OrcProgram *program, const char *name,
 
   insn->opcode = orc_opcode_find_by_name (name);
   if (!insn->opcode) {
-    printf("unknown opcode: %s\n", name);
+    ORC_ERROR ("unknown opcode: %s", name);
   }
   insn->args[0] = orc_program_find_var_by_name (program, arg1);
   insn->args[1] = orc_program_find_var_by_name (program, arg2);
@@ -242,7 +242,7 @@ orc_program_append_ds_str (OrcProgram *program, const char *name,
 
   insn->opcode = orc_opcode_find_by_name (name);
   if (!insn->opcode) {
-    printf("unknown opcode: %s\n", name);
+    ORC_ERROR ("unknown opcode: %s", name);
   }
   insn->args[0] = orc_program_find_var_by_name (program, arg1);
   insn->args[1] = orc_program_find_var_by_name (program, arg2);
@@ -284,7 +284,7 @@ orc_program_allocate_register (OrcProgram *program, int data_reg)
     }
   }
 
-  printf("register overflow\n");
+  ORC_ERROR ("register overflow");
   return 0;
 }
 
@@ -391,7 +391,7 @@ orc_program_rewrite_vars (OrcProgram *program)
     for(k=opcode->n_dest;k<opcode->n_src + opcode->n_dest;k++){
       var = insn->args[k];
       if (program->vars[var].vartype == ORC_VAR_TYPE_DEST) {
-        printf("ERROR: using dest var as source\n");
+        ORC_PROGRAM_ERROR(program, "using dest var as source");
       }
 
       actual_var = var;
@@ -402,7 +402,7 @@ orc_program_rewrite_vars (OrcProgram *program)
 
       if (!program->vars[var].used) {
         if (program->vars[var].vartype == ORC_VAR_TYPE_TEMP) {
-          printf("ERROR: using uninitialized temp var\n");
+          ORC_PROGRAM_ERROR(program, "using uninitialized temp var");
         }
         program->vars[var].used = TRUE;
         program->vars[var].first_use = j;
@@ -414,13 +414,13 @@ orc_program_rewrite_vars (OrcProgram *program)
       var = insn->args[k];
 
       if (program->vars[var].vartype == ORC_VAR_TYPE_SRC) {
-        printf("ERROR: using src var as dest\n");
+        ORC_PROGRAM_ERROR(program,"using src var as dest");
       }
       if (program->vars[var].vartype == ORC_VAR_TYPE_CONST) {
-        printf("ERROR: using const var as dest\n");
+        ORC_PROGRAM_ERROR(program,"using const var as dest");
       }
       if (program->vars[var].vartype == ORC_VAR_TYPE_PARAM) {
-        printf("ERROR: using param var as dest\n");
+        ORC_PROGRAM_ERROR(program,"using param var as dest");
       }
 
       actual_var = var;
@@ -434,7 +434,7 @@ orc_program_rewrite_vars (OrcProgram *program)
         program->vars[actual_var].first_use = j;
       } else {
         if (program->vars[var].vartype == ORC_VAR_TYPE_DEST) {
-          printf("ERROR: writing dest more than once\n");
+          ORC_PROGRAM_ERROR(program,"writing dest more than once");
         }
         if (program->vars[var].vartype == ORC_VAR_TYPE_TEMP) {
           actual_var = orc_program_dup_temporary (program, var, j);
@@ -557,16 +557,6 @@ orc_program_rewrite_vars2 (OrcProgram *program)
     }
   }
 
-#if 0
-  for(i=0;i<program->n_vars;i++){
-    printf("# %2d: %2d %2d %d\n",
-        i,
-        program->vars[i].first_use,
-        program->vars[i].last_use,
-        program->vars[i].alloc);
-  }
-#endif
-
 }
 
 void
@@ -579,43 +569,6 @@ orc_program_dump_code (OrcProgram *program)
 
   n = fwrite (program->code, 1, program->codeptr - program->code, file);
   fclose (file);
-}
-
-void
-orc_program_dump (OrcProgram *program)
-{
-  int i;
-  int j;
-  OrcOpcode *opcode;
-  OrcInstruction *insn;
-
-  for(i=0;i<program->n_insns;i++){
-    insn = program->insns + i;
-    opcode = insn->opcode;
-
-    printf("insn: %d\n", i);
-    printf("  opcode: %s\n", opcode->name);
-
-    for(j=0;j<opcode->n_dest;j++){
-      printf("  dest%d: %d %s\n", j, insn->args[j],
-          program->vars[insn->args[j]].name);
-    }
-    for(j=0;j<opcode->n_src;j++){
-      printf("  src%d: %d %s\n", j, insn->args[opcode->n_dest + j],
-          program->vars[insn->args[opcode->n_dest + j]].name);
-    }
-
-    printf("\n");
-  }
-
-  for(i=0;i<program->n_vars;i++){
-    printf("var: %d %s\n", i, program->vars[i].name);
-    printf("first_use: %d\n", program->vars[i].first_use);
-    printf("last_use: %d\n", program->vars[i].last_use);
-
-    printf("\n");
-  }
-
 }
 
 void

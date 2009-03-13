@@ -137,8 +137,8 @@ powerpc_emit_prologue (OrcProgram *program)
 {
   int i;
 
-  printf (".global test\n");
-  printf ("test:\n");
+  ORC_ASM_CODE (program, ".global test\n");
+  ORC_ASM_CODE (program, "test:\n");
 
   powerpc_emit_stwu (program, POWERPC_R1, POWERPC_R1, -16);
 
@@ -154,7 +154,7 @@ powerpc_emit_addi (OrcProgram *program, int regd, int rega, int imm)
 {
   unsigned int insn;
 
-  printf("  addi %s, %s, %d\n",
+  ORC_ASM_CODE(program,"  addi %s, %s, %d\n",
       powerpc_get_regname(regd),
       powerpc_get_regname(rega), imm);
   insn = (14<<26) | (powerpc_regnum (regd)<<21) | (powerpc_regnum (rega)<<16);
@@ -168,7 +168,7 @@ powerpc_emit_lwz (OrcProgram *program, int regd, int rega, int imm)
 {
   unsigned int insn;
 
-  printf("  lwz %s, %d(%s)\n",
+  ORC_ASM_CODE(program,"  lwz %s, %d(%s)\n",
       powerpc_get_regname(regd),
       imm, powerpc_get_regname(rega));
   insn = (32<<26) | (powerpc_regnum (regd)<<21) | (powerpc_regnum (rega)<<16);
@@ -182,7 +182,7 @@ powerpc_emit_stwu (OrcProgram *program, int regs, int rega, int offset)
 {
   unsigned int insn;
 
-  printf("  stwu %s, %d(%s)\n",
+  ORC_ASM_CODE(program,"  stwu %s, %d(%s)\n",
       powerpc_get_regname(regs),
       offset, powerpc_get_regname(rega));
   insn = (37<<26) | (powerpc_regnum (regs)<<21) | (powerpc_regnum (rega)<<16);
@@ -197,7 +197,7 @@ powerpc_emit_srawi (OrcProgram *program, int regd, int rega, int shift,
 {
   unsigned int insn;
 
-  printf("  srawi%s %s, %s, %d\n", (record)?".":"",
+  ORC_ASM_CODE(program,"  srawi%s %s, %s, %d\n", (record)?".":"",
       powerpc_get_regname(regd),
       powerpc_get_regname(rega), shift);
 
@@ -268,7 +268,7 @@ powerpc_emit_epilogue (OrcProgram *program)
   }
 
   powerpc_emit_addi (program, POWERPC_R1, POWERPC_R1, 16);
-  printf("  blr\n");
+  ORC_ASM_CODE(program,"  blr\n");
   powerpc_emit(program, 0x4e800020);
 }
 
@@ -351,7 +351,7 @@ powerpc_load_constants (OrcProgram *program)
   for(i=0;i<program->n_vars;i++){
     switch (program->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:
-        printf("  vspltish %s, %d\n",
+        ORC_ASM_CODE(program,"  vspltish %s, %d\n",
             powerpc_get_regname(program->vars[i].alloc),
             (int)program->vars[i].value);
         powerpc_emit_655510 (program, 4,
@@ -367,7 +367,7 @@ powerpc_load_constants (OrcProgram *program)
               (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
         } else {
           /* FIXME */
-          printf("ERROR");
+          ORC_ASM_CODE(program,"ERROR");
         }
         break;
       default:
@@ -384,17 +384,17 @@ powerpc_emit_load_src (OrcProgram *program, OrcVariable *var)
 
   switch (program->loop_shift) {
     case 0:
-      printf("  lvehx %s, 0, %s\n", 
+      ORC_ASM_CODE(program,"  lvehx %s, 0, %s\n", 
           powerpc_get_regname (var->alloc),
           powerpc_get_regname (ptr_reg));
       powerpc_emit_X (program, 31, powerpc_regnum(var->alloc),
           0, powerpc_regnum(ptr_reg), 39);
-      printf("  lvsl %s, 0, %s\n", 
+      ORC_ASM_CODE(program,"  lvsl %s, 0, %s\n", 
           powerpc_get_regname (POWERPC_V0),
           powerpc_get_regname (ptr_reg));
       powerpc_emit_X (program, 31, powerpc_regnum(POWERPC_V0),
           0, powerpc_regnum(ptr_reg), 6);
-      printf("  vperm %s, %s, %s, %s\n", 
+      ORC_ASM_CODE(program,"  vperm %s, %s, %s, %s\n", 
           powerpc_get_regname (var->alloc),
           powerpc_get_regname (var->alloc),
           powerpc_get_regname (var->alloc),
@@ -406,7 +406,7 @@ powerpc_emit_load_src (OrcProgram *program, OrcVariable *var)
           powerpc_regnum(POWERPC_V0), 43);
       break;
     default:
-      printf("ERROR\n");
+      ORC_ASM_CODE(program,"ERROR\n");
   }
 }
 
@@ -418,12 +418,12 @@ powerpc_emit_store_dest (OrcProgram *program, OrcVariable *var)
 
   switch (program->loop_shift) {
     case 0:
-      printf("  lvsr %s, 0, %s\n", 
+      ORC_ASM_CODE(program,"  lvsr %s, 0, %s\n", 
           powerpc_get_regname (POWERPC_V0),
           powerpc_get_regname (ptr_reg));
       powerpc_emit_X (program, 31, powerpc_regnum(POWERPC_V0),
           0, powerpc_regnum(ptr_reg), 38);
-      printf("  vperm %s, %s, %s, %s\n", 
+      ORC_ASM_CODE(program,"  vperm %s, %s, %s, %s\n", 
           powerpc_get_regname (var->alloc),
           powerpc_get_regname (var->alloc),
           powerpc_get_regname (var->alloc),
@@ -433,7 +433,7 @@ powerpc_emit_store_dest (OrcProgram *program, OrcVariable *var)
           powerpc_regnum(var->alloc),
           powerpc_regnum(var->alloc),
           powerpc_regnum(POWERPC_V0), 43);
-      printf("  stvehx %s, 0, %s\n", 
+      ORC_ASM_CODE(program,"  stvehx %s, 0, %s\n", 
           powerpc_get_regname (var->alloc),
           powerpc_get_regname (ptr_reg));
       powerpc_emit_X (program, 31,
@@ -441,7 +441,7 @@ powerpc_emit_store_dest (OrcProgram *program, OrcVariable *var)
           0, powerpc_regnum(ptr_reg), 167);
       break;
     default:
-      printf("ERROR\n");
+      ORC_ASM_CODE(program,"ERROR\n");
   }
 }
 
@@ -465,7 +465,7 @@ orc_program_assemble_powerpc (OrcProgram *program)
   powerpc_emit_beq (program, 1);
 
   powerpc_emit (program, 0x7c0903a6);
-  printf ("  mtctr %s\n", powerpc_get_regname(POWERPC_R0));
+  ORC_ASM_CODE (program, "  mtctr %s\n", powerpc_get_regname(POWERPC_R0));
 
   powerpc_load_constants (program);
 
@@ -475,17 +475,17 @@ orc_program_assemble_powerpc (OrcProgram *program)
     insn = program->insns + j;
     opcode = insn->opcode;
 
-    printf("# %d: %s", j, insn->opcode->name);
+    ORC_ASM_CODE(program,"# %d: %s", j, insn->opcode->name);
 
     /* set up args */
     for(k=0;k<opcode->n_src + opcode->n_dest;k++){
       args[k] = program->vars + insn->args[k];
-      printf(" %d", args[k]->alloc);
+      ORC_ASM_CODE(program," %d", args[k]->alloc);
       if (args[k]->is_chained) {
-        printf(" (chained)");
+        ORC_ASM_CODE(program," (chained)");
       }
     }
-    printf("\n");
+    ORC_ASM_CODE(program,"\n");
 
     for(k=opcode->n_dest;k<opcode->n_src + opcode->n_dest;k++){
       switch (args[k]->vartype) {
@@ -505,7 +505,7 @@ orc_program_assemble_powerpc (OrcProgram *program)
     if (rule) {
       rule->emit (program, rule->emit_user, insn);
     } else {
-      printf("No rule for: %s\n", opcode->name);
+      ORC_ASM_CODE(program,"No rule for: %s\n", opcode->name);
     }
 
     for(k=0;k<opcode->n_dest;k++){
@@ -530,7 +530,7 @@ orc_program_assemble_powerpc (OrcProgram *program)
             program->vars[k].ptr_register,
             program->vars[k].size << program->loop_shift);
       } else {
-        printf("ERROR\n");
+        ORC_ASM_CODE(program,"ERROR\n");
       }
     }
   }
@@ -553,7 +553,7 @@ powerpc_rule_addw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   unsigned int x;
 
-  printf("  vadduhm %s, %s, %s\n",
+  ORC_ASM_CODE(p,"  vadduhm %s, %s, %s\n",
       powerpc_get_regname(p->vars[insn->args[0]].alloc),
       powerpc_get_regname(p->vars[insn->args[1]].alloc),
       powerpc_get_regname(p->vars[insn->args[2]].alloc));
@@ -570,7 +570,7 @@ powerpc_rule_addw (OrcProgram *p, void *user, OrcInstruction *insn)
 static void
 powerpc_rule_subw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
-  printf("  vsubuhm %s, %s, %s\n",
+  ORC_ASM_CODE(p,"  vsubuhm %s, %s, %s\n",
       powerpc_get_regname(p->vars[insn->args[0]].alloc),
       powerpc_get_regname(p->vars[insn->args[1]].alloc),
       powerpc_get_regname(p->vars[insn->args[2]].alloc));
@@ -579,7 +579,7 @@ powerpc_rule_subw (OrcProgram *p, void *user, OrcInstruction *insn)
 static void
 powerpc_rule_mullw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
-  printf("  vxor %s, %s, %s\n",
+  ORC_ASM_CODE(p,"  vxor %s, %s, %s\n",
       powerpc_get_regname(POWERPC_V0),
       powerpc_get_regname(POWERPC_V0),
       powerpc_get_regname(POWERPC_V0));
@@ -588,7 +588,7 @@ powerpc_rule_mullw (OrcProgram *p, void *user, OrcInstruction *insn)
       powerpc_regnum(POWERPC_V0),
       powerpc_regnum(POWERPC_V0), 1220);
 
-  printf("  vmladduhm %s, %s, %s, %s\n",
+  ORC_ASM_CODE(p,"  vmladduhm %s, %s, %s, %s\n",
       powerpc_get_regname(p->vars[insn->args[0]].alloc),
       powerpc_get_regname(p->vars[insn->args[1]].alloc),
       powerpc_get_regname(p->vars[insn->args[2]].alloc),
@@ -604,7 +604,7 @@ powerpc_rule_mullw (OrcProgram *p, void *user, OrcInstruction *insn)
 static void
 powerpc_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
-  printf("  vrlh %s, %s, %s\n",
+  ORC_ASM_CODE(p,"  vrlh %s, %s, %s\n",
       powerpc_get_regname(p->vars[insn->args[0]].alloc),
       powerpc_get_regname(p->vars[insn->args[1]].alloc),
       powerpc_get_regname(p->vars[insn->args[2]].alloc));
@@ -619,7 +619,7 @@ powerpc_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
 {
   unsigned int x;
 
-  printf("  vsrah %s, %s, %s\n",
+  ORC_ASM_CODE(p,"  vsrah %s, %s, %s\n",
       powerpc_get_regname(p->vars[insn->args[0]].alloc),
       powerpc_get_regname(p->vars[insn->args[1]].alloc),
       powerpc_get_regname(p->vars[insn->args[2]].alloc));
@@ -648,7 +648,7 @@ orc_program_powerpc_register_rules (void)
 
 void powerpc_emit_ret (OrcProgram *program)
 {
-  printf("  ret\n");
+  ORC_ASM_CODE(program,"  ret\n");
   //*program->codeptr++ = 0xc3;
 }
 
@@ -669,7 +669,7 @@ powerpc_add_label (OrcProgram *program, unsigned char *ptr, int label)
 
 void powerpc_emit_beq (OrcProgram *program, int label)
 {
-  printf("  ble- .L%d\n", label);
+  ORC_ASM_CODE(program,"  ble- .L%d\n", label);
 
   powerpc_add_fixup (program, program->codeptr, label);
   powerpc_emit (program, 0x40810000);
@@ -677,7 +677,7 @@ void powerpc_emit_beq (OrcProgram *program, int label)
 
 void powerpc_emit_bne (OrcProgram *program, int label)
 {
-  printf("  bdnz+ .L%d\n", label);
+  ORC_ASM_CODE(program,"  bdnz+ .L%d\n", label);
 
   powerpc_add_fixup (program, program->codeptr, label);
   powerpc_emit (program, 0x42000000);
@@ -685,7 +685,7 @@ void powerpc_emit_bne (OrcProgram *program, int label)
 
 void powerpc_emit_label (OrcProgram *program, int label)
 {
-  printf(".L%d:\n", label);
+  ORC_ASM_CODE(program,".L%d:\n", label);
 
   powerpc_add_label (program, program->codeptr, label);
 }

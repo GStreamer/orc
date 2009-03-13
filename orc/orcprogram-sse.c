@@ -97,8 +97,7 @@ sse_load_constants (OrcProgram *program)
               (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]), x86_exec_ptr,
               program->vars[i].ptr_register);
         } else {
-          /* FIXME */
-          printf("ERROR\n");
+          ORC_PROGRAM_ERROR(program,"unimplemented");
         }
         break;
       default:
@@ -140,7 +139,8 @@ sse_emit_load_src (OrcProgram *program, OrcVariable *var)
       x86_emit_mov_memoffset_sse (program, 16, 0, ptr_reg, var->alloc);
       break;
     default:
-      printf("ERROR\n");
+      ORC_PROGRAM_ERROR(program,"unimplemented");
+      break;
   }
 }
 
@@ -159,7 +159,7 @@ sse_emit_store_dest (OrcProgram *program, OrcVariable *var)
     case 1:
       /* FIXME we might be using ecx twice here */
       if (ptr_reg == X86_ECX) {
-        printf("ERROR\n");
+        ORC_PROGRAM_ERROR(program,"unimplemented");
       }
       x86_emit_mov_sse_reg (program, var->alloc, X86_ECX);
       x86_emit_mov_reg_memoffset (program, 1, X86_ECX, 0, ptr_reg);
@@ -167,7 +167,7 @@ sse_emit_store_dest (OrcProgram *program, OrcVariable *var)
     case 2:
       /* FIXME we might be using ecx twice here */
       if (ptr_reg == X86_ECX) {
-        printf("ERROR\n");
+        ORC_PROGRAM_ERROR(program,"unimplemented");
       }
       x86_emit_mov_sse_reg (program, var->alloc, X86_ECX);
       x86_emit_mov_reg_memoffset (program, 2, X86_ECX, 0, ptr_reg);
@@ -185,7 +185,8 @@ sse_emit_store_dest (OrcProgram *program, OrcVariable *var)
           var->is_aligned, var->is_uncached);
       break;
     default:
-      printf("ERROR\n");
+      ORC_PROGRAM_ERROR(program,"bad size");
+      break;
   }
 }
 
@@ -331,17 +332,17 @@ sse_emit_loop (OrcProgram *program)
     insn = program->insns + j;
     opcode = insn->opcode;
 
-    orc_program_append_code(program,"# %d: %s", j, insn->opcode->name);
+    ORC_ASM_CODE(program,"# %d: %s", j, insn->opcode->name);
 
     /* set up args */
     for(k=0;k<opcode->n_src + opcode->n_dest;k++){
       args[k] = program->vars + insn->args[k];
-      orc_program_append_code(program," %d", args[k]->alloc);
+      ORC_ASM_CODE(program," %d", args[k]->alloc);
       if (args[k]->is_chained) {
-        orc_program_append_code(program," (chained)");
+        ORC_ASM_CODE(program," (chained)");
       }
     }
-    orc_program_append_code(program,"\n");
+    ORC_ASM_CODE(program,"\n");
 
     for(k=opcode->n_dest;k<opcode->n_src + opcode->n_dest;k++){
       switch (args[k]->vartype) {
@@ -366,7 +367,7 @@ sse_emit_loop (OrcProgram *program)
       }
       rule->emit (program, rule->emit_user, insn);
     } else {
-      orc_program_append_code(program,"No rule for: %s\n", opcode->name);
+      ORC_ASM_CODE(program,"No rule for: %s\n", opcode->name);
       program->error = TRUE;
     }
 

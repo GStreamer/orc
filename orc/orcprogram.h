@@ -44,13 +44,24 @@ typedef void (*OrcRuleEmitFunc)(OrcProgram *p, void *user, OrcInstruction *insn)
 #define ORC_STRUCT_OFFSET(struct_type, member)    \
       ((long) ((unsigned int *) &((struct_type*) 0)->member))
 
-
 #ifndef TRUE
 #define TRUE 1
 #endif
 #ifndef FALSE
 #define FALSE 0
 #endif
+
+#define ORC_ENABLE_ASM_CODE
+#ifdef ORC_ENABLE_ASM_CODE
+#define ORC_ASM_CODE(fmt,...) orc_program_append_code(fmt, __VA_ARGS__)
+#else
+#define ORC_ASM_CODE(fmt,...)
+#endif
+
+#define ORC_PROGRAM_ERROR(program, ...) do { \
+  program->error = TRUE; \
+  orc_debug_print(ORC_DEBUG_ERROR, __FILE__, ORC_FUNCTION, __LINE__, __VA_ARGS__); \
+} while (0)
 
 enum {
   ORC_TARGET_C = 0,
