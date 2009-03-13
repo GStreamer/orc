@@ -15,6 +15,7 @@
 #define SIZE 65536
 
 
+#ifdef HAVE_CODEMEM_MMAP
 void
 orc_program_allocate_codemem (OrcProgram *program)
 {
@@ -53,4 +54,18 @@ orc_program_allocate_codemem (OrcProgram *program)
   program->code_size = SIZE;
   program->codeptr = program->code;
 }
+#endif
+
+#ifdef HAVE_CODEMEM_MALLOC
+void
+orc_program_allocate_codemem (OrcProgram *program)
+{
+  /* Now you know why Windows has viruses */
+
+  program->code = malloc(SIZE);
+  program->code_exec = program->code;
+  program->code_size = SIZE;
+  program->codeptr = program->code;
+}
+#endif
 

@@ -88,16 +88,15 @@ fi
 
 case "${host_os}" in
   mingw*|cygwin*)
-    CODEMEM_BACKEND=win32
+    AC_DEFINE(HAVE_CODEMEM_MALLOC, 1, [Use malloc to allocate code for execution])
     ;;
   linux*|darwin*|solaris*|netbsd*|freebsd*|openbsd*)
-    CODEMEM_BACKEND=linux
+    AC_DEFINE(HAVE_CODEMEM_MMAP, 1, [Use mmap to allocate code for execution])
     ;;
   *)
     AC_ERROR([no code allocation backend])
     ;;
 esac
-AC_SUBST(CODEMEM_BACKEND)
 
 AC_DEFINE(ORC_EXPORTS, 1, [Defined for compiling internal code])
 
