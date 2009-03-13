@@ -288,7 +288,7 @@ orc_program_allocate_register (OrcProgram *program, int data_reg)
   return 0;
 }
 
-void
+orc_bool
 orc_program_compile (OrcProgram *program)
 {
   int i;
@@ -353,6 +353,12 @@ orc_program_compile (OrcProgram *program)
   }
 
   orc_program_dump_code (program);
+
+  if (program->error) {
+    ORC_ERROR("program failed to compile");
+    return FALSE;
+  }
+  return TRUE;
 }
 
 void

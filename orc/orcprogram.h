@@ -3,7 +3,7 @@
 #define _ORC_PROGRAM_H_
 
 #include <orc/orc-stdint.h>
-//#include <glib.h>
+#include <orc/orcutils.h>
 
 typedef struct _OrcExecutor OrcExecutor;
 typedef struct _OrcVariable OrcVariable;
@@ -224,7 +224,7 @@ void orc_arm_init (void);
 void orc_powerpc_init (void);
 void orc_c_init (void);
 
-void orc_program_compile (OrcProgram *p);
+orc_bool orc_program_compile (OrcProgram *p);
 void orc_program_c_init (OrcProgram *p);
 void orc_program_mmx_init (OrcProgram *p);
 void orc_program_sse_init (OrcProgram *p);
