@@ -12,6 +12,15 @@ static OrcOpcode *opcode_list;
 static int n_opcodes;
 static int n_opcodes_alloc;
 
+#define ORC_SB_MAX 127
+#define ORC_SB_MIN (-1-ORC_SB_MAX)
+#define ORC_UB_MAX 255
+#define ORC_SW_MAX 32767
+#define ORC_SW_MIN (-1-ORC_SW_MAX)
+#define ORC_UW_MAX 65535
+#define ORC_SL_MAX 2147483647
+#define ORC_SL_MIN (-1-ORC_SL_MAX)
+#define ORC_UL_MAX 4294967295U
 
 
 void
@@ -85,12 +94,6 @@ orc_opcode_find_by_name (const char *name)
 }
 
 static void
-convsuswb (OrcExecutor *ex, void *user)
-{
-  ex->args[0]->value = (int16_t)(ex->args[1]->value);
-}
-
-static void
 convsbw (OrcExecutor *ex, void *user)
 {
   ex->args[0]->value = (int8_t)(ex->args[1]->value);
@@ -102,9 +105,77 @@ convubw (OrcExecutor *ex, void *user)
   ex->args[0]->value = (uint8_t)(ex->args[1]->value);
 }
 
-#ifndef CLAMP
-#define CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
-#endif
+static void
+convswl (OrcExecutor *ex, void *user)
+{
+  ex->args[0]->value = (int8_t)(ex->args[1]->value);
+}
+
+static void
+convuwl (OrcExecutor *ex, void *user)
+{
+  ex->args[0]->value = (uint8_t)(ex->args[1]->value);
+}
+
+static void
+convwb (OrcExecutor *ex, void *user)
+{
+  ex->args[0]->value = (int16_t)(ex->args[1]->value);
+}
+
+static void
+convssswb (OrcExecutor *ex, void *user)
+{
+  ex->args[0]->value = CLAMP((int16_t)(ex->args[1]->value), -128, 127);
+}
+
+static void
+convsuswb (OrcExecutor *ex, void *user)
+{
+  ex->args[0]->value = CLAMP((int16_t)(ex->args[1]->value), 0, 255);
+}
+
+static void
+convusswb (OrcExecutor *ex, void *user)
+{
+  ex->args[0]->value = CLAMP((uint16_t)(ex->args[1]->value), -128, 127);
+}
+
+static void
+convuuswb (OrcExecutor *ex, void *user)
+{
+  ex->args[0]->value = CLAMP((uint16_t)(ex->args[1]->value), 0, 255);
+}
+
+static void
+convlw (OrcExecutor *ex, void *user)
+{
+  ex->args[0]->value = (int32_t)(ex->args[1]->value);
+}
+
+static void
+convssslw (OrcExecutor *ex, void *user)
+{
+  ex->args[0]->value = CLAMP((int32_t)(ex->args[1]->value), ORC_SW_MIN, ORC_SW_MAX);
+}
+
+static void
+convsuslw (OrcExecutor *ex, void *user)
+{
+  ex->args[0]->value = CLAMP((int32_t)(ex->args[1]->value), 0, ORC_UW_MAX);
+}
+
+static void
+convusslw (OrcExecutor *ex, void *user)
+{
+  ex->args[0]->value = CLAMP((uint32_t)(ex->args[1]->value), ORC_SW_MIN, ORC_SW_MAX);
+}
+
+static void
+convuuslw (OrcExecutor *ex, void *user)
+{
+  ex->args[0]->value = CLAMP((uint32_t)(ex->args[1]->value), 0, ORC_UW_MAX);
+}
 
 #define UNARY(name,type,code) \
 static void \
@@ -135,23 +206,14 @@ name (OrcExecutor *ex, void *user) \
 #define UNARY_SB(name,code) UNARY(name, int8_t, code)
 #define BINARY_SB(name,code) BINARY(name, int8_t, code)
 #define BINARY_UB(name,code) BINARY(name, uint8_t, code)
-#define ORC_SB_MAX 127
-#define ORC_SB_MIN (-1-ORC_SB_MAX)
-#define ORC_UB_MAX 255
 
 #define UNARY_SW(name,code) UNARY(name, int16_t, code)
 #define BINARY_SW(name,code) BINARY(name, int16_t, code)
 #define BINARY_UW(name,code) BINARY(name, uint16_t, code)
-#define ORC_SW_MAX 32767
-#define ORC_SW_MIN (-1-ORC_SW_MAX)
-#define ORC_UW_MAX 65535
 
 #define UNARY_SL(name,code) UNARY(name, int32_t, code)
 #define BINARY_SL(name,code) BINARY(name, int32_t, code)
 #define BINARY_UL(name,code) BINARY(name, uint32_t, code)
-#define ORC_SL_MAX 2147483647
-#define ORC_SL_MIN (-1-ORC_SL_MAX)
-#define ORC_UL_MAX 4294967295U
 
 UNARY_SB(absb, (a<0)?-a:a)
 BINARY_SB(addb, a + b)
@@ -236,6 +298,24 @@ BINARY_SL(subl, a - b)
 BINARY_SL(subssl, CLAMP(ORC_SL_MIN,ORC_SL_MAX,(int64_t)a - (int64_t)b))
 BINARY_UL(subusl, CLAMP(0,ORC_UL_MAX,(uint64_t)a - (uint64_t)b))
 BINARY_SL(xorl, a ^ b)
+
+
+#define MUL(name, type1, type2) \
+static void \
+name (OrcExecutor *ex, void *user) \
+{ \
+  ex->args[0]->value = ((type2)(type1)ex->args[1]->value) * \
+    ((type2)(type1)ex->args[2]->value); \
+}
+
+MUL(mulsbw, int8_t, int16_t)
+MUL(mulubw, uint8_t, uint16_t)
+MUL(mulswl, int16_t, int32_t)
+MUL(muluwl, uint16_t, uint32_t)
+#ifdef ENABLE_INT64
+MUL(mulslq, int32_t, int64_t)
+MUL(mululq, uint32_t, uint64_t)
+#endif
 
 static OrcStaticOpcode opcodes[] = {
 
@@ -328,7 +408,39 @@ static OrcStaticOpcode opcodes[] = {
 
   { "convsbw", convsbw, NULL, { 2 }, { 1 } },
   { "convubw", convubw, NULL, { 2 }, { 1 } },
+  { "convswl", convswl, NULL, { 4 }, { 2 } },
+  { "convuwl", convuwl, NULL, { 4 }, { 2 } },
+#ifdef ENABLE_64BIT
+  { "convslq", convslq, NULL, { 8 }, { 4 } },
+  { "convulq", convulq, NULL, { 8 }, { 4 } },
+#endif
+
+  { "convwb", convwb, NULL, { 1 }, { 2 } },
+  { "convssswb", convssswb, NULL, { 1 }, { 2 } },
   { "convsuswb", convsuswb, NULL, { 1 }, { 2 } },
+  { "convusswb", convusswb, NULL, { 1 }, { 2 } },
+  { "convuuswb", convuuswb, NULL, { 1 }, { 2 } },
+
+  { "convlw", convlw, NULL, { 1 }, { 2 } },
+  { "convssslw", convssslw, NULL, { 1 }, { 2 } },
+  { "convsuslw", convsuslw, NULL, { 1 }, { 2 } },
+  { "convusslw", convusslw, NULL, { 1 }, { 2 } },
+  { "convuuslw", convuuslw, NULL, { 1 }, { 2 } },
+
+#ifdef ENABLE_64BIT
+  { "convql", convql, NULL, { 4 }, { 8 } },
+  { "convssql", convssql, NULL, { 4 }, { 8 } },
+  { "convusql", convusql, NULL, { 4 }, { 8 } },
+#endif
+
+  { "mulsbw", mulsbw, NULL, { 2 }, { 1, 1 } },
+  { "mulubw", mulubw, NULL, { 2 }, { 1, 1 } },
+  { "mulswl", mulswl, NULL, { 4 }, { 2, 2 } },
+  { "muluwl", muluwl, NULL, { 4 }, { 2, 2 } },
+#ifdef ENABLE_64BIT
+  { "mulslq", mulslq, NULL, { 8 }, { 4, 4 } },
+  { "mululq", mululq, NULL, { 8 }, { 4, 4 } },
+#endif
 
   { "" }
 };
