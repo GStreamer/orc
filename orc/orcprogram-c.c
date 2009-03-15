@@ -170,19 +170,6 @@ c_get_type_name (int size)
 }
 
 
-#if 0
-static void
-c_rule_copyw (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  char dest[20], src1[20];
-
-  c_get_name (dest, p, insn->args[0]);
-  c_get_name (src1, p, insn->args[1]);
-
-  ORC_ASM_CODE(p,"    %s = %s;\n", dest, src1);
-}
-#endif
-
 #define BINARY(name,op) \
 static void \
 c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
@@ -213,18 +200,6 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 #define BINARY_LW(a,b) BINARY(a,b)
 #define BINARY_WB(a,b) BINARY(a,b)
 
-#if 0
-//UNNARY(absw, src1 + src2)
-BINARY(addw, src1 + src2)
-BINARY(addssw, CLAMP(src1 + src2, ORC_SB_MIN,ORC_SB_MAX))
-BINARY(addusw, CLAMP(src1 + src2, 0,ORC_UB_MAX))
-BINARY(subw, src1 - src2)
-BINARY(mullw, src1 * src2)
-BINARY(mulhw, (src1 * src2)>>16)
-BINARY(shlw, src1 << src2)
-BINARY(shrsw, src1 >> src2)
-#endif
-
 #include "opcodes.h"
 
 #undef BINARY_SB
@@ -243,69 +218,6 @@ BINARY(shrsw, src1 >> src2)
 #undef BINARY_WL
 #undef BINARY_LW
 #undef BINARY_WB
-
-
-#if 0
-static void
-c_rule_addw (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  char dest[20], src1[20], src2[20];
-
-  c_get_name (dest, p, insn->args[0]);
-  c_get_name (src1, p, insn->args[1]);
-  c_get_name (src2, p, insn->args[2]);
-
-  ORC_ASM_CODE(p,"    %s = %s + %s;\n", dest, src1, src2);
-}
-
-static void
-c_rule_subw (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  char dest[20], src1[20], src2[20];
-
-  c_get_name (dest, p, insn->args[0]);
-  c_get_name (src1, p, insn->args[1]);
-  c_get_name (src2, p, insn->args[2]);
-
-  ORC_ASM_CODE(p,"    %s = %s - %s;\n", dest, src1, src2);
-}
-
-static void
-c_rule_mullw (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  char dest[20], src1[20], src2[20];
-
-  c_get_name (dest, p, insn->args[0]);
-  c_get_name (src1, p, insn->args[1]);
-  c_get_name (src2, p, insn->args[2]);
-
-  ORC_ASM_CODE(p,"    %s = %s * %s;\n", dest, src1, src2);
-}
-
-static void
-c_rule_shlw (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  char dest[20], src1[20], src2[20];
-
-  c_get_name (dest, p, insn->args[0]);
-  c_get_name (src1, p, insn->args[1]);
-  c_get_name (src2, p, insn->args[2]);
-
-  ORC_ASM_CODE(p,"    %s = %s << %s;\n", dest, src1, src2);
-}
-
-static void
-c_rule_shrsw (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  char dest[20], src1[20], src2[20];
-
-  c_get_name (dest, p, insn->args[0]);
-  c_get_name (src1, p, insn->args[1]);
-  c_get_name (src2, p, insn->args[2]);
-
-  ORC_ASM_CODE(p,"    %s = %s >> %s;\n", dest, src1, src2);
-}
-#endif
 
 
 void
@@ -330,14 +242,5 @@ orc_c_init (void)
 
 #include "opcodes.h"
 
-#if 0
-  orc_rule_register ("copyw", ORC_TARGET_C, c_rule_copyw, NULL);
-  orc_rule_register ("addw", ORC_TARGET_C, c_rule_addw, NULL);
-  orc_rule_register ("subw", ORC_TARGET_C, c_rule_subw, NULL);
-  orc_rule_register ("mulw", ORC_TARGET_C, c_rule_mullw, NULL);
-  //orc_rule_register ("mulhw", ORC_TARGET_C, c_rule_mulhw, NULL);
-  orc_rule_register ("shlw", ORC_TARGET_C, c_rule_shlw, NULL);
-  orc_rule_register ("shrsw", ORC_TARGET_C, c_rule_shrsw, NULL);
-#endif
 }
 

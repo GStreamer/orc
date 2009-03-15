@@ -42,18 +42,6 @@ arm_emit_prologue (OrcCompiler *compiler)
   }
   if (regs) arm_emit_push (compiler, regs);
 
-#if 0
-  arm_emit_mov_memoffset_reg (compiler, 4, 8, X86_ESP, X86_EBP);
-  if (compiler->used_regs[X86_EDI]) {
-    arm_emit_push (compiler, 4, X86_EDI);
-  }
-  if (compiler->used_regs[X86_ESI]) {
-    arm_emit_push (compiler, 4, X86_ESI);
-  }
-  if (compiler->used_regs[X86_EBX]) {
-    arm_emit_push (compiler, 4, X86_EBX);
-  }
-#endif
 }
 
 void

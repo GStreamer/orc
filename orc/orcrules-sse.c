@@ -136,26 +136,6 @@ sse_emit_66_rex_0f (OrcCompiler *p, OrcInstruction *insn, int code,
       p->vars[insn->args[0]].alloc);
 }
 
-#if 0
-static void
-sse_rule_addw (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  sse_emit_66_rex_0f (p, insn, 0xfd, "paddw");
-}
-
-static void
-sse_rule_subw (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  sse_emit_66_rex_0f (p, insn, 0xf9, "psubw");
-}
-
-static void
-sse_rule_mullw (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  sse_emit_66_rex_0f (p, insn, 0xd5, "pmullw");
-}
-#endif
-
 #define UNARY(opcode,insn_name,code) \
 static void \
 sse_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \

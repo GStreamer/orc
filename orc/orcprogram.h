@@ -179,28 +179,6 @@ struct _OrcProgram {
   unsigned char *code;
   void *code_exec;
   int code_size;
-  
-#if 0
-  OrcInstruction *insn;
-
-  OrcRegister registers[ORC_N_REGISTERS];
-  int n_regs;
-
-  OrcFixup fixups[ORC_N_FIXUPS];
-  int n_fixups;
-  unsigned char *labels[ORC_N_LABELS];
-
-  int error;
-
-  int valid_regs[ORC_N_REGS];
-  int save_regs[ORC_N_REGS];
-  int used_regs[ORC_N_REGS];
-  int alloc_regs[ORC_N_REGS];
-
-  int loop_shift;
-  int long_jumps;
-#endif
-
 };
 
 struct _OrcCompiler {
@@ -219,11 +197,6 @@ struct _OrcCompiler {
   int n_regs;
 
   unsigned char *codeptr;
-#if 0
-  unsigned char *code;
-  void *code_exec;
-  int code_size;
-#endif
   
   OrcFixup fixups[ORC_N_FIXUPS];
   int n_fixups;

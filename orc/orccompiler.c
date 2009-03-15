@@ -382,21 +382,6 @@ orc_compiler_dup_temporary (OrcCompiler *compiler, int var, int j)
   return i;
 }
 
-#if 0
-void
-orc_compiler_dump_code (OrcCompiler *compiler)
-{
-  FILE *file;
-  int n;
-
-  file = fopen("dump","w");
-
-  n = fwrite (compiler->code, 1, compiler->codeptr - compiler->code, file);
-  fclose (file);
-}
-
-#endif
-
 void
 orc_compiler_dump_asm (OrcCompiler *compiler)
 {
