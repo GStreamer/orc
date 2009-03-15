@@ -111,113 +111,113 @@ orc_opcode_find_by_name (const char *name)
 }
 
 static void
-convsbw (OrcExecutor *ex, void *user)
+convsbw (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->args[0]->value = (int8_t)(ex->args[1]->value);
+  ex->values[0] = (int8_t)(ex->values[1]);
 }
 
 static void
-convubw (OrcExecutor *ex, void *user)
+convubw (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->args[0]->value = (uint8_t)(ex->args[1]->value);
+  ex->values[0] = (uint8_t)(ex->values[1]);
 }
 
 static void
-convswl (OrcExecutor *ex, void *user)
+convswl (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->args[0]->value = (int8_t)(ex->args[1]->value);
+  ex->values[0] = (int8_t)(ex->values[1]);
 }
 
 static void
-convuwl (OrcExecutor *ex, void *user)
+convuwl (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->args[0]->value = (uint8_t)(ex->args[1]->value);
+  ex->values[0] = (uint8_t)(ex->values[1]);
 }
 
 static void
-convwb (OrcExecutor *ex, void *user)
+convwb (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->args[0]->value = (int16_t)(ex->args[1]->value);
+  ex->values[0] = (int16_t)(ex->values[1]);
 }
 
 static void
-convssswb (OrcExecutor *ex, void *user)
+convssswb (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->args[0]->value = ORC_CLAMP_SB((int16_t)(ex->args[1]->value));
+  ex->values[0] = ORC_CLAMP_SB((int16_t)(ex->values[1]));
 }
 
 static void
-convsuswb (OrcExecutor *ex, void *user)
+convsuswb (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->args[0]->value = ORC_CLAMP_UB((int16_t)(ex->args[1]->value));
+  ex->values[0] = ORC_CLAMP_UB((int16_t)(ex->values[1]));
 }
 
 static void
-convusswb (OrcExecutor *ex, void *user)
+convusswb (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->args[0]->value = ORC_CLAMP_SB((uint16_t)(ex->args[1]->value));
+  ex->values[0] = ORC_CLAMP_SB((uint16_t)(ex->values[1]));
 }
 
 static void
-convuuswb (OrcExecutor *ex, void *user)
+convuuswb (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->args[0]->value = ORC_CLAMP_UB((uint16_t)(ex->args[1]->value));
+  ex->values[0] = ORC_CLAMP_UB((uint16_t)(ex->values[1]));
 }
 
 static void
-convlw (OrcExecutor *ex, void *user)
+convlw (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->args[0]->value = (int32_t)(ex->args[1]->value);
+  ex->values[0] = (int32_t)(ex->values[1]);
 }
 
 static void
-convssslw (OrcExecutor *ex, void *user)
+convssslw (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->args[0]->value = ORC_CLAMP_SW((int32_t)(ex->args[1]->value));
+  ex->values[0] = ORC_CLAMP_SW((int32_t)(ex->values[1]));
 }
 
 static void
-convsuslw (OrcExecutor *ex, void *user)
+convsuslw (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->args[0]->value = ORC_CLAMP_UW((int32_t)(ex->args[1]->value));
+  ex->values[0] = ORC_CLAMP_UW((int32_t)(ex->values[1]));
 }
 
 static void
-convusslw (OrcExecutor *ex, void *user)
+convusslw (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->args[0]->value = ORC_CLAMP_SW((uint32_t)(ex->args[1]->value));
+  ex->values[0] = ORC_CLAMP_SW((uint32_t)(ex->values[1]));
 }
 
 static void
-convuuslw (OrcExecutor *ex, void *user)
+convuuslw (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->args[0]->value = ORC_CLAMP_UW((uint32_t)(ex->args[1]->value));
+  ex->values[0] = ORC_CLAMP_UW((uint32_t)(ex->values[1]));
 }
 
 #define UNARY(name,type,code) \
 static void \
-name (OrcExecutor *ex, void *user) \
+name (OrcOpcodeExecutor *ex, void *user) \
 { \
-  int a = ex->args[1]->value; \
-  ex->args[0]->value = ( type )( code ); \
+  int a = ex->values[1]; \
+  ex->values[0] = ( type )( code ); \
 }
 
 #define BINARY(name,type,code) \
 static void \
-name (OrcExecutor *ex, void *user) \
+name (OrcOpcodeExecutor *ex, void *user) \
 { \
-  int a = ex->args[1]->value; \
-  int b = ex->args[2]->value; \
-  ex->args[0]->value = ( type )( code ); \
+  int a = ex->values[1]; \
+  int b = ex->values[2]; \
+  ex->values[0] = ( type )( code ); \
 }
 
 #define BINARY_U(name,type,code) \
 static void \
-name (OrcExecutor *ex, void *user) \
+name (OrcOpcodeExecutor *ex, void *user) \
 { \
-  unsigned int a = ex->args[1]->value; \
-  unsigned int b = ex->args[2]->value; \
-  ex->args[0]->value = ( type )( code ); \
+  unsigned int a = ex->values[1]; \
+  unsigned int b = ex->values[2]; \
+  ex->values[0] = ( type )( code ); \
 }
 
 #define UNARY_SB(name,code) UNARY(name, int8_t, code)
@@ -319,10 +319,10 @@ BINARY_SL(xorl, a ^ b)
 
 #define MUL(name, type1, type2) \
 static void \
-name (OrcExecutor *ex, void *user) \
+name (OrcOpcodeExecutor *ex, void *user) \
 { \
-  ex->args[0]->value = ((type2)(type1)ex->args[1]->value) * \
-    ((type2)(type1)ex->args[2]->value); \
+  ex->values[0] = ((type2)(type1)ex->values[1]) * \
+    ((type2)(type1)ex->values[2]); \
 }
 
 MUL(mulsbw, int8_t, int16_t)

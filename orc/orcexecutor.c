@@ -19,8 +19,6 @@ orc_executor_new (OrcProgram *program)
 
   ex->program = program;
 
-  memcpy (ex->vars, program->vars, 10*sizeof(OrcVariable));
-
   return ex;
 }
 
@@ -86,6 +84,7 @@ orc_executor_emulate (OrcExecutor *ex)
   OrcProgram *program = ex->program;
   OrcInstruction *insn;
   OrcOpcode *opcode;
+  OrcOpcodeExecutor opcode_ex;
 
   for(i=0;i<ex->n;i++){
     for(j=0;j<program->n_insns;j++){
@@ -94,20 +93,20 @@ orc_executor_emulate (OrcExecutor *ex)
 
       /* set up args */
       for(k=0;k<opcode->n_src + opcode->n_dest;k++){
-        ex->args[k] = ex->vars + insn->args[k];
 
-        if (ex->args[k]->vartype == ORC_VAR_TYPE_SRC) {
-          void *ptr = ex->arrays[insn->args[k]] + ex->args[k]->size*i;
+        if (program->vars[insn->args[k]].vartype == ORC_VAR_TYPE_SRC) {
+          void *ptr = ex->arrays[insn->args[k]] +
+            program->vars[insn->args[k]].size*i;
 
-          switch (ex->args[k]->size) {
+          switch (program->vars[insn->args[k]].size) {
             case 1:
-              ex->args[k]->value = *(int8_t *)ptr;
+              opcode_ex.values[k] = *(int8_t *)ptr;
               break;
             case 2:
-              ex->args[k]->value = *(int16_t *)ptr;
+              opcode_ex.values[k] = *(int16_t *)ptr;
               break;
             case 4:
-              ex->args[k]->value = *(int32_t *)ptr;
+              opcode_ex.values[k] = *(int32_t *)ptr;
               break;
             default:
               ORC_ERROR("ack");
@@ -115,22 +114,22 @@ orc_executor_emulate (OrcExecutor *ex)
         }
       }
 
-      opcode->emulate (ex, opcode->emulate_user);
+      opcode->emulate (&opcode_ex, opcode->emulate_user);
 
       for(k=0;k<opcode->n_src + opcode->n_dest;k++){
-        if (ex->args[k]->vartype == ORC_VAR_TYPE_DEST) {
-          void *ptr = ex->arrays[insn->args[k]] + ex->args[k]->size*i;
+        if (program->vars[insn->args[k]].vartype == ORC_VAR_TYPE_DEST) {
+          void *ptr = ex->arrays[insn->args[k]] +
+            program->vars[insn->args[k]].size*i;
 
-          *(int16_t *)ptr = ex->args[k]->value;
-          switch (ex->args[k]->size) {
+          switch (program->vars[insn->args[k]].size) {
             case 1:
-              *(int8_t *)ptr = ex->args[k]->value;
+              *(int8_t *)ptr = opcode_ex.values[k];
               break;
             case 2:
-              *(int16_t *)ptr = ex->args[k]->value;
+              *(int16_t *)ptr = opcode_ex.values[k];
               break;
             case 4:
-              *(int32_t *)ptr = ex->args[k]->value;
+              *(int32_t *)ptr = opcode_ex.values[k];
               break;
             default:
               ORC_ERROR("ack");

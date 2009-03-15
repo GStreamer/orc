@@ -5,6 +5,7 @@
 #include <orc/orc-stdint.h>
 #include <orc/orcutils.h>
 
+typedef struct _OrcOpcodeExecutor OrcOpcodeExecutor;
 typedef struct _OrcExecutor OrcExecutor;
 typedef struct _OrcVariable OrcVariable;
 typedef struct _OrcOpcode OrcOpcode;
@@ -16,7 +17,7 @@ typedef struct _OrcRegister OrcRegister;
 typedef struct _OrcRule OrcRule;
 typedef struct _OrcFixup OrcFixup;
 
-typedef void (*OrcOpcodeEmulateFunc)(OrcExecutor *ex, void *user);
+typedef void (*OrcOpcodeEmulateFunc)(OrcOpcodeExecutor *ex, void *user);
 typedef void (*OrcRuleEmitFunc)(OrcProgram *p, void *user, OrcInstruction *insn);
 
 #define ORC_N_REGS (32*4)
@@ -202,6 +203,10 @@ struct _OrcProgram {
   int asm_code_len;
 };
 
+struct _OrcOpcodeExecutor {
+  int values[ORC_N_VARIABLES];
+};
+
 struct _OrcExecutor {
   OrcProgram *program;
   int n;
@@ -211,10 +216,6 @@ struct _OrcExecutor {
 
   void *arrays[ORC_N_VARIABLES];
   int params[ORC_N_VARIABLES];
-
-  OrcVariable vars[ORC_N_VARIABLES];
-  OrcVariable *args[ORC_OPCODE_N_ARGS];
-
 };
 
 
