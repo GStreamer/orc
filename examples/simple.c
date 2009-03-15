@@ -604,6 +604,8 @@ test9(void)
     }
   }
 
+  printf("%s", orc_program_get_asm_code (p));
+
   orc_executor_free (ex);
   orc_program_free (p);
 }

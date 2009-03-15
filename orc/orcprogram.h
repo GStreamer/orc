@@ -13,12 +13,13 @@ typedef struct _OrcStaticOpcode OrcStaticOpcode;
 typedef struct _OrcArgument OrcArgument;
 typedef struct _OrcInstruction OrcInstruction;
 typedef struct _OrcProgram OrcProgram;
+typedef struct _OrcCompiler OrcCompiler;
 typedef struct _OrcRegister OrcRegister;
 typedef struct _OrcRule OrcRule;
 typedef struct _OrcFixup OrcFixup;
 
 typedef void (*OrcOpcodeEmulateFunc)(OrcOpcodeExecutor *ex, void *user);
-typedef void (*OrcRuleEmitFunc)(OrcProgram *p, void *user, OrcInstruction *insn);
+typedef void (*OrcRuleEmitFunc)(OrcCompiler *p, void *user, OrcInstruction *insn);
 
 #define ORC_N_REGS (32*4)
 #define ORC_N_INSNS 100
@@ -54,9 +55,9 @@ typedef void (*OrcRuleEmitFunc)(OrcProgram *p, void *user, OrcInstruction *insn)
 
 #define ORC_ENABLE_ASM_CODE
 #ifdef ORC_ENABLE_ASM_CODE
-#define ORC_ASM_CODE(fmt,...) orc_program_append_code(fmt, __VA_ARGS__)
+#define ORC_ASM_CODE(compiler,...) orc_compiler_append_code(compiler, __VA_ARGS__)
 #else
-#define ORC_ASM_CODE(fmt,...)
+#define ORC_ASM_CODE(compiler,...)
 #endif
 
 #define ORC_PROGRAM_ERROR(program, ...) do { \
@@ -172,17 +173,57 @@ struct _OrcProgram {
   OrcVariable vars[ORC_N_VARIABLES];
   int n_vars;
 
+  char *name;
+  char *asm_code;
+
+  unsigned char *code;
+  void *code_exec;
+  int code_size;
+  
+#if 0
   OrcInstruction *insn;
 
   OrcRegister registers[ORC_N_REGISTERS];
   int n_regs;
 
-  char *name;
+  OrcFixup fixups[ORC_N_FIXUPS];
+  int n_fixups;
+  unsigned char *labels[ORC_N_LABELS];
 
+  int error;
+
+  int valid_regs[ORC_N_REGS];
+  int save_regs[ORC_N_REGS];
+  int used_regs[ORC_N_REGS];
+  int alloc_regs[ORC_N_REGS];
+
+  int loop_shift;
+  int long_jumps;
+#endif
+
+};
+
+struct _OrcCompiler {
+  OrcProgram *program;
+  int target;
+
+  OrcInstruction insns[ORC_N_INSNS];
+  int n_insns;
+
+  OrcVariable vars[ORC_N_VARIABLES];
+  int n_vars;
+
+  OrcInstruction *insn;
+
+  OrcRegister registers[ORC_N_REGISTERS];
+  int n_regs;
+
+  unsigned char *codeptr;
+#if 0
   unsigned char *code;
   void *code_exec;
-  unsigned char *codeptr;
   int code_size;
+#endif
   
   OrcFixup fixups[ORC_N_FIXUPS];
   int n_fixups;
@@ -195,7 +236,6 @@ struct _OrcProgram {
   int used_regs[ORC_N_REGS];
   int alloc_regs[ORC_N_REGS];
 
-  int target;
   int loop_shift;
   int long_jumps;
 
@@ -247,20 +287,20 @@ void orc_c_init (void);
 
 orc_bool orc_program_compile (OrcProgram *p);
 orc_bool orc_program_compile_for_target (OrcProgram *p, int target);
-void orc_program_c_init (OrcProgram *p);
-void orc_program_mmx_init (OrcProgram *p);
-void orc_program_sse_init (OrcProgram *p);
-void orc_program_arm_init (OrcProgram *p);
-void orc_program_powerpc_init (OrcProgram *p);
-void orc_program_mmx_assemble (OrcProgram *p);
-void orc_program_sse_assemble (OrcProgram *p);
-void orc_program_arm_assemble (OrcProgram *p);
-void orc_program_assemble_powerpc (OrcProgram *p);
-void orc_program_assemble_c (OrcProgram *p);
+void orc_compiler_c_init (OrcCompiler *compiler);
+void orc_compiler_mmx_init (OrcCompiler *compiler);
+void orc_compiler_sse_init (OrcCompiler *compiler);
+void orc_compiler_arm_init (OrcCompiler *compiler);
+void orc_compiler_powerpc_init (OrcCompiler *compiler);
+void orc_compiler_mmx_assemble (OrcCompiler *compiler);
+void orc_compiler_sse_assemble (OrcCompiler *compiler);
+void orc_compiler_arm_assemble (OrcCompiler *compiler);
+void orc_compiler_assemble_powerpc (OrcCompiler *compiler);
+void orc_compiler_assemble_c (OrcCompiler *compiler);
 void orc_program_free (OrcProgram *program);
 
 int orc_program_find_var_by_name (OrcProgram *program, const char *name);
-int orc_program_get_dest (OrcProgram *program);
+int orc_compiler_get_dest (OrcCompiler *compiler);
 
 int orc_program_add_temporary (OrcProgram *program, int size, const char *name);
 int orc_program_dup_temporary (OrcProgram *program, int i, int j);
@@ -291,14 +331,14 @@ int orc_program_x86_allocate_register (OrcProgram *program, int is_data);
 int orc_program_powerpc_allocate_register (OrcProgram *program, int is_data);
 
 void orc_program_x86_register_rules (void);
-void orc_program_allocate_codemem (OrcProgram *program);
+void orc_compiler_allocate_codemem (OrcCompiler *compiler);
 void orc_program_dump_code (OrcProgram *program);
 
 const char *orc_program_get_asm_code (OrcProgram *program);
 void orc_program_dump_asm (OrcProgram *program);
 const char *orc_target_get_asm_preamble (int target);
 
-void orc_program_append_code (OrcProgram *p, const char *fmt, ...);
+void orc_compiler_append_code (OrcCompiler *p, const char *fmt, ...);
  
 #endif
 

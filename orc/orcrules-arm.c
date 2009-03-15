@@ -14,7 +14,7 @@
 
 
 void
-arm_loadw (OrcProgram *program, int dest, int src1, int offset)
+arm_loadw (OrcCompiler *compiler, int dest, int src1, int offset)
 {
   uint32_t code;
 
@@ -24,14 +24,14 @@ arm_loadw (OrcProgram *program, int dest, int src1, int offset)
   code |= (offset&0xf0) << 4;
   code |= offset&0x0f;
 
-  ORC_ASM_CODE(program,"  ldrh %s, [%s, #%d]\n",
+  ORC_ASM_CODE(compiler,"  ldrh %s, [%s, #%d]\n",
       arm_reg_name (dest),
       arm_reg_name (src1), offset);
-  arm_emit (program, code);
+  arm_emit (compiler, code);
 }
 
 void
-arm_storew (OrcProgram *program, int dest, int offset, int src1)
+arm_storew (OrcCompiler *compiler, int dest, int offset, int src1)
 {
   uint32_t code;
 
@@ -41,14 +41,14 @@ arm_storew (OrcProgram *program, int dest, int offset, int src1)
   code |= (offset&0xf0) << 4;
   code |= offset&0x0f;
 
-  ORC_ASM_CODE(program,"  strh %s, [%s, #%d]\n",
+  ORC_ASM_CODE(compiler,"  strh %s, [%s, #%d]\n",
       arm_reg_name (src1),
       arm_reg_name (dest), offset);
-  arm_emit (program, code);
+  arm_emit (compiler, code);
 }
 
 static void
-arm_rule_addw (OrcProgram *p, void *user, OrcInstruction *insn)
+arm_rule_addw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   uint32_t code;
 
@@ -65,7 +65,7 @@ arm_rule_addw (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-arm_rule_subw (OrcProgram *p, void *user, OrcInstruction *insn)
+arm_rule_subw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   uint32_t code;
 
@@ -82,7 +82,7 @@ arm_rule_subw (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-arm_rule_mullw (OrcProgram *p, void *user, OrcInstruction *insn)
+arm_rule_mullw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   uint32_t code;
 
@@ -99,7 +99,7 @@ arm_rule_mullw (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-arm_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
+arm_rule_shrsw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   uint32_t code;
 
@@ -118,16 +118,16 @@ arm_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
 
 #if 0
 void
-arm_emit_loadiw (OrcProgram *p, int reg, int value)
+arm_emit_loadiw (OrcCompiler *p, int reg, int value)
 {
   if (value == 0) {
-    ORC_ASM_CODE(program,"  pxor %%%s, %%%s\n", x86_get_regname_sse(reg),
+    ORC_ASM_CODE(compiler,"  pxor %%%s, %%%s\n", x86_get_regname_sse(reg),
         x86_get_regname_sse(reg));
     *p->codeptr++ = 0x0f;
     *p->codeptr++ = 0xef;
     x86_emit_modrm_reg (p, reg, reg);
   } else if (value == -1) {
-    ORC_ASM_CODE(program,"  pcmpeqw %%%s, %%%s\n", x86_get_regname_sse(reg),
+    ORC_ASM_CODE(compiler,"  pcmpeqw %%%s, %%%s\n", x86_get_regname_sse(reg),
         x86_get_regname_sse(reg));
     *p->codeptr++ = 0x66;
     *p->codeptr++ = 0x0f;
@@ -135,14 +135,14 @@ arm_emit_loadiw (OrcProgram *p, int reg, int value)
     x86_emit_modrm_reg (p, reg, reg);
 
   } else if (value == 1) {
-    ORC_ASM_CODE(program,"  pcmpeqw %%%s, %%%s\n", x86_get_regname_sse(reg),
+    ORC_ASM_CODE(compiler,"  pcmpeqw %%%s, %%%s\n", x86_get_regname_sse(reg),
         x86_get_regname_sse(reg));
     *p->codeptr++ = 0x66;
     *p->codeptr++ = 0x0f;
     *p->codeptr++ = 0x75;
     x86_emit_modrm_reg (p, reg, reg);
 
-    ORC_ASM_CODE(program,"  psrlw $15, %%%s\n", x86_get_regname_sse(reg));
+    ORC_ASM_CODE(compiler,"  psrlw $15, %%%s\n", x86_get_regname_sse(reg));
     *p->codeptr++ = 0x66;
     *p->codeptr++ = 0x0f;
     *p->codeptr++ = 0x71;
@@ -154,13 +154,13 @@ arm_emit_loadiw (OrcProgram *p, int reg, int value)
 
     x86_emit_mov_imm_reg (p, 4, value, X86_ECX);
 
-    ORC_ASM_CODE(program,"  movd %%ecx, %%%s\n", x86_get_regname_sse(reg));
+    ORC_ASM_CODE(compiler,"  movd %%ecx, %%%s\n", x86_get_regname_sse(reg));
     *p->codeptr++ = 0x66;
     *p->codeptr++ = 0x0f;
     *p->codeptr++ = 0x6e;
     x86_emit_modrm_reg (p, X86_ECX, reg);
 
-    ORC_ASM_CODE(program,"  pshufd $0, %%%s, %%%s\n", x86_get_regname_sse(reg),
+    ORC_ASM_CODE(compiler,"  pshufd $0, %%%s, %%%s\n", x86_get_regname_sse(reg),
         x86_get_regname_sse(reg));
 
     *p->codeptr++ = 0x66;
@@ -172,16 +172,16 @@ arm_emit_loadiw (OrcProgram *p, int reg, int value)
 }
 
 void
-arm_emit_loadw (OrcProgram *p, int reg, int offset, int reg1)
+arm_emit_loadw (OrcCompiler *p, int reg, int offset, int reg1)
 {
-  ORC_ASM_CODE(program,"  movd %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
+  ORC_ASM_CODE(compiler,"  movd %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
       x86_get_regname_sse(reg));
   *p->codeptr++ = 0x66;
   *p->codeptr++ = 0x0f;
   *p->codeptr++ = 0x6e;
   x86_emit_modrm_memoffset (p, reg, offset, reg1);
 
-  ORC_ASM_CODE(program,"  pshuflw $0, %%%s, %%%s\n", x86_get_regname_sse(reg),
+  ORC_ASM_CODE(compiler,"  pshuflw $0, %%%s, %%%s\n", x86_get_regname_sse(reg),
       x86_get_regname_sse(reg));
   *p->codeptr++ = 0xf2;
   *p->codeptr++ = 0x0f;
@@ -189,7 +189,7 @@ arm_emit_loadw (OrcProgram *p, int reg, int offset, int reg1)
   x86_emit_modrm_reg (p, reg, reg);
   *p->codeptr++ = 0x00;
 
-  ORC_ASM_CODE(program,"  pshufd $0, %%%s, %%%s\n", x86_get_regname_sse(reg),
+  ORC_ASM_CODE(compiler,"  pshufd $0, %%%s, %%%s\n", x86_get_regname_sse(reg),
       x86_get_regname_sse(reg));
   *p->codeptr++ = 0x66;
   *p->codeptr++ = 0x0f;
@@ -199,9 +199,9 @@ arm_emit_loadw (OrcProgram *p, int reg, int offset, int reg1)
 }
 
 static void
-arm_rule_copyx (OrcProgram *p, void *user, OrcInstruction *insn)
+arm_rule_copyx (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(program,"  movdqa %%%s, %%%s\n",
+  ORC_ASM_CODE(compiler,"  movdqa %%%s, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[1]].alloc),
       x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
@@ -215,10 +215,10 @@ arm_rule_copyx (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-arm_emit_66_rex_0f (OrcProgram *p, OrcInstruction *insn, int code,
+arm_emit_66_rex_0f (OrcCompiler *p, OrcInstruction *insn, int code,
     const char *insn_name)
 {
-  ORC_ASM_CODE(program,"  %s %%%s, %%%s\n", insn_name,
+  ORC_ASM_CODE(compiler,"  %s %%%s, %%%s\n", insn_name,
       x86_get_regname_sse(p->vars[insn->args[2]].alloc),
       x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
@@ -236,19 +236,19 @@ arm_emit_66_rex_0f (OrcProgram *p, OrcInstruction *insn, int code,
 
 #if 0
 static void
-arm_rule_addw (OrcProgram *p, void *user, OrcInstruction *insn)
+arm_rule_addw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   arm_emit_66_rex_0f (p, insn, 0xfd, "paddw");
 }
 
 static void
-arm_rule_subw (OrcProgram *p, void *user, OrcInstruction *insn)
+arm_rule_subw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   arm_emit_66_rex_0f (p, insn, 0xf9, "psubw");
 }
 
 static void
-arm_rule_mullw (OrcProgram *p, void *user, OrcInstruction *insn)
+arm_rule_mullw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   arm_emit_66_rex_0f (p, insn, 0xd5, "pmullw");
 }
@@ -256,14 +256,14 @@ arm_rule_mullw (OrcProgram *p, void *user, OrcInstruction *insn)
 
 #define UNARY(opcode,insn_name,code) \
 static void \
-arm_rule_ ## opcode (OrcProgram *p, void *user, OrcInstruction *insn) \
+arm_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
   arm_emit_66_rex_0f (p, insn, code, insn_name); \
 }
 
 #define BINARY(opcode,insn_name,code) \
 static void \
-arm_rule_ ## opcode (OrcProgram *p, void *user, OrcInstruction *insn) \
+arm_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
   arm_emit_66_rex_0f (p, insn, code, insn_name); \
 }
@@ -340,10 +340,10 @@ BINARY(xorl,"pxor",0xef)
 
 
 static void
-arm_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
+arm_rule_shlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_CONST) {
-    ORC_ASM_CODE(program,"  psllw $%d, %%%s\n",
+    ORC_ASM_CODE(compiler,"  psllw $%d, %%%s\n",
         p->vars[insn->args[2]].value,
         x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
@@ -355,7 +355,7 @@ arm_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
   } else if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_PARAM) {
     /* FIXME this is a gross hack to reload the register with a
      * 64-bit version of the parameter. */
-    ORC_ASM_CODE(program,"  movd %d(%%%s), %%%s\n",
+    ORC_ASM_CODE(compiler,"  movd %d(%%%s), %%%s\n",
         (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->args[2]]),
         x86_get_regname_ptr(x86_exec_ptr),
         x86_get_regname_sse(p->vars[insn->args[2]].alloc));
@@ -367,7 +367,7 @@ arm_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
         (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->args[2]]),
         x86_exec_ptr);
 
-    ORC_ASM_CODE(program,"  psllw %%%s, %%%s\n",
+    ORC_ASM_CODE(compiler,"  psllw %%%s, %%%s\n",
         x86_get_regname_sse(p->vars[insn->args[2]].alloc),
         x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
@@ -377,15 +377,15 @@ arm_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
     x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc,
         p->vars[insn->args[2]].alloc);
   } else {
-    ORC_ASM_CODE(program,"ERROR\n");
+    ORC_ASM_CODE(compiler,"ERROR\n");
   }
 }
 
 static void
-arm_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
+arm_rule_shrsw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_CONST) {
-    ORC_ASM_CODE(program,"  psraw $%d, %%%s\n",
+    ORC_ASM_CODE(compiler,"  psraw $%d, %%%s\n",
         p->vars[insn->args[2]].value,
         x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
@@ -397,7 +397,7 @@ arm_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
   } else if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_PARAM) {
     /* FIXME this is a gross hack to reload the register with a
      * 64-bit version of the parameter. */
-    ORC_ASM_CODE(program,"  movd %d(%%%s), %%%s\n",
+    ORC_ASM_CODE(compiler,"  movd %d(%%%s), %%%s\n",
         (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->args[2]]),
         x86_get_regname_ptr(x86_exec_ptr),
         x86_get_regname_sse(p->vars[insn->args[2]].alloc));
@@ -409,7 +409,7 @@ arm_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
         (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->args[2]]),
         x86_exec_ptr);
 
-    ORC_ASM_CODE(program,"  psraw %%%s, %%%s\n",
+    ORC_ASM_CODE(compiler,"  psraw %%%s, %%%s\n",
         x86_get_regname_sse(p->vars[insn->args[2]].alloc),
         x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
@@ -419,14 +419,14 @@ arm_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
     x86_emit_modrm_reg (p, p->vars[insn->args[2]].alloc,
         p->vars[insn->args[0]].alloc);
   } else {
-    ORC_ASM_CODE(program,"ERROR\n");
+    ORC_ASM_CODE(compiler,"ERROR\n");
   }
 }
 
 static void
-arm_rule_convsbw (OrcProgram *p, void *user, OrcInstruction *insn)
+arm_rule_convsbw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(program,"  punpcklbw %%%s, %%%s\n",
+  ORC_ASM_CODE(compiler,"  punpcklbw %%%s, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[1]].alloc),
       x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
@@ -436,7 +436,7 @@ arm_rule_convsbw (OrcProgram *p, void *user, OrcInstruction *insn)
   x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc,
       p->vars[insn->args[1]].alloc);
 
-  ORC_ASM_CODE(program,"  psraw $8, %%%s\n",
+  ORC_ASM_CODE(compiler,"  psraw $8, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[0]].alloc));
   
   *p->codeptr++ = 0x66;
@@ -447,11 +447,11 @@ arm_rule_convsbw (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-arm_rule_convubw (OrcProgram *p, void *user, OrcInstruction *insn)
+arm_rule_convubw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   /* FIXME should do this by unpacking with a zero reg */
 
-  ORC_ASM_CODE(program,"  punpcklbw %%%s, %%%s\n",
+  ORC_ASM_CODE(compiler,"  punpcklbw %%%s, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[1]].alloc),
       x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
@@ -461,7 +461,7 @@ arm_rule_convubw (OrcProgram *p, void *user, OrcInstruction *insn)
   x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc,
       p->vars[insn->args[1]].alloc);
 
-  ORC_ASM_CODE(program,"  psrlw $8, %%%s\n",
+  ORC_ASM_CODE(compiler,"  psrlw $8, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[0]].alloc));
   
   *p->codeptr++ = 0x66;
@@ -473,9 +473,9 @@ arm_rule_convubw (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-arm_rule_convsuswb (OrcProgram *p, void *user, OrcInstruction *insn)
+arm_rule_convsuswb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(program,"  packuswb %%%s, %%%s\n",
+  ORC_ASM_CODE(compiler,"  packuswb %%%s, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[1]].alloc),
       x86_get_regname_sse(p->vars[insn->args[0]].alloc));
 
@@ -488,7 +488,7 @@ arm_rule_convsuswb (OrcProgram *p, void *user, OrcInstruction *insn)
 #endif
 
 void
-orc_program_arm_register_rules (void)
+orc_compiler_arm_register_rules (void)
 {
 #if 0
 #define REG(x) \

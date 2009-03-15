@@ -13,14 +13,14 @@ static const char *c_get_type_name (int size);
 void orc_c_init (void);
 
 void
-orc_program_c_init (OrcProgram *program)
+orc_compiler_c_init (OrcCompiler *compiler)
 {
   int i;
 
   for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+16;i++){
-    program->valid_regs[i] = 1;
+    compiler->valid_regs[i] = 1;
   }
-  program->loop_shift = 0;
+  compiler->loop_shift = 0;
 }
 
 const char *
@@ -71,7 +71,7 @@ orc_target_get_asm_preamble (int target)
 }
 
 void
-orc_program_assemble_c (OrcProgram *program)
+orc_compiler_assemble_c (OrcCompiler *compiler)
 {
   int i;
   int j;
@@ -79,28 +79,28 @@ orc_program_assemble_c (OrcProgram *program)
   OrcOpcode *opcode;
   OrcRule *rule;
 
-  ORC_ASM_CODE(program,"void\n");
-  ORC_ASM_CODE(program,"%s (OrcExecutor *ex)\n", program->name);
-  ORC_ASM_CODE(program,"{\n");
-  ORC_ASM_CODE(program,"  int i;\n");
+  ORC_ASM_CODE(compiler,"void\n");
+  ORC_ASM_CODE(compiler,"%s (OrcExecutor *ex)\n", compiler->program->name);
+  ORC_ASM_CODE(compiler,"{\n");
+  ORC_ASM_CODE(compiler,"  int i;\n");
 
-  for(i=0;i<program->n_vars;i++){
-    OrcVariable *var = program->vars + i;
+  for(i=0;i<compiler->n_vars;i++){
+    OrcVariable *var = compiler->vars + i;
     switch (var->vartype) {
       case ORC_VAR_TYPE_CONST:
-        ORC_ASM_CODE(program,"  %s var%d = %d;\n",
+        ORC_ASM_CODE(compiler,"  %s var%d = %d;\n",
             c_get_type_name(var->size), i, var->value);
         break;
       case ORC_VAR_TYPE_TEMP:
-        ORC_ASM_CODE(program,"  %s var%d;\n", c_get_type_name(var->size), i);
+        ORC_ASM_CODE(compiler,"  %s var%d;\n", c_get_type_name(var->size), i);
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
-        ORC_ASM_CODE(program,"  %s *var%d = ex->arrays[%d];\n",
+        ORC_ASM_CODE(compiler,"  %s *var%d = ex->arrays[%d];\n",
             c_get_type_name (var->size), i, i);
         break;
       case ORC_VAR_TYPE_PARAM:
-        ORC_ASM_CODE(program,"  %s var%d = ex->arrays[%d];\n",
+        ORC_ASM_CODE(compiler,"  %s var%d = ex->arrays[%d];\n",
             c_get_type_name (var->size), i, i);
         break;
       default:
@@ -109,34 +109,34 @@ orc_program_assemble_c (OrcProgram *program)
 
   }
 
-  ORC_ASM_CODE(program,"\n");
-  ORC_ASM_CODE(program,"  for (i = 0; i < ex->n; i++) {\n");
+  ORC_ASM_CODE(compiler,"\n");
+  ORC_ASM_CODE(compiler,"  for (i = 0; i < ex->n; i++) {\n");
 
-  for(j=0;j<program->n_insns;j++){
-    insn = program->insns + j;
+  for(j=0;j<compiler->n_insns;j++){
+    insn = compiler->insns + j;
     opcode = insn->opcode;
 
-    ORC_ASM_CODE(program,"    /* %d: %s */\n", j, insn->opcode->name);
+    ORC_ASM_CODE(compiler,"    /* %d: %s */\n", j, insn->opcode->name);
 
     rule = insn->rule;
     if (rule) {
-      rule->emit (program, rule->emit_user, insn);
+      rule->emit (compiler, rule->emit_user, insn);
     } else {
-      ORC_PROGRAM_ERROR(program,"No rule for: %s\n", opcode->name);
-      program->error = TRUE;
+      ORC_PROGRAM_ERROR(compiler,"No rule for: %s\n", opcode->name);
+      compiler->error = TRUE;
     }
   }
 
-  ORC_ASM_CODE(program,"  }\n");
-  ORC_ASM_CODE(program,"}\n");
-  ORC_ASM_CODE(program,"\n");
+  ORC_ASM_CODE(compiler,"  }\n");
+  ORC_ASM_CODE(compiler,"}\n");
+  ORC_ASM_CODE(compiler,"\n");
 }
 
 
 /* rules */
 
 static void
-c_get_name (char *name, OrcProgram *p, int var)
+c_get_name (char *name, OrcCompiler *p, int var)
 {
   switch (p->vars[var].vartype) {
     case ORC_VAR_TYPE_CONST:
@@ -172,7 +172,7 @@ c_get_type_name (int size)
 
 #if 0
 static void
-c_rule_copyw (OrcProgram *p, void *user, OrcInstruction *insn)
+c_rule_copyw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   char dest[20], src1[20];
 
@@ -185,7 +185,7 @@ c_rule_copyw (OrcProgram *p, void *user, OrcInstruction *insn)
 
 #define BINARY(name,op) \
 static void \
-c_rule_ ## name (OrcProgram *p, void *user, OrcInstruction *insn) \
+c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
   char dest[20], src1[20], src2[20]; \
 \
@@ -247,7 +247,7 @@ BINARY(shrsw, src1 >> src2)
 
 #if 0
 static void
-c_rule_addw (OrcProgram *p, void *user, OrcInstruction *insn)
+c_rule_addw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   char dest[20], src1[20], src2[20];
 
@@ -259,7 +259,7 @@ c_rule_addw (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-c_rule_subw (OrcProgram *p, void *user, OrcInstruction *insn)
+c_rule_subw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   char dest[20], src1[20], src2[20];
 
@@ -271,7 +271,7 @@ c_rule_subw (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-c_rule_mullw (OrcProgram *p, void *user, OrcInstruction *insn)
+c_rule_mullw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   char dest[20], src1[20], src2[20];
 
@@ -283,7 +283,7 @@ c_rule_mullw (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-c_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
+c_rule_shlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   char dest[20], src1[20], src2[20];
 
@@ -295,7 +295,7 @@ c_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-c_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
+c_rule_shrsw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   char dest[20], src1[20], src2[20];
 

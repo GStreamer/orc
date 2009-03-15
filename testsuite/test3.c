@@ -54,10 +54,12 @@ test_opcode (const char *name)
   ret = orc_program_compile (p);
   if (!ret) {
     error = TRUE;
+    goto out;
   }
 
   printf("%s", orc_program_get_asm_code (p));
 
+out:
   orc_program_free (p);
 }
 

@@ -9,6 +9,7 @@
 #include <sys/types.h>
 
 #include <orc/orcprogram.h>
+#include <orc/orcdebug.h>
 #include <orc/x86.h>
 
 #define SIZE 65536
@@ -19,7 +20,7 @@ int sse41 = FALSE;
 /* sse rules */
 
 void
-sse_emit_loadiw (OrcProgram *p, int reg, int value)
+sse_emit_loadiw (OrcCompiler *p, int reg, int value)
 {
   if (value == 0) {
     ORC_ASM_CODE(p,"  pxor %%%s, %%%s\n", x86_get_regname_sse(reg),
@@ -73,7 +74,7 @@ sse_emit_loadiw (OrcProgram *p, int reg, int value)
 }
 
 void
-sse_emit_loadw (OrcProgram *p, int reg, int offset, int reg1)
+sse_emit_loadw (OrcCompiler *p, int reg, int offset, int reg1)
 {
   ORC_ASM_CODE(p,"  movd %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
       x86_get_regname_sse(reg));
@@ -100,7 +101,7 @@ sse_emit_loadw (OrcProgram *p, int reg, int offset, int reg1)
 }
 
 static void
-sse_rule_copyx (OrcProgram *p, void *user, OrcInstruction *insn)
+sse_rule_copyx (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   ORC_ASM_CODE(p,"  movdqa %%%s, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[1]].alloc),
@@ -116,7 +117,7 @@ sse_rule_copyx (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-sse_emit_66_rex_0f (OrcProgram *p, OrcInstruction *insn, int code,
+sse_emit_66_rex_0f (OrcCompiler *p, OrcInstruction *insn, int code,
     const char *insn_name)
 {
   ORC_ASM_CODE(p,"  %s %%%s, %%%s\n", insn_name,
@@ -137,19 +138,19 @@ sse_emit_66_rex_0f (OrcProgram *p, OrcInstruction *insn, int code,
 
 #if 0
 static void
-sse_rule_addw (OrcProgram *p, void *user, OrcInstruction *insn)
+sse_rule_addw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   sse_emit_66_rex_0f (p, insn, 0xfd, "paddw");
 }
 
 static void
-sse_rule_subw (OrcProgram *p, void *user, OrcInstruction *insn)
+sse_rule_subw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   sse_emit_66_rex_0f (p, insn, 0xf9, "psubw");
 }
 
 static void
-sse_rule_mullw (OrcProgram *p, void *user, OrcInstruction *insn)
+sse_rule_mullw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   sse_emit_66_rex_0f (p, insn, 0xd5, "pmullw");
 }
@@ -157,14 +158,14 @@ sse_rule_mullw (OrcProgram *p, void *user, OrcInstruction *insn)
 
 #define UNARY(opcode,insn_name,code) \
 static void \
-sse_rule_ ## opcode (OrcProgram *p, void *user, OrcInstruction *insn) \
+sse_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
   sse_emit_66_rex_0f (p, insn, code, insn_name); \
 }
 
 #define BINARY(opcode,insn_name,code) \
 static void \
-sse_rule_ ## opcode (OrcProgram *p, void *user, OrcInstruction *insn) \
+sse_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
   sse_emit_66_rex_0f (p, insn, code, insn_name); \
 }
@@ -230,8 +231,8 @@ BINARY(maxul,"pmaxud",0x383f)
 BINARY(minsl,"pminsd",0x3839)
 BINARY(minul,"pminud",0x383b)
 BINARY(mulll,"pmulld",0x3840)
-BINARY(mulhsl,"pmulhd",0xe5)
-BINARY(mulhul,"pmulhud",0xe4)
+//BINARY(mulhsl,"pmulhd",0xe5)
+//BINARY(mulhul,"pmulhud",0xe4)
 BINARY(orl,"por",0xeb)
 UNARY(signl,"psignd",0x380a)
 BINARY(subl,"psubd",0xfa)
@@ -241,7 +242,7 @@ BINARY(xorl,"pxor",0xef)
 
 
 static void
-sse_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
+sse_rule_shlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_CONST) {
     ORC_ASM_CODE(p,"  psllw $%d, %%%s\n",
@@ -278,12 +279,12 @@ sse_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
     x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc,
         p->vars[insn->args[2]].alloc);
   } else {
-    ORC_ASM_CODE(p,"ERROR\n");
+    ORC_PROGRAM_ERROR(p,"rule only works with constants or params");
   }
 }
 
 static void
-sse_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
+sse_rule_shrsw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_CONST) {
     ORC_ASM_CODE(p,"  psraw $%d, %%%s\n",
@@ -320,12 +321,12 @@ sse_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
     x86_emit_modrm_reg (p, p->vars[insn->args[2]].alloc,
         p->vars[insn->args[0]].alloc);
   } else {
-    ORC_ASM_CODE(p,"ERROR\n");
+    ORC_PROGRAM_ERROR(p,"rule only works with constants or params");
   }
 }
 
 static void
-sse_rule_convsbw (OrcProgram *p, void *user, OrcInstruction *insn)
+sse_rule_convsbw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   ORC_ASM_CODE(p,"  punpcklbw %%%s, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[1]].alloc),
@@ -348,7 +349,7 @@ sse_rule_convsbw (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-sse_rule_convubw (OrcProgram *p, void *user, OrcInstruction *insn)
+sse_rule_convubw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   /* FIXME should do this by unpacking with a zero reg */
 
@@ -374,7 +375,7 @@ sse_rule_convubw (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-sse_rule_convsuswb (OrcProgram *p, void *user, OrcInstruction *insn)
+sse_rule_convsuswb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   ORC_ASM_CODE(p,"  packuswb %%%s, %%%s\n",
       x86_get_regname_sse(p->vars[insn->args[1]].alloc),
@@ -388,7 +389,7 @@ sse_rule_convsuswb (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 void
-orc_program_sse_register_rules (void)
+orc_compiler_sse_register_rules (void)
 {
 #define REG(x) \
   orc_rule_register ( #x , ORC_TARGET_SSE, sse_rule_ ## x, NULL)
@@ -456,8 +457,8 @@ orc_program_sse_register_rules (void)
   if (sse41) REG(minsl);
   if (sse41) REG(minul);
   if (sse41) REG(mulll);
-  REG(mulhsl);
-  REG(mulhul);
+  //REG(mulhsl);
+  //REG(mulhul);
   REG(orl);
   REG(signl);
   REG(subl);

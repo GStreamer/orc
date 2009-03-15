@@ -211,17 +211,17 @@ orc_program_find_var_by_name (OrcProgram *program, const char *name)
 }
 
 int
-orc_program_get_dest (OrcProgram *program)
+orc_compiler_get_dest (OrcCompiler *compiler)
 {
   int k;
 
-  for(k=0;k<program->n_vars;k++){
-    if (program->vars[k].vartype == ORC_VAR_TYPE_DEST) {
+  for(k=0;k<compiler->n_vars;k++){
+    if (compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
       return k;
     }
   }
 
-  ORC_PROGRAM_ERROR(program, "failed to find destination array");
+  ORC_PROGRAM_ERROR(compiler, "failed to find destination array");
   return -1;
 }
 
@@ -260,5 +260,11 @@ orc_program_append_ds_str (OrcProgram *program, const char *name,
   insn->args[1] = orc_program_find_var_by_name (program, arg2);
   
   program->n_insns++;
+}
+
+const char *
+orc_program_get_asm_code (OrcProgram *program)
+{
+  return program->asm_code;
 }
 

@@ -60,31 +60,31 @@ enum {
   ARM_COND_AL,
 };
 
-void arm_emit (OrcProgram *program, uint32_t insn);
-void arm_emit_bx_lr (OrcProgram *program);
+void arm_emit (OrcCompiler *compiler, uint32_t insn);
+void arm_emit_bx_lr (OrcCompiler *compiler);
 const char * arm_reg_name (int reg);
-void arm_emit_loadimm (OrcProgram *program, int dest, int imm);
+void arm_emit_loadimm (OrcCompiler *compiler, int dest, int imm);
 
-void arm_emit_add (OrcProgram *program, int dest, int src1, int src2);
-void arm_emit_sub (OrcProgram *program, int dest, int src1, int src2);
-void arm_emit_sub_imm (OrcProgram *program, int dest, int src1, int value);
-void arm_emit_cmp_imm (OrcProgram *program, int src1, int value);
+void arm_emit_add (OrcCompiler *compiler, int dest, int src1, int src2);
+void arm_emit_sub (OrcCompiler *compiler, int dest, int src1, int src2);
+void arm_emit_sub_imm (OrcCompiler *compiler, int dest, int src1, int value);
+void arm_emit_cmp_imm (OrcCompiler *compiler, int src1, int value);
 
-void arm_emit_label (OrcProgram *program, int label);
-void arm_emit_push (OrcProgram *program, int regs);
-void arm_emit_pop (OrcProgram *program, int regs);
-void arm_emit_mov (OrcProgram *program, int dest, int src);
-void arm_emit_branch (OrcProgram *program, int cond, int label);
+void arm_emit_label (OrcCompiler *compiler, int label);
+void arm_emit_push (OrcCompiler *compiler, int regs);
+void arm_emit_pop (OrcCompiler *compiler, int regs);
+void arm_emit_mov (OrcCompiler *compiler, int dest, int src);
+void arm_emit_branch (OrcCompiler *compiler, int cond, int label);
 
-void arm_emit_dp_reg (OrcProgram *program, int cond, int opcode, int dest,
+void arm_emit_dp_reg (OrcCompiler *compiler, int cond, int opcode, int dest,
     int src1, int src2);
 
-void arm_loadw (OrcProgram *program, int dest, int src1, int offset);
-void arm_storew (OrcProgram *program, int dest, int offset, int src1);
+void arm_loadw (OrcCompiler *compiler, int dest, int src1, int offset);
+void arm_storew (OrcCompiler *compiler, int dest, int offset, int src1);
 
-void arm_emit_load_reg (OrcProgram *program, int dest, int src1, int offset);
+void arm_emit_load_reg (OrcCompiler *compiler, int dest, int src1, int offset);
 
-void arm_do_fixups (OrcProgram *program);
+void arm_do_fixups (OrcCompiler *compiler);
 
 
 #endif

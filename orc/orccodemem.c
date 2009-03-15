@@ -17,7 +17,7 @@
 
 #ifdef HAVE_CODEMEM_MMAP
 void
-orc_program_allocate_codemem (OrcProgram *program)
+orc_compiler_allocate_codemem (OrcCompiler *compiler)
 {
   char filename[32] = "/tmp/orcexecXXXXXX";
   int fd;
@@ -27,45 +27,41 @@ orc_program_allocate_codemem (OrcProgram *program)
   if (fd == -1) {
     /* FIXME oh crap */
     ORC_ERROR ("failed to create temp file");
-    program->error = TRUE;
+    compiler->error = TRUE;
     return;
   }
   unlink (filename);
 
   n = ftruncate (fd, SIZE);
 
-  program->code = mmap (NULL, SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
-  if (program->code == MAP_FAILED) {
-    /* FIXME oh crap */
-    ORC_ERROR ("failed to create write map");
-    program->error = TRUE;
+  compiler->program->code = mmap (NULL, SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+  if (compiler->program->code == MAP_FAILED) {
+    ORC_PROGRAM_ERROR(compiler, "failed to create write map");
     return;
   }
-  program->code_exec = mmap (NULL, SIZE, PROT_READ|PROT_EXEC, MAP_SHARED, fd, 0);
-  if (program->code_exec == MAP_FAILED) {
-    /* FIXME oh crap */
-    ORC_ERROR ("failed to create exec map");
-    program->error = TRUE;
+  compiler->program->code_exec = mmap (NULL, SIZE, PROT_READ|PROT_EXEC, MAP_SHARED, fd, 0);
+  if (compiler->program->code_exec == MAP_FAILED) {
+    ORC_PROGRAM_ERROR(compiler, "failed to create exec map");
     return;
   }
 
   close (fd);
 
-  program->code_size = SIZE;
-  program->codeptr = program->code;
+  compiler->program->code_size = SIZE;
+  compiler->codeptr = compiler->program->code;
 }
 #endif
 
 #ifdef HAVE_CODEMEM_MALLOC
 void
-orc_program_allocate_codemem (OrcProgram *program)
+orc_compiler_allocate_codemem (OrcCompiler *compiler)
 {
   /* Now you know why Windows has viruses */
 
-  program->code = malloc(SIZE);
-  program->code_exec = program->code;
-  program->code_size = SIZE;
-  program->codeptr = program->code;
+  compiler->program->code = malloc(SIZE);
+  compiler->program->code_exec = compiler->code;
+  compiler->program->code_size = SIZE;
+  compiler->codeptr = compiler->program->code;
 }
 #endif
 

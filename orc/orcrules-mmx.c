@@ -16,7 +16,7 @@
 /* mmx rules */
 
 void
-mmx_emit_loadiw (OrcProgram *p, int reg, int value)
+mmx_emit_loadiw (OrcCompiler *p, int reg, int value)
 {
   if (value == 0) {
     ORC_ASM_CODE(p,"  pxor %%%s, %%%s\n", x86_get_regname_mmx(reg),
@@ -47,7 +47,7 @@ mmx_emit_loadiw (OrcProgram *p, int reg, int value)
 }
 
 static void
-mmx_rule_addw (OrcProgram *p, void *user, OrcInstruction *insn)
+mmx_rule_addw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   ORC_ASM_CODE(p,"  paddw %%%s, %%%s\n",
       x86_get_regname_mmx(p->vars[insn->args[2]].alloc),
@@ -60,7 +60,7 @@ mmx_rule_addw (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-mmx_rule_subw (OrcProgram *p, void *user, OrcInstruction *insn)
+mmx_rule_subw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   ORC_ASM_CODE(p,"  psubw %%%s, %%%s\n",
       x86_get_regname_mmx(p->vars[insn->args[2]].alloc),
@@ -73,7 +73,7 @@ mmx_rule_subw (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-mmx_rule_mullw (OrcProgram *p, void *user, OrcInstruction *insn)
+mmx_rule_mullw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   ORC_ASM_CODE(p,"  pmullw %%%s, %%%s\n",
       x86_get_regname_mmx(p->vars[insn->args[2]].alloc),
@@ -86,7 +86,7 @@ mmx_rule_mullw (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-mmx_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
+mmx_rule_shlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_CONST) {
     ORC_ASM_CODE(p,"  psllw $%d, %%%s\n",
@@ -111,7 +111,7 @@ mmx_rule_shlw (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 static void
-mmx_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
+mmx_rule_shrsw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_CONST) {
     ORC_ASM_CODE(p,"  psraw $%d, %%%s\n",
@@ -136,7 +136,7 @@ mmx_rule_shrsw (OrcProgram *p, void *user, OrcInstruction *insn)
 }
 
 void
-orc_program_mmx_register_rules (void)
+orc_compiler_mmx_register_rules (void)
 {
   orc_rule_register ("addw", ORC_TARGET_MMX, mmx_rule_addw, NULL);
   orc_rule_register ("subw", ORC_TARGET_MMX, mmx_rule_subw, NULL);
