@@ -4,15 +4,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <orc/orc.h>
 #include <orc/orcprogram.h>
+#include <orc/orcdebug.h>
 
+static const char *c_get_type_name (int size);
 
 void orc_c_init (void);
 
 void
 orc_program_c_init (OrcProgram *program)
 {
+  int i;
 
+  for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+16;i++){
+    program->valid_regs[i] = 1;
+  }
+  program->loop_shift = 0;
 }
 
 const char *
@@ -37,9 +45,10 @@ orc_target_get_asm_preamble (int target)
     "  //OrcVariable vars[ORC_N_VARIABLES];\n"
     "  //OrcVariable *args[ORC_OPCODE_N_ARGS];\n"
     "};\n"
-    "#define CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))\n"
-    "#define MIN(a,b) ((a)<(b) ? (a) : (b))\n"
-    "#define MAX(a,b) ((a)>(b) ? (a) : (b))\n"
+    "#define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))\n"
+    "#define ORC_ABS(a) ((a)<0 ? (-a) : (a))\n"
+    "#define ORC_MIN(a,b) ((a)<(b) ? (a) : (b))\n"
+    "#define ORC_MAX(a,b) ((a)>(b) ? (a) : (b))\n"
     "#define ORC_SB_MAX 127\n"
     "#define ORC_SB_MIN (-1-ORC_SB_MAX)\n"
     "#define ORC_UB_MAX 255\n"
@@ -52,12 +61,12 @@ orc_target_get_asm_preamble (int target)
     "#define ORC_SL_MIN (-1-ORC_SL_MAX)\n"
     "#define ORC_UL_MAX 4294967295U\n"
     "#define ORC_UL_MIN 0\n"
-    "#define ORC_CLAMP_SB(x) CLAMP(x,ORC_SB_MIN,ORC_SB_MAX)\n"
-    "#define ORC_CLAMP_UB(x) CLAMP(x,ORC_UB_MIN,ORC_SB_MAX)\n"
-    "#define ORC_CLAMP_SW(x) CLAMP(x,ORC_SW_MIN,ORC_SB_MAX)\n"
-    "#define ORC_CLAMP_UW(x) CLAMP(x,ORC_UW_MIN,ORC_SB_MAX)\n"
-    "#define ORC_CLAMP_SL(x) CLAMP(x,ORC_SL_MIN,ORC_SB_MAX)\n"
-    "#define ORC_CLAMP_UL(x) CLAMP(x,ORC_UL_MIN,ORC_SB_MAX)\n"
+    "#define ORC_CLAMP_SB(x) ORC_CLAMP(x,ORC_SB_MIN,ORC_SB_MAX)\n"
+    "#define ORC_CLAMP_UB(x) ORC_CLAMP(x,ORC_UB_MIN,ORC_SB_MAX)\n"
+    "#define ORC_CLAMP_SW(x) ORC_CLAMP(x,ORC_SW_MIN,ORC_SB_MAX)\n"
+    "#define ORC_CLAMP_UW(x) ORC_CLAMP(x,ORC_UW_MIN,ORC_SB_MAX)\n"
+    "#define ORC_CLAMP_SL(x) ORC_CLAMP(x,ORC_SL_MIN,ORC_SB_MAX)\n"
+    "#define ORC_CLAMP_UL(x) ORC_CLAMP(x,ORC_UL_MIN,ORC_SB_MAX)\n"
     "/* end Orc C target preamble */\n\n";
 }
 
@@ -79,18 +88,20 @@ orc_program_assemble_c (OrcProgram *program)
     OrcVariable *var = program->vars + i;
     switch (var->vartype) {
       case ORC_VAR_TYPE_CONST:
-        ORC_ASM_CODE(program,"  int16_t var%d = %d;\n", i,
-            (int16_t)var->value);
+        ORC_ASM_CODE(program,"  %s var%d = %d;\n",
+            c_get_type_name(var->size), i, var->value);
         break;
       case ORC_VAR_TYPE_TEMP:
-        ORC_ASM_CODE(program,"  int16_t var%d;\n", i);
+        ORC_ASM_CODE(program,"  %s var%d;\n", c_get_type_name(var->size), i);
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
-        ORC_ASM_CODE(program,"  int16_t *var%d = ex->arrays[%d];\n", i, i);
+        ORC_ASM_CODE(program,"  %s *var%d = ex->arrays[%d];\n",
+            c_get_type_name (var->size), i, i);
         break;
       case ORC_VAR_TYPE_PARAM:
-        ORC_ASM_CODE(program,"  int16_t var%d = ex->arrays[%d];\n", i, i);
+        ORC_ASM_CODE(program,"  %s var%d = ex->arrays[%d];\n",
+            c_get_type_name (var->size), i, i);
         break;
       default:
         break;
@@ -111,7 +122,8 @@ orc_program_assemble_c (OrcProgram *program)
     if (rule) {
       rule->emit (program, rule->emit_user, insn);
     } else {
-      ORC_ASM_CODE(program,"#error No rule for: %s\n", opcode->name);
+      ORC_PROGRAM_ERROR(program,"No rule for: %s\n", opcode->name);
+      program->error = TRUE;
     }
   }
 
@@ -140,8 +152,23 @@ c_get_name (char *name, OrcProgram *p, int var)
       sprintf(name, "ERROR");
       break;
   }
-
 }
+
+static const char *
+c_get_type_name (int size)
+{
+  switch (size) {
+    case 1:
+      return "int8_t";
+    case 2:
+      return "int16_t";
+    case 4:
+      return "int32_t";
+    default:
+      return "ERROR";
+  }
+}
+
 
 #if 0
 static void
