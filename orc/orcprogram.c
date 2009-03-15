@@ -15,7 +15,7 @@ void orc_program_rewrite_vars (OrcProgram *program);
 void orc_program_rewrite_vars2 (OrcProgram *program);
 void orc_program_do_regs (OrcProgram *program);
 
-int _orc_default_target = ORC_TARGET_C;
+int _orc_default_target = ORC_TARGET_SSE;
 
 OrcProgram *
 orc_program_new (void)
@@ -278,8 +278,8 @@ orc_program_allocate_register (OrcProgram *program, int data_reg)
   int offset;
 
   if (data_reg) {
-    if (_orc_default_target == ORC_TARGET_ARM ||
-        _orc_default_target == ORC_TARGET_C) {
+    if (program->target == ORC_TARGET_ARM ||
+        program->target == ORC_TARGET_C) {
       offset = ORC_GP_REG_BASE;
     } else {
       offset = ORC_VEC_REG_BASE;
