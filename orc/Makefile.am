@@ -14,6 +14,7 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orcrule.c \
 	orccodemem.c \
 	orcprogram.c \
+	orccompiler.c \
 	orcprogram-arm.c \
 	orcprogram-c.c \
 	orcprogram-powerpc.c \
