@@ -25,6 +25,9 @@ orc_program_new (void)
   p = malloc(sizeof(OrcProgram));
   memset (p, 0, sizeof(OrcProgram));
 
+  p->name = malloc (40);
+  sprintf(p->name, "func_%p", p);
+
   p->target = _orc_default_target;
 
   return p;
@@ -64,7 +67,25 @@ orc_program_free (OrcProgram *program)
   for(i=0;i<program->n_vars;i++){
     free (program->vars[i].name);
   }
+  if (program->name) {
+    free (program->name);
+  }
   free (program);
+}
+
+void
+orc_program_set_name (OrcProgram *program, const char *name)
+{
+  if (program->name) {
+    free (program->name);
+  }
+  program->name = strdup (name);
+}
+
+const char *
+orc_program_get_name (OrcProgram *program)
+{
+  return program->name;
 }
 
 int
@@ -286,6 +307,14 @@ orc_program_allocate_register (OrcProgram *program, int data_reg)
 
   ORC_ERROR ("register overflow");
   return 0;
+}
+
+orc_bool
+orc_program_compile_for_target (OrcProgram *program, int target)
+{
+  program->target = target;
+
+  return orc_program_compile (program);
 }
 
 orc_bool
@@ -571,13 +600,32 @@ orc_program_dump_code (OrcProgram *program)
   fclose (file);
 }
 
+const char *
+orc_program_get_asm_code (OrcProgram *program)
+{
+  return program->asm_code;
+}
+
+void
+orc_program_dump_asm (OrcProgram *program)
+{
+  printf("%s", program->asm_code);
+}
+
 void
 orc_program_append_code (OrcProgram *p, const char *fmt, ...)
 {
+  char tmp[100];
   va_list varargs;
+  int n;
 
   va_start (varargs, fmt);
-  vprintf(fmt, varargs);
+  vsnprintf(tmp, 100 - 1, fmt, varargs);
   va_end (varargs);
+
+  n = strlen (tmp);
+  p->asm_code = realloc (p->asm_code, p->asm_code_len + n + 1);
+  memcpy (p->asm_code + p->asm_code_len, tmp, n + 1);
+  p->asm_code_len += n;
 }
 

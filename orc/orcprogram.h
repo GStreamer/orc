@@ -176,6 +176,8 @@ struct _OrcProgram {
   OrcRegister registers[ORC_N_REGISTERS];
   int n_regs;
 
+  char *name;
+
   unsigned char *code;
   void *code_exec;
   unsigned char *codeptr;
@@ -195,6 +197,9 @@ struct _OrcProgram {
   int target;
   int loop_shift;
   int long_jumps;
+
+  char *asm_code;
+  int asm_code_len;
 };
 
 struct _OrcExecutor {
@@ -219,7 +224,11 @@ OrcProgram * orc_program_new (void);
 OrcProgram * orc_program_new_ds (int size1, int size2);
 OrcProgram * orc_program_new_dss (int size1, int size2, int size3);
 OrcOpcode * orc_opcode_find_by_name (const char *name);
+int orc_opcode_get_list (OrcOpcode **list);
 void orc_opcode_init (void);
+
+const char * orc_program_get_name (OrcProgram *program);
+void orc_program_set_name (OrcProgram *program, const char *name);
 
 void orc_program_append (OrcProgram *p, const char *opcode, int arg0, int arg1, int arg2);
 void orc_program_append_str (OrcProgram *p, const char *opcode,
@@ -236,6 +245,7 @@ void orc_powerpc_init (void);
 void orc_c_init (void);
 
 orc_bool orc_program_compile (OrcProgram *p);
+orc_bool orc_program_compile_for_target (OrcProgram *p, int target);
 void orc_program_c_init (OrcProgram *p);
 void orc_program_mmx_init (OrcProgram *p);
 void orc_program_sse_init (OrcProgram *p);
@@ -282,6 +292,10 @@ int orc_program_powerpc_allocate_register (OrcProgram *program, int is_data);
 void orc_program_x86_register_rules (void);
 void orc_program_allocate_codemem (OrcProgram *program);
 void orc_program_dump_code (OrcProgram *program);
+
+const char *orc_program_get_asm_code (OrcProgram *program);
+void orc_program_dump_asm (OrcProgram *program);
+const char *orc_target_get_asm_preamble (int target);
 
 void orc_program_append_code (OrcProgram *p, const char *fmt, ...);
  

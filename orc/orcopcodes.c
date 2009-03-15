@@ -15,13 +15,30 @@ static int n_opcodes_alloc;
 #define ORC_SB_MAX 127
 #define ORC_SB_MIN (-1-ORC_SB_MAX)
 #define ORC_UB_MAX 255
+#define ORC_UB_MIN 0
 #define ORC_SW_MAX 32767
 #define ORC_SW_MIN (-1-ORC_SW_MAX)
 #define ORC_UW_MAX 65535
+#define ORC_UW_MIN 0
 #define ORC_SL_MAX 2147483647
 #define ORC_SL_MIN (-1-ORC_SL_MAX)
 #define ORC_UL_MAX 4294967295U
+#define ORC_UL_MIN 0
 
+#define ORC_CLAMP_SB(x) CLAMP(x,ORC_SB_MIN,ORC_SB_MAX)
+#define ORC_CLAMP_UB(x) CLAMP(x,ORC_UB_MIN,ORC_UB_MAX)
+#define ORC_CLAMP_SW(x) CLAMP(x,ORC_SW_MIN,ORC_SW_MAX)
+#define ORC_CLAMP_UW(x) CLAMP(x,ORC_UW_MIN,ORC_UW_MAX)
+#define ORC_CLAMP_SL(x) CLAMP(x,ORC_SL_MIN,ORC_SL_MAX)
+#define ORC_CLAMP_UL(x) CLAMP(x,ORC_UL_MIN,ORC_UL_MAX)
+
+
+int
+orc_opcode_get_list (OrcOpcode **list)
+{
+  (*list) = opcode_list;
+  return n_opcodes;
+}
 
 void
 orc_opcode_register (const char *name, int n_dest, int n_src,
@@ -126,25 +143,25 @@ convwb (OrcExecutor *ex, void *user)
 static void
 convssswb (OrcExecutor *ex, void *user)
 {
-  ex->args[0]->value = CLAMP((int16_t)(ex->args[1]->value), -128, 127);
+  ex->args[0]->value = ORC_CLAMP_SB((int16_t)(ex->args[1]->value));
 }
 
 static void
 convsuswb (OrcExecutor *ex, void *user)
 {
-  ex->args[0]->value = CLAMP((int16_t)(ex->args[1]->value), 0, 255);
+  ex->args[0]->value = ORC_CLAMP_UB((int16_t)(ex->args[1]->value));
 }
 
 static void
 convusswb (OrcExecutor *ex, void *user)
 {
-  ex->args[0]->value = CLAMP((uint16_t)(ex->args[1]->value), -128, 127);
+  ex->args[0]->value = ORC_CLAMP_SB((uint16_t)(ex->args[1]->value));
 }
 
 static void
 convuuswb (OrcExecutor *ex, void *user)
 {
-  ex->args[0]->value = CLAMP((uint16_t)(ex->args[1]->value), 0, 255);
+  ex->args[0]->value = ORC_CLAMP_UB((uint16_t)(ex->args[1]->value));
 }
 
 static void
@@ -156,25 +173,25 @@ convlw (OrcExecutor *ex, void *user)
 static void
 convssslw (OrcExecutor *ex, void *user)
 {
-  ex->args[0]->value = CLAMP((int32_t)(ex->args[1]->value), ORC_SW_MIN, ORC_SW_MAX);
+  ex->args[0]->value = ORC_CLAMP_SW((int32_t)(ex->args[1]->value));
 }
 
 static void
 convsuslw (OrcExecutor *ex, void *user)
 {
-  ex->args[0]->value = CLAMP((int32_t)(ex->args[1]->value), 0, ORC_UW_MAX);
+  ex->args[0]->value = ORC_CLAMP_UW((int32_t)(ex->args[1]->value));
 }
 
 static void
 convusslw (OrcExecutor *ex, void *user)
 {
-  ex->args[0]->value = CLAMP((uint32_t)(ex->args[1]->value), ORC_SW_MIN, ORC_SW_MAX);
+  ex->args[0]->value = ORC_CLAMP_SW((uint32_t)(ex->args[1]->value));
 }
 
 static void
 convuuslw (OrcExecutor *ex, void *user)
 {
-  ex->args[0]->value = CLAMP((uint32_t)(ex->args[1]->value), 0, ORC_UW_MAX);
+  ex->args[0]->value = ORC_CLAMP_UW((uint32_t)(ex->args[1]->value));
 }
 
 #define UNARY(name,type,code) \
@@ -236,11 +253,11 @@ BINARY_UB(mulhub, (a * b) >> 8)
 BINARY_SB(orb, a | b)
 BINARY_SB(shlb, a << b)
 BINARY_SB(shrsb, a >> b)
-BINARY_UB(shrub, a >> b)
+BINARY_UB(shrub, ((uint8_t)a) >> b)
 UNARY_SB(signb, CLAMP(-1,1,a))
 BINARY_SB(subb, a - b)
 BINARY_SB(subssb, CLAMP(ORC_SB_MIN,ORC_SB_MAX,a - b))
-BINARY_UB(subusb, CLAMP(0,ORC_UB_MAX,a - b))
+BINARY_UB(subusb, CLAMP(0,ORC_UB_MAX,(uint8_t)a - (uint8_t)b))
 BINARY_SB(xorb, a ^ b)
 
 UNARY_SW(absw, (a<0)?-a:a)
@@ -288,7 +305,7 @@ BINARY_SL(minsl, (a < b) ? a : b)
 BINARY_UL(minul, (a < b) ? a : b)
 BINARY_SL(mulll, (a * b) & 0xffffffff)
 BINARY_SL(mulhsl, ((int64_t)a * (int64_t)b) >> 32)
-BINARY_UL(mulhul, ((int64_t)a * (int64_t)b) >> 32)
+BINARY_UL(mulhul, ((uint64_t)a * (uint64_t)b) >> 32)
 BINARY_SL(orl, a | b)
 BINARY_SL(shll, a << b)
 BINARY_SL(shrsl, a >> b)
