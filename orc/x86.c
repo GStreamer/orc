@@ -956,8 +956,8 @@ x86_do_fixups (OrcProgram *program)
 void
 x86_emit_prologue (OrcProgram *program)
 {
-  orc_program_append_code(program,".global _binary_dump_start\n");
-  orc_program_append_code(program,"_binary_dump_start:\n");
+  orc_program_append_code(program,".global %s\n", program->name);
+  orc_program_append_code(program,"%s:\n", program->name);
   if (x86_64) {
     int i;
     for(i=0;i<16;i++){

@@ -367,8 +367,7 @@ sse_emit_loop (OrcProgram *program)
       }
       rule->emit (program, rule->emit_user, insn);
     } else {
-      ORC_ASM_CODE(program,"No rule for: %s\n", opcode->name);
-      program->error = TRUE;
+      ORC_PROGRAM_ERROR(program,"No rule for: %s", opcode->name);
     }
 
     for(k=0;k<opcode->n_dest;k++){

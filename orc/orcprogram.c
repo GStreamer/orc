@@ -15,7 +15,19 @@ void orc_program_rewrite_vars (OrcProgram *program);
 void orc_program_rewrite_vars2 (OrcProgram *program);
 void orc_program_do_regs (OrcProgram *program);
 
+#if defined(HAVE_I386)
 int _orc_default_target = ORC_TARGET_SSE;
+#elif defined(HAVE_AMD64)
+int _orc_default_target = ORC_TARGET_SSE;
+#elif defined(HAVE_ARM)
+int _orc_default_target = ORC_TARGET_ARM;
+#elif defined(HAVE_POWERPC)
+int _orc_default_target = ORC_TARGET_ALTIVEC;
+#else
+int _orc_default_target = ORC_TARGET_C;
+#endif
+
+
 
 OrcProgram *
 orc_program_new (void)
@@ -348,7 +360,10 @@ orc_program_compile (OrcProgram *program)
   }
 
   orc_program_assign_rules (program);
+  if (program->error) goto error;
+
   orc_program_rewrite_vars (program);
+  if (program->error) goto error;
 
   if (program->target != ORC_TARGET_C) {
     orc_program_global_reg_alloc (program);
@@ -357,6 +372,7 @@ orc_program_compile (OrcProgram *program)
   }
 
   orc_program_rewrite_vars2 (program);
+  if (program->error) goto error;
 
   if (program->target != ORC_TARGET_C) {
     orc_program_allocate_codemem (program);
@@ -381,14 +397,12 @@ orc_program_compile (OrcProgram *program)
     default:
       break;
   }
+  if (program->error) goto error;
 
-  orc_program_dump_code (program);
-
-  if (program->error) {
-    ORC_ERROR("program failed to compile");
-    return FALSE;
-  }
   return TRUE;
+error:
+  ORC_ERROR("program failed to compile");
+  return FALSE;
 }
 
 void
@@ -400,6 +414,10 @@ orc_program_assign_rules (OrcProgram *program)
     OrcInstruction *insn = program->insns + i;
 
     insn->rule = insn->opcode->rules + program->target;
+
+    if (insn->rule == NULL || insn->rule->emit == NULL) {
+      ORC_PROGRAM_ERROR(program, "No rule for: %s", insn->opcode->name);
+    }
   }
 }
 

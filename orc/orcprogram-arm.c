@@ -31,8 +31,8 @@ arm_emit_prologue (OrcProgram *program)
   unsigned int regs = 0;
   int i;
 
-  orc_program_append_code(program,".global _binary_dump_start\n");
-  orc_program_append_code(program,"_binary_dump_start:\n");
+  orc_program_append_code(program,".global %s\n", program->name);
+  orc_program_append_code(program,"%s:\n", program->name);
 
   for(i=0;i<16;i++){
     if (program->used_regs[ORC_GP_REG_BASE + i] &&
