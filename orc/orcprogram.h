@@ -10,11 +10,9 @@ typedef struct _OrcExecutor OrcExecutor;
 typedef struct _OrcVariable OrcVariable;
 typedef struct _OrcOpcode OrcOpcode;
 typedef struct _OrcStaticOpcode OrcStaticOpcode;
-typedef struct _OrcArgument OrcArgument;
 typedef struct _OrcInstruction OrcInstruction;
 typedef struct _OrcProgram OrcProgram;
 typedef struct _OrcCompiler OrcCompiler;
-typedef struct _OrcRegister OrcRegister;
 typedef struct _OrcRule OrcRule;
 typedef struct _OrcFixup OrcFixup;
 
@@ -131,17 +129,6 @@ struct _OrcStaticOpcode {
   int src_size[ORC_STATIC_OPCODE_N_SRC];
 };
 
-struct _OrcArgument {
-  OrcVariable *var;
-  int is_indirect;
-  int is_indexed;
-  OrcVariable *index_var;
-  int index_scale;
-  int type; // remove
-  int index; // remove
-  int offset;
-};
-
 struct _OrcInstruction {
   OrcOpcode *opcode;
   int args[3];
@@ -154,17 +141,6 @@ struct _OrcFixup {
   int type;
   int label;
 };
-
-struct _OrcRegister {
-  int var;
-
-  int is_data;
-  int is_chained;
-  int chained_reg;
-
-  int merge;
-};
-
 
 struct _OrcProgram {
   OrcInstruction insns[ORC_N_INSNS];
@@ -190,11 +166,6 @@ struct _OrcCompiler {
 
   OrcVariable vars[ORC_N_VARIABLES];
   int n_vars;
-
-  OrcInstruction *insn;
-
-  OrcRegister registers[ORC_N_REGISTERS];
-  int n_regs;
 
   unsigned char *codeptr;
   
