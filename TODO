@@ -1,0 +1,16 @@
+
+High priority:
+
+- convert values to value pointers
+
+- make sure emulation always works
+
+- unroll emulation
+
+
+Low priority:
+
+- floating point support
+
+- int64 support
+

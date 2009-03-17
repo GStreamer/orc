@@ -1,0 +1,105 @@
+
+ORC - The Oil Runtime Compiler
+==============================
+
+(and OIL stands for Optimized Inner Loops)
+
+Entropy Wave Inc (http://entropywave.com/) presents Orc, the sucessor
+to Liboil - The Library of Optimized Inner Loops.
+
+Orc is a library and set of tools for compiling and executing
+very simple programs that operate on arrays of data.  The "language"
+is a generic assembly language that represents many of the features
+available in SIMD architectures, including saturated addition and
+subtraction, and many arithmetic operations.
+
+At this point, developers interested in using Orc should look at the
+examples and try out a few Orc programs in an experimental branch
+of their own projects.  And provide feedback on how it works.  There
+will likely be some major changes in ease of use from a developer's
+perspective over the next few releases.
+
+The 0.4 series of Orc releases will be API and ABI compatible, and
+will be incompatible with the 0.5 series when it comes out.  It is
+anticipated that 0.5 will follow in a few months.
+
+
+Features:
+
+ - Users can create, compile, and run simple programs that use the
+   vector extensions of the CPU, all directly from an application.
+
+ - Users can compile Orc programs to assembly source code to be
+   compiled and used without linking against the Orc library.
+
+ - The generic assembly language can be extended by an application
+   by adding new opcodes.
+
+ - An application can add rules for converting existing or new opcodes
+   to binary code for a specific target.
+
+ - Current targets: SSE, MMX, ARM, Altivec.  (SSE is the only target
+   that has gotten much testing.)
+
+ - Programs can optionally be emulated, which is useful for testing, or
+   if no rules are available to convert Orc opcodes to executable code.
+
+
+Questions and Answers:
+
+ - Q: Why not let gcc vectorize my code?
+
+   A: Two reasons: first, since Orc's assembly language is much more
+   restrictive than C, Orc can generate better code than gcc, and
+   second, Orc can generate code for functions you define at runtime.
+   Many algorithms require gluing together several stages of operations,
+   and if each stage has several options, the total amount of code to
+   cover all combinations
+
+ - Q: Why not use compiler intrinsics for SIMD code?
+
+   A: Compiler intrinsics only work for one target, and need to be
+   hand written.  Plus, some compilers are very picky about source
+   code that uses intrinsics, and will silently produce slow code.
+   And, of course, you can't compile intrinsics at runtime.
+
+ - Q: How big is the Orc library?
+
+   A: Compiled with only one target (SSE), the library size is about
+   60 kB uncompressed, or 20 kB compressed.  The goal is to keep the
+   uncompressed size under about 100 kB.
+
+
+Caveats (Known Bugs):
+
+ - The SSE target may generate illegal instructions on your CPU, since
+   it doesn't (yet) check which instructions are legal.  This will be
+   fixed in the next release.
+
+ - Most other targets are very limited in their instruction coverage.
+
+
+Future directions:
+
+ - A parser, so that programs can be written in text form instead
+   of constructed directly in intermediate form using function calls.
+
+ - Addition of various convenience functions.
+
+ - Addition of an option to compile the Orc library with only the
+   runtime features for a single target, e.g., for embedded systems.
+ 
+ - Addition of rewrite rules, which convert an instruction that cannot
+   be converted to binary code into a series of instructions that can.
+   This is necessary since assembly instructions on most targets do
+   not cover all the features of the Orc assembly language.
+ 
+
+About Entropy Wave:
+
+Entropy Wave creates tools that allow content producers and distributors
+use open video technology.  Through use of open source software like
+GStreamer and Dirac, Entropy Wave's customers save money on licensing
+costs for encoding and streaming video on the web.  Entropy Wave was
+founded in 2008 by long-time open source developer David Schleef.
+
