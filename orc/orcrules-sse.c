@@ -314,7 +314,7 @@ sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
   int imm_code1[] = { 0x71, 0x71, 0x71, 0x72, 0x72, 0x72 };
   int imm_code2[] = { 6, 2, 4, 6, 2, 4 };
   int reg_code[] = { 0xf1, 0xd1, 0xe1, 0xf2, 0xd2, 0xe2 };
-  //const char *code[] = { "psllw", "psrlw", "psraw", "pslld", "psrld", "psrad" };
+  const char *code[] = { "psllw", "psrlw", "psraw", "pslld", "psrld", "psrad" };
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
     ORC_ASM_CODE(p,"  %s $%d, %%%s\n", code[type],
@@ -423,89 +423,59 @@ orc_compiler_sse_register_rules (OrcTarget *target)
 {
   OrcRuleSet *rule_set;
 
-  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target);
-
 #define REG(x) \
   orc_rule_register (rule_set, #x , sse_rule_ ## x, NULL)
 
-  REG(absb);
+  /* SSE 2 */
+  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target);
+
   REG(addb);
   REG(addssb);
   REG(addusb);
   REG(andb);
   REG(andnb);
-  //REG(avgsb);
   REG(avgub);
   REG(cmpeqb);
   REG(cmpgtsb);
-  if (sse41) REG(maxsb);
   REG(maxub);
-  if (sse41) REG(minsb);
   REG(minub);
-  //REG(mullb);
-  //REG(mulhsb);
-  //REG(mulhub);
   REG(orb);
-  REG(signb);
   REG(subb);
   REG(subssb);
   REG(subusb);
   REG(xorb);
 
-  REG(absw);
   REG(addw);
   REG(addssw);
   REG(addusw);
   REG(andw);
   REG(andnw);
-  //REG(avgsw);
   REG(avguw);
   REG(cmpeqw);
   REG(cmpgtsw);
   REG(maxsw);
-  if (sse41) REG(maxuw);
   REG(minsw);
-  if (sse41) REG(minuw);
   REG(mullw);
   REG(mulhsw);
   REG(mulhuw);
   REG(orw);
-  REG(signw);
   REG(subw);
   REG(subssw);
   REG(subusw);
   REG(xorw);
 
-  REG(absl);
   REG(addl);
-  //REG(addssl);
-  //REG(addusl);
   REG(andl);
   REG(andnl);
-  //REG(avgsl);
-  //REG(avgul);
   REG(cmpeql);
   REG(cmpgtsl);
-  if (sse41) REG(maxsl);
-  if (sse41) REG(maxul);
-  if (sse41) REG(minsl);
-  if (sse41) REG(minul);
-  if (sse41) REG(mulll);
-  //REG(mulhsl);
-  //REG(mulhul);
   REG(orl);
-  REG(signl);
   REG(subl);
-  //REG(subssl);
-  //REG(subusl);
   REG(xorl);
 
   orc_rule_register (rule_set, "copyb", sse_rule_copyx, NULL);
   orc_rule_register (rule_set, "copyw", sse_rule_copyx, NULL);
   orc_rule_register (rule_set, "copyl", sse_rule_copyx, NULL);
-
-  //orc_rule_register (rule_set, "shlw", sse_rule_shlw, NULL);
-  //orc_rule_register (rule_set, "shrsw", sse_rule_shrsw, NULL);
 
   orc_rule_register (rule_set, "shlw", sse_rule_shift, (void *)0);
   orc_rule_register (rule_set, "shruw", sse_rule_shift, (void *)1);
@@ -517,5 +487,36 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "convsbw", sse_rule_convsbw, NULL);
   orc_rule_register (rule_set, "convubw", sse_rule_convubw, NULL);
   orc_rule_register (rule_set, "convsuswb", sse_rule_convsuswb, NULL);
+
+  /* SSE 3 -- no rules */
+
+  /* SSSE 3 */
+  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target);
+
+  REG(signb);
+  REG(signw);
+  REG(signl);
+  REG(absb);
+  REG(absw);
+  REG(absl);
+
+  /* SSE 4.1 */
+  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target);
+
+  REG(maxsb);
+  REG(minsb);
+  REG(maxuw);
+  REG(minuw);
+  REG(maxsl);
+  REG(maxul);
+  REG(minsl);
+  REG(minul);
+  REG(mulll);
+
+  /* SSE 4.2 -- no rules */
+
+  /* SSE 4a -- no rules */
+
+  /* SSE 5 -- no rules */
 }
 
