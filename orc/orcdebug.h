@@ -122,6 +122,13 @@ typedef enum {
   orc_debug_print((level), __FILE__, ORC_FUNCTION, __LINE__, __VA_ARGS__); \
 }while(0)
 
+#define ORC_ASSERT(test) do { \
+  if (!(test)) { \
+    ORC_ERROR("assertion failed: " #test ); \
+    abort(); \
+  } \
+} while(0)
+
 void orc_debug_set_print_function (OrcDebugPrintFunc func);
 int orc_debug_get_level (void);
 void orc_debug_set_level (int level);

@@ -16,18 +16,6 @@ void orc_compiler_rewrite_vars2 (OrcCompiler *compiler);
 void orc_compiler_do_regs (OrcCompiler *compiler);
 int orc_compiler_dup_temporary (OrcCompiler *compiler, int var, int j);
 
-#if defined(HAVE_I386)
-int _orc_default_target = ORC_TARGET_SSE;
-#elif defined(HAVE_AMD64)
-int _orc_default_target = ORC_TARGET_SSE;
-#elif defined(HAVE_ARM)
-int _orc_default_target = ORC_TARGET_ARM;
-#elif defined(HAVE_POWERPC)
-int _orc_default_target = ORC_TARGET_ALTIVEC;
-#else
-int _orc_default_target = ORC_TARGET_C;
-#endif
-
 
 int
 orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
@@ -36,12 +24,7 @@ orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
   int offset;
 
   if (data_reg) {
-    if (compiler->target == ORC_TARGET_ARM ||
-        compiler->target == ORC_TARGET_C) {
-      offset = ORC_GP_REG_BASE;
-    } else {
-      offset = ORC_VEC_REG_BASE;
-    }
+    offset = compiler->target->data_register_offset;
   } else {
     offset = ORC_GP_REG_BASE;
   }
@@ -71,11 +54,11 @@ orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
 orc_bool
 orc_program_compile (OrcProgram *program)
 {
-  return orc_program_compile_for_target (program, _orc_default_target);
+  return orc_program_compile_for_target (program, orc_target_get_default());
 }
 
 orc_bool
-orc_program_compile_for_target (OrcProgram *program, int target)
+orc_program_compile_for_target (OrcProgram *program, OrcTarget *target)
 {
   OrcCompiler *compiler;
   int i;
@@ -98,25 +81,7 @@ orc_program_compile_for_target (OrcProgram *program, int target)
     compiler->valid_regs[i] = 1;
   }
 
-  switch (compiler->target) {
-    case ORC_TARGET_C:
-      orc_compiler_c_init (compiler);
-      break;
-    case ORC_TARGET_ALTIVEC:
-      orc_compiler_powerpc_init (compiler);
-      break;
-    case ORC_TARGET_SSE:
-      orc_compiler_sse_init (compiler);
-      break;
-    case ORC_TARGET_MMX:
-      orc_compiler_mmx_init (compiler);
-      break;
-    case ORC_TARGET_ARM:
-      orc_compiler_arm_init (compiler);
-      break;
-    default:
-      break;
-  }
+  compiler->target->compiler_init (compiler);
 
   orc_compiler_assign_rules (compiler);
   if (compiler->error) goto error;
@@ -124,38 +89,20 @@ orc_program_compile_for_target (OrcProgram *program, int target)
   orc_compiler_rewrite_vars (compiler);
   if (compiler->error) goto error;
 
-  if (compiler->target != ORC_TARGET_C) {
+  //if (compiler->target != ORC_TARGET_C) {
     orc_compiler_global_reg_alloc (compiler);
 
     orc_compiler_do_regs (compiler);
-  }
+  //}
 
   orc_compiler_rewrite_vars2 (compiler);
   if (compiler->error) goto error;
 
-  if (compiler->target != ORC_TARGET_C) {
+  //if (compiler->target != ORC_TARGET_C) {
     orc_compiler_allocate_codemem (compiler);
-  }
+  //}
 
-  switch (compiler->target) {
-    case ORC_TARGET_C:
-      orc_compiler_assemble_c (compiler);
-      break;
-    case ORC_TARGET_ALTIVEC:
-      orc_compiler_assemble_powerpc (compiler);
-      break;
-    case ORC_TARGET_MMX:
-      orc_compiler_mmx_assemble (compiler);
-      break;
-    case ORC_TARGET_SSE:
-      orc_compiler_sse_assemble (compiler);
-      break;
-    case ORC_TARGET_ARM:
-      orc_compiler_arm_assemble (compiler);
-      break;
-    default:
-      break;
-  }
+  compiler->target->compile (compiler);
   if (compiler->error) goto error;
 
   program->asm_code = compiler->asm_code;
@@ -174,7 +121,7 @@ orc_compiler_assign_rules (OrcCompiler *compiler)
   for(i=0;i<compiler->n_insns;i++) {
     OrcInstruction *insn = compiler->insns + i;
 
-    insn->rule = insn->opcode->rules + compiler->target;
+    insn->rule = orc_target_get_rule (compiler->target, insn->opcode);
 
     if (insn->rule == NULL || insn->rule->emit == NULL) {
       ORC_PROGRAM_ERROR(compiler, "No rule for: %s", insn->opcode->name);
@@ -188,7 +135,7 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
   int j;
   int k;
   OrcInstruction *insn;
-  OrcOpcode *opcode;
+  OrcStaticOpcode *opcode;
   int var;
   int actual_var;
 
@@ -197,8 +144,10 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
     opcode = insn->opcode;
 
     /* set up args */
-    for(k=opcode->n_dest;k<opcode->n_src + opcode->n_dest;k++){
-      var = insn->args[k];
+    for(k=0;k<ORC_STATIC_OPCODE_N_SRC;k++){
+      if (opcode->src_size[k] == 0) continue;
+
+      var = insn->src_args[k];
       if (compiler->vars[var].vartype == ORC_VAR_TYPE_DEST) {
         ORC_PROGRAM_ERROR(compiler, "using dest var as source");
       }
@@ -206,7 +155,7 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
       actual_var = var;
       if (compiler->vars[var].replaced) {
         actual_var = compiler->vars[var].replacement;
-        insn->args[k] = actual_var;
+        insn->src_args[k] = actual_var;
       }
 
       if (!compiler->vars[var].used) {
@@ -219,8 +168,10 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
       compiler->vars[actual_var].last_use = j;
     }
 
-    for(k=0;k<opcode->n_dest;k++){
-      var = insn->args[k];
+    for(k=0;k<ORC_STATIC_OPCODE_N_DEST;k++){
+      if (opcode->dest_size[k] == 0) continue;
+
+      var = insn->dest_args[k];
 
       if (compiler->vars[var].vartype == ORC_VAR_TYPE_SRC) {
         ORC_PROGRAM_ERROR(compiler,"using src var as dest");
@@ -235,7 +186,7 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
       actual_var = var;
       if (compiler->vars[var].replaced) {
         actual_var = compiler->vars[var].replacement;
-        insn->args[k] = actual_var;
+        insn->dest_args[k] = actual_var;
       }
 
       if (!compiler->vars[var].used) {
@@ -249,7 +200,7 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
           actual_var = orc_compiler_dup_temporary (compiler, var, j);
           compiler->vars[var].replaced = TRUE;
           compiler->vars[var].replacement = actual_var;
-          insn->args[k] = actual_var;
+          insn->dest_args[k] = actual_var;
           compiler->vars[actual_var].used = TRUE;
           compiler->vars[actual_var].first_use = j;
         }
@@ -296,20 +247,23 @@ orc_compiler_do_regs (OrcCompiler *compiler)
   int k;
   int var;
   OrcInstruction *insn;
-  OrcOpcode *opcode;
+  OrcStaticOpcode *opcode;
 
   for(i=0;i<compiler->n_insns;i++){
     insn = compiler->insns + i;
     opcode = insn->opcode;
 
-    for(k=opcode->n_dest;k<opcode->n_src + opcode->n_dest;k++){
-      var = insn->args[k];
+    for(k=0;k<ORC_STATIC_OPCODE_N_SRC;k++){
+      if (opcode->src_size[k] == 0) continue;
 
+      var = insn->src_args[k];
 
     }
 
-    for(k=0;k<opcode->n_dest;k++){
-      var = insn->args[k];
+    for(k=0;k<ORC_STATIC_OPCODE_N_DEST;k++){
+      if (opcode->dest_size[k] == 0) continue;
+
+      var = insn->dest_args[k];
     }
   }
 }
@@ -328,8 +282,8 @@ orc_compiler_rewrite_vars2 (OrcCompiler *compiler)
      *  - src1 must be last_use
      */
     if (1) {
-      int src1 = compiler->insns[j].args[1];
-      int dest = compiler->insns[j].args[0];
+      int src1 = compiler->insns[j].src_args[0];
+      int dest = compiler->insns[j].dest_args[0];
       if (compiler->vars[src1].last_use == j) {
         if (compiler->vars[src1].first_use == j) {
           k = orc_compiler_allocate_register (compiler, TRUE);
@@ -343,10 +297,10 @@ orc_compiler_rewrite_vars2 (OrcCompiler *compiler)
 
     if (0) {
       /* immediate operand, don't load */
-      int src2 = compiler->insns[j].args[2];
+      int src2 = compiler->insns[j].src_args[1];
       compiler->vars[src2].alloc = 1;
     } else {
-      int src2 = compiler->insns[j].args[2];
+      int src2 = compiler->insns[j].src_args[1];
       if (compiler->vars[src2].alloc == 1) {
         compiler->vars[src2].alloc = 0;
       }

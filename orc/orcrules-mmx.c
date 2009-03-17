@@ -50,98 +50,102 @@ static void
 mmx_rule_addw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   ORC_ASM_CODE(p,"  paddw %%%s, %%%s\n",
-      x86_get_regname_mmx(p->vars[insn->args[2]].alloc),
-      x86_get_regname_mmx(p->vars[insn->args[0]].alloc));
+      x86_get_regname_mmx(p->vars[insn->src_args[1]].alloc),
+      x86_get_regname_mmx(p->vars[insn->dest_args[0]].alloc));
 
   *p->codeptr++ = 0x0f;
   *p->codeptr++ = 0xfd;
-  x86_emit_modrm_reg (p, p->vars[insn->args[2]].alloc,
-      p->vars[insn->args[0]].alloc);
+  x86_emit_modrm_reg (p, p->vars[insn->src_args[1]].alloc,
+      p->vars[insn->dest_args[0]].alloc);
 }
 
 static void
 mmx_rule_subw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   ORC_ASM_CODE(p,"  psubw %%%s, %%%s\n",
-      x86_get_regname_mmx(p->vars[insn->args[2]].alloc),
-      x86_get_regname_mmx(p->vars[insn->args[0]].alloc));
+      x86_get_regname_mmx(p->vars[insn->src_args[1]].alloc),
+      x86_get_regname_mmx(p->vars[insn->dest_args[0]].alloc));
 
   *p->codeptr++ = 0x0f;
   *p->codeptr++ = 0xf9;
-  x86_emit_modrm_reg (p, p->vars[insn->args[2]].alloc,
-      p->vars[insn->args[0]].alloc);
+  x86_emit_modrm_reg (p, p->vars[insn->src_args[1]].alloc,
+      p->vars[insn->dest_args[0]].alloc);
 }
 
 static void
 mmx_rule_mullw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   ORC_ASM_CODE(p,"  pmullw %%%s, %%%s\n",
-      x86_get_regname_mmx(p->vars[insn->args[2]].alloc),
-      x86_get_regname_mmx(p->vars[insn->args[0]].alloc));
+      x86_get_regname_mmx(p->vars[insn->src_args[1]].alloc),
+      x86_get_regname_mmx(p->vars[insn->dest_args[0]].alloc));
 
   *p->codeptr++ = 0x0f;
   *p->codeptr++ = 0xd5;
-  x86_emit_modrm_reg (p, p->vars[insn->args[2]].alloc,
-      p->vars[insn->args[0]].alloc);
+  x86_emit_modrm_reg (p, p->vars[insn->src_args[1]].alloc,
+      p->vars[insn->dest_args[0]].alloc);
 }
 
 static void
 mmx_rule_shlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_CONST) {
+  if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
     ORC_ASM_CODE(p,"  psllw $%d, %%%s\n",
-        p->vars[insn->args[2]].value,
-        x86_get_regname_mmx(p->vars[insn->args[0]].alloc));
+        p->vars[insn->src_args[1]].value,
+        x86_get_regname_mmx(p->vars[insn->dest_args[0]].alloc));
 
     *p->codeptr++ = 0x0f;
     *p->codeptr++ = 0x71;
-    x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc, 6);
-    *p->codeptr++ = p->vars[insn->args[2]].value;
+    x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc, 6);
+    *p->codeptr++ = p->vars[insn->src_args[1]].value;
   } else {
     /* FIXME this doesn't work quite right */
     ORC_ASM_CODE(p,"  psllw %%%s, %%%s\n",
-        x86_get_regname_mmx(p->vars[insn->args[2]].alloc),
-        x86_get_regname_mmx(p->vars[insn->args[0]].alloc));
+        x86_get_regname_mmx(p->vars[insn->src_args[1]].alloc),
+        x86_get_regname_mmx(p->vars[insn->dest_args[0]].alloc));
 
     *p->codeptr++ = 0x0f;
     *p->codeptr++ = 0xf1;
-    x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc,
-        p->vars[insn->args[2]].alloc);
+    x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc,
+        p->vars[insn->src_args[1]].alloc);
   }
 }
 
 static void
 mmx_rule_shrsw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  if (p->vars[insn->args[2]].vartype == ORC_VAR_TYPE_CONST) {
+  if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
     ORC_ASM_CODE(p,"  psraw $%d, %%%s\n",
-        p->vars[insn->args[2]].value,
-        x86_get_regname_mmx(p->vars[insn->args[0]].alloc));
+        p->vars[insn->src_args[1]].value,
+        x86_get_regname_mmx(p->vars[insn->dest_args[0]].alloc));
 
     *p->codeptr++ = 0x0f;
     *p->codeptr++ = 0x71;
-    x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc, 4);
-    *p->codeptr++ = p->vars[insn->args[2]].value;
+    x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc, 4);
+    *p->codeptr++ = p->vars[insn->src_args[1]].value;
   } else {
     /* FIXME this doesn't work quite right */
     ORC_ASM_CODE(p,"  psraw %%%s, %%%s\n",
-        x86_get_regname_mmx(p->vars[insn->args[2]].alloc),
-        x86_get_regname_mmx(p->vars[insn->args[0]].alloc));
+        x86_get_regname_mmx(p->vars[insn->src_args[1]].alloc),
+        x86_get_regname_mmx(p->vars[insn->dest_args[0]].alloc));
 
     *p->codeptr++ = 0x0f;
     *p->codeptr++ = 0xe1;
-    x86_emit_modrm_reg (p, p->vars[insn->args[0]].alloc,
-        p->vars[insn->args[2]].alloc);
+    x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc,
+        p->vars[insn->src_args[1]].alloc);
   }
 }
 
 void
-orc_compiler_mmx_register_rules (void)
+orc_compiler_mmx_register_rules (OrcTarget *target)
 {
-  orc_rule_register ("addw", ORC_TARGET_MMX, mmx_rule_addw, NULL);
-  orc_rule_register ("subw", ORC_TARGET_MMX, mmx_rule_subw, NULL);
-  orc_rule_register ("mullw", ORC_TARGET_MMX, mmx_rule_mullw, NULL);
-  orc_rule_register ("shlw", ORC_TARGET_MMX, mmx_rule_shlw, NULL);
-  orc_rule_register ("shrsw", ORC_TARGET_MMX, mmx_rule_shrsw, NULL);
+  OrcRuleSet *rule_set;
+
+  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target);
+
+  orc_rule_register (rule_set, "addw", mmx_rule_addw, NULL);
+  orc_rule_register (rule_set, "subw", mmx_rule_subw, NULL);
+  orc_rule_register (rule_set, "mullw", mmx_rule_mullw, NULL);
+  orc_rule_register (rule_set, "shlw", mmx_rule_shlw, NULL);
+  orc_rule_register (rule_set, "shrsw", mmx_rule_shrsw, NULL);
 }
 

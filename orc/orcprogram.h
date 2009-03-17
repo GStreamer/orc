@@ -9,12 +9,15 @@ typedef struct _OrcOpcodeExecutor OrcOpcodeExecutor;
 typedef struct _OrcExecutor OrcExecutor;
 typedef struct _OrcVariable OrcVariable;
 typedef struct _OrcOpcode OrcOpcode;
+typedef struct _OrcOpcodeSet OrcOpcodeSet;
 typedef struct _OrcStaticOpcode OrcStaticOpcode;
 typedef struct _OrcInstruction OrcInstruction;
 typedef struct _OrcProgram OrcProgram;
 typedef struct _OrcCompiler OrcCompiler;
 typedef struct _OrcRule OrcRule;
+typedef struct _OrcRuleSet OrcRuleSet;
 typedef struct _OrcFixup OrcFixup;
+typedef struct _OrcTarget OrcTarget;
 
 typedef void (*OrcOpcodeEmulateFunc)(OrcOpcodeExecutor *ex, void *user);
 typedef void (*OrcRuleEmitFunc)(OrcCompiler *p, void *user, OrcInstruction *insn);
@@ -39,7 +42,8 @@ typedef void (*OrcRuleEmitFunc)(OrcCompiler *p, void *user, OrcInstruction *insn
 #define ORC_OPCODE_N_DEST 4
 
 #define ORC_OPCODE_N_ARGS 4
-#define ORC_OPCODE_N_TARGETS 10
+#define ORC_N_TARGETS 10
+#define ORC_N_RULE_SETS 10
 
 #define ORC_STRUCT_OFFSET(struct_type, member)    \
       ((long) ((unsigned int *) &((struct_type*) 0)->member))
@@ -63,6 +67,7 @@ typedef void (*OrcRuleEmitFunc)(OrcCompiler *p, void *user, OrcInstruction *insn
   orc_debug_print(ORC_DEBUG_ERROR, __FILE__, ORC_FUNCTION, __LINE__, __VA_ARGS__); \
 } while (0)
 
+#if 0
 enum {
   ORC_TARGET_C = 0,
   ORC_TARGET_ALTIVEC = 1,
@@ -70,6 +75,7 @@ enum {
   ORC_TARGET_SSE = 3,
   ORC_TARGET_ARM = 4
 };
+#endif
 
 typedef enum {
   ORC_VAR_TYPE_TEMP,
@@ -107,6 +113,13 @@ struct _OrcRule {
   void *emit_user;
 };
 
+struct _OrcRuleSet {
+  OrcOpcodeSet *opcode_set;
+
+  OrcRule *rules;
+  int n_rules;
+};
+
 struct _OrcOpcode {
   char *name;
   int n_src;
@@ -115,10 +128,18 @@ struct _OrcOpcode {
   int dest_size[ORC_OPCODE_N_DEST];
   int src_size[ORC_OPCODE_N_SRC];
 
-  OrcRule rules[ORC_OPCODE_N_TARGETS];
+  OrcRule rules[ORC_N_TARGETS];
 
   OrcOpcodeEmulateFunc emulate;
   void *emulate_user;
+};
+
+struct _OrcOpcodeSet {
+  int opcode_major;
+  char prefix[8];
+
+  int n_opcodes;
+  OrcStaticOpcode *opcodes;
 };
 
 struct _OrcStaticOpcode {
@@ -130,8 +151,9 @@ struct _OrcStaticOpcode {
 };
 
 struct _OrcInstruction {
-  OrcOpcode *opcode;
-  int args[3];
+  OrcStaticOpcode *opcode;
+  int dest_args[ORC_STATIC_OPCODE_N_DEST];
+  int src_args[ORC_STATIC_OPCODE_N_SRC];
 
   OrcRule *rule;
 };
@@ -159,7 +181,7 @@ struct _OrcProgram {
 
 struct _OrcCompiler {
   OrcProgram *program;
-  int target;
+  OrcTarget *target;
 
   OrcInstruction insns[ORC_N_INSNS];
   int n_insns;
@@ -202,13 +224,25 @@ struct _OrcExecutor {
   int params[ORC_N_VARIABLES];
 };
 
+struct _OrcTarget {
+  const char *name;
+  orc_bool executable;
+  int data_register_offset;
+
+  void (*compiler_init)(OrcCompiler *compiler);
+  void (*compile)(OrcCompiler *compiler);
+
+  OrcRuleSet rule_sets[ORC_N_RULE_SETS];
+  int n_rule_sets;
+};
+
 
 void orc_init (void);
 
 OrcProgram * orc_program_new (void);
 OrcProgram * orc_program_new_ds (int size1, int size2);
 OrcProgram * orc_program_new_dss (int size1, int size2, int size3);
-OrcOpcode * orc_opcode_find_by_name (const char *name);
+OrcStaticOpcode * orc_opcode_find_by_name (const char *name);
 int orc_opcode_get_list (OrcOpcode **list);
 void orc_opcode_init (void);
 
@@ -230,17 +264,7 @@ void orc_powerpc_init (void);
 void orc_c_init (void);
 
 orc_bool orc_program_compile (OrcProgram *p);
-orc_bool orc_program_compile_for_target (OrcProgram *p, int target);
-void orc_compiler_c_init (OrcCompiler *compiler);
-void orc_compiler_mmx_init (OrcCompiler *compiler);
-void orc_compiler_sse_init (OrcCompiler *compiler);
-void orc_compiler_arm_init (OrcCompiler *compiler);
-void orc_compiler_powerpc_init (OrcCompiler *compiler);
-void orc_compiler_mmx_assemble (OrcCompiler *compiler);
-void orc_compiler_sse_assemble (OrcCompiler *compiler);
-void orc_compiler_arm_assemble (OrcCompiler *compiler);
-void orc_compiler_assemble_powerpc (OrcCompiler *compiler);
-void orc_compiler_assemble_c (OrcCompiler *compiler);
+orc_bool orc_program_compile_for_target (OrcProgram *p, OrcTarget *target);
 void orc_program_free (OrcProgram *program);
 
 int orc_program_find_var_by_name (OrcProgram *program, const char *name);
@@ -267,8 +291,14 @@ void orc_executor_set_n (OrcExecutor *ex, int n);
 void orc_executor_emulate (OrcExecutor *ex);
 void orc_executor_run (OrcExecutor *ex);
 
-void orc_rule_register (const char *opcode_name, unsigned int mode,
+OrcOpcodeSet *orc_opcode_set_get (const char *name);
+int orc_opcode_set_find_by_name (OrcOpcodeSet *opcode_set, const char *name);
+
+OrcRuleSet * orc_rule_set_new (OrcOpcodeSet *opcode_set, OrcTarget *target);
+void orc_rule_register (OrcRuleSet *rule_set, const char *opcode_name,
     OrcRuleEmitFunc emit, void *emit_user);
+OrcRule * orc_target_get_rule (OrcTarget *target, OrcStaticOpcode *opcode);
+OrcTarget * orc_target_get_default (void);
 
 int orc_program_allocate_register (OrcProgram *program, int is_data);
 int orc_program_x86_allocate_register (OrcProgram *program, int is_data);
@@ -280,9 +310,12 @@ void orc_program_dump_code (OrcProgram *program);
 
 const char *orc_program_get_asm_code (OrcProgram *program);
 void orc_program_dump_asm (OrcProgram *program);
-const char *orc_target_get_asm_preamble (int target);
+const char *orc_target_get_asm_preamble (const char *target);
 
 void orc_compiler_append_code (OrcCompiler *p, const char *fmt, ...);
  
+void orc_target_register (OrcTarget *target);
+OrcTarget *orc_target_get_by_name (const char *target_name);
+
 #endif
 

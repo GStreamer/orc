@@ -24,7 +24,7 @@ orc_compiler_c_init (OrcCompiler *compiler)
 }
 
 const char *
-orc_target_get_asm_preamble (int target)
+orc_target_get_asm_preamble (const char *target)
 {
   return "\n"
     "/* begin Orc C target preamble */\n"
@@ -71,12 +71,12 @@ orc_target_get_asm_preamble (int target)
 }
 
 void
-orc_compiler_assemble_c (OrcCompiler *compiler)
+orc_compiler_c_assemble (OrcCompiler *compiler)
 {
   int i;
   int j;
   OrcInstruction *insn;
-  OrcOpcode *opcode;
+  OrcStaticOpcode *opcode;
   OrcRule *rule;
 
   ORC_ASM_CODE(compiler,"void\n");
@@ -176,9 +176,9 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
   char dest[20], src1[20], src2[20]; \
 \
-  c_get_name (dest, p, insn->args[0]); \
-  c_get_name (src1, p, insn->args[1]); \
-  c_get_name (src2, p, insn->args[2]); \
+  c_get_name (dest, p, insn->dest_args[0]); \
+  c_get_name (src1, p, insn->src_args[0]); \
+  c_get_name (src2, p, insn->src_args[1]); \
  \
   ORC_ASM_CODE(p,"    %s = " op ";\n", dest, src1, src2); \
 }
@@ -219,26 +219,40 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 #undef BINARY_LW
 #undef BINARY_WB
 
+static OrcTarget c_target = {
+  "c",
+  TRUE,
+  ORC_GP_REG_BASE,
+  orc_compiler_c_init,
+  orc_compiler_c_assemble
+};
+
 
 void
 orc_c_init (void)
 {
-#define BINARY_SB(a,b) orc_rule_register ( #a , ORC_TARGET_C, c_rule_ ## a, NULL);
-#define BINARY_UB(a,b) orc_rule_register ( #a , ORC_TARGET_C, c_rule_ ## a, NULL);
-#define BINARY_SW(a,b) orc_rule_register ( #a , ORC_TARGET_C, c_rule_ ## a, NULL);
-#define BINARY_UW(a,b) orc_rule_register ( #a , ORC_TARGET_C, c_rule_ ## a, NULL);
-#define BINARY_SL(a,b) orc_rule_register ( #a , ORC_TARGET_C, c_rule_ ## a, NULL);
-#define BINARY_UL(a,b) orc_rule_register ( #a , ORC_TARGET_C, c_rule_ ## a, NULL);
-#define UNARY_SB(a,b) orc_rule_register ( #a , ORC_TARGET_C, c_rule_ ## a, NULL);
-#define UNARY_UB(a,b) orc_rule_register ( #a , ORC_TARGET_C, c_rule_ ## a, NULL);
-#define UNARY_SW(a,b) orc_rule_register ( #a , ORC_TARGET_C, c_rule_ ## a, NULL);
-#define UNARY_UW(a,b) orc_rule_register ( #a , ORC_TARGET_C, c_rule_ ## a, NULL);
-#define UNARY_SL(a,b) orc_rule_register ( #a , ORC_TARGET_C, c_rule_ ## a, NULL);
-#define UNARY_UL(a,b) orc_rule_register ( #a , ORC_TARGET_C, c_rule_ ## a, NULL);
-#define BINARY_BW(a,b) orc_rule_register ( #a , ORC_TARGET_C, c_rule_ ## a, NULL);
-#define BINARY_WL(a,b) orc_rule_register ( #a , ORC_TARGET_C, c_rule_ ## a, NULL);
-#define BINARY_LW(a,b) orc_rule_register ( #a , ORC_TARGET_C, c_rule_ ## a, NULL);
-#define BINARY_WB(a,b) orc_rule_register ( #a , ORC_TARGET_C, c_rule_ ## a, NULL);
+  OrcRuleSet *rule_set;
+
+  orc_target_register (&c_target);
+
+  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), &c_target);
+
+#define BINARY_SB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define BINARY_UB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define BINARY_SW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define BINARY_UW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define BINARY_SL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define BINARY_UL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define UNARY_SB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define UNARY_UB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define UNARY_SW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define UNARY_UW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define UNARY_SL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define UNARY_UL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define BINARY_BW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define BINARY_WL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define BINARY_LW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define BINARY_WB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 
 #include "opcodes.h"
 

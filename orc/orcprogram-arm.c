@@ -19,8 +19,10 @@ int arm_exec_ptr = ARM_V1;
 
 void arm_emit_loop (OrcCompiler *compiler);
 
-void orc_compiler_arm_register_rules (void);
+void orc_compiler_arm_register_rules (OrcTarget *target);
 
+void orc_compiler_arm_init (OrcCompiler *compiler);
+void orc_compiler_arm_assemble (OrcCompiler *compiler);
 
 void orc_compiler_rewrite_vars (OrcCompiler *compiler);
 void orc_compiler_dump (OrcCompiler *compiler);
@@ -81,10 +83,24 @@ arm_emit_epilogue (OrcCompiler *compiler)
   //arm_dump_insns (compiler);
 }
 
+static OrcTarget arm_target = {
+  "arm",
+#ifdef HAVE_ARM
+  TRUE,
+#else
+  FALSE,
+#endif
+  ORC_GP_REG_BASE,
+  orc_compiler_arm_init,
+  orc_compiler_arm_assemble
+};
+
 void
 orc_arm_init (void)
 {
-  orc_compiler_arm_register_rules ();
+  orc_target_register (&arm_target);
+
+  orc_compiler_arm_register_rules (&arm_target);
 }
 
 void
@@ -251,8 +267,7 @@ arm_emit_loop (OrcCompiler *compiler)
   int j;
   int k;
   OrcInstruction *insn;
-  OrcOpcode *opcode;
-  OrcVariable *args[10];
+  OrcStaticOpcode *opcode;
   OrcRule *rule;
 
   for(j=0;j<compiler->n_insns;j++){
@@ -262,6 +277,7 @@ arm_emit_loop (OrcCompiler *compiler)
     orc_compiler_append_code(compiler,"# %d: %s", j, insn->opcode->name);
 
     /* set up args */
+#if 0
     for(k=0;k<opcode->n_src + opcode->n_dest;k++){
       args[k] = compiler->vars + insn->args[k];
       orc_compiler_append_code(compiler," %d", args[k]->alloc);
@@ -269,12 +285,15 @@ arm_emit_loop (OrcCompiler *compiler)
         orc_compiler_append_code(compiler," (chained)");
       }
     }
+#endif
     orc_compiler_append_code(compiler,"\n");
 
-    for(k=opcode->n_dest;k<opcode->n_src + opcode->n_dest;k++){
-      switch (args[k]->vartype) {
+    for(k=0;k<ORC_STATIC_OPCODE_N_SRC;k++){
+      if (opcode->src_size[k] == 0) continue;
+
+      switch (compiler->vars[insn->src_args[k]].vartype) {
         case ORC_VAR_TYPE_SRC:
-          arm_emit_load_src (compiler, args[k]);
+          arm_emit_load_src (compiler, &compiler->vars[insn->src_args[k]]);
           break;
         case ORC_VAR_TYPE_CONST:
           break;
@@ -289,18 +308,22 @@ arm_emit_loop (OrcCompiler *compiler)
 
     rule = insn->rule;
     if (rule && rule->emit) {
-      if (args[0]->alloc != args[1]->alloc) {
-        arm_emit_mov (compiler, args[1]->alloc, args[0]->alloc);
+      if (compiler->vars[insn->dest_args[0]].alloc !=
+          compiler->vars[insn->src_args[0]].alloc) {
+        arm_emit_mov (compiler, compiler->vars[insn->src_args[0]].alloc,
+            compiler->vars[insn->dest_args[0]].alloc);
       }
       rule->emit (compiler, rule->emit_user, insn);
     } else {
       orc_compiler_append_code(compiler,"No rule for: %s\n", opcode->name);
     }
 
-    for(k=0;k<opcode->n_dest;k++){
-      switch (args[k]->vartype) {
+    for(k=0;k<ORC_STATIC_OPCODE_N_DEST;k++){
+      if (opcode->dest_size[k] == 0) continue;
+
+      switch (compiler->vars[insn->dest_args[k]].vartype) {
         case ORC_VAR_TYPE_DEST:
-          arm_emit_store_dest (compiler, args[k]);
+          arm_emit_store_dest (compiler, &compiler->vars[insn->dest_args[k]]);
           break;
         case ORC_VAR_TYPE_TEMP:
           break;

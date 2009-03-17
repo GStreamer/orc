@@ -6,11 +6,16 @@
 #include <stdlib.h>
 
 #include <orc/orcprogram.h>
+#include <orc/orcdebug.h>
 
 
-static OrcOpcode *opcode_list;
-static int n_opcodes;
-static int n_opcodes_alloc;
+static OrcOpcodeSet *opcode_sets;
+static int n_opcode_sets;
+
+static OrcTarget *targets[ORC_N_TARGETS];
+static int n_targets;
+
+static OrcTarget *default_target;
 
 #define ORC_SB_MAX 127
 #define ORC_SB_MIN (-1-ORC_SB_MAX)
@@ -33,13 +38,47 @@ static int n_opcodes_alloc;
 #define ORC_CLAMP_UL(x) CLAMP(x,ORC_UL_MIN,ORC_UL_MAX)
 
 
+void
+orc_target_register (OrcTarget *target)
+{
+  targets[n_targets] = target;
+  n_targets++;
+
+  if (target->executable) {
+    default_target = target;
+  }
+}
+
+OrcTarget *
+orc_target_get_by_name (const char *name)
+{
+  int i;
+
+  for(i=0;i<n_targets;i++){
+    if (strcmp (name, targets[i]->name) == 0) {
+      return targets[i];
+    }
+  }
+
+  return NULL;
+}
+
+OrcTarget *
+orc_target_get_default (void)
+{
+  return default_target;
+}
+
+#if 0
 int
 orc_opcode_get_list (OrcOpcode **list)
 {
   (*list) = opcode_list;
   return n_opcodes;
 }
+#endif
 
+#if 0
 void
 orc_opcode_register (const char *name, int n_dest, int n_src,
     OrcOpcodeEmulateFunc emulate, void *user)
@@ -61,49 +100,109 @@ orc_opcode_register (const char *name, int n_dest, int n_src,
 
   n_opcodes++;
 }
+#endif
 
-void
-orc_opcode_register_static (OrcStaticOpcode *sopcode)
+OrcRuleSet *
+orc_rule_set_new (OrcOpcodeSet *opcode_set, OrcTarget *target)
 {
-  while (sopcode->name[0]) {
-    OrcOpcode *opcode;
-    int i;
+  OrcRuleSet *rule_set;
 
-    if (n_opcodes == n_opcodes_alloc) {
-      n_opcodes_alloc += 100;
-      opcode_list = realloc(opcode_list, sizeof(OrcOpcode) * n_opcodes_alloc);
-    }
+  rule_set = target->rule_sets + target->n_rule_sets;
+  target->n_rule_sets++;
 
-    opcode = opcode_list + n_opcodes;
+  memset (rule_set, 0, sizeof(OrcRuleSet));
 
-    memset (opcode, 0, sizeof(OrcOpcode));
+  rule_set->opcode_set = opcode_set;
 
-    opcode->name = sopcode->name;
-    for(i=0;i<ORC_STATIC_OPCODE_N_DEST;i++){
-      opcode->dest_size[i] = sopcode->dest_size[i];
-      if (sopcode->dest_size[i]) opcode->n_dest = i + 1;
-    }
-    for(i=0;i<ORC_STATIC_OPCODE_N_SRC;i++){
-      opcode->src_size[i] = sopcode->src_size[i];
-      if (sopcode->src_size[i]) opcode->n_src = i + 1;
-    }
-    opcode->emulate = sopcode->emulate;
-    opcode->emulate_user = sopcode->emulate_user;
+  rule_set->rules = malloc (sizeof(OrcRule) * opcode_set->n_opcodes);
+  memset (rule_set->rules, 0, sizeof(OrcRule) * opcode_set->n_opcodes);
 
-    n_opcodes++;
-    sopcode++;
-  }
+  return rule_set;
 }
 
+OrcRule *
+orc_target_get_rule (OrcTarget *target, OrcStaticOpcode *opcode)
+{
+  OrcRule *rule;
+  int i;
+  int j;
 
-OrcOpcode *
-orc_opcode_find_by_name (const char *name)
+  /* FIXME */
+  ORC_ASSERT(n_opcode_sets == 1);
+
+  j = opcode - opcode_sets[0].opcodes;
+
+  for(i=0;i<target->n_rule_sets;i++){
+    rule = target->rule_sets[i].rules + j;
+    if (rule) return rule;
+  }
+
+  return NULL;
+}
+
+int
+orc_opcode_register_static (OrcStaticOpcode *sopcode, char *prefix)
+{
+  int n;
+  int major;
+
+  n = 0;
+  while (sopcode[n].name[0]) {
+    n++;
+  }
+
+  major = n_opcode_sets;
+
+  n_opcode_sets++;
+  opcode_sets = realloc (opcode_sets, sizeof(OrcOpcodeSet)*n_opcode_sets);
+  
+  memset (opcode_sets + major, 0, sizeof(OrcOpcodeSet));
+  strncpy(opcode_sets[major].prefix, prefix, sizeof(opcode_sets[major].prefix)-1);
+  opcode_sets[major].n_opcodes = n;
+  opcode_sets[major].opcodes = sopcode;
+  opcode_sets[major].opcode_major = major;
+
+  return major;
+}
+
+OrcOpcodeSet *
+orc_opcode_set_get (const char *name)
 {
   int i;
 
-  for(i=0;i<n_opcodes;i++){
-    if (!strcmp (name, opcode_list[i].name)) {
-      return opcode_list + i;
+  for(i=0;i<n_opcode_sets;i++){
+    if (strcmp (opcode_sets[i].prefix, name) == 0) {
+      return opcode_sets + i;
+    }
+  }
+
+  return NULL;
+}
+
+int
+orc_opcode_set_find_by_name (OrcOpcodeSet *opcode_set, const char *name)
+{
+  int j;
+
+  for(j=0;j<opcode_set->n_opcodes;j++){
+    if (strcmp (name, opcode_set->opcodes[j].name) == 0) {
+      return j;
+    }
+  }
+
+  return -1;
+}
+
+OrcStaticOpcode *
+orc_opcode_find_by_name (const char *name)
+{
+  int i;
+  int j;
+
+  for(i=0;i<n_opcode_sets;i++){
+    j = orc_opcode_set_find_by_name (opcode_sets + i, name);
+    if (j >= 0) {
+      return &opcode_sets[i].opcodes[j];
     }
   }
 
@@ -359,7 +458,7 @@ static OrcStaticOpcode opcodes[] = {
   { "shlb", shlb, NULL, { 1 }, { 1, 1 } },
   { "shrsb", shrsb, NULL, { 1 }, { 1, 1 } },
   { "shrub", shrub, NULL, { 1 }, { 1, 1 } },
-  { "signb", signb, NULL, { 1 }, { 1, 1 } },
+  { "signb", signb, NULL, { 1 }, { 1 } },
   { "subb", subb, NULL, { 1 }, { 1, 1 } },
   { "subssb", subssb, NULL, { 1 }, { 1, 1 } },
   { "subusb", subusb, NULL, { 1 }, { 1, 1 } },
@@ -388,7 +487,7 @@ static OrcStaticOpcode opcodes[] = {
   { "shlw", shlw, NULL, { 2 }, { 2, 2 } },
   { "shrsw", shrsw, NULL, { 2 }, { 2, 2 } },
   { "shruw", shruw, NULL, { 2 }, { 2, 2 } },
-  { "signw", signw, NULL, { 2 }, { 2, 2 } },
+  { "signw", signw, NULL, { 2 }, { 2 } },
   { "subw", subw, NULL, { 2 }, { 2, 2 } },
   { "subssw", subssw, NULL, { 2 }, { 2, 2 } },
   { "subusw", subusw, NULL, { 2 }, { 2, 2 } },
@@ -417,7 +516,7 @@ static OrcStaticOpcode opcodes[] = {
   { "shll", shll, NULL, { 4 }, { 4, 4 } },
   { "shrsl", shrsl, NULL, { 4 }, { 4, 4 } },
   { "shrul", shrul, NULL, { 4 }, { 4, 4 } },
-  { "signl", signl, NULL, { 4 }, { 4, 4 } },
+  { "signl", signl, NULL, { 4 }, { 4 } },
   { "subl", subl, NULL, { 4 }, { 4, 4 } },
   { "subssl", subssl, NULL, { 4 }, { 4, 4 } },
   { "subusl", subusl, NULL, { 4 }, { 4, 4 } },
@@ -465,7 +564,7 @@ static OrcStaticOpcode opcodes[] = {
 void
 orc_opcode_init (void)
 {
-  orc_opcode_register_static (opcodes);
+  orc_opcode_register_static (opcodes, "sys");
 }
 
 

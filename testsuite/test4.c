@@ -14,23 +14,20 @@ int
 main (int argc, char *argv[])
 {
   int i;
-  OrcOpcode *opcode_list;
-  int n_opcodes;
+  OrcOpcodeSet *opcode_set;
 
   orc_init();
 
-  n_opcodes = orc_opcode_get_list (&opcode_list);
+  opcode_set = orc_opcode_set_get ("sys");
 
-  //printf("%s", orc_target_get_asm_preamble (ORC_TARGET_C));
-
-  for(i=0;i<n_opcodes;i++){
-    printf("/* %s %d %d %p */\n",
-        opcode_list[i].name,
-        opcode_list[i].n_src,
-        opcode_list[i].n_dest,
-        opcode_list[i].emulate
-        );
-    test_opcode (opcode_list[i].name);
+  for(i=0;i<opcode_set->n_opcodes;i++){
+    printf("/* %s %d,%d,%d %p */\n",
+        opcode_set->opcodes[i].name,
+        opcode_set->opcodes[i].dest_size[0],
+        opcode_set->opcodes[i].src_size[0],
+        opcode_set->opcodes[i].src_size[1],
+        opcode_set->opcodes[i].emulate);
+    test_opcode (opcode_set->opcodes[i].name);
   }
 
   if (error) return 1;
@@ -51,7 +48,7 @@ test_opcode (const char *name)
 
   orc_program_append_str (p, name, "d1", "s1", "s2");
 
-  ret = orc_program_compile_for_target (p, ORC_TARGET_ARM);
+  ret = orc_program_compile_for_target (p, orc_target_get_by_name("arm"));
   if (!ret) {
     error = TRUE;
     goto out;

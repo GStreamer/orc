@@ -171,8 +171,8 @@ orc_program_append_ds (OrcProgram *program, const char *name, int arg0,
   if (!insn->opcode) {
     ORC_ERROR ("unknown opcode: %s", name);
   }
-  insn->args[0] = arg0;
-  insn->args[1] = arg1;
+  insn->dest_args[0] = arg0;
+  insn->src_args[0] = arg1;
   
   program->n_insns++;
 }
@@ -189,9 +189,9 @@ orc_program_append (OrcProgram *program, const char *name, int arg0,
   if (!insn->opcode) {
     ORC_ERROR ("unknown opcode: %s", name);
   }
-  insn->args[0] = arg0;
-  insn->args[1] = arg1;
-  insn->args[2] = arg2;
+  insn->dest_args[0] = arg0;
+  insn->src_args[0] = arg1;
+  insn->src_args[1] = arg2;
   
   program->n_insns++;
 }
@@ -237,9 +237,9 @@ orc_program_append_str (OrcProgram *program, const char *name,
   if (!insn->opcode) {
     ORC_ERROR ("unknown opcode: %s", name);
   }
-  insn->args[0] = orc_program_find_var_by_name (program, arg1);
-  insn->args[1] = orc_program_find_var_by_name (program, arg2);
-  insn->args[2] = orc_program_find_var_by_name (program, arg3);
+  insn->dest_args[0] = orc_program_find_var_by_name (program, arg1);
+  insn->src_args[0] = orc_program_find_var_by_name (program, arg2);
+  insn->src_args[1] = orc_program_find_var_by_name (program, arg3);
   
   program->n_insns++;
 }
@@ -256,8 +256,8 @@ orc_program_append_ds_str (OrcProgram *program, const char *name,
   if (!insn->opcode) {
     ORC_ERROR ("unknown opcode: %s", name);
   }
-  insn->args[0] = orc_program_find_var_by_name (program, arg1);
-  insn->args[1] = orc_program_find_var_by_name (program, arg2);
+  insn->dest_args[0] = orc_program_find_var_by_name (program, arg1);
+  insn->src_args[0] = orc_program_find_var_by_name (program, arg2);
   
   program->n_insns++;
 }

@@ -10,18 +10,19 @@
 
 
 void
-orc_rule_register (const char *opcode_name, unsigned int mode,
+orc_rule_register (OrcRuleSet *rule_set,
+    const char *opcode_name,
     OrcRuleEmitFunc emit, void *emit_user)
 {
-  OrcOpcode *opcode;
+  int i;
 
-  opcode = orc_opcode_find_by_name (opcode_name);
-  if (opcode == NULL) {
+  i = orc_opcode_set_find_by_name (rule_set->opcode_set, opcode_name);
+  if (i == -1) {
     ORC_ERROR("failed to find opcode \"%s\"", opcode_name);
     return;
   }
 
-  opcode->rules[mode].emit = emit;
-  opcode->rules[mode].emit_user = emit_user;
+  rule_set->rules[i].emit = emit;
+  rule_set->rules[i].emit_user = emit_user;
 }
 

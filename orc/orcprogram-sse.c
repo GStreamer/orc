@@ -18,16 +18,33 @@
 
 void sse_emit_loop (OrcCompiler *compiler);
 
-void orc_compiler_sse_register_rules (void);
+void orc_compiler_sse_init (OrcCompiler *compiler);
+void orc_compiler_sse_assemble (OrcCompiler *compiler);
+void orc_compiler_sse_register_rules (OrcTarget *target);
 
 
 void orc_compiler_rewrite_vars (OrcCompiler *compiler);
 void orc_compiler_dump (OrcCompiler *compiler);
 
+static OrcTarget sse_target = {
+  "sse",
+#if defined(HAVE_I386) || defined(HAVE_AMD64)
+  TRUE,
+#else
+  FALSE,
+#endif
+  ORC_VEC_REG_BASE,
+  orc_compiler_sse_init,
+  orc_compiler_sse_assemble
+};
+
+
 void
 orc_sse_init (void)
 {
-  orc_compiler_sse_register_rules ();
+  orc_target_register (&sse_target);
+
+  orc_compiler_sse_register_rules (&sse_target);
 }
 
 void
@@ -324,16 +341,17 @@ sse_emit_loop (OrcCompiler *compiler)
   int j;
   int k;
   OrcInstruction *insn;
-  OrcOpcode *opcode;
-  OrcVariable *args[10];
+  OrcStaticOpcode *opcode;
+  //OrcVariable *args[10];
   OrcRule *rule;
 
   for(j=0;j<compiler->n_insns;j++){
     insn = compiler->insns + j;
     opcode = insn->opcode;
 
-    ORC_ASM_CODE(compiler,"# %d: %s", j, insn->opcode->name);
+    ORC_ASM_CODE(compiler,"# %d: %s\n", j, insn->opcode->name);
 
+#if 0
     /* set up args */
     for(k=0;k<opcode->n_src + opcode->n_dest;k++){
       args[k] = compiler->vars + insn->args[k];
@@ -343,11 +361,16 @@ sse_emit_loop (OrcCompiler *compiler)
       }
     }
     ORC_ASM_CODE(compiler,"\n");
+#endif
 
-    for(k=opcode->n_dest;k<opcode->n_src + opcode->n_dest;k++){
-      switch (args[k]->vartype) {
+    for(k=0;k<ORC_STATIC_OPCODE_N_SRC;k++){
+      OrcVariable *var = compiler->vars + insn->src_args[k];
+
+      if (opcode->src_size[k] == 0) continue;
+
+      switch (var->vartype) {
         case ORC_VAR_TYPE_SRC:
-          sse_emit_load_src (compiler, args[k]);
+          sse_emit_load_src (compiler, var);
           break;
         case ORC_VAR_TYPE_CONST:
           break;
@@ -362,18 +385,25 @@ sse_emit_loop (OrcCompiler *compiler)
 
     rule = insn->rule;
     if (rule && rule->emit) {
-      if (args[0]->alloc != args[1]->alloc) {
-        x86_emit_mov_sse_reg_reg (compiler, args[1]->alloc, args[0]->alloc);
+      if (compiler->vars[insn->dest_args[0]].alloc !=
+          compiler->vars[insn->src_args[0]].alloc) {
+        x86_emit_mov_sse_reg_reg (compiler,
+            compiler->vars[insn->src_args[0]].alloc,
+            compiler->vars[insn->dest_args[0]].alloc);
       }
       rule->emit (compiler, rule->emit_user, insn);
     } else {
       ORC_PROGRAM_ERROR(compiler,"No rule for: %s", opcode->name);
     }
 
-    for(k=0;k<opcode->n_dest;k++){
-      switch (args[k]->vartype) {
+    for(k=0;k<ORC_STATIC_OPCODE_N_DEST;k++){
+      OrcVariable *var = compiler->vars + insn->dest_args[k];
+
+      if (opcode->dest_size[k] == 0) continue;
+
+      switch (var->vartype) {
         case ORC_VAR_TYPE_DEST:
-          sse_emit_store_dest (compiler, args[k]);
+          sse_emit_store_dest (compiler, var);
           break;
         case ORC_VAR_TYPE_TEMP:
           break;
