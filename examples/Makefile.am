@@ -1,5 +1,5 @@
 
-noinst_PROGRAMS = jit simple
+noinst_PROGRAMS = jit simple mt19937ar
 
 AM_LDFLAGS = $(ORC_LIBS)
 AM_CFLAGS = $(ORC_CFLAGS)
