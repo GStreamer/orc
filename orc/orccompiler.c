@@ -106,6 +106,7 @@ orc_program_compile_for_target (OrcProgram *program, OrcTarget *target)
   if (compiler->error) goto error;
 
   program->asm_code = compiler->asm_code;
+  program->code_size = compiler->codeptr - program->code;
 
   return TRUE;
 error:

@@ -156,7 +156,8 @@ sse_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
       x86_emit_mov_memoffset_sse (compiler, 16, 0, ptr_reg, var->alloc);
       break;
     default:
-      ORC_PROGRAM_ERROR(compiler,"unimplemented");
+      ORC_PROGRAM_ERROR(compiler,"bad load size %d",
+          var->size << compiler->loop_shift);
       break;
   }
 }

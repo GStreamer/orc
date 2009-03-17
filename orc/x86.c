@@ -856,7 +856,8 @@ x86_add_label (OrcCompiler *compiler, unsigned char *ptr, int label)
 
 void x86_emit_jmp (OrcCompiler *compiler, int label)
 {
-  ORC_ASM_CODE(compiler,"  jmp .L%d\n", label);
+  ORC_ASM_CODE(compiler,"  jmp %d%c\n", label,
+      (compiler->labels[label]!=NULL) ? 'b' : 'f');
 
   if (compiler->long_jumps) {
     ORC_PROGRAM_ERROR(compiler, "unimplemented");
@@ -869,7 +870,8 @@ void x86_emit_jmp (OrcCompiler *compiler, int label)
 
 void x86_emit_jle (OrcCompiler *compiler, int label)
 {
-  ORC_ASM_CODE(compiler,"  jle .L%d\n", label);
+  ORC_ASM_CODE(compiler,"  jle %d%c\n", label,
+      (compiler->labels[label]!=NULL) ? 'b' : 'f');
 
   if (compiler->long_jumps) {
     ORC_PROGRAM_ERROR(compiler, "unimplemented");
@@ -882,7 +884,8 @@ void x86_emit_jle (OrcCompiler *compiler, int label)
 
 void x86_emit_je (OrcCompiler *compiler, int label)
 {
-  ORC_ASM_CODE(compiler,"  je .L%d\n", label);
+  ORC_ASM_CODE(compiler,"  je %d%c\n", label,
+      (compiler->labels[label]!=NULL) ? 'b' : 'f');
 
   if (compiler->long_jumps) {
     *compiler->codeptr++ = 0x0f;
@@ -901,7 +904,8 @@ void x86_emit_je (OrcCompiler *compiler, int label)
 
 void x86_emit_jne (OrcCompiler *compiler, int label)
 {
-  ORC_ASM_CODE(compiler,"  jne .L%d\n", label);
+  ORC_ASM_CODE(compiler,"  jne %d%c\n", label,
+      (compiler->labels[label]!=NULL) ? 'b' : 'f');
 
   if (compiler->long_jumps) {
     *compiler->codeptr++ = 0x0f;
@@ -920,7 +924,7 @@ void x86_emit_jne (OrcCompiler *compiler, int label)
 
 void x86_emit_label (OrcCompiler *compiler, int label)
 {
-  ORC_ASM_CODE(compiler,".L%d:\n", label);
+  ORC_ASM_CODE(compiler,"%d:\n", label);
 
   x86_add_label (compiler, compiler->codeptr, label);
 }
@@ -957,6 +961,7 @@ void
 x86_emit_prologue (OrcCompiler *compiler)
 {
   orc_compiler_append_code(compiler,".global %s\n", compiler->program->name);
+  orc_compiler_append_code(compiler,".p2align 4\n");
   orc_compiler_append_code(compiler,"%s:\n", compiler->program->name);
   if (x86_64) {
     int i;
