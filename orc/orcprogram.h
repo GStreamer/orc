@@ -382,6 +382,7 @@ void orc_sse_init (void);
 void orc_arm_init (void);
 void orc_powerpc_init (void);
 void orc_c_init (void);
+void orc_neon_init (void);
 
 OrcCompileResult orc_program_compile (OrcProgram *p);
 OrcCompileResult orc_program_compile_for_target (OrcProgram *p, OrcTarget *target);

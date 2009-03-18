@@ -26,6 +26,8 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orcrules-mmx.c \
 	orcrules-sse.c \
 	orcrules-arm.c \
+	orcprogram-neon.c \
+	orcrules-neon.c \
 	orcdebug.c \
 	orccpu.c \
 	orcutils.c \
