@@ -80,7 +80,7 @@ orc_debug_print_valist (int level, const char *file, const char *func,
     level_name = level_names[level];
   }
   
-  fprintf (stderr, "ORC: %s %s %d: %s(): ", level_name, file, line, func);
+  fprintf (stderr, "ORC: %s: %s(%d): %s(): ", level_name, file, line, func);
   vfprintf (stderr, format, args);
   fprintf (stderr, "\n");
 }
