@@ -12,6 +12,7 @@
 #include <orc/arm.h>
 #include <orc/orcdebug.h>
 
+extern int neon_tmp_reg;
 
 const char *neon_reg_name (int reg)
 {
@@ -33,43 +34,75 @@ neon_loadw (OrcCompiler *compiler, int dest, int src1, int offset, int size)
 {
   uint32_t code;
 
-  code = 0xed900b00;
 
   switch (size) {
     case 1:
-      ORC_ASM_CODE(compiler,"  vldr.8 %s, [%s, #%d]\n",
-          neon_reg_name (dest),
+      ORC_ASM_CODE(compiler,"  ldrb %s, [%s, #%d]\n",
+          arm_reg_name (neon_tmp_reg),
           arm_reg_name (src1), offset);
+      code = 0xe5d00000;
+      code |= (src1&0xf) << 16;
+      code |= (neon_tmp_reg&0xf) << 12;
+      code |= (offset&0xf0) << 4;
+      code |= offset&0x0f;
+      arm_emit (compiler, code);
+
+      ORC_ASM_CODE(compiler,"  vmov.8 %s[0], %s\n",
+          neon_reg_name (dest), arm_reg_name (neon_tmp_reg));
+      code = 0xee400b10;
+      code |= (neon_tmp_reg&0xf) << 12;
+      code |= (dest&0xf) << 16;
+      arm_emit (compiler, code);
       break;
     case 2:
-      ORC_ASM_CODE(compiler,"  vldr.16 %s, [%s, #%d]\n",
-          neon_reg_name (dest),
+      ORC_ASM_CODE(compiler,"  ldrh %s, [%s, #%d]\n",
+          arm_reg_name (neon_tmp_reg),
           arm_reg_name (src1), offset);
+      code = 0xe1d000b0;
+      code |= (src1&0xf) << 16;
+      code |= (neon_tmp_reg&0xf) << 12;
+      code |= (offset&0xf0) << 4;
+      code |= offset&0x0f;
+      arm_emit (compiler, code);
+
+      ORC_ASM_CODE(compiler,"  vmov.16 %s[0], %s\n",
+          neon_reg_name (dest), arm_reg_name (neon_tmp_reg));
+      code = 0xee000b30;
+      code |= (neon_tmp_reg&0xf) << 12;
+      code |= (dest&0xf) << 16;
+      arm_emit (compiler, code);
       break;
     case 4:
       ORC_ASM_CODE(compiler,"  vldr.32 %s, [%s, #%d]\n",
           neon_reg_name (dest),
           arm_reg_name (src1), offset);
+      code = 0xed900b00;
+      code |= (src1&0xf) << 16;
+      code |= (dest&0xf) << 12;
+      code |= (offset&0xf0) << 4;
+      code |= offset&0x0f;
+      arm_emit (compiler, code);
       break;
     case 8:
       ORC_ASM_CODE(compiler,"  vldr.64 %s, [%s, #%d]\n",
           neon_reg_name (dest),
           arm_reg_name (src1), offset);
+      code = 0xed900b00;
+      code |= (src1&0xf) << 16;
+      code |= (dest&0xf) << 12;
+      code |= (offset&0xf0) << 4;
+      code |= offset&0x0f;
+      arm_emit (compiler, code);
       break;
     case 16:
-      ORC_ASM_CODE(compiler,"  vldr.128 %s, [%s, #%d]\n",
-          neon_reg_name (dest),
-          arm_reg_name (src1), offset);
-      break;
+      //ORC_ASM_CODE(compiler,"  vldr.128 %s, [%s, #%d]\n",
+      //    neon_reg_name (dest),
+      //    arm_reg_name (src1), offset);
+      //break;
     default:
       ORC_PROGRAM_ERROR(compiler, "bad size %d\n", size);
   }
-  code |= (src1&0xf) << 16;
-  code |= (dest&0xf) << 12;
-  code |= (offset&0xf0) << 4;
-  code |= offset&0x0f;
 
-  arm_emit (compiler, code);
 }
 
 void
@@ -77,42 +110,75 @@ neon_storew (OrcCompiler *compiler, int dest, int offset, int src1, int size)
 {
   uint32_t code;
 
-  code = 0xed800b00;
 
   switch (size) {
     case 1:
-      ORC_ASM_CODE(compiler,"  vstr.8 %s, [%s, #%d]\n",
-          neon_reg_name (src1),
+      ORC_ASM_CODE(compiler,"  vmov.u8 %s, %s[0]\n",
+          arm_reg_name (neon_tmp_reg), neon_reg_name (src1));
+      code = 0xeed00b10;
+      code |= (neon_tmp_reg&0xf) << 12;
+      code |= (src1&0xf) << 16;
+      arm_emit (compiler, code);
+
+      ORC_ASM_CODE(compiler,"  strb %s, [%s, #%d]\n",
+          arm_reg_name (neon_tmp_reg),
           arm_reg_name (dest), offset);
+      code = 0xe5c00000;
+      code |= (dest&0xf) << 16;
+      code |= (neon_tmp_reg&0xf) << 12;
+      code |= (offset&0xf0) << 4;
+      code |= offset&0x0f;
+      arm_emit (compiler, code);
       break;
     case 2:
-      ORC_ASM_CODE(compiler,"  vstr.16 %s, [%s, #%d]\n",
-          neon_reg_name (src1),
+      ORC_ASM_CODE(compiler,"  vmov.u16 %s, %s[0]\n",
+          arm_reg_name (neon_tmp_reg), neon_reg_name (src1));
+      code = 0xee900b30;
+      code |= (neon_tmp_reg&0xf) << 12;
+      code |= (src1&0xf) << 16;
+      arm_emit (compiler, code);
+
+      ORC_ASM_CODE(compiler,"  strh %s, [%s, #%d]\n",
+          arm_reg_name (neon_tmp_reg),
           arm_reg_name (dest), offset);
+      code = 0xe1c000b0;
+      code |= (dest&0xf) << 16;
+      code |= (neon_tmp_reg&0xf) << 12;
+      code |= (offset&0xf0) << 4;
+      code |= offset&0x0f;
+      arm_emit (compiler, code);
       break;
     case 4:
       ORC_ASM_CODE(compiler,"  vstr.32 %s, [%s, #%d]\n",
           neon_reg_name (src1),
           arm_reg_name (dest), offset);
+      code = 0xed800b00;
+      code |= (dest&0xf) << 16;
+      code |= (src1&0xf) << 12;
+      code |= (offset&0xf0) << 4;
+      code |= offset&0x0f;
+      arm_emit (compiler, code);
       break;
     case 8:
       ORC_ASM_CODE(compiler,"  vstr.64 %s, [%s, #%d]\n",
           neon_reg_name (src1),
           arm_reg_name (dest), offset);
+      code = 0xed800b00;
+      code |= (dest&0xf) << 16;
+      code |= (src1&0xf) << 12;
+      code |= (offset&0xf0) << 4;
+      code |= offset&0x0f;
+      arm_emit (compiler, code);
       break;
     case 16:
-      ORC_ASM_CODE(compiler,"  vstr.128 %s, [%s, #%d]\n",
-          neon_reg_name (src1),
-          arm_reg_name (dest), offset);
+      //ORC_ASM_CODE(compiler,"  vstr.128 %s, [%s, #%d]\n",
+      //    neon_reg_name (src1),
+      //    arm_reg_name (dest), offset);
+      //arm_emit (compiler, code);
       break;
     default:
       ORC_PROGRAM_ERROR(compiler, "bad size %d\n", size);
   }
-  code |= (dest&0xf) << 16;
-  code |= (src1&0xf) << 12;
-  code |= (offset&0xf0) << 4;
-  code |= offset&0x0f;
-  arm_emit (compiler, code);
 }
 
 #define UNARY(opcode,insn_name,code) \

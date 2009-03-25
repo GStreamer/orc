@@ -16,6 +16,7 @@
 #define SIZE 65536
 
 int neon_exec_ptr = ARM_R0;
+int neon_tmp_reg = ARM_A2;
 
 void neon_emit_loop (OrcCompiler *compiler);
 
@@ -117,7 +118,8 @@ orc_compiler_neon_init (OrcCompiler *compiler)
   for(i=ORC_VEC_REG_BASE+3;i<ORC_VEC_REG_BASE+16;i++){
     compiler->valid_regs[i] = 1;
   }
-  compiler->valid_regs[ARM_R0] = 0;
+  compiler->valid_regs[neon_exec_ptr] = 0;
+  compiler->valid_regs[neon_tmp_reg] = 0;
   //compiler->valid_regs[ARM_SB] = 0;
   compiler->valid_regs[ARM_IP] = 0;
   compiler->valid_regs[ARM_SP] = 0;
@@ -132,7 +134,7 @@ orc_compiler_neon_init (OrcCompiler *compiler)
     compiler->used_regs[i] = 0;
   }
 
-  compiler->loop_shift = 2;
+  compiler->loop_shift = 0;
 }
 
 void
