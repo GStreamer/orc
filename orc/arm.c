@@ -265,6 +265,23 @@ arm_emit_cmp_imm (OrcCompiler *compiler, int src1, int value)
 }
 
 void
+arm_emit_asr_imm (OrcCompiler *compiler, int dest, int src1, int value)
+{
+  uint32_t code;
+
+  code = 0xe1a00040;
+  code |= (src1&0xf) << 0;
+  code |= (dest&0xf) << 12;
+  code |= (value) << 7;
+
+  ORC_ASM_CODE(compiler,"  asr %s, %s, #%d\n",
+      arm_reg_name (dest),
+      arm_reg_name (src1),
+      value);
+  arm_emit (compiler, code);
+}
+
+void
 arm_emit_load_reg (OrcCompiler *compiler, int dest, int src1, int offset)
 {
   uint32_t code;

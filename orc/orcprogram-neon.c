@@ -205,6 +205,9 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
 
   arm_emit_load_reg (compiler, ARM_IP, neon_exec_ptr,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
+  if (compiler->loop_shift > 0) {
+    arm_emit_asr_imm (compiler, ARM_IP, ARM_IP, compiler->loop_shift);
+  }
   neon_load_constants (compiler);
 
   arm_emit_label (compiler, 1);
