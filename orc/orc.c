@@ -23,7 +23,7 @@ orc_init (void)
   orc_mmx_init();
   orc_sse_init();
   orc_powerpc_init();
-  orc_neon_init();
   orc_arm_init();
+  orc_neon_init();
 }
 
