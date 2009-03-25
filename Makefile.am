@@ -1,7 +1,7 @@
 
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = orc testsuite examples doc tools
+SUBDIRS = orc orc-test testsuite examples doc tools
 
 EXTRA_DIST = COPYING autogen.sh gtk-doc.make
 

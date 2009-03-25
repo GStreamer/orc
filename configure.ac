@@ -106,6 +106,8 @@ AC_SUBST(ORC_CFLAGS)
 ORC_LIBS="\$(top_builddir)/orc/liborc-$ORC_MAJORMINOR.la $LIBM $LIBRT"
 AC_SUBST(ORC_LIBS)
 
+#CFLAGS=`echo $CFLAGS | sed s/O2/O0/`
+
 pkgconfigdir="\$(libdir)/pkgconfig"
 AC_SUBST(pkgconfigdir)
 
@@ -113,6 +115,7 @@ AC_CONFIG_FILES([
 Makefile 
 doc/Makefile
 orc/Makefile
+orc-test/Makefile
 testsuite/Makefile
 examples/Makefile
 tools/Makefile
