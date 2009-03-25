@@ -18,7 +18,7 @@
 const char *
 arm_reg_name (int reg)
 {
-#if 1
+#if 0
   static const char *gp_regs[] = {
     "a1", "a2", "a3", "a4",
     "v1", "v2", "v3", "v4",
@@ -29,7 +29,8 @@ arm_reg_name (int reg)
     "r0", "r1", "r2", "r3",
     "r4", "r5", "r6", "r7",
     "r8", "r9", "r10", "r11",
-    "r12", "r13", "r14", "r15" };
+    "ip", "sp", "lr", "pc" };
+    //"r12", "r13", "r14", "r15" };
 #endif
 
   if (reg < ORC_GP_REG_BASE || reg >= ORC_GP_REG_BASE+16) {
@@ -211,6 +212,23 @@ arm_emit_sub (OrcCompiler *compiler, int dest, int src1, int src2)
       arm_reg_name (dest),
       arm_reg_name (src1),
       arm_reg_name (src2));
+  arm_emit (compiler, code);
+}
+
+void
+arm_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int value)
+{
+  uint32_t code;
+
+  code = 0xe2800000;
+  code |= (src1&0xf) << 16;
+  code |= (dest&0xf) << 12;
+  code |= (value) << 0;
+
+  ORC_ASM_CODE(compiler,"  add %s, %s, #%d\n",
+      arm_reg_name (dest),
+      arm_reg_name (src1),
+      value);
   arm_emit (compiler, code);
 }
 

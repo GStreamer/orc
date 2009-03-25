@@ -4,6 +4,8 @@
 
 #include <orc/orcprogram.h>
 
+#define ARM_R0 (ORC_GP_REG_BASE+0)
+
 #define ARM_A1 (ORC_GP_REG_BASE+0)
 #define ARM_A2 (ORC_GP_REG_BASE+1)
 #define ARM_A3 (ORC_GP_REG_BASE+2)
@@ -67,6 +69,7 @@ void arm_emit_loadimm (OrcCompiler *compiler, int dest, int imm);
 
 void arm_emit_add (OrcCompiler *compiler, int dest, int src1, int src2);
 void arm_emit_sub (OrcCompiler *compiler, int dest, int src1, int src2);
+void arm_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int value);
 void arm_emit_sub_imm (OrcCompiler *compiler, int dest, int src1, int value);
 void arm_emit_cmp_imm (OrcCompiler *compiler, int src1, int value);
 

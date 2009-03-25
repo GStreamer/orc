@@ -15,7 +15,7 @@
 
 #define SIZE 65536
 
-int arm_exec_ptr = ARM_V1;
+int arm_exec_ptr = ARM_R0;
 
 void arm_emit_loop (OrcCompiler *compiler);
 
@@ -108,10 +108,10 @@ orc_compiler_arm_init (OrcCompiler *compiler)
 {
   int i;
 
-  for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+16;i++){
+  for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+9;i++){
     compiler->valid_regs[i] = 1;
   }
-  compiler->valid_regs[ARM_V1] = 0;
+  compiler->valid_regs[ARM_R0] = 0;
   //compiler->valid_regs[ARM_SB] = 0;
   compiler->valid_regs[ARM_IP] = 0;
   compiler->valid_regs[ARM_SP] = 0;
@@ -337,9 +337,10 @@ arm_emit_loop (OrcCompiler *compiler)
     if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
         compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
       if (compiler->vars[k].ptr_register) {
-        //arm_emit_add_imm_reg (compiler, arm_ptr_size,
-        //    compiler->vars[k].size << compiler->loop_shift,
-        //    compiler->vars[k].ptr_register);
+        arm_emit_add_imm (compiler,
+            compiler->vars[k].ptr_register,
+            compiler->vars[k].ptr_register,
+            compiler->vars[k].size << compiler->loop_shift);
       } else {
         //arm_emit_add_imm_memoffset (compiler, arm_ptr_size,
         //    compiler->vars[k].size << compiler->loop_shift,
