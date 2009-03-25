@@ -1,5 +1,5 @@
 /*
- * LIBOIL - Library of Optimized Inner Loops
+ * ORC - Oil Runtime Compiler
  * Copyright (c) 2003,2004 David A. Schleef <ds@schleef.org>
  * All rights reserved.
  *
@@ -28,11 +28,9 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <liboil/liboilfunction.h>
-#include <liboil/liboildebug.h>
-#include <liboil/liboilcpu.h>
-#include <liboil/liboilfault.h>
-#include <liboil/liboilutils.h>
+#include <orc/orccpu.h>
+#include <orc/orcutils.h>
+#include <orc/orcdebug.h>
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -49,7 +47,7 @@
 #ifdef __arm__
 #if 0
 static unsigned long
-oil_profile_stamp_xscale(void)
+orc_profile_stamp_xscale(void)
 {
   unsigned int ts;
   __asm__ __volatile__ (
@@ -60,7 +58,7 @@ oil_profile_stamp_xscale(void)
 #endif
 
 static void
-oil_cpu_arm_getflags_cpuinfo (char *cpuinfo)
+orc_cpu_arm_getflags_cpuinfo (char *cpuinfo)
 {
   char *cpuinfo_flags;
   char **flags;
@@ -75,12 +73,12 @@ oil_cpu_arm_getflags_cpuinfo (char *cpuinfo)
   flags = strsplit(cpuinfo_flags);
   for (f = flags; *f; f++) {
     if (strcmp (*f, "edsp") == 0) {
-      OIL_DEBUG ("cpu feature %s", *f);
-      oil_cpu_flags |= OIL_IMPL_FLAG_EDSP;
+      ORC_DEBUG ("cpu feature %s", *f);
+      orc_cpu_flags |= ORC_CPU_FLAG_EDSP;
     }
     if (strcmp (*f, "vfp") == 0) {
-      OIL_DEBUG ("cpu feature %s", *f);
-      oil_cpu_flags |= OIL_IMPL_FLAG_VFP;
+      ORC_DEBUG ("cpu feature %s", *f);
+      orc_cpu_flags |= ORC_CPU_FLAG_VFP;
     }
 
     free (*f);
@@ -119,7 +117,7 @@ get_proc_cpuinfo (void)
 }
 
 void
-oil_cpu_detect_arch(void)
+orc_cpu_detect_arch(void)
 {
 #ifdef __linux__
   int arm_implementer = 0;
@@ -150,11 +148,11 @@ oil_cpu_detect_arch(void)
   if (s) {
     arm_arch = strtoul (s, NULL, 0);
     if (arm_arch >= 6)
-      oil_cpu_flags |= OIL_IMPL_FLAG_ARM6;
+      orc_cpu_flags |= ORC_CPU_FLAG_ARM6;
     free(s);
   }
 
-  oil_cpu_arm_getflags_cpuinfo (cpuinfo);
+  orc_cpu_arm_getflags_cpuinfo (cpuinfo);
   free (cpuinfo);
 #endif
 }

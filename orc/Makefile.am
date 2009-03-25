@@ -27,6 +27,7 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orcrules-arm.c \
 	orcdebug.c \
 	orccpu.c \
+	orcutils.c \
 	x86.c \
 	arm.c
 
@@ -53,7 +54,9 @@ pkginclude_HEADERS = \
 	orcdebug.h \
 	orcprogram.h \
 	orcutils.h \
-	x86.h
+	opcodes.h \
+	x86.h \
+	arm.h
 
 nodist_pkginclude_HEADERS = orc-stdint.h
 
