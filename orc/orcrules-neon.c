@@ -10,6 +10,7 @@
 
 #include <orc/orcprogram.h>
 #include <orc/arm.h>
+#include <orc/orcdebug.h>
 
 
 const char *neon_reg_name (int reg)
@@ -28,36 +29,89 @@ const char *neon_reg_name (int reg)
 }
 
 void
-neon_loadw (OrcCompiler *compiler, int dest, int src1, int offset)
+neon_loadw (OrcCompiler *compiler, int dest, int src1, int offset, int size)
 {
   uint32_t code;
 
   code = 0xed900b00;
+
+  switch (size) {
+    case 1:
+      ORC_ASM_CODE(compiler,"  vldr.8 %s, [%s, #%d]\n",
+          neon_reg_name (dest),
+          arm_reg_name (src1), offset);
+      break;
+    case 2:
+      ORC_ASM_CODE(compiler,"  vldr.16 %s, [%s, #%d]\n",
+          neon_reg_name (dest),
+          arm_reg_name (src1), offset);
+      break;
+    case 4:
+      ORC_ASM_CODE(compiler,"  vldr.32 %s, [%s, #%d]\n",
+          neon_reg_name (dest),
+          arm_reg_name (src1), offset);
+      break;
+    case 8:
+      ORC_ASM_CODE(compiler,"  vldr.64 %s, [%s, #%d]\n",
+          neon_reg_name (dest),
+          arm_reg_name (src1), offset);
+      break;
+    case 16:
+      ORC_ASM_CODE(compiler,"  vldr.128 %s, [%s, #%d]\n",
+          neon_reg_name (dest),
+          arm_reg_name (src1), offset);
+      break;
+    default:
+      ORC_PROGRAM_ERROR(compiler, "bad size %d\n", size);
+  }
   code |= (src1&0xf) << 16;
   code |= (dest&0xf) << 12;
   code |= (offset&0xf0) << 4;
   code |= offset&0x0f;
 
-  ORC_ASM_CODE(compiler,"  vldr.64 %s, [%s, #%d]\n",
-      neon_reg_name (dest),
-      arm_reg_name (src1), offset);
   arm_emit (compiler, code);
 }
 
 void
-neon_storew (OrcCompiler *compiler, int dest, int offset, int src1)
+neon_storew (OrcCompiler *compiler, int dest, int offset, int src1, int size)
 {
   uint32_t code;
 
   code = 0xed800b00;
+
+  switch (size) {
+    case 1:
+      ORC_ASM_CODE(compiler,"  vstr.8 %s, [%s, #%d]\n",
+          neon_reg_name (src1),
+          arm_reg_name (dest), offset);
+      break;
+    case 2:
+      ORC_ASM_CODE(compiler,"  vstr.16 %s, [%s, #%d]\n",
+          neon_reg_name (src1),
+          arm_reg_name (dest), offset);
+      break;
+    case 4:
+      ORC_ASM_CODE(compiler,"  vstr.32 %s, [%s, #%d]\n",
+          neon_reg_name (src1),
+          arm_reg_name (dest), offset);
+      break;
+    case 8:
+      ORC_ASM_CODE(compiler,"  vstr.64 %s, [%s, #%d]\n",
+          neon_reg_name (src1),
+          arm_reg_name (dest), offset);
+      break;
+    case 16:
+      ORC_ASM_CODE(compiler,"  vstr.128 %s, [%s, #%d]\n",
+          neon_reg_name (src1),
+          arm_reg_name (dest), offset);
+      break;
+    default:
+      ORC_PROGRAM_ERROR(compiler, "bad size %d\n", size);
+  }
   code |= (dest&0xf) << 16;
   code |= (src1&0xf) << 12;
   code |= (offset&0xf0) << 4;
   code |= offset&0x0f;
-
-  ORC_ASM_CODE(compiler,"  vstr.64 %s, [%s, #%d]\n",
-      neon_reg_name (src1),
-      arm_reg_name (dest), offset);
   arm_emit (compiler, code);
 }
 
@@ -103,16 +157,33 @@ neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
   arm_emit (p, x); \
 }
 
-#define SHIFT(opcode,insn_name,code) \
+#define LSHIFT(opcode,insn_name,code) \
 static void \
 neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
   uint32_t x = code; \
-  ORC_ASM_CODE(p,"  " insn_name " %s, %s, #2\n", \
+  ORC_ASM_CODE(p,"  " insn_name " %s, %s, #%d\n", \
       neon_reg_name (p->vars[insn->dest_args[0]].alloc), \
-      neon_reg_name (p->vars[insn->src_args[0]].alloc)); \
+      neon_reg_name (p->vars[insn->src_args[0]].alloc), \
+      p->vars[insn->src_args[1]].value); \
   x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12; \
   x |= (p->vars[insn->src_args[0]].alloc&0xf)<<0; \
+  x |= p->vars[insn->src_args[1]].value << 16; \
+  arm_emit (p, x); \
+}
+
+#define RSHIFT(opcode,insn_name,code,n) \
+static void \
+neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
+{ \
+  uint32_t x = code; \
+  ORC_ASM_CODE(p,"  " insn_name " %s, %s, #%d\n", \
+      neon_reg_name (p->vars[insn->dest_args[0]].alloc), \
+      neon_reg_name (p->vars[insn->src_args[0]].alloc), \
+      p->vars[insn->src_args[1]].value); \
+  x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12; \
+  x |= (p->vars[insn->src_args[0]].alloc&0xf)<<0; \
+  x |= (n - p->vars[insn->src_args[1]].value)<<16; \
   arm_emit (p, x); \
 }
 
@@ -132,9 +203,9 @@ BINARY(minsb,"vmin.s8",0xf2000610)
 BINARY(minub,"vmin.u8",0xf3000610)
 BINARY(mullb,"vmul.i8",0xf2000910)
 BINARY(orb,"vorn",0xf2300110)
-SHIFT(shlb,"vshl.i8",0xf2890510)
-SHIFT(shrsb,"vshr.s8",0xf28f0010)
-SHIFT(shrub,"vshr.u8",0xf38f0010)
+LSHIFT(shlb,"vshl.i8",0xf2880510)
+RSHIFT(shrsb,"vshr.s8",0xf2880010,8)
+RSHIFT(shrub,"vshr.u8",0xf3880010,8)
 BINARY(subb,"vsub.i8",0xf3000800)
 BINARY(subssb,"vqsub.s8",0xf2000210)
 BINARY(subusb,"vqsub.u8",0xf3000210)
@@ -154,9 +225,9 @@ BINARY(minsw,"vmin.s16",0xf2100610)
 BINARY(minuw,"vmin.u16",0xf3100610)
 BINARY(mullw,"vmul.i16",0xf2100910)
 BINARY(orw,"vorn",0xf2300110)
-SHIFT(shlw,"vshl.i16",0xf2910510)
-SHIFT(shrsw,"vshr.s16",0xf29f0010)
-SHIFT(shruw,"vshr.u16",0xf39f0010)
+LSHIFT(shlw,"vshl.i16",0xf2900510)
+RSHIFT(shrsw,"vshr.s16",0xf2900010,16)
+RSHIFT(shruw,"vshr.u16",0xf3900010,16)
 BINARY(subw,"vsub.i16",0xf3100800)
 BINARY(subssw,"vqsub.s16",0xf2100210)
 BINARY(subusw,"vqsub.u16",0xf3100210)
@@ -176,9 +247,9 @@ BINARY(minsl,"vmin.s32",0xf2200610)
 BINARY(minul,"vmin.u32",0xf3200610)
 BINARY(mulll,"vmul.i32",0xf2200910)
 BINARY(orl,"vorn",0xf2300110)
-SHIFT(shll,"vshl.i32",0xf2a10510)
-SHIFT(shrsl,"vshr.s32",0xf2bf0010)
-SHIFT(shrul,"vshr.u32",0xf3bf0010)
+LSHIFT(shll,"vshl.i32",0xf2a00510)
+RSHIFT(shrsl,"vshr.s32",0xf2a00010,32)
+RSHIFT(shrul,"vshr.u32",0xf3a00010,32)
 BINARY(subl,"vsub.i32",0xf3200800)
 BINARY(subssl,"vqsub.s32",0xf2200210)
 BINARY(subusl,"vqsub.u32",0xf3200210)

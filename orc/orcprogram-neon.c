@@ -27,8 +27,8 @@ void orc_compiler_neon_assemble (OrcCompiler *compiler);
 void orc_compiler_rewrite_vars (OrcCompiler *compiler);
 void orc_compiler_dump (OrcCompiler *compiler);
 
-void neon_loadw (OrcCompiler *compiler, int dest, int src1, int offset);
-void neon_storew (OrcCompiler *compiler, int dest, int offset, int src1);
+void neon_loadw (OrcCompiler *compiler, int dest, int src1, int offset, int size);
+void neon_storew (OrcCompiler *compiler, int dest, int offset, int src1, int size);
 
 void
 neon_emit_prologue (OrcCompiler *compiler)
@@ -132,7 +132,7 @@ orc_compiler_neon_init (OrcCompiler *compiler)
     compiler->used_regs[i] = 0;
   }
 
-  compiler->loop_shift = 0;
+  compiler->loop_shift = 2;
 }
 
 void
@@ -175,28 +175,8 @@ neon_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
   } else {
     ptr_reg = var->ptr_register;
   }
-  switch (var->size << compiler->loop_shift) {
-    //case 1:
-      //arm_emit_mov_memoffset_reg (compiler, 1, 0, ptr_reg, X86_ECX);
-      //arm_emit_mov_reg_arm (compiler, X86_ECX, var->alloc);
-      break;
-    case 2:
-      neon_loadw (compiler, var->alloc, ptr_reg, 0);
-      //arm_emit_mov_memoffset_reg (compiler, 2, 0, ptr_reg, X86_ECX);
-      //arm_emit_mov_reg_arm (compiler, X86_ECX, var->alloc);
-      break;
-    //case 4:
-      //arm_emit_mov_memoffset_arm (compiler, 4, 0, ptr_reg, var->alloc);
-      break;
-    //case 8:
-      //arm_emit_mov_memoffset_arm (compiler, 8, 0, ptr_reg, var->alloc);
-      break;
-    //case 16:
-      //arm_emit_mov_memoffset_arm (compiler, 16, 0, ptr_reg, var->alloc);
-      break;
-    default:
-      ORC_PROGRAM_ERROR(compiler, "bad size %d\n", var->size << compiler->loop_shift);
-  }
+  neon_loadw (compiler, var->alloc, ptr_reg, 0,
+      var->size << compiler->loop_shift);
 }
 
 void
@@ -210,31 +190,8 @@ neon_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
   } else {
     ptr_reg = var->ptr_register;
   }
-  switch (var->size << compiler->loop_shift) {
-    case 1:
-      //arm_emit_mov_arm_reg (compiler, var->alloc, X86_ECX);
-      //arm_emit_mov_reg_memoffset (compiler, 1, X86_ECX, 0, ptr_reg);
-      break;
-    case 2:
-      neon_storew (compiler, ptr_reg, 0, var->alloc);
-      //arm_emit_mov_arm_reg (compiler, var->alloc, X86_ECX);
-      //arm_emit_mov_reg_memoffset (compiler, 2, X86_ECX, 0, ptr_reg);
-      break;
-    case 4:
-      //arm_emit_mov_arm_memoffset (compiler, 4, var->alloc, 0, ptr_reg,
-      //    var->is_aligned, var->is_uncached);
-      break;
-    case 8:
-      //arm_emit_mov_arm_memoffset (compiler, 8, var->alloc, 0, ptr_reg,
-      //    var->is_aligned, var->is_uncached);
-      break;
-    case 16:
-      //arm_emit_mov_arm_memoffset (compiler, 16, var->alloc, 0, ptr_reg,
-      //    var->is_aligned, var->is_uncached);
-      break;
-    default:
-      ORC_PROGRAM_ERROR(compiler, "bad size %d\n", var->size << compiler->loop_shift);
-  }
+  neon_storew (compiler, ptr_reg, 0, var->alloc,
+      var->size << compiler->loop_shift);
 }
 
 void
