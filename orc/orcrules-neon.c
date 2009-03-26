@@ -110,7 +110,6 @@ neon_storew (OrcCompiler *compiler, int dest, int offset, int src1, int size)
 {
   uint32_t code;
 
-
   switch (size) {
     case 1:
       ORC_ASM_CODE(compiler,"  vmov.u8 %s, %s[0]\n",
@@ -178,6 +177,37 @@ neon_storew (OrcCompiler *compiler, int dest, int offset, int src1, int size)
       break;
     default:
       ORC_PROGRAM_ERROR(compiler, "bad size %d\n", size);
+  }
+}
+
+void
+neon_emit_loadiw (OrcCompiler *compiler, int reg, int value)
+{
+  uint32_t code;
+
+  if (value == 0) {
+    ORC_ASM_CODE(compiler,"  veor %s, %s, %s\n",
+        neon_reg_name (reg), neon_reg_name (reg), neon_reg_name (reg));
+    code = 0xee000b30;
+    code |= (reg&0xf) << 16;
+    code |= (reg&0xf) << 12;
+    code |= (reg&0xf) << 0;
+    arm_emit (compiler, code);
+  } else {
+    ORC_ASM_CODE(compiler,"  mov %s, #%d\n",
+        arm_reg_name (neon_tmp_reg), value);
+    code = 0xe3a00000;
+    code |= (neon_tmp_reg&0xf) << 12;
+    code |= (value&0xf0) << 4;
+    code |= value&0x0f;
+    arm_emit (compiler, code);
+
+    ORC_ASM_CODE(compiler,"  vmov.16 %s[0], %s\n",
+        neon_reg_name (reg), arm_reg_name (neon_tmp_reg));
+    code = 0xee000b30;
+    code |= (neon_tmp_reg&0xf) << 12;
+    code |= (reg&0xf) << 16;
+    arm_emit (compiler, code);
   }
 }
 
@@ -249,7 +279,7 @@ neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
       p->vars[insn->src_args[1]].value); \
   x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12; \
   x |= (p->vars[insn->src_args[0]].alloc&0xf)<<0; \
-  x |= (n - p->vars[insn->src_args[1]].value)<<16; \
+  x |= ((n - p->vars[insn->src_args[1]].value)&(n-1))<<16; \
   arm_emit (p, x); \
 }
 
@@ -268,7 +298,7 @@ BINARY(maxub,"vmax.u8",0xf3000600)
 BINARY(minsb,"vmin.s8",0xf2000610)
 BINARY(minub,"vmin.u8",0xf3000610)
 BINARY(mullb,"vmul.i8",0xf2000910)
-BINARY(orb,"vorn",0xf2300110)
+BINARY(orb,"vorr",0xf2200110)
 LSHIFT(shlb,"vshl.i8",0xf2880510)
 RSHIFT(shrsb,"vshr.s8",0xf2880010,8)
 RSHIFT(shrub,"vshr.u8",0xf3880010,8)
@@ -290,7 +320,7 @@ BINARY(maxuw,"vmax.u16",0xf3100600)
 BINARY(minsw,"vmin.s16",0xf2100610)
 BINARY(minuw,"vmin.u16",0xf3100610)
 BINARY(mullw,"vmul.i16",0xf2100910)
-BINARY(orw,"vorn",0xf2300110)
+BINARY(orw,"vorr",0xf2200110)
 LSHIFT(shlw,"vshl.i16",0xf2900510)
 RSHIFT(shrsw,"vshr.s16",0xf2900010,16)
 RSHIFT(shruw,"vshr.u16",0xf3900010,16)
@@ -312,7 +342,7 @@ BINARY(maxul,"vmax.u32",0xf3200600)
 BINARY(minsl,"vmin.s32",0xf2200610)
 BINARY(minul,"vmin.u32",0xf3200610)
 BINARY(mulll,"vmul.i32",0xf2200910)
-BINARY(orl,"vorn",0xf2300110)
+BINARY(orl,"vorr",0xf2200110)
 LSHIFT(shll,"vshl.i32",0xf2a00510)
 RSHIFT(shrsl,"vshr.s32",0xf2a00010,32)
 RSHIFT(shrul,"vshr.u32",0xf3a00010,32)
