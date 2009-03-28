@@ -11,6 +11,11 @@
 void
 orc_init (void)
 {
+  static int _inited = 0;
+  if (_inited) return;
+
+  _inited = 1;
+
   orc_opcode_init();
   orc_c_init();
   orc_mmx_init();
