@@ -134,7 +134,7 @@ orc_target_get_rule (OrcTarget *target, OrcStaticOpcode *opcode)
 
   for(i=0;i<target->n_rule_sets;i++){
     rule = target->rule_sets[i].rules + j;
-    if (rule) return rule;
+    if (rule->emit) return rule;
   }
 
   return NULL;
