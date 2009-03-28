@@ -104,15 +104,15 @@ static void
 sse_rule_copyx (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   ORC_ASM_CODE(p,"  movdqa %%%s, %%%s\n",
-      x86_get_regname_sse(p->vars[insn->src_args[1]].alloc),
+      x86_get_regname_sse(p->vars[insn->src_args[0]].alloc),
       x86_get_regname_sse(p->vars[insn->dest_args[0]].alloc));
 
   *p->codeptr++ = 0x66;
-  x86_emit_rex (p, 0, p->vars[insn->src_args[1]].alloc, 0,
+  x86_emit_rex (p, 0, p->vars[insn->src_args[0]].alloc, 0,
       p->vars[insn->dest_args[0]].alloc);
   *p->codeptr++ = 0x0f;
   *p->codeptr++ = 0x6f;
-  x86_emit_modrm_reg (p, p->vars[insn->src_args[1]].alloc,
+  x86_emit_modrm_reg (p, p->vars[insn->src_args[0]].alloc,
       p->vars[insn->dest_args[0]].alloc);
 }
 
@@ -405,6 +405,19 @@ sse_rule_convubw (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+sse_rule_convssswb (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  ORC_ASM_CODE(p,"  packsswb %%%s, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->src_args[0]].alloc),
+      x86_get_regname_sse(p->vars[insn->dest_args[0]].alloc));
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x63;
+  x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc,
+      p->vars[insn->src_args[0]].alloc);
+}
+
+static void
 sse_rule_convsuswb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   ORC_ASM_CODE(p,"  packuswb %%%s, %%%s\n",
@@ -416,6 +429,212 @@ sse_rule_convsuswb (OrcCompiler *p, void *user, OrcInstruction *insn)
   *p->codeptr++ = 0x67;
   x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc,
       p->vars[insn->src_args[0]].alloc);
+}
+
+static void
+sse_rule_convwb (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  /* FIXME slow */
+
+  if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
+    ORC_ASM_CODE(p,"  movdqa %%%s, %%%s\n",
+        x86_get_regname_sse(p->vars[insn->src_args[0]].alloc),
+        x86_get_regname_sse(p->vars[insn->dest_args[0]].alloc));
+    *p->codeptr++ = 0x66;
+    x86_emit_rex (p, 0, p->vars[insn->src_args[0]].alloc, 0,
+        p->vars[insn->dest_args[0]].alloc);
+    *p->codeptr++ = 0x0f;
+    *p->codeptr++ = 0x6f;
+    x86_emit_modrm_reg (p, p->vars[insn->src_args[0]].alloc,
+        p->vars[insn->dest_args[0]].alloc);
+  }
+
+  ORC_ASM_CODE(p,"  psllw $8, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->dest_args[0]].alloc));
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x71;
+  x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc, 6);
+  *p->codeptr++ = 8;
+
+  ORC_ASM_CODE(p,"  psrlw $8, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->dest_args[0]].alloc));
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x71;
+  x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc, 2);
+  *p->codeptr++ = 8;
+
+  ORC_ASM_CODE(p,"  packuswb %%%s, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->dest_args[0]].alloc),
+      x86_get_regname_sse(p->vars[insn->dest_args[0]].alloc));
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x67;
+  x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc,
+      p->vars[insn->dest_args[0]].alloc);
+}
+
+static void
+sse_rule_convswl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  ORC_ASM_CODE(p,"  punpcklwd %%%s, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->src_args[0]].alloc),
+      x86_get_regname_sse(p->vars[insn->dest_args[0]].alloc));
+
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x61;
+  x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc,
+      p->vars[insn->src_args[0]].alloc);
+
+  ORC_ASM_CODE(p,"  psrad $16, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->dest_args[0]].alloc));
+  
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x72;
+  x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc, 4);
+  *p->codeptr++ = 16;
+}
+
+static void
+sse_rule_convuwl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  /* FIXME should do this by unpacking with a zero reg */
+
+  ORC_ASM_CODE(p,"  punpcklwd %%%s, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->src_args[0]].alloc),
+      x86_get_regname_sse(p->vars[insn->dest_args[0]].alloc));
+
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x61;
+  x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc,
+      p->vars[insn->src_args[0]].alloc);
+
+  ORC_ASM_CODE(p,"  psrld $16, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->dest_args[0]].alloc));
+  
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x72;
+  x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc, 2);
+  *p->codeptr++ = 16;
+
+}
+
+static void
+sse_rule_convlw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  /* FIXME slow */
+
+  if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
+    ORC_ASM_CODE(p,"  movdqa %%%s, %%%s\n",
+        x86_get_regname_sse(p->vars[insn->src_args[0]].alloc),
+        x86_get_regname_sse(p->vars[insn->dest_args[0]].alloc));
+    *p->codeptr++ = 0x66;
+    x86_emit_rex (p, 0, p->vars[insn->src_args[0]].alloc, 0,
+        p->vars[insn->dest_args[0]].alloc);
+    *p->codeptr++ = 0x0f;
+    *p->codeptr++ = 0x6f;
+    x86_emit_modrm_reg (p, p->vars[insn->src_args[0]].alloc,
+        p->vars[insn->dest_args[0]].alloc);
+  }
+
+  ORC_ASM_CODE(p,"  pslld $16, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->dest_args[0]].alloc));
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x72;
+  x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc, 6);
+  *p->codeptr++ = 16;
+
+  ORC_ASM_CODE(p,"  psrld $16, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->dest_args[0]].alloc));
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x72;
+  x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc, 2);
+  *p->codeptr++ = 16;
+
+  ORC_ASM_CODE(p,"  packusdw %%%s, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->dest_args[0]].alloc),
+      x86_get_regname_sse(p->vars[insn->dest_args[0]].alloc));
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x38;
+  *p->codeptr++ = 0x2b;
+  x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc,
+      p->vars[insn->dest_args[0]].alloc);
+}
+
+static void
+sse_rule_convssslw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  ORC_ASM_CODE(p,"  packssdw %%%s, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->src_args[0]].alloc),
+      x86_get_regname_sse(p->vars[insn->dest_args[0]].alloc));
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x6b;
+  x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc,
+      p->vars[insn->src_args[0]].alloc);
+}
+
+static void
+sse_rule_convsuslw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  ORC_ASM_CODE(p,"  packusdw %%%s, %%%s\n",
+      x86_get_regname_sse(p->vars[insn->src_args[0]].alloc),
+      x86_get_regname_sse(p->vars[insn->dest_args[0]].alloc));
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x38;
+  *p->codeptr++ = 0x2b;
+  x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc,
+      p->vars[insn->src_args[0]].alloc);
+}
+
+static void
+sse_rule_mulswl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = p->tmpreg;
+
+  ORC_ASM_CODE(p,"  movdqa %%%s, %%%s\n",
+      x86_get_regname_sse(src),
+      x86_get_regname_sse(tmp));
+  *p->codeptr++ = 0x66;
+  x86_emit_rex (p, 0, src, 0, tmp);
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x6f;
+  x86_emit_modrm_reg (p, src, tmp);
+
+  ORC_ASM_CODE(p,"  pmulhw %%%s, %%%s\n",
+      x86_get_regname_sse(src),
+      x86_get_regname_sse(tmp));
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0xe5;
+  x86_emit_modrm_reg (p, src, tmp);
+
+  ORC_ASM_CODE(p,"  pmullw %%%s, %%%s\n",
+      x86_get_regname_sse(src),
+      x86_get_regname_sse(dest));
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0xd5;
+  x86_emit_modrm_reg (p, src, dest);
+
+  ORC_ASM_CODE(p,"  punpcklwd %%%s, %%%s\n",
+      x86_get_regname_sse(tmp),
+      x86_get_regname_sse(dest));
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x61;
+  x86_emit_modrm_reg (p, tmp, dest);
 }
 
 void
@@ -486,7 +705,17 @@ orc_compiler_sse_register_rules (OrcTarget *target)
 
   orc_rule_register (rule_set, "convsbw", sse_rule_convsbw, NULL);
   orc_rule_register (rule_set, "convubw", sse_rule_convubw, NULL);
+  orc_rule_register (rule_set, "convssswb", sse_rule_convssswb, NULL);
   orc_rule_register (rule_set, "convsuswb", sse_rule_convsuswb, NULL);
+  orc_rule_register (rule_set, "convwb", sse_rule_convwb, NULL);
+
+  orc_rule_register (rule_set, "convswl", sse_rule_convswl, NULL);
+  orc_rule_register (rule_set, "convuwl", sse_rule_convuwl, NULL);
+  orc_rule_register (rule_set, "convssslw", sse_rule_convssslw, NULL);
+  orc_rule_register (rule_set, "convsuslw", sse_rule_convsuslw, NULL);
+  orc_rule_register (rule_set, "convlw", sse_rule_convlw, NULL);
+
+  orc_rule_register (rule_set, "mulswl", sse_rule_mulswl, NULL);
 
   /* SSE 3 -- no rules */
 

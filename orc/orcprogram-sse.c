@@ -90,6 +90,9 @@ orc_compiler_sse_init (OrcCompiler *compiler)
     compiler->used_regs[i] = 0;
   }
 
+  compiler->tmpreg = X86_XMM0;
+  compiler->valid_regs[compiler->tmpreg] = 0;
+
   compiler->loop_shift = 3;
 }
 
