@@ -8,6 +8,7 @@
 ORC_BEGIN_DECLS
 
 void orc_test_init (void);
+int orc_test_gcc_compile (OrcProgram *p);
 
 ORC_END_DECLS
 
