@@ -56,6 +56,7 @@ pkginclude_HEADERS = \
 	orcprogram.h \
 	orcutils.h \
 	orcparse.h \
+	orccpu.h \
 	opcodes.h \
 	x86.h \
 	arm.h
