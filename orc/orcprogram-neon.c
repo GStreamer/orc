@@ -241,14 +241,16 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   neon_emit_prologue (compiler);
 
   if (compiler->loop_shift > 0) {
-    arm_emit_load_imm (compiler, ARM_IP, 16);
+    int align_shift = 3;
+
+    arm_emit_load_imm (compiler, ARM_IP, 1<<align_shift);
 
     arm_emit_load_reg (compiler, ARM_A3, neon_exec_ptr,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
     arm_emit_load_reg (compiler, ARM_A2, neon_exec_ptr,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,arrays[dest_var]));
     arm_emit_sub (compiler, ARM_IP, ARM_IP, ARM_A2);
-    arm_emit_and_imm (compiler, ARM_IP, ARM_IP, 0xf);
+    arm_emit_and_imm (compiler, ARM_IP, ARM_IP, (1<<align_shift)-1);
     if (dest_shift > 0) {
       arm_emit_asr_imm (compiler, ARM_IP, ARM_IP, dest_shift);
     }
@@ -283,15 +285,35 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
     arm_emit_label (compiler, 7);
   }
 
-
-  arm_emit_load_reg (compiler, ARM_IP, neon_exec_ptr,
-      (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
-  if (compiler->loop_shift > 0) {
-    arm_emit_asr_imm (compiler, ARM_IP, ARM_IP, compiler->loop_shift);
-  }
   neon_load_constants (compiler);
 
-  arm_emit_label (compiler, 1);
+  if (compiler->loop_shift > 0) {
+    int save_loop_shift = compiler->loop_shift;
+    compiler->loop_shift = 0;
+
+    arm_emit_load_reg (compiler, ARM_IP, neon_exec_ptr,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1));
+
+    arm_emit_cmp_imm (compiler, ARM_IP, 0);
+    arm_emit_branch (compiler, ARM_COND_EQ, 3);
+
+    arm_emit_label (compiler, 0);
+    neon_emit_loop (compiler);
+    arm_emit_sub_imm (compiler, ARM_IP, ARM_IP, 1);
+    arm_emit_cmp_imm (compiler, ARM_IP, 0);
+    arm_emit_branch (compiler, ARM_COND_NE, 0);
+    arm_emit_label (compiler, 1);
+
+    compiler->loop_shift = save_loop_shift;
+  }
+
+  if (compiler->loop_shift > 0) {
+    arm_emit_load_reg (compiler, ARM_IP, neon_exec_ptr,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
+  } else {
+    arm_emit_load_reg (compiler, ARM_IP, neon_exec_ptr,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
+  }
 
   arm_emit_cmp_imm (compiler, ARM_IP, 0);
   arm_emit_branch (compiler, ARM_COND_EQ, 3);
@@ -302,6 +324,26 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   arm_emit_cmp_imm (compiler, ARM_IP, 0);
   arm_emit_branch (compiler, ARM_COND_NE, 2);
   arm_emit_label (compiler, 3);
+
+  if (compiler->loop_shift > 0) {
+    int save_loop_shift = compiler->loop_shift;
+    compiler->loop_shift = 0;
+
+    arm_emit_load_reg (compiler, ARM_IP, neon_exec_ptr,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3));
+
+    arm_emit_cmp_imm (compiler, ARM_IP, 0);
+    arm_emit_branch (compiler, ARM_COND_EQ, 5);
+
+    arm_emit_label (compiler, 4);
+    neon_emit_loop (compiler);
+    arm_emit_sub_imm (compiler, ARM_IP, ARM_IP, 1);
+    arm_emit_cmp_imm (compiler, ARM_IP, 0);
+    arm_emit_branch (compiler, ARM_COND_NE, 4);
+    arm_emit_label (compiler, 5);
+
+    compiler->loop_shift = save_loop_shift;
+  }
 
   neon_emit_epilogue (compiler);
 
