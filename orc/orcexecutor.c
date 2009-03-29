@@ -94,52 +94,67 @@ orc_executor_emulate (OrcExecutor *ex)
       opcode = insn->opcode;
 
       /* set up args */
-      for(k=0;k<ORC_STATIC_OPCODE_N_SRC;k++){
-        void *ptr = ex->arrays[insn->src_args[k]] +
-          program->vars[insn->src_args[k]].size*i;
+      for(k=0;k<ORC_STATIC_OPCODE_N_SRC;k++) {
+        OrcVariable *var = program->vars + insn->src_args[k];
 
         if (opcode->src_size[k] == 0) continue;
 
-        switch (program->vars[insn->src_args[k]].size) {
-          case 1:
-            opcode_ex.src_values[k] = *(int8_t *)ptr;
-            break;
-          case 2:
-            opcode_ex.src_values[k] = *(int16_t *)ptr;
-            break;
-          case 4:
-            opcode_ex.src_values[k] = *(int32_t *)ptr;
-            break;
-          default:
-            ORC_ERROR("unhandled size %d", program->vars[insn->src_args[k]].size);
+        if (var->vartype == ORC_VAR_TYPE_CONST) {
+          opcode_ex.src_values[k] = var->value;
+        } else if (var->vartype == ORC_VAR_TYPE_PARAM) {
+          opcode_ex.src_values[k] = ex->params[insn->src_args[k]];
+        } else if (var->vartype == ORC_VAR_TYPE_TEMP) {
+          /* FIXME shouldn't store executor stuff in program */
+          opcode_ex.src_values[k] = var->value;
+        } else if (var->vartype == ORC_VAR_TYPE_SRC) {
+          void *ptr = ex->arrays[insn->src_args[k]] + var->size*i;
+
+          switch (var->size) {
+            case 1:
+              opcode_ex.src_values[k] = *(int8_t *)ptr;
+              break;
+            case 2:
+              opcode_ex.src_values[k] = *(int16_t *)ptr;
+              break;
+            case 4:
+              opcode_ex.src_values[k] = *(int32_t *)ptr;
+              break;
+            default:
+              ORC_ERROR("unhandled size %d", program->vars[insn->src_args[k]].size);
+          }
+        } else {
+          ORC_ERROR("shouldn't be reached (%d)", var->vartype);
         }
       }
 
       opcode->emulate (&opcode_ex, opcode->emulate_user);
-#if 0
-      ORC_ERROR("emulate %s: %d %d -> %d",
-          opcode->name, opcode_ex.src_values[0], opcode_ex.src_values[1],
-          opcode_ex.dest_values[0]);
-#endif
 
       for(k=0;k<ORC_STATIC_OPCODE_N_DEST;k++){
-        void *ptr = ex->arrays[insn->dest_args[k]] +
-          program->vars[insn->dest_args[k]].size*i;
+        OrcVariable *var = program->vars + insn->dest_args[k];
 
         if (opcode->dest_size[k] == 0) continue;
 
-        switch (program->vars[insn->dest_args[k]].size) {
-          case 1:
-            *(int8_t *)ptr = opcode_ex.dest_values[k];
-            break;
-          case 2:
-            *(int16_t *)ptr = opcode_ex.dest_values[k];
-            break;
-          case 4:
-            *(int32_t *)ptr = opcode_ex.dest_values[k];
-            break;
-          default:
-            ORC_ERROR("unhandled size %d", program->vars[insn->dest_args[k]].size);
+        if (var->vartype == ORC_VAR_TYPE_TEMP) {
+          /* FIXME shouldn't store executor stuff in program */
+          var->value = opcode_ex.dest_values[k];
+        } else if (var->vartype == ORC_VAR_TYPE_DEST) {
+          void *ptr = ex->arrays[insn->dest_args[k]] + var->size*i;
+
+          switch (var->size) {
+            case 1:
+              *(int8_t *)ptr = opcode_ex.dest_values[k];
+              break;
+            case 2:
+              *(int16_t *)ptr = opcode_ex.dest_values[k];
+              break;
+            case 4:
+              *(int32_t *)ptr = opcode_ex.dest_values[k];
+              break;
+            default:
+              ORC_ERROR("unhandled size %d", program->vars[insn->dest_args[k]].size);
+          }
+        } else {
+          ORC_ERROR("shouldn't be reached (%d)", var->vartype);
         }
       }
     }
