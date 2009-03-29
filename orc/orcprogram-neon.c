@@ -116,7 +116,7 @@ orc_compiler_neon_init (OrcCompiler *compiler)
   for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+9;i++){
     compiler->valid_regs[i] = 1;
   }
-  for(i=ORC_VEC_REG_BASE+3;i<ORC_VEC_REG_BASE+16;i++){
+  for(i=ORC_VEC_REG_BASE+0;i<ORC_VEC_REG_BASE+32;i+=2){
     compiler->valid_regs[i] = 1;
   }
   compiler->valid_regs[neon_exec_ptr] = 0;
