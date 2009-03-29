@@ -152,22 +152,22 @@ print_array_val_signed (void *array, int size, int i)
   switch (size) {
     case 1:
       {
-        int8_t *a = array;
-        printf(" %4d", a[i]);
+        uint8_t *a = array;
+        printf(" %4u", a[i]);
         return a[i];
       }
       break;
     case 2:
       {
-        int16_t *a = array;
-        printf(" %5d", a[i]);
+        uint16_t *a = array;
+        printf(" %5u", a[i]);
         return a[i];
       }
       break;
     case 4:
       {
-        int32_t *a = array;
-        printf(" %10d", a[i]);
+        uint32_t *a = array;
+        printf(" %10u", a[i]);
         return a[i];
       }
       break;
@@ -370,6 +370,8 @@ orc_test_compare_output (OrcProgram *program)
 
   dest_exec = alloc_array (n, program->vars[dest_index].size, &ptr_exec);
   dest_emul = alloc_array (n, program->vars[dest_index].size, &ptr_emul);
+  memset (dest_exec, 0xa5, n*program->vars[dest_index].size);
+  memset (dest_emul, 0xa5, n*program->vars[dest_index].size);
 
   orc_executor_set_array (ex, dest_index, dest_exec);
   orc_executor_run (ex);
