@@ -61,7 +61,7 @@ arm_dump_insns (OrcCompiler *compiler)
   arm_emit_branch (compiler, ARM_COND_LE, 0);
   arm_emit_branch (compiler, ARM_COND_AL, 0);
 
-  arm_emit_loadimm (compiler, ARM_A3, 0xa500);
+  arm_emit_load_imm (compiler, ARM_A3, 0xa500);
   arm_loadw (compiler, ARM_A3, ARM_A4, 0xa5);
   arm_emit_load_reg (compiler, ARM_A3, ARM_A4, 0x5a5);
 }

@@ -13,6 +13,7 @@
 #include <orc/orcprogram.h>
 #include <orc/arm.h>
 #include <orc/orcutils.h>
+#include <orc/orcdebug.h>
 
 
 const char *
@@ -161,13 +162,22 @@ arm_emit_branch (OrcCompiler *compiler, int cond, int label)
 }
 
 void
-arm_emit_loadimm (OrcCompiler *compiler, int dest, int imm)
+arm_emit_load_imm (OrcCompiler *compiler, int dest, int imm)
 {
   uint32_t code;
   int shift2;
 
   shift2 = 0;
+#if 0
   while (imm && ((imm&3)==0)) {
+    imm >>= 2;
+    shift2++;
+  }
+#endif
+  while (imm && imm > 0xffff) {
+    if ((imm&3) != 0) {
+      ORC_ERROR("bad immediate value");
+    }
     imm >>= 2;
     shift2++;
   }
@@ -233,6 +243,23 @@ arm_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int value)
 }
 
 void
+arm_emit_and_imm (OrcCompiler *compiler, int dest, int src1, int value)
+{
+  uint32_t code;
+
+  code = 0xe2000000;
+  code |= (src1&0xf) << 16;
+  code |= (dest&0xf) << 12;
+  code |= (value) << 0;
+
+  ORC_ASM_CODE(compiler,"  and %s, %s, #%d\n",
+      arm_reg_name (dest),
+      arm_reg_name (src1),
+      value);
+  arm_emit (compiler, code);
+}
+
+void
 arm_emit_sub_imm (OrcCompiler *compiler, int dest, int src1, int value)
 {
   uint32_t code;
@@ -265,10 +292,28 @@ arm_emit_cmp_imm (OrcCompiler *compiler, int src1, int value)
 }
 
 void
+arm_emit_cmp (OrcCompiler *compiler, int src1, int src2)
+{
+  uint32_t code;
+
+  code = 0xe1500000;
+  code |= (src1&0xf) << 16;
+  code |= (src2&0xf) << 0;
+
+  ORC_ASM_CODE(compiler,"  cmp %s, %s\n",
+      arm_reg_name (src1),
+      arm_reg_name (src2));
+  arm_emit (compiler, code);
+}
+
+void
 arm_emit_asr_imm (OrcCompiler *compiler, int dest, int src1, int value)
 {
   uint32_t code;
 
+  if (value == 0) {
+    ORC_ERROR("bad immediate value");
+  }
   code = 0xe1a00040;
   code |= (src1&0xf) << 0;
   code |= (dest&0xf) << 12;
@@ -297,6 +342,21 @@ arm_emit_load_reg (OrcCompiler *compiler, int dest, int src1, int offset)
   arm_emit (compiler, code);
 }
 
+void
+arm_emit_store_reg (OrcCompiler *compiler, int dest, int src1, int offset)
+{
+  uint32_t code;
+
+  code = 0xe5800000;
+  code |= (dest&0xf) << 16;
+  code |= (src1&0xf) << 12;
+  code |= offset&0xfff;
+
+  ORC_ASM_CODE(compiler,"  str %s, [%s, #%d]\n",
+      arm_reg_name (src1),
+      arm_reg_name (dest), offset);
+  arm_emit (compiler, code);
+}
 
 
 void

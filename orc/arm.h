@@ -65,14 +65,16 @@ enum {
 void arm_emit (OrcCompiler *compiler, uint32_t insn);
 void arm_emit_bx_lr (OrcCompiler *compiler);
 const char * arm_reg_name (int reg);
-void arm_emit_loadimm (OrcCompiler *compiler, int dest, int imm);
+void arm_emit_load_imm (OrcCompiler *compiler, int dest, int imm);
 
 void arm_emit_add (OrcCompiler *compiler, int dest, int src1, int src2);
 void arm_emit_sub (OrcCompiler *compiler, int dest, int src1, int src2);
 void arm_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int value);
+void arm_emit_and_imm (OrcCompiler *compiler, int dest, int src1, int value);
 void arm_emit_sub_imm (OrcCompiler *compiler, int dest, int src1, int value);
 void arm_emit_asr_imm (OrcCompiler *compiler, int dest, int src1, int value);
 void arm_emit_cmp_imm (OrcCompiler *compiler, int src1, int value);
+void arm_emit_cmp (OrcCompiler *compiler, int src1, int src2);
 
 void arm_emit_label (OrcCompiler *compiler, int label);
 void arm_emit_push (OrcCompiler *compiler, int regs);
@@ -87,6 +89,7 @@ void arm_loadw (OrcCompiler *compiler, int dest, int src1, int offset);
 void arm_storew (OrcCompiler *compiler, int dest, int offset, int src1);
 
 void arm_emit_load_reg (OrcCompiler *compiler, int dest, int src1, int offset);
+void arm_emit_store_reg (OrcCompiler *compiler, int src, int dest, int offset);
 
 void arm_do_fixups (OrcCompiler *compiler);
 
