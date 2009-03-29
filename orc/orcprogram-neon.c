@@ -253,7 +253,7 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
       arm_emit_asr_imm (compiler, ARM_IP, ARM_IP, dest_shift);
     }
 
-    arm_emit_cmp (compiler, ARM_IP, ARM_A3);
+    arm_emit_cmp (compiler, ARM_A3, ARM_IP);
     arm_emit_branch (compiler, ARM_COND_LE, 6);
 
     arm_emit_store_reg (compiler, ARM_IP, neon_exec_ptr,
