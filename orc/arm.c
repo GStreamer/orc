@@ -343,7 +343,7 @@ arm_emit_load_reg (OrcCompiler *compiler, int dest, int src1, int offset)
 }
 
 void
-arm_emit_store_reg (OrcCompiler *compiler, int dest, int src1, int offset)
+arm_emit_store_reg (OrcCompiler *compiler, int src1, int dest, int offset)
 {
   uint32_t code;
 
