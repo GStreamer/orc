@@ -93,7 +93,21 @@ orc_compiler_sse_init (OrcCompiler *compiler)
   compiler->tmpreg = X86_XMM0;
   compiler->valid_regs[compiler->tmpreg] = 0;
 
-  compiler->loop_shift = 3;
+  switch (orc_program_get_max_var_size (compiler->program)) {
+    case 1:
+      compiler->loop_shift = 4;
+      break;
+    case 2:
+      compiler->loop_shift = 3;
+      break;
+    case 4:
+      compiler->loop_shift = 2;
+      break;
+    default:
+      ORC_ERROR("unhandled max var size %d",
+          orc_program_get_max_var_size (compiler->program));
+      break;
+  }
 }
 
 void
@@ -211,24 +225,41 @@ sse_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
   }
 }
 
+int
+get_shift (int size)
+{
+  switch (size) {
+    case 1:
+      return 0;
+    case 2:
+      return 1;
+    case 4:
+      return 2;
+    default:
+      ORC_ERROR("bad size %d", size);
+  }
+  return -1;
+}
 void
 orc_compiler_sse_assemble (OrcCompiler *compiler)
 {
-  int dest_var = orc_compiler_get_dest (compiler);
+  int dest_var;
+  int dest_shift;
+
+  dest_var = orc_compiler_get_dest (compiler);
+  dest_shift = get_shift (compiler->vars[dest_var].size);
 
   compiler->vars[dest_var].is_aligned = FALSE;
 
   x86_emit_prologue (compiler);
 
   if (compiler->loop_shift > 0) {
-
     x86_emit_mov_imm_reg (compiler, 4, 16, X86_EAX);
     x86_emit_sub_memoffset_reg (compiler, 4,
         (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[dest_var]),
         x86_exec_ptr, X86_EAX);
     x86_emit_and_imm_reg (compiler, 4, 15, X86_EAX);
-    /* FIXME size shift */
-    x86_emit_sar_imm_reg (compiler, 4, 1, X86_EAX);
+    x86_emit_sar_imm_reg (compiler, 4, dest_shift, X86_EAX);
 
     x86_emit_cmp_reg_memoffset (compiler, 4, X86_EAX,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,n), x86_exec_ptr);

@@ -212,7 +212,8 @@ struct _OrcCompiler {
 };
 
 struct _OrcOpcodeExecutor {
-  int values[ORC_N_VARIABLES];
+  int src_values[ORC_STATIC_OPCODE_N_SRC];
+  int dest_values[ORC_STATIC_OPCODE_N_DEST];
 };
 
 struct _OrcExecutor {
@@ -318,6 +319,7 @@ void orc_compiler_append_code (OrcCompiler *p, const char *fmt, ...);
  
 void orc_target_register (OrcTarget *target);
 OrcTarget *orc_target_get_by_name (const char *target_name);
+int orc_program_get_max_var_size (OrcProgram *program);
 
 #endif
 

@@ -268,3 +268,17 @@ orc_program_get_asm_code (OrcProgram *program)
   return program->asm_code;
 }
 
+int
+orc_program_get_max_var_size (OrcProgram *program)
+{
+  int i;
+  int max;
+
+  max = 0;
+  for(i=0;i<program->n_vars;i++){
+    max = MAX(max, program->vars[i].size);
+  }
+
+  return max;
+}
+

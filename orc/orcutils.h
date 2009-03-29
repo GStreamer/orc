@@ -49,8 +49,8 @@ typedef unsigned int orc_bool;
 #ifndef MAX
 #define MAX(a,b) ((a)>(b) ? (a) : (b))
 #endif
-#ifndef CLAMP
-#define CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
+#ifndef ORC_CLAMP
+#define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
 #endif
 #define ROUND_UP_SHIFT(x,y) (((x) + (1<<(y)) - 1)>>(y))
 #define ROUND_UP_POW2(x,y) (((x) + (1<<(y)) - 1)&((~0)<<(y)))

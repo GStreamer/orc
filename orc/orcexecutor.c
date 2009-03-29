@@ -86,6 +86,8 @@ orc_executor_emulate (OrcExecutor *ex)
   OrcStaticOpcode *opcode;
   OrcOpcodeExecutor opcode_ex;
 
+  memset (&opcode_ex, 0, sizeof(opcode_ex));
+
   for(i=0;i<ex->n;i++){
     for(j=0;j<program->n_insns;j++){
       insn = program->insns + j;
@@ -96,39 +98,48 @@ orc_executor_emulate (OrcExecutor *ex)
         void *ptr = ex->arrays[insn->src_args[k]] +
           program->vars[insn->src_args[k]].size*i;
 
+        if (opcode->src_size[k] == 0) continue;
+
         switch (program->vars[insn->src_args[k]].size) {
           case 1:
-            opcode_ex.values[k] = *(int8_t *)ptr;
+            opcode_ex.src_values[k] = *(int8_t *)ptr;
             break;
           case 2:
-            opcode_ex.values[k] = *(int16_t *)ptr;
+            opcode_ex.src_values[k] = *(int16_t *)ptr;
             break;
           case 4:
-            opcode_ex.values[k] = *(int32_t *)ptr;
+            opcode_ex.src_values[k] = *(int32_t *)ptr;
             break;
           default:
-            ORC_ERROR("ack");
+            ORC_ERROR("unhandled size %d", program->vars[insn->src_args[k]].size);
         }
       }
 
       opcode->emulate (&opcode_ex, opcode->emulate_user);
+#if 0
+      ORC_ERROR("emulate %s: %d %d -> %d",
+          opcode->name, opcode_ex.src_values[0], opcode_ex.src_values[1],
+          opcode_ex.dest_values[0]);
+#endif
 
       for(k=0;k<ORC_STATIC_OPCODE_N_DEST;k++){
         void *ptr = ex->arrays[insn->dest_args[k]] +
           program->vars[insn->dest_args[k]].size*i;
 
+        if (opcode->dest_size[k] == 0) continue;
+
         switch (program->vars[insn->dest_args[k]].size) {
           case 1:
-            *(int8_t *)ptr = opcode_ex.values[k];
+            *(int8_t *)ptr = opcode_ex.dest_values[k];
             break;
           case 2:
-            *(int16_t *)ptr = opcode_ex.values[k];
+            *(int16_t *)ptr = opcode_ex.dest_values[k];
             break;
           case 4:
-            *(int32_t *)ptr = opcode_ex.values[k];
+            *(int32_t *)ptr = opcode_ex.dest_values[k];
             break;
           default:
-            ORC_ERROR("ack");
+            ORC_ERROR("unhandled size %d", program->vars[insn->dest_args[k]].size);
         }
       }
     }
