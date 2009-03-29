@@ -135,7 +135,21 @@ orc_compiler_neon_init (OrcCompiler *compiler)
     compiler->used_regs[i] = 0;
   }
 
-  compiler->loop_shift = 0;
+  switch (orc_program_get_max_var_size (compiler->program)) {
+    case 1:
+      compiler->loop_shift = 3;
+      break;
+    case 2:
+      compiler->loop_shift = 2;
+      break;
+    case 4:
+      compiler->loop_shift = 1;
+      break;
+    default:
+      ORC_ERROR("unhandled max var size %d",
+          orc_program_get_max_var_size (compiler->program));
+      break;
+  }
 }
 
 void

@@ -398,13 +398,30 @@ neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 }
 
 
+static void
+neon_rule_andn (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  uint32_t x = 0xf2100110;
+  ORC_ASM_CODE(p,"  vbic %s, %s, %s\n",
+      neon_reg_name (p->vars[insn->dest_args[0]].alloc),
+      neon_reg_name (p->vars[insn->src_args[1]].alloc),
+      neon_reg_name (p->vars[insn->src_args[0]].alloc));
+  x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12;
+  x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22;
+  x |= (p->vars[insn->src_args[1]].alloc&0xf)<<16;
+  x |= ((p->vars[insn->src_args[1]].alloc>>4)&0x1)<<7;
+  x |= (p->vars[insn->src_args[0]].alloc&0xf)<<0;
+  x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5;
+  arm_emit (p, x);
+}
+
 
 UNARY(absb,"vabs.s8",0xf3b10300)
 BINARY(addb,"vadd.i8",0xf2000800)
 BINARY(addssb,"vqadd.s8",0xf2000010)
 BINARY(addusb,"vqadd.u8",0xf3000010)
 BINARY(andb,"vand",0xf2000110)
-BINARY(andnb,"vbic",0xf2100110)
+//BINARY(andnb,"vbic",0xf2100110)
 BINARY(avgsb,"vrhadd.s8",0xf2000100)
 BINARY(avgub,"vrhadd.u8",0xf3000100)
 BINARY(cmpeqb,"vceq.i8",0xf3000810)
@@ -429,7 +446,7 @@ BINARY(addw,"vadd.i16",0xf2100800)
 BINARY(addssw,"vqadd.s16",0xf2100010)
 BINARY(addusw,"vqadd.u16",0xf3100010)
 BINARY(andw,"vand",0xf2000110)
-BINARY(andnw,"vbic",0xf2100110)
+//BINARY(andnw,"vbic",0xf2100110)
 BINARY(avgsw,"vrhadd.s16",0xf2100100)
 BINARY(avguw,"vrhadd.u16",0xf3100100)
 BINARY(cmpeqw,"vceq.i16",0xf3100810)
@@ -454,7 +471,7 @@ BINARY(addl,"vadd.i32",0xf2200800)
 BINARY(addssl,"vqadd.s32",0xf2200010)
 BINARY(addusl,"vqadd.u32",0xf3200010)
 BINARY(andl,"vand",0xf2000110)
-BINARY(andnl,"vbic",0xf2100110)
+//BINARY(andnl,"vbic",0xf2100110)
 BINARY(avgsl,"vrhadd.s32",0xf2200100)
 BINARY(avgul,"vrhadd.u32",0xf3200100)
 BINARY(cmpeql,"vceq.i32",0xf3200810)
@@ -508,7 +525,7 @@ orc_compiler_neon_register_rules (OrcTarget *target)
   REG(addssb);
   REG(addusb);
   REG(andb);
-  REG(andnb);
+  //REG(andnb);
   REG(avgsb);
   REG(avgub);
   REG(cmpeqb);
@@ -533,7 +550,7 @@ orc_compiler_neon_register_rules (OrcTarget *target)
   REG(addssw);
   REG(addusw);
   REG(andw);
-  REG(andnw);
+  //REG(andnw);
   REG(avgsw);
   REG(avguw);
   REG(cmpeqw);
@@ -558,7 +575,7 @@ orc_compiler_neon_register_rules (OrcTarget *target)
   REG(addssl);
   REG(addusl);
   REG(andl);
-  REG(andnl);
+  //REG(andnl);
   REG(avgsl);
   REG(avgul);
   REG(cmpeql);
@@ -595,5 +612,9 @@ orc_compiler_neon_register_rules (OrcTarget *target)
   REG(mulubw);
   REG(mulswl);
   REG(muluwl);
+
+  orc_rule_register (rule_set, "andnb", neon_rule_andn, NULL);
+  orc_rule_register (rule_set, "andnw", neon_rule_andn, NULL);
+  orc_rule_register (rule_set, "andnl", neon_rule_andn, NULL);
 }
 
