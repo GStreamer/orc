@@ -89,6 +89,12 @@ typedef unsigned int orc_bool;
 #define ORC_INTERNAL
 #endif
 
+#if ORC_GNUC_PREREQ(3,3) /* guess */
+#define ORC_GNU_PRINTF(a,b) __attribute__((__format__ (__printf__, a, b)))
+#else
+#define ORC_GNU_PRINTF(a,b)
+#endif
+
 #ifdef __cplusplus
 #define ORC_BEGIN_DECLS extern "C" {
 #define ORC_END_DECLS }

@@ -315,7 +315,8 @@ const char *orc_program_get_asm_code (OrcProgram *program);
 void orc_program_dump_asm (OrcProgram *program);
 const char *orc_target_get_asm_preamble (const char *target);
 
-void orc_compiler_append_code (OrcCompiler *p, const char *fmt, ...);
+void orc_compiler_append_code (OrcCompiler *p, const char *fmt, ...)
+  ORC_GNU_PRINTF(2,3);
  
 void orc_target_register (OrcTarget *target);
 OrcTarget *orc_target_get_by_name (const char *target_name);

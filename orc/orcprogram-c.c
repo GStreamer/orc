@@ -170,6 +170,18 @@ c_get_type_name (int size)
 }
 
 
+#define UNARY(name,op) \
+static void \
+c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
+{ \
+  char dest[20], src1[20]; \
+\
+  c_get_name (dest, p, insn->dest_args[0]); \
+  c_get_name (src1, p, insn->src_args[0]); \
+ \
+  ORC_ASM_CODE(p,"    %s = " op ";\n", dest, src1); \
+}
+
 #define BINARY(name,op) \
 static void \
 c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
@@ -189,16 +201,20 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 #define BINARY_UW(a,b) BINARY(a,b)
 #define BINARY_SL(a,b) BINARY(a,b)
 #define BINARY_UL(a,b) BINARY(a,b)
-#define UNARY_SB(a,b) BINARY(a,b)
-#define UNARY_UB(a,b) BINARY(a,b)
-#define UNARY_SW(a,b) BINARY(a,b)
-#define UNARY_UW(a,b) BINARY(a,b)
-#define UNARY_SL(a,b) BINARY(a,b)
-#define UNARY_UL(a,b) BINARY(a,b)
+#define UNARY_SB(a,b) UNARY(a,b)
+#define UNARY_UB(a,b) UNARY(a,b)
+#define UNARY_SW(a,b) UNARY(a,b)
+#define UNARY_UW(a,b) UNARY(a,b)
+#define UNARY_SL(a,b) UNARY(a,b)
+#define UNARY_UL(a,b) UNARY(a,b)
 #define BINARY_BW(a,b) BINARY(a,b)
 #define BINARY_WL(a,b) BINARY(a,b)
 #define BINARY_LW(a,b) BINARY(a,b)
 #define BINARY_WB(a,b) BINARY(a,b)
+#define UNARY_BW(a,b) UNARY(a,b)
+#define UNARY_WL(a,b) UNARY(a,b)
+#define UNARY_LW(a,b) UNARY(a,b)
+#define UNARY_WB(a,b) UNARY(a,b)
 
 #include "opcodes.h"
 
@@ -218,6 +234,10 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 #undef BINARY_WL
 #undef BINARY_LW
 #undef BINARY_WB
+#undef UNARY_BW
+#undef UNARY_WL
+#undef UNARY_LW
+#undef UNARY_WB
 
 static OrcTarget c_target = {
   "c",
@@ -253,6 +273,10 @@ orc_c_init (void)
 #define BINARY_WL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define BINARY_LW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define BINARY_WB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define UNARY_BW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define UNARY_WL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define UNARY_LW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define UNARY_WB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 
 #include "opcodes.h"
 
