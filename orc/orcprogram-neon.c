@@ -448,6 +448,7 @@ neon_emit_loop (OrcCompiler *compiler)
     }
   }
 
+#if 0
   for(k=0;k<compiler->n_vars;k++){
     if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
         compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
@@ -464,5 +465,6 @@ neon_emit_loop (OrcCompiler *compiler)
       }
     }
   }
+#endif
 }
 
