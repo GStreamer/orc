@@ -65,145 +65,194 @@ neon_emit_mov (OrcCompiler *compiler, uint32_t code, int src, int dest)
 }
 
 void
-neon_loadw (OrcCompiler *compiler, int dest, int src1, int offset, int size)
+neon_loadb (OrcCompiler *compiler, int dest, int src1, int offset)
 {
   uint32_t code;
+  int i;
+  int aligned;
 
-
-  switch (size) {
-    case 1:
-      ORC_ASM_CODE(compiler,"  ldrb %s, [%s, #%d]\n",
-          arm_reg_name (neon_tmp_reg),
-          arm_reg_name (src1), offset);
-      code = 0xe5d00000;
-      code |= (src1&0xf) << 16;
-      code |= (neon_tmp_reg&0xf) << 12;
-      code |= (offset&0xf0) << 4;
-      code |= offset&0x0f;
-      arm_emit (compiler, code);
-
-      ORC_ASM_CODE(compiler,"  vmov.8 %s[0], %s\n",
-          neon_reg_name (dest), arm_reg_name (neon_tmp_reg));
-      neon_emit_mov (compiler, 0xee400b10, neon_tmp_reg, dest);
-      break;
-    case 2:
-      ORC_ASM_CODE(compiler,"  ldrh %s, [%s, #%d]\n",
-          arm_reg_name (neon_tmp_reg),
-          arm_reg_name (src1), offset);
-      code = 0xe1d000b0;
-      code |= (src1&0xf) << 16;
-      code |= (neon_tmp_reg&0xf) << 12;
-      code |= (offset&0xf0) << 4;
-      code |= offset&0x0f;
-      arm_emit (compiler, code);
-
-      ORC_ASM_CODE(compiler,"  vmov.16 %s[0], %s\n",
-          neon_reg_name (dest), arm_reg_name (neon_tmp_reg));
-      neon_emit_mov (compiler, 0xee000b30, neon_tmp_reg, dest);
-      break;
-    case 4:
-      ORC_ASM_CODE(compiler,"  vldr.32 %s, [%s, #%d]\n",
-          neon_reg_name (dest),
-          arm_reg_name (src1), offset);
-      code = 0xed900b00;
+  aligned = FALSE;
+  if (aligned && compiler->loop_shift == 3) {
+    ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]!\n",
+        neon_reg_name (dest),
+        arm_reg_name (src1));
+    code = 0xf42007cd;
+    code |= (src1&0xf) << 16;
+    code |= (dest&0xf) << 12;
+    code |= ((dest>>4)&0x1) << 22;
+    arm_emit (compiler, code);
+  } else {
+    for(i=0;i<(1<<compiler->loop_shift);i++){
+      ORC_ASM_CODE(compiler,"  vld1.8 %s[%d], [%s]!\n",
+          neon_reg_name (dest), i,
+          arm_reg_name (src1));
+      code = 0xf4a0000d;
       code |= (src1&0xf) << 16;
       code |= (dest&0xf) << 12;
       code |= ((dest>>4)&0x1) << 22;
-      code |= (offset&0xf0) << 4;
-      code |= offset&0x0f;
+      code |= i << 5;
       arm_emit (compiler, code);
-      break;
-    case 8:
-      ORC_ASM_CODE(compiler,"  vldr.64 %s, [%s, #%d]\n",
-          neon_reg_name (dest),
-          arm_reg_name (src1), offset);
-      code = 0xed900b00;
-      code |= (src1&0xf) << 16;
-      code |= (dest&0xf) << 12;
-      code |= ((dest>>4)&0x1) << 22;
-      code |= (offset&0xf0) << 4;
-      code |= offset&0x0f;
-      arm_emit (compiler, code);
-      break;
-    case 16:
-      //ORC_ASM_CODE(compiler,"  vldr.128 %s, [%s, #%d]\n",
-      //    neon_reg_name (dest),
-      //    arm_reg_name (src1), offset);
-      //break;
-    default:
-      ORC_PROGRAM_ERROR(compiler, "bad size %d\n", size);
+    }
   }
-
 }
 
 void
-neon_storew (OrcCompiler *compiler, int dest, int offset, int src1, int size)
+neon_loadw (OrcCompiler *compiler, int dest, int src1, int offset)
 {
   uint32_t code;
+  int i;
+  int aligned;
 
-  switch (size) {
-    case 1:
-      ORC_ASM_CODE(compiler,"  vmov.u8 %s, %s[0]\n",
-          arm_reg_name (neon_tmp_reg), neon_reg_name (src1));
-      neon_emit_mov (compiler, 0xeed00b10, neon_tmp_reg, src1);
-
-      ORC_ASM_CODE(compiler,"  strb %s, [%s, #%d]\n",
-          arm_reg_name (neon_tmp_reg),
-          arm_reg_name (dest), offset);
-      code = 0xe5c00000;
-      code |= (dest&0xf) << 16;
-      code |= (neon_tmp_reg&0xf) << 12;
-      code |= (offset&0xf0) << 4;
-      code |= offset&0x0f;
+  aligned = FALSE;
+  if (aligned && compiler->loop_shift == 2) {
+    ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]!\n",
+        neon_reg_name (dest),
+        arm_reg_name (src1));
+    code = 0xf42007cd;
+    code |= (src1&0xf) << 16;
+    code |= (dest&0xf) << 12;
+    code |= ((dest>>4)&0x1) << 22;
+    arm_emit (compiler, code);
+  } else {
+    for(i=0;i<(1<<compiler->loop_shift);i++){
+      ORC_ASM_CODE(compiler,"  vld1.16 %s[%d], [%s]!\n",
+          neon_reg_name (dest), i,
+          arm_reg_name (src1));
+      code = 0xf4a0040d;
+      code |= (src1&0xf) << 16;
+      code |= (dest&0xf) << 12;
+      code |= ((dest>>4)&0x1) << 22;
+      code |= i << 6;
       arm_emit (compiler, code);
-      break;
-    case 2:
-      ORC_ASM_CODE(compiler,"  vmov.u16 %s, %s[0]\n",
-          arm_reg_name (neon_tmp_reg), neon_reg_name (src1));
-      neon_emit_mov (compiler, 0xee900b30, neon_tmp_reg, src1);
+    }
+  }
+}
 
-      ORC_ASM_CODE(compiler,"  strh %s, [%s, #%d]\n",
-          arm_reg_name (neon_tmp_reg),
-          arm_reg_name (dest), offset);
-      code = 0xe1c000b0;
-      code |= (dest&0xf) << 16;
-      code |= (neon_tmp_reg&0xf) << 12;
-      code |= (offset&0xf0) << 4;
-      code |= offset&0x0f;
+void
+neon_loadl (OrcCompiler *compiler, int dest, int src1, int offset)
+{
+  uint32_t code;
+  int i;
+  int aligned;
+
+  aligned = FALSE;
+  if (aligned && compiler->loop_shift == 1) {
+    ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]!\n",
+        neon_reg_name (dest),
+        arm_reg_name (src1));
+    code = 0xf42007cd;
+    code |= (src1&0xf) << 16;
+    code |= (dest&0xf) << 12;
+    code |= ((dest>>4)&0x1) << 22;
+    arm_emit (compiler, code);
+  } else {
+    for(i=0;i<(1<<compiler->loop_shift);i++){
+      ORC_ASM_CODE(compiler,"  vld1.32 %s[%d], [%s]!\n",
+          neon_reg_name (dest), i,
+          arm_reg_name (src1));
+      code = 0xf4a0080d;
+      code |= (src1&0xf) << 16;
+      code |= (dest&0xf) << 12;
+      code |= ((dest>>4)&0x1) << 22;
+      code |= i<<7;
       arm_emit (compiler, code);
-      break;
-    case 4:
-      ORC_ASM_CODE(compiler,"  vstr.32 %s, [%s, #%d]\n",
-          neon_reg_name (src1),
-          arm_reg_name (dest), offset);
-      code = 0xed800b00;
+    }
+  }
+}
+
+void
+neon_storeb (OrcCompiler *compiler, int dest, int offset, int src1)
+{
+  uint32_t code;
+  int i;
+  int aligned;
+
+  aligned = TRUE;
+  if (aligned && compiler->loop_shift == 3) {
+    ORC_ASM_CODE(compiler,"  vst1.64 %s, [%s]!\n",
+        neon_reg_name (src1),
+        arm_reg_name (dest));
+    code = 0xf40007cd;
+    code |= (dest&0xf) << 16;
+    code |= (src1&0xf) << 12;
+    code |= ((src1>>4)&0x1) << 22;
+    arm_emit (compiler, code);
+  } else {
+    for(i=0;i<(1<<compiler->loop_shift);i++){
+      ORC_ASM_CODE(compiler,"  vst1.8 %s[%d], [%s]!\n",
+          neon_reg_name (src1), i,
+          arm_reg_name (dest));
+      code = 0xf480000d;
       code |= (dest&0xf) << 16;
       code |= (src1&0xf) << 12;
       code |= ((src1>>4)&0x1) << 22;
-      code |= (offset&0xf0) << 4;
-      code |= offset&0x0f;
+      code |= i<<5;
       arm_emit (compiler, code);
-      break;
-    case 8:
-      ORC_ASM_CODE(compiler,"  vstr.64 %s, [%s, #%d]\n",
-          neon_reg_name (src1),
-          arm_reg_name (dest), offset);
-      code = 0xed800b00;
+    }
+  }
+}
+
+void
+neon_storew (OrcCompiler *compiler, int dest, int offset, int src1)
+{
+  uint32_t code;
+  int i;
+  int aligned;
+
+  aligned = TRUE;
+  if (aligned && compiler->loop_shift == 2) {
+    ORC_ASM_CODE(compiler,"  vst1.64 %s, [%s]!\n",
+        neon_reg_name (src1),
+        arm_reg_name (dest));
+    code = 0xf40007cd;
+    code |= (dest&0xf) << 16;
+    code |= (src1&0xf) << 12;
+    code |= ((src1>>4)&0x1) << 22;
+    arm_emit (compiler, code);
+  } else {
+    for(i=0;i<(1<<compiler->loop_shift);i++){
+      ORC_ASM_CODE(compiler,"  vst1.16 %s[%d], [%s]!\n",
+          neon_reg_name (src1), i,
+          arm_reg_name (dest));
+      code = 0xf480040d;
       code |= (dest&0xf) << 16;
       code |= (src1&0xf) << 12;
       code |= ((src1>>4)&0x1) << 22;
-      code |= (offset&0xf0) << 4;
-      code |= offset&0x0f;
+      code |= i<<6;
       arm_emit (compiler, code);
-      break;
-    case 16:
-      //ORC_ASM_CODE(compiler,"  vstr.128 %s, [%s, #%d]\n",
-      //    neon_reg_name (src1),
-      //    arm_reg_name (dest), offset);
-      //arm_emit (compiler, code);
-      break;
-    default:
-      ORC_PROGRAM_ERROR(compiler, "bad size %d\n", size);
+    }
+  }
+}
+
+void
+neon_storel (OrcCompiler *compiler, int dest, int offset, int src1)
+{
+  uint32_t code;
+  int i;
+  int aligned;
+
+  aligned = TRUE;
+  if (aligned && compiler->loop_shift == 2) {
+    ORC_ASM_CODE(compiler,"  vst1.64 %s, [%s]!\n",
+        neon_reg_name (src1),
+        arm_reg_name (dest));
+    code = 0xf40007cd;
+    code |= (dest&0xf) << 16;
+    code |= (src1&0xf) << 12;
+    code |= ((src1>>4)&0x1) << 22;
+    arm_emit (compiler, code);
+  } else {
+    for(i=0;i<(1<<compiler->loop_shift);i++){
+      ORC_ASM_CODE(compiler,"  vst1.32 %s[%d], [%s]!\n",
+          neon_reg_name (src1), i,
+          arm_reg_name (dest));
+      code = 0xf480080d;
+      code |= (dest&0xf) << 16;
+      code |= (src1&0xf) << 12;
+      code |= ((src1>>4)&0x1) << 22;
+      code |= i<<7;
+      arm_emit (compiler, code);
+    }
   }
 }
 

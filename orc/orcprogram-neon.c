@@ -28,8 +28,12 @@ void orc_compiler_neon_assemble (OrcCompiler *compiler);
 void orc_compiler_rewrite_vars (OrcCompiler *compiler);
 void orc_compiler_dump (OrcCompiler *compiler);
 
-void neon_loadw (OrcCompiler *compiler, int dest, int src1, int offset, int size);
-void neon_storew (OrcCompiler *compiler, int dest, int offset, int src1, int size);
+void neon_loadb (OrcCompiler *compiler, int dest, int src1, int offset);
+void neon_loadw (OrcCompiler *compiler, int dest, int src1, int offset);
+void neon_loadl (OrcCompiler *compiler, int dest, int src1, int offset);
+void neon_storeb (OrcCompiler *compiler, int dest, int offset, int src1);
+void neon_storew (OrcCompiler *compiler, int dest, int offset, int src1);
+void neon_storel (OrcCompiler *compiler, int dest, int offset, int src1);
 void neon_emit_loadiw (OrcCompiler *p, int reg, int value);
 
 void
@@ -192,8 +196,19 @@ neon_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
   } else {
     ptr_reg = var->ptr_register;
   }
-  neon_loadw (compiler, var->alloc, ptr_reg, 0,
-      var->size << compiler->loop_shift);
+  switch (var->size) {
+    case 1:
+      neon_loadb (compiler, var->alloc, ptr_reg, 0);
+      break;
+    case 2:
+      neon_loadw (compiler, var->alloc, ptr_reg, 0);
+      break;
+    case 4:
+      neon_loadl (compiler, var->alloc, ptr_reg, 0);
+      break;
+    default:
+      ORC_ERROR("bad size");
+  }
 }
 
 void
@@ -207,8 +222,19 @@ neon_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
   } else {
     ptr_reg = var->ptr_register;
   }
-  neon_storew (compiler, ptr_reg, 0, var->alloc,
-      var->size << compiler->loop_shift);
+  switch (var->size) {
+    case 1:
+      neon_storeb (compiler, ptr_reg, 0, var->alloc);
+      break;
+    case 2:
+      neon_storew (compiler, ptr_reg, 0, var->alloc);
+      break;
+    case 4:
+      neon_storel (compiler, ptr_reg, 0, var->alloc);
+      break;
+    default:
+      ORC_ERROR("bad size");
+  }
 }
 
 static int
