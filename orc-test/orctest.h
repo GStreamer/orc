@@ -15,6 +15,7 @@ typedef enum {
 
 void orc_test_init (void);
 OrcTestResult orc_test_gcc_compile (OrcProgram *p);
+OrcTestResult orc_test_gcc_compile_neon (OrcProgram *p);
 void orc_test_random_bits (void *data, int n_bytes);
 OrcTestResult orc_test_compare_output (OrcProgram *program);
 
