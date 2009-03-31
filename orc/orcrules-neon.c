@@ -54,6 +54,7 @@ const char *neon_reg_name_quad (int reg)
   return vec_regs[reg&0x1f];
 }
 
+#if 0
 void
 neon_emit_mov (OrcCompiler *compiler, uint32_t code, int src, int dest)
 {
@@ -63,6 +64,7 @@ neon_emit_mov (OrcCompiler *compiler, uint32_t code, int src, int dest)
   code |= ((dest>>4)&0x1) << 7;
   arm_emit (compiler, code);
 }
+#endif
 
 void
 neon_loadb (OrcCompiler *compiler, int dest, int src1, int offset)
@@ -158,6 +160,22 @@ neon_loadl (OrcCompiler *compiler, int dest, int src1, int offset)
       arm_emit (compiler, code);
     }
   }
+}
+
+void
+neon_neg (OrcCompiler *compiler, int dest)
+{
+  uint32_t code;
+
+  ORC_ASM_CODE(compiler,"  vneg.s32 %s, %s\n",
+      neon_reg_name (dest),
+      neon_reg_name (dest));
+  code = 0xf3b90380;
+  code |= (dest&0xf) << 12;
+  code |= ((dest>>4)&0x1) << 22;
+  code |= (dest&0xf) << 0;
+  code |= ((dest>>4)&0x1) << 5;
+  arm_emit (compiler, code);
 }
 
 void
@@ -433,9 +451,55 @@ neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
     x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5; \
     x |= ((n - p->vars[insn->src_args[1]].value)&(n-1))<<16; \
     arm_emit (p, x); \
+  } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) { \
+    ORC_ASM_CODE(p,"  " insn_name " %s, %s, %s\n", \
+        neon_reg_name (p->vars[insn->dest_args[0]].alloc), \
+        neon_reg_name (p->vars[insn->src_args[0]].alloc), \
+        neon_reg_name (p->vars[insn->src_args[1]].alloc)); \
+    x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12; \
+    x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22; \
+    x |= (p->vars[insn->src_args[0]].alloc&0xf)<<0; \
+    x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5; \
+    x |= (p->vars[insn->src_args[1]].alloc)<<16; \
+    x |= ((p->vars[insn->src_args[1]].alloc>>4))<<7; \
+    arm_emit (p, x); \
   } else { \
-    ORC_PROGRAM_ERROR(p,"shift rule only works with constants"); \
+    ORC_PROGRAM_ERROR(p,"shift rule only works with constants and params"); \
   } \
+}
+
+static void
+neon_rule_shrsw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  uint32_t code;
+  if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
+    code = 0xf2900010;
+    ORC_ASM_CODE(p,"  vshr.s16 %s, %s, #%d\n",
+        neon_reg_name (p->vars[insn->dest_args[0]].alloc),
+        neon_reg_name (p->vars[insn->src_args[0]].alloc),
+        p->vars[insn->src_args[1]].value);
+    code |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12;
+    code |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22;
+    code |= (p->vars[insn->src_args[0]].alloc&0xf)<<0;
+    code |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5;
+    code |= ((16 - p->vars[insn->src_args[1]].value)&0xf)<<16;
+    arm_emit (p, code);
+  } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
+    code = 0xf2100400;
+    ORC_ASM_CODE(p,"  vshl.s16 %s, %s, %s\n",
+        neon_reg_name (p->vars[insn->dest_args[0]].alloc),
+        neon_reg_name (p->vars[insn->src_args[0]].alloc),
+        neon_reg_name (p->vars[insn->src_args[1]].alloc));
+    code |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12;
+    code |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22;
+    code |= (p->vars[insn->src_args[0]].alloc&0xf)<<0;
+    code |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5;
+    code |= (p->vars[insn->src_args[1]].alloc&0xf)<<16;
+    code |= ((p->vars[insn->src_args[1]].alloc>>4)&0x1)<<7;
+    arm_emit (p, code);
+  } else {
+    ORC_PROGRAM_ERROR(p,"shift rule only works with constants and params");
+  }
 }
 
 
@@ -500,7 +564,7 @@ BINARY(minuw,"vmin.u16",0xf3100610)
 BINARY(mullw,"vmul.i16",0xf2100910)
 BINARY(orw,"vorr",0xf2200110)
 LSHIFT(shlw,"vshl.i16",0xf2900510)
-RSHIFT(shrsw,"vshr.s16",0xf2900010,16)
+//RSHIFT(shrsw,"vshr.s16",0xf2900010,16)
 RSHIFT(shruw,"vshr.u16",0xf3900010,16)
 BINARY(subw,"vsub.i16",0xf3100800)
 BINARY(subssw,"vqsub.s16",0xf2100210)

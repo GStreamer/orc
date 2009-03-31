@@ -31,6 +31,7 @@ void orc_compiler_dump (OrcCompiler *compiler);
 void neon_loadb (OrcCompiler *compiler, int dest, int src1, int offset);
 void neon_loadw (OrcCompiler *compiler, int dest, int src1, int offset);
 void neon_loadl (OrcCompiler *compiler, int dest, int src1, int offset);
+void neon_neg (OrcCompiler *compiler, int dest);
 void neon_storeb (OrcCompiler *compiler, int dest, int offset, int src1);
 void neon_storew (OrcCompiler *compiler, int dest, int offset, int src1);
 void neon_storel (OrcCompiler *compiler, int dest, int offset, int src1);
@@ -164,12 +165,15 @@ neon_load_constants (OrcCompiler *compiler)
   for(i=0;i<compiler->n_vars;i++){
     switch (compiler->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:
+        ORC_ASSERT (compiler->vars[i].size == 2);
         neon_emit_loadiw (compiler, compiler->vars[i].alloc,
             (int)compiler->vars[i].value);
         break;
       case ORC_VAR_TYPE_PARAM:
-        //neon_emit_loadw (compiler, compiler->vars[i].alloc,
-        //    (int)ORC_STRUCT_OFFSET(OrcExecutor, params[i]), neon_exec_ptr);
+        arm_emit_add_imm (compiler, neon_tmp_reg,
+            neon_exec_ptr, ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
+        neon_loadl (compiler, compiler->vars[i].alloc, neon_exec_ptr, 0);
+        neon_neg (compiler, compiler->vars[i].alloc);
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
