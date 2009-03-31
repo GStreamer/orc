@@ -83,6 +83,7 @@ shlw d1, s1, 2
 .dest 2 d1
 .source 2 s1
 .source 2 s2
+.source 2 s3
 .temp 2 t1
 .temp 4 t2
 .param p1
