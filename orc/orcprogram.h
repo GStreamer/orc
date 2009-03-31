@@ -8,7 +8,6 @@
 typedef struct _OrcOpcodeExecutor OrcOpcodeExecutor;
 typedef struct _OrcExecutor OrcExecutor;
 typedef struct _OrcVariable OrcVariable;
-typedef struct _OrcOpcode OrcOpcode;
 typedef struct _OrcOpcodeSet OrcOpcodeSet;
 typedef struct _OrcStaticOpcode OrcStaticOpcode;
 typedef struct _OrcInstruction OrcInstruction;
@@ -37,9 +36,6 @@ typedef void (*OrcRuleEmitFunc)(OrcCompiler *p, void *user, OrcInstruction *insn
 
 #define ORC_STATIC_OPCODE_N_SRC 4
 #define ORC_STATIC_OPCODE_N_DEST 2
-
-#define ORC_OPCODE_N_SRC 4
-#define ORC_OPCODE_N_DEST 4
 
 #define ORC_OPCODE_N_ARGS 4
 #define ORC_N_TARGETS 10
@@ -118,20 +114,6 @@ struct _OrcRuleSet {
 
   OrcRule *rules;
   int n_rules;
-};
-
-struct _OrcOpcode {
-  char *name;
-  int n_src;
-  int n_dest;
-
-  int dest_size[ORC_OPCODE_N_DEST];
-  int src_size[ORC_OPCODE_N_SRC];
-
-  OrcRule rules[ORC_N_TARGETS];
-
-  OrcOpcodeEmulateFunc emulate;
-  void *emulate_user;
 };
 
 struct _OrcOpcodeSet {
@@ -246,7 +228,6 @@ OrcProgram * orc_program_new (void);
 OrcProgram * orc_program_new_ds (int size1, int size2);
 OrcProgram * orc_program_new_dss (int size1, int size2, int size3);
 OrcStaticOpcode * orc_opcode_find_by_name (const char *name);
-int orc_opcode_get_list (OrcOpcode **list);
 void orc_opcode_init (void);
 
 const char * orc_program_get_name (OrcProgram *program);
