@@ -27,7 +27,7 @@ static OrcTarget *default_target;
 #define ORC_UW_MIN 0
 #define ORC_SL_MAX 2147483647
 #define ORC_SL_MIN (-1-ORC_SL_MAX)
-#define ORC_UL_MAX 4294967295U
+#define ORC_UL_MAX 4294967295ULL
 #define ORC_UL_MIN 0
 
 #define ORC_CLAMP_SB(x) ORC_CLAMP(x,ORC_SB_MIN,ORC_SB_MAX)
@@ -384,8 +384,8 @@ BINARY_SL(addssl, ORC_CLAMP_SL((int64_t)a + (int64_t)b))
 BINARY_UL(addusl, ORC_CLAMP_UL((uint64_t)a + (uint64_t)b))
 BINARY_SL(andl, a & b)
 BINARY_SL(andnl, (~a) & b)
-BINARY_SL(avgsl, (a + b + 1)>>1)
-BINARY_UL(avgul, (a + b + 1)>>1)
+BINARY_SL(avgsl, ((int64_t)a + (int64_t)b + 1)>>1)
+BINARY_UL(avgul, ((uint64_t)a + (uint64_t)b + 1)>>1)
 BINARY_SL(cmpeql, (a == b) ? (~0) : 0)
 BINARY_SL(cmpgtsl, (a > b) ? (~0) : 0)
 UNARY_SL(copyl, a)
@@ -403,7 +403,7 @@ BINARY_UL(shrul, a >> b)
 UNARY_SL(signl, ORC_CLAMP(a,-1,1))
 BINARY_SL(subl, a - b)
 BINARY_SL(subssl, ORC_CLAMP_SL((int64_t)a - (int64_t)b))
-BINARY_UL(subusl, ORC_CLAMP_UL((uint64_t)a - (uint64_t)b))
+BINARY_UL(subusl, (((uint32_t)a) < ((uint32_t)b)) ? 0 : a - b)
 BINARY_SL(xorl, a ^ b)
 
 
