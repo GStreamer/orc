@@ -155,7 +155,6 @@ orc_compiler_neon_init (OrcCompiler *compiler)
           orc_program_get_max_var_size (compiler->program));
       break;
   }
-  compiler->loop_shift = 0;
 }
 
 void
