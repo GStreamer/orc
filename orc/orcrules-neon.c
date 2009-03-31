@@ -270,20 +270,12 @@ neon_emit_loadiw (OrcCompiler *compiler, int reg, int value)
     code |= (reg&0xf) << 0;
     arm_emit (compiler, code);
   } else {
-    ORC_ASM_CODE(compiler,"  mov %s, #%d\n",
-        arm_reg_name (neon_tmp_reg), value);
-    code = 0xe3a00000;
-    code |= (neon_tmp_reg&0xf) << 12;
-    code |= (value&0xf0) << 4;
-    code |= value&0x0f;
-    arm_emit (compiler, code);
-
-    ORC_ASM_CODE(compiler,"  vmov.16 %s[0], %s\n",
-        neon_reg_name (reg), arm_reg_name (neon_tmp_reg));
-    code = 0xee000b30;
-    code |= (neon_tmp_reg&0xf) << 12;
-    code |= (reg&0xf) << 16;
+    ORC_ASM_CODE(compiler,"  vmov.i16 %s, #%d\n",
+        neon_reg_name (reg), value);
+    code = 0xf2800810;
+    code |= (reg&0xf) << 12;
     code |= ((reg>>4)&0x1) << 7;
+    code |= (value&0xf) << 0;
     arm_emit (compiler, code);
   }
 }
