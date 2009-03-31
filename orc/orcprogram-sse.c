@@ -225,7 +225,7 @@ sse_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
   }
 }
 
-int
+static int
 get_shift (int size)
 {
   switch (size) {
