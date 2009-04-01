@@ -3,49 +3,45 @@
 .dest 2 d1
 .source 2 s1
 .source 2 s2
-.source 2 s3
 .temp 2 t1
 
-addw t1, s2, s3
+addw t1, s1, s2
 addw t1, t1, 2
 shrsw t1, t1, 2
-addw d1, s1, t1
+addw d1, d1, t1
 
 .function orc_add2_rshift_sub_s16_22
 .dest 2 d1
 .source 2 s1
 .source 2 s2
-.source 2 s3
 .temp 2 t1
 
-addw t1, s2, s3
+addw t1, s1, s2
 addw t1, t1, 2
 shrsw t1, t1, 2
-subw d1, s1, t1
+subw d1, d1, t1
 
 .function orc_add2_rshift_add_s16_11
 .dest 2 d1
 .source 2 s1
 .source 2 s2
-.source 2 s3
 .temp 2 t1
 
-addw t1, s2, s3
+addw t1, s1, s2
 addw t1, t1, 1
 shrsw t1, t1, 1
-addw d1, s1, t1
+addw d1, d1, t1
 
 .function orc_add2_rshift_sub_s16_11
 .dest 2 d1
 .source 2 s1
 .source 2 s2
-.source 2 s3
 .temp 2 t1
 
-addw t1, s2, s3
+addw t1, s1, s2
 addw t1, t1, 1
 shrsw t1, t1, 1
-subw d1, s1, t1
+subw d1, d1, t1
 
 .function orc_add_const_rshift_s16_11
 .dest 2 d1
@@ -83,61 +79,58 @@ shlw d1, s1, 2
 .dest 2 d1
 .source 2 s1
 .source 2 s2
-.source 2 s3
 .temp 2 t1
 .temp 4 t2
 .param p1
 .param p2
 .param p3
 
-addw t1, s2, s3
+addw t1, s1, s2
 mulswl t2, t1, p1
 addl t2, t2, p2
 shll t2, t2, p3
 convlw t1, t2
-addl d1, t1, s1
+addl d1, d1, t1
 
 
 .function orc_mas4_add_s16_1991
 .dest 2 d1
+.source 2 s0
 .source 2 s1
-.source 2 s20
-.source 2 s21
-.source 2 s22
-.source 2 s23
+.source 2 s2
+.source 2 s3
 .param p1
 .param p2
 .temp 2 t1
 .temp 2 t2
 
-addw t1, s21, s22
+addw t1, s1, s2
 mullw t1, t1, 9
-addw t2, s20, s23
+addw t2, s0, s3
 subw t1, t1, t2
 addw t1, t1, p1
 shrsw t1, t1, p2
-addw d1, s1, t1
+addw d1, d1, t1
 
 
 .function orc_mas4_sub_s16_1991
 .dest 2 d1
+.source 2 s0
 .source 2 s1
-.source 2 s20
-.source 2 s21
-.source 2 s22
-.source 2 s23
+.source 2 s2
+.source 2 s3
 .param p1
 .param p2
 .temp 2 t1
 .temp 2 t2
 
-addw t1, s21, s22
+addw t1, s1, s2
 mullw t1, t1, 9
-addw t2, s20, s23
+addw t2, s0, s3
 subw t1, t1, t2
 addw t1, t1, p1
 shrsw t1, t1, p2
-subw d1, s1, t1
+subw d1, d1, t1
 
 
 .function orc_subtract_s16
