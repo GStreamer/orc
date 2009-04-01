@@ -117,12 +117,29 @@ sse_load_constants (OrcCompiler *compiler)
   for(i=0;i<compiler->n_vars;i++){
     switch (compiler->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:
-        sse_emit_loadiw (compiler, compiler->vars[i].alloc,
-            (int)compiler->vars[i].value);
+        if (compiler->vars[i].size == 1) {
+          sse_emit_loadib (compiler, compiler->vars[i].alloc,
+              (int)compiler->vars[i].value);
+        } else if (compiler->vars[i].size == 2) {
+          sse_emit_loadiw (compiler, compiler->vars[i].alloc,
+              (int)compiler->vars[i].value);
+        } else if (compiler->vars[i].size == 4) {
+          sse_emit_loadil (compiler, compiler->vars[i].alloc,
+              (int)compiler->vars[i].value);
+        } else {
+          ORC_PROGRAM_ERROR(compiler, "unimplemented");
+        }
         break;
       case ORC_VAR_TYPE_PARAM:
-        sse_emit_loadw (compiler, compiler->vars[i].alloc,
-            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[i]), x86_exec_ptr);
+        if (compiler->vars[i].size == 1) {
+          sse_emit_loadpb (compiler, compiler->vars[i].alloc, i);
+        } else if (compiler->vars[i].size == 2) {
+          sse_emit_loadpw (compiler, compiler->vars[i].alloc, i);
+        } else if (compiler->vars[i].size == 4) {
+          sse_emit_loadpl (compiler, compiler->vars[i].alloc, i);
+        } else {
+          ORC_PROGRAM_ERROR(compiler, "unimplemented");
+        }
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
