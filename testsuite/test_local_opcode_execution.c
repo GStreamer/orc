@@ -9,7 +9,9 @@
 
 int error = FALSE;
 
-void test_opcode (OrcStaticOpcode *opcode);
+void test_opcode_src (OrcStaticOpcode *opcode);
+void test_opcode_const (OrcStaticOpcode *opcode);
+void test_opcode_param (OrcStaticOpcode *opcode);
 
 int
 main (int argc, char *argv[])
@@ -23,12 +25,28 @@ main (int argc, char *argv[])
   opcode_set = orc_opcode_set_get ("sys");
 
   for(i=0;i<opcode_set->n_opcodes;i++){
-    printf("/* %s %d,%d,%d */\n",
+    printf("/* %s src %d,%d,%d */\n",
         opcode_set->opcodes[i].name,
         opcode_set->opcodes[i].dest_size[0],
         opcode_set->opcodes[i].src_size[0],
         opcode_set->opcodes[i].src_size[1]);
-    test_opcode (opcode_set->opcodes + i);
+    test_opcode_src (opcode_set->opcodes + i);
+  }
+  for(i=0;i<opcode_set->n_opcodes;i++){
+    printf("/* %s const %d,%d,%d */\n",
+        opcode_set->opcodes[i].name,
+        opcode_set->opcodes[i].dest_size[0],
+        opcode_set->opcodes[i].src_size[0],
+        opcode_set->opcodes[i].src_size[1]);
+    test_opcode_const (opcode_set->opcodes + i);
+  }
+  for(i=0;i<opcode_set->n_opcodes;i++){
+    printf("/* %s param %d,%d,%d */\n",
+        opcode_set->opcodes[i].name,
+        opcode_set->opcodes[i].dest_size[0],
+        opcode_set->opcodes[i].src_size[0],
+        opcode_set->opcodes[i].src_size[1]);
+    test_opcode_param (opcode_set->opcodes + i);
   }
 
   if (error) return 1;
@@ -36,7 +54,7 @@ main (int argc, char *argv[])
 }
 
 void
-test_opcode (OrcStaticOpcode *opcode)
+test_opcode_src (OrcStaticOpcode *opcode)
 {
   OrcProgram *p;
   char s[40];
@@ -49,7 +67,7 @@ test_opcode (OrcStaticOpcode *opcode)
         opcode->src_size[1]);
   }
 
-  sprintf(s, "test_%s", opcode->name);
+  sprintf(s, "test_s_%s", opcode->name);
   orc_program_set_name (p, s);
 
   orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
@@ -61,5 +79,58 @@ test_opcode (OrcStaticOpcode *opcode)
 
   orc_program_free (p);
 }
+
+void
+test_opcode_const (OrcStaticOpcode *opcode)
+{
+  OrcProgram *p;
+  char s[40];
+  int ret;
+
+  if (opcode->src_size[1] == 0) {
+    return;
+  }
+  p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);
+  orc_program_add_constant (p, opcode->src_size[1], 1, "c1");
+
+  sprintf(s, "test_c_%s", opcode->name);
+  orc_program_set_name (p, s);
+
+  orc_program_append_str (p, opcode->name, "d1", "s1", "c1");
+
+  ret = orc_test_compare_output (p);
+  if (!ret) {
+    error = TRUE;
+  }
+
+  orc_program_free (p);
+}
+
+void
+test_opcode_param (OrcStaticOpcode *opcode)
+{
+  OrcProgram *p;
+  char s[40];
+  int ret;
+
+  if (opcode->src_size[1] == 0) {
+    return;
+  }
+  p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);
+  orc_program_add_parameter (p, opcode->src_size[1], "p1");
+
+  sprintf(s, "test_c_%s", opcode->name);
+  orc_program_set_name (p, s);
+
+  orc_program_append_str (p, opcode->name, "d1", "s1", "p1");
+
+  ret = orc_test_compare_output (p);
+  if (!ret) {
+    error = TRUE;
+  }
+
+  orc_program_free (p);
+}
+
 
 
