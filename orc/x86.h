@@ -60,8 +60,13 @@ void x86_emit_modrm_reg (OrcCompiler *compiler, int reg1, int reg2);
 void x86_test (OrcCompiler *compiler);
 
 void mmx_emit_loadiw (OrcCompiler *p, int reg, int value);
+
+void sse_emit_loadib (OrcCompiler *p, int reg, int value);
 void sse_emit_loadiw (OrcCompiler *p, int reg, int value);
-void sse_emit_loadw (OrcCompiler *p, int reg, int offset, int reg1);
+void sse_emit_loadil (OrcCompiler *p, int reg, int value);
+void sse_emit_loadpb (OrcCompiler *p, int reg, int value);
+void sse_emit_loadpw (OrcCompiler *p, int reg, int value);
+void sse_emit_loadpl (OrcCompiler *p, int reg, int value);
 
 enum {
   X86_EAX = ORC_GP_REG_BASE,
