@@ -149,9 +149,11 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
       if (opcode->src_size[k] == 0) continue;
 
       var = insn->src_args[k];
+#if 0
       if (compiler->vars[var].vartype == ORC_VAR_TYPE_DEST) {
         ORC_PROGRAM_ERROR(compiler, "using dest var as source");
       }
+#endif
 
       actual_var = var;
       if (compiler->vars[var].replaced) {
@@ -194,9 +196,11 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
         compiler->vars[actual_var].used = TRUE;
         compiler->vars[actual_var].first_use = j;
       } else {
+#if 0
         if (compiler->vars[var].vartype == ORC_VAR_TYPE_DEST) {
           ORC_PROGRAM_ERROR(compiler,"writing dest more than once");
         }
+#endif
         if (compiler->vars[var].vartype == ORC_VAR_TYPE_TEMP) {
           actual_var = orc_compiler_dup_temporary (compiler, var, j);
           compiler->vars[var].replaced = TRUE;

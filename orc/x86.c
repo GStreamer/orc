@@ -287,7 +287,7 @@ x86_emit_mov_memoffset_mmx (OrcCompiler *compiler, int size, int offset,
 
 void
 x86_emit_mov_memoffset_sse (OrcCompiler *compiler, int size, int offset,
-    int reg1, int reg2)
+    int reg1, int reg2, int is_aligned)
 {
   switch (size) {
     case 4:
@@ -306,12 +306,21 @@ x86_emit_mov_memoffset_sse (OrcCompiler *compiler, int size, int offset,
       *compiler->codeptr++ = 0x7e;
       break;
     case 16:
-      ORC_ASM_CODE(compiler,"  movdqu %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
-          x86_get_regname_sse(reg2));
-      *compiler->codeptr++ = 0xf3;
-      x86_emit_rex(compiler, 0, reg2, 0, reg1);
-      *compiler->codeptr++ = 0x0f;
-      *compiler->codeptr++ = 0x6f;
+      if (is_aligned) {
+        ORC_ASM_CODE(compiler,"  movdqa %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
+            x86_get_regname_sse(reg2));
+        *compiler->codeptr++ = 0x66;
+        x86_emit_rex(compiler, 0, reg2, 0, reg1);
+        *compiler->codeptr++ = 0x0f;
+        *compiler->codeptr++ = 0x6f;
+      } else {
+        ORC_ASM_CODE(compiler,"  movdqu %d(%%%s), %%%s\n", offset, x86_get_regname_ptr(reg1),
+            x86_get_regname_sse(reg2));
+        *compiler->codeptr++ = 0xf3;
+        x86_emit_rex(compiler, 0, reg2, 0, reg1);
+        *compiler->codeptr++ = 0x0f;
+        *compiler->codeptr++ = 0x6f;
+      }
       break;
     default:
       ORC_PROGRAM_ERROR(compiler, "bad size");

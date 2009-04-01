@@ -164,13 +164,16 @@ sse_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
       x86_emit_mov_reg_sse (compiler, X86_ECX, var->alloc);
       break;
     case 4:
-      x86_emit_mov_memoffset_sse (compiler, 4, 0, ptr_reg, var->alloc);
+      x86_emit_mov_memoffset_sse (compiler, 4, 0, ptr_reg, var->alloc,
+          var->is_aligned);
       break;
     case 8:
-      x86_emit_mov_memoffset_sse (compiler, 8, 0, ptr_reg, var->alloc);
+      x86_emit_mov_memoffset_sse (compiler, 8, 0, ptr_reg, var->alloc,
+          var->is_aligned);
       break;
     case 16:
-      x86_emit_mov_memoffset_sse (compiler, 16, 0, ptr_reg, var->alloc);
+      x86_emit_mov_memoffset_sse (compiler, 16, 0, ptr_reg, var->alloc,
+          var->is_aligned);
       break;
     default:
       ORC_PROGRAM_ERROR(compiler,"bad load size %d",
@@ -405,6 +408,7 @@ sse_emit_loop (OrcCompiler *compiler)
 
       switch (var->vartype) {
         case ORC_VAR_TYPE_SRC:
+        case ORC_VAR_TYPE_DEST:
           sse_emit_load_src (compiler, var);
           break;
         case ORC_VAR_TYPE_CONST:

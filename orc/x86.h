@@ -14,7 +14,7 @@ void x86_emit_mov_memoffset_reg (OrcCompiler *compiler, int size, int offset, in
 void x86_emit_mov_memoffset_mmx (OrcCompiler *compiler, int size, int offset,
     int reg1, int reg2);
 void x86_emit_mov_memoffset_sse (OrcCompiler *compiler, int size, int offset,
-    int reg1, int reg2);
+    int reg1, int reg2, int is_aligned);
 void x86_emit_mov_reg_memoffset (OrcCompiler *compiler, int size, int reg1, int offset, int reg2);
 void x86_emit_mov_mmx_memoffset (OrcCompiler *compiler, int size, int reg1, int offset,
     int reg2);
