@@ -576,15 +576,15 @@ sse_rule_convlw (OrcCompiler *p, void *user, OrcInstruction *insn)
   x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc, 6);
   *p->codeptr++ = 16;
 
-  ORC_ASM_CODE(p,"  psrld $16, %%%s\n",
+  ORC_ASM_CODE(p,"  psrad $16, %%%s\n",
       x86_get_regname_sse(p->vars[insn->dest_args[0]].alloc));
   *p->codeptr++ = 0x66;
   *p->codeptr++ = 0x0f;
   *p->codeptr++ = 0x72;
-  x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc, 2);
+  x86_emit_modrm_reg (p, p->vars[insn->dest_args[0]].alloc, 4);
   *p->codeptr++ = 16;
 
-  sse_emit_660f38 (p, "packusdw", 0x2b, dest, dest);
+  sse_emit_660f (p, "packssdw", 0x6b, dest, dest);
 }
 
 static void
