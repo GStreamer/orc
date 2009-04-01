@@ -884,6 +884,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "minsl", sse_rule_minsl_slow, NULL);
   orc_rule_register (rule_set, "maxul", sse_rule_maxul_slow, NULL);
   orc_rule_register (rule_set, "minul", sse_rule_minul_slow, NULL);
+  orc_rule_register (rule_set, "convlw", sse_rule_convlw, NULL);
 
   /* SSE 3 -- no rules */
 
@@ -911,7 +912,6 @@ if (0) {
   REG(minul);
   REG(mulll);
   orc_rule_register (rule_set, "convsuslw", sse_rule_convsuslw, NULL);
-  orc_rule_register (rule_set, "convlw", sse_rule_convlw, NULL);
 }
 
   /* SSE 4.2 -- no rules */
