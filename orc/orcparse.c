@@ -67,7 +67,7 @@ orc_parse (const char *code, OrcProgram ***programs)
     }
 
     if (p[0] == '#') {
-      printf("comment: %s\n", p+1);
+      //printf("comment: %s\n", p+1);
       continue;
     }
 
@@ -92,9 +92,9 @@ orc_parse (const char *code, OrcProgram ***programs)
     {
       int i;
       for(i=0;i<n_tokens;i++){
-        printf("'%s' ", token[i]);
+        //printf("'%s' ", token[i]);
       }
-      printf("\n");
+      //printf("\n");
     }
 
     if (token[0][0] == '.') {
@@ -117,7 +117,7 @@ orc_parse (const char *code, OrcProgram ***programs)
         int size = 2;
         orc_program_add_parameter (parser->program, size, token[1]);
       } else {
-        printf("ERROR: unknown directive: %s\n", token[0]);
+        //printf("ERROR: unknown directive: %s\n", token[0]);
       }
     } else {
       OrcStaticOpcode *o;
