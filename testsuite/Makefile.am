@@ -18,8 +18,8 @@ orcbin_PROGRAMS = $(TESTS)
 
 CLEANFILES = temp-orc-test-*
 
-TESTS += test6 test-schro
-orcbin_PROGRAMS += test6 test-schro
+TESTS += test6 test-schro test_compile_neon
+orcbin_PROGRAMS += test6 test-schro test_compile_neon
 
 AM_CFLAGS = $(ORC_CFLAGS)
 LIBS = $(ORC_LIBS) $(top_builddir)/orc-test/liborc-test-0.3.la
