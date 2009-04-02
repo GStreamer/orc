@@ -35,7 +35,12 @@ void neon_neg (OrcCompiler *compiler, int dest);
 void neon_storeb (OrcCompiler *compiler, int dest, int offset, int src1);
 void neon_storew (OrcCompiler *compiler, int dest, int offset, int src1);
 void neon_storel (OrcCompiler *compiler, int dest, int offset, int src1);
+void neon_emit_loadib (OrcCompiler *p, int reg, int value);
 void neon_emit_loadiw (OrcCompiler *p, int reg, int value);
+void neon_emit_loadil (OrcCompiler *p, int reg, int value);
+void neon_emit_loadpb (OrcCompiler *p, int reg, int param);
+void neon_emit_loadpw (OrcCompiler *p, int reg, int param);
+void neon_emit_loadpl (OrcCompiler *p, int reg, int param);
 
 void
 neon_emit_prologue (OrcCompiler *compiler)
@@ -140,6 +145,9 @@ orc_compiler_neon_init (OrcCompiler *compiler)
     compiler->used_regs[i] = 0;
   }
 
+  compiler->tmpreg = ORC_VEC_REG_BASE + 0;
+  compiler->valid_regs[compiler->tmpreg] = 0;
+
   switch (orc_program_get_max_var_size (compiler->program)) {
     case 1:
       compiler->loop_shift = 3;
@@ -164,15 +172,29 @@ neon_load_constants (OrcCompiler *compiler)
   for(i=0;i<compiler->n_vars;i++){
     switch (compiler->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:
-        ORC_ASSERT (compiler->vars[i].size == 2);
-        neon_emit_loadiw (compiler, compiler->vars[i].alloc,
-            (int)compiler->vars[i].value);
+        if (compiler->vars[i].size == 1) {
+          neon_emit_loadib (compiler, compiler->vars[i].alloc,
+              (int)compiler->vars[i].value);
+        } else if (compiler->vars[i].size == 2) {
+          neon_emit_loadiw (compiler, compiler->vars[i].alloc,
+              (int)compiler->vars[i].value);
+        } else if (compiler->vars[i].size == 4) {
+          neon_emit_loadil (compiler, compiler->vars[i].alloc,
+              (int)compiler->vars[i].value);
+        } else {
+          ORC_PROGRAM_ERROR(compiler,"unimplemented");
+        }
         break;
       case ORC_VAR_TYPE_PARAM:
-        arm_emit_add_imm (compiler, neon_tmp_reg,
-            neon_exec_ptr, ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
-        neon_loadl (compiler, compiler->vars[i].alloc, neon_exec_ptr, 0);
-        neon_neg (compiler, compiler->vars[i].alloc);
+        if (compiler->vars[i].size == 1) {
+          neon_emit_loadpb (compiler, compiler->vars[i].alloc, i);
+        } else if (compiler->vars[i].size == 2) {
+          neon_emit_loadpw (compiler, compiler->vars[i].alloc, i);
+        } else if (compiler->vars[i].size == 4) {
+          neon_emit_loadpl (compiler, compiler->vars[i].alloc, i);
+        } else {
+          ORC_PROGRAM_ERROR(compiler,"unimplemented");
+        }
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
