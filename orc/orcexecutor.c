@@ -106,7 +106,8 @@ orc_executor_emulate (OrcExecutor *ex)
         } else if (var->vartype == ORC_VAR_TYPE_TEMP) {
           /* FIXME shouldn't store executor stuff in program */
           opcode_ex.src_values[k] = var->value;
-        } else if (var->vartype == ORC_VAR_TYPE_SRC) {
+        } else if (var->vartype == ORC_VAR_TYPE_SRC ||
+            var->vartype == ORC_VAR_TYPE_DEST) {
           void *ptr = ex->arrays[insn->src_args[k]] + var->size*i;
 
           switch (var->size) {
