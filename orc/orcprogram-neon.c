@@ -201,6 +201,8 @@ void
 neon_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
 {
   int ptr_reg;
+  int update;
+
   if (var->ptr_register == 0) {
     int i;
     i = var - compiler->vars;
@@ -211,15 +213,20 @@ neon_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
   } else {
     ptr_reg = var->ptr_register;
   }
+  if (var->vartype == ORC_VAR_TYPE_DEST) {
+    update = FALSE;
+  } else {
+    update = TRUE;
+  }
   switch (var->size) {
     case 1:
-      neon_loadb (compiler, var->alloc, ptr_reg, 0, var->is_aligned);
+      neon_loadb (compiler, var->alloc, ptr_reg, update, var->is_aligned);
       break;
     case 2:
-      neon_loadw (compiler, var->alloc, ptr_reg, 0, var->is_aligned);
+      neon_loadw (compiler, var->alloc, ptr_reg, update, var->is_aligned);
       break;
     case 4:
-      neon_loadl (compiler, var->alloc, ptr_reg, 0, var->is_aligned);
+      neon_loadl (compiler, var->alloc, ptr_reg, update, var->is_aligned);
       break;
     default:
       ORC_ERROR("bad size");
@@ -239,13 +246,13 @@ neon_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
   }
   switch (var->size) {
     case 1:
-      neon_storeb (compiler, ptr_reg, 0, var->alloc, var->is_aligned);
+      neon_storeb (compiler, ptr_reg, TRUE, var->alloc, var->is_aligned);
       break;
     case 2:
-      neon_storew (compiler, ptr_reg, 0, var->alloc, var->is_aligned);
+      neon_storew (compiler, ptr_reg, TRUE, var->alloc, var->is_aligned);
       break;
     case 4:
-      neon_storel (compiler, ptr_reg, 0, var->alloc, var->is_aligned);
+      neon_storel (compiler, ptr_reg, TRUE, var->alloc, var->is_aligned);
       break;
     default:
       ORC_ERROR("bad size");
