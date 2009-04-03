@@ -13,6 +13,8 @@
 #include <orc/orcutils.h>
 #include <orc/orcdebug.h>
 
+#include "neon.h"
+
 #define SIZE 65536
 
 int neon_exec_ptr = ARM_R0;
@@ -28,19 +30,6 @@ void orc_compiler_neon_assemble (OrcCompiler *compiler);
 void orc_compiler_rewrite_vars (OrcCompiler *compiler);
 void orc_compiler_dump (OrcCompiler *compiler);
 
-void neon_loadb (OrcCompiler *compiler, int dest, int src1, int offset);
-void neon_loadw (OrcCompiler *compiler, int dest, int src1, int offset);
-void neon_loadl (OrcCompiler *compiler, int dest, int src1, int offset);
-void neon_neg (OrcCompiler *compiler, int dest);
-void neon_storeb (OrcCompiler *compiler, int dest, int offset, int src1);
-void neon_storew (OrcCompiler *compiler, int dest, int offset, int src1);
-void neon_storel (OrcCompiler *compiler, int dest, int offset, int src1);
-void neon_emit_loadib (OrcCompiler *p, int reg, int value);
-void neon_emit_loadiw (OrcCompiler *p, int reg, int value);
-void neon_emit_loadil (OrcCompiler *p, int reg, int value);
-void neon_emit_loadpb (OrcCompiler *p, int reg, int param);
-void neon_emit_loadpw (OrcCompiler *p, int reg, int param);
-void neon_emit_loadpl (OrcCompiler *p, int reg, int param);
 
 void
 neon_emit_prologue (OrcCompiler *compiler)
@@ -224,13 +213,13 @@ neon_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
   }
   switch (var->size) {
     case 1:
-      neon_loadb (compiler, var->alloc, ptr_reg, 0);
+      neon_loadb (compiler, var->alloc, ptr_reg, 0, var->is_aligned);
       break;
     case 2:
-      neon_loadw (compiler, var->alloc, ptr_reg, 0);
+      neon_loadw (compiler, var->alloc, ptr_reg, 0, var->is_aligned);
       break;
     case 4:
-      neon_loadl (compiler, var->alloc, ptr_reg, 0);
+      neon_loadl (compiler, var->alloc, ptr_reg, 0, var->is_aligned);
       break;
     default:
       ORC_ERROR("bad size");
@@ -250,13 +239,13 @@ neon_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
   }
   switch (var->size) {
     case 1:
-      neon_storeb (compiler, ptr_reg, 0, var->alloc);
+      neon_storeb (compiler, ptr_reg, 0, var->alloc, var->is_aligned);
       break;
     case 2:
-      neon_storew (compiler, ptr_reg, 0, var->alloc);
+      neon_storew (compiler, ptr_reg, 0, var->alloc, var->is_aligned);
       break;
     case 4:
-      neon_storel (compiler, ptr_reg, 0, var->alloc);
+      neon_storel (compiler, ptr_reg, 0, var->alloc, var->is_aligned);
       break;
     default:
       ORC_ERROR("bad size");
@@ -357,6 +346,7 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
     arm_emit_label (compiler, 1);
 
     compiler->loop_shift = save_loop_shift;
+    compiler->vars[dest_var].is_aligned = TRUE;
   }
 
   if (compiler->loop_shift > 0) {
@@ -380,6 +370,8 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   if (compiler->loop_shift > 0) {
     int save_loop_shift = compiler->loop_shift;
     compiler->loop_shift = 0;
+
+    compiler->vars[dest_var].is_aligned = FALSE;
 
     arm_emit_load_reg (compiler, ARM_IP, neon_exec_ptr,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3));
@@ -434,6 +426,7 @@ neon_emit_loop (OrcCompiler *compiler)
 
       switch (compiler->vars[insn->src_args[k]].vartype) {
         case ORC_VAR_TYPE_SRC:
+        case ORC_VAR_TYPE_DEST:
           neon_emit_load_src (compiler, &compiler->vars[insn->src_args[k]]);
           break;
         case ORC_VAR_TYPE_CONST:

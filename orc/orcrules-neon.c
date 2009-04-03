@@ -12,6 +12,8 @@
 #include <orc/arm.h>
 #include <orc/orcdebug.h>
 
+#include "neon.h"
+
 extern int neon_exec_ptr;
 extern int neon_tmp_reg;
 
@@ -68,14 +70,12 @@ neon_emit_mov (OrcCompiler *compiler, uint32_t code, int src, int dest)
 #endif
 
 void
-neon_loadb (OrcCompiler *compiler, int dest, int src1, int offset)
+neon_loadb (OrcCompiler *compiler, int dest, int src1, int offset, int is_aligned)
 {
   uint32_t code;
   int i;
-  int aligned;
 
-  aligned = FALSE;
-  if (aligned && compiler->loop_shift == 3) {
+  if (is_aligned && compiler->loop_shift == 3) {
     ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]!\n",
         neon_reg_name (dest),
         arm_reg_name (src1));
@@ -100,14 +100,12 @@ neon_loadb (OrcCompiler *compiler, int dest, int src1, int offset)
 }
 
 void
-neon_loadw (OrcCompiler *compiler, int dest, int src1, int offset)
+neon_loadw (OrcCompiler *compiler, int dest, int src1, int offset, int is_aligned)
 {
   uint32_t code;
   int i;
-  int aligned;
 
-  aligned = FALSE;
-  if (aligned && compiler->loop_shift == 2) {
+  if (is_aligned && compiler->loop_shift == 2) {
     ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]!\n",
         neon_reg_name (dest),
         arm_reg_name (src1));
@@ -132,14 +130,12 @@ neon_loadw (OrcCompiler *compiler, int dest, int src1, int offset)
 }
 
 void
-neon_loadl (OrcCompiler *compiler, int dest, int src1, int offset)
+neon_loadl (OrcCompiler *compiler, int dest, int src1, int offset, int is_aligned)
 {
   uint32_t code;
   int i;
-  int aligned;
 
-  aligned = FALSE;
-  if (aligned && compiler->loop_shift == 1) {
+  if (is_aligned && compiler->loop_shift == 1) {
     ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]!\n",
         neon_reg_name (dest),
         arm_reg_name (src1));
@@ -180,14 +176,12 @@ neon_emit_neg (OrcCompiler *compiler, int dest)
 }
 
 void
-neon_storeb (OrcCompiler *compiler, int dest, int offset, int src1)
+neon_storeb (OrcCompiler *compiler, int dest, int offset, int src1, int is_aligned)
 {
   uint32_t code;
   int i;
-  int aligned;
 
-  aligned = TRUE;
-  if (aligned && compiler->loop_shift == 3) {
+  if (is_aligned && compiler->loop_shift == 3) {
     ORC_ASM_CODE(compiler,"  vst1.64 %s, [%s]!\n",
         neon_reg_name (src1),
         arm_reg_name (dest));
@@ -212,14 +206,12 @@ neon_storeb (OrcCompiler *compiler, int dest, int offset, int src1)
 }
 
 void
-neon_storew (OrcCompiler *compiler, int dest, int offset, int src1)
+neon_storew (OrcCompiler *compiler, int dest, int offset, int src1, int is_aligned)
 {
   uint32_t code;
   int i;
-  int aligned;
 
-  aligned = TRUE;
-  if (aligned && compiler->loop_shift == 2) {
+  if (is_aligned && compiler->loop_shift == 2) {
     ORC_ASM_CODE(compiler,"  vst1.64 %s, [%s]!\n",
         neon_reg_name (src1),
         arm_reg_name (dest));
@@ -244,14 +236,12 @@ neon_storew (OrcCompiler *compiler, int dest, int offset, int src1)
 }
 
 void
-neon_storel (OrcCompiler *compiler, int dest, int offset, int src1)
+neon_storel (OrcCompiler *compiler, int dest, int offset, int src1, int is_aligned)
 {
   uint32_t code;
   int i;
-  int aligned;
 
-  aligned = TRUE;
-  if (aligned && compiler->loop_shift == 2) {
+  if (is_aligned && compiler->loop_shift == 2) {
     ORC_ASM_CODE(compiler,"  vst1.64 %s, [%s]!\n",
         neon_reg_name (src1),
         arm_reg_name (dest));
