@@ -84,6 +84,7 @@ neon_loadb (OrcCompiler *compiler, int dest, int src1, int update, int is_aligne
     code |= (src1&0xf) << 16;
     code |= (dest&0xf) << 12;
     code |= ((dest>>4)&0x1) << 22;
+    code |= (!update) << 1;
     arm_emit (compiler, code);
   } else {
     for(i=0;i<(1<<compiler->loop_shift);i++){
@@ -96,6 +97,7 @@ neon_loadb (OrcCompiler *compiler, int dest, int src1, int update, int is_aligne
       code |= (dest&0xf) << 12;
       code |= ((dest>>4)&0x1) << 22;
       code |= i << 5;
+      code |= (!update) << 1;
       arm_emit (compiler, code);
     }
   }
@@ -116,6 +118,7 @@ neon_loadw (OrcCompiler *compiler, int dest, int src1, int update, int is_aligne
     code |= (src1&0xf) << 16;
     code |= (dest&0xf) << 12;
     code |= ((dest>>4)&0x1) << 22;
+    code |= (!update) << 1;
     arm_emit (compiler, code);
   } else {
     for(i=0;i<(1<<compiler->loop_shift);i++){
@@ -128,6 +131,7 @@ neon_loadw (OrcCompiler *compiler, int dest, int src1, int update, int is_aligne
       code |= (dest&0xf) << 12;
       code |= ((dest>>4)&0x1) << 22;
       code |= i << 6;
+      code |= (!update) << 1;
       arm_emit (compiler, code);
     }
   }
@@ -148,6 +152,7 @@ neon_loadl (OrcCompiler *compiler, int dest, int src1, int update, int is_aligne
     code |= (src1&0xf) << 16;
     code |= (dest&0xf) << 12;
     code |= ((dest>>4)&0x1) << 22;
+    code |= (!update) << 1;
     arm_emit (compiler, code);
   } else {
     for(i=0;i<(1<<compiler->loop_shift);i++){
@@ -160,6 +165,7 @@ neon_loadl (OrcCompiler *compiler, int dest, int src1, int update, int is_aligne
       code |= (dest&0xf) << 12;
       code |= ((dest>>4)&0x1) << 22;
       code |= i<<7;
+      code |= (!update) << 1;
       arm_emit (compiler, code);
     }
   }
@@ -196,6 +202,7 @@ neon_storeb (OrcCompiler *compiler, int dest, int update, int src1, int is_align
     code |= (dest&0xf) << 16;
     code |= (src1&0xf) << 12;
     code |= ((src1>>4)&0x1) << 22;
+    code |= (!update) << 1;
     arm_emit (compiler, code);
   } else {
     for(i=0;i<(1<<compiler->loop_shift);i++){
@@ -208,6 +215,7 @@ neon_storeb (OrcCompiler *compiler, int dest, int update, int src1, int is_align
       code |= (src1&0xf) << 12;
       code |= ((src1>>4)&0x1) << 22;
       code |= i<<5;
+      code |= (!update) << 1;
       arm_emit (compiler, code);
     }
   }
@@ -228,6 +236,7 @@ neon_storew (OrcCompiler *compiler, int dest, int update, int src1, int is_align
     code |= (dest&0xf) << 16;
     code |= (src1&0xf) << 12;
     code |= ((src1>>4)&0x1) << 22;
+    code |= (!update) << 1;
     arm_emit (compiler, code);
   } else {
     for(i=0;i<(1<<compiler->loop_shift);i++){
@@ -240,6 +249,7 @@ neon_storew (OrcCompiler *compiler, int dest, int update, int src1, int is_align
       code |= (src1&0xf) << 12;
       code |= ((src1>>4)&0x1) << 22;
       code |= i<<6;
+      code |= (!update) << 1;
       arm_emit (compiler, code);
     }
   }
@@ -260,6 +270,7 @@ neon_storel (OrcCompiler *compiler, int dest, int update, int src1, int is_align
     code |= (dest&0xf) << 16;
     code |= (src1&0xf) << 12;
     code |= ((src1>>4)&0x1) << 22;
+    code |= (!update) << 1;
     arm_emit (compiler, code);
   } else {
     for(i=0;i<(1<<compiler->loop_shift);i++){
@@ -272,6 +283,7 @@ neon_storel (OrcCompiler *compiler, int dest, int update, int src1, int is_align
       code |= (src1&0xf) << 12;
       code |= ((src1>>4)&0x1) << 22;
       code |= i<<7;
+      code |= (!update) << 1;
       arm_emit (compiler, code);
     }
   }
