@@ -343,7 +343,7 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1));
 
     arm_emit_cmp_imm (compiler, ARM_IP, 0);
-    arm_emit_branch (compiler, ARM_COND_EQ, 3);
+    arm_emit_branch (compiler, ARM_COND_EQ, 1);
 
     arm_emit_label (compiler, 0);
     neon_emit_loop (compiler);
