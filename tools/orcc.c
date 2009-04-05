@@ -23,16 +23,21 @@ main (int argc, char *argv[])
 
   n = orc_parse (code, &programs);
 
-#if 1
+#if 0
   for(i=0;i<n;i++){
     printf("%s\n", programs[i]->name);
     orc_test_gcc_compile (programs[i]);
   }
 #endif
-#if 0
+#if 1
   for(i=0;i<n;i++){
-    orc_program_compile_for_target (programs[i], orc_target_get_by_name("c"));
-    printf("%s", orc_program_get_asm_code (programs[i]));
+    int ret;
+
+    ret = orc_program_compile_for_target (programs[i],
+        orc_target_get_by_name("neon"));
+    if (ret) {
+      printf("%s", orc_program_get_asm_code (programs[i]));
+    }
   }
 #endif
 

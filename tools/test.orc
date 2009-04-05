@@ -90,7 +90,7 @@ mulswl t2, t1, p1
 addl t2, t2, p2
 shll t2, t2, p3
 convlw t1, t2
-addl d1, d1, t1
+addw d1, d1, t1
 
 
 .function orc_mas4_add_s16_1991
@@ -142,8 +142,8 @@ subw d1, s1, s2
 
 
 .function orc_memcpy
-.dest 2 d1
-.source 2 s1
+.dest 1 d1
+.source 1 s1
 
 copyb d1, s1
 

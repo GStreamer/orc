@@ -15,6 +15,7 @@ void orc_compiler_rewrite_vars (OrcCompiler *compiler);
 void orc_compiler_rewrite_vars2 (OrcCompiler *compiler);
 void orc_compiler_do_regs (OrcCompiler *compiler);
 int orc_compiler_dup_temporary (OrcCompiler *compiler, int var, int j);
+void orc_compiler_check_sizes (OrcCompiler *compiler);
 
 
 int
@@ -83,6 +84,9 @@ orc_program_compile_for_target (OrcProgram *program, OrcTarget *target)
 
   compiler->target->compiler_init (compiler);
 
+  orc_compiler_check_sizes (compiler);
+  if (compiler->error) goto error;
+
   orc_compiler_assign_rules (compiler);
   if (compiler->error) goto error;
 
@@ -115,6 +119,36 @@ error:
 }
 
 void
+orc_compiler_check_sizes (OrcCompiler *compiler)
+{
+  int i;
+  int j;
+
+  for(i=0;i<compiler->n_insns;i++) {
+    OrcInstruction *insn = compiler->insns + i;
+    OrcStaticOpcode *opcode = insn->opcode;
+
+    for(j=0;j<ORC_STATIC_OPCODE_N_DEST;j++){
+      if (opcode->dest_size[j] == 0) continue;
+      if (opcode->dest_size[j] != compiler->vars[insn->dest_args[j]].size) {
+        ORC_PROGRAM_ERROR(compiler, "size mismatch, opcode %s dest %d",
+            opcode->name, j);
+        return;
+      }
+    }
+    for(j=0;j<ORC_STATIC_OPCODE_N_SRC;j++){
+      if (opcode->src_size[j] == 0) continue;
+      if (opcode->src_size[j] != compiler->vars[insn->src_args[j]].size &&
+          compiler->vars[insn->src_args[j]].vartype != ORC_VAR_TYPE_PARAM) {
+        ORC_PROGRAM_ERROR(compiler, "size mismatch, opcode %s src %d",
+            opcode->name, j);
+        return;
+      }
+    }
+  }
+}
+
+void
 orc_compiler_assign_rules (OrcCompiler *compiler)
 {
   int i;
@@ -126,6 +160,7 @@ orc_compiler_assign_rules (OrcCompiler *compiler)
 
     if (insn->rule == NULL || insn->rule->emit == NULL) {
       ORC_PROGRAM_ERROR(compiler, "No rule for: %s", insn->opcode->name);
+      return;
     }
   }
 }
