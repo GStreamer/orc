@@ -36,7 +36,7 @@ orc_executor_run (OrcExecutor *ex)
   func = ex->program->code_exec;
   if (func) {
     func (ex);
-    //ORC_ERROR("counters %d %d %d", ex->counter1, ex->counter2, ex->counter3);
+    ORC_ERROR("counters %d %d %d", ex->counter1, ex->counter2, ex->counter3);
   } else {
     orc_executor_emulate (ex);
   }
