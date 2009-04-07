@@ -26,8 +26,7 @@ orc_compiler_allocate_codemem (OrcCompiler *compiler)
   fd = mkstemp (filename);
   if (fd == -1) {
     /* FIXME oh crap */
-    ORC_ERROR ("failed to create temp file");
-    compiler->error = TRUE;
+    ORC_PROGRAM_ERROR (compiler, "failed to create temp file");
     return;
   }
   unlink (filename);

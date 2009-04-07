@@ -151,7 +151,7 @@ x86_emit_push (OrcCompiler *compiler, int size, int reg)
 {
 
   if (size == 1) {
-    compiler->error = 1;
+    ORC_PROGRAM_ERROR(compiler, "bad size");
   } else if (size == 2) {
     ORC_ASM_CODE(compiler,"  pushw %%%s\n", x86_get_regname_16(reg));
     *compiler->codeptr++ = 0x66;
@@ -167,7 +167,7 @@ x86_emit_pop (OrcCompiler *compiler, int size, int reg)
 {
 
   if (size == 1) {
-    compiler->error = 1;
+    ORC_PROGRAM_ERROR(compiler, "bad size");
   } else if (size == 2) {
     ORC_ASM_CODE(compiler,"  popw %%%s\n", x86_get_regname_16(reg));
     *compiler->codeptr++ = 0x66;
@@ -869,7 +869,12 @@ void x86_emit_jmp (OrcCompiler *compiler, int label)
       (compiler->labels[label]!=NULL) ? 'b' : 'f');
 
   if (compiler->long_jumps) {
-    ORC_PROGRAM_ERROR(compiler, "unimplemented");
+    *compiler->codeptr++ = 0xe9;
+    x86_add_fixup (compiler, compiler->codeptr, label, 1);
+    *compiler->codeptr++ = 0xfc;
+    *compiler->codeptr++ = 0xff;
+    *compiler->codeptr++ = 0xff;
+    *compiler->codeptr++ = 0xff;
   } else {
     *compiler->codeptr++ = 0xeb;
     x86_add_fixup (compiler, compiler->codeptr, label, 0);
@@ -883,7 +888,13 @@ void x86_emit_jle (OrcCompiler *compiler, int label)
       (compiler->labels[label]!=NULL) ? 'b' : 'f');
 
   if (compiler->long_jumps) {
-    ORC_PROGRAM_ERROR(compiler, "unimplemented");
+    *compiler->codeptr++ = 0x0f;
+    *compiler->codeptr++ = 0x8e;
+    x86_add_fixup (compiler, compiler->codeptr, label, 1);
+    *compiler->codeptr++ = 0xfc;
+    *compiler->codeptr++ = 0xff;
+    *compiler->codeptr++ = 0xff;
+    *compiler->codeptr++ = 0xff;
   } else {
     *compiler->codeptr++ = 0x7e;
     x86_add_fixup (compiler, compiler->codeptr, label, 0);
@@ -950,8 +961,7 @@ x86_do_fixups (OrcCompiler *compiler)
 
       diff = ((int8_t)ptr[0]) + (label - ptr);
       if (diff != (int8_t)diff) {
-        ORC_WARNING("short jump too long");
-        compiler->error = TRUE;
+        ORC_PROGRAM_ERROR(compiler, "short jump too long");
       }
 
       ptr[0] = diff;

@@ -108,6 +108,8 @@ orc_compiler_sse_init (OrcCompiler *compiler)
           orc_program_get_max_var_size (compiler->program));
       break;
   }
+
+  compiler->long_jumps = TRUE;
 }
 
 void
