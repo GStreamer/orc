@@ -55,8 +55,8 @@ void
 orc_program_free (OrcProgram *program)
 {
   int i;
-  for(i=0;i<program->n_vars;i++){
-    free (program->vars[i].name);
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    if (program->vars[i].name) free (program->vars[i].name);
   }
   if (program->name) {
     free (program->name);
@@ -82,12 +82,12 @@ orc_program_get_name (OrcProgram *program)
 int
 orc_program_add_temporary (OrcProgram *program, int size, const char *name)
 {
-  int i = program->n_vars;
+  int i = ORC_VAR_T1 + program->n_temp_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_TEMP;
   program->vars[i].size = size;
   program->vars[i].name = strdup(name);
-  program->n_vars++;
+  program->n_temp_vars++;
 
   return i;
 }
@@ -95,13 +95,13 @@ orc_program_add_temporary (OrcProgram *program, int size, const char *name)
 int
 orc_program_dup_temporary (OrcProgram *program, int var, int j)
 {
-  int i = program->n_vars;
+  int i = ORC_VAR_T1 + program->n_temp_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_TEMP;
   program->vars[i].size = program->vars[var].size;
   program->vars[i].name = malloc (strlen(program->vars[var].name) + 10);
   sprintf(program->vars[i].name, "%s.dup%d", program->vars[var].name, j);
-  program->n_vars++;
+  program->n_temp_vars++;
 
   return i;
 }
@@ -109,12 +109,12 @@ orc_program_dup_temporary (OrcProgram *program, int var, int j)
 int
 orc_program_add_source (OrcProgram *program, int size, const char *name)
 {
-  int i = program->n_vars;
+  int i = ORC_VAR_S1 + program->n_src_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_SRC;
   program->vars[i].size = size;
   program->vars[i].name = strdup(name);
-  program->n_vars++;
+  program->n_src_vars++;
 
   return i;
 }
@@ -122,12 +122,12 @@ orc_program_add_source (OrcProgram *program, int size, const char *name)
 int
 orc_program_add_destination (OrcProgram *program, int size, const char *name)
 {
-  int i = program->n_vars;
+  int i = ORC_VAR_D1 + program->n_dest_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_DEST;
   program->vars[i].size = size;
   program->vars[i].name = strdup(name);
-  program->n_vars++;
+  program->n_dest_vars++;
 
   return i;
 }
@@ -135,13 +135,13 @@ orc_program_add_destination (OrcProgram *program, int size, const char *name)
 int
 orc_program_add_constant (OrcProgram *program, int size, int value, const char *name)
 {
-  int i = program->n_vars;
+  int i = ORC_VAR_C1 + program->n_const_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_CONST;
   program->vars[i].size = size;
   program->vars[i].value = value;
   program->vars[i].name = strdup(name);
-  program->n_vars++;
+  program->n_const_vars++;
 
   return i;
 }
@@ -149,12 +149,12 @@ orc_program_add_constant (OrcProgram *program, int size, int value, const char *
 int
 orc_program_add_parameter (OrcProgram *program, int size, const char *name)
 {
-  int i = program->n_vars;
+  int i = ORC_VAR_P1 + program->n_param_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_PARAM;
   program->vars[i].size = size;
   program->vars[i].name = strdup(name);
-  program->n_vars++;
+  program->n_param_vars++;
 
   return i;
 }
@@ -201,8 +201,8 @@ orc_program_find_var_by_name (OrcProgram *program, const char *name)
 {
   int i;
 
-  for(i=0;i<program->n_vars;i++){
-    if (strcmp (program->vars[i].name, name) == 0) {
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    if (program->vars[i].name && strcmp (program->vars[i].name, name) == 0) {
       return i;
     }
   }
@@ -215,8 +215,9 @@ orc_compiler_get_dest (OrcCompiler *compiler)
 {
   int k;
 
-  for(k=0;k<compiler->n_vars;k++){
-    if (compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
+  for(k=0;k<ORC_N_VARIABLES;k++){
+    if (compiler->vars[k].name &&
+        compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
       return k;
     }
   }
@@ -275,8 +276,10 @@ orc_program_get_max_var_size (OrcProgram *program)
   int max;
 
   max = 0;
-  for(i=0;i<program->n_vars;i++){
-    max = MAX(max, program->vars[i].size);
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    if (program->vars[i].size) {
+      max = MAX(max, program->vars[i].size);
+    }
   }
 
   return max;

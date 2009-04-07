@@ -81,6 +81,45 @@ typedef enum {
   ORC_VAR_TYPE_PARAM
 } OrcVarType;
 
+enum {
+  ORC_VAR_D1,
+  ORC_VAR_D2,
+  ORC_VAR_D3,
+  ORC_VAR_D4,
+  ORC_VAR_S1,
+  ORC_VAR_S2,
+  ORC_VAR_S3,
+  ORC_VAR_S4,
+  ORC_VAR_S5,
+  ORC_VAR_S6,
+  ORC_VAR_S7,
+  ORC_VAR_S8,
+  ORC_VAR_C1,
+  ORC_VAR_C2,
+  ORC_VAR_C3,
+  ORC_VAR_C4,
+  ORC_VAR_C5,
+  ORC_VAR_C6,
+  ORC_VAR_C7,
+  ORC_VAR_C8,
+  ORC_VAR_P1,
+  ORC_VAR_P2,
+  ORC_VAR_P3,
+  ORC_VAR_P4,
+  ORC_VAR_P5,
+  ORC_VAR_P6,
+  ORC_VAR_P7,
+  ORC_VAR_P8,
+  ORC_VAR_T1,
+  ORC_VAR_T2,
+  ORC_VAR_T3,
+  ORC_VAR_T4,
+  ORC_VAR_T5,
+  ORC_VAR_T6,
+  ORC_VAR_T7,
+  ORC_VAR_T8
+};
+
 struct _OrcVariable {
   char *name;
 
@@ -151,7 +190,12 @@ struct _OrcProgram {
   int n_insns;
 
   OrcVariable vars[ORC_N_VARIABLES];
-  int n_vars;
+  //int n_vars;
+  int n_src_vars;
+  int n_dest_vars;
+  int n_param_vars;
+  int n_const_vars;
+  int n_temp_vars;
 
   char *name;
   char *asm_code;
@@ -169,7 +213,8 @@ struct _OrcCompiler {
   int n_insns;
 
   OrcVariable vars[ORC_N_VARIABLES];
-  int n_vars;
+  //int n_vars;
+  int n_temp_vars;
 
   unsigned char *codeptr;
   

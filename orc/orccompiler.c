@@ -75,8 +75,8 @@ orc_program_compile_for_target (OrcProgram *program, OrcTarget *target)
   compiler->n_insns = program->n_insns;
 
   memcpy (compiler->vars, program->vars,
-      program->n_vars * sizeof(OrcVariable));
-  compiler->n_vars = program->n_vars;
+      ORC_N_VARIABLES * sizeof(OrcVariable));
+  compiler->n_temp_vars = program->n_temp_vars;
 
   for(i=0;i<32;i++) {
     compiler->valid_regs[i] = 1;
@@ -257,8 +257,9 @@ orc_compiler_global_reg_alloc (OrcCompiler *compiler)
   OrcVariable *var;
 
 
-  for(i=0;i<compiler->n_vars;i++){
+  for(i=0;i<ORC_N_VARIABLES;i++){
     var = compiler->vars + i;
+    if (var->name == NULL) continue;
     switch (var->vartype) {
       case ORC_VAR_TYPE_CONST:
         var->first_use = -1;
@@ -346,14 +347,16 @@ orc_compiler_rewrite_vars2 (OrcCompiler *compiler)
       }
     }
 
-    for(i=0;i<compiler->n_vars;i++){
+    for(i=0;i<ORC_N_VARIABLES;i++){
+      if (compiler->vars[i].name == NULL) continue;
       if (compiler->vars[i].first_use == j) {
         if (compiler->vars[i].alloc) continue;
         k = orc_compiler_allocate_register (compiler, TRUE);
         compiler->vars[i].alloc = k;
       }
     }
-    for(i=0;i<compiler->n_vars;i++){
+    for(i=0;i<ORC_N_VARIABLES;i++){
+      if (compiler->vars[i].name == NULL) continue;
       if (compiler->vars[i].last_use == j) {
         compiler->alloc_regs[compiler->vars[i].alloc]--;
       }
@@ -365,13 +368,13 @@ orc_compiler_rewrite_vars2 (OrcCompiler *compiler)
 int
 orc_compiler_dup_temporary (OrcCompiler *compiler, int var, int j)
 {
-  int i = compiler->n_vars;
+  int i = ORC_VAR_T1 + compiler->n_temp_vars;
 
   compiler->vars[i].vartype = ORC_VAR_TYPE_TEMP;
   compiler->vars[i].size = compiler->vars[var].size;
   compiler->vars[i].name = malloc (strlen(compiler->vars[var].name) + 10);
   sprintf(compiler->vars[i].name, "%s.dup%d", compiler->vars[var].name, j);
-  compiler->n_vars++;
+  compiler->n_temp_vars++;
 
   return i;
 }

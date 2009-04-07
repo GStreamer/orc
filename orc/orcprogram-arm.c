@@ -133,7 +133,8 @@ void
 arm_load_constants (OrcCompiler *compiler)
 {
   int i;
-  for(i=0;i<compiler->n_vars;i++){
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    if (compiler->vars[i].name == NULL) continue;
     switch (compiler->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:
         //arm_emit_loadiw (compiler, compiler->vars[i].alloc,
@@ -333,7 +334,8 @@ arm_emit_loop (OrcCompiler *compiler)
     }
   }
 
-  for(k=0;k<compiler->n_vars;k++){
+  for(k=0;k<ORC_N_VARIABLES;k++){
+    if (compiler->vars[k].name == NULL) continue;
     if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
         compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
       if (compiler->vars[k].ptr_register) {

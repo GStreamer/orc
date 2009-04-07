@@ -84,8 +84,9 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
   ORC_ASM_CODE(compiler,"{\n");
   ORC_ASM_CODE(compiler,"  int i;\n");
 
-  for(i=0;i<compiler->n_vars;i++){
+  for(i=0;i<ORC_N_VARIABLES;i++){
     OrcVariable *var = compiler->vars + i;
+    if (var->name == NULL) continue;
     switch (var->vartype) {
       case ORC_VAR_TYPE_CONST:
         ORC_ASM_CODE(compiler,"  %s var%d = %d;\n",

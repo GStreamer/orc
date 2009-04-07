@@ -109,14 +109,15 @@ orc_compiler_sse_init (OrcCompiler *compiler)
       break;
   }
 
-  compiler->long_jumps = TRUE;
+  //compiler->long_jumps = TRUE;
 }
 
 void
 sse_load_constants (OrcCompiler *compiler)
 {
   int i;
-  for(i=0;i<compiler->n_vars;i++){
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    if (compiler->vars[i].name == NULL) continue;
     switch (compiler->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:
         if (compiler->vars[i].size == 1) {
@@ -471,7 +472,8 @@ sse_emit_loop (OrcCompiler *compiler)
     }
   }
 
-  for(k=0;k<compiler->n_vars;k++){
+  for(k=0;k<ORC_N_VARIABLES;k++){
+    if (compiler->vars[k].name == NULL) continue;
     if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
         compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
       if (compiler->vars[k].ptr_register) {

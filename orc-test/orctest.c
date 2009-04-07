@@ -137,7 +137,9 @@ orc_test_compare_output (OrcProgram *program)
   orc_executor_set_n (ex, n);
 
   dest_index = -1;
-  for(i=0;i<program->n_vars;i++){
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    if (program->vars[i].name == NULL) continue;
+
     if (program->vars[i].vartype == ORC_VAR_TYPE_SRC) {
       uint8_t *data;
       data = malloc(n*program->vars[i].size);
@@ -171,7 +173,8 @@ orc_test_compare_output (OrcProgram *program)
 
       printf("%2d:", i);
 
-      for(j=0;j<program->n_vars;j++){
+      for(j=0;j<ORC_N_VARIABLES;j++){
+        if (program->vars[j].name == NULL) continue;
         if (program->vars[j].vartype == ORC_VAR_TYPE_SRC &&
             program->vars[j].size > 0) {
           print_array_val (ex->arrays[j], program->vars[j].size, i);

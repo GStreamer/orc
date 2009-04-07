@@ -254,13 +254,13 @@ convsuswb (OrcOpcodeExecutor *ex, void *user)
 static void
 convusswb (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->dest_values[0] = ORC_CLAMP_SB((uint16_t)(ex->src_values[0]));
+  ex->dest_values[0] = ORC_CLAMP_SB((int)(uint16_t)(ex->src_values[0]));
 }
 
 static void
 convuuswb (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->dest_values[0] = ORC_CLAMP_UB((uint16_t)(ex->src_values[0]));
+  ex->dest_values[0] = ORC_CLAMP_UB((int)(uint16_t)(ex->src_values[0]));
 }
 
 static void
