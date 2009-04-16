@@ -83,7 +83,7 @@ orc_test_random_bits (void *data, int n_bytes)
   uint8_t *d = data;
   int i;
   for(i=0;i<n_bytes;i++){
-    d[i] = random();
+    d[i] = rand();
   }
 }
 
