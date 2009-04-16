@@ -158,7 +158,9 @@ void
 neon_load_constants (OrcCompiler *compiler)
 {
   int i;
-  for(i=0;i<compiler->n_vars;i++){
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    if (compiler->vars[i].name == NULL) continue;
+
     switch (compiler->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:
         if (compiler->vars[i].size == 1) {
