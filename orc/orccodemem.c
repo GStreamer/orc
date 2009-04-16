@@ -7,7 +7,9 @@
 
 #include <unistd.h>
 #include <sys/types.h>
+#ifdef HAVE_CODEMEM_MMAP
 #include <sys/mman.h>
+#endif
 
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
@@ -58,7 +60,7 @@ orc_compiler_allocate_codemem (OrcCompiler *compiler)
   /* Now you know why Windows has viruses */
 
   compiler->program->code = malloc(SIZE);
-  compiler->program->code_exec = compiler->code;
+  compiler->program->code_exec = compiler->program->code;
   compiler->program->code_size = SIZE;
   compiler->codeptr = compiler->program->code;
 }
