@@ -23,7 +23,7 @@ typedef void (*OrcRuleEmitFunc)(OrcCompiler *p, void *user, OrcInstruction *insn
 
 #define ORC_N_REGS (32*4)
 #define ORC_N_INSNS 100
-#define ORC_N_VARIABLES 20
+#define ORC_N_VARIABLES 40
 #define ORC_N_REGISTERS 20
 #define ORC_N_FIXUPS 20
 #define ORC_N_LABELS 20

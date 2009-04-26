@@ -7,6 +7,7 @@
 
 #include <orc/orcprogram.h>
 
+void _orc_debug_init(void);
 
 void
 orc_init (void)
@@ -16,6 +17,7 @@ orc_init (void)
 
   _inited = 1;
 
+  _orc_debug_init();
   orc_opcode_init();
   orc_c_init();
   orc_mmx_init();

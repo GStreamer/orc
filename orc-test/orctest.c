@@ -148,7 +148,7 @@ orc_test_compare_output (OrcProgram *program)
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
       dest_index = i;
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_PARAM) {
-      orc_executor_set_parameter (ex, i, 2);
+      orc_executor_set_param (ex, i, 2);
     }
   }
   if (dest_index == -1) {
