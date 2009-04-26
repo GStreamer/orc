@@ -70,6 +70,23 @@ orc_program_compile_for_target (OrcProgram *program, OrcTarget *target)
   compiler->program = program;
   compiler->target = target;
 
+  {
+    for(i=0;i<ORC_N_VARIABLES;i++){
+      ORC_INFO("%d: %s %d %d", i,
+          program->vars[i].name,
+          program->vars[i].size,
+          program->vars[i].vartype);
+    }
+    for(i=0;i<program->n_insns;i++){
+      ORC_INFO("%d: %s %d %d %d %d", i,
+          program->insns[i].opcode->name,
+          program->insns[i].dest_args[0],
+          program->insns[i].dest_args[1],
+          program->insns[i].src_args[0],
+          program->insns[i].src_args[1]);
+    }
+  }
+
   memcpy (compiler->insns, program->insns,
       program->n_insns * sizeof(OrcInstruction));
   compiler->n_insns = program->n_insns;
@@ -131,8 +148,9 @@ orc_compiler_check_sizes (OrcCompiler *compiler)
     for(j=0;j<ORC_STATIC_OPCODE_N_DEST;j++){
       if (opcode->dest_size[j] == 0) continue;
       if (opcode->dest_size[j] != compiler->vars[insn->dest_args[j]].size) {
-        ORC_PROGRAM_ERROR(compiler, "size mismatch, opcode %s dest %d",
-            opcode->name, j);
+        ORC_PROGRAM_ERROR(compiler, "size mismatch, opcode %s dest[%d] is %d should be %d",
+            opcode->name, j, compiler->vars[insn->dest_args[j]].size,
+            opcode->dest_size[j]);
         return;
       }
     }
@@ -140,8 +158,9 @@ orc_compiler_check_sizes (OrcCompiler *compiler)
       if (opcode->src_size[j] == 0) continue;
       if (opcode->src_size[j] != compiler->vars[insn->src_args[j]].size &&
           compiler->vars[insn->src_args[j]].vartype != ORC_VAR_TYPE_PARAM) {
-        ORC_PROGRAM_ERROR(compiler, "size mismatch, opcode %s src %d",
-            opcode->name, j);
+        ORC_PROGRAM_ERROR(compiler, "size mismatch, opcode %s src[%d] is %d should be %d",
+            opcode->name, j, compiler->vars[insn->src_args[j]].size,
+            opcode->src_size[j]);
         return;
       }
     }
