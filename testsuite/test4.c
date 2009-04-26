@@ -8,7 +8,7 @@
 
 int error = FALSE;
 
-void test_opcode (const char *name);
+void test_opcode (OrcStaticOpcode *opcode);
 
 int
 main (int argc, char *argv[])
@@ -27,7 +27,7 @@ main (int argc, char *argv[])
         opcode_set->opcodes[i].src_size[0],
         opcode_set->opcodes[i].src_size[1],
         opcode_set->opcodes[i].emulate);
-    test_opcode (opcode_set->opcodes[i].name);
+    test_opcode (opcode_set->opcodes + i);
   }
 
   if (error) return 1;
@@ -35,18 +35,19 @@ main (int argc, char *argv[])
 }
 
 void
-test_opcode (const char *name)
+test_opcode (OrcStaticOpcode *opcode)
 {
   OrcProgram *p;
   char s[40];
   int ret;
 
-  p = orc_program_new_dss (2,2,2);
+  p = orc_program_new_dss (opcode->dest_size[0],
+        opcode->src_size[0], opcode->src_size[1]);
 
-  sprintf(s, "test_%s", name);
+  sprintf(s, "test_%s", opcode->name);
   orc_program_set_name (p, s);
 
-  orc_program_append_str (p, name, "d1", "s1", "s2");
+  orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
 
   ret = orc_program_compile_for_target (p, orc_target_get_by_name("arm"));
   if (!ret) {
