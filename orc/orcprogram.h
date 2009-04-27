@@ -78,7 +78,8 @@ typedef enum {
   ORC_VAR_TYPE_SRC,
   ORC_VAR_TYPE_DEST,
   ORC_VAR_TYPE_CONST,
-  ORC_VAR_TYPE_PARAM
+  ORC_VAR_TYPE_PARAM,
+  ORC_VAR_TYPE_ACCUMULATOR
 } OrcVarType;
 
 enum {
@@ -94,6 +95,10 @@ enum {
   ORC_VAR_S6,
   ORC_VAR_S7,
   ORC_VAR_S8,
+  ORC_VAR_A1,
+  ORC_VAR_A2,
+  ORC_VAR_A3,
+  ORC_VAR_A4,
   ORC_VAR_C1,
   ORC_VAR_C2,
   ORC_VAR_C3,
@@ -163,10 +168,13 @@ struct _OrcOpcodeSet {
   OrcStaticOpcode *opcodes;
 };
 
+#define ORC_STATIC_OPCODE_ACCUMULATOR 1
+
 struct _OrcStaticOpcode {
   char name[16];
   OrcOpcodeEmulateFunc emulate;
   void *emulate_user;
+  unsigned int flags;
   int dest_size[ORC_STATIC_OPCODE_N_DEST];
   int src_size[ORC_STATIC_OPCODE_N_SRC];
 };
@@ -196,6 +204,7 @@ struct _OrcProgram {
   int n_param_vars;
   int n_const_vars;
   int n_temp_vars;
+  int n_accum_vars;
 
   char *name;
   char *asm_code;
@@ -252,6 +261,7 @@ struct _OrcExecutor {
 
   void *arrays[ORC_N_VARIABLES];
   int params[ORC_N_VARIABLES];
+  int accumulators[4];
 };
 
 struct _OrcTarget {
@@ -272,6 +282,8 @@ void orc_init (void);
 OrcProgram * orc_program_new (void);
 OrcProgram * orc_program_new_ds (int size1, int size2);
 OrcProgram * orc_program_new_dss (int size1, int size2, int size3);
+OrcProgram * orc_program_new_as (int size1, int size2);
+OrcProgram * orc_program_new_ass (int size1, int size2, int size3);
 OrcStaticOpcode * orc_opcode_find_by_name (const char *name);
 void orc_opcode_init (void);
 
@@ -305,6 +317,7 @@ int orc_program_add_source (OrcProgram *program, int size, const char *name);
 int orc_program_add_destination (OrcProgram *program, int size, const char *name);
 int orc_program_add_constant (OrcProgram *program, int size, int value, const char *name);
 int orc_program_add_parameter (OrcProgram *program, int size, const char *name);
+int orc_program_add_accumulator (OrcProgram *program, int size, const char *name);
 
 void orc_program_x86_reset_alloc (OrcProgram *program);
 void orc_program_powerpc_reset_alloc (OrcProgram *program);
@@ -316,6 +329,8 @@ void orc_executor_set_array (OrcExecutor *ex, int var, void *ptr);
 void orc_executor_set_array_str (OrcExecutor *ex, const char *name, void *ptr);
 void orc_executor_set_parameter (OrcExecutor *ex, int var, int value);
 void orc_executor_set_param_str (OrcExecutor *ex, const char *name, int value);
+int orc_executor_get_accumulator (OrcExecutor *ex, int var, int value);
+int orc_executor_get_accumulator_str (OrcExecutor *ex, const char *name, int value);
 void orc_executor_set_n (OrcExecutor *ex, int n);
 void orc_executor_emulate (OrcExecutor *ex);
 void orc_executor_run (OrcExecutor *ex);

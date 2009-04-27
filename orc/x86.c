@@ -687,6 +687,30 @@ x86_emit_add_imm_memoffset (OrcCompiler *compiler, int size, int value,
 }
 
 void
+x86_emit_add_reg_memoffset (OrcCompiler *compiler, int size, int reg1,
+    int offset, int reg)
+{
+  if (size == 2) {
+    ORC_ASM_CODE(compiler,"  addw %%%s, %d(%%%s)\n",
+        x86_get_regname_ptr(reg1), offset,
+        x86_get_regname_ptr(reg));
+    *compiler->codeptr++ = 0x66;
+  } else if (size == 4) {
+    ORC_ASM_CODE(compiler,"  addl %%%s, %d(%%%s)\n",
+        x86_get_regname_ptr(reg1), offset,
+        x86_get_regname_ptr(reg));
+  } else {
+    ORC_ASM_CODE(compiler,"  add %%%s, %d(%%%s)\n",
+        x86_get_regname_ptr(reg1), offset,
+        x86_get_regname_ptr(reg));
+  }
+
+  x86_emit_rex(compiler, size, 0, 0, reg);
+  *compiler->codeptr++ = 0x01;
+  x86_emit_modrm_memoffset (compiler, reg1, offset, reg);
+}
+
+void
 x86_emit_add_imm_reg (OrcCompiler *compiler, int size, int value, int reg)
 {
   if (size == 2) {

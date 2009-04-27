@@ -17,7 +17,21 @@
 int ssse3 = TRUE;
 int sse41 = FALSE;
 
-static void
+void
+sse_emit_f20f (OrcCompiler *p, const char *insn_name, int code,
+    int src, int dest)
+{
+  ORC_ASM_CODE(p,"  %s %%%s, %%%s\n", insn_name,
+      x86_get_regname_sse(src),
+      x86_get_regname_sse(dest));
+  *p->codeptr++ = 0xf2;
+  x86_emit_rex (p, 0, src, 0, dest);
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = code;
+  x86_emit_modrm_reg (p, src, dest);
+}
+
+void
 sse_emit_660f (OrcCompiler *p, const char *insn_name, int code,
     int src, int dest)
 {
@@ -31,7 +45,7 @@ sse_emit_660f (OrcCompiler *p, const char *insn_name, int code,
   x86_emit_modrm_reg (p, src, dest);
 }
 
-static void
+void
 sse_emit_660f38 (OrcCompiler *p, const char *insn_name, int code,
     int src, int dest)
 {
@@ -292,6 +306,68 @@ BINARY(subl,"psubd",0xfa)
 //BINARY(subusl,"psubusd",0xd9)
 BINARY(xorl,"pxor",0xef)
 
+
+static void
+sse_rule_accw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+
+  sse_emit_660f (p, "paddw", 0xfd, src, dest);
+}
+
+static void
+sse_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+
+  sse_emit_660f (p, "paddd", 0xfe, src, dest);
+}
+
+static void
+sse_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src1 = p->vars[insn->src_args[0]].alloc;
+  int src2 = p->vars[insn->src_args[1]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+
+  sse_emit_660f (p, "movdqa", 0x6f, src1, p->tmpreg);
+  sse_emit_660f (p, "psadbw", 0xf6, src2, p->tmpreg);
+  sse_emit_660f (p, "paddd", 0xfe, p->tmpreg, dest);
+
+#if 0
+  ORC_ASM_CODE(p,"  movd %%%s, %%ecx\n", x86_get_regname_sse(dest));
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x7e;
+  x86_emit_modrm_reg (p, X86_ECX, dest);
+
+  x86_emit_add_reg_memoffset (p, 4, X86_ECX,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor, accumulators[0]),
+      x86_exec_ptr);
+
+  if (p->loop_shift > 3) {
+    ORC_ASM_CODE(p,"  psrldq $8, %%%s\n", x86_get_regname_sse(dest));
+    *p->codeptr++ = 0x66;
+    *p->codeptr++ = 0x0f;
+    *p->codeptr++ = 0x73;
+    x86_emit_modrm_reg (p, dest, 3);
+    *p->codeptr++ = 0x08;
+
+    ORC_ASM_CODE(p,"  movd %%%s, %%ecx\n", x86_get_regname_sse(dest));
+    *p->codeptr++ = 0x66;
+    *p->codeptr++ = 0x0f;
+    *p->codeptr++ = 0x7e;
+    x86_emit_modrm_reg (p, X86_ECX, dest);
+
+    x86_emit_add_reg_memoffset (p, 4, X86_ECX,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, accumulators[0]),
+        x86_exec_ptr);
+
+  }
+#endif
+}
 
 static void
 sse_rule_signX (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -811,6 +887,10 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "convssslw", sse_rule_convssslw, NULL);
 
   orc_rule_register (rule_set, "mulswl", sse_rule_mulswl, NULL);
+
+  orc_rule_register (rule_set, "accw", sse_rule_accw, NULL);
+  orc_rule_register (rule_set, "accl", sse_rule_accl, NULL);
+  orc_rule_register (rule_set, "accsadubl", sse_rule_accsadubl, NULL);
 
   /* slow rules */
   orc_rule_register (rule_set, "maxuw", sse_rule_maxuw_slow, NULL);

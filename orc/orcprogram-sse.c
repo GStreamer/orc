@@ -113,6 +113,94 @@ orc_compiler_sse_init (OrcCompiler *compiler)
 }
 
 void
+sse_save_accumulators (OrcCompiler *compiler)
+{
+  int i;
+  int src;
+
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    OrcVariable *var = compiler->vars + i;
+
+    if (compiler->vars[i].name == NULL) continue;
+    switch (compiler->vars[i].vartype) {
+      case ORC_VAR_TYPE_ACCUMULATOR:
+        src = compiler->vars[i].alloc;
+
+        sse_emit_660f (compiler, "pshufd $0xee,", 0x70, src, compiler->tmpreg);
+#if 0
+        ORC_ASM_CODE(compiler,"  pshufd $0xee, %%%s, %%%s\n",
+            x86_get_regname_sse(src),
+            x86_get_regname_sse(compiler->tmpreg));
+        *compiler->codeptr++ = 0x66;
+        x86_emit_rex (compiler, 0, src, 0, compiler->tmpreg);
+        *compiler->codeptr++ = 0x0f;
+        *compiler->codeptr++ = 0x70;
+        x86_emit_modrm_reg (compiler, src, compiler->tmpreg);
+#endif
+        *compiler->codeptr++ = 0xee;
+
+        if (compiler->vars[i].size == 2) {
+          sse_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
+        } else {
+          sse_emit_660f (compiler, "paddd", 0xfe, compiler->tmpreg, src);
+        }
+
+        sse_emit_660f (compiler, "pshufd $0x55,", 0x70, src, compiler->tmpreg);
+#if 0
+        ORC_ASM_CODE(compiler,"  pshufd $0x55, %%%s, %%%s\n",
+            x86_get_regname_sse(src),
+            x86_get_regname_sse(compiler->tmpreg));
+        *compiler->codeptr++ = 0x66;
+        x86_emit_rex (compiler, 0, src, 0, compiler->tmpreg);
+        *compiler->codeptr++ = 0x0f;
+        *compiler->codeptr++ = 0xef;
+        x86_emit_modrm_reg (compiler, src, compiler->tmpreg);
+#endif
+        *compiler->codeptr++ = 0x55;
+
+        if (compiler->vars[i].size == 2) {
+          sse_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
+        } else {
+          sse_emit_660f (compiler, "paddd", 0xfe, compiler->tmpreg, src);
+        }
+
+        if (compiler->vars[i].size == 2) {
+          sse_emit_f20f (compiler, "pshuflw $0x55,", 0x70, src, compiler->tmpreg);
+#if 0
+          ORC_ASM_CODE(compiler,"  pshuflw $0x55, %%%s, %%%s\n",
+              x86_get_regname_sse(src),
+              x86_get_regname_sse(compiler->tmpreg));
+          *compiler->codeptr++ = 0x66;
+          x86_emit_rex (compiler, 0, src, 0, compiler->tmpreg);
+          *compiler->codeptr++ = 0x0f;
+          *compiler->codeptr++ = 0xef;
+          x86_emit_modrm_reg (compiler, src, compiler->tmpreg);
+#endif
+          *compiler->codeptr++ = 0x55;
+
+          sse_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
+        }
+
+        if (compiler->vars[i].size == 2) {
+          x86_emit_mov_sse_reg (compiler, src, X86_ECX);
+          x86_emit_mov_reg_memoffset (compiler, 2, X86_ECX,
+              (int)ORC_STRUCT_OFFSET(OrcExecutor, accumulators[i-ORC_VAR_A1]),
+              x86_exec_ptr);
+        } else {
+          x86_emit_mov_sse_memoffset (compiler, 4, src,
+              (int)ORC_STRUCT_OFFSET(OrcExecutor, accumulators[i-ORC_VAR_A1]),
+              x86_exec_ptr,
+              var->is_aligned, var->is_uncached);
+        }
+
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+void
 sse_load_constants (OrcCompiler *compiler)
 {
   int i;
@@ -154,7 +242,18 @@ sse_load_constants (OrcCompiler *compiler)
           ORC_PROGRAM_ERROR(compiler,"unimplemented");
         }
         break;
+      case ORC_VAR_TYPE_ACCUMULATOR:
+        ORC_ASM_CODE(compiler,"  pxor %%%s, %%%s\n",
+            x86_get_regname_sse(compiler->vars[i].alloc),
+            x86_get_regname_sse(compiler->vars[i].alloc));
+        *compiler->codeptr++ = 0x66;
+        x86_emit_rex (compiler, 0, compiler->vars[i].alloc, 0, compiler->vars[i].alloc);
+        *compiler->codeptr++ = 0x0f;
+        *compiler->codeptr++ = 0xef;
+        x86_emit_modrm_reg (compiler, compiler->vars[i].alloc, compiler->vars[i].alloc);
+        break;
       default:
+        ORC_PROGRAM_ERROR(compiler,"bad vartype");
         break;
     }
   }
@@ -249,6 +348,17 @@ sse_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
 }
 
 static int
+get_align_var (OrcCompiler *compiler)
+{
+  if (compiler->vars[ORC_VAR_D1].size) return ORC_VAR_D1;
+  if (compiler->vars[ORC_VAR_S1].size) return ORC_VAR_S1;
+
+  ORC_PROGRAM_ERROR(compiler, "could not find alignment variable");
+
+  return -1;
+}
+
+static int
 get_shift (int size)
 {
   switch (size) {
@@ -263,26 +373,27 @@ get_shift (int size)
   }
   return -1;
 }
+
 void
 orc_compiler_sse_assemble (OrcCompiler *compiler)
 {
-  int dest_var;
-  int dest_shift;
+  int align_var;
+  int align_shift;
 
-  dest_var = orc_compiler_get_dest (compiler);
-  dest_shift = get_shift (compiler->vars[dest_var].size);
+  align_var = get_align_var (compiler);
+  align_shift = get_shift (compiler->vars[align_var].size);
 
-  compiler->vars[dest_var].is_aligned = FALSE;
+  compiler->vars[align_var].is_aligned = FALSE;
 
   x86_emit_prologue (compiler);
 
   if (compiler->loop_shift > 0) {
     x86_emit_mov_imm_reg (compiler, 4, 16, X86_EAX);
     x86_emit_sub_memoffset_reg (compiler, 4,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[dest_var]),
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[align_var]),
         x86_exec_ptr, X86_EAX);
     x86_emit_and_imm_reg (compiler, 4, 15, X86_EAX);
-    x86_emit_sar_imm_reg (compiler, 4, dest_shift, X86_EAX);
+    x86_emit_sar_imm_reg (compiler, 4, align_shift, X86_EAX);
 
     x86_emit_cmp_reg_memoffset (compiler, 4, X86_EAX,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,n), x86_exec_ptr);
@@ -347,7 +458,7 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
     x86_emit_jne (compiler, 0);
 
     compiler->loop_shift = save_loop_shift;
-    compiler->vars[dest_var].is_aligned = TRUE;
+    compiler->vars[align_var].is_aligned = TRUE;
   }
 
   x86_emit_label (compiler, 1);
@@ -368,7 +479,7 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
   if (compiler->loop_shift > 0) {
     int save_loop_shift;
 
-    compiler->vars[dest_var].is_aligned = FALSE;
+    compiler->vars[align_var].is_aligned = FALSE;
     x86_emit_cmp_imm_memoffset (compiler, 4, 0,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3), x86_exec_ptr);
     x86_emit_je (compiler, 5);
@@ -387,6 +498,8 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
 
     compiler->loop_shift = save_loop_shift;
   }
+
+  sse_save_accumulators (compiler);
 
   x86_emit_epilogue (compiler);
 
@@ -444,7 +557,8 @@ sse_emit_loop (OrcCompiler *compiler)
 
     rule = insn->rule;
     if (rule && rule->emit) {
-      if (compiler->vars[insn->dest_args[0]].alloc !=
+      if (!(insn->opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) &&
+          compiler->vars[insn->dest_args[0]].alloc !=
           compiler->vars[insn->src_args[0]].alloc) {
         x86_emit_mov_sse_reg_reg (compiler,
             compiler->vars[insn->src_args[0]].alloc,

@@ -51,6 +51,33 @@ orc_program_new_ds (int size1, int size2)
   return p;
 }
 
+OrcProgram *
+orc_program_new_ass (int size1, int size2, int size3)
+{
+  OrcProgram *p;
+
+  p = orc_program_new ();
+
+  orc_program_add_accumulator (p, size1, "a1");
+  orc_program_add_source (p, size2, "s1");
+  orc_program_add_source (p, size3, "s2");
+
+  return p;
+}
+
+OrcProgram *
+orc_program_new_as (int size1, int size2)
+{
+  OrcProgram *p;
+
+  p = orc_program_new ();
+
+  orc_program_add_accumulator (p, size1, "a1");
+  orc_program_add_source (p, size2, "s1");
+
+  return p;
+}
+
 void
 orc_program_free (OrcProgram *program)
 {
@@ -152,6 +179,19 @@ orc_program_add_parameter (OrcProgram *program, int size, const char *name)
   int i = ORC_VAR_P1 + program->n_param_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_PARAM;
+  program->vars[i].size = size;
+  program->vars[i].name = strdup(name);
+  program->n_param_vars++;
+
+  return i;
+}
+
+int
+orc_program_add_accumulator (OrcProgram *program, int size, const char *name)
+{
+  int i = ORC_VAR_A1 + program->n_accum_vars;
+
+  program->vars[i].vartype = ORC_VAR_TYPE_ACCUMULATOR;
   program->vars[i].size = size;
   program->vars[i].name = strdup(name);
   program->n_param_vars++;

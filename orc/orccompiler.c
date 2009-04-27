@@ -239,6 +239,15 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
       if (compiler->vars[var].vartype == ORC_VAR_TYPE_PARAM) {
         ORC_PROGRAM_ERROR(compiler,"using param var as dest");
       }
+      if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
+        if (compiler->vars[var].vartype != ORC_VAR_TYPE_ACCUMULATOR) {
+          ORC_PROGRAM_ERROR(compiler,"accumulating opcode to non-accumulator dest");
+        }
+      } else {
+        if (compiler->vars[var].vartype == ORC_VAR_TYPE_ACCUMULATOR) {
+          ORC_PROGRAM_ERROR(compiler,"non-accumulating opcode to accumulator dest");
+        }
+      }
 
       actual_var = var;
       if (compiler->vars[var].replaced) {
@@ -294,7 +303,13 @@ orc_compiler_global_reg_alloc (OrcCompiler *compiler)
       case ORC_VAR_TYPE_DEST:
         var->ptr_register = orc_compiler_allocate_register (compiler, FALSE);
         break;
+      case ORC_VAR_TYPE_ACCUMULATOR:
+        var->first_use = -1;
+        var->last_use = -1;
+        var->alloc = orc_compiler_allocate_register (compiler, TRUE);
+        break;
       default:
+        ORC_PROGRAM_ERROR(compiler, "bad vartype");
         break;
     }
   }
@@ -341,9 +356,10 @@ orc_compiler_rewrite_vars2 (OrcCompiler *compiler)
      *  - rule must handle it
      *  - src1 must be last_use
      */
-    if (1) {
+    if (!(compiler->insns[j].opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR)) {
       int src1 = compiler->insns[j].src_args[0];
       int dest = compiler->insns[j].dest_args[0];
+
       if (compiler->vars[src1].last_use == j) {
         if (compiler->vars[src1].first_use == j) {
           k = orc_compiler_allocate_register (compiler, TRUE);

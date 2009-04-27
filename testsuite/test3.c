@@ -41,13 +41,31 @@ test_opcode (OrcStaticOpcode *opcode)
   char s[40];
   int ret;
 
-  p = orc_program_new_dss (opcode->dest_size[0],
-        opcode->src_size[0], opcode->src_size[1]);
+  if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
+    if (opcode->src_size[1] == 0) {
+      p = orc_program_new_as (opcode->dest_size[0], opcode->src_size[0]);
+    } else {
+      p = orc_program_new_ass (opcode->dest_size[0], opcode->src_size[0],
+          opcode->src_size[1]);
+    }
+  } else {
+    if (opcode->src_size[1] == 0) {
+      p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);
+    } else {
+      p = orc_program_new_dss (opcode->dest_size[0], opcode->src_size[0],
+          opcode->src_size[1]);
+    }
+  }
 
   sprintf(s, "test_%s", opcode->name);
   orc_program_set_name (p, s);
+  //orc_program_add_constant (p, 2, 1, "c1");
 
-  orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
+  if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
+    orc_program_append_str (p, opcode->name, "a1", "s1", "s2");
+  } else {
+    orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
+  }
 
   ret = orc_program_compile (p);
   if (!ret) {

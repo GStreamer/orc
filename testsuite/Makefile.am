@@ -1,7 +1,7 @@
 
-TESTS = test1 test2 test3 test4 test5 test_local_opcode_execution test_compile
+TESTS = test1 test2 test3 test4 test5 test_local_opcode_execution test_compile test_accsadubl
 
-orcbin_PROGRAMS = test1 test2 test3 test4 test5 test_local_opcode_execution test_compile
+orcbin_PROGRAMS = test1 test2 test3 test4 test5 test_local_opcode_execution test_compile test_accsadubl
 
 AM_CFLAGS = $(ORC_CFLAGS)
 LIBS = $(ORC_LIBS) $(top_builddir)/orc-test/liborc-test-0.3.la

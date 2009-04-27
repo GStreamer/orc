@@ -32,6 +32,7 @@ void x86_emit_test_reg_reg (OrcCompiler *compiler, int size, int reg1, int reg2)
 void x86_emit_sar_imm_reg (OrcCompiler *compiler, int size, int value, int reg);
 void x86_emit_dec_memoffset (OrcCompiler *compiler, int size, int offset, int reg);
 void x86_emit_add_imm_memoffset (OrcCompiler *compiler, int size, int value, int offset, int reg);
+void x86_emit_add_reg_memoffset (OrcCompiler *compiler, int size, int reg1, int offset, int reg);
 void x86_emit_and_imm_memoffset (OrcCompiler *compiler, int size, int value, int offset, int reg);
 void x86_emit_add_imm_reg (OrcCompiler *compiler, int size, int value, int reg);
 void x86_emit_and_imm_reg (OrcCompiler *compiler, int size, int value, int reg);
@@ -67,6 +68,13 @@ void sse_emit_loadil (OrcCompiler *p, int reg, int value);
 void sse_emit_loadpb (OrcCompiler *p, int reg, int value);
 void sse_emit_loadpw (OrcCompiler *p, int reg, int value);
 void sse_emit_loadpl (OrcCompiler *p, int reg, int value);
+
+void sse_emit_660f (OrcCompiler *p, const char *insn_name, int code,
+    int src, int dest);
+void sse_emit_f20f (OrcCompiler *p, const char *insn_name, int code,
+    int src, int dest);
+void sse_emit_660f38 (OrcCompiler *p, const char *insn_name, int code,
+    int src, int dest);
 
 enum {
   X86_EAX = ORC_GP_REG_BASE,
