@@ -1,5 +1,7 @@
 
 #include <orc-test/orctest.h>
+#include <orc/orc.h>
+#include <orc/orcdebug.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -93,28 +95,63 @@ print_array_val (void *array, int size, int i)
   switch (size) {
     case 1:
       {
-        int8_t *a = array;
-        printf(" %4d", a[i]);
+        uint8_t *a = array;
+        printf(" %4u", a[i]);
         return a[i];
       }
       break;
     case 2:
       {
-        int16_t *a = array;
-        printf(" %5d", a[i]);
+        uint16_t *a = array;
+        printf(" %5u", a[i]);
         return a[i];
       }
       break;
     case 4:
       {
-        int32_t *a = array;
-        printf(" %10d", a[i]);
+        uint32_t *a = array;
+        printf(" %10u", a[i]);
         return a[i];
       }
       break;
     default:
       return -1;
   }
+}
+
+int delign_index = 1;
+
+void *
+alloc_array (int n, int size, void **m_ptr)
+{
+  unsigned char *ptr = malloc (n*size+256*2);
+  memset (ptr, 0xa5, n*size+256*2);
+  if (m_ptr) *m_ptr = ptr;
+
+  delign_index++;
+  delign_index &= 0xf;
+
+  return (ptr + 256 + size*delign_index);
+}
+
+int
+check_bounds (void *ptr, int n, int size)
+{
+  unsigned char *data = ptr;
+  int i;
+
+  for(i=0;i<100;i++){
+    if (data[-1-i] != 0xa5) {
+      ORC_ERROR("early bounds failure at %d", i);
+      return FALSE;
+    }
+    if (data[n*size+i] != 0xa5) {
+      ORC_ERROR("late bounds failure at %d", i);
+      return FALSE;
+    }
+  }
+
+  return TRUE;
 }
 
 int
@@ -126,6 +163,8 @@ orc_test_compare_output (OrcProgram *program)
   int dest_index;
   void *dest_exec;
   void *dest_emul;
+  void *ptr_exec;
+  void *ptr_emul;
   int i;
 
   ret = orc_program_compile (program);
@@ -142,7 +181,7 @@ orc_test_compare_output (OrcProgram *program)
 
     if (program->vars[i].vartype == ORC_VAR_TYPE_SRC) {
       uint8_t *data;
-      data = malloc(n*program->vars[i].size);
+      data = alloc_array (n,program->vars[i].size, NULL);
       orc_test_random_bits (data, n*program->vars[i].size);
       orc_executor_set_array (ex, i, data);
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
@@ -155,10 +194,8 @@ orc_test_compare_output (OrcProgram *program)
     return FALSE;
   }
 
-  dest_exec = malloc(n*program->vars[dest_index].size);
-  memset (dest_exec, 0xa5, n*program->vars[dest_index].size);
-  dest_emul = malloc(n*program->vars[dest_index].size);
-  memset (dest_emul, 0xa5, n*program->vars[dest_index].size);
+  dest_exec = alloc_array (n, program->vars[dest_index].size, &ptr_exec);
+  dest_emul = alloc_array (n, program->vars[dest_index].size, &ptr_emul);
 
   orc_executor_set_array (ex, dest_index, dest_exec);
   orc_executor_run (ex);
@@ -191,45 +228,19 @@ orc_test_compare_output (OrcProgram *program)
 
       printf("\n");
     }
-#if 0
-    switch (program->vars[dest_index].size) {
-      case 1:
-        {
-          uint8_t *a = dest_emul;
-          uint8_t *b = dest_exec;
-          for(i=0;i<n;i++){
-            printf("%d: %d %d %c\n", i, a[i], b[i], (a[i]==b[i])?' ':'*');
-          }
-        }
-        break;
-      case 2:
-        {
-          uint16_t *a = dest_emul;
-          uint16_t *b = dest_exec;
-          for(i=0;i<n;i++){
-            printf("%d: %d %d %c\n", i, a[i], b[i], (a[i]==b[i])?' ':'*');
-          }
-        }
-        break;
-      case 4:
-        {
-          uint32_t *a = dest_emul;
-          uint32_t *b = dest_exec;
-          for(i=0;i<n;i++){
-            printf("%d: %d %d %c\n", i, a[i], b[i], (a[i]==b[i])?' ':'*');
-          }
-        }
-        break;
-      default:
-        return FALSE;
-    }
-#endif
 
     printf("%s", orc_program_get_asm_code (program));
 
     return FALSE;
   }
+  if (!check_bounds (dest_exec, n, program->vars[dest_index].size)) {
+    printf("out of bounds failure\n");
 
+    return FALSE;
+  }
+
+  free (ptr_exec);
+  free (ptr_emul);
   orc_executor_free (ex);
 
   return TRUE;

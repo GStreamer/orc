@@ -26,86 +26,56 @@ get_program (int type)
     d1 = orc_program_add_destination (p, 2, "d1");
     orc_program_add_source (p, 2, "s1");
     orc_program_add_source (p, 2, "s2");
-    orc_program_add_source (p, 2, "s3");
     orc_program_add_constant (p, 2, 2, "c1");
     orc_program_add_constant (p, 2, 2, "c2");
     orc_program_add_temporary (p, 2, "t1");
 
-    orc_program_append_str (p, "addw", "t1", "s2", "s3");
+    orc_program_append_str (p, "addw", "t1", "s1", "s2");
     orc_program_append_str (p, "addw", "t1", "t1", "c1");
     orc_program_append_str (p, "shrsw", "t1", "t1", "c2");
-    orc_program_append_str (p, "addw", "d1", "s1", "t1");
+    orc_program_append_str (p, "addw", "d1", "d1", "t1");
     break;
   case 1:
     p = orc_program_new ();
     d1 = orc_program_add_destination (p, 2, "d1");
     orc_program_add_source (p, 2, "s1");
     orc_program_add_source (p, 2, "s2");
-    orc_program_add_source (p, 2, "s3");
     orc_program_add_constant (p, 2, 2, "c1");
     orc_program_add_constant (p, 2, 2, "c2");
     orc_program_add_temporary (p, 2, "t1");
 
-    orc_program_append_str (p, "addw", "t1", "s2", "s3");
+    orc_program_append_str (p, "addw", "t1", "s1", "s2");
     orc_program_append_str (p, "addw", "t1", "t1", "c1");
     orc_program_append_str (p, "shrsw", "t1", "t1", "c2");
-    orc_program_append_str (p, "subw", "d1", "s1", "t1");
+    orc_program_append_str (p, "subw", "d1", "d1", "t1");
     break;
   case 2:
     p = orc_program_new ();
     orc_program_add_destination (p, 2, "d1");
     orc_program_add_source (p, 2, "s1");
     orc_program_add_source (p, 2, "s2");
-    orc_program_add_source (p, 2, "s3");
-#if 1
     orc_program_add_constant (p, 2, 1, "c1");
     orc_program_add_constant (p, 2, 1, "c2");
-#else
-    orc_program_add_constant (p, 2, 0x8000, "c1");
-#endif
     orc_program_add_temporary (p, 2, "t1");
-    orc_program_add_temporary (p, 2, "t2");
-    orc_program_add_temporary (p, 2, "t3");
 
-#if 1
-    orc_program_append_str (p, "addw", "t1", "s2", "s3");
+    orc_program_append_str (p, "addw", "t1", "s1", "s2");
     orc_program_append_str (p, "addw", "t1", "t1", "c1");
     orc_program_append_str (p, "shrsw", "t1", "t1", "c2");
-#else
-    orc_program_append_str (p, "xorw", "t1", "c1", "s2");
-    orc_program_append_str (p, "xorw", "t2", "c1", "s3");
-    orc_program_append_str (p, "avguw", "t3", "t1", "t2");
-    orc_program_append_str (p, "xorw", "t1", "c1", "t3");
-#endif
-    orc_program_append_str (p, "addw", "d1", "s1", "t1");
+    orc_program_append_str (p, "addw", "d1", "d1", "t1");
     break;
   case 3:
     p = orc_program_new ();
     orc_program_add_destination (p, 2, "d1");
     orc_program_add_source (p, 2, "s1");
     orc_program_add_source (p, 2, "s2");
-    orc_program_add_source (p, 2, "s3");
-#if 1
     orc_program_add_constant (p, 2, 1, "c1");
     orc_program_add_constant (p, 2, 1, "c2");
-#else
-    orc_program_add_constant (p, 2, 0x8000, "c1");
-#endif
     orc_program_add_temporary (p, 2, "t1");
-    orc_program_add_temporary (p, 2, "t2");
-    orc_program_add_temporary (p, 2, "t3");
 
-#if 1
-    orc_program_append_str (p, "addw", "t1", "s2", "s3");
+    orc_program_append_str (p, "addw", "t1", "s1", "s2");
     orc_program_append_str (p, "addw", "t1", "t1", "c1");
     orc_program_append_str (p, "shrsw", "t1", "t1", "c2");
-#else
-    orc_program_append_str (p, "xorw", "t1", "c1", "s2");
-    orc_program_append_str (p, "xorw", "t2", "c1", "s3");
-    orc_program_append_str (p, "avguw", "t3", "t1", "t2");
-    orc_program_append_str (p, "xorw", "t1", "c1", "t3");
-#endif
-    orc_program_append_str (p, "subw", "d1", "s1", "t1");
+    orc_program_append_str (p, "subw", "d1", "d1", "t1");
     break;
   case 4:
     p = orc_program_new_dss (2,2,2);
@@ -134,24 +104,22 @@ get_program (int type)
     break;
   case 8:
     p = orc_program_new_dss (2,2,2);
-    orc_program_add_source (p, 2, "s3");
-    orc_program_add_temporary (p, 4, "t1");
-    orc_program_add_temporary (p, 2, "t2");
+    orc_program_add_temporary (p, 2, "t1");
+    orc_program_add_temporary (p, 4, "t2");
     orc_program_add_parameter (p, 2, "p1");
     orc_program_add_parameter (p, 4, "p2");
-    orc_program_add_parameter (p, 2, "p3");
+    orc_program_add_parameter (p, 4, "p3");
 
-    orc_program_append_str (p, "addw", "t1", "s2", "s3");
-    orc_program_append_str (p, "mulswl", "t1", "t1", "p1");
-    orc_program_append_str (p, "addl", "t1", "t1", "p2");
-    orc_program_append_str (p, "shll", "t1", "s1", "p3");
-    orc_program_append_ds_str (p, "convlw", "t2", "t1");
-    orc_program_append_str (p, "addl", "d1", "t2", "s1");
+    orc_program_append_str (p, "addw", "t1", "s1", "s2");
+    orc_program_append_str (p, "mulswl", "t2", "t1", "p1");
+    orc_program_append_str (p, "addl", "t2", "t2", "p2");
+    orc_program_append_str (p, "shll", "t2", "t2", "p3");
+    orc_program_append_ds_str (p, "convlw", "t1", "t2");
+    orc_program_append_str (p, "addw", "d1", "d1", "t1");
     break;
   case 9:
     p = orc_program_new ();
     orc_program_add_destination (p, 2, "d1");
-    orc_program_add_source (p, 2, "s1");
     orc_program_add_source (p, 2, "s20");
     orc_program_add_source (p, 2, "s21");
     orc_program_add_source (p, 2, "s22");
@@ -168,12 +136,11 @@ get_program (int type)
     orc_program_append_str (p, "subw", "t1", "t1", "t2");
     orc_program_append_str (p, "addw", "t1", "t1", "p1");
     orc_program_append_str (p, "shrsw", "t1", "t1", "p2");
-    orc_program_append_str (p, "addw", "d1", "s1", "t1");
+    orc_program_append_str (p, "addw", "d1", "d1", "t1");
     break;
   case 10:
     p = orc_program_new ();
     orc_program_add_destination (p, 2, "d1");
-    orc_program_add_source (p, 2, "s1");
     orc_program_add_source (p, 2, "s20");
     orc_program_add_source (p, 2, "s21");
     orc_program_add_source (p, 2, "s22");
@@ -190,7 +157,7 @@ get_program (int type)
     orc_program_append_str (p, "subw", "t1", "t1", "t2");
     orc_program_append_str (p, "addw", "t1", "t1", "p1");
     orc_program_append_str (p, "shrsw", "t1", "t1", "p2");
-    orc_program_append_str (p, "subw", "d1", "s1", "t1");
+    orc_program_append_str (p, "subw", "d1", "d1", "t1");
     break;
   case 11:
     p = orc_program_new_dss (2,2,2);
@@ -330,6 +297,7 @@ main (int argc, char *argv[])
   int i;
 
   orc_init();
+  orc_test_init();
 
   for(i=0;i<18;i++){
     printf("/* %d */\n", i);

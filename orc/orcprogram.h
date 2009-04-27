@@ -325,9 +325,10 @@ void orc_program_powerpc_reset_alloc (OrcProgram *program);
 
 OrcExecutor * orc_executor_new (OrcProgram *program);
 void orc_executor_free (OrcExecutor *ex);
+void orc_executor_set_program (OrcExecutor *ex, OrcProgram *program);
 void orc_executor_set_array (OrcExecutor *ex, int var, void *ptr);
 void orc_executor_set_array_str (OrcExecutor *ex, const char *name, void *ptr);
-void orc_executor_set_parameter (OrcExecutor *ex, int var, int value);
+void orc_executor_set_param (OrcExecutor *ex, int var, int value);
 void orc_executor_set_param_str (OrcExecutor *ex, const char *name, int value);
 int orc_executor_get_accumulator (OrcExecutor *ex, int var, int value);
 int orc_executor_get_accumulator_str (OrcExecutor *ex, const char *name, int value);

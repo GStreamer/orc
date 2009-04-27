@@ -36,9 +36,16 @@ orc_executor_run (OrcExecutor *ex)
   func = ex->program->code_exec;
   if (func) {
     func (ex);
+    //ORC_ERROR("counters %d %d %d", ex->counter1, ex->counter2, ex->counter3);
   } else {
     orc_executor_emulate (ex);
   }
+}
+
+void
+orc_executor_set_program (OrcExecutor *ex, OrcProgram *program)
+{
+  ex->program = program;
 }
 
 void
@@ -56,7 +63,7 @@ orc_executor_set_array_str (OrcExecutor *ex, const char *name, void *ptr)
 }
 
 void
-orc_executor_set_parameter (OrcExecutor *ex, int var, int value)
+orc_executor_set_param (OrcExecutor *ex, int var, int value)
 {
   ex->params[var] = value;
 }

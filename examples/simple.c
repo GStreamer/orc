@@ -36,7 +36,7 @@ main (int argc, char *argv[])
 {
   orc_init ();
 
-  test9();
+  test1();
 
   exit(0);
 }
@@ -67,7 +67,7 @@ test1(void)
       src2[i] = rand()&0xf;
     }
 
-    //orc_executor_run (ex);
+    orc_executor_run (ex);
     //orc_executor_emulate (ex);
 
     for(i=0;i<N;i++){

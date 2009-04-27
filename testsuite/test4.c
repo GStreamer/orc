@@ -41,15 +41,19 @@ test_opcode (OrcStaticOpcode *opcode)
   char s[40];
   int ret;
 
-  p = orc_program_new_dss (opcode->dest_size[0],
-        opcode->src_size[0], opcode->src_size[1]);
+  if (opcode->src_size[1] == 0) {
+    p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);
+  } else {
+    p = orc_program_new_dss (opcode->dest_size[0], opcode->src_size[0],
+        opcode->src_size[1]);
+  }
 
   sprintf(s, "test_%s", opcode->name);
   orc_program_set_name (p, s);
 
   orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
 
-  ret = orc_program_compile_for_target (p, orc_target_get_by_name("arm"));
+  ret = orc_program_compile_for_target (p, orc_target_get_by_name("neon"));
   if (!ret) {
     error = TRUE;
     goto out;
