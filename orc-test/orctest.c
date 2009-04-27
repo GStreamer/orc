@@ -89,8 +89,38 @@ orc_test_random_bits (void *data, int n_bytes)
   }
 }
 
-static int
-print_array_val (void *array, int size, int i)
+int
+print_array_val_signed (void *array, int size, int i)
+{
+  switch (size) {
+    case 1:
+      {
+        uint8_t *a = array;
+        printf(" %4d", a[i]);
+        return a[i];
+      }
+      break;
+    case 2:
+      {
+        uint16_t *a = array;
+        printf(" %5d", a[i]);
+        return a[i];
+      }
+      break;
+    case 4:
+      {
+        uint32_t *a = array;
+        printf(" %10d", a[i]);
+        return a[i];
+      }
+      break;
+    default:
+      return -1;
+  }
+}
+
+int
+print_array_val_unsigned (void *array, int size, int i)
 {
   switch (size) {
     case 1:
@@ -111,6 +141,36 @@ print_array_val (void *array, int size, int i)
       {
         uint32_t *a = array;
         printf(" %10u", a[i]);
+        return a[i];
+      }
+      break;
+    default:
+      return -1;
+  }
+}
+
+int
+print_array_val_hex (void *array, int size, int i)
+{
+  switch (size) {
+    case 1:
+      {
+        uint8_t *a = array;
+        printf(" %2x", a[i]);
+        return a[i];
+      }
+      break;
+    case 2:
+      {
+        uint16_t *a = array;
+        printf(" %4x", a[i]);
+        return a[i];
+      }
+      break;
+    case 4:
+      {
+        uint32_t *a = array;
+        printf(" %8x", a[i]);
         return a[i];
       }
       break;
@@ -214,13 +274,13 @@ orc_test_compare_output (OrcProgram *program)
         if (program->vars[j].name == NULL) continue;
         if (program->vars[j].vartype == ORC_VAR_TYPE_SRC &&
             program->vars[j].size > 0) {
-          print_array_val (ex->arrays[j], program->vars[j].size, i);
+          print_array_val_signed (ex->arrays[j], program->vars[j].size, i);
         }
       }
 
       printf(" ->");
-      a = print_array_val (dest_emul, program->vars[dest_index].size, i);
-      b = print_array_val (dest_exec, program->vars[dest_index].size, i);
+      a = print_array_val_signed (dest_emul, program->vars[dest_index].size, i);
+      b = print_array_val_signed (dest_exec, program->vars[dest_index].size, i);
 
       if (a != b) {
         printf(" *");
