@@ -126,15 +126,20 @@ orc_target_get_rule (OrcTarget *target, OrcStaticOpcode *opcode)
   OrcRule *rule;
   int i;
   int j;
+  int k;
 
-  /* FIXME */
-  ORC_ASSERT(n_opcode_sets == 1);
+  for(k=0;k<n_opcode_sets;k++){
+    j = opcode - opcode_sets[k].opcodes;
 
-  j = opcode - opcode_sets[0].opcodes;
+    if (j < 0 || j >= opcode_sets[k].n_opcodes) continue;
+    if (opcode_sets[k].opcodes + j != opcode) continue;
 
-  for(i=0;i<target->n_rule_sets;i++){
-    rule = target->rule_sets[i].rules + j;
-    if (rule->emit) return rule;
+    for(i=0;i<target->n_rule_sets;i++){
+      if (target->rule_sets[i].opcode_set != opcode_sets + k) continue;
+
+      rule = target->rule_sets[i].rules + j;
+      if (rule->emit) return rule;
+    }
   }
 
   return NULL;

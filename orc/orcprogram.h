@@ -338,6 +338,7 @@ void orc_executor_run (OrcExecutor *ex);
 
 OrcOpcodeSet *orc_opcode_set_get (const char *name);
 int orc_opcode_set_find_by_name (OrcOpcodeSet *opcode_set, const char *name);
+int orc_opcode_register_static (OrcStaticOpcode *sopcode, char *prefix);
 
 OrcRuleSet * orc_rule_set_new (OrcOpcodeSet *opcode_set, OrcTarget *target);
 void orc_rule_register (OrcRuleSet *rule_set, const char *opcode_name,

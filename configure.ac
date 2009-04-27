@@ -118,6 +118,7 @@ AC_CONFIG_FILES([
 Makefile 
 doc/Makefile
 orc/Makefile
+orc-pixel/Makefile
 orc-test/Makefile
 testsuite/Makefile
 examples/Makefile
