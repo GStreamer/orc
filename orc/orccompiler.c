@@ -308,6 +308,8 @@ orc_compiler_global_reg_alloc (OrcCompiler *compiler)
         var->last_use = -1;
         var->alloc = orc_compiler_allocate_register (compiler, TRUE);
         break;
+      case ORC_VAR_TYPE_TEMP:
+        break;
       default:
         ORC_PROGRAM_ERROR(compiler, "bad vartype");
         break;

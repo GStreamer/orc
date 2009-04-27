@@ -252,6 +252,8 @@ sse_load_constants (OrcCompiler *compiler)
         *compiler->codeptr++ = 0xef;
         x86_emit_modrm_reg (compiler, compiler->vars[i].alloc, compiler->vars[i].alloc);
         break;
+      case ORC_VAR_TYPE_TEMP:
+        break;
       default:
         ORC_PROGRAM_ERROR(compiler,"bad vartype");
         break;

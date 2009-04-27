@@ -18,12 +18,11 @@ OrcProgram *
 get_program (int type)
 {
   OrcProgram *p;
-  int d1;
 
   switch (type) {
   case 0:
     p = orc_program_new ();
-    d1 = orc_program_add_destination (p, 2, "d1");
+    orc_program_add_destination (p, 2, "d1");
     orc_program_add_source (p, 2, "s1");
     orc_program_add_source (p, 2, "s2");
     orc_program_add_constant (p, 2, 2, "c1");
@@ -37,7 +36,7 @@ get_program (int type)
     break;
   case 1:
     p = orc_program_new ();
-    d1 = orc_program_add_destination (p, 2, "d1");
+    orc_program_add_destination (p, 2, "d1");
     orc_program_add_source (p, 2, "s1");
     orc_program_add_source (p, 2, "s2");
     orc_program_add_constant (p, 2, 2, "c1");
