@@ -191,6 +191,28 @@ sse_emit_loadpl (OrcCompiler *p, int reg, int param)
   *p->codeptr++ = 0x00;
 }
 
+void
+sse_emit_loadpq (OrcCompiler *p, int reg, int param)
+{
+  ORC_ASM_CODE(p,"  movq %d(%%%s), %%%s\n",
+      (int)ORC_STRUCT_OFFSET(OrcExecutor, params[param]),
+      x86_get_regname_ptr(x86_exec_ptr),
+      x86_get_regname_sse(reg));
+  *p->codeptr++ = 0xf3;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x7e;
+  x86_emit_modrm_memoffset (p, reg,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor, params[param]), x86_exec_ptr);
+
+  ORC_ASM_CODE(p,"  pshufd $0, %%%s, %%%s\n", x86_get_regname_sse(reg),
+      x86_get_regname_sse(reg));
+  *p->codeptr++ = 0x66;
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x70;
+  x86_emit_modrm_reg (p, reg, reg);
+  *p->codeptr++ = 0x00;
+}
+
 static void
 sse_rule_copyx (OrcCompiler *p, void *user, OrcInstruction *insn)
 {

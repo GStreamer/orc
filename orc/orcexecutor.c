@@ -141,6 +141,9 @@ orc_executor_emulate (OrcExecutor *ex)
             case 4:
               opcode_ex.src_values[k] = *(int32_t *)ptr;
               break;
+            case 8:
+              opcode_ex.src_values[k] = *(int64_t *)ptr;
+              break;
             default:
               ORC_ERROR("unhandled size %d", program->vars[insn->src_args[k]].size);
           }
@@ -171,6 +174,9 @@ orc_executor_emulate (OrcExecutor *ex)
               break;
             case 4:
               *(int32_t *)ptr = opcode_ex.dest_values[k];
+              break;
+            case 8:
+              *(int64_t *)ptr = opcode_ex.dest_values[k];
               break;
             default:
               ORC_ERROR("unhandled size %d", program->vars[insn->dest_args[k]].size);

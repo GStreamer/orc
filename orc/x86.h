@@ -68,6 +68,7 @@ void sse_emit_loadil (OrcCompiler *p, int reg, int value);
 void sse_emit_loadpb (OrcCompiler *p, int reg, int value);
 void sse_emit_loadpw (OrcCompiler *p, int reg, int value);
 void sse_emit_loadpl (OrcCompiler *p, int reg, int value);
+void sse_emit_loadpq (OrcCompiler *p, int reg, int value);
 
 void sse_emit_660f (OrcCompiler *p, const char *insn_name, int code,
     int src, int dest);

@@ -1,0 +1,76 @@
+
+orc-float
+=========
+
+See the notes about orc-pixel.
+
+Specifying floating point parameters requires you to use the integer
+that corresponds to the bit pattern of the floating point number you
+want.
+
+The SSE backend generates nearly correct output, however, it's not
+bit exact with the C code for some operations.  Of course, it's
+notoriously difficult to get bit-exact floating point code in C.
+
+
+
+diff --git a/testsuite/Makefile.am b/testsuite/Makefile.am
+index d4220db..a754193 100644
+--- a/testsuite/Makefile.am
++++ b/testsuite/Makefile.am
+@@ -4,5 +4,6 @@ TESTS = test1 test2 test3 test4 test5 test_local_opcode_execution test_compile t
+ orcbin_PROGRAMS = test1 test2 test3 test4 test5 test_local_opcode_execution test_compile test_accsadubl test-schro
+ 
+ AM_CFLAGS = $(ORC_CFLAGS)
+-LIBS = $(ORC_LIBS) $(top_builddir)/orc-test/liborc-test-0.3.la
++LIBS = $(ORC_LIBS) $(top_builddir)/orc-test/liborc-test-0.3.la \
++	$(top_builddir)/orc-float/liborc-float-0.3.la
+ 
+diff --git a/testsuite/test_compile.c b/testsuite/test_compile.c
+index f95aeb5..a3f58e2 100644
+--- a/testsuite/test_compile.c
++++ b/testsuite/test_compile.c
+@@ -6,6 +6,7 @@
+ 
+ #include <orc/orc.h>
+ #include <orc-test/orctest.h>
++#include <orc-float/orcfloat.h>
+ 
+ 
+ int error = FALSE;
+@@ -22,8 +23,9 @@ main (int argc, char *argv[])
+ 
+   orc_init();
+   orc_test_init();
++  orc_float_init();
+ 
+-  opcode_set = orc_opcode_set_get ("sys");
++  opcode_set = orc_opcode_set_get ("float");
+ 
+   for(i=0;i<opcode_set->n_opcodes;i++){
+     printf("/* %s %d,%d,%d %p */\n",
+diff --git a/testsuite/test_local_opcode_execution.c b/testsuite/test_local_opcode_execution.c
+index fc62a49..17230d6 100644
+--- a/testsuite/test_local_opcode_execution.c
++++ b/testsuite/test_local_opcode_execution.c
+@@ -5,6 +5,7 @@
+ 
+ #include <orc/orc.h>
+ #include <orc-test/orctest.h>
++#include <orc-float/orcfloat.h>
+ 
+ 
+ int error = FALSE;
+@@ -20,10 +21,11 @@ main (int argc, char *argv[])
+   int i;
+   OrcOpcodeSet *opcode_set;
+ 
++  orc_float_init();
+   orc_test_init();
+   orc_init();
+ 
+-  opcode_set = orc_opcode_set_get ("sys");
++  opcode_set = orc_opcode_set_get ("float");
+ 
+   for(i=0;i<opcode_set->n_opcodes;i++){
+     printf("/* %s src %d,%d,%d */\n",

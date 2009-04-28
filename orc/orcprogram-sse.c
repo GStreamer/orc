@@ -103,6 +103,9 @@ orc_compiler_sse_init (OrcCompiler *compiler)
     case 4:
       compiler->loop_shift = 2;
       break;
+    case 8:
+      compiler->loop_shift = 1;
+      break;
     default:
       ORC_ERROR("unhandled max var size %d",
           orc_program_get_max_var_size (compiler->program));
@@ -228,6 +231,8 @@ sse_load_constants (OrcCompiler *compiler)
           sse_emit_loadpw (compiler, compiler->vars[i].alloc, i);
         } else if (compiler->vars[i].size == 4) {
           sse_emit_loadpl (compiler, compiler->vars[i].alloc, i);
+        } else if (compiler->vars[i].size == 8) {
+          sse_emit_loadpq (compiler, compiler->vars[i].alloc, i);
         } else {
           ORC_PROGRAM_ERROR(compiler, "unimplemented");
         }
@@ -370,6 +375,8 @@ get_shift (int size)
       return 1;
     case 4:
       return 2;
+    case 8:
+      return 3;
     default:
       ORC_ERROR("bad size %d", size);
   }

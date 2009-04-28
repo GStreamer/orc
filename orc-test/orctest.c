@@ -82,11 +82,20 @@ orc_test_gcc_compile (OrcProgram *p)
 void
 orc_test_random_bits (void *data, int n_bytes)
 {
+#if 1
   uint8_t *d = data;
   int i;
   for(i=0;i<n_bytes;i++){
     d[i] = rand();
   }
+#endif
+#if 0
+  float *d = data;
+  int i;
+  for(i=0;i<n_bytes/4;i++){
+    d[i] = ((rand() & 0xffff)-32768)*0.01;
+  }
+#endif
 }
 
 int
@@ -95,22 +104,29 @@ print_array_val_signed (void *array, int size, int i)
   switch (size) {
     case 1:
       {
-        uint8_t *a = array;
+        int8_t *a = array;
         printf(" %4d", a[i]);
         return a[i];
       }
       break;
     case 2:
       {
-        uint16_t *a = array;
+        int16_t *a = array;
         printf(" %5d", a[i]);
         return a[i];
       }
       break;
     case 4:
       {
-        uint32_t *a = array;
+        int32_t *a = array;
         printf(" %10d", a[i]);
+        return a[i];
+      }
+      break;
+    case 8:
+      {
+        int64_t *a = array;
+        printf(" %20lld", a[i]);
         return a[i];
       }
       break;
@@ -144,6 +160,13 @@ print_array_val_unsigned (void *array, int size, int i)
         return a[i];
       }
       break;
+    case 8:
+      {
+        uint64_t *a = array;
+        printf(" %20llu", a[i]);
+        return a[i];
+      }
+      break;
     default:
       return -1;
   }
@@ -174,7 +197,38 @@ print_array_val_hex (void *array, int size, int i)
         return a[i];
       }
       break;
+    case 8:
+      {
+        uint64_t *a = array;
+        printf(" %16llx", a[i]);
+        return a[i];
+      }
+      break;
     default:
+      return -1;
+  }
+}
+
+float
+print_array_val_float (void *array, int size, int i)
+{
+  switch (size) {
+    case 4:
+      {
+        float *a = array;
+        printf(" %g", a[i]);
+        return a[i];
+      }
+      break;
+    case 8:
+      {
+        double *a = array;
+        printf(" %g", a[i]);
+        return a[i];
+      }
+      break;
+    default:
+      printf(" ERROR");
       return -1;
   }
 }
