@@ -121,7 +121,7 @@ sse_rule_compin (OrcCompiler *p, void *user, OrcInstruction *insn)
     sse_emit_660f (p, "punpckldq", 0x62,
         tmpreg2, tmpreg2);
   } else {
-    sse_emit_660f (p, "pshuflw $00,", 0x70,
+    sse_emit_f20f (p, "pshuflw $00,", 0x70,
         tmpreg2, tmpreg2);
     *p->codeptr++ = 0x00;
   }
