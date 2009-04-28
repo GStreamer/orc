@@ -22,6 +22,8 @@ int
 orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
 {
   int i;
+  int roff;
+  int reg;
   int offset;
 
   if (data_reg) {
@@ -30,21 +32,25 @@ orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
     offset = ORC_GP_REG_BASE;
   }
 
-  for(i=offset;i<offset+32;i++){
-    if (compiler->valid_regs[i] &&
-        !compiler->save_regs[i] &&
-        compiler->alloc_regs[i] == 0) {
-      compiler->alloc_regs[i]++;
-      compiler->used_regs[i] = 1;
-      return i;
+  roff = rand()&0xf;
+
+  for(i=0;i<32;i++){
+    reg = offset + ((roff + i)&0x1f);
+    if (compiler->valid_regs[reg] &&
+        !compiler->save_regs[reg] &&
+        compiler->alloc_regs[reg] == 0) {
+      compiler->alloc_regs[reg]++;
+      compiler->used_regs[reg] = 1;
+      return reg;
     }
   }
-  for(i=offset;i<offset+32;i++){
-    if (compiler->valid_regs[i] &&
-        compiler->alloc_regs[i] == 0) {
-      compiler->alloc_regs[i]++;
-      compiler->used_regs[i] = 1;
-      return i;
+  for(i=0;i<32;i++){
+    reg = offset + ((roff + i)&0x1f);
+    if (compiler->valid_regs[reg] &&
+        compiler->alloc_regs[reg] == 0) {
+      compiler->alloc_regs[reg]++;
+      compiler->used_regs[reg] = 1;
+      return reg;
     }
   }
 

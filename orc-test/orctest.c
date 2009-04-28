@@ -1,4 +1,6 @@
 
+#include "config.h"
+
 #include <orc-test/orctest.h>
 #include <orc/orc.h>
 #include <orc/orcdebug.h>
@@ -53,7 +55,14 @@ orc_test_gcc_compile (OrcProgram *p)
     return FALSE;
   }
 
-  sprintf (cmd, "objcopy -I binary -O elf32-i386 -B i386 "
+  sprintf (cmd, "objcopy -I binary "
+#ifdef HAVE_I386
+      "-O elf32-i386 -B i386 "
+#elif defined(HAVE_AMD64)
+      "-O elf64-x86-64 -B i386 "
+#else
+      /* FIXME */
+#endif
       "--rename-section .data=.text "
       "--redefine-sym _binary_dump_start=%s "
       "dump tmp.o", p->name);
@@ -126,7 +135,11 @@ print_array_val_signed (void *array, int size, int i)
     case 8:
       {
         int64_t *a = array;
+#ifdef HAVE_AMD64
+        printf(" %20ld", a[i]);
+#else
         printf(" %20lld", a[i]);
+#endif
         return a[i];
       }
       break;
@@ -163,7 +176,11 @@ print_array_val_unsigned (void *array, int size, int i)
     case 8:
       {
         uint64_t *a = array;
+#ifdef HAVE_AMD64
+        printf(" %20lu", a[i]);
+#else
         printf(" %20llu", a[i]);
+#endif
         return a[i];
       }
       break;
@@ -200,7 +217,11 @@ print_array_val_hex (void *array, int size, int i)
     case 8:
       {
         uint64_t *a = array;
+#ifdef HAVE_AMD64
+        printf(" %20lx", a[i]);
+#else
         printf(" %16llx", a[i]);
+#endif
         return a[i];
       }
       break;
