@@ -11,123 +11,11 @@
 
 #define X86_MODRM(mod, rm, reg) ((((mod)&3)<<6)|(((rm)&7)<<0)|(((reg)&7)<<3))
 
-#ifdef HAVE_AMD64
-int x86_64 = 1;
-int x86_ptr_size = 8;
-int x86_exec_ptr = X86_EDI;
-#else
-int x86_64 = 0;
-int x86_ptr_size = 4;
-int x86_exec_ptr = X86_EBP;
-#endif
-
-const char *
-x86_get_regname_sse(int i)
-{
-  static const char *x86_regs[] = {
-    "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7",
-    "xmm8", "xmm9", "xmm10", "xmm11", "xmm12", "xmm13", "xmm14", "xmm15"
-  };
-
-  if (i>=X86_XMM0 && i<X86_XMM0 + 16) return x86_regs[i - X86_XMM0];
-  switch (i) {
-    case 0:
-      return "UNALLOCATED";
-    case 1:
-      return "direct";
-    default:
-      return "ERROR";
-  }
-}
-
-int
-x86_get_regnum(int i)
-{
-  return (i&0xf);
-}
-
-void
-x86_emit_rex (OrcCompiler *compiler, int size, int reg1, int reg2, int reg3)
-{
-  int rex = 0x40;
-
-  if (x86_64) {
-    if (size >= 8) rex |= 0x08;
-    if (reg1 == 1 || (x86_get_regnum(reg1)>=8)) rex |= 0x4;
-    if (reg2 == 1 || (x86_get_regnum(reg2)>=8)) rex |= 0x2;
-    if (reg3 == 1 || (x86_get_regnum(reg3)>=8)) rex |= 0x1;
-
-    if (rex != 0x40) *compiler->codeptr++ = rex;
-  }
-}
-
-void
-x86_emit_modrm_reg (OrcCompiler *compiler, int reg1, int reg2)
-{
-  *compiler->codeptr++ = X86_MODRM(3, reg1, reg2);
-}
-
-void
-sse_emit_f20f (OrcCompiler *p, const char *insn_name, int code,
-    int src, int dest)
-{
-  ORC_ASM_CODE(p,"  %s %%%s, %%%s\n", insn_name,
-      x86_get_regname_sse(src),
-      x86_get_regname_sse(dest));
-  *p->codeptr++ = 0xf2;
-  x86_emit_rex (p, 0, src, 0, dest);
-  *p->codeptr++ = 0x0f;
-  *p->codeptr++ = code;
-  x86_emit_modrm_reg (p, src, dest);
-}
-
-void
-sse_emit_f30f (OrcCompiler *p, const char *insn_name, int code,
-    int src, int dest)
-{
-  ORC_ASM_CODE(p,"  %s %%%s, %%%s\n", insn_name,
-      x86_get_regname_sse(src),
-      x86_get_regname_sse(dest));
-  *p->codeptr++ = 0xf3;
-  x86_emit_rex (p, 0, src, 0, dest);
-  *p->codeptr++ = 0x0f;
-  *p->codeptr++ = code;
-  x86_emit_modrm_reg (p, src, dest);
-}
-
-void
-sse_emit_660f (OrcCompiler *p, const char *insn_name, int code,
-    int src, int dest)
-{
-  ORC_ASM_CODE(p,"  %s %%%s, %%%s\n", insn_name,
-      x86_get_regname_sse(src),
-      x86_get_regname_sse(dest));
-  *p->codeptr++ = 0x66;
-  x86_emit_rex (p, 0, src, 0, dest);
-  *p->codeptr++ = 0x0f;
-  *p->codeptr++ = code;
-  x86_emit_modrm_reg (p, src, dest);
-}
-
-void
-sse_emit_0f (OrcCompiler *p, const char *insn_name, int code,
-    int src, int dest)
-{
-  ORC_ASM_CODE(p,"  %s %%%s, %%%s\n", insn_name,
-      x86_get_regname_sse(src),
-      x86_get_regname_sse(dest));
-  x86_emit_rex (p, 0, src, 0, dest);
-  *p->codeptr++ = 0x0f;
-  *p->codeptr++ = code;
-  x86_emit_modrm_reg (p, src, dest);
-}
-
-
 #define UNARY(opcode,insn_name,code) \
 static void \
 sse_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  sse_emit_0f (p, insn_name, code, \
+  orc_sse_emit_0f (p, insn_name, code, \
       p->vars[insn->src_args[0]].alloc, \
       p->vars[insn->dest_args[0]].alloc); \
 }
@@ -136,7 +24,7 @@ sse_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 static void \
 sse_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  sse_emit_0f (p, insn_name, code, \
+  orc_sse_emit_0f (p, insn_name, code, \
       p->vars[insn->src_args[1]].alloc, \
       p->vars[insn->dest_args[0]].alloc); \
 }
@@ -155,7 +43,7 @@ UNARY(invsqrtf, "rsqrtps", 0x52)
 static void
 sse_rule_cmpeqf (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  sse_emit_0f (p, "cmpeqps", 0xc2,
+  orc_sse_emit_0f (p, "cmpeqps", 0xc2,
       p->vars[insn->src_args[1]].alloc,
       p->vars[insn->dest_args[0]].alloc);
   *p->codeptr++ = 0x00;
@@ -164,7 +52,7 @@ sse_rule_cmpeqf (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_cmpltf (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  sse_emit_0f (p, "cmpltps", 0xc2,
+  orc_sse_emit_0f (p, "cmpltps", 0xc2,
       p->vars[insn->src_args[1]].alloc,
       p->vars[insn->dest_args[0]].alloc);
   *p->codeptr++ = 0x01;
@@ -173,7 +61,7 @@ sse_rule_cmpltf (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_cmplef (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  sse_emit_0f (p, "cmpleps", 0xc2,
+  orc_sse_emit_0f (p, "cmpleps", 0xc2,
       p->vars[insn->src_args[1]].alloc,
       p->vars[insn->dest_args[0]].alloc);
   *p->codeptr++ = 0x02;
@@ -182,7 +70,7 @@ sse_rule_cmplef (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_convfl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  sse_emit_660f (p, "cvtps2dq", 0x5b,
+  orc_sse_emit_660f (p, "cvtps2dq", 0x5b,
       p->vars[insn->src_args[0]].alloc,
       p->vars[insn->dest_args[0]].alloc);
 }
@@ -190,7 +78,7 @@ sse_rule_convfl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_convlf (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  sse_emit_0f (p, "cvtdq2ps", 0x5b,
+  orc_sse_emit_0f (p, "cvtdq2ps", 0x5b,
       p->vars[insn->src_args[0]].alloc,
       p->vars[insn->dest_args[0]].alloc);
 }
@@ -199,7 +87,7 @@ sse_rule_convlf (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void \
 sse_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  sse_emit_660f (p, insn_name, code, \
+  orc_sse_emit_660f (p, insn_name, code, \
       p->vars[insn->src_args[0]].alloc, \
       p->vars[insn->dest_args[0]].alloc); \
 }
@@ -208,7 +96,7 @@ sse_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 static void \
 sse_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  sse_emit_660f (p, insn_name, code, \
+  orc_sse_emit_660f (p, insn_name, code, \
       p->vars[insn->src_args[1]].alloc, \
       p->vars[insn->dest_args[0]].alloc); \
 }
@@ -229,7 +117,7 @@ UNARY_66(invsqrtg, "rsqrtpd", 0x52)
 static void
 sse_rule_cmpeqg (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  sse_emit_660f (p, "cmpeqpd", 0xc2,
+  orc_sse_emit_660f (p, "cmpeqpd", 0xc2,
       p->vars[insn->src_args[1]].alloc,
       p->vars[insn->dest_args[0]].alloc);
   *p->codeptr++ = 0x00;
@@ -238,7 +126,7 @@ sse_rule_cmpeqg (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_cmpltg (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  sse_emit_660f (p, "cmpltpd", 0xc2,
+  orc_sse_emit_660f (p, "cmpltpd", 0xc2,
       p->vars[insn->src_args[1]].alloc,
       p->vars[insn->dest_args[0]].alloc);
   *p->codeptr++ = 0x01;
@@ -247,7 +135,7 @@ sse_rule_cmpltg (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_cmpleg (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  sse_emit_660f (p, "cmplepd", 0xc2,
+  orc_sse_emit_660f (p, "cmplepd", 0xc2,
       p->vars[insn->src_args[1]].alloc,
       p->vars[insn->dest_args[0]].alloc);
   *p->codeptr++ = 0x02;
@@ -256,7 +144,7 @@ sse_rule_cmpleg (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_convgl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  sse_emit_f20f (p, "cvtpd2dq", 0xe6,
+  orc_sse_emit_f20f (p, "cvtpd2dq", 0xe6,
       p->vars[insn->src_args[0]].alloc,
       p->vars[insn->dest_args[0]].alloc);
 }
@@ -264,7 +152,7 @@ sse_rule_convgl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_convlg (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  sse_emit_f30f (p, "cvtdq2pd", 0xe6,
+  orc_sse_emit_f30f (p, "cvtdq2pd", 0xe6,
       p->vars[insn->src_args[0]].alloc,
       p->vars[insn->dest_args[0]].alloc);
 }
@@ -272,7 +160,7 @@ sse_rule_convlg (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_convgf (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  sse_emit_660f (p, "cvtpd2ps", 0x5a,
+  orc_sse_emit_660f (p, "cvtpd2ps", 0x5a,
       p->vars[insn->src_args[0]].alloc,
       p->vars[insn->dest_args[0]].alloc);
 }
@@ -280,7 +168,7 @@ sse_rule_convgf (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_convfg (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  sse_emit_0f (p, "cvtps2pd", 0x5a,
+  orc_sse_emit_0f (p, "cvtps2pd", 0x5a,
       p->vars[insn->src_args[0]].alloc,
       p->vars[insn->dest_args[0]].alloc);
 }

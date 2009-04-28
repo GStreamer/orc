@@ -244,7 +244,10 @@ struct _OrcCompiler {
   char *asm_code;
   int asm_code_len;
 
+  int is_64bit;
   int tmpreg;
+  int exec_reg;
+  int gp_tmpreg;
 };
 
 struct _OrcOpcodeExecutor {
