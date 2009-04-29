@@ -492,7 +492,7 @@ orc_compiler_arm_register_rules (OrcTarget *target)
 {
   OrcRuleSet *rule_set;
 
-  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target);
+  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target, 0);
 
 #if 0
 #define REG(x) \

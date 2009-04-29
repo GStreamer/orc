@@ -50,7 +50,7 @@ typedef enum {
   ORC_CPU_FLAG_SSSE3 = (1<<12)
 } OrcCpuFlag;
 
-unsigned int orc_cpu_get_flags (void);
+unsigned int orc_sse_get_cpu_flags (void);
 
 void _orc_cpu_init (void);
 

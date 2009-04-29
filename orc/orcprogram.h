@@ -63,15 +63,15 @@ typedef void (*OrcRuleEmitFunc)(OrcCompiler *p, void *user, OrcInstruction *insn
   orc_debug_print(ORC_DEBUG_ERROR, __FILE__, ORC_FUNCTION, __LINE__, __VA_ARGS__); \
 } while (0)
 
-#if 0
 enum {
-  ORC_TARGET_C = 0,
-  ORC_TARGET_ALTIVEC = 1,
-  ORC_TARGET_MMX = 2,
-  ORC_TARGET_SSE = 3,
-  ORC_TARGET_ARM = 4
+  ORC_TARGET_SSE_SSE2 = (1<<0),
+  ORC_TARGET_SSE_SSE3 = (1<<1),
+  ORC_TARGET_SSE_SSSE3 = (1<<2),
+  ORC_TARGET_SSE_SSE4_1 = (1<<3),
+  ORC_TARGET_SSE_SSE4_2 = (1<<4),
+  ORC_TARGET_SSE_SSE4A = (1<<5),
+  ORC_TARGET_SSE_SSE5 = (1<<6)
 };
-#endif
 
 typedef enum {
   ORC_VAR_TYPE_TEMP,
@@ -155,6 +155,7 @@ struct _OrcRule {
 
 struct _OrcRuleSet {
   OrcOpcodeSet *opcode_set;
+  int required_target_flags;
 
   OrcRule *rules;
   int n_rules;
@@ -217,6 +218,8 @@ struct _OrcProgram {
 struct _OrcCompiler {
   OrcProgram *program;
   OrcTarget *target;
+
+  unsigned int target_flags;
 
   OrcInstruction insns[ORC_N_INSNS];
   int n_insns;
@@ -333,8 +336,8 @@ void orc_executor_set_array (OrcExecutor *ex, int var, void *ptr);
 void orc_executor_set_array_str (OrcExecutor *ex, const char *name, void *ptr);
 void orc_executor_set_param (OrcExecutor *ex, int var, int value);
 void orc_executor_set_param_str (OrcExecutor *ex, const char *name, int value);
-int orc_executor_get_accumulator (OrcExecutor *ex, int var, int value);
-int orc_executor_get_accumulator_str (OrcExecutor *ex, const char *name, int value);
+int orc_executor_get_accumulator (OrcExecutor *ex, int var);
+int orc_executor_get_accumulator_str (OrcExecutor *ex, const char *name);
 void orc_executor_set_n (OrcExecutor *ex, int n);
 void orc_executor_emulate (OrcExecutor *ex);
 void orc_executor_run (OrcExecutor *ex);
@@ -343,7 +346,8 @@ OrcOpcodeSet *orc_opcode_set_get (const char *name);
 int orc_opcode_set_find_by_name (OrcOpcodeSet *opcode_set, const char *name);
 int orc_opcode_register_static (OrcStaticOpcode *sopcode, char *prefix);
 
-OrcRuleSet * orc_rule_set_new (OrcOpcodeSet *opcode_set, OrcTarget *target);
+OrcRuleSet * orc_rule_set_new (OrcOpcodeSet *opcode_set, OrcTarget *target,
+    unsigned int required_flags);
 void orc_rule_register (OrcRuleSet *rule_set, const char *opcode_name,
     OrcRuleEmitFunc emit, void *emit_user);
 OrcRule * orc_target_get_rule (OrcTarget *target, OrcStaticOpcode *opcode);

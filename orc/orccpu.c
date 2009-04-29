@@ -105,7 +105,7 @@ _orc_cpu_init (void)
 {
   const char *envvar;
 
-  orc_cpu_detect_arch();
+  //orc_cpu_detect_arch();
 
   envvar = getenv ("ORC_CPU_FLAGS");
   if (envvar != NULL) {

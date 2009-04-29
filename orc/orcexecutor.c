@@ -77,13 +77,13 @@ orc_executor_set_param_str (OrcExecutor *ex, const char *name, int value)
 }
 
 int
-orc_executor_get_accumulator (OrcExecutor *ex, int var, int value)
+orc_executor_get_accumulator (OrcExecutor *ex, int var)
 {
   return ex->accumulators[var];
 }
 
 int
-orc_executor_get_accumulator_str (OrcExecutor *ex, const char *name, int value)
+orc_executor_get_accumulator_str (OrcExecutor *ex, const char *name)
 {
   int var;
   var = orc_program_find_var_by_name (ex->program, name);

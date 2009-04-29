@@ -667,7 +667,7 @@ orc_compiler_powerpc_register_rules (OrcTarget *target)
 {
   OrcRuleSet *rule_set;
 
-  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target);
+  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target, 0);
 
   orc_rule_register (rule_set, "addw", powerpc_rule_addw, NULL);
   orc_rule_register (rule_set, "subw", powerpc_rule_subw, NULL);

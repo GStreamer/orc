@@ -12,6 +12,7 @@
 #include <orc/x86.h>
 #include <orc/orcutils.h>
 #include <orc/orcdebug.h>
+#include <orc/orccpu.h>
 
 #define SIZE 65536
 
@@ -58,6 +59,14 @@ orc_compiler_sse_init (OrcCompiler *compiler)
   compiler->is_64bit = FALSE;
 #endif
   
+#if defined(HAVE_AMD64) || defined(HAVE_I386)
+  compiler->target_flags = orc_sse_get_cpu_flags ();
+#else
+  compiler->target_flags = ORC_TARGET_SSE_SSE2;
+  compiler->target_flags |= ORC_TARGET_SSE_SSE3;
+  compiler->target_flags |= ORC_TARGET_SSE_SSSE3;
+#endif
+
   if (compiler->is_64bit) {
     for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+16;i++){
       compiler->valid_regs[i] = 1;
@@ -124,7 +133,7 @@ orc_compiler_sse_init (OrcCompiler *compiler)
       break;
   }
 
-  //compiler->long_jumps = TRUE;
+  compiler->long_jumps = TRUE;
 }
 
 void

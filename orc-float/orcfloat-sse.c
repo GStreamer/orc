@@ -180,7 +180,7 @@ orc_float_sse_register_rules (OrcTarget *target)
   OrcRuleSet *rule_set;
 
   rule_set = orc_rule_set_new (orc_opcode_set_get("float"),
-      orc_target_get_by_name ("sse"));
+      orc_target_get_by_name ("sse"), ORC_TARGET_SSE_SSE2);
 
   orc_rule_register (rule_set, "addf", sse_rule_addf, NULL);
   orc_rule_register (rule_set, "subf", sse_rule_subf, NULL);

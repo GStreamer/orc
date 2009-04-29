@@ -861,7 +861,8 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, #x , sse_rule_ ## x, NULL)
 
   /* SSE 2 */
-  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target);
+  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target,
+      ORC_TARGET_SSE_SSE2);
 
   REG(addb);
   REG(addssb);
@@ -949,9 +950,9 @@ orc_compiler_sse_register_rules (OrcTarget *target)
 
   /* SSE 3 -- no rules */
 
-if (0) {
   /* SSSE 3 */
-  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target);
+  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target,
+      ORC_TARGET_SSE_SSSE3);
 
   orc_rule_register (rule_set, "signb", sse_rule_signX, (void *)0);
   orc_rule_register (rule_set, "signw", sse_rule_signX, (void *)1);
@@ -959,11 +960,10 @@ if (0) {
   REG(absb);
   REG(absw);
   REG(absl);
-}
 
-if (0) {
   /* SSE 4.1 */
-  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target);
+  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target,
+      ORC_TARGET_SSE_SSE4_1);
 
   REG(maxsb);
   REG(minsb);
@@ -975,12 +975,9 @@ if (0) {
   REG(minul);
   REG(mulll);
   orc_rule_register (rule_set, "convsuslw", sse_rule_convsuslw, NULL);
-}
 
   /* SSE 4.2 -- no rules */
 
   /* SSE 4a -- no rules */
-
-  /* SSE 5 -- no rules */
 }
 

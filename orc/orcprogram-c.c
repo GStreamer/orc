@@ -256,7 +256,7 @@ orc_c_init (void)
 
   orc_target_register (&c_target);
 
-  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), &c_target);
+  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), &c_target, 0);
 
 #define BINARY_SB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define BINARY_UB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);

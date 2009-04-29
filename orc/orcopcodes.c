@@ -103,7 +103,8 @@ orc_opcode_register (const char *name, int n_dest, int n_src,
 #endif
 
 OrcRuleSet *
-orc_rule_set_new (OrcOpcodeSet *opcode_set, OrcTarget *target)
+orc_rule_set_new (OrcOpcodeSet *opcode_set, OrcTarget *target,
+    unsigned int required_flags)
 {
   OrcRuleSet *rule_set;
 
@@ -113,6 +114,7 @@ orc_rule_set_new (OrcOpcodeSet *opcode_set, OrcTarget *target)
   memset (rule_set, 0, sizeof(OrcRuleSet));
 
   rule_set->opcode_set = opcode_set;
+  rule_set->required_target_flags = required_flags;
 
   rule_set->rules = malloc (sizeof(OrcRule) * opcode_set->n_opcodes);
   memset (rule_set->rules, 0, sizeof(OrcRule) * opcode_set->n_opcodes);

@@ -30,6 +30,7 @@
 #endif
 #include <orc/orcdebug.h>
 #include <orc/orccpu.h>
+#include <orc/orcprogram.h>
 #include <orc/orcutils.h>
 
 #include <unistd.h>
@@ -61,9 +62,10 @@
 
 
 #ifdef USE_I386_CPUINFO
-static void
-orc_cpu_i386_getflags_cpuinfo (char *cpuinfo)
+static unsigned int
+orc_sse_getflags_cpuinfo (char *cpuinfo)
 {
+  unsigned int sse_flags;
   char *cpuinfo_flags;
   char **flags;
   char **f;
@@ -76,47 +78,33 @@ orc_cpu_i386_getflags_cpuinfo (char *cpuinfo)
 
   flags = strsplit(cpuinfo_flags);
   for (f = flags; *f; f++) {
-    if (strcmp (*f, "cmov") == 0) {
-      ORC_DEBUG ("cpu flag %s", *f);
-      orc_cpu_flags |= ORC_CPU_FLAG_CMOV;
-    }
-    if (strcmp (*f, "mmx") == 0) {
-      ORC_DEBUG ("cpu flag %s", *f);
-      orc_cpu_flags |= ORC_CPU_FLAG_MMX;
-    }
-    if (strcmp (*f, "sse") == 0) {
-      ORC_DEBUG ("cpu flag %s", *f);
-      orc_cpu_flags |= ORC_CPU_FLAG_SSE;
-    }
-    if (strcmp (*f, "mmxext") == 0) {
-      ORC_DEBUG ("cpu flag %s", *f);
-      orc_cpu_flags |= ORC_CPU_FLAG_MMXEXT;
-    }
     if (strcmp (*f, "sse2") == 0) {
       ORC_DEBUG ("cpu flag %s", *f);
-      orc_cpu_flags |= ORC_CPU_FLAG_SSE2;
-      orc_cpu_flags |= ORC_CPU_FLAG_MMXEXT;
+      sse_flags |= ORC_TARGET_SSE_SSE2;
     }
-    if (strcmp (*f, "3dnow") == 0) {
+    if (strcmp (*f, "pni") == 0) {
       ORC_DEBUG ("cpu flag %s", *f);
-      orc_cpu_flags |= ORC_CPU_FLAG_3DNOW;
-    }
-    if (strcmp (*f, "3dnowext") == 0) {
-      ORC_DEBUG ("cpu flag %s", *f);
-      orc_cpu_flags |= ORC_CPU_FLAG_3DNOWEXT;
-    }
-    if (strcmp (*f, "sse3") == 0) {
-      ORC_DEBUG ("cpu flag %s", *f);
-      orc_cpu_flags |= ORC_CPU_FLAG_SSE3;
-      orc_cpu_flags |= ORC_CPU_FLAG_SSE2;
-      orc_cpu_flags |= ORC_CPU_FLAG_MMXEXT;
+      sse_flags |= ORC_TARGET_SSE_SSE3;
     }
     if (strcmp (*f, "ssse3") == 0) {
       ORC_DEBUG ("cpu flag %s", *f);
-      orc_cpu_flags |= ORC_CPU_FLAG_SSSE3;
-      orc_cpu_flags |= ORC_CPU_FLAG_SSE3;
-      orc_cpu_flags |= ORC_CPU_FLAG_SSE2;
-      orc_cpu_flags |= ORC_CPU_FLAG_MMXEXT;
+      sse_flags |= ORC_TARGET_SSE_SSSE3;
+    }
+    if (strcmp (*f, "sse4_1") == 0) {
+      ORC_DEBUG ("cpu flag %s", *f);
+      sse_flags |= ORC_TARGET_SSE_SSSE4_1;
+    }
+    if (strcmp (*f, "sse4_2") == 0) {
+      ORC_DEBUG ("cpu flag %s", *f);
+      sse_flags |= ORC_TARGET_SSE_SSSE4_2;
+    }
+    if (strcmp (*f, "sse4a") == 0) {
+      ORC_DEBUG ("cpu flag %s", *f);
+      sse_flags |= ORC_TARGET_SSE_SSSE4A;
+    }
+    if (strcmp (*f, "sse5") == 0) {
+      ORC_DEBUG ("cpu flag %s", *f);
+      orc_cpu_flags |= ORC_CPU_FLAG_SSE5;
     }
 
     free (*f);
@@ -124,6 +112,8 @@ orc_cpu_i386_getflags_cpuinfo (char *cpuinfo)
   free (flags);
   free (cpuinfo);
   free (cpuinfo_flags);
+
+  return sse_flags;
 }
 #endif
 
@@ -166,12 +156,13 @@ test_cpuid (void *ignored)
 }
 #endif
 
-static void
-orc_cpu_detect_cpuid (void)
+static unsigned int
+orc_sse_detect_cpuid (void)
 {
   uint32_t eax, ebx, ecx, edx;
   uint32_t level;
   char vendor[13] = { 0 };
+  unsigned int sse_flags = 0;
 #if 0
   int ret;
 
@@ -190,7 +181,7 @@ orc_cpu_detect_cpuid (void)
   ORC_DEBUG("cpuid %d %s", level, vendor);
 
   if (level < 1) {
-    return;
+    return 0;
   }
 
   get_cpuid (0x00000001, &eax, &ebx, &ecx, &edx);
@@ -202,37 +193,34 @@ orc_cpu_detect_cpuid (void)
 #endif
 
   /* Intel flags */
-  if (edx & (1<<15)) {
-    orc_cpu_flags |= ORC_CPU_FLAG_CMOV;
-  }
-  if (edx & (1<<23)) {
-    orc_cpu_flags |= ORC_CPU_FLAG_MMX;
-  }
-  if (edx & (1<<25)) {
-    orc_cpu_flags |= ORC_CPU_FLAG_SSE;
-  }
   if (edx & (1<<26)) {
-    orc_cpu_flags |= ORC_CPU_FLAG_SSE2;
-    orc_cpu_flags |= ORC_CPU_FLAG_MMXEXT;
+    sse_flags |= ORC_TARGET_SSE_SSE2;
   }
   if (ecx & (1<<0)) {
-    orc_cpu_flags |= ORC_CPU_FLAG_SSE3;
+    sse_flags |= ORC_TARGET_SSE_SSE3;
+  }
+  if (ecx & (1<<9)) {
+    sse_flags |= ORC_TARGET_SSE_SSSE3;
+  }
+  if (ecx & (1<<19)) {
+    sse_flags |= ORC_TARGET_SSE_SSE4_1;
+  }
+  if (ecx & (1<<20)) {
+    sse_flags |= ORC_TARGET_SSE_SSE4_2;
   }
   
   if (memcmp (vendor, "AuthenticAMD", 12) == 0) {
     get_cpuid (0x80000001, &eax, &ebx, &ecx, &edx);
 
     /* AMD flags */
-    if (edx & (1<<22)) {
-      orc_cpu_flags |= ORC_CPU_FLAG_MMXEXT;
+    if (ecx & (1<<6)) {
+      sse_flags |= ORC_TARGET_SSE_SSE4A;
     }
-    if (edx & (1<<31)) {
-      orc_cpu_flags |= ORC_CPU_FLAG_3DNOW;
-    }
-    if (edx & (1<<30)) {
-      orc_cpu_flags |= ORC_CPU_FLAG_3DNOWEXT;
+    if (ecx & (1<<11)) {
+      sse_flags |= ORC_TARGET_SSE_SSE5;
     }
 
+#if 0
     get_cpuid (0x80000005, &eax, &ebx, &ecx, &edx);
 
     ORC_INFO("L1 D-cache: %d kbytes, %d-way, %d lines/tag, %d line size",
@@ -243,46 +231,51 @@ orc_cpu_detect_cpuid (void)
     get_cpuid (0x80000006, &eax, &ebx, &ecx, &edx);
     ORC_INFO("L2 cache: %d kbytes, %d assoc, %d lines/tag, %d line size",
         (ecx>>16)&0xffff, (ecx>>12)&0xf, (ecx>>8)&0xf, ecx&0xff);
+#endif
   }
+
+  return sse_flags;
 }
 #endif
 
 #ifdef USE_I386_GETISAX
-static void
-orc_cpu_detect_getisax (void)
+static unsigned int
+orc_sse_detect_getisax (void)
 {
+  unsigned int sse_flags;
   uint_t ui;
 
   getisax (&ui, 1);
 
-  if (ui & AV_386_CMOV) {
-     orc_cpu_flags |= ORC_CPU_FLAG_CMOV;
-  }
-  if (ui & AV_386_MMX) {
-     orc_cpu_flags |= ORC_CPU_FLAG_MMX;
-  }
-  if (ui & AV_386_SSE) {
-     orc_cpu_flags |= ORC_CPU_FLAG_SSE;
-  }
   if (ui & AV_386_SSE2) {
-     orc_cpu_flags |= ORC_CPU_FLAG_SSE2;
-     orc_cpu_flags |= ORC_CPU_FLAG_MMXEXT;
+     sse_flags |= ORC_TARGET_SSE_SSE2;
   }
   if (ui & AV_386_SSE3) {
-     orc_cpu_flags |= ORC_CPU_FLAG_SSE3;
+     sse_flags |= ORC_TARGET_SSE_SSE3;
   }
-  if (ui & AV_386_AMD_3DNow) {
-    orc_cpu_flags |= ORC_CPU_FLAG_3DNOW;
+
+  /* guesses.  if these fail to compile, please fix */
+  if (ui & AV_386_SSSE3) {
+     sse_flags |= ORC_TARGET_SSE_SSSE3;
   }
-  if (ui & AV_386_AMD_3DNowx) {
-    orc_cpu_flags |= ORC_CPU_FLAG_3DNOWEXT;
+  if (ui & AV_386_SSE4_1) {
+     sse_flags |= ORC_TARGET_SSE_SSE4_1;
   }
-  if (ui & AV_386_AMD_MMX) {
-    orc_cpu_flags |= ORC_CPU_FLAG_MMXEXT;
+  if (ui & AV_386_SSE4_2) {
+     sse_flags |= ORC_TARGET_SSE_SSE4_2;
   }
+  if (ui & AV_386_SSE4A) {
+     sse_flags |= ORC_TARGET_SSE_SSE4A;
+  }
+  if (ui & AV_386_SSE5) {
+     sse_flags |= ORC_TARGET_SSE_SSE5;
+  }
+
+  return sse_flags;
 }
 #endif
 
+#if 0
 /* Reduce the set of CPU capabilities detected by whatever detection mechanism
  * was chosen, according to kernel limitations.  SSE requires kernel support for
  * use.
@@ -320,21 +313,22 @@ orc_cpu_detect_kernel_support (void)
 #endif
 #endif
 }
+#endif
 
-void
-orc_cpu_detect_arch(void)
+unsigned int
+orc_sse_get_cpu_flags(void)
 {
+  //orc_cpu_detect_kernel_support ();
+
 #ifdef USE_I386_CPUID
-  orc_cpu_detect_cpuid ();
+  return orc_sse_detect_cpuid ();
 #endif
 #ifdef USE_I386_GETISAX
-  orc_cpu_detect_getisax ();
+  return orc_sse_detect_getisax ();
 #endif
 #ifdef USE_I386_CPUINFO
-  orc_cpu_detect_cpuinfo ();
+  return orc_sse_detect_cpuinfo ();
 #endif
-
-  orc_cpu_detect_kernel_support ();
 }
 
 
