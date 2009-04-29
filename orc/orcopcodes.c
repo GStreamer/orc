@@ -123,7 +123,8 @@ orc_rule_set_new (OrcOpcodeSet *opcode_set, OrcTarget *target,
 }
 
 OrcRule *
-orc_target_get_rule (OrcTarget *target, OrcStaticOpcode *opcode)
+orc_target_get_rule (OrcTarget *target, OrcStaticOpcode *opcode,
+    unsigned int target_flags)
 {
   OrcRule *rule;
   int i;
@@ -138,6 +139,7 @@ orc_target_get_rule (OrcTarget *target, OrcStaticOpcode *opcode)
 
     for(i=0;i<target->n_rule_sets;i++){
       if (target->rule_sets[i].opcode_set != opcode_sets + k) continue;
+      if (target->rule_sets[i].required_target_flags & (~target_flags)) continue;
 
       rule = target->rule_sets[i].rules + j;
       if (rule->emit) return rule;

@@ -181,7 +181,8 @@ orc_compiler_assign_rules (OrcCompiler *compiler)
   for(i=0;i<compiler->n_insns;i++) {
     OrcInstruction *insn = compiler->insns + i;
 
-    insn->rule = orc_target_get_rule (compiler->target, insn->opcode);
+    insn->rule = orc_target_get_rule (compiler->target, insn->opcode,
+        compiler->target_flags);
 
     if (insn->rule == NULL || insn->rule->emit == NULL) {
       ORC_PROGRAM_ERROR(compiler, "No rule for: %s", insn->opcode->name);

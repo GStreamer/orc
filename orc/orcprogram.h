@@ -350,7 +350,8 @@ OrcRuleSet * orc_rule_set_new (OrcOpcodeSet *opcode_set, OrcTarget *target,
     unsigned int required_flags);
 void orc_rule_register (OrcRuleSet *rule_set, const char *opcode_name,
     OrcRuleEmitFunc emit, void *emit_user);
-OrcRule * orc_target_get_rule (OrcTarget *target, OrcStaticOpcode *opcode);
+OrcRule * orc_target_get_rule (OrcTarget *target, OrcStaticOpcode *opcode,
+    unsigned int target_flags);
 OrcTarget * orc_target_get_default (void);
 
 int orc_program_allocate_register (OrcProgram *program, int is_data);
