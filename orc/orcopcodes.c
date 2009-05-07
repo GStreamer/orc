@@ -444,6 +444,86 @@ ACC(accw, int16_t);
 ACC(accl, int32_t);
 
 static void
+swapw (OrcOpcodeExecutor *ex, void *user)
+{
+  ex->dest_values[0] = ((ex->src_values[0]&0xff)<<8)|
+    ((ex->src_values[0]&0xff00)>>8);
+}
+
+static void
+swapl (OrcOpcodeExecutor *ex, void *user)
+{
+  ex->dest_values[0] = ((ex->src_values[0]&0xff)<<24)|
+    ((ex->src_values[0]&0xff00)<<8)|
+    ((ex->src_values[0]&0xff0000)>>8)|
+    ((ex->src_values[0]&0xff000000)>>24);
+}
+
+static void
+select0lw (OrcOpcodeExecutor *ex, void *user)
+{
+#if WORDS_BIGENDIAN
+  ex->dest_values[0] = (ex->src_values[0]>>16)&0xffff;
+#else
+  ex->dest_values[0] = ex->src_values[0]&0xffff;
+#endif
+}
+
+static void
+select1lw (OrcOpcodeExecutor *ex, void *user)
+{
+#if WORDS_BIGENDIAN
+  ex->dest_values[0] = ex->src_values[0]&0xffff;
+#else
+  ex->dest_values[0] = (ex->src_values[0]>>16)&0xffff;
+#endif
+}
+
+static void
+select0wb (OrcOpcodeExecutor *ex, void *user)
+{
+#if WORDS_BIGENDIAN
+  ex->dest_values[0] = (ex->src_values[0]>>8)&0xff;
+#else
+  ex->dest_values[0] = ex->src_values[0]&0xff;
+#endif
+}
+
+static void
+select1wb (OrcOpcodeExecutor *ex, void *user)
+{
+#if WORDS_BIGENDIAN
+  ex->dest_values[0] = ex->src_values[0]&0xff;
+#else
+  ex->dest_values[0] = (ex->src_values[0]>>8)&0xff;
+#endif
+}
+
+static void
+mergewl (OrcOpcodeExecutor *ex, void *user)
+{
+  union {
+    uint16_t u16[2];
+    uint32_t u32;
+  } val;
+  val.u16[0] = ex->dest_values[0];
+  val.u16[1] = ex->dest_values[1];
+  ex->src_values[0] = val.u32;
+}
+
+static void
+mergebw (OrcOpcodeExecutor *ex, void *user)
+{
+  union {
+    uint8_t u8[2];
+    uint16_t u16;
+  } val;
+  val.u8[0] = ex->dest_values[0];
+  val.u8[1] = ex->dest_values[1];
+  ex->src_values[0] = val.u16;
+}
+
+static void
 accsadubl (OrcOpcodeExecutor *ex, void *user)
 {
   ex->dest_values[0] = abs((int)((uint8_t)ex->src_values[0]) -
@@ -580,6 +660,15 @@ static OrcStaticOpcode opcodes[] = {
   { "accw", accw, NULL, ORC_STATIC_OPCODE_ACCUMULATOR, { 2 }, { 2 } },
   { "accl", accl, NULL, ORC_STATIC_OPCODE_ACCUMULATOR, { 4 }, { 4 } },
   { "accsadubl", accsadubl, NULL, ORC_STATIC_OPCODE_ACCUMULATOR, { 4 }, { 1, 1 } },
+
+  { "swapw", swapw, NULL, 0, { 2 }, { 2 } },
+  { "swapl", swapl, NULL, 0, { 4 }, { 4 } },
+  { "select0wb", select0wb, NULL, 0, { 1 }, { 2 } },
+  { "select1wb", select1wb, NULL, 0, { 1 }, { 2 } },
+  { "select0lw", select0lw, NULL, 0, { 2 }, { 4 } },
+  { "select1lw", select1lw, NULL, 0, { 2 }, { 4 } },
+  { "mergewl", mergewl, NULL, 0, { 4 }, { 2, 2 } },
+  { "mergebw", mergebw, NULL, 0, { 2 }, { 1, 1 } },
 
   { "" }
 };
