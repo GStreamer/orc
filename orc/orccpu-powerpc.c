@@ -1,5 +1,5 @@
 /*
- * LIBOIL - Library of Optimized Inner Loops
+ * LIBORC - Library of Optimized Inner Loops
  * Copyright (c) 2003,2004 David A. Schleef <ds@schleef.org>
  * All rights reserved.
  *
@@ -28,11 +28,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <liboil/liboilfunction.h>
-#include <liboil/liboildebug.h>
-#include <liboil/liboilcpu.h>
-#include <liboil/liboilfault.h>
-#include <liboil/liboilutils.h>
+#include <orc/orc.h>
 
 #if defined(__linux__)
 #include <linux/auxvec.h>
@@ -57,13 +53,15 @@
 
 /***** powerpc *****/
 
+#if 0
 static unsigned long
-oil_profile_stamp_tb(void)
+orc_profile_stamp_tb(void)
 {
   unsigned long ts;
   __asm__ __volatile__("mftb %0\n" : "=r" (ts));
   return ts;
 }
+#endif
 
 #if !defined(__FreeBSD__) && !defined(__FreeBSD_kernel__) && !defined(__APPLE__) && !defined(__linux__)
 static void
@@ -75,7 +73,7 @@ test_altivec (void * ignored)
 
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 static void
-oil_check_altivec_sysctl_freebsd (void)
+orc_check_altivec_sysctl_freebsd (void)
 {
   int ret, av;
   size_t len;
@@ -83,14 +81,14 @@ oil_check_altivec_sysctl_freebsd (void)
   len = sizeof(av);
   ret = sysctlbyname("hw.altivec", &av, &len, NULL, 0);
   if (!ret && av) {
-    oil_cpu_flags |= OIL_IMPL_FLAG_ALTIVEC;
+    orc_cpu_flags |= ORC_IMPL_FLAG_ALTIVEC;
   }
 }
 #endif
 
 #if defined(__APPLE__)
 static void
-oil_check_altivec_sysctl_darwin (void)
+orc_check_altivec_sysctl_darwin (void)
 {
   int ret, vu;
   size_t len;
@@ -98,15 +96,16 @@ oil_check_altivec_sysctl_darwin (void)
   len = sizeof(vu);
   ret = sysctlbyname("hw.vectorunit", &vu, &len, NULL, 0);
   if (!ret && vu) {
-    oil_cpu_flags |= OIL_IMPL_FLAG_ALTIVEC;
+    orc_cpu_flags |= ORC_IMPL_FLAG_ALTIVEC;
   }
 }
 #endif
 
 #if defined(__linux__)
-static void
-oil_check_altivec_proc_auxv (void)
+static unsigned long
+orc_check_altivec_proc_auxv (void)
 {
+  unsigned long cpu_flags = 0;
   static int available = -1;
   int new_avail = 0;
   unsigned long buf[64];
@@ -115,7 +114,7 @@ oil_check_altivec_proc_auxv (void)
 
   /* Flags already set */
   if (available != -1) {
-    return;
+    return 0;
   }
 
   fd = open("/proc/self/auxv", O_RDONLY);
@@ -148,38 +147,40 @@ out_close:
 out:
   available = new_avail;
   if (available) {
-    oil_cpu_flags |= OIL_IMPL_FLAG_ALTIVEC;
+    cpu_flags |= ORC_TARGET_ALTIVEC_ALTIVEC;
   }
+
+  return cpu_flags;
 }
 #endif
 
 #if !defined(__FreeBSD__) && !defined(__FreeBSD_kernel__) && !defined(__APPLE__) && !defined(__linux__)
 static void
-oil_check_altivec_fault (void)
+orc_check_altivec_fault (void)
 {
-  oil_fault_check_enable ();
-  if (oil_fault_check_try(test_altivec, NULL)) {
-    OIL_DEBUG ("cpu flag altivec");
-    oil_cpu_flags |= OIL_IMPL_FLAG_ALTIVEC;
+  orc_fault_check_enable ();
+  if (orc_fault_check_try(test_altivec, NULL)) {
+    ORC_DEBUG ("cpu flag altivec");
+    orc_cpu_flags |= ORC_IMPL_FLAG_ALTIVEC;
   }
-  oil_fault_check_disable ();
+  orc_fault_check_disable ();
 }
 #endif
 
 void
-oil_cpu_detect_arch(void)
+orc_cpu_detect_arch(void)
 {
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
-  oil_check_altivec_sysctl_freebsd();
+  orc_check_altivec_sysctl_freebsd();
 #elif defined(__APPLE__)
-  oil_check_altivec_sysctl_darwin();
+  orc_check_altivec_sysctl_darwin();
 #elif defined(__linux__)
-  oil_check_altivec_proc_auxv();
+  orc_check_altivec_proc_auxv();
 #else
-  oil_check_altivec_fault();
+  orc_check_altivec_fault();
 #endif
 
-  _oil_profile_stamp = oil_profile_stamp_tb;
+  //_orc_profile_stamp = orc_profile_stamp_tb;
 }
 
 

@@ -43,7 +43,11 @@ orc_test_gcc_compile (OrcProgram *p)
   ret = fwrite(p->code, p->code_size, 1, file);
   fclose (file);
 
+#if defined(HAVE_POWERPC)
+  ret = system ("gcc -Wa,-mregnames -Wall -c tmp.s");
+#else
   ret = system ("gcc -Wall -c tmp.s");
+#endif
   if (ret != 0) {
     printf("gcc failed\n");
     return FALSE;
@@ -60,6 +64,8 @@ orc_test_gcc_compile (OrcProgram *p)
       "-O elf32-i386 -B i386 "
 #elif defined(HAVE_AMD64)
       "-O elf64-x86-64 -B i386 "
+#elif defined(HAVE_POWERPC)
+      "-O elf32-powerpc -B powerpc "
 #else
       /* FIXME */
 #endif

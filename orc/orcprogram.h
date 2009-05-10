@@ -72,6 +72,9 @@ enum {
   ORC_TARGET_SSE_SSE4A = (1<<5),
   ORC_TARGET_SSE_SSE5 = (1<<6)
 };
+enum {
+  ORC_TARGET_ALTIVEC_ALTIVEC = (1<<0)
+};
 
 typedef enum {
   ORC_VAR_TYPE_TEMP,
