@@ -98,6 +98,7 @@ test_opcode_const (OrcStaticOpcode *opcode)
 {
   OrcProgram *p;
   char s[40];
+  int ret;
 
   if (opcode->src_size[1] == 0) return;
 
@@ -109,7 +110,10 @@ test_opcode_const (OrcStaticOpcode *opcode)
 
   orc_program_append_str (p, opcode->name, "d1", "s1", "c1");
 
-  orc_test_gcc_compile (p);
+  ret = orc_test_gcc_compile (p);
+  if (!ret) {
+    printf("%s", orc_program_get_asm_code (p));
+  }
 
   orc_program_free (p);
 }

@@ -15,6 +15,7 @@ typedef struct _OrcProgram OrcProgram;
 typedef struct _OrcCompiler OrcCompiler;
 typedef struct _OrcRule OrcRule;
 typedef struct _OrcRuleSet OrcRuleSet;
+typedef struct _OrcConstant OrcConstant;
 typedef struct _OrcFixup OrcFixup;
 typedef struct _OrcTarget OrcTarget;
 
@@ -26,6 +27,7 @@ typedef void (*OrcRuleEmitFunc)(OrcCompiler *p, void *user, OrcInstruction *insn
 #define ORC_N_VARIABLES 40
 #define ORC_N_REGISTERS 20
 #define ORC_N_FIXUPS 20
+#define ORC_N_CONSTANTS 20
 #define ORC_N_LABELS 20
 
 #define ORC_GP_REG_BASE 32
@@ -128,6 +130,13 @@ enum {
   ORC_VAR_T8
 };
 
+enum {
+  ORC_CONST_ZERO,
+  ORC_CONST_SPLAT_B,
+  ORC_CONST_SPLAT_W,
+  ORC_CONST_SPLAT_L,
+};
+
 struct _OrcVariable {
   char *name;
 
@@ -191,6 +200,13 @@ struct _OrcInstruction {
   OrcRule *rule;
 };
 
+struct _OrcConstant {
+  int type;
+  int alloc_reg;
+  unsigned int value;
+  unsigned int full_value[4];
+};
+
 struct _OrcFixup {
   unsigned char *ptr;
   int type;
@@ -233,6 +249,9 @@ struct _OrcCompiler {
 
   unsigned char *codeptr;
   
+  OrcConstant constants[ORC_N_CONSTANTS];
+  int n_constants;
+
   OrcFixup fixups[ORC_N_FIXUPS];
   int n_fixups;
   unsigned char *labels[ORC_N_LABELS];
@@ -246,6 +265,7 @@ struct _OrcCompiler {
 
   int loop_shift;
   int long_jumps;
+  int use_frame_pointer;
 
   char *asm_code;
   int asm_code_len;

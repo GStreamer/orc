@@ -18,9 +18,11 @@ void powerpc_emit_lwz (OrcCompiler *compiler, int regd, int rega, int imm);
 void powerpc_emit_stwu (OrcCompiler *compiler, int regs, int rega, int offset);
 
 void powerpc_emit_ret (OrcCompiler *compiler);
+void powerpc_emit_b (OrcCompiler *compiler, int label);
 void powerpc_emit_beq (OrcCompiler *compiler, int label);
 void powerpc_emit_bne (OrcCompiler *compiler, int label);
 void powerpc_emit_label (OrcCompiler *compiler, int label);
+void powerpc_add_fixup (OrcCompiler *compiler, int type, unsigned char *ptr, int label);
 
 void orc_compiler_powerpc_init (OrcCompiler *compiler);
 void orc_compiler_powerpc_assemble (OrcCompiler *compiler);
@@ -233,9 +235,9 @@ powerpc_emit_X (OrcCompiler *compiler, unsigned int insn, int d, int a, int b)
 
   powerpc_emit (compiler, insn);
 #endif
-  insn |= (d<<21);
-  insn |= (a<<16);
-  insn |= (b<<11);
+  insn |= ((d&0x1f)<<21);
+  insn |= ((a&0x1f)<<16);
+  insn |= ((b&0x1f)<<11);
   powerpc_emit (compiler, insn);
 }
 
@@ -260,6 +262,19 @@ powerpc_emit_VX (OrcCompiler *compiler, unsigned int insn, int d, int a, int b)
   powerpc_emit (compiler, insn);
 }
 
+void
+powerpc_emit_VX_2 (OrcCompiler *p, const char *name,
+    unsigned int insn, int d, int a, int b)
+{
+  ORC_ASM_CODE(p,"  %s %s, %s, %s\n", name,
+      powerpc_get_regname(d),
+      powerpc_get_regname(a),
+      powerpc_get_regname(b));
+  powerpc_emit_VX(p, insn,
+      powerpc_regnum(d),
+      powerpc_regnum(a),
+      powerpc_regnum(b));
+}
 
 void
 powerpc_emit_epilogue (OrcCompiler *compiler)
@@ -290,6 +305,12 @@ powerpc_do_fixups (OrcCompiler *compiler)
 
       insn = *(unsigned int *)ptr;
       *(unsigned int *)ptr = (insn&0xffff0000) | ((insn + (label-ptr))&0xffff);
+    } else {
+      unsigned char *label = compiler->labels[compiler->fixups[i].label];
+      unsigned char *ptr = compiler->fixups[i].ptr;
+
+      insn = *(unsigned int *)ptr;
+      *(unsigned int *)ptr = (insn&0xffff0000) | ((insn + (label-compiler->program->code))&0xffff);
     }
   }
 }
@@ -365,20 +386,228 @@ orc_compiler_powerpc_init (OrcCompiler *compiler)
   compiler->loop_shift = 0;
 }
 
+static void
+powerpc_load_constant (OrcCompiler *p, int i, int reg)
+{
+  int j;
+  int value = p->constants[i].value;
+  int greg = POWERPC_R31;
+
+#if 0
+  switch (p->constants[i].type) {
+    case ORC_CONST_ZERO:
+      powerpc_emit_VX_2(p, "vxor", 0x100004c4, reg, reg, reg);
+      break;
+    case ORC_CONST_SPLAT_B:
+      if (value < 16 && value >= -16) {
+        ORC_ASM_CODE(p,"  vspltisb %s, %d\n",
+            powerpc_get_regname(reg), value&0x1f);
+        powerpc_emit_VX(p, 0x1000020c,
+            powerpc_regnum(reg), value & 0x1f, 0);
+      } else {
+        ORC_PROGRAM_ERROR(p,"can't load constant");
+      }
+      break;
+    case ORC_CONST_SPLAT_W:
+      if (value < 16 && value >= -16) {
+        ORC_ASM_CODE(p,"  vspltish %s, %d\n",
+            powerpc_get_regname(reg), value&0x1f);
+        powerpc_emit_VX(p, 0x1000024c,
+            powerpc_regnum(reg), value & 0x1f, 0);
+      } else {
+        ORC_PROGRAM_ERROR(p,"can't load constant");
+      }
+      break;
+    case ORC_CONST_SPLAT_L:
+      if (value < 16 && value >= -16) {
+        ORC_ASM_CODE(p,"  vspltisw %s, %d\n",
+            powerpc_get_regname(reg), value&0x1f);
+        powerpc_emit_VX(p, 0x1000028c,
+            powerpc_regnum(reg), value & 0x1f, 0);
+      } else {
+        ORC_PROGRAM_ERROR(p,"can't load constant");
+      }
+      break;
+    default:
+      ORC_PROGRAM_ERROR(p,"unhandled");
+      break;
+  }
+#endif
+
+  switch (p->constants[i].type) {
+    case ORC_CONST_ZERO:
+      for(j=0;j<4;j++){
+        p->constants[i].full_value[j] = 0;
+      }
+      break;
+    case ORC_CONST_SPLAT_B:
+      value &= 0xff;
+      value |= (value<<8);
+      value |= (value<<16);
+      for(j=0;j<4;j++){
+        p->constants[i].full_value[j] = value;
+      }
+      break;
+    case ORC_CONST_SPLAT_W:
+      value &= 0xffff;
+      value |= (value<<16);
+      for(j=0;j<4;j++){
+        p->constants[i].full_value[j] = value;
+      }
+      break;
+    case ORC_CONST_SPLAT_L:
+      for(j=0;j<4;j++){
+        p->constants[i].full_value[j] = value;
+      }
+      break;
+    default:
+      break;
+  }
+
+  powerpc_emit_b (p, 10);
+
+  while ((p->codeptr - p->program->code) & 0xf) {
+    ORC_ASM_CODE(p,"  .long 0x00000000\n");
+    powerpc_emit (p, 0x00000000);
+  }
+
+  powerpc_emit_label (p, 11);
+  for(j=0;j<4;j++){
+    ORC_ASM_CODE(p,"  .long 0x%08x\n", p->constants[i].full_value[j]);
+    powerpc_emit (p, p->constants[i].full_value[j]);
+  }
+
+  powerpc_emit_label (p, 10);
+  powerpc_emit_lwz (p,
+      greg,
+      POWERPC_R3,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor, program));
+  powerpc_emit_lwz (p,
+      greg, greg,
+      (int)ORC_STRUCT_OFFSET(OrcProgram, code_exec));
+
+  powerpc_add_fixup (p, 1, p->codeptr, 11);
+  {
+    unsigned int insn;
+
+    ORC_ASM_CODE(p,"  addi %s, %s, %db - %s\n",
+        powerpc_get_regname(greg),
+        powerpc_get_regname(greg), 11, p->program->name);
+    insn = (14<<26) | (powerpc_regnum (greg)<<21) | (powerpc_regnum (greg)<<16);
+    insn |= 0;
+
+    powerpc_emit (p, insn);
+  }
+
+  ORC_ASM_CODE(p,"  lvx %s, 0, %s\n",
+      powerpc_get_regname(reg),
+      powerpc_get_regname(greg));
+  powerpc_emit_X (p, 0x7c0000ce, reg, 0, greg);
+
+}
+
+static int
+powerpc_get_constant (OrcCompiler *p, int type, int value)
+{
+  int reg = p->tmpreg;
+  int i;
+
+  for(i=0;i<p->n_constants;i++){
+    if (p->constants[i].type == type &&
+        p->constants[i].value == value) {
+      if (p->constants[i].alloc_reg != 0) {
+        return p->constants[i].alloc_reg;
+      }
+      break;
+    }
+  }
+  if (i == p->n_constants) {
+    p->n_constants++;
+    p->constants[i].type = type;
+    p->constants[i].value = value;
+    p->constants[i].alloc_reg = 0;
+  }
+
+  powerpc_load_constant (p, i, reg);
+
+  return reg;
+}
+
 void
 powerpc_load_constants (OrcCompiler *compiler)
 {
+  OrcVariable *var;
   int i;
+  int j;
+  int greg = POWERPC_R0;
+
   for(i=0;i<ORC_N_VARIABLES;i++){
+    var = compiler->vars + i;
+
     if (compiler->vars[i].name == NULL) continue;
     switch (compiler->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:
-        ORC_ASM_CODE(compiler,"  vspltish %s, %d\n",
-            powerpc_get_regname(compiler->vars[i].alloc),
-            (int)compiler->vars[i].value);
-        powerpc_emit_655510 (compiler, 4,
-            powerpc_regnum(compiler->vars[i].alloc),
-            (int)compiler->vars[i].value, 0, 844);
+        j = compiler->n_constants;
+        compiler->n_constants++;
+        if (compiler->vars[i].size == 1) {
+          compiler->constants[j].type = ORC_CONST_SPLAT_B;
+        } else if (compiler->vars[i].size == 2) {
+          compiler->constants[j].type = ORC_CONST_SPLAT_W;
+        } else {
+          compiler->constants[j].type = ORC_CONST_SPLAT_L;
+        }
+        compiler->constants[j].value = compiler->vars[i].value;
+        compiler->constants[j].alloc_reg = compiler->vars[i].alloc;
+        break;
+      case ORC_VAR_TYPE_PARAM:
+        powerpc_emit_addi (compiler,
+            greg, POWERPC_R3,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[i]));
+        ORC_ASM_CODE(compiler,"  lvewx %s, 0, %s\n", 
+            powerpc_get_regname (var->alloc),
+            powerpc_get_regname (greg));
+        powerpc_emit_X (compiler, 0x7c00008e, powerpc_regnum(var->alloc),
+            0, powerpc_regnum(greg));
+
+        ORC_ASM_CODE(compiler,"  lvsl %s, 0, %s\n", 
+            powerpc_get_regname (POWERPC_V0),
+            powerpc_get_regname (greg));
+        powerpc_emit_X (compiler, 0x7c00000c, powerpc_regnum(POWERPC_V0),
+            0, powerpc_regnum(greg));
+
+        ORC_ASM_CODE(compiler,"  vperm %s, %s, %s, %s\n", 
+            powerpc_get_regname (var->alloc),
+            powerpc_get_regname (var->alloc),
+            powerpc_get_regname (var->alloc),
+            powerpc_get_regname (POWERPC_V0));
+        powerpc_emit_VA (compiler, 4,
+            powerpc_regnum(var->alloc),
+            powerpc_regnum(var->alloc),
+            powerpc_regnum(var->alloc),
+            powerpc_regnum(POWERPC_V0), 43);
+        switch (var->size) {
+          case 1:
+            ORC_ASM_CODE(compiler,"  vspltb %s, %s, 3\n",
+                powerpc_get_regname (var->alloc),
+                powerpc_get_regname (var->alloc));
+            powerpc_emit_VX (compiler, 0x1000020c,
+                powerpc_regnum(var->alloc), 3, powerpc_regnum(var->alloc));
+            break;
+          case 2:
+            ORC_ASM_CODE(compiler,"  vsplth %s, %s, 1\n", 
+                powerpc_get_regname (var->alloc),
+                powerpc_get_regname (var->alloc));
+            powerpc_emit_VX (compiler, 0x1000024c,
+                powerpc_regnum(var->alloc), 1, powerpc_regnum(var->alloc));
+            break;
+          case 4:
+            ORC_ASM_CODE(compiler,"  vspltw %s, %s, 0\n", 
+                powerpc_get_regname (var->alloc),
+                powerpc_get_regname (var->alloc));
+            powerpc_emit_VX (compiler, 0x1000028c,
+                powerpc_regnum(var->alloc), 0, powerpc_regnum(var->alloc));
+            break;
+        }
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
@@ -394,6 +623,12 @@ powerpc_load_constants (OrcCompiler *compiler)
         break;
       default:
         break;
+    }
+  }
+
+  for(i=0;i<compiler->n_constants;i++){
+    if (compiler->constants[i].alloc_reg > 0) {
+      powerpc_load_constant (compiler, i, compiler->constants[i].alloc_reg);
     }
   }
 }
@@ -556,6 +791,7 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
 
       switch (var->vartype) {
         case ORC_VAR_TYPE_SRC:
+        case ORC_VAR_TYPE_DEST:
           powerpc_emit_load_src (compiler, var);
           break;
         case ORC_VAR_TYPE_CONST:
@@ -665,7 +901,7 @@ RULE(maxub, "vmaxub", 0x10000002)
 RULE(minsb, "vminsb", 0x10000302)
 RULE(minub, "vminub", 0x10000202)
 RULE(orb, "vor", 0x10000484)
-RULE_SHIFT(shlb, "vrlb", 0x10000004)
+RULE_SHIFT(shlb, "vslb", 0x10000104)
 RULE_SHIFT(shrsb, "vsrab", 0x10000304)
 RULE_SHIFT(shrub, "vsrb", 0x10000204)
 RULE(subb, "vsububm", 0x10000400)
@@ -687,7 +923,7 @@ RULE(maxuw, "vmaxuh", 0x10000042)
 RULE(minsw, "vminsh", 0x10000342)
 RULE(minuw, "vminuh", 0x10000242)
 RULE(orw, "vor", 0x10000484)
-RULE_SHIFT(shlw, "vrlh", 0x10000044)
+RULE_SHIFT(shlw, "vslh", 0x10000144)
 RULE_SHIFT(shrsw, "vsrah", 0x10000344)
 RULE_SHIFT(shruw, "vsrh", 0x10000244)
 RULE(subw, "vsubuhm", 0x10000440)
@@ -709,7 +945,7 @@ RULE(maxul, "vmaxuw", 0x10000082)
 RULE(minsl, "vminsw", 0x10000382)
 RULE(minul, "vminuw", 0x10000282)
 RULE(orl, "vor", 0x10000484)
-RULE_SHIFT(shll, "vrlw", 0x10000084)
+RULE_SHIFT(shll, "vslw", 0x10000184)
 RULE_SHIFT(shrsl, "vsraw", 0x10000384)
 RULE_SHIFT(shrul, "vsrw", 0x10000284)
 RULE(subl, "vsubuwm", 0x10000480)
@@ -891,27 +1127,10 @@ powerpc_rule_convswl (OrcCompiler *p, void *user, OrcInstruction *insn)
       powerpc_regnum(p->vars[insn->src_args[0]].alloc));
 }
 
-static int
-powerpc_get_constant (OrcCompiler *p, int value)
-{
-  int reg = p->tmpreg;
-
-  ORC_ASM_CODE(p,"  vxor %s, %s, %s\n",
-      powerpc_get_regname(reg),
-      powerpc_get_regname(reg),
-      powerpc_get_regname(reg));
-  powerpc_emit_VX(p, 0x100004c4,
-      powerpc_regnum(reg),
-      powerpc_regnum(reg),
-      powerpc_regnum(reg));
-
-  return reg;
-}
-
 static void
 powerpc_rule_convubw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int reg = powerpc_get_constant (p, 0);
+  int reg = powerpc_get_constant (p, ORC_CONST_ZERO, 0);
 
   ORC_ASM_CODE(p,"  vmrghb %s, %s, %s\n",
       powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
@@ -926,7 +1145,7 @@ powerpc_rule_convubw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 powerpc_rule_convuwl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int reg = powerpc_get_constant (p, 0);
+  int reg = powerpc_get_constant (p, ORC_CONST_ZERO, 0);
 
   ORC_ASM_CODE(p,"  vmrghh %s, %s, %s\n",
       powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
@@ -1282,11 +1501,11 @@ void powerpc_emit_ret (OrcCompiler *compiler)
 }
 
 void
-powerpc_add_fixup (OrcCompiler *compiler, unsigned char *ptr, int label)
+powerpc_add_fixup (OrcCompiler *compiler, int type, unsigned char *ptr, int label)
 {
   compiler->fixups[compiler->n_fixups].ptr = ptr;
   compiler->fixups[compiler->n_fixups].label = label;
-  compiler->fixups[compiler->n_fixups].type = 0;
+  compiler->fixups[compiler->n_fixups].type = type;
   compiler->n_fixups++;
 }
 
@@ -1296,25 +1515,36 @@ powerpc_add_label (OrcCompiler *compiler, unsigned char *ptr, int label)
   compiler->labels[label] = ptr;
 }
 
+void powerpc_emit_b (OrcCompiler *compiler, int label)
+{
+  ORC_ASM_CODE(compiler,"  b %d%c\n", label,
+      (compiler->labels[label]!=NULL) ? 'b' : 'f');
+
+  powerpc_add_fixup (compiler, 0, compiler->codeptr, label);
+  powerpc_emit (compiler, 0x48000000);
+}
+
 void powerpc_emit_beq (OrcCompiler *compiler, int label)
 {
-  ORC_ASM_CODE(compiler,"  ble- .L%d\n", label);
+  ORC_ASM_CODE(compiler,"  ble- %d%c\n", label,
+      (compiler->labels[label]!=NULL) ? 'b' : 'f');
 
-  powerpc_add_fixup (compiler, compiler->codeptr, label);
+  powerpc_add_fixup (compiler, 0, compiler->codeptr, label);
   powerpc_emit (compiler, 0x40810000);
 }
 
 void powerpc_emit_bne (OrcCompiler *compiler, int label)
 {
-  ORC_ASM_CODE(compiler,"  bdnz+ .L%d\n", label);
+  ORC_ASM_CODE(compiler,"  bdnz+ %d%c\n", label,
+      (compiler->labels[label]!=NULL) ? 'b' : 'f');
 
-  powerpc_add_fixup (compiler, compiler->codeptr, label);
+  powerpc_add_fixup (compiler, 0, compiler->codeptr, label);
   powerpc_emit (compiler, 0x42000000);
 }
 
 void powerpc_emit_label (OrcCompiler *compiler, int label)
 {
-  ORC_ASM_CODE(compiler,".L%d:\n", label);
+  ORC_ASM_CODE(compiler,"%d:\n", label);
 
   powerpc_add_label (compiler, compiler->codeptr, label);
 }
