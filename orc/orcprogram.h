@@ -255,6 +255,7 @@ struct _OrcCompiler {
   OrcFixup fixups[ORC_N_FIXUPS];
   int n_fixups;
   unsigned char *labels[ORC_N_LABELS];
+  int n_labels;
 
   int error;
 
@@ -384,6 +385,7 @@ int orc_program_powerpc_allocate_register (OrcProgram *program, int is_data);
 void orc_program_x86_register_rules (void);
 void orc_compiler_allocate_codemem (OrcCompiler *compiler);
 void orc_program_dump_code (OrcProgram *program);
+int orc_compiler_label_new (OrcCompiler *compiler);
 
 const char *orc_program_get_asm_code (OrcProgram *program);
 void orc_program_dump_asm (OrcProgram *program);

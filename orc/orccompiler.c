@@ -32,7 +32,11 @@ orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
     offset = ORC_GP_REG_BASE;
   }
 
+  roff = 0;
+#if 0
+  /* for testing */
   roff = rand()&0xf;
+#endif
 
   for(i=0;i<32;i++){
     reg = offset + ((roff + i)&0x1f);
@@ -134,6 +138,8 @@ orc_program_compile_for_target (OrcProgram *program, OrcTarget *target)
 
   program->asm_code = compiler->asm_code;
   program->code_size = compiler->codeptr - program->code;
+
+  free (compiler);
 
   return TRUE;
 error:
@@ -444,5 +450,11 @@ orc_compiler_append_code (OrcCompiler *p, const char *fmt, ...)
   p->asm_code = realloc (p->asm_code, p->asm_code_len + n + 1);
   memcpy (p->asm_code + p->asm_code_len, tmp, n + 1);
   p->asm_code_len += n;
+}
+
+int
+orc_compiler_label_new (OrcCompiler *compiler)
+{
+  return compiler->n_labels++;
 }
 
