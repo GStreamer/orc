@@ -506,9 +506,9 @@ mergewl (OrcOpcodeExecutor *ex, void *user)
     uint16_t u16[2];
     uint32_t u32;
   } val;
-  val.u16[0] = ex->dest_values[0];
-  val.u16[1] = ex->dest_values[1];
-  ex->src_values[0] = val.u32;
+  val.u16[0] = ex->src_values[0];
+  val.u16[1] = ex->src_values[1];
+  ex->dest_values[0] = val.u32;
 }
 
 static void
@@ -518,9 +518,9 @@ mergebw (OrcOpcodeExecutor *ex, void *user)
     uint8_t u8[2];
     uint16_t u16;
   } val;
-  val.u8[0] = ex->dest_values[0];
-  val.u8[1] = ex->dest_values[1];
-  ex->src_values[0] = val.u16;
+  val.u8[0] = ex->src_values[0];
+  val.u8[1] = ex->src_values[1];
+  ex->dest_values[0] = val.u16;
 }
 
 static void

@@ -788,6 +788,24 @@ sse_rule_select1wb (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+sse_rule_mergebw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[1]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+
+  orc_sse_emit_660f (p, "punpcklbw", 0x60, src, dest);
+}
+
+static void
+sse_rule_mergewl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[1]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+
+  orc_sse_emit_660f (p, "punpcklwd", 0x61, src, dest);
+}
+
+static void
 sse_emit_load_mask (OrcCompiler *p, unsigned int mask1, unsigned int mask2)
 {
   int tmp = p->tmpreg;
@@ -1175,6 +1193,8 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   REG(select1lw);
   REG(select0wb);
   REG(select1wb);
+  REG(mergebw);
+  REG(mergewl);
 
   orc_rule_register (rule_set, "copyb", sse_rule_copyx, NULL);
   orc_rule_register (rule_set, "copyw", sse_rule_copyx, NULL);
