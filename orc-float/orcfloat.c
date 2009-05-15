@@ -21,8 +21,30 @@ orc_float_init (void)
   orc_float_sse_register_rules ();
 }
 
-#define ORC_FLOAT_READ(addr) (*(float *)(addr))
-#define ORC_FLOAT_WRITE(addr,value) do{ (*(float *)(addr)) = (value); }while(0)
+static float
+ORC_FLOAT_READ(void *addr)
+{
+  union {
+    float f;
+    unsigned int i;
+  } x;
+  x.i = *(unsigned int *)(addr);
+  return x.f;
+}
+
+static void
+ORC_FLOAT_WRITE(void *addr, float value)
+{
+  union {
+    float f;
+    unsigned int i;
+  } x;
+  x.f = value;
+  *(unsigned int *)(addr) = x.i;
+}
+
+//#define ORC_FLOAT_READ(addr) (*(float *)(addr))
+//#define ORC_FLOAT_WRITE(addr,value) do{ (*(float *)(addr)) = (value); }while(0)
 
 #define UNARY_F(name,code) \
 static void \
@@ -36,8 +58,10 @@ name (OrcOpcodeExecutor *ex, void *user) \
 static void \
 name (OrcOpcodeExecutor *ex, void *user) \
 { \
-  float a = ORC_FLOAT_READ(&ex->src_values[0]); \
-  float b = ORC_FLOAT_READ(&ex->src_values[1]); \
+  void *pa = &ex->src_values[0]; \
+  void *pb = &ex->src_values[1]; \
+  float a = ORC_FLOAT_READ(pa); \
+  float b = ORC_FLOAT_READ(pb); \
   ORC_FLOAT_WRITE(&ex->dest_values[0], code ); \
 }
 
@@ -76,8 +100,30 @@ convlf (OrcOpcodeExecutor *ex, void *user)
   ORC_FLOAT_WRITE(&ex->dest_values[0], ex->src_values[0]);
 }
 
-#define ORC_DOUBLE_READ(addr) (*(double *)(addr))
-#define ORC_DOUBLE_WRITE(addr,value) do{ (*(double *)(addr)) = (value); }while(0)
+static double
+ORC_DOUBLE_READ(void *addr)
+{
+  union {
+    double f;
+    unsigned long long i;
+  } x;
+  x.i = *(unsigned long long *)(addr);
+  return x.f;
+}
+
+static void
+ORC_DOUBLE_WRITE(void *addr, double value)
+{
+  union {
+    double f;
+    unsigned long long i;
+  } x;
+  x.f = value;
+  *(unsigned long long *)(addr) = x.i;
+}
+
+//#define ORC_DOUBLE_READ(addr) (*(double *)(void *)(addr))
+//#define ORC_DOUBLE_WRITE(addr,value) do{ (*(double *)(void *)(addr)) = (value); }while(0)
 
 #define UNARY_G(name,code) \
 static void \
