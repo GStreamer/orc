@@ -1011,7 +1011,10 @@ orc_x86_emit_prologue (OrcCompiler *compiler)
     }
   } else {
     orc_x86_emit_push (compiler, 4, X86_EBP);
-    orc_x86_emit_mov_memoffset_reg (compiler, 4, 8, X86_ESP, X86_EBP);
+    if (compiler->use_frame_pointer) {
+      orc_x86_emit_mov_reg_reg (compiler, 4, X86_ESP, X86_EBP);
+    }
+    orc_x86_emit_mov_memoffset_reg (compiler, 4, 8, X86_ESP, compiler->exec_reg);
     if (compiler->used_regs[X86_EDI]) {
       orc_x86_emit_push (compiler, 4, X86_EDI);
     }

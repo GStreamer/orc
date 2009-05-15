@@ -58,6 +58,7 @@ orc_compiler_sse_init (OrcCompiler *compiler)
 #else
   compiler->is_64bit = FALSE;
 #endif
+  compiler->use_frame_pointer = FALSE;
   
 #if defined(HAVE_AMD64) || defined(HAVE_I386)
   compiler->target_flags = orc_sse_get_cpu_flags ();
@@ -89,7 +90,9 @@ orc_compiler_sse_init (OrcCompiler *compiler)
     }
     compiler->valid_regs[X86_ECX] = 0;
     compiler->valid_regs[X86_ESP] = 0;
-    compiler->valid_regs[X86_EBP] = 0;
+    if (compiler->use_frame_pointer) {
+      compiler->valid_regs[X86_EBP] = 0;
+    }
     for(i=X86_XMM0;i<X86_XMM0+8;i++){
       compiler->valid_regs[i] = 1;
     }
@@ -111,8 +114,13 @@ orc_compiler_sse_init (OrcCompiler *compiler)
   if (compiler->is_64bit) {
     compiler->exec_reg = X86_EDI;
   } else {
-    compiler->exec_reg = X86_EBP;
+    if (compiler->use_frame_pointer) {
+      compiler->exec_reg = X86_EBX;
+    } else {
+      compiler->exec_reg = X86_EBP;
+    }
   }
+  compiler->valid_regs[compiler->exec_reg] = 0;
 
   switch (orc_program_get_max_var_size (compiler->program)) {
     case 1:
