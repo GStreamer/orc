@@ -15,8 +15,6 @@
 
 #define SIZE 65536
 
-int arm_exec_ptr = ARM_R0;
-
 void orc_arm_emit_loop (OrcCompiler *compiler);
 
 void orc_compiler_arm_register_rules (OrcTarget *target);
@@ -150,13 +148,13 @@ orc_arm_load_constants (OrcCompiler *compiler)
         break;
       case ORC_VAR_TYPE_PARAM:
         //arm_emit_loadw (compiler, compiler->vars[i].alloc,
-        //    (int)ORC_STRUCT_OFFSET(OrcExecutor, params[i]), arm_exec_ptr);
+        //    (int)ORC_STRUCT_OFFSET(OrcExecutor, params[i]), p->exec_reg);
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
         orc_arm_emit_load_reg (compiler, 
             compiler->vars[i].ptr_register,
-            arm_exec_ptr, ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
+            compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
         break;
       default:
         break;
@@ -173,7 +171,7 @@ orc_arm_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
     i = var - compiler->vars;
     //arm_emit_mov_memoffset_reg (compiler, arm_ptr_size,
     //    (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]),
-    //    arm_exec_ptr, X86_ECX);
+    //    compiler->exec_reg, X86_ECX);
     ptr_reg = ARM_PC;
   } else {
     ptr_reg = var->ptr_register;
@@ -208,7 +206,7 @@ orc_arm_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
   int ptr_reg;
   if (var->ptr_register == 0) {
     //arm_emit_mov_memoffset_reg (compiler, arm_ptr_size,
-    //    var->ptr_offset, arm_exec_ptr, X86_ECX);
+    //    var->ptr_offset, p->exec_reg, X86_ECX);
     ptr_reg = ARM_PC;
   } else {
     ptr_reg = var->ptr_register;
@@ -249,7 +247,7 @@ orc_compiler_arm_assemble (OrcCompiler *compiler)
 
   orc_arm_emit_prologue (compiler);
 
-  orc_arm_emit_load_reg (compiler, ARM_IP, arm_exec_ptr,
+  orc_arm_emit_load_reg (compiler, ARM_IP, compiler->exec_reg,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
   orc_arm_load_constants (compiler);
 
@@ -355,7 +353,7 @@ orc_arm_emit_loop (OrcCompiler *compiler)
         //arm_emit_add_imm_memoffset (compiler, arm_ptr_size,
         //    compiler->vars[k].size << compiler->loop_shift,
         //    (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]),
-        //    arm_exec_ptr);
+        //    p->exec_reg);
       }
     }
   }

@@ -14,9 +14,6 @@
 
 #include "neon.h"
 
-extern int neon_exec_ptr;
-extern int neon_tmp_reg;
-
 const char *orc_neon_reg_name (int reg)
 {
   static const char *vec_regs[] = {
@@ -372,13 +369,13 @@ orc_neon_emit_loadpb (OrcCompiler *compiler, int dest, int param)
 {
   uint32_t code;
 
-  orc_arm_emit_add_imm (compiler, neon_tmp_reg,
-      neon_exec_ptr, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
+  orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
+      compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
 
   ORC_ASM_CODE(compiler,"  vld1.8 %s[], [%s]\n",
-      orc_neon_reg_name (dest), orc_arm_reg_name (neon_tmp_reg));
+      orc_neon_reg_name (dest), orc_arm_reg_name (compiler->gp_tmpreg));
   code = 0xf4a00c0f;
-  code |= (neon_tmp_reg&0xf) << 16;
+  code |= (compiler->gp_tmpreg&0xf) << 16;
   code |= (dest&0xf) << 12;
   code |= ((dest>>4)&0x1) << 22;
   orc_arm_emit (compiler, code);
@@ -389,13 +386,13 @@ orc_neon_emit_loadpw (OrcCompiler *compiler, int dest, int param)
 {
   uint32_t code;
 
-  orc_arm_emit_add_imm (compiler, neon_tmp_reg,
-      neon_exec_ptr, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
+  orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
+      compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
 
   ORC_ASM_CODE(compiler,"  vld1.16 %s[], [%s]\n",
-      orc_neon_reg_name (dest), orc_arm_reg_name (neon_tmp_reg));
+      orc_neon_reg_name (dest), orc_arm_reg_name (compiler->gp_tmpreg));
   code = 0xf4a00c4f;
-  code |= (neon_tmp_reg&0xf) << 16;
+  code |= (compiler->gp_tmpreg&0xf) << 16;
   code |= (dest&0xf) << 12;
   code |= ((dest>>4)&0x1) << 22;
   orc_arm_emit (compiler, code);
@@ -406,13 +403,13 @@ orc_neon_emit_loadpl (OrcCompiler *compiler, int dest, int param)
 {
   uint32_t code;
 
-  orc_arm_emit_add_imm (compiler, neon_tmp_reg,
-      neon_exec_ptr, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
+  orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
+      compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
 
   ORC_ASM_CODE(compiler,"  vld1.32 %s[], [%s]\n",
-      orc_neon_reg_name (dest), orc_arm_reg_name (neon_tmp_reg));
+      orc_neon_reg_name (dest), orc_arm_reg_name (compiler->gp_tmpreg));
   code = 0xf4a00c8f;
-  code |= (neon_tmp_reg&0xf) << 16;
+  code |= (compiler->gp_tmpreg&0xf) << 16;
   code |= (dest&0xf) << 12;
   code |= ((dest>>4)&0x1) << 22;
   orc_arm_emit (compiler, code);
