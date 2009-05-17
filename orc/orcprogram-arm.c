@@ -17,7 +17,7 @@
 
 int arm_exec_ptr = ARM_R0;
 
-void arm_emit_loop (OrcCompiler *compiler);
+void orc_arm_emit_loop (OrcCompiler *compiler);
 
 void orc_compiler_arm_register_rules (OrcTarget *target);
 
@@ -29,7 +29,7 @@ void orc_compiler_rewrite_vars (OrcCompiler *compiler);
 void orc_compiler_dump (OrcCompiler *compiler);
 
 void
-arm_emit_prologue (OrcCompiler *compiler)
+orc_arm_emit_prologue (OrcCompiler *compiler)
 {
   unsigned int regs = 0;
   int i;
@@ -43,31 +43,31 @@ arm_emit_prologue (OrcCompiler *compiler)
       regs |= (1<<i);
     }
   }
-  if (regs) arm_emit_push (compiler, regs);
+  if (regs) orc_arm_emit_push (compiler, regs);
 
 }
 
 void
-arm_dump_insns (OrcCompiler *compiler)
+orc_arm_dump_insns (OrcCompiler *compiler)
 {
 
-  arm_emit_label (compiler, 0);
+  orc_arm_emit_label (compiler, 0);
 
-  arm_emit_add (compiler, ARM_A2, ARM_A3, ARM_A4);
-  arm_emit_sub (compiler, ARM_A2, ARM_A3, ARM_A4);
-  arm_emit_push (compiler, 0x06);
-  arm_emit_mov (compiler, ARM_A2, ARM_A3);
+  orc_arm_emit_add (compiler, ARM_A2, ARM_A3, ARM_A4);
+  orc_arm_emit_sub (compiler, ARM_A2, ARM_A3, ARM_A4);
+  orc_arm_emit_push (compiler, 0x06);
+  orc_arm_emit_mov (compiler, ARM_A2, ARM_A3);
 
-  arm_emit_branch (compiler, ARM_COND_LE, 0);
-  arm_emit_branch (compiler, ARM_COND_AL, 0);
+  orc_arm_emit_branch (compiler, ARM_COND_LE, 0);
+  orc_arm_emit_branch (compiler, ARM_COND_AL, 0);
 
-  arm_emit_load_imm (compiler, ARM_A3, 0xa500);
-  arm_loadw (compiler, ARM_A3, ARM_A4, 0xa5);
-  arm_emit_load_reg (compiler, ARM_A3, ARM_A4, 0x5a5);
+  orc_arm_emit_load_imm (compiler, ARM_A3, 0xa500);
+  orc_arm_loadw (compiler, ARM_A3, ARM_A4, 0xa5);
+  orc_arm_emit_load_reg (compiler, ARM_A3, ARM_A4, 0x5a5);
 }
 
 void
-arm_emit_epilogue (OrcCompiler *compiler)
+orc_arm_emit_epilogue (OrcCompiler *compiler)
 {
   int i;
   unsigned int regs = 0;
@@ -78,8 +78,8 @@ arm_emit_epilogue (OrcCompiler *compiler)
       regs |= (1<<i);
     }
   }
-  if (regs) arm_emit_pop (compiler, regs);
-  arm_emit_bx_lr (compiler);
+  if (regs) orc_arm_emit_pop (compiler, regs);
+  orc_arm_emit_bx_lr (compiler);
 
   //arm_dump_insns (compiler);
 }
@@ -138,7 +138,7 @@ orc_compiler_arm_init (OrcCompiler *compiler)
 }
 
 void
-arm_load_constants (OrcCompiler *compiler)
+orc_arm_load_constants (OrcCompiler *compiler)
 {
   int i;
   for(i=0;i<ORC_N_VARIABLES;i++){
@@ -154,7 +154,7 @@ arm_load_constants (OrcCompiler *compiler)
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
-        arm_emit_load_reg (compiler, 
+        orc_arm_emit_load_reg (compiler, 
             compiler->vars[i].ptr_register,
             arm_exec_ptr, ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
         break;
@@ -165,7 +165,7 @@ arm_load_constants (OrcCompiler *compiler)
 }
 
 void
-arm_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
+orc_arm_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
 {
   int ptr_reg;
   if (var->ptr_register == 0) {
@@ -184,7 +184,7 @@ arm_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
       //arm_emit_mov_reg_arm (compiler, X86_ECX, var->alloc);
       break;
     case 2:
-      arm_loadw (compiler, var->alloc, ptr_reg, 0);
+      orc_arm_loadw (compiler, var->alloc, ptr_reg, 0);
       //arm_emit_mov_memoffset_reg (compiler, 2, 0, ptr_reg, X86_ECX);
       //arm_emit_mov_reg_arm (compiler, X86_ECX, var->alloc);
       break;
@@ -203,7 +203,7 @@ arm_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
 }
 
 void
-arm_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
+orc_arm_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
 {
   int ptr_reg;
   if (var->ptr_register == 0) {
@@ -219,7 +219,7 @@ arm_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
       //arm_emit_mov_reg_memoffset (compiler, 1, X86_ECX, 0, ptr_reg);
       break;
     case 2:
-      arm_storew (compiler, ptr_reg, 0, var->alloc);
+      orc_arm_storew (compiler, ptr_reg, 0, var->alloc);
       //arm_emit_mov_arm_reg (compiler, var->alloc, X86_ECX);
       //arm_emit_mov_reg_memoffset (compiler, 2, X86_ECX, 0, ptr_reg);
       break;
@@ -247,31 +247,31 @@ orc_compiler_arm_assemble (OrcCompiler *compiler)
 
   compiler->vars[dest_var].is_aligned = FALSE;
 
-  arm_emit_prologue (compiler);
+  orc_arm_emit_prologue (compiler);
 
-  arm_emit_load_reg (compiler, ARM_IP, arm_exec_ptr,
+  orc_arm_emit_load_reg (compiler, ARM_IP, arm_exec_ptr,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
-  arm_load_constants (compiler);
+  orc_arm_load_constants (compiler);
 
-  arm_emit_label (compiler, 1);
+  orc_arm_emit_label (compiler, 1);
 
-  arm_emit_cmp_imm (compiler, ARM_IP, 0);
-  arm_emit_branch (compiler, ARM_COND_EQ, 3);
+  orc_arm_emit_cmp_imm (compiler, ARM_IP, 0);
+  orc_arm_emit_branch (compiler, ARM_COND_EQ, 3);
 
-  arm_emit_label (compiler, 2);
-  arm_emit_loop (compiler);
-  arm_emit_sub_imm (compiler, ARM_IP, ARM_IP, 1);
-  arm_emit_cmp_imm (compiler, ARM_IP, 0);
-  arm_emit_branch (compiler, ARM_COND_NE, 2);
-  arm_emit_label (compiler, 3);
+  orc_arm_emit_label (compiler, 2);
+  orc_arm_emit_loop (compiler);
+  orc_arm_emit_sub_imm (compiler, ARM_IP, ARM_IP, 1);
+  orc_arm_emit_cmp_imm (compiler, ARM_IP, 0);
+  orc_arm_emit_branch (compiler, ARM_COND_NE, 2);
+  orc_arm_emit_label (compiler, 3);
 
-  arm_emit_epilogue (compiler);
+  orc_arm_emit_epilogue (compiler);
 
-  arm_do_fixups (compiler);
+  orc_arm_do_fixups (compiler);
 }
 
 void
-arm_emit_loop (OrcCompiler *compiler)
+orc_arm_emit_loop (OrcCompiler *compiler)
 {
   int j;
   int k;
@@ -302,7 +302,7 @@ arm_emit_loop (OrcCompiler *compiler)
 
       switch (compiler->vars[insn->src_args[k]].vartype) {
         case ORC_VAR_TYPE_SRC:
-          arm_emit_load_src (compiler, &compiler->vars[insn->src_args[k]]);
+          orc_arm_emit_load_src (compiler, &compiler->vars[insn->src_args[k]]);
           break;
         case ORC_VAR_TYPE_CONST:
           break;
@@ -319,7 +319,7 @@ arm_emit_loop (OrcCompiler *compiler)
     if (rule && rule->emit) {
       if (compiler->vars[insn->dest_args[0]].alloc !=
           compiler->vars[insn->src_args[0]].alloc) {
-        arm_emit_mov (compiler, compiler->vars[insn->src_args[0]].alloc,
+        orc_arm_emit_mov (compiler, compiler->vars[insn->src_args[0]].alloc,
             compiler->vars[insn->dest_args[0]].alloc);
       }
       rule->emit (compiler, rule->emit_user, insn);
@@ -332,7 +332,7 @@ arm_emit_loop (OrcCompiler *compiler)
 
       switch (compiler->vars[insn->dest_args[k]].vartype) {
         case ORC_VAR_TYPE_DEST:
-          arm_emit_store_dest (compiler, &compiler->vars[insn->dest_args[k]]);
+          orc_arm_emit_store_dest (compiler, &compiler->vars[insn->dest_args[k]]);
           break;
         case ORC_VAR_TYPE_TEMP:
           break;
@@ -347,7 +347,7 @@ arm_emit_loop (OrcCompiler *compiler)
     if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
         compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
       if (compiler->vars[k].ptr_register) {
-        arm_emit_add_imm (compiler,
+        orc_arm_emit_add_imm (compiler,
             compiler->vars[k].ptr_register,
             compiler->vars[k].ptr_register,
             compiler->vars[k].size << compiler->loop_shift);

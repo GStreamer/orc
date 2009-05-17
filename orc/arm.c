@@ -17,7 +17,7 @@
 
 
 const char *
-arm_reg_name (int reg)
+orc_arm_reg_name (int reg)
 {
 #if 0
   static const char *gp_regs[] = {
@@ -42,21 +42,21 @@ arm_reg_name (int reg)
 }
 
 void
-arm_emit (OrcCompiler *compiler, uint32_t insn)
+orc_arm_emit (OrcCompiler *compiler, uint32_t insn)
 {
   ORC_WRITE_UINT32_LE (compiler->codeptr, insn);
   compiler->codeptr+=4;
 }
 
 void
-arm_emit_bx_lr (OrcCompiler *compiler)
+orc_arm_emit_bx_lr (OrcCompiler *compiler)
 {
   ORC_ASM_CODE(compiler,"  bx lr\n");
-  arm_emit (compiler, 0xe12fff1e);
+  orc_arm_emit (compiler, 0xe12fff1e);
 }
 
 void
-arm_emit_push (OrcCompiler *compiler, int regs)
+orc_arm_emit_push (OrcCompiler *compiler, int regs)
 {
   int i;
   int x = 0;
@@ -73,11 +73,11 @@ arm_emit_push (OrcCompiler *compiler, int regs)
   }
   ORC_ASM_CODE(compiler,"}\n");
 
-  arm_emit (compiler, 0xe92d0000 | regs);
+  orc_arm_emit (compiler, 0xe92d0000 | regs);
 }
 
 void
-arm_emit_pop (OrcCompiler *compiler, int regs)
+orc_arm_emit_pop (OrcCompiler *compiler, int regs)
 {
   int i;
   int x = 0;
@@ -94,11 +94,11 @@ arm_emit_pop (OrcCompiler *compiler, int regs)
   }
   ORC_ASM_CODE(compiler,"}\n");
 
-  arm_emit (compiler, 0xe8bd0000 | regs);
+  orc_arm_emit (compiler, 0xe8bd0000 | regs);
 }
 
 void
-arm_emit_mov (OrcCompiler *compiler, int dest, int src)
+orc_arm_emit_mov (OrcCompiler *compiler, int dest, int src)
 {
   uint32_t code;
 
@@ -106,13 +106,13 @@ arm_emit_mov (OrcCompiler *compiler, int dest, int src)
   code |= (src&0xf) << 0;
   code |= (dest&0xf) << 12;
 
-  ORC_ASM_CODE(compiler,"  mov %s, %s\n", arm_reg_name (dest), arm_reg_name (src));
+  ORC_ASM_CODE(compiler,"  mov %s, %s\n", orc_arm_reg_name (dest), orc_arm_reg_name (src));
 
-  arm_emit (compiler, code);
+  orc_arm_emit (compiler, code);
 }
 
 void
-arm_emit_label (OrcCompiler *compiler, int label)
+orc_arm_emit_label (OrcCompiler *compiler, int label)
 {
   ORC_ASM_CODE(compiler,".L%d:\n", label);
 
@@ -120,7 +120,7 @@ arm_emit_label (OrcCompiler *compiler, int label)
 }
 
 void
-arm_add_fixup (OrcCompiler *compiler, int label, int type)
+orc_arm_add_fixup (OrcCompiler *compiler, int label, int type)
 {
   compiler->fixups[compiler->n_fixups].ptr = compiler->codeptr;
   compiler->fixups[compiler->n_fixups].label = label;
@@ -129,7 +129,7 @@ arm_add_fixup (OrcCompiler *compiler, int label, int type)
 }
 
 void
-arm_do_fixups (OrcCompiler *compiler)
+orc_arm_do_fixups (OrcCompiler *compiler)
 {
   int i;
   for(i=0;i<compiler->n_fixups;i++){
@@ -146,7 +146,7 @@ arm_do_fixups (OrcCompiler *compiler)
 }
 
 void
-arm_emit_branch (OrcCompiler *compiler, int cond, int label)
+orc_arm_emit_branch (OrcCompiler *compiler, int cond, int label)
 {
   static const char *cond_names[] = {
     "eq", "ne", "cs", "cc", "mi", "pl", "vs", "vc",
@@ -155,14 +155,14 @@ arm_emit_branch (OrcCompiler *compiler, int cond, int label)
 
   code = 0x0afffffe;
   code |= (cond&0xf) << 28;
-  arm_add_fixup (compiler, label, 0);
-  arm_emit (compiler, code);
+  orc_arm_add_fixup (compiler, label, 0);
+  orc_arm_emit (compiler, code);
 
   ORC_ASM_CODE(compiler,"  b%s .L%d\n", cond_names[cond], label);
 }
 
 void
-arm_emit_load_imm (OrcCompiler *compiler, int dest, int imm)
+orc_arm_emit_load_imm (OrcCompiler *compiler, int dest, int imm)
 {
   uint32_t code;
   int shift2;
@@ -188,12 +188,12 @@ arm_emit_load_imm (OrcCompiler *compiler, int dest, int imm)
   code |= (((16-shift2)&0xf) << 8);
   code |= (x&0xff);
 
-  ORC_ASM_CODE(compiler,"  mov %s, #0x%08x\n", arm_reg_name (dest), imm);
-  arm_emit (compiler, code);
+  ORC_ASM_CODE(compiler,"  mov %s, #0x%08x\n", orc_arm_reg_name (dest), imm);
+  orc_arm_emit (compiler, code);
 }
 
 void
-arm_emit_add (OrcCompiler *compiler, int dest, int src1, int src2)
+orc_arm_emit_add (OrcCompiler *compiler, int dest, int src1, int src2)
 {
   uint32_t code;
 
@@ -203,14 +203,14 @@ arm_emit_add (OrcCompiler *compiler, int dest, int src1, int src2)
   code |= (src2&0xf) << 0;
 
   ORC_ASM_CODE(compiler,"  add %s, %s, %s\n",
-      arm_reg_name (dest),
-      arm_reg_name (src1),
-      arm_reg_name (src2));
-  arm_emit (compiler, code);
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (src2));
+  orc_arm_emit (compiler, code);
 }
 
 void
-arm_emit_sub (OrcCompiler *compiler, int dest, int src1, int src2)
+orc_arm_emit_sub (OrcCompiler *compiler, int dest, int src1, int src2)
 {
   uint32_t code;
 
@@ -220,14 +220,14 @@ arm_emit_sub (OrcCompiler *compiler, int dest, int src1, int src2)
   code |= (src2&0xf) << 0;
 
   ORC_ASM_CODE(compiler,"  sub %s, %s, %s\n",
-      arm_reg_name (dest),
-      arm_reg_name (src1),
-      arm_reg_name (src2));
-  arm_emit (compiler, code);
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (src2));
+  orc_arm_emit (compiler, code);
 }
 
 void
-arm_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int imm)
+orc_arm_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int imm)
 {
 #if 0
   uint32_t code;
@@ -238,10 +238,10 @@ arm_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int imm)
   code |= (value) << 0;
 
   ORC_ASM_CODE(compiler,"  add %s, %s, #%d\n",
-      arm_reg_name (dest),
-      arm_reg_name (src1),
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1),
       value);
-  arm_emit (compiler, code);
+  orc_arm_emit (compiler, code);
 #endif
   uint32_t code;
   int shift2;
@@ -268,13 +268,13 @@ arm_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int imm)
   code |= (((16-shift2)&0xf) << 8);
   code |= (x&0xff);
 
-  ORC_ASM_CODE(compiler,"  add %s, %s, #0x%08x\n", arm_reg_name (dest),
-      arm_reg_name(src1), imm);
-  arm_emit (compiler, code);
+  ORC_ASM_CODE(compiler,"  add %s, %s, #0x%08x\n", orc_arm_reg_name (dest),
+      orc_arm_reg_name(src1), imm);
+  orc_arm_emit (compiler, code);
 }
 
 void
-arm_emit_and_imm (OrcCompiler *compiler, int dest, int src1, int value)
+orc_arm_emit_and_imm (OrcCompiler *compiler, int dest, int src1, int value)
 {
   uint32_t code;
 
@@ -284,14 +284,14 @@ arm_emit_and_imm (OrcCompiler *compiler, int dest, int src1, int value)
   code |= (value) << 0;
 
   ORC_ASM_CODE(compiler,"  and %s, %s, #%d\n",
-      arm_reg_name (dest),
-      arm_reg_name (src1),
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1),
       value);
-  arm_emit (compiler, code);
+  orc_arm_emit (compiler, code);
 }
 
 void
-arm_emit_sub_imm (OrcCompiler *compiler, int dest, int src1, int value)
+orc_arm_emit_sub_imm (OrcCompiler *compiler, int dest, int src1, int value)
 {
   uint32_t code;
 
@@ -301,14 +301,14 @@ arm_emit_sub_imm (OrcCompiler *compiler, int dest, int src1, int value)
   code |= (value) << 0;
 
   ORC_ASM_CODE(compiler,"  subs %s, %s, #%d\n",
-      arm_reg_name (dest),
-      arm_reg_name (src1),
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1),
       value);
-  arm_emit (compiler, code);
+  orc_arm_emit (compiler, code);
 }
 
 void
-arm_emit_cmp_imm (OrcCompiler *compiler, int src1, int value)
+orc_arm_emit_cmp_imm (OrcCompiler *compiler, int src1, int value)
 {
   uint32_t code;
 
@@ -317,13 +317,13 @@ arm_emit_cmp_imm (OrcCompiler *compiler, int src1, int value)
   code |= (value) << 0;
 
   ORC_ASM_CODE(compiler,"  cmp %s, #%d\n",
-      arm_reg_name (src1),
+      orc_arm_reg_name (src1),
       value);
-  arm_emit (compiler, code);
+  orc_arm_emit (compiler, code);
 }
 
 void
-arm_emit_cmp (OrcCompiler *compiler, int src1, int src2)
+orc_arm_emit_cmp (OrcCompiler *compiler, int src1, int src2)
 {
   uint32_t code;
 
@@ -332,13 +332,13 @@ arm_emit_cmp (OrcCompiler *compiler, int src1, int src2)
   code |= (src2&0xf) << 0;
 
   ORC_ASM_CODE(compiler,"  cmp %s, %s\n",
-      arm_reg_name (src1),
-      arm_reg_name (src2));
-  arm_emit (compiler, code);
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (src2));
+  orc_arm_emit (compiler, code);
 }
 
 void
-arm_emit_asr_imm (OrcCompiler *compiler, int dest, int src1, int value)
+orc_arm_emit_asr_imm (OrcCompiler *compiler, int dest, int src1, int value)
 {
   uint32_t code;
 
@@ -351,14 +351,14 @@ arm_emit_asr_imm (OrcCompiler *compiler, int dest, int src1, int value)
   code |= (value) << 7;
 
   ORC_ASM_CODE(compiler,"  asr %s, %s, #%d\n",
-      arm_reg_name (dest),
-      arm_reg_name (src1),
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1),
       value);
-  arm_emit (compiler, code);
+  orc_arm_emit (compiler, code);
 }
 
 void
-arm_emit_load_reg (OrcCompiler *compiler, int dest, int src1, int offset)
+orc_arm_emit_load_reg (OrcCompiler *compiler, int dest, int src1, int offset)
 {
   uint32_t code;
 
@@ -368,13 +368,13 @@ arm_emit_load_reg (OrcCompiler *compiler, int dest, int src1, int offset)
   code |= offset&0xfff;
 
   ORC_ASM_CODE(compiler,"  ldr %s, [%s, #%d]\n",
-      arm_reg_name (dest),
-      arm_reg_name (src1), offset);
-  arm_emit (compiler, code);
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1), offset);
+  orc_arm_emit (compiler, code);
 }
 
 void
-arm_emit_store_reg (OrcCompiler *compiler, int src1, int dest, int offset)
+orc_arm_emit_store_reg (OrcCompiler *compiler, int src1, int dest, int offset)
 {
   uint32_t code;
 
@@ -384,14 +384,14 @@ arm_emit_store_reg (OrcCompiler *compiler, int src1, int dest, int offset)
   code |= offset&0xfff;
 
   ORC_ASM_CODE(compiler,"  str %s, [%s, #%d]\n",
-      arm_reg_name (src1),
-      arm_reg_name (dest), offset);
-  arm_emit (compiler, code);
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (dest), offset);
+  orc_arm_emit (compiler, code);
 }
 
 
 void
-arm_emit_dp_reg (OrcCompiler *compiler, int cond, int opcode, int dest,
+orc_arm_emit_dp_reg (OrcCompiler *compiler, int cond, int opcode, int dest,
     int src1, int src2)
 {
   static const char *dp_insn_names[] = {
@@ -419,16 +419,16 @@ arm_emit_dp_reg (OrcCompiler *compiler, int cond, int opcode, int dest,
     ORC_ASM_CODE(compiler,"  %s%s %s, %s\n",
         dp_insn_names[opcode],
         update ? "s" : "",
-        arm_reg_name (src1),
-        arm_reg_name (src2));
+        orc_arm_reg_name (src1),
+        orc_arm_reg_name (src2));
   } else {
     ORC_ASM_CODE(compiler,"  %s%s %s, %s, %s\n",
         dp_insn_names[opcode],
         update ? "s" : "",
-        arm_reg_name (dest),
-        arm_reg_name (src1),
-        arm_reg_name (src2));
+        orc_arm_reg_name (dest),
+        orc_arm_reg_name (src1),
+        orc_arm_reg_name (src2));
   }
-  arm_emit (compiler, code);
+  orc_arm_emit (compiler, code);
 }
 
