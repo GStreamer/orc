@@ -73,17 +73,30 @@ test_opcode (OrcStaticOpcode *opcode)
   OrcProgram *p;
   char s[40];
 
-  if (opcode->src_size[1] == 0) {
-    p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);
+  if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
+    if (opcode->src_size[1] == 0) {
+      p = orc_program_new_as (opcode->dest_size[0], opcode->src_size[0]);
+    } else {
+      p = orc_program_new_ass (opcode->dest_size[0], opcode->src_size[0],
+          opcode->src_size[1]);
+    }
   } else {
-    p = orc_program_new_dss (opcode->dest_size[0], opcode->src_size[0],
-        opcode->src_size[1]);
+    if (opcode->src_size[1] == 0) {
+      p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);
+    } else {
+      p = orc_program_new_dss (opcode->dest_size[0], opcode->src_size[0],
+          opcode->src_size[1]);
+    }
   }
 
   sprintf(s, "test_%s", opcode->name);
   orc_program_set_name (p, s);
 
-  orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
+  if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
+    orc_program_append_str (p, opcode->name, "a1", "s1", "s2");
+  } else {
+    orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
+  }
 
   orc_test_gcc_compile_neon (p);
 

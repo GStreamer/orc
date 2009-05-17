@@ -74,6 +74,7 @@ orc_test_gcc_compile (OrcProgram *p)
   ret = system (cmd);
   if (ret != 0) {
     ORC_ERROR ("gcc failed");
+    printf("%s\n", orc_program_get_asm_code (p));
     return ORC_TEST_FAILED;
   }
 
@@ -151,9 +152,10 @@ orc_test_gcc_compile_neon (OrcProgram *p)
   ret = fwrite(p->code, p->code_size, 1, file);
   fclose (file);
 
-  ret = system (PREFIX "gcc -mcpu=cortex-a8 -mfpu=neon -Wall -c tmp.s");
+  ret = system (PREFIX "gcc -march=armv6t2 -mcpu=cortex-a8 -mfpu=neon -Wall -c tmp.s");
   if (ret != 0) {
     printf("gcc failed\n");
+    printf("%s\n", orc_program_get_asm_code (p));
     return FALSE;
   }
 

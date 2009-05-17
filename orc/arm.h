@@ -93,6 +93,9 @@ void arm_emit_store_reg (OrcCompiler *compiler, int src, int dest, int offset);
 
 void arm_do_fixups (OrcCompiler *compiler);
 
+const char *neon_reg_name (int reg);
+const char *neon_reg_name_quad (int reg);
+void neon_emit_mov (OrcCompiler *compiler, int src, int dest);
 
 #endif
 

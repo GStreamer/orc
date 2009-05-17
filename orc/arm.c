@@ -166,28 +166,29 @@ arm_emit_load_imm (OrcCompiler *compiler, int dest, int imm)
 {
   uint32_t code;
   int shift2;
+  unsigned int x;
 
-  shift2 = 0;
-#if 0
-  while (imm && ((imm&3)==0)) {
-    imm >>= 2;
-    shift2++;
-  }
-#endif
-  while (imm && imm > 0xffff) {
-    if ((imm&3) != 0) {
-      ORC_ERROR("bad immediate value");
+  if ((imm & 0xff) == imm) {
+    shift2 = 0;
+    x = imm;
+  } else {
+    shift2 = 0;
+    x = imm & 0xffffffff;
+    while ((x & 3) == 0) {
+      x >>= 2;
+      shift2++;
     }
-    imm >>= 2;
-    shift2++;
+    if (x > 0xff) {
+      ORC_PROGRAM_ERROR(compiler, "bad immediate value");
+    }
   }
 
   code = 0xe3a00000;
   code |= (dest&0xf) << 12;
   code |= (((16-shift2)&0xf) << 8);
-  code |= (imm&0xff);
+  code |= (x&0xff);
 
-  ORC_ASM_CODE(compiler,"  mov %s, #0x%08x\n", arm_reg_name (dest), imm << (shift2*2));
+  ORC_ASM_CODE(compiler,"  mov %s, #0x%08x\n", arm_reg_name (dest), imm);
   arm_emit (compiler, code);
 }
 
@@ -226,8 +227,9 @@ arm_emit_sub (OrcCompiler *compiler, int dest, int src1, int src2)
 }
 
 void
-arm_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int value)
+arm_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int imm)
 {
+#if 0
   uint32_t code;
 
   code = 0xe2800000;
@@ -239,6 +241,35 @@ arm_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int value)
       arm_reg_name (dest),
       arm_reg_name (src1),
       value);
+  arm_emit (compiler, code);
+#endif
+  uint32_t code;
+  int shift2;
+  unsigned int x;
+
+  if ((imm & 0xff) == imm) {
+    shift2 = 0;
+    x = imm;
+  } else {
+    shift2 = 0;
+    x = imm & 0xffffffff;
+    while ((x & 3) == 0) {
+      x >>= 2;
+      shift2++;
+    }
+    if (x > 0xff) {
+      ORC_PROGRAM_ERROR(compiler, "bad immediate value");
+    }
+  }
+
+  code = 0xe2800000;
+  code |= (src1&0xf) << 16;
+  code |= (dest&0xf) << 12;
+  code |= (((16-shift2)&0xf) << 8);
+  code |= (x&0xff);
+
+  ORC_ASM_CODE(compiler,"  add %s, %s, #0x%08x\n", arm_reg_name (dest),
+      arm_reg_name(src1), imm);
   arm_emit (compiler, code);
 }
 
