@@ -11,6 +11,7 @@
 static OrcStaticOpcode opcodes[];
 
 void orc_float_sse_register_rules (void);
+void orc_float_neon_register_rules (void);
 
 void
 orc_float_init (void)
@@ -19,6 +20,7 @@ orc_float_init (void)
 
   orc_opcode_register_static (opcodes, "float");
   orc_float_sse_register_rules ();
+  orc_float_neon_register_rules ();
 }
 
 static float

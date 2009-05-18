@@ -147,6 +147,9 @@ orc_compiler_neon_init (OrcCompiler *compiler)
     case 4:
       compiler->loop_shift = 1;
       break;
+    case 8:
+      compiler->loop_shift = 0;
+      break;
     default:
       ORC_ERROR("unhandled max var size %d",
           orc_program_get_max_var_size (compiler->program));
@@ -236,6 +239,9 @@ orc_neon_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
     case 4:
       orc_neon_loadl (compiler, var->alloc, ptr_reg, update, var->is_aligned);
       break;
+    case 8:
+      orc_neon_loadq (compiler, var->alloc, ptr_reg, update, var->is_aligned);
+      break;
     default:
       ORC_ERROR("bad size");
   }
@@ -262,6 +268,9 @@ orc_neon_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
     case 4:
       orc_neon_storel (compiler, ptr_reg, TRUE, var->alloc, var->is_aligned);
       break;
+    case 8:
+      orc_neon_storeq (compiler, ptr_reg, TRUE, var->alloc, var->is_aligned);
+      break;
     default:
       ORC_ERROR("bad size");
   }
@@ -277,6 +286,8 @@ get_shift (int size)
       return 1;
     case 4:
       return 2;
+    case 8:
+      return 3;
     default:
       ORC_ERROR("bad size %d", size);
   }

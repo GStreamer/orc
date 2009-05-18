@@ -9,7 +9,8 @@ liborc_float_@ORC_MAJORMINOR@_la_LDFLAGS = \
 liborc_float_@ORC_MAJORMINOR@_la_CFLAGS = $(ORC_CFLAGS)
 
 liborc_float_@ORC_MAJORMINOR@_la_SOURCES = \
-	orcfloat.c orcfloat-sse.c
+	orcfloat.c orcfloat-sse.c \
+	orcfloat-neon.c
 
 pkginclude_HEADERS = \
 	orcfloat.h
