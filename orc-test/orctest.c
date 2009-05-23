@@ -21,16 +21,17 @@ orc_test_init (void)
 
 
 
-int
+OrcTestResult
 orc_test_gcc_compile (OrcProgram *p)
 {
   char cmd[200];
   int ret;
   FILE *file;
+  OrcCompileResult result;
 
-  ret = orc_program_compile (p);
-  if (!ret) {
-    return FALSE;
+  result = orc_program_compile (p);
+  if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
+    return ORC_TEST_INDETERMINATE;
   }
 
   fflush (stdout);
@@ -295,11 +296,10 @@ check_bounds (void *ptr, int n, int size)
   return TRUE;
 }
 
-int
+OrcTestResult
 orc_test_compare_output (OrcProgram *program)
 {
   OrcExecutor *ex;
-  int ret;
   int n = 64;
   int dest_index;
   void *dest_exec;
@@ -307,10 +307,11 @@ orc_test_compare_output (OrcProgram *program)
   void *ptr_exec;
   void *ptr_emul;
   int i;
+  OrcCompileResult result;
 
-  ret = orc_program_compile (program);
-  if (!ret) {
-    return TRUE;
+  result = orc_program_compile (program);
+  if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
+    return ORC_TEST_INDETERMINATE;
   }
 
   ex = orc_executor_new (program);

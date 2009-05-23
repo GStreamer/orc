@@ -38,13 +38,6 @@ main (int argc, char *argv[])
   orc_program_append (p, "addw", t1, t1, offset);
   orc_program_append (p, "shrsw", d1, t1, shift);
 
-#if 0
-  orc_program_append (p, "shlw", d1, s1, shift);
-  //orc_program_append (p, "subw", t1, t1, shift);
-  //orc_program_append (p, "mullw", d1, s1, s2);
-  //orc_program_append (p, "_loadiw", t1, t1, shift);
-#endif
-
   orc_program_compile (p);
 
   if (1) {

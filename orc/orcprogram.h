@@ -137,6 +137,20 @@ enum {
   ORC_CONST_SPLAT_L,
 };
 
+typedef enum {
+  ORC_COMPILE_RESULT_OK = 0,
+
+  ORC_COMPILE_RESULT_UNKNOWN_PARSE = 0x100,
+  ORC_COMPILE_RESULT_PARSE = 0x101,
+  ORC_COMPILE_RESULT_VARIABLE = 0x102,
+
+  ORC_COMPILE_RESULT_UNKNOWN_COMPILE = 0x200,
+  ORC_COMPILE_RESULT_MISSING_RULE = 0x201
+} OrcCompileResult;
+
+#define ORC_COMPILE_RESULT_IS_SUCCESSFUL(x) ((x) < 0x100)
+#define ORC_COMPILE_RESULT_IS_FATAL(x) ((x) < 0x200)
+
 struct _OrcVariable {
   char *name;
 
@@ -258,6 +272,7 @@ struct _OrcCompiler {
   int n_labels;
 
   int error;
+  OrcCompileResult result;
 
   int valid_regs[ORC_N_REGS];
   int save_regs[ORC_N_REGS];
@@ -334,8 +349,8 @@ void orc_arm_init (void);
 void orc_powerpc_init (void);
 void orc_c_init (void);
 
-orc_bool orc_program_compile (OrcProgram *p);
-orc_bool orc_program_compile_for_target (OrcProgram *p, OrcTarget *target);
+OrcCompileResult orc_program_compile (OrcProgram *p);
+OrcCompileResult orc_program_compile_for_target (OrcProgram *p, OrcTarget *target);
 void orc_program_free (OrcProgram *program);
 
 int orc_program_find_var_by_name (OrcProgram *program, const char *name);

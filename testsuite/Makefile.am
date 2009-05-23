@@ -1,13 +1,15 @@
 
-TESTS = test1 test2 test3 test4 test5 \
-	test_local_opcode_execution test_compile test_accsadubl test-schro \
+TESTS = compile_opcodes_c \
+	test_accsadubl test-schro \
+	compile_opcodes_sys exec_opcodes_sys \
 	compile_opcodes_float exec_opcodes_float \
 	compile_opcodes_pixel exec_opcodes_pixel
 
-orcbin_PROGRAMS = test1 test2 test3 test4 test5 \
-	test_local_opcode_execution test_compile test_accsadubl test-schro \
-	compile_opcodes_float exec_opcodes_float \
-	compile_opcodes_pixel exec_opcodes_pixel
+XFAIL_TESTS = \
+	exec_opcodes_float \
+	exec_opcodes_pixel
+
+orcbin_PROGRAMS = $(TESTS)
 
 AM_CFLAGS = $(ORC_CFLAGS)
 LIBS = $(ORC_LIBS) $(top_builddir)/orc-test/liborc-test-0.3.la

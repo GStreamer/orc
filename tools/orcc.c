@@ -31,12 +31,11 @@ main (int argc, char *argv[])
 #endif
 #if 1
   for(i=0;i<n;i++){
-    int ret;
+    OrcCompileResult result;
 
-    ret = orc_program_compile_for_target (programs[i],
-        orc_target_get_by_name("neon"));
-    if (ret) {
-      printf("%s", orc_program_get_asm_code (programs[i]));
+    result = orc_program_compile (programs[i]);
+    if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
+      printf("%s\n", orc_program_get_asm_code (programs[i]));
     }
   }
 #endif

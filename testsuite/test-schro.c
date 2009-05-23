@@ -214,9 +214,7 @@ test_program (int type)
 {
   OrcProgram *p;
   char s[40];
-  char cmd[200];
-  int ret;
-  FILE *file;
+  OrcTestResult ret;
 
   p = get_program(type);
 
@@ -227,66 +225,6 @@ test_program (int type)
   if (!ret) {
     error = TRUE;
   }
-  return;
-
-  ret = orc_program_compile_for_target (p, orc_target_get_by_name("neon"));
-  if (!ret) {
-    printf("/* %d failed to compile */\n", type);
-    error = TRUE;
-    goto out;
-  }
-
-  fflush (stdout);
-
-  file = fopen ("tmp-test-schro.s", "w");
-  fprintf(file, "%s", orc_program_get_asm_code (p));
-  fclose (file);
-
-  file = fopen ("dump", "w");
-  ret = fwrite(p->code, p->code_size, 1, file);
-  fclose (file);
-
-  ret = system (PREFIX "gcc -mcpu=cortex-a8 -mfpu=neon -Wall -c tmp-test-schro.s");
-  if (ret != 0) {
-    printf("gcc failed\n");
-    error = TRUE;
-    goto out;
-  }
-
-  ret = system (PREFIX "objdump -dr tmp-test-schro.o >tmp-test-schro.dis");
-  if (ret != 0) {
-    printf("objdump failed\n");
-    error = TRUE;
-    goto out;
-  }
-
-  sprintf (cmd, PREFIX "objcopy -I binary -O elf32-littlearm -B arm "
-      "--rename-section .data=.text "
-      "--redefine-sym _binary_dump_start=%s "
-      "dump tmp-test-schro.o", s);
-  ret = system (cmd);
-  if (ret != 0) {
-    printf("objcopy failed\n");
-    error = TRUE;
-    goto out;
-  }
-
-  ret = system (PREFIX "objdump -Dr tmp-test-schro.o >tmp-test-schro-dump.dis");
-  if (ret != 0) {
-    printf("objdump failed\n");
-    error = TRUE;
-    goto out;
-  }
-
-  ret = system ("diff -u tmp-test-schro.dis tmp-test-schro-dump.dis");
-  if (ret != 0) {
-    printf("diff failed\n");
-    error = TRUE;
-    goto out;
-  }
-
-out:
-  orc_program_free (p);
 }
 
 

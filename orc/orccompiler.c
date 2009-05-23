@@ -62,17 +62,18 @@ orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
   return 0;
 }
 
-orc_bool
+OrcCompileResult
 orc_program_compile (OrcProgram *program)
 {
   return orc_program_compile_for_target (program, orc_target_get_default());
 }
 
-orc_bool
+OrcCompileResult
 orc_program_compile_for_target (OrcProgram *program, OrcTarget *target)
 {
   OrcCompiler *compiler;
   int i;
+  OrcCompileResult result;
 
   compiler = malloc (sizeof(OrcCompiler));
   memset (compiler, 0, sizeof(OrcCompiler));
@@ -139,12 +140,19 @@ orc_program_compile_for_target (OrcProgram *program, OrcTarget *target)
   program->asm_code = compiler->asm_code;
   program->code_size = compiler->codeptr - program->code;
 
+  result = compiler->result;
   free (compiler);
 
-  return TRUE;
+  return result;
 error:
-  ORC_ERROR("program failed to compile");
-  return FALSE;
+  ORC_WARNING("program %s failed to compile, reason %d",
+      program->name, compiler->result);
+  result = compiler->result;
+  if (result == 0) {
+    result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
+  }
+  free (compiler);
+  return result;
 }
 
 void

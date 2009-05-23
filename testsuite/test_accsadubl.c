@@ -50,10 +50,9 @@ orc_sad_u8 (uint8_t *s1, uint8_t *s2, int n)
   static OrcProgram *p = NULL;
   OrcExecutor *ex;
   int sum;
+  OrcCompileResult result;
 
   if (p == NULL) {
-    int ret;
-
     p = orc_program_new ();
     orc_program_add_accumulator (p, 4, "a1");
     orc_program_add_source (p, 1, "s1");
@@ -61,9 +60,9 @@ orc_sad_u8 (uint8_t *s1, uint8_t *s2, int n)
 
     orc_program_append_str (p, "accsadubl", "a1", "s1", "s2");
 
-    ret = orc_program_compile (p);
-    if (!ret) {
-      ORC_ERROR("Orc compiler failure");
+    result = orc_program_compile (p);
+    if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
+      return 0;
     }
 
     printf("%s\n", orc_program_get_asm_code (p));

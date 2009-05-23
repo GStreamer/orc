@@ -141,7 +141,7 @@ orc_compiler_sse_init (OrcCompiler *compiler)
       break;
   }
 
-  compiler->long_jumps = TRUE;
+  compiler->long_jumps = FALSE;
 }
 
 void
