@@ -102,3 +102,12 @@ BINARY_BW(mulubw, "%s * %s")
 BINARY_WL(mulswl, "%s * %s")
 BINARY_WL(muluwl, "%s * %s")
 
+BINARY_WL(mergewl, "(%s << 16) | (%s)")
+BINARY_BW(mergebw, "(%s << 8) | (%s)")
+UNARY_WB(select0wb, "(%s >> 8)&0xff")
+UNARY_WB(select1wb, "%s & 0xff")
+UNARY_LW(select0lw, "(%s >> 16)&0xffff")
+UNARY_LW(select1lw, "%s & 0xffff")
+UNARY_UW(swapw, "ORC_SWAP_W(%s)")
+UNARY_UL(swapl, "ORC_SWAP_L(%s)")
+

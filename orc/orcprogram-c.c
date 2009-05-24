@@ -28,7 +28,15 @@ orc_target_get_asm_preamble (const char *target)
 {
   return "\n"
     "/* begin Orc C target preamble */\n"
-    "#include <stdint.h>\n"
+    "typedef signed char int8_t;\n"
+    "typedef unsigned char uint8_t;\n"
+    "typedef signed short int16_t;\n"
+    "typedef unsigned short uint16_t;\n"
+    "typedef signed int int32_t;\n"
+    "typedef unsigned int uint32_t;\n"
+    "typedef signed long long int64_t;\n"
+    "typedef unsigned long long uint64_t;\n"
+    "#define ORC_RESTRICT restrict\n"
     "typedef struct _OrcProgram OrcProgram;\n"
     "typedef struct _OrcExecutor OrcExecutor;\n"
     "#define ORC_N_VARIABLES 20\n"
@@ -67,6 +75,8 @@ orc_target_get_asm_preamble (const char *target)
     "#define ORC_CLAMP_UW(x) ORC_CLAMP(x,ORC_UW_MIN,ORC_SB_MAX)\n"
     "#define ORC_CLAMP_SL(x) ORC_CLAMP(x,ORC_SL_MIN,ORC_SB_MAX)\n"
     "#define ORC_CLAMP_UL(x) ORC_CLAMP(x,ORC_UL_MIN,ORC_SB_MAX)\n"
+    "#define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))\n"
+    "#define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)<<24))\n"
     "/* end Orc C target preamble */\n\n";
 }
 
@@ -97,14 +107,18 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
-        ORC_ASM_CODE(compiler,"  %s *var%d = ex->arrays[%d];\n",
-            c_get_type_name (var->size), i, i);
+      case ORC_VAR_TYPE_ACCUMULATOR:
+        ORC_ASM_CODE(compiler,"  %s *%s var%d = ex->arrays[%d];\n",
+            c_get_type_name (var->size),
+            (compiler->target_flags & ORC_TARGET_C_C99) ? "restrict " : "",
+            i, i);
         break;
       case ORC_VAR_TYPE_PARAM:
         ORC_ASM_CODE(compiler,"  %s var%d = ex->arrays[%d];\n",
             c_get_type_name (var->size), i, i);
         break;
       default:
+        ORC_COMPILER_ERROR(compiler, "bad vartype");
         break;
     }
 
@@ -123,7 +137,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     if (rule) {
       rule->emit (compiler, rule->emit_user, insn);
     } else {
-      ORC_PROGRAM_ERROR(compiler,"No rule for: %s\n", opcode->name);
+      ORC_COMPILER_ERROR(compiler, "No rule for: %s\n", opcode->name);
       compiler->error = TRUE;
     }
   }
@@ -147,9 +161,11 @@ c_get_name (char *name, OrcCompiler *p, int var)
       break;
     case ORC_VAR_TYPE_SRC:
     case ORC_VAR_TYPE_DEST:
+    case ORC_VAR_TYPE_ACCUMULATOR:
       sprintf(name, "var%d[i]", var);
       break;
     default:
+      ORC_COMPILER_ERROR(p, "bad vartype");
       sprintf(name, "ERROR");
       break;
   }
@@ -165,6 +181,8 @@ c_get_type_name (int size)
       return "int16_t";
     case 4:
       return "int32_t";
+    case 8:
+      return "int64_t";
     default:
       return "ERROR";
   }
@@ -240,6 +258,40 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 #undef UNARY_LW
 #undef UNARY_WB
 
+static void
+c_rule_accw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[20], src1[20];
+
+  c_get_name (dest, p, insn->dest_args[0]);
+  c_get_name (src1, p, insn->src_args[0]);
+
+  ORC_ASM_CODE(p,"    %s = %s + %s;\n", dest, dest, src1);
+}
+
+static void
+c_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[20], src1[20];
+
+  c_get_name (dest, p, insn->dest_args[0]);
+  c_get_name (src1, p, insn->src_args[0]);
+
+  ORC_ASM_CODE(p,"    %s = %s + %s;\n", dest, dest, src1);
+}
+
+static void
+c_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[20], src1[20], src2[20];
+
+  c_get_name (dest, p, insn->dest_args[0]);
+  c_get_name (src1, p, insn->src_args[0]);
+  c_get_name (src2, p, insn->src_args[1]);
+
+  ORC_ASM_CODE(p,"    %s = %s + ORC_ABS(%s - %s);\n", dest, dest, src1, src2);
+}
+
 static OrcTarget c_target = {
   "c",
   TRUE,
@@ -281,5 +333,8 @@ orc_c_init (void)
 
 #include "opcodes.h"
 
+  orc_rule_register (rule_set, "accw", c_rule_accw, NULL);
+  orc_rule_register (rule_set, "accl", c_rule_accl, NULL);
+  orc_rule_register (rule_set, "accsadubl", c_rule_accsadubl, NULL);
 }
 

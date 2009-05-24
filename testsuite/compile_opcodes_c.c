@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include <orc/orc.h>
+#include <orc-test/orctest.h>
 
 
 int error = FALSE;
@@ -17,6 +18,7 @@ main (int argc, char *argv[])
   OrcOpcodeSet *opcode_set;
 
   orc_init();
+  orc_test_init();
 
   opcode_set = orc_opcode_set_get ("sys");
 
@@ -40,20 +42,10 @@ void
 test_opcode (OrcStaticOpcode *opcode)
 {
   OrcProgram *p;
-  char s[40];
   OrcCompileResult result;
 
-  if (opcode->src_size[1] == 0) {
-    p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);
-  } else {
-    p = orc_program_new_dss (opcode->dest_size[0], opcode->src_size[0],
-        opcode->src_size[1]);
-  }
-
-  sprintf(s, "test_%s", opcode->name);
-  orc_program_set_name (p, s);
-
-  orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
+  p = orc_test_get_program_for_opcode (opcode);
+  if (!p) return;
 
   result = orc_program_compile_for_target (p, orc_target_get_by_name("c"));
   if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {

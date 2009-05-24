@@ -18,6 +18,9 @@ OrcTestResult orc_test_gcc_compile (OrcProgram *p);
 void orc_test_random_bits (void *data, int n_bytes);
 OrcTestResult orc_test_compare_output (OrcProgram *program);
 
+OrcProgram *orc_test_get_program_for_opcode (OrcStaticOpcode *opcode);
+OrcProgram *orc_test_get_program_for_opcode_const (OrcStaticOpcode *opcode);
+OrcProgram *orc_test_get_program_for_opcode_param (OrcStaticOpcode *opcode);
 
 ORC_END_DECLS
 

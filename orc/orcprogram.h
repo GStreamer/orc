@@ -65,6 +65,15 @@ typedef void (*OrcRuleEmitFunc)(OrcCompiler *p, void *user, OrcInstruction *insn
   orc_debug_print(ORC_DEBUG_ERROR, __FILE__, ORC_FUNCTION, __LINE__, __VA_ARGS__); \
 } while (0)
 
+#define ORC_COMPILER_ERROR(compiler, ...) do { \
+  compiler->error = TRUE; \
+  orc_debug_print(ORC_DEBUG_ERROR, __FILE__, ORC_FUNCTION, __LINE__, __VA_ARGS__); \
+} while (0)
+
+enum {
+  ORC_TARGET_C_C99 = (1<<0)
+};
+
 enum {
   ORC_TARGET_SSE_SSE2 = (1<<0),
   ORC_TARGET_SSE_SSE3 = (1<<1),
