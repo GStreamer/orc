@@ -2,13 +2,13 @@
 #include "config.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 
 #include <orc/orc.h>
 #include <orc-test/orctest.h>
 
 
 int error = FALSE;
+int verbose = FALSE;
 
 void test_opcode (OrcStaticOpcode *opcode);
 void test_opcode_const (OrcStaticOpcode *opcode);
@@ -26,7 +26,7 @@ main (int argc, char *argv[])
   opcode_set = orc_opcode_set_get ("sys");
 
   for(i=0;i<opcode_set->n_opcodes;i++){
-    printf("/* %s %d,%d,%d %p */\n",
+    if (verbose) printf("/* %s %d,%d,%d %p */\n",
         opcode_set->opcodes[i].name,
         opcode_set->opcodes[i].dest_size[0],
         opcode_set->opcodes[i].src_size[0],
@@ -34,40 +34,27 @@ main (int argc, char *argv[])
         opcode_set->opcodes[i].emulate);
     test_opcode (opcode_set->opcodes + i);
   }
-  for(i=0;i<opcode_set->n_opcodes;i++){
-    printf("/* %s const %d,%d,%d %p */\n",
-        opcode_set->opcodes[i].name,
-        opcode_set->opcodes[i].dest_size[0],
-        opcode_set->opcodes[i].src_size[0],
-        opcode_set->opcodes[i].src_size[1],
-        opcode_set->opcodes[i].emulate);
-    test_opcode_const (opcode_set->opcodes + i);
-  }
-  for(i=0;i<opcode_set->n_opcodes;i++){
-    printf("/* %s param %d,%d,%d %p */\n",
-        opcode_set->opcodes[i].name,
-        opcode_set->opcodes[i].dest_size[0],
-        opcode_set->opcodes[i].src_size[0],
-        opcode_set->opcodes[i].src_size[1],
-        opcode_set->opcodes[i].emulate);
-    test_opcode_param (opcode_set->opcodes + i);
-  }
 
-  if (error) return 1;
-  return 0;
+  if (error) {
+    printf("test failed\n");
+    return 1;
+  } else {
+    printf("test passed\n");
+    return 0;
+  }
 }
 
 void
 test_opcode (OrcStaticOpcode *opcode)
 {
   OrcProgram *p;
-  OrcTestResult ret;
+  OrcCompileResult result;
 
   p = orc_test_get_program_for_opcode (opcode);
   if (!p) return;
 
-  ret = orc_test_gcc_compile (p);
-  if (ret == ORC_TEST_FAILED) {
+  result = orc_program_compile_for_target (p, orc_target_get_by_name("c"));
+  if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
     printf("%s", orc_program_get_asm_code (p));
     error = TRUE;
     return;
@@ -80,13 +67,13 @@ void
 test_opcode_const (OrcStaticOpcode *opcode)
 {
   OrcProgram *p;
-  OrcTestResult ret;
+  OrcCompileResult result;
 
   p = orc_test_get_program_for_opcode_const (opcode);
   if (!p) return;
 
-  ret = orc_test_gcc_compile (p);
-  if (ret == ORC_TEST_FAILED) {
+  result = orc_program_compile_for_target (p, orc_target_get_by_name("c"));
+  if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
     printf("%s", orc_program_get_asm_code (p));
     error = TRUE;
     return;
@@ -99,13 +86,13 @@ void
 test_opcode_param (OrcStaticOpcode *opcode)
 {
   OrcProgram *p;
-  OrcTestResult ret;
+  OrcCompileResult result;
 
   p = orc_test_get_program_for_opcode_param (opcode);
   if (!p) return;
 
-  ret = orc_test_gcc_compile (p);
-  if (ret == ORC_TEST_FAILED) {
+  result = orc_program_compile_for_target (p, orc_target_get_by_name("c"));
+  if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
     printf("%s", orc_program_get_asm_code (p));
     error = TRUE;
     return;
@@ -113,4 +100,7 @@ test_opcode_param (OrcStaticOpcode *opcode)
 
   orc_program_free (p);
 }
+
+
+
 

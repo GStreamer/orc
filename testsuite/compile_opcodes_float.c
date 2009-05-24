@@ -22,8 +22,8 @@ main (int argc, char *argv[])
   OrcOpcodeSet *opcode_set;
 
   orc_init();
-  orc_test_init();
   orc_float_init();
+  orc_test_init();
 
   opcode_set = orc_opcode_set_get ("float");
 
@@ -63,34 +63,17 @@ void
 test_opcode (OrcStaticOpcode *opcode)
 {
   OrcProgram *p;
-  char s[40];
+  OrcTestResult ret;
 
-  if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
-    if (opcode->src_size[1] == 0) {
-      p = orc_program_new_as (opcode->dest_size[0], opcode->src_size[0]);
-    } else {
-      p = orc_program_new_ass (opcode->dest_size[0], opcode->src_size[0],
-          opcode->src_size[1]);
-    }
-  } else {
-    if (opcode->src_size[1] == 0) {
-      p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);
-    } else {
-      p = orc_program_new_dss (opcode->dest_size[0], opcode->src_size[0],
-          opcode->src_size[1]);
-    }
+  p = orc_test_get_program_for_opcode (opcode);
+  if (!p) return;
+
+  ret = orc_test_gcc_compile (p);
+  if (ret == ORC_TEST_FAILED) {
+    printf("%s", orc_program_get_asm_code (p));
+    error = TRUE;
+    return;
   }
-
-  sprintf(s, "test_%s", opcode->name);
-  orc_program_set_name (p, s);
-
-  if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
-    orc_program_append_str (p, opcode->name, "a1", "s1", "s2");
-  } else {
-    orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
-  }
-
-  orc_test_gcc_compile (p);
 
   orc_program_free (p);
 }
@@ -99,19 +82,17 @@ void
 test_opcode_const (OrcStaticOpcode *opcode)
 {
   OrcProgram *p;
-  char s[40];
+  OrcTestResult ret;
 
-  if (opcode->src_size[1] == 0) return;
+  p = orc_test_get_program_for_opcode_const (opcode);
+  if (!p) return;
 
-  p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);
-  orc_program_add_constant (p, opcode->src_size[1], 1, "c1");
-
-  sprintf(s, "test_const_%s", opcode->name);
-  orc_program_set_name (p, s);
-
-  orc_program_append_str (p, opcode->name, "d1", "s1", "c1");
-
-  orc_test_gcc_compile (p);
+  ret = orc_test_gcc_compile (p);
+  if (ret == ORC_TEST_FAILED) {
+    printf("%s", orc_program_get_asm_code (p));
+    error = TRUE;
+    return;
+  }
 
   orc_program_free (p);
 }
@@ -120,22 +101,16 @@ void
 test_opcode_param (OrcStaticOpcode *opcode)
 {
   OrcProgram *p;
-  char s[40];
-  int ret;
+  OrcTestResult ret;
 
-  if (opcode->src_size[1] == 0) return;
-
-  p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);
-  orc_program_add_parameter (p, opcode->src_size[1], "p1");
-
-  sprintf(s, "test_param_%s", opcode->name);
-  orc_program_set_name (p, s);
-
-  orc_program_append_str (p, opcode->name, "d1", "s1", "p1");
+  p = orc_test_get_program_for_opcode_param (opcode);
+  if (!p) return;
 
   ret = orc_test_gcc_compile (p);
-  if (!ret) {
+  if (ret == ORC_TEST_FAILED) {
     printf("%s", orc_program_get_asm_code (p));
+    error = TRUE;
+    return;
   }
 
   orc_program_free (p);

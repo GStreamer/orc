@@ -28,7 +28,6 @@ orc_test_gcc_compile (OrcProgram *p)
   char obj_filename[100];
   char dis_filename[100];
   char dump_filename[100];
-  char dump_obj_filename[100];
   char dump_dis_filename[100];
   int ret;
   FILE *file;
@@ -37,10 +36,9 @@ orc_test_gcc_compile (OrcProgram *p)
   base = "temp-orc-test";
 
   sprintf(source_filename, "%s-source.s", base);
-  sprintf(obj_filename, "%s-source.o", base);
+  sprintf(obj_filename, "%s.o", base);
   sprintf(dis_filename, "%s-source.dis", base);
   sprintf(dump_filename, "%s-dump.bin", base);
-  sprintf(dump_obj_filename, "%s-dump.o", base);
   sprintf(dump_dis_filename, "%s-dump.dis", base);
 
   result = orc_program_compile (p);
@@ -89,15 +87,15 @@ orc_test_gcc_compile (OrcProgram *p)
       /* FIXME */
 #endif
       "--rename-section .data=.text "
-      "--redefine-sym _binary_dump_start=%s "
-      "%s %s", p->name, dump_filename, dump_obj_filename);
+      "--redefine-sym _binary_temp_orc_test_dump_bin_start=%s "
+      "%s %s", p->name, dump_filename, obj_filename);
   ret = system (cmd);
   if (ret != 0) {
     printf("objcopy failed\n");
     return ORC_TEST_FAILED;
   }
 
-  sprintf (cmd, "objdump -Dr %s >%s", dump_obj_filename, dump_dis_filename);
+  sprintf (cmd, "objdump -Dr %s >%s", obj_filename, dump_dis_filename);
   ret = system (cmd);
   if (ret != 0) {
     printf("objdump failed\n");
@@ -115,7 +113,6 @@ orc_test_gcc_compile (OrcProgram *p)
   remove (obj_filename);
   remove (dis_filename);
   remove (dump_filename);
-  remove (dump_obj_filename);
   remove (dump_dis_filename);
 
   return ORC_TEST_OK;

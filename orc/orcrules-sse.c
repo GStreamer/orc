@@ -95,6 +95,7 @@ orc_sse_emit_loadil (OrcCompiler *p, int reg, int value)
   if (value == 0) {
     ORC_ASM_CODE(p,"  pxor %%%s, %%%s\n", orc_x86_get_regname_sse(reg),
         orc_x86_get_regname_sse(reg));
+    *p->codeptr++ = 0x66;
     orc_x86_emit_rex (p, 0, reg, 0, reg);
     *p->codeptr++ = 0x0f;
     *p->codeptr++ = 0xef;
@@ -991,7 +992,7 @@ sse_rule_minuw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp = p->tmpreg;
 
-  orc_sse_emit_loadib (p, tmp, 0x8000);
+  orc_sse_emit_loadiw (p, tmp, 0x8000);
 
   orc_sse_emit_660f (p, "pxor", 0xef, tmp, src);
   orc_sse_emit_660f (p, "pxor", 0xef, tmp, dest);
