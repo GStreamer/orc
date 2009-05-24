@@ -478,7 +478,7 @@ sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
     *p->codeptr++ = reg_code[type];
     orc_x86_emit_modrm_reg (p, p->tmpreg, p->vars[insn->dest_args[0]].alloc);
   } else {
-    ORC_PROGRAM_ERROR(p,"rule only works with constants or params");
+    ORC_COMPILER_ERROR(p,"rule only works with constants or params");
   }
 }
 

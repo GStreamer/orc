@@ -141,7 +141,7 @@ orc_x86_emit_push (OrcCompiler *compiler, int size, int reg)
 {
 
   if (size == 1) {
-    ORC_PROGRAM_ERROR(compiler, "bad size");
+    ORC_COMPILER_ERROR(compiler, "bad size");
   } else if (size == 2) {
     ORC_ASM_CODE(compiler,"  pushw %%%s\n", orc_x86_get_regname_16(reg));
     *compiler->codeptr++ = 0x66;
@@ -157,7 +157,7 @@ orc_x86_emit_pop (OrcCompiler *compiler, int size, int reg)
 {
 
   if (size == 1) {
-    ORC_PROGRAM_ERROR(compiler, "bad size");
+    ORC_COMPILER_ERROR(compiler, "bad size");
   } else if (size == 2) {
     ORC_ASM_CODE(compiler,"  popw %%%s\n", orc_x86_get_regname_16(reg));
     *compiler->codeptr++ = 0x66;
@@ -248,7 +248,7 @@ orc_x86_emit_mov_memoffset_reg (OrcCompiler *compiler, int size, int offset,
           orc_x86_get_regname_64(reg2));
       break;
     default:
-      ORC_PROGRAM_ERROR(compiler, "bad size");
+      ORC_COMPILER_ERROR(compiler, "bad size");
       break;
   }
 
@@ -316,7 +316,7 @@ orc_x86_emit_mov_memoffset_sse (OrcCompiler *compiler, int size, int offset,
       }
       break;
     default:
-      ORC_PROGRAM_ERROR(compiler, "bad size");
+      ORC_COMPILER_ERROR(compiler, "bad size");
       break;
   }
   orc_x86_emit_modrm_memoffset (compiler, reg2, offset, reg1);
@@ -348,7 +348,7 @@ orc_x86_emit_mov_reg_memoffset (OrcCompiler *compiler, int size, int reg1, int o
           orc_x86_get_regname_ptr(compiler, reg2));
       break;
     default:
-      ORC_PROGRAM_ERROR(compiler, "bad size");
+      ORC_COMPILER_ERROR(compiler, "bad size");
       break;
   }
 
@@ -425,7 +425,7 @@ orc_x86_emit_mov_sse_memoffset (OrcCompiler *compiler, int size, int reg1, int o
       }
       break;
     default:
-      ORC_PROGRAM_ERROR(compiler, "bad size");
+      ORC_COMPILER_ERROR(compiler, "bad size");
       break;
   }
 
@@ -980,7 +980,7 @@ x86_do_fixups (OrcCompiler *compiler)
 
       diff = ((int8_t)ptr[0]) + (label - ptr);
       if (diff != (int8_t)diff) {
-        ORC_PROGRAM_ERROR(compiler, "short jump too long");
+        ORC_COMPILER_ERROR(compiler, "short jump too long");
       }
 
       ptr[0] = diff;

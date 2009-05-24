@@ -190,7 +190,7 @@ arm_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
       //arm_emit_mov_memoffset_arm (compiler, 16, 0, ptr_reg, var->alloc);
       break;
     default:
-      ORC_PROGRAM_ERROR(compiler, "bad size %d\n", var->size << compiler->loop_shift);
+      ORC_COMPILER_ERROR(compiler, "bad size %d\n", var->size << compiler->loop_shift);
   }
 }
 
@@ -228,7 +228,7 @@ arm_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
       //    var->is_aligned, var->is_uncached);
       break;
     default:
-      ORC_PROGRAM_ERROR(compiler, "bad size %d\n", var->size << compiler->loop_shift);
+      ORC_COMPILER_ERROR(compiler, "bad size %d\n", var->size << compiler->loop_shift);
   }
 }
 

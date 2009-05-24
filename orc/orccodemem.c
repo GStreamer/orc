@@ -28,7 +28,7 @@ orc_compiler_allocate_codemem (OrcCompiler *compiler)
   fd = mkstemp (filename);
   if (fd == -1) {
     /* FIXME oh crap */
-    ORC_PROGRAM_ERROR (compiler, "failed to create temp file");
+    ORC_COMPILER_ERROR (compiler, "failed to create temp file");
     return;
   }
   unlink (filename);
@@ -37,12 +37,12 @@ orc_compiler_allocate_codemem (OrcCompiler *compiler)
 
   compiler->program->code = mmap (NULL, SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
   if (compiler->program->code == MAP_FAILED) {
-    ORC_PROGRAM_ERROR(compiler, "failed to create write map");
+    ORC_COMPILER_ERROR(compiler, "failed to create write map");
     return;
   }
   compiler->program->code_exec = mmap (NULL, SIZE, PROT_READ|PROT_EXEC, MAP_SHARED, fd, 0);
   if (compiler->program->code_exec == MAP_FAILED) {
-    ORC_PROGRAM_ERROR(compiler, "failed to create exec map");
+    ORC_COMPILER_ERROR(compiler, "failed to create exec map");
     return;
   }
 

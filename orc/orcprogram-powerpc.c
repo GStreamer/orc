@@ -406,7 +406,7 @@ powerpc_load_constant (OrcCompiler *p, int i, int reg)
         powerpc_emit_VX(p, 0x1000020c,
             powerpc_regnum(reg), value & 0x1f, 0);
       } else {
-        ORC_PROGRAM_ERROR(p,"can't load constant");
+        ORC_COMPILER_ERROR(p,"can't load constant");
       }
       break;
     case ORC_CONST_SPLAT_W:
@@ -416,7 +416,7 @@ powerpc_load_constant (OrcCompiler *p, int i, int reg)
         powerpc_emit_VX(p, 0x1000024c,
             powerpc_regnum(reg), value & 0x1f, 0);
       } else {
-        ORC_PROGRAM_ERROR(p,"can't load constant");
+        ORC_COMPILER_ERROR(p,"can't load constant");
       }
       break;
     case ORC_CONST_SPLAT_L:
@@ -426,11 +426,11 @@ powerpc_load_constant (OrcCompiler *p, int i, int reg)
         powerpc_emit_VX(p, 0x1000028c,
             powerpc_regnum(reg), value & 0x1f, 0);
       } else {
-        ORC_PROGRAM_ERROR(p,"can't load constant");
+        ORC_COMPILER_ERROR(p,"can't load constant");
       }
       break;
     default:
-      ORC_PROGRAM_ERROR(p,"unhandled");
+      ORC_COMPILER_ERROR(p,"unhandled");
       break;
   }
 #endif
@@ -884,7 +884,7 @@ powerpc_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
   if (p->vars[insn->src_args[1]].vartype != ORC_VAR_TYPE_CONST && \
       p->vars[insn->src_args[1]].vartype != ORC_VAR_TYPE_PARAM) { \
-    ORC_PROGRAM_ERROR(p,"rule only works with constants or params"); \
+    ORC_COMPILER_ERROR(p,"rule only works with constants or params"); \
   } \
   ORC_ASM_CODE(p,"  " opcode " %s, %s, %s\n", \
       powerpc_get_regname(p->vars[insn->dest_args[0]].alloc), \

@@ -24,7 +24,7 @@ typedef void (*OrcRuleEmitFunc)(OrcCompiler *p, void *user, OrcInstruction *insn
 
 #define ORC_N_REGS (32*4)
 #define ORC_N_INSNS 100
-#define ORC_N_VARIABLES 40
+#define ORC_N_VARIABLES 64
 #define ORC_N_REGISTERS 20
 #define ORC_N_FIXUPS 20
 #define ORC_N_CONSTANTS 20
@@ -67,6 +67,7 @@ typedef void (*OrcRuleEmitFunc)(OrcCompiler *p, void *user, OrcInstruction *insn
 
 #define ORC_COMPILER_ERROR(compiler, ...) do { \
   compiler->error = TRUE; \
+  compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE; \
   orc_debug_print(ORC_DEBUG_ERROR, __FILE__, ORC_FUNCTION, __LINE__, __VA_ARGS__); \
 } while (0)
 
@@ -136,7 +137,14 @@ enum {
   ORC_VAR_T5,
   ORC_VAR_T6,
   ORC_VAR_T7,
-  ORC_VAR_T8
+  ORC_VAR_T8,
+  ORC_VAR_T9,
+  ORC_VAR_T10,
+  ORC_VAR_T11,
+  ORC_VAR_T12,
+  ORC_VAR_T13,
+  ORC_VAR_T14,
+  ORC_VAR_T15
 };
 
 enum {
@@ -149,16 +157,17 @@ enum {
 typedef enum {
   ORC_COMPILE_RESULT_OK = 0,
 
-  ORC_COMPILE_RESULT_UNKNOWN_PARSE = 0x100,
-  ORC_COMPILE_RESULT_PARSE = 0x101,
-  ORC_COMPILE_RESULT_VARIABLE = 0x102,
+  ORC_COMPILE_RESULT_UNKNOWN_COMPILE = 0x100,
+  ORC_COMPILE_RESULT_MISSING_RULE = 0x101,
 
-  ORC_COMPILE_RESULT_UNKNOWN_COMPILE = 0x200,
-  ORC_COMPILE_RESULT_MISSING_RULE = 0x201
+  ORC_COMPILE_RESULT_UNKNOWN_PARSE = 0x200,
+  ORC_COMPILE_RESULT_PARSE = 0x201,
+  ORC_COMPILE_RESULT_VARIABLE = 0x202
+
 } OrcCompileResult;
 
 #define ORC_COMPILE_RESULT_IS_SUCCESSFUL(x) ((x) < 0x100)
-#define ORC_COMPILE_RESULT_IS_FATAL(x) ((x) < 0x200)
+#define ORC_COMPILE_RESULT_IS_FATAL(x) ((x) >= 0x200)
 
 struct _OrcVariable {
   char *name;

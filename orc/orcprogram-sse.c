@@ -72,7 +72,6 @@ orc_compiler_sse_init (OrcCompiler *compiler)
     for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+16;i++){
       compiler->valid_regs[i] = 1;
     }
-    compiler->valid_regs[X86_ECX] = 0;
     compiler->valid_regs[X86_EDI] = 0;
     compiler->valid_regs[X86_ESP] = 0;
     for(i=X86_XMM0;i<X86_XMM0+16;i++){
@@ -88,7 +87,6 @@ orc_compiler_sse_init (OrcCompiler *compiler)
     for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+8;i++){
       compiler->valid_regs[i] = 1;
     }
-    compiler->valid_regs[X86_ECX] = 0;
     compiler->valid_regs[X86_ESP] = 0;
     if (compiler->use_frame_pointer) {
       compiler->valid_regs[X86_EBP] = 0;
@@ -110,6 +108,9 @@ orc_compiler_sse_init (OrcCompiler *compiler)
 
   compiler->tmpreg = X86_XMM0;
   compiler->valid_regs[compiler->tmpreg] = 0;
+
+  compiler->gp_tmpreg = X86_ECX;
+  compiler->valid_regs[compiler->gp_tmpreg] = 0;
 
   if (compiler->is_64bit) {
     compiler->exec_reg = X86_EDI;
@@ -141,7 +142,7 @@ orc_compiler_sse_init (OrcCompiler *compiler)
       break;
   }
 
-  compiler->long_jumps = FALSE;
+  compiler->long_jumps = TRUE;
 }
 
 void
@@ -220,7 +221,7 @@ sse_load_constants (OrcCompiler *compiler)
           orc_sse_emit_loadil (compiler, compiler->vars[i].alloc,
               (int)compiler->vars[i].value);
         } else {
-          ORC_PROGRAM_ERROR(compiler, "unimplemented");
+          ORC_COMPILER_ERROR(compiler, "unimplemented");
         }
         break;
       case ORC_VAR_TYPE_PARAM:
@@ -233,7 +234,7 @@ sse_load_constants (OrcCompiler *compiler)
         } else if (compiler->vars[i].size == 8) {
           orc_sse_emit_loadpq (compiler, compiler->vars[i].alloc, i);
         } else {
-          ORC_PROGRAM_ERROR(compiler, "unimplemented");
+          ORC_COMPILER_ERROR(compiler, "unimplemented");
         }
         break;
       case ORC_VAR_TYPE_SRC:
@@ -243,7 +244,7 @@ sse_load_constants (OrcCompiler *compiler)
               (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]), compiler->exec_reg,
               compiler->vars[i].ptr_register);
         } else {
-          ORC_PROGRAM_ERROR(compiler,"unimplemented");
+          ORC_COMPILER_ERROR(compiler,"unimplemented");
         }
         break;
       case ORC_VAR_TYPE_ACCUMULATOR:
@@ -259,7 +260,7 @@ sse_load_constants (OrcCompiler *compiler)
       case ORC_VAR_TYPE_TEMP:
         break;
       default:
-        ORC_PROGRAM_ERROR(compiler,"bad vartype");
+        ORC_COMPILER_ERROR(compiler,"bad vartype");
         break;
     }
   }
@@ -301,7 +302,7 @@ orc_sse_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
           var->is_aligned);
       break;
     default:
-      ORC_PROGRAM_ERROR(compiler,"bad load size %d",
+      ORC_COMPILER_ERROR(compiler,"bad load size %d",
           var->size << compiler->loop_shift);
       break;
   }
@@ -322,7 +323,7 @@ orc_sse_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
     case 1:
       /* FIXME we might be using ecx twice here */
       if (ptr_reg == X86_ECX) {
-        ORC_PROGRAM_ERROR(compiler,"unimplemented");
+        ORC_COMPILER_ERROR(compiler,"unimplemented");
       }
       orc_x86_emit_mov_sse_reg (compiler, var->alloc, X86_ECX);
       orc_x86_emit_mov_reg_memoffset (compiler, 1, X86_ECX, 0, ptr_reg);
@@ -330,7 +331,7 @@ orc_sse_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
     case 2:
       /* FIXME we might be using ecx twice here */
       if (ptr_reg == X86_ECX) {
-        ORC_PROGRAM_ERROR(compiler,"unimplemented");
+        ORC_COMPILER_ERROR(compiler,"unimplemented");
       }
       orc_x86_emit_mov_sse_reg (compiler, var->alloc, X86_ECX);
       orc_x86_emit_mov_reg_memoffset (compiler, 2, X86_ECX, 0, ptr_reg);
@@ -348,7 +349,7 @@ orc_sse_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
           var->is_aligned, var->is_uncached);
       break;
     default:
-      ORC_PROGRAM_ERROR(compiler,"bad size");
+      ORC_COMPILER_ERROR(compiler,"bad size");
       break;
   }
 }
@@ -359,7 +360,7 @@ get_align_var (OrcCompiler *compiler)
   if (compiler->vars[ORC_VAR_D1].size) return ORC_VAR_D1;
   if (compiler->vars[ORC_VAR_S1].size) return ORC_VAR_S1;
 
-  ORC_PROGRAM_ERROR(compiler, "could not find alignment variable");
+  ORC_COMPILER_ERROR(compiler, "could not find alignment variable");
 
   return -1;
 }
@@ -574,7 +575,7 @@ orc_sse_emit_loop (OrcCompiler *compiler)
       }
       rule->emit (compiler, rule->emit_user, insn);
     } else {
-      ORC_PROGRAM_ERROR(compiler,"No rule for: %s", opcode->name);
+      ORC_COMPILER_ERROR(compiler,"No rule for: %s", opcode->name);
     }
 
     for(k=0;k<ORC_STATIC_OPCODE_N_DEST;k++){

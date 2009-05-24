@@ -110,7 +110,7 @@ mmx_load_constants (OrcCompiler *compiler)
               (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]), compiler->exec_reg,
               compiler->vars[i].ptr_register);
         } else {
-          ORC_PROGRAM_ERROR(compiler, "unimplemented");
+          ORC_COMPILER_ERROR(compiler, "unimplemented");
         }
         break;
       default:
@@ -142,7 +142,7 @@ orc_mmx_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
       orc_x86_emit_mov_memoffset_mmx (compiler, 8, 0, ptr_reg, var->alloc);
       break;
     default:
-      ORC_PROGRAM_ERROR(compiler, "bad size");
+      ORC_COMPILER_ERROR(compiler, "bad size");
   }
 }
 
@@ -161,7 +161,7 @@ mmx_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
     case 0:
       /* FIXME we might be using ecx twice here */
       if (ptr_reg == X86_ECX) {
-        ORC_PROGRAM_ERROR(compiler, "unimplemented");
+        ORC_COMPILER_ERROR(compiler, "unimplemented");
       }
       orc_x86_emit_mov_mmx_reg (compiler, var->alloc, X86_ECX);
       orc_x86_emit_mov_reg_memoffset (compiler, 2, X86_ECX, 0, ptr_reg);
@@ -173,7 +173,7 @@ mmx_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
       orc_x86_emit_mov_mmx_memoffset (compiler, 8, var->alloc, 0, ptr_reg);
       break;
     default:
-      ORC_PROGRAM_ERROR(compiler, "unimplemented");
+      ORC_COMPILER_ERROR(compiler, "unimplemented");
   }
 }
 

@@ -58,7 +58,9 @@ orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
     }
   }
 
+  /* FIXME on !x86, this is an error */
   ORC_ERROR ("register overflow");
+
   return 0;
 }
 
@@ -168,7 +170,7 @@ orc_compiler_check_sizes (OrcCompiler *compiler)
     for(j=0;j<ORC_STATIC_OPCODE_N_DEST;j++){
       if (opcode->dest_size[j] == 0) continue;
       if (opcode->dest_size[j] != compiler->vars[insn->dest_args[j]].size) {
-        ORC_PROGRAM_ERROR(compiler, "size mismatch, opcode %s dest[%d] is %d should be %d",
+        ORC_COMPILER_ERROR(compiler, "size mismatch, opcode %s dest[%d] is %d should be %d",
             opcode->name, j, compiler->vars[insn->dest_args[j]].size,
             opcode->dest_size[j]);
         return;
@@ -178,7 +180,7 @@ orc_compiler_check_sizes (OrcCompiler *compiler)
       if (opcode->src_size[j] == 0) continue;
       if (opcode->src_size[j] != compiler->vars[insn->src_args[j]].size &&
           compiler->vars[insn->src_args[j]].vartype != ORC_VAR_TYPE_PARAM) {
-        ORC_PROGRAM_ERROR(compiler, "size mismatch, opcode %s src[%d] is %d should be %d",
+        ORC_COMPILER_ERROR(compiler, "size mismatch, opcode %s src[%d] is %d should be %d",
             opcode->name, j, compiler->vars[insn->src_args[j]].size,
             opcode->src_size[j]);
         return;
@@ -199,7 +201,7 @@ orc_compiler_assign_rules (OrcCompiler *compiler)
         compiler->target_flags);
 
     if (insn->rule == NULL || insn->rule->emit == NULL) {
-      ORC_PROGRAM_ERROR(compiler, "No rule for: %s", insn->opcode->name);
+      ORC_COMPILER_ERROR(compiler, "No rule for: %s", insn->opcode->name);
       return;
     }
   }
@@ -226,7 +228,7 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
       var = insn->src_args[k];
 #if 0
       if (compiler->vars[var].vartype == ORC_VAR_TYPE_DEST) {
-        ORC_PROGRAM_ERROR(compiler, "using dest var as source");
+        ORC_COMPILER_ERROR(compiler, "using dest var as source");
       }
 #endif
 
@@ -238,7 +240,7 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
 
       if (!compiler->vars[var].used) {
         if (compiler->vars[var].vartype == ORC_VAR_TYPE_TEMP) {
-          ORC_PROGRAM_ERROR(compiler, "using uninitialized temp var");
+          ORC_COMPILER_ERROR(compiler, "using uninitialized temp var");
         }
         compiler->vars[var].used = TRUE;
         compiler->vars[var].first_use = j;
@@ -252,21 +254,21 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
       var = insn->dest_args[k];
 
       if (compiler->vars[var].vartype == ORC_VAR_TYPE_SRC) {
-        ORC_PROGRAM_ERROR(compiler,"using src var as dest");
+        ORC_COMPILER_ERROR(compiler,"using src var as dest");
       }
       if (compiler->vars[var].vartype == ORC_VAR_TYPE_CONST) {
-        ORC_PROGRAM_ERROR(compiler,"using const var as dest");
+        ORC_COMPILER_ERROR(compiler,"using const var as dest");
       }
       if (compiler->vars[var].vartype == ORC_VAR_TYPE_PARAM) {
-        ORC_PROGRAM_ERROR(compiler,"using param var as dest");
+        ORC_COMPILER_ERROR(compiler,"using param var as dest");
       }
       if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
         if (compiler->vars[var].vartype != ORC_VAR_TYPE_ACCUMULATOR) {
-          ORC_PROGRAM_ERROR(compiler,"accumulating opcode to non-accumulator dest");
+          ORC_COMPILER_ERROR(compiler,"accumulating opcode to non-accumulator dest");
         }
       } else {
         if (compiler->vars[var].vartype == ORC_VAR_TYPE_ACCUMULATOR) {
-          ORC_PROGRAM_ERROR(compiler,"non-accumulating opcode to accumulator dest");
+          ORC_COMPILER_ERROR(compiler,"non-accumulating opcode to accumulator dest");
         }
       }
 
@@ -282,7 +284,7 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
       } else {
 #if 0
         if (compiler->vars[var].vartype == ORC_VAR_TYPE_DEST) {
-          ORC_PROGRAM_ERROR(compiler,"writing dest more than once");
+          ORC_COMPILER_ERROR(compiler,"writing dest more than once");
         }
 #endif
         if (compiler->vars[var].vartype == ORC_VAR_TYPE_TEMP) {
@@ -332,7 +334,7 @@ orc_compiler_global_reg_alloc (OrcCompiler *compiler)
       case ORC_VAR_TYPE_TEMP:
         break;
       default:
-        ORC_PROGRAM_ERROR(compiler, "bad vartype");
+        ORC_COMPILER_ERROR(compiler, "bad vartype");
         break;
     }
   }
