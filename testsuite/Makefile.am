@@ -11,6 +11,8 @@ XFAIL_TESTS = \
 
 orcbin_PROGRAMS = $(TESTS)
 
+CLEANFILES = temp-orc-test-*
+
 AM_CFLAGS = $(ORC_CFLAGS)
 LIBS = $(ORC_LIBS) $(top_builddir)/orc-test/liborc-test-0.3.la
 

@@ -19,15 +19,29 @@ orc_test_init (void)
 }
 
 
-
-
 OrcTestResult
 orc_test_gcc_compile (OrcProgram *p)
 {
   char cmd[200];
+  char *base;
+  char source_filename[100];
+  char obj_filename[100];
+  char dis_filename[100];
+  char dump_filename[100];
+  char dump_obj_filename[100];
+  char dump_dis_filename[100];
   int ret;
   FILE *file;
   OrcCompileResult result;
+
+  base = "temp-orc-test";
+
+  sprintf(source_filename, "%s-source.s", base);
+  sprintf(obj_filename, "%s-source.o", base);
+  sprintf(dis_filename, "%s-source.dis", base);
+  sprintf(dump_filename, "%s-dump.bin", base);
+  sprintf(dump_obj_filename, "%s-dump.o", base);
+  sprintf(dump_dis_filename, "%s-dump.dis", base);
 
   result = orc_program_compile (p);
   if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
@@ -36,28 +50,32 @@ orc_test_gcc_compile (OrcProgram *p)
 
   fflush (stdout);
 
-  file = fopen ("tmp.s", "w");
+  file = fopen (source_filename, "w");
   fprintf(file, "%s", orc_program_get_asm_code (p));
   fclose (file);
 
-  file = fopen ("dump", "w");
+  file = fopen (dump_filename, "w");
   ret = fwrite(p->code, p->code_size, 1, file);
   fclose (file);
 
 #if defined(HAVE_POWERPC)
-  ret = system ("gcc -Wa,-mregnames -Wall -c tmp.s");
+  sprintf (cmd, "gcc -Wa,-mregnames -Wall -c %s -o %d", source_filename,
+      obj_filename);
 #else
-  ret = system ("gcc -Wall -c tmp.s");
+  sprintf (cmd, "gcc -Wall -c %s -o %s", source_filename,
+      obj_filename);
 #endif
+  ret = system (cmd);
   if (ret != 0) {
-    printf("gcc failed\n");
-    return FALSE;
+    ORC_ERROR ("gcc failed");
+    return ORC_TEST_FAILED;
   }
 
-  ret = system ("objdump -dr tmp.o >tmp.dis");
+  sprintf (cmd, "objdump -dr %s >%s", obj_filename, dis_filename);
+  ret = system (cmd);
   if (ret != 0) {
-    printf("objdump failed\n");
-    return FALSE;
+    ORC_ERROR ("objdump failed");
+    return ORC_TEST_FAILED;
   }
 
   sprintf (cmd, "objcopy -I binary "
@@ -72,26 +90,35 @@ orc_test_gcc_compile (OrcProgram *p)
 #endif
       "--rename-section .data=.text "
       "--redefine-sym _binary_dump_start=%s "
-      "dump tmp.o", p->name);
+      "%s %s", p->name, dump_filename, dump_obj_filename);
   ret = system (cmd);
   if (ret != 0) {
     printf("objcopy failed\n");
-    return FALSE;
+    return ORC_TEST_FAILED;
   }
 
-  ret = system ("objdump -Dr tmp.o >tmp-dump.dis");
+  sprintf (cmd, "objdump -Dr %s >%s", dump_obj_filename, dump_dis_filename);
+  ret = system (cmd);
   if (ret != 0) {
     printf("objdump failed\n");
-    return FALSE;
+    return ORC_TEST_FAILED;
   }
 
-  ret = system ("diff -u tmp.dis tmp-dump.dis");
+  sprintf (cmd, "diff -u %s %s", dis_filename, dump_dis_filename);
+  ret = system (cmd);
   if (ret != 0) {
     printf("diff failed\n");
-    return FALSE;
+    return ORC_TEST_FAILED;
   }
 
-  return TRUE;
+  remove (source_filename);
+  remove (obj_filename);
+  remove (dis_filename);
+  remove (dump_filename);
+  remove (dump_obj_filename);
+  remove (dump_dis_filename);
+
+  return ORC_TEST_OK;
 }
 
 
