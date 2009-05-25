@@ -13,6 +13,25 @@
 #include <orc/x86.h>
 
 
+const char *
+orc_x86_get_regname_sse(int i)
+{
+  static const char *x86_regs[] = {
+    "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7",
+    "xmm8", "xmm9", "xmm10", "xmm11", "xmm12", "xmm13", "xmm14", "xmm15"
+  };
+
+  if (i>=X86_XMM0 && i<X86_XMM0 + 16) return x86_regs[i - X86_XMM0];
+  switch (i) {
+    case 0:
+      return "UNALLOCATED";
+    case 1:
+      return "direct";
+    default:
+      return "ERROR";
+  }
+}
+
 void
 orc_sse_emit_f20f (OrcCompiler *p, const char *insn_name, int code,
     int src, int dest)
@@ -111,25 +130,6 @@ orc_sse_emit_shiftimm (OrcCompiler *p, const char *insn_name, int code,
   *p->codeptr++ = code;
   orc_x86_emit_modrm_reg (p, reg, modrm_code);
   *p->codeptr++ = shift;
-}
-
-const char *
-orc_x86_get_regname_sse(int i)
-{
-  static const char *x86_regs[] = {
-    "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7",
-    "xmm8", "xmm9", "xmm10", "xmm11", "xmm12", "xmm13", "xmm14", "xmm15"
-  };
-
-  if (i>=X86_XMM0 && i<X86_XMM0 + 16) return x86_regs[i - X86_XMM0];
-  switch (i) {
-    case 0:
-      return "UNALLOCATED";
-    case 1:
-      return "direct";
-    default:
-      return "ERROR";
-  }
 }
 
 void
