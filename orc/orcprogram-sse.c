@@ -178,8 +178,7 @@ sse_save_accumulators (OrcCompiler *compiler)
       case ORC_VAR_TYPE_ACCUMULATOR:
         src = compiler->vars[i].alloc;
 
-        orc_sse_emit_660f (compiler, "pshufd $0xee,", 0x70, src, compiler->tmpreg);
-        *compiler->codeptr++ = 0xee;
+        orc_sse_emit_pshufd (compiler, 0xee, src, compiler->tmpreg);
 
         if (compiler->vars[i].size == 2) {
           orc_sse_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
@@ -187,8 +186,7 @@ sse_save_accumulators (OrcCompiler *compiler)
           orc_sse_emit_660f (compiler, "paddd", 0xfe, compiler->tmpreg, src);
         }
 
-        orc_sse_emit_660f (compiler, "pshufd $0x55,", 0x70, src, compiler->tmpreg);
-        *compiler->codeptr++ = 0x55;
+        orc_sse_emit_pshufd (compiler, 0x55, src, compiler->tmpreg);
 
         if (compiler->vars[i].size == 2) {
           orc_sse_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
@@ -197,8 +195,7 @@ sse_save_accumulators (OrcCompiler *compiler)
         }
 
         if (compiler->vars[i].size == 2) {
-          orc_sse_emit_f20f (compiler, "pshuflw $0x55,", 0x70, src, compiler->tmpreg);
-          *compiler->codeptr++ = 0x55;
+          orc_sse_emit_pshuflw (compiler, 0x55, src, compiler->tmpreg);
 
           orc_sse_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
         }
@@ -267,14 +264,8 @@ sse_load_constants (OrcCompiler *compiler)
         }
         break;
       case ORC_VAR_TYPE_ACCUMULATOR:
-        ORC_ASM_CODE(compiler,"  pxor %%%s, %%%s\n",
-            orc_x86_get_regname_sse(compiler->vars[i].alloc),
-            orc_x86_get_regname_sse(compiler->vars[i].alloc));
-        *compiler->codeptr++ = 0x66;
-        orc_x86_emit_rex (compiler, 0, compiler->vars[i].alloc, 0, compiler->vars[i].alloc);
-        *compiler->codeptr++ = 0x0f;
-        *compiler->codeptr++ = 0xef;
-        orc_x86_emit_modrm_reg (compiler, compiler->vars[i].alloc, compiler->vars[i].alloc);
+        orc_sse_emit_660f (compiler, "pxor", 0xef,
+            compiler->vars[i].alloc, compiler->vars[i].alloc);
         break;
       case ORC_VAR_TYPE_TEMP:
         break;
