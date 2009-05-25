@@ -201,8 +201,8 @@ sse_save_accumulators (OrcCompiler *compiler)
         }
 
         if (compiler->vars[i].size == 2) {
-          orc_x86_emit_mov_sse_reg (compiler, src, X86_ECX);
-          orc_x86_emit_mov_reg_memoffset (compiler, 2, X86_ECX,
+          orc_x86_emit_mov_sse_reg (compiler, src, compiler->gp_tmpreg);
+          orc_x86_emit_mov_reg_memoffset (compiler, 2, compiler->gp_tmpreg,
               (int)ORC_STRUCT_OFFSET(OrcExecutor, accumulators[i-ORC_VAR_A1]),
               compiler->exec_reg);
         } else {
@@ -285,19 +285,19 @@ orc_sse_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
     i = var - compiler->vars;
     orc_x86_emit_mov_memoffset_reg (compiler, compiler->is_64bit ? 8 : 4,
         (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]),
-        compiler->exec_reg, X86_ECX);
-    ptr_reg = X86_ECX;
+        compiler->exec_reg, compiler->gp_tmpreg);
+    ptr_reg = compiler->gp_tmpreg;
   } else {
     ptr_reg = var->ptr_register;
   }
   switch (var->size << compiler->loop_shift) {
     case 1:
-      orc_x86_emit_mov_memoffset_reg (compiler, 1, 0, ptr_reg, X86_ECX);
-      orc_x86_emit_mov_reg_sse (compiler, X86_ECX, var->alloc);
+      orc_x86_emit_mov_memoffset_reg (compiler, 1, 0, ptr_reg, compiler->gp_tmpreg);
+      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, var->alloc);
       break;
     case 2:
-      orc_x86_emit_mov_memoffset_reg (compiler, 2, 0, ptr_reg, X86_ECX);
-      orc_x86_emit_mov_reg_sse (compiler, X86_ECX, var->alloc);
+      orc_x86_emit_mov_memoffset_reg (compiler, 2, 0, ptr_reg, compiler->gp_tmpreg);
+      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, var->alloc);
       break;
     case 4:
       orc_x86_emit_mov_memoffset_sse (compiler, 4, 0, ptr_reg, var->alloc,
@@ -324,27 +324,27 @@ orc_sse_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
   int ptr_reg;
   if (var->ptr_register == 0) {
     orc_x86_emit_mov_memoffset_reg (compiler, compiler->is_64bit ? 8 : 4,
-        var->ptr_offset, compiler->exec_reg, X86_ECX);
-    ptr_reg = X86_ECX;
+        var->ptr_offset, compiler->exec_reg, compiler->gp_tmpreg);
+    ptr_reg = compiler->gp_tmpreg;
   } else {
     ptr_reg = var->ptr_register;
   }
   switch (var->size << compiler->loop_shift) {
     case 1:
       /* FIXME we might be using ecx twice here */
-      if (ptr_reg == X86_ECX) {
+      if (ptr_reg == compiler->gp_tmpreg) {
         ORC_COMPILER_ERROR(compiler,"unimplemented");
       }
-      orc_x86_emit_mov_sse_reg (compiler, var->alloc, X86_ECX);
-      orc_x86_emit_mov_reg_memoffset (compiler, 1, X86_ECX, 0, ptr_reg);
+      orc_x86_emit_mov_sse_reg (compiler, var->alloc, compiler->gp_tmpreg);
+      orc_x86_emit_mov_reg_memoffset (compiler, 1, compiler->gp_tmpreg, 0, ptr_reg);
       break;
     case 2:
       /* FIXME we might be using ecx twice here */
-      if (ptr_reg == X86_ECX) {
+      if (ptr_reg == compiler->gp_tmpreg) {
         ORC_COMPILER_ERROR(compiler,"unimplemented");
       }
-      orc_x86_emit_mov_sse_reg (compiler, var->alloc, X86_ECX);
-      orc_x86_emit_mov_reg_memoffset (compiler, 2, X86_ECX, 0, ptr_reg);
+      orc_x86_emit_mov_sse_reg (compiler, var->alloc, compiler->gp_tmpreg);
+      orc_x86_emit_mov_reg_memoffset (compiler, 2, compiler->gp_tmpreg, 0, ptr_reg);
       break;
     case 4:
       orc_x86_emit_mov_sse_memoffset (compiler, 4, var->alloc, 0, ptr_reg,
@@ -423,13 +423,14 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1), compiler->exec_reg);
     
     orc_x86_emit_mov_memoffset_reg (compiler, 4,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor,n), compiler->exec_reg, X86_ECX);
-    orc_x86_emit_sub_reg_reg (compiler, 4, X86_EAX, X86_ECX);
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,n), compiler->exec_reg,
+        compiler->gp_tmpreg);
+    orc_x86_emit_sub_reg_reg (compiler, 4, X86_EAX, compiler->gp_tmpreg);
 
-    orc_x86_emit_mov_reg_reg (compiler, 4, X86_ECX, X86_EAX);
+    orc_x86_emit_mov_reg_reg (compiler, 4, compiler->gp_tmpreg, X86_EAX);
 
-    orc_x86_emit_sar_imm_reg (compiler, 4, compiler->loop_shift, X86_ECX);
-    orc_x86_emit_mov_reg_memoffset (compiler, 4, X86_ECX,
+    orc_x86_emit_sar_imm_reg (compiler, 4, compiler->loop_shift, compiler->gp_tmpreg);
+    orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2), compiler->exec_reg);
 
     orc_x86_emit_and_imm_reg (compiler, 4, (1<<compiler->loop_shift)-1, X86_EAX);
@@ -452,8 +453,8 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
     orc_x86_emit_label (compiler, 7);
   } else {
     orc_x86_emit_mov_memoffset_reg (compiler, 4,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor,n), compiler->exec_reg, X86_ECX);
-    orc_x86_emit_mov_reg_memoffset (compiler, 4, X86_ECX,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,n), compiler->exec_reg, compiler->gp_tmpreg);
+    orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2), compiler->exec_reg);
   }
 

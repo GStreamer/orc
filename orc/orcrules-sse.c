@@ -22,8 +22,8 @@ orc_sse_emit_loadil (OrcCompiler *p, int reg, int value)
   if (value == 0) {
     orc_sse_emit_660f (p, "pxor", 0xef, reg, reg);
   } else {
-    orc_x86_emit_mov_imm_reg (p, 4, value, X86_ECX);
-    orc_x86_emit_mov_reg_sse (p, X86_ECX, reg);
+    orc_x86_emit_mov_imm_reg (p, 4, value, p->gp_tmpreg);
+    orc_x86_emit_mov_reg_sse (p, p->gp_tmpreg, reg);
     orc_sse_emit_pshufd (p, 0, reg, reg);
   }
 }
@@ -230,9 +230,9 @@ sse_rule_signX (OrcCompiler *p, void *user, OrcInstruction *insn)
     src = p->tmpreg;
   }
 
-  orc_x86_emit_mov_imm_reg (p, 4, imm_vals[ORC_PTR_TO_INT(user)], X86_ECX);
+  orc_x86_emit_mov_imm_reg (p, 4, imm_vals[ORC_PTR_TO_INT(user)], p->gp_tmpreg);
 
-  orc_x86_emit_mov_reg_sse (p, X86_ECX, dest);
+  orc_x86_emit_mov_reg_sse (p, p->gp_tmpreg, dest);
   orc_sse_emit_pshufd (p, 0, dest, dest);
 
   orc_sse_emit_660f (p, names[ORC_PTR_TO_INT(user)], codes[ORC_PTR_TO_INT(user)], src, dest);
@@ -491,11 +491,11 @@ sse_emit_load_mask (OrcCompiler *p, unsigned int mask1, unsigned int mask2)
   int tmp = p->tmpreg;
   int tmp2 = X86_XMM7;
 
-  orc_x86_emit_mov_imm_reg (p, 4, mask1, X86_ECX);
-  orc_x86_emit_mov_reg_sse (p, X86_ECX, p->tmpreg);
+  orc_x86_emit_mov_imm_reg (p, 4, mask1, p->gp_tmpreg);
+  orc_x86_emit_mov_reg_sse (p, p->gp_tmpreg, p->tmpreg);
   orc_sse_emit_pshufd (p, 0, tmp, tmp);
-  orc_x86_emit_mov_imm_reg (p, 4, mask2, X86_ECX);
-  orc_x86_emit_mov_reg_sse (p, X86_ECX, tmp2);
+  orc_x86_emit_mov_imm_reg (p, 4, mask2, p->gp_tmpreg);
+  orc_x86_emit_mov_reg_sse (p, p->gp_tmpreg, tmp2);
   orc_sse_emit_660f (p, "punpcklbw", 0x60, tmp2, tmp2);
   orc_sse_emit_660f (p, "punpcklwd", 0x61, tmp2, tmp2);
   orc_sse_emit_660f (p, "paddb", 0xfc, tmp2, tmp);
@@ -616,8 +616,8 @@ sse_rule_maxuw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp = p->tmpreg;
 
-  orc_x86_emit_mov_imm_reg (p, 4, 0x80008000, X86_ECX);
-  orc_x86_emit_mov_reg_sse (p, X86_ECX, tmp);
+  orc_x86_emit_mov_imm_reg (p, 4, 0x80008000, p->gp_tmpreg);
+  orc_x86_emit_mov_reg_sse (p, p->gp_tmpreg, tmp);
   orc_sse_emit_pshufd (p, 0, tmp, tmp);
   orc_sse_emit_660f (p, "pxor", 0xef, tmp, src);
   orc_sse_emit_660f (p, "pxor", 0xef, tmp, dest);
