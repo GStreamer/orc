@@ -29,6 +29,7 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orcdebug.c \
 	orccpu.c \
 	orcutils.c \
+	orcsse.c \
 	x86.c \
 	arm.c
 

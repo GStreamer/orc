@@ -74,8 +74,6 @@ void orc_sse_emit_f30f (OrcCompiler *p, const char *insn_name, int code,
     int src, int dest);
 void orc_sse_emit_0f (OrcCompiler *p, const char *insn_name, int code,
     int src, int dest);
-void orc_sse_emit_660f38 (OrcCompiler *p, const char *insn_name, int code,
-    int src, int dest);
 
 enum {
   X86_EAX = ORC_GP_REG_BASE,

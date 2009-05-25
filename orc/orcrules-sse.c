@@ -14,79 +14,6 @@
 
 #define SIZE 65536
 
-int ssse3 = TRUE;
-int sse41 = FALSE;
-
-void
-orc_sse_emit_f20f (OrcCompiler *p, const char *insn_name, int code,
-    int src, int dest)
-{
-  ORC_ASM_CODE(p,"  %s %%%s, %%%s\n", insn_name,
-      orc_x86_get_regname_sse(src),
-      orc_x86_get_regname_sse(dest));
-  *p->codeptr++ = 0xf2;
-  orc_x86_emit_rex (p, 0, dest, 0, src);
-  *p->codeptr++ = 0x0f;
-  *p->codeptr++ = code;
-  orc_x86_emit_modrm_reg (p, src, dest);
-}
-
-void
-orc_sse_emit_f30f (OrcCompiler *p, const char *insn_name, int code,
-    int src, int dest)
-{
-  ORC_ASM_CODE(p,"  %s %%%s, %%%s\n", insn_name,
-      orc_x86_get_regname_sse(src),
-      orc_x86_get_regname_sse(dest));
-  *p->codeptr++ = 0xf3;
-  orc_x86_emit_rex (p, 0, dest, 0, src);
-  *p->codeptr++ = 0x0f;
-  *p->codeptr++ = code;
-  orc_x86_emit_modrm_reg (p, src, dest);
-}
-
-void
-orc_sse_emit_0f (OrcCompiler *p, const char *insn_name, int code,
-    int src, int dest)
-{
-  ORC_ASM_CODE(p,"  %s %%%s, %%%s\n", insn_name,
-      orc_x86_get_regname_sse(src),
-      orc_x86_get_regname_sse(dest));
-  orc_x86_emit_rex (p, 0, dest, 0, src);
-  *p->codeptr++ = 0x0f;
-  *p->codeptr++ = code;
-  orc_x86_emit_modrm_reg (p, src, dest);
-}
-
-void
-orc_sse_emit_660f (OrcCompiler *p, const char *insn_name, int code,
-    int src, int dest)
-{
-  ORC_ASM_CODE(p,"  %s %%%s, %%%s\n", insn_name,
-      orc_x86_get_regname_sse(src),
-      orc_x86_get_regname_sse(dest));
-  *p->codeptr++ = 0x66;
-  orc_x86_emit_rex (p, 0, dest, 0, src);
-  *p->codeptr++ = 0x0f;
-  *p->codeptr++ = code;
-  orc_x86_emit_modrm_reg (p, src, dest);
-}
-
-void
-orc_sse_emit_660f38 (OrcCompiler *p, const char *insn_name, int code,
-    int src, int dest)
-{
-  ORC_ASM_CODE(p,"  %s %%%s, %%%s\n", insn_name,
-      orc_x86_get_regname_sse(src),
-      orc_x86_get_regname_sse(dest));
-  *p->codeptr++ = 0x66;
-  orc_x86_emit_rex (p, 0, dest, 0, src);
-  *p->codeptr++ = 0x0f;
-  *p->codeptr++ = 0x38;
-  *p->codeptr++ = code;
-  orc_x86_emit_modrm_reg (p, src, dest);
-}
-
 /* sse rules */
 
 void
@@ -234,30 +161,11 @@ sse_rule_copyx (OrcCompiler *p, void *user, OrcInstruction *insn)
       p->vars[insn->dest_args[0]].alloc);
 }
 
-static void
-orc_sse_emit_66_rex_0f (OrcCompiler *p, OrcInstruction *insn, int code,
-    const char *insn_name, int src, int dest)
-{
-  ORC_ASM_CODE(p,"  %s %%%s, %%%s\n", insn_name,
-      orc_x86_get_regname_sse(src), orc_x86_get_regname_sse(dest));
-
-  *p->codeptr++ = 0x66;
-  orc_x86_emit_rex (p, 0, dest, 0, src);
-  *p->codeptr++ = 0x0f;
-  if (code & 0xff00) {
-    *p->codeptr++ = code >> 8;
-    *p->codeptr++ = code & 0xff;
-  } else {
-    *p->codeptr++ = code;
-  }
-  orc_x86_emit_modrm_reg (p, src, dest);
-}
-
 #define UNARY(opcode,insn_name,code) \
 static void \
 sse_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  orc_sse_emit_66_rex_0f (p, insn, code, insn_name, \
+  orc_sse_emit_660f (p, insn_name, code, \
       p->vars[insn->src_args[0]].alloc, \
       p->vars[insn->dest_args[0]].alloc); \
 }
@@ -266,7 +174,7 @@ sse_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 static void \
 sse_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  orc_sse_emit_66_rex_0f (p, insn, code, insn_name, \
+  orc_sse_emit_660f (p, insn_name, code, \
       p->vars[insn->src_args[1]].alloc, \
       p->vars[insn->dest_args[0]].alloc); \
 }
@@ -414,7 +322,7 @@ sse_rule_signX (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int imm_vals[] = { 0x01010101, 0x00010001, 0x00000001 };
   const char * names[] = { "psignb", "psignw", "psignd" };
-  int codes[] = { 0x08, 0x09, 0x0a };
+  int codes[] = { 0x3808, 0x3809, 0x380a };
 
   if (src == dest) {
     orc_sse_emit_660f (p, "movdqa", 0x6f, src, p->tmpreg);
@@ -439,7 +347,7 @@ sse_rule_signX (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_x86_emit_modrm_reg (p, dest, dest);
   *p->codeptr++ = 0x00;
 
-  orc_sse_emit_660f38 (p, names[ORC_PTR_TO_INT(user)], codes[ORC_PTR_TO_INT(user)], src, dest);
+  orc_sse_emit_660f (p, names[ORC_PTR_TO_INT(user)], codes[ORC_PTR_TO_INT(user)], src, dest);
 }
 
 static void
@@ -654,7 +562,7 @@ sse_rule_convssslw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_convsuslw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  orc_sse_emit_660f38 (p, "packusdw", 0x2b,
+  orc_sse_emit_660f (p, "packusdw", 0x382b,
       p->vars[insn->src_args[0]].alloc,
       p->vars[insn->dest_args[0]].alloc);
 }
@@ -860,7 +768,7 @@ sse_rule_select0lw_sse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_sse_emit_660f (p, "movdqa", 0x6f, src, dest);
   }
 
-  orc_sse_emit_660f38 (p, "pshufb", 0x00, tmp, dest);
+  orc_sse_emit_660f (p, "pshufb", 0x3800, tmp, dest);
 }
 
 static void
@@ -878,7 +786,7 @@ sse_rule_select1lw_sse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_sse_emit_660f (p, "movdqa", 0x6f, src, dest);
   }
 
-  orc_sse_emit_660f38 (p, "pshufb", 0x00, tmp, dest);
+  orc_sse_emit_660f (p, "pshufb", 0x3800, tmp, dest);
 }
 
 static void
@@ -896,7 +804,7 @@ sse_rule_select0wb_sse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_sse_emit_660f (p, "movdqa", 0x6f, src, dest);
   }
 
-  orc_sse_emit_660f38 (p, "pshufb", 0x00, tmp, dest);
+  orc_sse_emit_660f (p, "pshufb", 0x3800, tmp, dest);
 }
 
 static void
@@ -914,7 +822,7 @@ sse_rule_select1wb_sse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_sse_emit_660f (p, "movdqa", 0x6f, src, dest);
   }
 
-  orc_sse_emit_660f38 (p, "pshufb", 0x00, tmp, dest);
+  orc_sse_emit_660f (p, "pshufb", 0x3800, tmp, dest);
 }
 
 /* slow rules */
@@ -933,7 +841,7 @@ sse_rule_swapw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   if (src != dest) {
     orc_sse_emit_660f (p, "movdqa", 0x6f, src, dest);
   }
-  orc_sse_emit_660f38 (p, "pshufb", 0x00, tmp, dest);
+  orc_sse_emit_660f (p, "pshufb", 0x3800, tmp, dest);
 }
 
 static void
@@ -950,7 +858,7 @@ sse_rule_swapl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   if (src != dest) {
     orc_sse_emit_660f (p, "movdqa", 0x6f, src, dest);
   }
-  orc_sse_emit_660f38 (p, "pshufb", 0x00, tmp, dest);
+  orc_sse_emit_660f (p, "pshufb", 0x3800, tmp, dest);
 }
 
 static void
