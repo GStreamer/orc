@@ -63,9 +63,9 @@ orc_compiler_sse_get_default_flags (void)
   flags |= ORC_TARGET_SSE_SHORT_JUMPS;
   
 #if defined(HAVE_AMD64) || defined(HAVE_I386)
-  flags = orc_sse_get_cpu_flags ();
+  flags |= orc_sse_get_cpu_flags ();
 #else
-  flags = ORC_TARGET_SSE_SSE2;
+  flags |= ORC_TARGET_SSE_SSE2;
   flags |= ORC_TARGET_SSE_SSE3;
   flags |= ORC_TARGET_SSE_SSSE3;
 #endif
