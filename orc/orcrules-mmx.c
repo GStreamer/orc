@@ -9,7 +9,7 @@
 #include <sys/types.h>
 
 #include <orc/orcprogram.h>
-#include <orc/x86.h>
+#include <orc/orcmmx.h>
 
 #define SIZE 65536
 

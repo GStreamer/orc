@@ -30,6 +30,7 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orccpu.c \
 	orcutils.c \
 	orcsse.c \
+	orcmmx.c \
 	x86.c \
 	arm.c
 
@@ -59,7 +60,9 @@ pkginclude_HEADERS = \
 	orcparse.h \
 	orccpu.h \
 	opcodes.h \
-	x86.h \
+	orcsse.h \
+	orcmmx.h \
+	orcx86.h \
 	arm.h
 
 nodist_pkginclude_HEADERS = orc-stdint.h

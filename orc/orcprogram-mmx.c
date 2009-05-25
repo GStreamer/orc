@@ -10,7 +10,8 @@
 
 #include <orc/orc.h>
 #include <orc/orcdebug.h>
-#include <orc/x86.h>
+#include <orc/orcx86.h>
+#include <orc/orcmmx.h>
 
 #define SIZE 65536
 
@@ -66,7 +67,7 @@ orc_compiler_mmx_init (OrcCompiler *compiler)
     compiler->valid_regs[X86_ECX] = 0;
     compiler->valid_regs[X86_EDI] = 0;
     compiler->valid_regs[X86_ESP] = 0;
-    for(i=X86_XMM0;i<X86_XMM0+16;i++){
+    for(i=X86_MM0;i<X86_MM0+8;i++){
       compiler->valid_regs[i] = 1;
     }
     compiler->save_regs[X86_EBX] = 1;
@@ -82,7 +83,7 @@ orc_compiler_mmx_init (OrcCompiler *compiler)
     compiler->valid_regs[X86_ECX] = 0;
     compiler->valid_regs[X86_ESP] = 0;
     compiler->valid_regs[X86_EBP] = 0;
-    for(i=X86_XMM0;i<X86_XMM0+8;i++){
+    for(i=X86_MM0;i<X86_MM0+8;i++){
       compiler->valid_regs[i] = 1;
     }
     compiler->save_regs[X86_EBX] = 1;
@@ -144,10 +145,10 @@ orc_mmx_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
       orc_x86_emit_mov_reg_mmx (compiler, X86_ECX, var->alloc);
       break;
     case 1:
-      orc_x86_emit_mov_memoffset_mmx (compiler, 4, 0, ptr_reg, var->alloc);
+      orc_x86_emit_mov_memoffset_mmx (compiler, 4, 0, ptr_reg, var->alloc, FALSE);
       break;
     case 2:
-      orc_x86_emit_mov_memoffset_mmx (compiler, 8, 0, ptr_reg, var->alloc);
+      orc_x86_emit_mov_memoffset_mmx (compiler, 8, 0, ptr_reg, var->alloc, FALSE);
       break;
     default:
       ORC_COMPILER_ERROR(compiler, "bad size");
@@ -175,10 +176,10 @@ mmx_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
       orc_x86_emit_mov_reg_memoffset (compiler, 2, X86_ECX, 0, ptr_reg);
       break;
     case 1:
-      orc_x86_emit_mov_mmx_memoffset (compiler, 4, var->alloc, 0, ptr_reg);
+      orc_x86_emit_mov_mmx_memoffset (compiler, 4, var->alloc, 0, ptr_reg, FALSE, FALSE);
       break;
     case 2:
-      orc_x86_emit_mov_mmx_memoffset (compiler, 8, var->alloc, 0, ptr_reg);
+      orc_x86_emit_mov_mmx_memoffset (compiler, 8, var->alloc, 0, ptr_reg, FALSE, FALSE);
       break;
     default:
       ORC_COMPILER_ERROR(compiler, "unimplemented");

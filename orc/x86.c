@@ -9,7 +9,7 @@
 #include <sys/types.h>
 
 #include <orc/orcprogram.h>
-#include <orc/x86.h>
+#include <orc/orcx86.h>
 #include <orc/orcdebug.h>
 #include <orc/orcutils.h>
 
@@ -97,23 +97,6 @@ orc_x86_get_regname_ptr(OrcCompiler *compiler, int i)
     return orc_x86_get_regname_64 (i);
   } else {
     return orc_x86_get_regname (i);
-  }
-}
-
-const char *
-orc_x86_get_regname_mmx(int i)
-{
-  static const char *x86_regs[] = { "mm0", "mm1", "mm2", "mm3",
-    "mm4", "mm5", "mm6", "mm7" };
-
-  if (i>=X86_MM0 && i<X86_MM0 + 8) return x86_regs[i - X86_MM0];
-  switch (i) {
-    case 0:
-      return "UNALLOCATED";
-    case 1:
-      return "direct";
-    default:
-      return "ERROR";
   }
 }
 
@@ -239,26 +222,6 @@ orc_x86_emit_mov_memoffset_reg (OrcCompiler *compiler, int size, int offset,
 }
 
 void
-orc_x86_emit_mov_memoffset_mmx (OrcCompiler *compiler, int size, int offset,
-    int reg1, int reg2)
-{
-  if (size == 4) {
-    ORC_ASM_CODE(compiler,"  movd %d(%%%s), %%%s\n", offset, orc_x86_get_regname_ptr(compiler, reg1),
-        orc_x86_get_regname_mmx(reg2));
-    orc_x86_emit_rex(compiler, 0, reg2, 0, reg1);
-    *compiler->codeptr++ = 0x0f;
-    *compiler->codeptr++ = 0x6e;
-  } else {
-    ORC_ASM_CODE(compiler,"  movq %d(%%%s), %%%s\n", offset, orc_x86_get_regname_ptr(compiler, reg1),
-        orc_x86_get_regname_mmx(reg2));
-    orc_x86_emit_rex(compiler, 0, reg2, 0, reg1);
-    *compiler->codeptr++ = 0x0f;
-    *compiler->codeptr++ = 0x6f;
-  }
-  orc_x86_emit_modrm_memoffset (compiler, reg2, offset, reg1);
-}
-
-void
 orc_x86_emit_mov_reg_memoffset (OrcCompiler *compiler, int size, int reg1, int offset,
     int reg2)
 {
@@ -290,26 +253,6 @@ orc_x86_emit_mov_reg_memoffset (OrcCompiler *compiler, int size, int reg1, int o
 
   orc_x86_emit_rex(compiler, size, reg1, 0, reg2);
   *compiler->codeptr++ = 0x89;
-  orc_x86_emit_modrm_memoffset (compiler, reg1, offset, reg2);
-}
-
-void
-orc_x86_emit_mov_mmx_memoffset (OrcCompiler *compiler, int size, int reg1, int offset,
-    int reg2)
-{
-  orc_x86_emit_rex(compiler, 0, reg1, 0, reg2);
-  if (size == 4) {
-    ORC_ASM_CODE(compiler,"  movd %%%s, %d(%%%s)\n", orc_x86_get_regname_mmx(reg1), offset,
-        orc_x86_get_regname_ptr(compiler, reg2));
-    *compiler->codeptr++ = 0x0f;
-    *compiler->codeptr++ = 0x7e;
-  } else if (size == 8) {
-    ORC_ASM_CODE(compiler,"  movq %%%s, %d(%%%s)\n", orc_x86_get_regname_mmx(reg1), offset,
-        orc_x86_get_regname_ptr(compiler, reg2));
-    *compiler->codeptr++ = 0x0f;
-    *compiler->codeptr++ = 0x7f;
-  }
-
   orc_x86_emit_modrm_memoffset (compiler, reg1, offset, reg2);
 }
 
@@ -353,39 +296,6 @@ void orc_x86_emit_mov_reg_reg (OrcCompiler *compiler, int size, int reg1, int re
 
   orc_x86_emit_rex(compiler, size, reg2, 0, reg1);
   *compiler->codeptr++ = 0x89;
-  orc_x86_emit_modrm_reg (compiler, reg2, reg1);
-}
-
-void orc_x86_emit_mov_mmx_reg_reg (OrcCompiler *compiler, int reg1, int reg2)
-{
-  ORC_ASM_CODE(compiler,"  movq %%%s, %%%s\n", orc_x86_get_regname_mmx(reg1),
-        orc_x86_get_regname_mmx(reg2));
-
-  orc_x86_emit_rex(compiler, 0, reg1, 0, reg2);
-  *compiler->codeptr++ = 0x0f;
-  *compiler->codeptr++ = 0x6f;
-  orc_x86_emit_modrm_reg (compiler, reg1, reg2);
-}
-
-void orc_x86_emit_mov_reg_mmx (OrcCompiler *compiler, int reg1, int reg2)
-{
-  /* FIXME */
-  ORC_ASM_CODE(compiler,"  movd %%%s, %%%s\n", orc_x86_get_regname(reg1),
-      orc_x86_get_regname_mmx(reg2));
-  orc_x86_emit_rex(compiler, 0, reg1, 0, reg2);
-  *compiler->codeptr++ = 0x0f;
-  *compiler->codeptr++ = 0x6e;
-  orc_x86_emit_modrm_reg (compiler, reg1, reg2);
-}
-
-void orc_x86_emit_mov_mmx_reg (OrcCompiler *compiler, int reg1, int reg2)
-{
-  /* FIXME */
-  ORC_ASM_CODE(compiler,"  movd %%%s, %%%s\n", orc_x86_get_regname_mmx(reg1),
-      orc_x86_get_regname(reg2));
-  orc_x86_emit_rex(compiler, 0, reg2, 0, reg1);
-  *compiler->codeptr++ = 0x0f;
-  *compiler->codeptr++ = 0x7e;
   orc_x86_emit_modrm_reg (compiler, reg2, reg1);
 }
 

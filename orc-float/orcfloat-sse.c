@@ -2,12 +2,9 @@
 #include <orc-float/orcfloat.h>
 #include <orc/orc.h>
 #include <orc/orcdebug.h>
+#include <orc/orcsse.h>
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-
-#include <orc/x86.h>
 
 #define X86_MODRM(mod, rm, reg) ((((mod)&3)<<6)|(((rm)&7)<<0)|(((reg)&7)<<3))
 

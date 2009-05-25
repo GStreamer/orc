@@ -9,7 +9,8 @@
 #include <sys/types.h>
 
 #include <orc/orcprogram.h>
-#include <orc/x86.h>
+#include <orc/orcx86.h>
+#include <orc/orcsse.h>
 #include <orc/orcutils.h>
 #include <orc/orcdebug.h>
 #include <orc/orccpu.h>
@@ -117,9 +118,6 @@ orc_compiler_sse_init (OrcCompiler *compiler)
     compiler->save_regs[X86_EBX] = 1;
     compiler->save_regs[X86_EDI] = 1;
     compiler->save_regs[X86_EBP] = 1;
-  }
-  for(i=X86_MM0;i<X86_MM0+8;i++){
-    compiler->valid_regs[i] = 1;
   }
   for(i=0;i<128;i++){
     compiler->alloc_regs[i] = 0;

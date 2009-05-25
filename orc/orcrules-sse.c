@@ -10,7 +10,7 @@
 
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
-#include <orc/x86.h>
+#include <orc/orcsse.h>
 
 #define SIZE 65536
 

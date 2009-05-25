@@ -2,12 +2,10 @@
 #include <orc-pixel/orcpixel.h>
 #include <orc/orc.h>
 #include <orc/orcdebug.h>
+#include <orc/orcsse.h>
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-#include <orc/x86.h>
 
 
 static void
