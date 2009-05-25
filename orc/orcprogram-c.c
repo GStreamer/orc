@@ -80,6 +80,12 @@ orc_target_get_asm_preamble (const char *target)
     "/* end Orc C target preamble */\n\n";
 }
 
+unsigned int
+orc_compiler_c_get_default_flags (void)
+{
+  return 0;
+}
+
 void
 orc_compiler_c_assemble (OrcCompiler *compiler)
 {
@@ -294,8 +300,9 @@ c_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
 
 static OrcTarget c_target = {
   "c",
-  TRUE,
+  FALSE,
   ORC_GP_REG_BASE,
+  orc_compiler_c_get_default_flags,
   orc_compiler_c_init,
   orc_compiler_c_assemble
 };

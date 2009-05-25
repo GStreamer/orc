@@ -69,6 +69,18 @@ orc_target_get_default (void)
   return default_target;
 }
 
+const char *
+orc_target_get_name (OrcTarget *target)
+{
+  return target->name;
+}
+
+unsigned int
+orc_target_get_default_flags (OrcTarget *target)
+{
+  return target->get_default_flags();
+}
+
 #if 0
 int
 orc_opcode_get_list (OrcOpcode **list)

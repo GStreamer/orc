@@ -20,6 +20,7 @@
 void orc_sse_emit_loop (OrcCompiler *compiler);
 
 void orc_compiler_sse_init (OrcCompiler *compiler);
+unsigned int orc_compiler_sse_get_default_flags (void);
 void orc_compiler_sse_assemble (OrcCompiler *compiler);
 void orc_compiler_sse_register_rules (OrcTarget *target);
 
@@ -35,6 +36,7 @@ static OrcTarget sse_target = {
   FALSE,
 #endif
   ORC_VEC_REG_BASE,
+  orc_compiler_sse_get_default_flags,
   orc_compiler_sse_init,
   orc_compiler_sse_assemble
 };
@@ -48,25 +50,43 @@ orc_sse_init (void)
   orc_compiler_sse_register_rules (&sse_target);
 }
 
+unsigned int
+orc_compiler_sse_get_default_flags (void)
+{
+  unsigned int flags = 0;
+
+#ifdef HAVE_AMD64
+  flags |= ORC_TARGET_SSE_64BIT;
+#endif
+  flags &= ~ORC_TARGET_SSE_FRAME_POINTER;
+  flags |= ORC_TARGET_SSE_SHORT_JUMPS;
+  
+#if defined(HAVE_AMD64) || defined(HAVE_I386)
+  flags = orc_sse_get_cpu_flags ();
+#else
+  flags = ORC_TARGET_SSE_SSE2;
+  flags |= ORC_TARGET_SSE_SSE3;
+  flags |= ORC_TARGET_SSE_SSSE3;
+#endif
+
+  return flags;
+}
+
 void
 orc_compiler_sse_init (OrcCompiler *compiler)
 {
   int i;
 
-#ifdef HAVE_AMD64
-  compiler->is_64bit = TRUE;
-#else
-  compiler->is_64bit = FALSE;
-#endif
-  compiler->use_frame_pointer = FALSE;
+  if (compiler->target_flags & ORC_TARGET_SSE_64BIT) {
+    compiler->is_64bit = TRUE;
+  }
+  if (compiler->target_flags & ORC_TARGET_SSE_FRAME_POINTER) {
+    compiler->use_frame_pointer = TRUE;
+  }
+  if (!(compiler->target_flags & ORC_TARGET_SSE_SHORT_JUMPS)) {
+    compiler->long_jumps = TRUE;
+  }
   
-#if defined(HAVE_AMD64) || defined(HAVE_I386)
-  compiler->target_flags = orc_sse_get_cpu_flags ();
-#else
-  compiler->target_flags = ORC_TARGET_SSE_SSE2;
-  compiler->target_flags |= ORC_TARGET_SSE_SSE3;
-  compiler->target_flags |= ORC_TARGET_SSE_SSSE3;
-#endif
 
   if (compiler->is_64bit) {
     for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+16;i++){
@@ -142,7 +162,6 @@ orc_compiler_sse_init (OrcCompiler *compiler)
       break;
   }
 
-  compiler->long_jumps = TRUE;
 }
 
 void

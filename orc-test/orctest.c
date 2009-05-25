@@ -32,6 +32,8 @@ orc_test_gcc_compile (OrcProgram *p)
   int ret;
   FILE *file;
   OrcCompileResult result;
+  OrcTarget *target;
+  unsigned int flags;
 
   base = "temp-orc-test";
 
@@ -41,7 +43,13 @@ orc_test_gcc_compile (OrcProgram *p)
   sprintf(dump_filename, "%s-dump.bin", base);
   sprintf(dump_dis_filename, "%s-dump.dis", base);
 
-  result = orc_program_compile (p);
+  target = orc_target_get_default ();
+  flags = orc_target_get_default_flags (target);
+  if (strcmp (orc_target_get_name (target), "sse") == 0) {
+    flags |= ORC_TARGET_SSE_SHORT_JUMPS;
+  }
+
+  result = orc_program_compile_full (p, target, flags);
   if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
     return ORC_TEST_INDETERMINATE;
   }

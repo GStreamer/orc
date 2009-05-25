@@ -67,11 +67,22 @@ orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
 OrcCompileResult
 orc_program_compile (OrcProgram *program)
 {
-  return orc_program_compile_for_target (program, orc_target_get_default());
+  return orc_program_compile_for_target (program, orc_target_get_default ());
 }
 
 OrcCompileResult
 orc_program_compile_for_target (OrcProgram *program, OrcTarget *target)
+{
+  unsigned int flags;
+
+  flags = target->get_default_flags ();
+
+  return orc_program_compile_full (program, target, flags);
+}
+
+OrcCompileResult
+orc_program_compile_full (OrcProgram *program, OrcTarget *target,
+    unsigned int flags)
 {
   OrcCompiler *compiler;
   int i;
@@ -82,6 +93,7 @@ orc_program_compile_for_target (OrcProgram *program, OrcTarget *target)
 
   compiler->program = program;
   compiler->target = target;
+  compiler->target_flags = flags;
 
   {
     for(i=0;i<ORC_N_VARIABLES;i++){

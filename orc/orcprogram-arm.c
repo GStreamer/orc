@@ -22,6 +22,7 @@ void arm_emit_loop (OrcCompiler *compiler);
 void orc_compiler_arm_register_rules (OrcTarget *target);
 
 void orc_compiler_arm_init (OrcCompiler *compiler);
+unsigned int orc_compiler_arm_get_default_flags (void);
 void orc_compiler_arm_assemble (OrcCompiler *compiler);
 
 void orc_compiler_rewrite_vars (OrcCompiler *compiler);
@@ -91,6 +92,7 @@ static OrcTarget arm_target = {
   FALSE,
 #endif
   ORC_GP_REG_BASE,
+  orc_compiler_arm_get_default_flags,
   orc_compiler_arm_init,
   orc_compiler_arm_assemble
 };
@@ -101,6 +103,12 @@ orc_arm_init (void)
   orc_target_register (&arm_target);
 
   orc_compiler_arm_register_rules (&arm_target);
+}
+
+unsigned int
+orc_compiler_arm_get_default_flags (void)
+{
+  return 0;
 }
 
 void

@@ -82,7 +82,10 @@ enum {
   ORC_TARGET_SSE_SSE4_1 = (1<<3),
   ORC_TARGET_SSE_SSE4_2 = (1<<4),
   ORC_TARGET_SSE_SSE4A = (1<<5),
-  ORC_TARGET_SSE_SSE5 = (1<<6)
+  ORC_TARGET_SSE_SSE5 = (1<<6),
+  ORC_TARGET_SSE_FRAME_POINTER = (1<<7),
+  ORC_TARGET_SSE_SHORT_JUMPS = (1<<8),
+  ORC_TARGET_SSE_64BIT = (1<<9)
 };
 enum {
   ORC_TARGET_ALTIVEC_ALTIVEC = (1<<0)
@@ -332,6 +335,7 @@ struct _OrcTarget {
   orc_bool executable;
   int data_register_offset;
 
+  unsigned int (*get_default_flags)(void);
   void (*compiler_init)(OrcCompiler *compiler);
   void (*compile)(OrcCompiler *compiler);
 
@@ -369,6 +373,8 @@ void orc_c_init (void);
 
 OrcCompileResult orc_program_compile (OrcProgram *p);
 OrcCompileResult orc_program_compile_for_target (OrcProgram *p, OrcTarget *target);
+OrcCompileResult orc_program_compile_full (OrcProgram *p, OrcTarget *target,
+    unsigned int flags);
 void orc_program_free (OrcProgram *program);
 
 int orc_program_find_var_by_name (OrcProgram *program, const char *name);
@@ -410,6 +416,8 @@ void orc_rule_register (OrcRuleSet *rule_set, const char *opcode_name,
 OrcRule * orc_target_get_rule (OrcTarget *target, OrcStaticOpcode *opcode,
     unsigned int target_flags);
 OrcTarget * orc_target_get_default (void);
+unsigned int orc_target_get_default_flags (OrcTarget *target);
+const char * orc_target_get_name (OrcTarget *target);
 
 int orc_program_allocate_register (OrcProgram *program, int is_data);
 int orc_program_x86_allocate_register (OrcProgram *program, int is_data);

@@ -17,6 +17,7 @@
 void mmx_emit_loop (OrcCompiler *compiler);
 
 void orc_compiler_mmx_init (OrcCompiler *compiler);
+unsigned int orc_compiler_mmx_get_default_flags (void);
 void orc_compiler_mmx_assemble (OrcCompiler *compiler);
 
 void orc_compiler_mmx_register_rules (OrcTarget *target);
@@ -34,6 +35,7 @@ static OrcTarget mmx_target = {
   FALSE,
 #endif
   ORC_VEC_REG_BASE,
+  orc_compiler_mmx_get_default_flags,
   orc_compiler_mmx_init,
   orc_compiler_mmx_assemble
 };
@@ -44,6 +46,12 @@ orc_mmx_init (void)
   orc_target_register (&mmx_target);
 
   orc_compiler_mmx_register_rules (&mmx_target);
+}
+
+unsigned int
+orc_compiler_mmx_get_default_flags (void)
+{
+  return 0;
 }
 
 void

@@ -25,6 +25,7 @@ void powerpc_emit_label (OrcCompiler *compiler, int label);
 void powerpc_add_fixup (OrcCompiler *compiler, int type, unsigned char *ptr, int label);
 
 void orc_compiler_powerpc_init (OrcCompiler *compiler);
+unsigned int orc_compiler_powerpc_get_default_flags (void);
 void orc_compiler_powerpc_assemble (OrcCompiler *compiler);
 void orc_compiler_powerpc_register_rules (OrcTarget *target);
 
@@ -346,6 +347,7 @@ static OrcTarget powerpc_target = {
   FALSE,
 #endif
   ORC_VEC_REG_BASE,
+  orc_compiler_powerpc_get_default_flags,
   orc_compiler_powerpc_init,
   orc_compiler_powerpc_assemble
 };
@@ -356,6 +358,12 @@ orc_powerpc_init (void)
   orc_target_register (&powerpc_target);
 
   orc_compiler_powerpc_register_rules (&powerpc_target);
+}
+
+unsigned int
+orc_compiler_powerpc_get_default_flags (void)
+{
+  return 0;
 }
 
 void
