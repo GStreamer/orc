@@ -32,7 +32,8 @@ void orc_compiler_dump (OrcCompiler *compiler);
 static OrcTarget sse_target = {
   "sse",
 #if defined(HAVE_I386) || defined(HAVE_AMD64)
-  TRUE,
+  //TRUE,
+  FALSE,
 #else
   FALSE,
 #endif

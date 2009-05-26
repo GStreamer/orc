@@ -51,6 +51,7 @@ typedef enum {
 } OrcCpuFlag;
 
 unsigned int orc_sse_get_cpu_flags (void);
+unsigned int orc_mmx_get_cpu_flags (void);
 
 void _orc_cpu_init (void);
 

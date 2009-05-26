@@ -115,6 +115,52 @@ orc_sse_getflags_cpuinfo (char *cpuinfo)
 
   return sse_flags;
 }
+
+static unsigned int
+orc_mmx_getflags_cpuinfo (char *cpuinfo)
+{
+  unsigned int sse_flags;
+  char *cpuinfo_flags;
+  char **flags;
+  char **f;
+
+  cpuinfo_flags = get_tag_value (cpuinfo, "flags");
+  if (cpuinfo_flags == NULL) {
+    free (cpuinfo);
+    return;
+  }
+
+  flags = strsplit(cpuinfo_flags);
+  for (f = flags; *f; f++) {
+    if (strcmp (*f, "mmx") == 0) {
+      ORC_DEBUG ("cpu flag %s", *f);
+      sse_flags |= ORC_TARGET_MMX_MMX;
+    }
+    if (strcmp (*f, "mmxext") == 0) {
+      ORC_DEBUG ("cpu flag %s", *f);
+      sse_flags |= ORC_TARGET_MMX_MMXEXT;
+    }
+    if (strcmp (*f, "ssse3") == 0) {
+      ORC_DEBUG ("cpu flag %s", *f);
+      sse_flags |= ORC_TARGET_MMX_SSSE3;
+    }
+    if (strcmp (*f, "3dnow") == 0) {
+      ORC_DEBUG ("cpu flag %s", *f);
+      sse_flags |= ORC_TARGET_MMX_3DNOW;
+    }
+    if (strcmp (*f, "3dnowext") == 0) {
+      ORC_DEBUG ("cpu flag %s", *f);
+      sse_flags |= ORC_TARGET_MMX_3DNOWEXT;
+    }
+
+    free (*f);
+  }
+  free (flags);
+  free (cpuinfo);
+  free (cpuinfo_flags);
+
+  return sse_flags;
+}
 #endif
 
 #ifdef USE_I386_CPUID
@@ -236,6 +282,51 @@ orc_sse_detect_cpuid (void)
 
   return sse_flags;
 }
+
+static unsigned int
+orc_mmx_detect_cpuid (void)
+{
+  uint32_t eax, ebx, ecx, edx;
+  uint32_t level;
+  char vendor[13] = { 0 };
+  unsigned int mmx_flags = 0;
+
+  get_cpuid (0x00000000, &level, (uint32_t *)(vendor+0),
+      (uint32_t *)(vendor+8), (uint32_t *)(vendor+4));
+
+  ORC_DEBUG("cpuid %d %s", level, vendor);
+
+  if (level < 1) {
+    return 0;
+  }
+
+  get_cpuid (0x00000001, &eax, &ebx, &ecx, &edx);
+
+  /* Intel flags */
+  if (edx & (1<<23)) {
+    mmx_flags |= ORC_TARGET_MMX_MMX;
+  }
+  if (ecx & (1<<9)) {
+    mmx_flags |= ORC_TARGET_MMX_SSSE3;
+  }
+  
+  if (memcmp (vendor, "AuthenticAMD", 12) == 0) {
+    get_cpuid (0x80000001, &eax, &ebx, &ecx, &edx);
+
+    /* AMD flags */
+    if (edx & (1<<22)) {
+      mmx_flags |= ORC_TARGET_MMX_MMXEXT;
+    }
+    if (edx & (1<<31)) {
+      mmx_flags |= ORC_TARGET_MMX_3DNOW;
+    }
+    if (edx & (1<<30)) {
+      mmx_flags |= ORC_TARGET_MMX_3DNOWEXT;
+    }
+  }
+
+  return mmx_flags;
+}
 #endif
 
 #ifdef USE_I386_GETISAX
@@ -272,6 +363,35 @@ orc_sse_detect_getisax (void)
   }
 
   return sse_flags;
+}
+
+static unsigned int
+orc_mmx_detect_getisax (void)
+{
+  unsigned int mmx_flags;
+  uint_t ui;
+
+  getisax (&ui, 1);
+
+  if (ui & AV_386_MMX) {
+     mmx_flags |= ORC_TARGET_MMX_MMX;
+  }
+
+  /* guesses.  if these fail to compile, please fix */
+  if (ui & AV_386_MMXEXT) {
+     mmx_flags |= ORC_TARGET_MMX_MMXEXT;
+  }
+  if (ui & AV_386_SSSE3) {
+     mmx_flags |= ORC_TARGET_MMX_SSSE3;
+  }
+  if (ui & AV_386_3DNOW) {
+     mmx_flags |= ORC_TARGET_MMX_3DNOW;
+  }
+  if (ui & AV_386_3DNOWEXT) {
+     mmx_flags |= ORC_TARGET_MMX_3DNOWEXT;
+  }
+
+  return mmx_flags;
 }
 #endif
 
@@ -330,5 +450,22 @@ orc_sse_get_cpu_flags(void)
   return orc_sse_detect_cpuinfo ();
 #endif
 }
+
+unsigned int
+orc_mmx_get_cpu_flags(void)
+{
+  //orc_cpu_detect_kernel_support ();
+
+#ifdef USE_I386_CPUID
+  return orc_mmx_detect_cpuid ();
+#endif
+#ifdef USE_I386_GETISAX
+  return orc_mmx_detect_getisax ();
+#endif
+#ifdef USE_I386_CPUINFO
+  return orc_mmx_detect_cpuinfo ();
+#endif
+}
+
 
 

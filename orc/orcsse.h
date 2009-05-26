@@ -23,6 +23,8 @@ enum {
   X86_XMM15
 };
 
+#define ORC_SSE_SHUF(a,b,c,d) ((((a)&3)<<6)|(((b)&3)<<4)|(((c)&3)<<2)|(((d)&3)<<0))
+
 const char * orc_x86_get_regname_sse(int i);
 void orc_x86_emit_mov_memoffset_sse (OrcCompiler *compiler, int size, int offset,
     int reg1, int reg2, int is_aligned);
