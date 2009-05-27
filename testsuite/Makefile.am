@@ -18,13 +18,19 @@ orcbin_PROGRAMS = $(TESTS)
 
 CLEANFILES = temp-orc-test-*
 
-TESTS += test6 test-schro test_compile_neon
-orcbin_PROGRAMS += test6 test-schro test_compile_neon
+TESTS += compile_opcodes_sys_neon \
+	compile_opcodes_float_neon \
+	compile_opcodes_pixel_neon
+orcbin_PROGRAMS += compile_opcodes_sys_neon \
+	compile_opcodes_float_neon \
+	compile_opcodes_pixel_neon
 
 AM_CFLAGS = $(ORC_CFLAGS)
 LIBS = $(ORC_LIBS) $(top_builddir)/orc-test/liborc-test-0.3.la
 
 compile_opcodes_float_c_LDADD = \
+	$(top_builddir)/orc-float/liborc-float-0.3.la
+compile_opcodes_float_neon_LDADD = \
 	$(top_builddir)/orc-float/liborc-float-0.3.la
 compile_opcodes_float_LDADD = \
 	$(top_builddir)/orc-float/liborc-float-0.3.la
@@ -32,6 +38,8 @@ exec_opcodes_float_LDADD = \
 	$(top_builddir)/orc-float/liborc-float-0.3.la
 
 compile_opcodes_pixel_c_LDADD = \
+	$(top_builddir)/orc-pixel/liborc-pixel-0.3.la
+compile_opcodes_pixel_neon_LDADD = \
 	$(top_builddir)/orc-pixel/liborc-pixel-0.3.la
 compile_opcodes_pixel_LDADD = \
 	$(top_builddir)/orc-pixel/liborc-pixel-0.3.la

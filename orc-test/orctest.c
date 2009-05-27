@@ -130,64 +130,96 @@ orc_test_gcc_compile (OrcProgram *p)
 
 #define PREFIX "/opt/arm-2008q3/bin/arm-none-linux-gnueabi-"
 
-int
+OrcTestResult
 orc_test_gcc_compile_neon (OrcProgram *p)
 {
-  char cmd[200];
+  char cmd[300];
+  char *base;
+  char source_filename[100];
+  char obj_filename[100];
+  char dis_filename[100];
+  char dump_filename[100];
+  char dump_dis_filename[100];
   int ret;
   FILE *file;
+  OrcCompileResult result;
+  OrcTarget *target;
+  unsigned int flags;
 
-  ret = orc_program_compile_for_target (p, orc_target_get_by_name("neon"));
-  if (!ret) {
-    return FALSE;
+  base = "temp-orc-test";
+
+  sprintf(source_filename, "%s-source.s", base);
+  sprintf(obj_filename, "%s.o", base);
+  sprintf(dis_filename, "%s-source.dis", base);
+  sprintf(dump_filename, "%s-dump.bin", base);
+  sprintf(dump_dis_filename, "%s-dump.dis", base);
+
+  target = orc_target_get_by_name ("neon");
+  flags = orc_target_get_default_flags (target);
+
+  result = orc_program_compile_full (p, target, flags);
+  if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
+    return ORC_TEST_INDETERMINATE;
   }
 
   fflush (stdout);
 
-  file = fopen ("tmp.s", "w");
+  file = fopen (source_filename, "w");
   fprintf(file, "%s", orc_program_get_asm_code (p));
   fclose (file);
 
-  file = fopen ("dump", "w");
+  file = fopen (dump_filename, "w");
   ret = fwrite(p->code, p->code_size, 1, file);
   fclose (file);
 
-  ret = system (PREFIX "gcc -march=armv6t2 -mcpu=cortex-a8 -mfpu=neon -Wall -c tmp.s");
+  sprintf (cmd, PREFIX "gcc -march=armv6t2 -mcpu=cortex-a8 -mfpu=neon -Wall "
+      "-c %s -o %s", source_filename, obj_filename);
+  ret = system (cmd);
   if (ret != 0) {
-    printf("gcc failed\n");
+    ORC_ERROR ("gcc failed");
     printf("%s\n", orc_program_get_asm_code (p));
-    return FALSE;
+    return ORC_TEST_FAILED;
   }
 
-  ret = system (PREFIX "objdump -dr tmp.o >tmp.dis");
+  sprintf (cmd, PREFIX "objdump -dr %s >%s", obj_filename, dis_filename);
+  ret = system (cmd);
   if (ret != 0) {
-    printf("objdump failed\n");
-    return FALSE;
+    ORC_ERROR ("objdump failed");
+    return ORC_TEST_FAILED;
   }
 
-  sprintf (cmd, PREFIX "objcopy -I binary -O elf32-littlearm -B arm "
+  sprintf (cmd, PREFIX "objcopy -I binary "
+      "-O elf32-littlearm -B arm "
       "--rename-section .data=.text "
-      "--redefine-sym _binary_dump_start=%s "
-      "dump tmp.o", p->name);
+      "--redefine-sym _binary_temp_orc_test_dump_bin_start=%s "
+      "%s %s", p->name, dump_filename, obj_filename);
   ret = system (cmd);
   if (ret != 0) {
     printf("objcopy failed\n");
-    return FALSE;
+    return ORC_TEST_FAILED;
   }
 
-  ret = system (PREFIX "objdump -Dr tmp.o >tmp-dump.dis");
+  sprintf (cmd, PREFIX "objdump -Dr %s >%s", obj_filename, dump_dis_filename);
+  ret = system (cmd);
   if (ret != 0) {
     printf("objdump failed\n");
-    return FALSE;
+    return ORC_TEST_FAILED;
   }
 
-  ret = system ("diff -u tmp.dis tmp-dump.dis");
+  sprintf (cmd, "diff -u %s %s", dis_filename, dump_dis_filename);
+  ret = system (cmd);
   if (ret != 0) {
     printf("diff failed\n");
-    return FALSE;
+    return ORC_TEST_FAILED;
   }
 
-  return TRUE;
+  remove (source_filename);
+  remove (obj_filename);
+  remove (dis_filename);
+  remove (dump_filename);
+  remove (dump_dis_filename);
+
+  return ORC_TEST_OK;
 }
 
 void

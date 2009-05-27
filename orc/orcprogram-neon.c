@@ -20,6 +20,7 @@
 void orc_neon_emit_loop (OrcCompiler *compiler);
 
 void orc_compiler_neon_register_rules (OrcTarget *target);
+unsigned int orc_compiler_neon_get_default_flags (void);
 
 void orc_compiler_neon_init (OrcCompiler *compiler);
 void orc_compiler_neon_assemble (OrcCompiler *compiler);
@@ -93,6 +94,7 @@ static OrcTarget neon_target = {
   FALSE,
 #endif
   ORC_VEC_REG_BASE,
+  orc_compiler_neon_get_default_flags,
   orc_compiler_neon_init,
   orc_compiler_neon_assemble
 };
@@ -103,6 +105,12 @@ orc_neon_init (void)
   orc_target_register (&neon_target);
 
   orc_compiler_neon_register_rules (&neon_target);
+}
+
+unsigned int
+orc_compiler_neon_get_default_flags (void)
+{
+  return 0;
 }
 
 void
