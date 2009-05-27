@@ -25,5 +25,6 @@ orc_init (void)
   orc_powerpc_init();
   orc_arm_init();
   orc_neon_init();
+  orc_c64x_init();
 }
 
