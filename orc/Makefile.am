@@ -31,7 +31,7 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orcutils.c \
 	orcsse.c \
 	orcmmx.c \
-	x86.c \
+	orcx86.c \
 	orcarm.c
 
 if HAVE_I386
