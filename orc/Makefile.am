@@ -32,7 +32,7 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orcsse.c \
 	orcmmx.c \
 	x86.c \
-	arm.c
+	orcarm.c
 
 if HAVE_I386
 liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-x86.c
@@ -63,7 +63,7 @@ pkginclude_HEADERS = \
 	orcsse.h \
 	orcmmx.h \
 	orcx86.h \
-	arm.h
+	orcarm.h
 
 nodist_pkginclude_HEADERS = orc-stdint.h
 
