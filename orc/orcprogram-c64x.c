@@ -34,7 +34,7 @@ orc_c64x_emit_prologue (OrcCompiler *compiler)
   unsigned int regs = 0;
   int i;
 
-  orc_compiler_append_code(compiler,".global %s\n", compiler->program->name);
+  orc_compiler_append_code(compiler,"  .global %s\n", compiler->program->name);
   orc_compiler_append_code(compiler,"%s:\n", compiler->program->name);
 
   for(i=0;i<16;i++){
@@ -72,7 +72,7 @@ static OrcTarget c64x_target = {
 #else
   FALSE,
 #endif
-  ORC_VEC_REG_BASE,
+  ORC_GP_REG_BASE,
   orc_compiler_c64x_get_default_flags,
   orc_compiler_c64x_init,
   orc_compiler_c64x_assemble
@@ -97,19 +97,14 @@ orc_compiler_c64x_init (OrcCompiler *compiler)
 {
   int i;
 
-  for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+9;i++){
+  for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+32;i++){
     compiler->valid_regs[i] = 1;
   }
-  for(i=ORC_VEC_REG_BASE+0;i<ORC_VEC_REG_BASE+32;i+=2){
-    compiler->valid_regs[i] = 1;
-  }
-  //compiler->valid_regs[C64X_SB] = 0;
-  compiler->valid_regs[C64X_IP] = 0;
   compiler->valid_regs[C64X_SP] = 0;
-  compiler->valid_regs[C64X_LR] = 0;
-  compiler->valid_regs[C64X_PC] = 0;
-  for(i=4;i<11;i++) {
+  compiler->valid_regs[C64X_B3] = 0; /* return register */
+  for(i=10;i<16;i++) {
     compiler->save_regs[ORC_GP_REG_BASE+i] = 1;
+    compiler->save_regs[ORC_GP_REG_BASE+16+i] = 1;
   }
   
   for(i=0;i<ORC_N_REGS;i++){
@@ -117,24 +112,21 @@ orc_compiler_c64x_init (OrcCompiler *compiler)
     compiler->used_regs[i] = 0;
   }
 
-  compiler->exec_reg = C64X_R0;
+  compiler->exec_reg = C64X_A4;
   compiler->valid_regs[compiler->exec_reg] = 0;
-  compiler->gp_tmpreg = C64X_A2;
+  compiler->gp_tmpreg = C64X_A0;
   compiler->valid_regs[compiler->gp_tmpreg] = 0;
-  compiler->tmpreg = ORC_VEC_REG_BASE + 0;
+  compiler->tmpreg = C64X_B0;
   compiler->valid_regs[compiler->tmpreg] = 0;
 
   switch (orc_program_get_max_var_size (compiler->program)) {
     case 1:
-      compiler->loop_shift = 3;
-      break;
-    case 2:
       compiler->loop_shift = 2;
       break;
-    case 4:
+    case 2:
       compiler->loop_shift = 1;
       break;
-    case 8:
+    case 4:
       compiler->loop_shift = 0;
       break;
     default:
@@ -142,6 +134,7 @@ orc_compiler_c64x_init (OrcCompiler *compiler)
           orc_program_get_max_var_size (compiler->program));
       break;
   }
+  compiler->loop_shift = 0;
 }
 
 void
@@ -226,9 +219,6 @@ orc_c64x_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
     case 4:
       orc_c64x_loadl (compiler, var->alloc, ptr_reg, update, var->is_aligned);
       break;
-    case 8:
-      orc_c64x_loadq (compiler, var->alloc, ptr_reg, update, var->is_aligned);
-      break;
     default:
       ORC_ERROR("bad size");
   }
@@ -254,9 +244,6 @@ orc_c64x_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
       break;
     case 4:
       orc_c64x_storel (compiler, ptr_reg, TRUE, var->alloc, var->is_aligned);
-      break;
-    case 8:
-      orc_c64x_storeq (compiler, ptr_reg, TRUE, var->alloc, var->is_aligned);
       break;
     default:
       ORC_ERROR("bad size");
@@ -433,7 +420,7 @@ orc_c64x_emit_loop (OrcCompiler *compiler)
     insn = compiler->insns + j;
     opcode = insn->opcode;
 
-    orc_compiler_append_code(compiler,"# %d: %s", j, insn->opcode->name);
+    orc_compiler_append_code(compiler,"; %d: %s", j, insn->opcode->name);
 
     /* set up args */
 #if 0

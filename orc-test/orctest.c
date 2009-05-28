@@ -222,6 +222,104 @@ orc_test_gcc_compile_neon (OrcProgram *p)
   return ORC_TEST_OK;
 }
 
+#define C64X_PREFIX "/opt/TI/cg6x_6_1_7/bin/"
+
+OrcTestResult
+orc_test_gcc_compile_c64x (OrcProgram *p)
+{
+  char cmd[300];
+  char *base;
+  char source_filename[100];
+  char obj_filename[100];
+  char dis_filename[100];
+  char dump_filename[100];
+  char dump_dis_filename[100];
+  int ret;
+  FILE *file;
+  OrcCompileResult result;
+  OrcTarget *target;
+  unsigned int flags;
+
+  base = "temp-orc-test";
+
+  sprintf(source_filename, "%s-source.s", base);
+  sprintf(obj_filename, "%s-source.obj", base);
+  sprintf(dis_filename, "%s-source.dis", base);
+  sprintf(dump_filename, "%s-dump.bin", base);
+  sprintf(dump_dis_filename, "%s-dump.dis", base);
+
+  target = orc_target_get_by_name ("c64x");
+  flags = orc_target_get_default_flags (target);
+
+  result = orc_program_compile_full (p, target, flags);
+  if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
+    return ORC_TEST_INDETERMINATE;
+  }
+
+  fflush (stdout);
+
+  file = fopen (source_filename, "w");
+  fprintf(file, "%s", orc_program_get_asm_code (p));
+  fclose (file);
+
+  file = fopen (dump_filename, "w");
+  ret = fwrite(p->code, p->code_size, 1, file);
+  fclose (file);
+
+  sprintf (cmd, C64X_PREFIX "cl6x -mv=6400+ "
+      "-c %s", source_filename);
+  ret = system (cmd);
+  if (ret != 0) {
+    ORC_ERROR ("compiler failed");
+    //printf("%s\n", orc_program_get_asm_code (p));
+    return ORC_TEST_FAILED;
+  }
+
+  sprintf (cmd, C64X_PREFIX "dis6x %s >%s", obj_filename, dis_filename);
+  ret = system (cmd);
+  if (ret != 0) {
+    ORC_ERROR ("objdump failed");
+    return ORC_TEST_FAILED;
+  }
+
+#if 0
+  sprintf (cmd, C64X_PREFIX "objcopy -I binary "
+      "-O elf32-littlearm -B arm "
+      "--rename-section .data=.text "
+      "--redefine-sym _binary_temp_orc_test_dump_bin_start=%s "
+      "%s %s", p->name, dump_filename, obj_filename);
+  ret = system (cmd);
+  if (ret != 0) {
+    printf("objcopy failed\n");
+    return ORC_TEST_FAILED;
+  }
+#endif
+
+#if 0
+  sprintf (cmd, C64X_PREFIX "dis6x %s >%s", dump_filename, dump_dis_filename);
+  ret = system (cmd);
+  if (ret != 0) {
+    printf("objdump failed\n");
+    return ORC_TEST_FAILED;
+  }
+
+  sprintf (cmd, "diff -u %s %s", dis_filename, dump_dis_filename);
+  ret = system (cmd);
+  if (ret != 0) {
+    printf("diff failed\n");
+    return ORC_TEST_FAILED;
+  }
+#endif
+
+  remove (source_filename);
+  remove (obj_filename);
+  remove (dis_filename);
+  remove (dump_filename);
+  remove (dump_dis_filename);
+
+  return ORC_TEST_OK;
+}
+
 void
 orc_test_random_bits (void *data, int n_bytes)
 {
