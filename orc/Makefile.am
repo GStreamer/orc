@@ -18,17 +18,19 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orccompiler.c \
 	orcprogram-arm.c \
 	orcprogram-c.c \
-	orcprogram-powerpc.c \
+	orcprogram-altivec.c \
 	orcprogram-mmx.c \
 	orcprogram-sse.c \
 	orcprogram.h \
 	orcopcodes.c \
 	orcparse.c \
+	orcrules-altivec.c \
 	orcrules-mmx.c \
 	orcrules-sse.c \
 	orcrules-arm.c \
 	orcdebug.c \
 	orcutils.c \
+	orcpowerpc.c \
 	orcsse.c \
 	orcmmx.c \
 	orcx86.c \
@@ -57,7 +59,8 @@ pkginclude_HEADERS = \
 	orcsse.h \
 	orcmmx.h \
 	orcx86.h \
-	orcarm.h
+	orcarm.h \
+	orcpowerpc.h
 
 nodist_pkginclude_HEADERS = orc-stdint.h
 
