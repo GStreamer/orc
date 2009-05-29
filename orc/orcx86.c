@@ -14,6 +14,12 @@
 #include <orc/orcutils.h>
 
 
+/**
+ * SECTION:orcx86
+ * @title: x86
+ * @short_description: code generation for x86
+ */
+
 const char *
 orc_x86_get_regname(int i)
 {
@@ -726,7 +732,7 @@ void orc_x86_emit_label (OrcCompiler *compiler, int label)
 }
 
 void
-x86_do_fixups (OrcCompiler *compiler)
+orc_x86_do_fixups (OrcCompiler *compiler)
 {
   int i;
   for(i=0;i<compiler->n_fixups;i++){
@@ -822,45 +828,5 @@ orc_x86_emit_align (OrcCompiler *compiler)
     *compiler->codeptr++ = 0x90;
     diff--;
   }
-}
-
-void
-x86_test (OrcCompiler *compiler)
-{
-  int size;
-  int i;
-  int j;
-  int reg;
-
-  for(size=2;size<=4;size+=2) {
-    for(i=0;i<8;i++){
-      reg = ORC_GP_REG_BASE + i;
-      orc_x86_emit_push (compiler, size, reg);
-      orc_x86_emit_pop (compiler, size, reg);
-      orc_x86_emit_mov_imm_reg (compiler, size, 0, reg);
-      orc_x86_emit_mov_imm_reg (compiler, size, 1, reg);
-      orc_x86_emit_mov_imm_reg (compiler, size, 256, reg);
-      orc_x86_emit_dec_memoffset (compiler, size, 0, reg);
-      orc_x86_emit_dec_memoffset (compiler, size, 1, reg);
-      orc_x86_emit_dec_memoffset (compiler, size, 256, reg);
-      orc_x86_emit_add_imm_memoffset (compiler, size, 1, 0, reg);
-      orc_x86_emit_add_imm_memoffset (compiler, size, 1, 1, reg);
-      orc_x86_emit_add_imm_memoffset (compiler, size, 1, 256, reg);
-      orc_x86_emit_add_imm_memoffset (compiler, size, 256, 0, reg);
-      orc_x86_emit_add_imm_memoffset (compiler, size, 256, 1, reg);
-      orc_x86_emit_add_imm_memoffset (compiler, size, 256, 256, reg);
-      for(j=0;j<8;j++){
-        int reg2 = ORC_GP_REG_BASE + j;
-        orc_x86_emit_mov_reg_reg (compiler, size, reg, reg2);
-        orc_x86_emit_mov_memoffset_reg (compiler, size, 0, reg, reg2);
-        orc_x86_emit_mov_memoffset_reg (compiler, size, 1, reg, reg2);
-        orc_x86_emit_mov_memoffset_reg (compiler, size, 256, reg, reg2);
-        orc_x86_emit_mov_reg_memoffset (compiler, size, reg, 0, reg2);
-        orc_x86_emit_mov_reg_memoffset (compiler, size, reg, 1, reg2);
-        orc_x86_emit_mov_reg_memoffset (compiler, size, reg, 256, reg2);
-      }
-    }
-  }
-
 }
 

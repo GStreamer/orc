@@ -44,6 +44,7 @@ void orc_mmx_emit_0f (OrcCompiler *p, const char *insn_name, int code,
 void orc_mmx_emit_pshufw (OrcCompiler *p, int shuf, int src, int dest);
 void orc_mmx_emit_shiftimm (OrcCompiler *p, const char *insn_name,
     int code, int modrm_code, int shift, int reg);
+unsigned int orc_mmx_get_cpu_flags (void);
 
 #endif
 

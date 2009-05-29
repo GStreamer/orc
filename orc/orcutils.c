@@ -36,6 +36,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * SECTION:orcutils
+ * @title: Utility functions
+ * @short_description: Orc utility functions
+ */
+
 int
 get_file_int (const char *file, int *value)
 {

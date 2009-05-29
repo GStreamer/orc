@@ -28,7 +28,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <orc/orccpu.h>
+#include <orc/orcarm.h>
 #include <orc/orcutils.h>
 #include <orc/orcdebug.h>
 

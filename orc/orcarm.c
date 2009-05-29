@@ -14,6 +14,12 @@
 #include <orc/orcarm.h>
 #include <orc/orcutils.h>
 
+/**
+ * SECTION:orcarm
+ * @title: ARM
+ * @short_description: code generation for ARM
+ */
+
 
 const char *
 orc_arm_reg_name (int reg)

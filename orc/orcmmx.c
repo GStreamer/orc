@@ -12,6 +12,12 @@
 #include <orc/orcdebug.h>
 #include <orc/orcmmx.h>
 
+/**
+ * SECTION:orcmmx
+ * @title: MMX
+ * @short_description: code generation for MMX
+ */
+
 
 const char *
 orc_x86_get_regname_mmx(int i)

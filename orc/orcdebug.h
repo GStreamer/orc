@@ -33,8 +33,6 @@
 
 ORC_BEGIN_DECLS
 
-#ifdef ORC_ENABLE_UNSTABLE_API
-
 /**
  * OrcDebugPrintFunc:
  * @level: the debug level
@@ -54,7 +52,7 @@ typedef void (*OrcDebugPrintFunc) (int level, const char *file,
 /**
  * OrcDebugLevel:
  *
- * Enumeration describing debug levels in Liborc.
+ * Enumeration describing debug levels in Orc.
  */
 typedef enum {
   ORC_DEBUG_NONE = 0,
@@ -137,8 +135,6 @@ void _orc_debug_init (void);
 
 void orc_debug_print (int level, const char *file, const char *func,
     int line, const char *format, ...);
-
-#endif
 
 ORC_END_DECLS
 

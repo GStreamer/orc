@@ -54,6 +54,7 @@ void orc_sse_emit_pshuflw (OrcCompiler *p, int shuf, int src, int dest);
 void orc_sse_emit_shiftimm (OrcCompiler *p, const char *insn_name,
     int code, int modrm_code, int shift, int reg);
 
+unsigned int orc_sse_get_cpu_flags (void);
 
 #endif
 

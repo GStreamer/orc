@@ -8,6 +8,12 @@
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
 
+/**
+ * SECTION:orcrule
+ * @title: OrcRule
+ * @short_description: Creating rules for code generation
+ */
+
 
 void
 orc_rule_register (OrcRuleSet *rule_set,

@@ -58,14 +58,14 @@ void orc_x86_emit_jne (OrcCompiler *compiler, int label);
 void orc_x86_emit_jmp (OrcCompiler *compiler, int label);
 void orc_x86_emit_label (OrcCompiler *compiler, int label);
 void orc_x86_emit_align (OrcCompiler *compiler);
-void x86_do_fixups (OrcCompiler *compiler);
 void orc_x86_emit_prologue (OrcCompiler *compiler);
 void orc_x86_emit_epilogue (OrcCompiler *compiler);
 
 void orc_x86_emit_rex (OrcCompiler *compiler, int size, int reg1, int reg2, int reg3);
 void orc_x86_emit_modrm_memoffset (OrcCompiler *compiler, int reg1, int offset, int reg2);
 void orc_x86_emit_modrm_reg (OrcCompiler *compiler, int reg1, int reg2);
-void x86_test (OrcCompiler *compiler);
+
+void orc_x86_do_fixups (OrcCompiler *compiler);
 
 
 #endif

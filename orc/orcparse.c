@@ -10,6 +10,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/**
+ * SECTION:orcparse
+ * @title: Parser
+ * @short_description: Parse Orc source code
+ */
+
 
 typedef struct _OrcParser OrcParser;
 struct _OrcParser {

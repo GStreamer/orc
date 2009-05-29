@@ -12,6 +12,12 @@
 #include <orc/orcdebug.h>
 #include <orc/orcsse.h>
 
+/**
+ * SECTION:orcsse
+ * @title: SSE
+ * @short_description: code generation for SSE
+ */
+
 
 const char *
 orc_x86_get_regname_sse(int i)

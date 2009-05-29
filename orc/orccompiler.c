@@ -9,6 +9,12 @@
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
 
+/**
+ * SECTION:orccompiler
+ * @title: OrcCompiler
+ * @short_description: Compile Orc programs
+ */
+
 void orc_compiler_assign_rules (OrcCompiler *compiler);
 void orc_compiler_global_reg_alloc (OrcCompiler *compiler);
 void orc_compiler_rewrite_vars (OrcCompiler *compiler);

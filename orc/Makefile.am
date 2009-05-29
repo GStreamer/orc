@@ -6,7 +6,8 @@ lib_LTLIBRARIES = liborc-@ORC_MAJORMINOR@.la
 liborc_@ORC_MAJORMINOR@_la_LIBS = $(ORC_LIBS)
 liborc_@ORC_MAJORMINOR@_la_LDFLAGS = \
 	-no-undefined -export-symbols-regex 'orc_'
-liborc_@ORC_MAJORMINOR@_la_CFLAGS = $(ORC_CFLAGS)
+liborc_@ORC_MAJORMINOR@_la_CFLAGS = $(ORC_CFLAGS) \
+	-DORC_ENABLE_UNSTABLE_API
 
 liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orc.c \
@@ -27,7 +28,6 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orcrules-sse.c \
 	orcrules-arm.c \
 	orcdebug.c \
-	orccpu.c \
 	orcutils.c \
 	orcsse.c \
 	orcmmx.c \
@@ -36,20 +36,15 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 
 if HAVE_I386
 liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-x86.c
-else
+endif
 if HAVE_AMD64
 liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-x86.c
-else
+endif
 if HAVE_POWERPC
 liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-powerpc.c
-else
+endif
 if HAVE_ARM
 liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-arm.c
-else
-liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-misc.c
-endif
-endif
-endif
 endif
 
 pkginclude_HEADERS = \
@@ -58,7 +53,6 @@ pkginclude_HEADERS = \
 	orcprogram.h \
 	orcutils.h \
 	orcparse.h \
-	orccpu.h \
 	opcodes.h \
 	orcsse.h \
 	orcmmx.h \

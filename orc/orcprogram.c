@@ -9,6 +9,12 @@
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
 
+/**
+ * SECTION:orcprogram
+ * @title: OrcProgram
+ * @short_description: Creating and manipulating Orc programs
+ */
+
 
 OrcProgram *
 orc_program_new (void)

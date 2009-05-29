@@ -37,7 +37,7 @@
 
 /**
  * SECTION:orcdebug
- * @title: Debug
+ * @title: OrcDebug
  * @short_description: Printing and formatting debug information
  */
 

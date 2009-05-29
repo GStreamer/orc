@@ -33,9 +33,6 @@ typedef void (*OrcRuleEmitFunc)(OrcCompiler *p, void *user, OrcInstruction *insn
 #define ORC_GP_REG_BASE 32
 #define ORC_VEC_REG_BASE 64
 
-#define ORC_REGCLASS_GP 1
-#define ORC_REGCLASS_VEC 2
-
 #define ORC_STATIC_OPCODE_N_SRC 4
 #define ORC_STATIC_OPCODE_N_DEST 2
 
@@ -400,10 +397,6 @@ int orc_program_add_constant (OrcProgram *program, int size, int value, const ch
 int orc_program_add_parameter (OrcProgram *program, int size, const char *name);
 int orc_program_add_accumulator (OrcProgram *program, int size, const char *name);
 
-void orc_program_x86_reset_alloc (OrcProgram *program);
-void orc_program_powerpc_reset_alloc (OrcProgram *program);
-
-
 OrcExecutor * orc_executor_new (OrcProgram *program);
 void orc_executor_free (OrcExecutor *ex);
 void orc_executor_set_program (OrcExecutor *ex, OrcProgram *program);
@@ -432,16 +425,11 @@ unsigned int orc_target_get_default_flags (OrcTarget *target);
 const char * orc_target_get_name (OrcTarget *target);
 
 int orc_program_allocate_register (OrcProgram *program, int is_data);
-int orc_program_x86_allocate_register (OrcProgram *program, int is_data);
-int orc_program_powerpc_allocate_register (OrcProgram *program, int is_data);
 
-void orc_program_x86_register_rules (void);
 void orc_compiler_allocate_codemem (OrcCompiler *compiler);
-void orc_program_dump_code (OrcProgram *program);
 int orc_compiler_label_new (OrcCompiler *compiler);
 
 const char *orc_program_get_asm_code (OrcProgram *program);
-void orc_program_dump_asm (OrcProgram *program);
 const char *orc_target_get_asm_preamble (const char *target);
 
 void orc_compiler_append_code (OrcCompiler *p, const char *fmt, ...)

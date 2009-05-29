@@ -15,7 +15,7 @@
 
 #define SIZE 65536
 
-int orc_arm_exec_ptr = ORC_ARM_R0;
+int orc_arm_exec_ptr = ORC_ARM_A1;
 
 void orc_arm_emit_loop (OrcCompiler *compiler);
 
@@ -119,7 +119,7 @@ orc_compiler_orc_arm_init (OrcCompiler *compiler)
   for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+9;i++){
     compiler->valid_regs[i] = 1;
   }
-  compiler->valid_regs[ORC_ARM_R0] = 0;
+  compiler->valid_regs[ORC_ARM_A1] = 0;
   //compiler->valid_regs[ORC_ARM_SB] = 0;
   compiler->valid_regs[ORC_ARM_IP] = 0;
   compiler->valid_regs[ORC_ARM_SP] = 0;

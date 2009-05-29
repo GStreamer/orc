@@ -29,7 +29,8 @@
 #include "config.h"
 #endif
 #include <orc/orcdebug.h>
-#include <orc/orccpu.h>
+#include <orc/orcsse.h>
+#include <orc/orcmmx.h>
 #include <orc/orcprogram.h>
 #include <orc/orcutils.h>
 

@@ -13,7 +13,6 @@
 #include <orc/orcmmx.h>
 #include <orc/orcutils.h>
 #include <orc/orcdebug.h>
-#include <orc/orccpu.h>
 
 #define SIZE 65536
 
@@ -522,7 +521,7 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
 
   orc_x86_emit_epilogue (compiler);
 
-  x86_do_fixups (compiler);
+  orc_x86_do_fixups (compiler);
 }
 
 void
