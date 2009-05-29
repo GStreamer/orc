@@ -7,6 +7,12 @@
 
 #include <orc/orcprogram.h>
 
+/**
+ * SECTION:orc
+ * @title: Orc
+ * @short_description: Library Initialization
+ */
+
 void _orc_debug_init(void);
 
 void

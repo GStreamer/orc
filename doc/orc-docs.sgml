@@ -3,9 +3,9 @@
                "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
   <bookinfo>
-    <title>orc Reference Manual</title>
+    <title>Orc Reference Manual</title>
     <releaseinfo>
-      for orc [VERSION]
+      for Orc [VERSION]
       The latest version of this documentation can be found on-line at
       <ulink role="online-location" url="http://[SERVER]/orc/index.html">http://[SERVER]/orc/</ulink>.
     </releaseinfo>

@@ -229,6 +229,8 @@ orc_x86_do_fixups
 
 <SECTION>
 <FILE>orcsse</FILE>
+OrcSSERegister
+OrcTargetSSEFlags
 ORC_SSE_SHUF
 orc_sse_emit_0f
 orc_sse_emit_660f
@@ -250,6 +252,8 @@ orc_sse_init
 
 <SECTION>
 <FILE>orcmmx</FILE>
+OrcMMXRegister
+OrcTargetMMXFlags
 ORC_MMX_SHUF
 orc_mmx_emit_0f
 orc_mmx_emit_660f

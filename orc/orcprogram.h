@@ -73,30 +73,6 @@ enum {
 };
 
 enum {
-  ORC_TARGET_SSE_SSE2 = (1<<0),
-  ORC_TARGET_SSE_SSE3 = (1<<1),
-  ORC_TARGET_SSE_SSSE3 = (1<<2),
-  ORC_TARGET_SSE_SSE4_1 = (1<<3),
-  ORC_TARGET_SSE_SSE4_2 = (1<<4),
-  ORC_TARGET_SSE_SSE4A = (1<<5),
-  ORC_TARGET_SSE_SSE5 = (1<<6),
-  ORC_TARGET_SSE_FRAME_POINTER = (1<<7),
-  ORC_TARGET_SSE_SHORT_JUMPS = (1<<8),
-  ORC_TARGET_SSE_64BIT = (1<<9)
-};
-
-enum {
-  ORC_TARGET_MMX_MMX = (1<<0),
-  ORC_TARGET_MMX_MMXEXT = (1<<1),
-  ORC_TARGET_MMX_3DNOW = (1<<2),
-  ORC_TARGET_MMX_3DNOWEXT = (1<<3),
-  ORC_TARGET_MMX_SSSE3 = (1<<4),
-  ORC_TARGET_MMX_FRAME_POINTER = (1<<7),
-  ORC_TARGET_MMX_SHORT_JUMPS = (1<<8),
-  ORC_TARGET_MMX_64BIT = (1<<9)
-};
-
-enum {
   ORC_TARGET_ALTIVEC_ALTIVEC = (1<<0)
 };
 
@@ -182,6 +158,7 @@ typedef enum {
 #define ORC_COMPILE_RESULT_IS_FATAL(x) ((x) >= 0x200)
 
 struct _OrcVariable {
+  /*< private >*/
   char *name;
 
   int size;
@@ -205,11 +182,13 @@ struct _OrcVariable {
 };
 
 struct _OrcRule {
+  /*< private >*/
   OrcRuleEmitFunc emit;
   void *emit_user;
 };
 
 struct _OrcRuleSet {
+  /*< private >*/
   OrcOpcodeSet *opcode_set;
   int required_target_flags;
 
@@ -218,6 +197,7 @@ struct _OrcRuleSet {
 };
 
 struct _OrcOpcodeSet {
+  /*< private >*/
   int opcode_major;
   char prefix[8];
 
@@ -237,6 +217,7 @@ struct _OrcStaticOpcode {
 };
 
 struct _OrcInstruction {
+  /*< private >*/
   OrcStaticOpcode *opcode;
   int dest_args[ORC_STATIC_OPCODE_N_DEST];
   int src_args[ORC_STATIC_OPCODE_N_SRC];
@@ -245,6 +226,7 @@ struct _OrcInstruction {
 };
 
 struct _OrcConstant {
+  /*< private >*/
   int type;
   int alloc_reg;
   unsigned int value;
@@ -252,17 +234,18 @@ struct _OrcConstant {
 };
 
 struct _OrcFixup {
+  /*< private >*/
   unsigned char *ptr;
   int type;
   int label;
 };
 
 struct _OrcProgram {
+  /*< private >*/
   OrcInstruction insns[ORC_N_INSNS];
   int n_insns;
 
   OrcVariable vars[ORC_N_VARIABLES];
-  //int n_vars;
   int n_src_vars;
   int n_dest_vars;
   int n_param_vars;
@@ -279,6 +262,7 @@ struct _OrcProgram {
 };
 
 struct _OrcCompiler {
+  /*< private >*/
   OrcProgram *program;
   OrcTarget *target;
 
@@ -288,7 +272,6 @@ struct _OrcCompiler {
   int n_insns;
 
   OrcVariable vars[ORC_N_VARIABLES];
-  //int n_vars;
   int n_temp_vars;
 
   unsigned char *codeptr;
@@ -323,11 +306,13 @@ struct _OrcCompiler {
 };
 
 struct _OrcOpcodeExecutor {
+  /*< private >*/
   int src_values[ORC_STATIC_OPCODE_N_SRC];
   int dest_values[ORC_STATIC_OPCODE_N_DEST];
 };
 
 struct _OrcExecutor {
+  /*< private >*/
   OrcProgram *program;
   int n;
   int counter1;
@@ -350,6 +335,8 @@ struct _OrcTarget {
 
   OrcRuleSet rule_sets[ORC_N_RULE_SETS];
   int n_rule_sets;
+
+  void *_unused[10];
 };
 
 

@@ -4,7 +4,18 @@
 
 #include <orc/orcx86.h>
 
-enum {
+typedef enum {
+  ORC_TARGET_MMX_MMX = (1<<0),
+  ORC_TARGET_MMX_MMXEXT = (1<<1),
+  ORC_TARGET_MMX_3DNOW = (1<<2),
+  ORC_TARGET_MMX_3DNOWEXT = (1<<3),
+  ORC_TARGET_MMX_SSSE3 = (1<<4),
+  ORC_TARGET_MMX_FRAME_POINTER = (1<<7),
+  ORC_TARGET_MMX_SHORT_JUMPS = (1<<8),
+  ORC_TARGET_MMX_64BIT = (1<<9)
+} OrcTargetMMXFlags;
+
+typedef enum {
   X86_MM0 = ORC_VEC_REG_BASE,
   X86_MM1,
   X86_MM2,
@@ -13,7 +24,7 @@ enum {
   X86_MM5,
   X86_MM6,
   X86_MM7
-};
+} OrcMMXRegister;
 
 #define ORC_MMX_SHUF(a,b,c,d) ((((a)&3)<<6)|(((b)&3)<<4)|(((c)&3)<<2)|(((d)&3)<<0))
 
