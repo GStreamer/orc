@@ -19,19 +19,19 @@ orcbin_PROGRAMS = $(TESTS) generate_xml_table generate_xml_table2
 CLEANFILES = temp-orc-test-*
 
 AM_CFLAGS = $(ORC_CFLAGS)
-LIBS = $(ORC_LIBS) $(top_builddir)/orc-test/liborc-test-0.3.la
+LIBS = $(ORC_LIBS) $(top_builddir)/orc-test/liborc-test-@ORC_MAJORMINOR@.la
 
 compile_opcodes_float_c_LDADD = \
-	$(top_builddir)/orc-float/liborc-float-0.3.la
+	$(top_builddir)/orc-float/liborc-float-@ORC_MAJORMINOR@.la
 compile_opcodes_float_LDADD = \
-	$(top_builddir)/orc-float/liborc-float-0.3.la
+	$(top_builddir)/orc-float/liborc-float-@ORC_MAJORMINOR@.la
 exec_opcodes_float_LDADD = \
-	$(top_builddir)/orc-float/liborc-float-0.3.la
+	$(top_builddir)/orc-float/liborc-float-@ORC_MAJORMINOR@.la
 
 compile_opcodes_pixel_c_LDADD = \
-	$(top_builddir)/orc-pixel/liborc-pixel-0.3.la
+	$(top_builddir)/orc-pixel/liborc-pixel-@ORC_MAJORMINOR@.la
 compile_opcodes_pixel_LDADD = \
-	$(top_builddir)/orc-pixel/liborc-pixel-0.3.la
+	$(top_builddir)/orc-pixel/liborc-pixel-@ORC_MAJORMINOR@.la
 exec_opcodes_pixel_LDADD = \
-	$(top_builddir)/orc-pixel/liborc-pixel-0.3.la
+	$(top_builddir)/orc-pixel/liborc-pixel-@ORC_MAJORMINOR@.la
 
