@@ -20,6 +20,9 @@ orc_pixel_init (void)
   orc_pixel_sse_register_rules ();
 }
 
+#ifndef ORC_CLAMP
+#define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
+#endif
 
 #define COMPOSITE_OVER(d,s,m) ((d) + (s) - ORC_MULDIV_255((d),(m)))
 #define COMPOSITE_ADD(d,s) ORC_CLAMP((d) + (s), 0, 255)

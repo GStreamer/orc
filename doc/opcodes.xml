@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+<!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+]>
+<refentry id="orc-opcodes" revision="29 may 2009">
+<refmeta>
+<refentrytitle>Orc Opcodes</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>Orc</refmiscinfo>
+</refmeta>
+
+<refnamediv>
+<refname>Orc Opcodes</refname>
+<refpurpose>
+Description of Opcodes
+</refpurpose>
+</refnamediv>
+
+<refsect1>
+<title>Orc Opcodes</title>
+
+  <para>
+    Opcodes only work with variables of a particular size.  In the
+    table below, destination and source indicate the size of the
+    destination and source operands, in bytes.  In general, opcodes
+    have a suffix indicating the sizes, "b" for 1-byte operations,
+    "w" for 2-byte operations, and "l" for 4-byte operations.  If
+    the source and destination have different sizes, the source
+    size suffix is listed first, then the destination suffix.  For
+    example, converting a 1-byte variable to 2-byte can be performed
+    using the "convsbw" opcode.
+  </para>
+
+  <para>
+    Signed, unsigned, and saturating operations are indicated by
+    the letters "s", "u", and "s".  If signed or unsigned is not
+    indicated, it generally means that the signedness is not
+    relevant to the definition of the opcode, and that the operation
+    on signed or unsigned values will give the same result.
+  </para>
+  
+  <para>
+    The "select" opcodes divide the bits in the source value into
+    two halves.  For "select0", the half that is first in memory
+    order is selected, and the latter half for "select1".  In other
+    words, "convwb" is the same as "select0wb" on little-endian
+    systems, and "select1wb" on big-endian systems.
+  </para>
+
+  <para>
+    The "merge" opcodes take two values and put them together in
+    memory order.
+  </para>
+  
+  <para>
+    Accumulating opcodes require an accumulator variable as the
+    destination.  Accumulating opcodes start with "acc".  These
+    opcodes sum the source values over the entire array, and can
+    be read from the OrcExecutor structure after an execution
+    of an Orc program.
+  </para>
+
+  <para>
+    Shift opcodes only work with constants or parameters as the
+    second source value.
+  </para>
+
+  <para>
+    For more precise understanding of operations, it is recommended
+    to compile a program for the C target and examine the resulting C
+    source code.
+  </para>
+
+  <xi:include href="opcode_table.xml"/>
+
+  <para>
+    In the pseudo code of the above table, abs() indicates absolute
+    value, clamp() indicates that any values outside the destination
+    range are set to the nearest value in the destination range, and
+    sign() evaluates to -1 for values less than 0, 1 for values
+    greater than 0, and 0 for 0.
+  </para>
+
+</refsect1>
+
+<refsect1>
+<title>Rule Coverage</title>
+
+  <para>
+    The values for shift operations are not correct in this table.
+  </para>
+  
+  <xi:include href="table.xml"/>
+
+</refsect1>
+
+</refentry>
+

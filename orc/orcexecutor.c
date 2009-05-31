@@ -8,6 +8,12 @@
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
 
+/**
+ * SECTION:orcexecutor
+ * @title: OrcExecutor
+ * @short_description: Running Orc programs
+ */
+
 
 OrcExecutor *
 orc_executor_new (OrcProgram *program)

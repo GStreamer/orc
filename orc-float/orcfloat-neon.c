@@ -9,7 +9,7 @@
 #include <sys/types.h>
 
 #include <orc/orcprogram.h>
-#include <orc/arm.h>
+#include <orc/orcarm.h>
 #include <orc/orcdebug.h>
 
 #include <orc/neon.h>

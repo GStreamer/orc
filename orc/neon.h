@@ -3,7 +3,7 @@
 #define _ORC_NEON_H_
 
 #include <orc/orc.h>
-#include <orc/arm.h>
+#include <orc/orcarm.h>
 
 void orc_neon_loadb (OrcCompiler *compiler, int dest, int src1, int update, int is_aligned);
 void orc_neon_loadw (OrcCompiler *compiler, int dest, int src1, int update, int is_aligned);

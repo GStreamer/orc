@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
+  <bookinfo>
+    <title>Orc Reference Manual</title>
+    <releaseinfo>
+      for Orc [VERSION]
+      The latest version of this documentation can be found on-line at
+      <ulink role="online-location" url="http://[SERVER]/orc/index.html">http://[SERVER]/orc/</ulink>.
+    </releaseinfo>
+  </bookinfo>
+
+  <chapter>
+    <title>Overview</title>
+    <xi:include href="building.xml"/>
+    <xi:include href="concepts.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>Application API</title>
+    <xi:include href="xml/orc.xml"/>
+    <xi:include href="xml/orcprogram.xml"/>
+    <xi:include href="xml/orccompiler.xml"/>
+    <xi:include href="xml/orcexecutor.xml"/>
+    <xi:include href="opcodes.xml"/>
+  </chapter>
+  <chapter>
+    <title>Extension API</title>
+    <xi:include href="xml/orcdebug.xml"/>
+    <xi:include href="xml/orcopcode.xml"/>
+    <xi:include href="xml/orcutils.xml"/>
+    <xi:include href="xml/orcrule.xml"/>
+  </chapter>
+  <chapter>
+    <title>Code Generation</title>
+    <xi:include href="xml/orcarm.xml"/>
+    <xi:include href="xml/orcmmx.xml"/>
+    <xi:include href="xml/orcpowerpc.xml"/>
+    <xi:include href="xml/orcsse.xml"/>
+    <xi:include href="xml/orcx86.xml"/>
+  </chapter>
+  <chapter>
+    <title>Herein lie dragons</title>
+    <xi:include href="xml/misc.xml"/>
+  </chapter>
+</book>

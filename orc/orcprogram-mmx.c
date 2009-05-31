@@ -13,7 +13,6 @@
 #include <orc/orcmmx.h>
 #include <orc/orcutils.h>
 #include <orc/orcdebug.h>
-#include <orc/orccpu.h>
 
 #define SIZE 65536
 
@@ -77,13 +76,13 @@ orc_compiler_mmx_init (OrcCompiler *compiler)
 {
   int i;
 
-  if (compiler->target_flags & ORC_TARGET_SSE_64BIT) {
+  if (compiler->target_flags & ORC_TARGET_MMX_64BIT) {
     compiler->is_64bit = TRUE;
   }
-  if (compiler->target_flags & ORC_TARGET_SSE_FRAME_POINTER) {
+  if (compiler->target_flags & ORC_TARGET_MMX_FRAME_POINTER) {
     compiler->use_frame_pointer = TRUE;
   }
-  if (!(compiler->target_flags & ORC_TARGET_SSE_SHORT_JUMPS)) {
+  if (!(compiler->target_flags & ORC_TARGET_MMX_SHORT_JUMPS)) {
     compiler->long_jumps = TRUE;
   }
   
@@ -522,7 +521,7 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
 
   orc_x86_emit_epilogue (compiler);
 
-  x86_do_fixups (compiler);
+  orc_x86_do_fixups (compiler);
 }
 
 void

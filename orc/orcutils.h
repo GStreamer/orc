@@ -42,7 +42,6 @@ typedef unsigned int orc_bool;
 #ifdef ORC_ENABLE_UNSTABLE_API
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
-#define DIVIDE_ROUND_UP(a,b) (((a) + (b) - 1)/(b))
 #ifndef MIN
 #define MIN(a,b) ((a)<(b) ? (a) : (b))
 #endif
@@ -53,12 +52,6 @@ typedef unsigned int orc_bool;
 #define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
 #endif
 #define ORC_PTR_TO_INT(x) ((int)(long)(x))
-#define ROUND_UP_SHIFT(x,y) (((x) + (1<<(y)) - 1)>>(y))
-#define ROUND_UP_POW2(x,y) (((x) + (1<<(y)) - 1)&((~0)<<(y)))
-#define ROUND_UP_2(x) ROUND_UP_POW2(x,1)
-#define ROUND_UP_4(x) ROUND_UP_POW2(x,2)
-#define ROUND_UP_8(x) ROUND_UP_POW2(x,3)
-#define ROUND_SHIFT(x,y) (((x) + (1<<((y)-1)))>>(y))
 
 #define ORC_READ_UINT32_LE(ptr) \
   ((uint32_t)( \

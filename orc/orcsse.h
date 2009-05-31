@@ -4,7 +4,20 @@
 
 #include <orc/orcx86.h>
 
-enum {
+typedef enum {
+  ORC_TARGET_SSE_SSE2 = (1<<0),
+  ORC_TARGET_SSE_SSE3 = (1<<1),
+  ORC_TARGET_SSE_SSSE3 = (1<<2),
+  ORC_TARGET_SSE_SSE4_1 = (1<<3),
+  ORC_TARGET_SSE_SSE4_2 = (1<<4),
+  ORC_TARGET_SSE_SSE4A = (1<<5),
+  ORC_TARGET_SSE_SSE5 = (1<<6),
+  ORC_TARGET_SSE_FRAME_POINTER = (1<<7),
+  ORC_TARGET_SSE_SHORT_JUMPS = (1<<8),
+  ORC_TARGET_SSE_64BIT = (1<<9)
+}OrcTargetSSEFlags;
+
+typedef enum {
   X86_XMM0 = ORC_VEC_REG_BASE,
   X86_XMM1,
   X86_XMM2,
@@ -21,7 +34,7 @@ enum {
   X86_XMM13,
   X86_XMM14,
   X86_XMM15
-};
+}OrcSSERegister;
 
 #define ORC_SSE_SHUF(a,b,c,d) ((((a)&3)<<6)|(((b)&3)<<4)|(((c)&3)<<2)|(((d)&3)<<0))
 
@@ -54,6 +67,7 @@ void orc_sse_emit_pshuflw (OrcCompiler *p, int shuf, int src, int dest);
 void orc_sse_emit_shiftimm (OrcCompiler *p, const char *insn_name,
     int code, int modrm_code, int shift, int reg);
 
+unsigned int orc_sse_get_cpu_flags (void);
 
 #endif
 

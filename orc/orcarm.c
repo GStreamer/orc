@@ -11,9 +11,15 @@
 #include <sys/types.h>
 
 #include <orc/orcprogram.h>
-#include <orc/arm.h>
+#include <orc/orcarm.h>
 #include <orc/orcutils.h>
 #include <orc/orcdebug.h>
+
+/**
+ * SECTION:orcarm
+ * @title: ARM
+ * @short_description: code generation for ARM
+ */
 
 
 const char *

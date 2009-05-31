@@ -33,9 +33,6 @@ typedef void (*OrcRuleEmitFunc)(OrcCompiler *p, void *user, OrcInstruction *insn
 #define ORC_GP_REG_BASE 32
 #define ORC_VEC_REG_BASE 64
 
-#define ORC_REGCLASS_GP 1
-#define ORC_REGCLASS_VEC 2
-
 #define ORC_STATIC_OPCODE_N_SRC 4
 #define ORC_STATIC_OPCODE_N_DEST 2
 
@@ -73,30 +70,6 @@ typedef void (*OrcRuleEmitFunc)(OrcCompiler *p, void *user, OrcInstruction *insn
 
 enum {
   ORC_TARGET_C_C99 = (1<<0)
-};
-
-enum {
-  ORC_TARGET_SSE_SSE2 = (1<<0),
-  ORC_TARGET_SSE_SSE3 = (1<<1),
-  ORC_TARGET_SSE_SSSE3 = (1<<2),
-  ORC_TARGET_SSE_SSE4_1 = (1<<3),
-  ORC_TARGET_SSE_SSE4_2 = (1<<4),
-  ORC_TARGET_SSE_SSE4A = (1<<5),
-  ORC_TARGET_SSE_SSE5 = (1<<6),
-  ORC_TARGET_SSE_FRAME_POINTER = (1<<7),
-  ORC_TARGET_SSE_SHORT_JUMPS = (1<<8),
-  ORC_TARGET_SSE_64BIT = (1<<9)
-};
-
-enum {
-  ORC_TARGET_MMX_MMX = (1<<0),
-  ORC_TARGET_MMX_MMXEXT = (1<<1),
-  ORC_TARGET_MMX_3DNOW = (1<<2),
-  ORC_TARGET_MMX_3DNOWEXT = (1<<3),
-  ORC_TARGET_MMX_SSSE3 = (1<<4),
-  ORC_TARGET_MMX_FRAME_POINTER = (1<<7),
-  ORC_TARGET_MMX_SHORT_JUMPS = (1<<8),
-  ORC_TARGET_MMX_64BIT = (1<<9)
 };
 
 enum {
@@ -184,7 +157,13 @@ typedef enum {
 #define ORC_COMPILE_RESULT_IS_SUCCESSFUL(x) ((x) < 0x100)
 #define ORC_COMPILE_RESULT_IS_FATAL(x) ((x) >= 0x200)
 
+/**
+ * OrcVariable:
+ *
+ * The OrcVariable structure has no public members
+ */
 struct _OrcVariable {
+  /*< private >*/
   char *name;
 
   int size;
@@ -207,12 +186,24 @@ struct _OrcVariable {
   int ptr_offset;
 };
 
+/**
+ * OrcRule:
+ *
+ * The OrcRule structure has no public members
+ */
 struct _OrcRule {
+  /*< private >*/
   OrcRuleEmitFunc emit;
   void *emit_user;
 };
 
+/**
+ * OrcRuleSet:
+ *
+ * The OrcRuleSet structure has no public members
+ */
 struct _OrcRuleSet {
+  /*< private >*/
   OrcOpcodeSet *opcode_set;
   int required_target_flags;
 
@@ -220,7 +211,13 @@ struct _OrcRuleSet {
   int n_rules;
 };
 
+/**
+ * OrcOpcodeSet:
+ *
+ * The OrcOpcodeSet structure has no public members
+ */
 struct _OrcOpcodeSet {
+  /*< private >*/
   int opcode_major;
   char prefix[8];
 
@@ -239,7 +236,13 @@ struct _OrcStaticOpcode {
   int src_size[ORC_STATIC_OPCODE_N_SRC];
 };
 
+/**
+ * OrcInstruction:
+ *
+ * The OrcInstruction structure has no public members
+ */
 struct _OrcInstruction {
+  /*< private >*/
   OrcStaticOpcode *opcode;
   int dest_args[ORC_STATIC_OPCODE_N_DEST];
   int src_args[ORC_STATIC_OPCODE_N_SRC];
@@ -247,25 +250,42 @@ struct _OrcInstruction {
   OrcRule *rule;
 };
 
+/**
+ * OrcConstant:
+ *
+ * The OrcConstant structure has no public members
+ */
 struct _OrcConstant {
+  /*< private >*/
   int type;
   int alloc_reg;
   unsigned int value;
   unsigned int full_value[4];
 };
 
+/**
+ * OrcFixup:
+ *
+ * The OrcFixup structure has no public members
+ */
 struct _OrcFixup {
+  /*< private >*/
   unsigned char *ptr;
   int type;
   int label;
 };
 
+/**
+ * OrcProgram:
+ *
+ * The OrcProgram structure has no public members
+ */
 struct _OrcProgram {
+  /*< private >*/
   OrcInstruction insns[ORC_N_INSNS];
   int n_insns;
 
   OrcVariable vars[ORC_N_VARIABLES];
-  //int n_vars;
   int n_src_vars;
   int n_dest_vars;
   int n_param_vars;
@@ -281,7 +301,13 @@ struct _OrcProgram {
   int code_size;
 };
 
+/**
+ * OrcCompiler:
+ *
+ * The OrcCompiler structure has no public members
+ */
 struct _OrcCompiler {
+  /*< private >*/
   OrcProgram *program;
   OrcTarget *target;
 
@@ -291,7 +317,6 @@ struct _OrcCompiler {
   int n_insns;
 
   OrcVariable vars[ORC_N_VARIABLES];
-  //int n_vars;
   int n_temp_vars;
 
   unsigned char *codeptr;
@@ -325,12 +350,23 @@ struct _OrcCompiler {
   int gp_tmpreg;
 };
 
+/**
+ * OrcOpcodeExecutor:
+ *
+ * The OrcOpcodeExecutor structure has no public members
+ */
 struct _OrcOpcodeExecutor {
+  /*< private >*/
   int src_values[ORC_STATIC_OPCODE_N_SRC];
   int dest_values[ORC_STATIC_OPCODE_N_DEST];
 };
 
+/**
+ * OrcExecutor:
+ *
+ */
 struct _OrcExecutor {
+  /*< private >*/
   OrcProgram *program;
   int n;
   int counter1;
@@ -342,6 +378,10 @@ struct _OrcExecutor {
   int accumulators[4];
 };
 
+/**
+ * OrcTarget:
+ *
+ */
 struct _OrcTarget {
   const char *name;
   orc_bool executable;
@@ -353,6 +393,8 @@ struct _OrcTarget {
 
   OrcRuleSet rule_sets[ORC_N_RULE_SETS];
   int n_rule_sets;
+
+  void *_unused[10];
 };
 
 
@@ -392,7 +434,6 @@ OrcCompileResult orc_program_compile_full (OrcProgram *p, OrcTarget *target,
 void orc_program_free (OrcProgram *program);
 
 int orc_program_find_var_by_name (OrcProgram *program, const char *name);
-int orc_compiler_get_dest (OrcCompiler *compiler);
 
 int orc_program_add_temporary (OrcProgram *program, int size, const char *name);
 int orc_program_dup_temporary (OrcProgram *program, int i, int j);
@@ -401,10 +442,6 @@ int orc_program_add_destination (OrcProgram *program, int size, const char *name
 int orc_program_add_constant (OrcProgram *program, int size, int value, const char *name);
 int orc_program_add_parameter (OrcProgram *program, int size, const char *name);
 int orc_program_add_accumulator (OrcProgram *program, int size, const char *name);
-
-void orc_program_x86_reset_alloc (OrcProgram *program);
-void orc_program_powerpc_reset_alloc (OrcProgram *program);
-
 
 OrcExecutor * orc_executor_new (OrcProgram *program);
 void orc_executor_free (OrcExecutor *ex);
@@ -434,16 +471,11 @@ unsigned int orc_target_get_default_flags (OrcTarget *target);
 const char * orc_target_get_name (OrcTarget *target);
 
 int orc_program_allocate_register (OrcProgram *program, int is_data);
-int orc_program_x86_allocate_register (OrcProgram *program, int is_data);
-int orc_program_powerpc_allocate_register (OrcProgram *program, int is_data);
 
-void orc_program_x86_register_rules (void);
 void orc_compiler_allocate_codemem (OrcCompiler *compiler);
-void orc_program_dump_code (OrcProgram *program);
 int orc_compiler_label_new (OrcCompiler *compiler);
 
 const char *orc_program_get_asm_code (OrcProgram *program);
-void orc_program_dump_asm (OrcProgram *program);
 const char *orc_target_get_asm_preamble (const char *target);
 
 void orc_compiler_append_code (OrcCompiler *p, const char *fmt, ...)

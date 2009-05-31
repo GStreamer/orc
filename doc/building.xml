@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+<!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+]>
+<refentry id="orc-building" revision="29 may 2009">
+<refmeta>
+<refentrytitle>Building Orc and Applications That Use Orc</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>Orc</refmiscinfo>
+</refmeta>
+
+<refnamediv>
+<refname>Building Orc and Applications that use Orc</refname>
+<refpurpose>
+How to build Orc and applications using it.
+</refpurpose>
+</refnamediv>
+
+<refsect1>
+<title>Building Orc on UNIX</title>
+
+  <!-- this has been borrowed from the glib docs via gstreamer -->
+  <para>
+    On UNIX, Orc uses the standard GNU build system,
+    using <application>autoconf</application> for package
+    configuration and resolving portability issues,
+    <application>automake</application> for building makefiles
+    that comply with the GNU Coding Standards, and
+    <application>libtool</application> for building shared
+    libraries on multiple platforms.  The normal sequence for
+    compiling and installing the Orc library is thus:
+
+    <literallayout>
+      <userinput>./configure</userinput>
+      <userinput>make</userinput>
+      <userinput>make install</userinput>
+    </literallayout>
+  </para>
+
+  <para>
+    The standard options provided by <application>GNU
+    autoconf</application> may be passed to the
+    <command>configure</command> script.  Please see the
+    <application>autoconf</application> documentation or run
+    <command>./configure --help</command> for information about
+    the standard options.
+  </para>
+
+  <para>
+    Future releases will have configure options that allow Orc
+    to be compiled in a minimal configuration for embedded systems.
+    This functionality is not yet available for general use.
+  </para>
+
+</refsect1>
+
+<refsect1>
+<title>Building Orc Applications</title>
+
+<para>
+Applications and libraries can use <command>pkg-config</command> to get all the
+needed compiler and linker flags to build against Orc.  The following
+commands will provide the necessary compiler and linker flags:
+
+<literallayout>
+  <userinput>pkg-config --cflags orc-&ORC_MAJORMINOR;</userinput>
+  <userinput>pkg-config --libs orc-&ORC_MAJORMINOR;</userinput>
+</literallayout>
+</para>
+
+<para>
+When compiling from source, the default installation directory is not
+in the default path for the <command>pkg-config</command>, so you may
+need to set the PKG_CONFIG_DIR environment variable.
+</para>
+
+</refsect1>
+
+</refentry>

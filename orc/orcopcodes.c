@@ -8,6 +8,12 @@
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
 
+/**
+ * SECTION:orcopcode
+ * @title: OrcOpcode
+ * @short_description: Operations
+ */
+
 
 static OrcOpcodeSet *opcode_sets;
 static int n_opcode_sets;

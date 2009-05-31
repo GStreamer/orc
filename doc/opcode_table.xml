@@ -1,0 +1,897 @@
+<table frame="all" id="table-basictypes" xreflabel="Table of Opcodes">
+<title>Table of Opcodes</title>
+<tgroup cols="3" align="left" colsep="1" rowsep="1">
+<thead>
+<row>
+<entry>opcode</entry>
+<entry>destination</entry>
+<entry>source 1</entry>
+<entry>source 2</entry>
+<entry>description</entry>
+<entry>pseudo code</entry>
+</row>
+</thead>
+<tbody valign="top">
+<row>
+<entry>absb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry></entry>
+<entry>absolute value</entry>
+<entry>(a &lt; 0) ? -a : a</entry>
+</row>
+<row>
+<entry>addb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>add</entry>
+<entry>a + b</entry>
+</row>
+<row>
+<entry>addssb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>add with signed saturate</entry>
+<entry>clamp(a + b)</entry>
+</row>
+<row>
+<entry>addusb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>add with unsigned saturate</entry>
+<entry>clamp(a + b)</entry>
+</row>
+<row>
+<entry>andb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>bitwise AND</entry>
+<entry>a &amp; b</entry>
+</row>
+<row>
+<entry>andnb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>bitwise AND NOT</entry>
+<entry>a &amp; (~b)</entry>
+</row>
+<row>
+<entry>avgsb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>signed average</entry>
+<entry>(a + b + 1)&gt;&gt;1</entry>
+</row>
+<row>
+<entry>avgub</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>unsigned average</entry>
+<entry>(a + b + 1)&gt;&gt;1</entry>
+</row>
+<row>
+<entry>cmpeqb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>compare equal</entry>
+<entry>(a == b) ? (~0) : 0</entry>
+</row>
+<row>
+<entry>cmpgtsb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>compare greater than</entry>
+<entry>(a &gt; b) ? (~0) : 0</entry>
+</row>
+<row>
+<entry>copyb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry></entry>
+<entry>copy</entry>
+<entry>a</entry>
+</row>
+<row>
+<entry>maxsb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>signed maximum</entry>
+<entry>(a &gt; b) ? a : b</entry>
+</row>
+<row>
+<entry>maxub</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>unsigned maximum</entry>
+<entry>(a &gt; b) ? a : b</entry>
+</row>
+<row>
+<entry>minsb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>signed minimum</entry>
+<entry>(a &lt; b) ? a : b</entry>
+</row>
+<row>
+<entry>minub</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>unsigned minimum</entry>
+<entry>(a &lt; b) ? a : b</entry>
+</row>
+<row>
+<entry>mullb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>low bits of multiply</entry>
+<entry>a * b</entry>
+</row>
+<row>
+<entry>mulhsb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>high bits of signed multiply</entry>
+<entry>(a * b) &gt;&gt; 8</entry>
+</row>
+<row>
+<entry>mulhub</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>high bits of unsigned multiply</entry>
+<entry>(a * b) &gt;&gt; 8</entry>
+</row>
+<row>
+<entry>orb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>bitwise or</entry>
+<entry>a | b</entry>
+</row>
+<row>
+<entry>shlb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>shift left</entry>
+<entry>a &lt;&lt; b</entry>
+</row>
+<row>
+<entry>shrsb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>signed shift right</entry>
+<entry>a &gt;&gt; b</entry>
+</row>
+<row>
+<entry>shrub</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>unsigned shift right</entry>
+<entry>a &gt;&gt; b</entry>
+</row>
+<row>
+<entry>signb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry></entry>
+<entry>sign</entry>
+<entry>sign(a)</entry>
+</row>
+<row>
+<entry>subb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>subtract</entry>
+<entry>a - b</entry>
+</row>
+<row>
+<entry>subssb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>subtract with signed saturate</entry>
+<entry>clamp(a - b)</entry>
+</row>
+<row>
+<entry>subusb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>subtract with unsigned saturate</entry>
+<entry>clamp(a - b)</entry>
+</row>
+<row>
+<entry>xorb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>bitwise XOR</entry>
+<entry>a ^ b</entry>
+</row>
+<row>
+<entry>absw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry></entry>
+<entry>absolute value</entry>
+<entry>(a &lt; 0) ? -a : a</entry>
+</row>
+<row>
+<entry>addw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>add</entry>
+<entry>a + b</entry>
+</row>
+<row>
+<entry>addssw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>add with signed saturate</entry>
+<entry>clamp(a + b)</entry>
+</row>
+<row>
+<entry>addusw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>add with unsigned saturate</entry>
+<entry>clamp(a + b)</entry>
+</row>
+<row>
+<entry>andw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>bitwise AND</entry>
+<entry>a &amp; b</entry>
+</row>
+<row>
+<entry>andnw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>bitwise AND NOT</entry>
+<entry>a &amp; (~b)</entry>
+</row>
+<row>
+<entry>avgsw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>signed average</entry>
+<entry>(a + b + 1)&gt;&gt;1</entry>
+</row>
+<row>
+<entry>avguw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>unsigned average</entry>
+<entry>(a + b + 1)&gt;&gt;1</entry>
+</row>
+<row>
+<entry>cmpeqw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>compare equal</entry>
+<entry>(a == b) ? (~0) : 0</entry>
+</row>
+<row>
+<entry>cmpgtsw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>compare greater than</entry>
+<entry>(a &gt; b) ? (~0) : 0</entry>
+</row>
+<row>
+<entry>copyw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry></entry>
+<entry>copy</entry>
+<entry>a</entry>
+</row>
+<row>
+<entry>maxsw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>signed maximum</entry>
+<entry>(a &gt; b) ? a : b</entry>
+</row>
+<row>
+<entry>maxuw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>unsigned maximum</entry>
+<entry>(a &gt; b) ? a : b</entry>
+</row>
+<row>
+<entry>minsw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>signed minimum</entry>
+<entry>(a &lt; b) ? a : b</entry>
+</row>
+<row>
+<entry>minuw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>unsigned minimum</entry>
+<entry>(a &lt; b) ? a : b</entry>
+</row>
+<row>
+<entry>mullw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>low bits of multiply</entry>
+<entry>a * b</entry>
+</row>
+<row>
+<entry>mulhsw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>high bits of signed multiply</entry>
+<entry>(a * b) &gt;&gt; 8</entry>
+</row>
+<row>
+<entry>mulhuw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>high bits of unsigned multiply</entry>
+<entry>(a * b) &gt;&gt; 8</entry>
+</row>
+<row>
+<entry>orw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>bitwise or</entry>
+<entry>a | b</entry>
+</row>
+<row>
+<entry>shlw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>shift left</entry>
+<entry>a &lt;&lt; b</entry>
+</row>
+<row>
+<entry>shrsw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>signed shift right</entry>
+<entry>a &gt;&gt; b</entry>
+</row>
+<row>
+<entry>shruw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>unsigned shift right</entry>
+<entry>a &gt;&gt; b</entry>
+</row>
+<row>
+<entry>signw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry></entry>
+<entry>sign</entry>
+<entry>sign(a)</entry>
+</row>
+<row>
+<entry>subw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>subtract</entry>
+<entry>a - b</entry>
+</row>
+<row>
+<entry>subssw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>subtract with signed saturate</entry>
+<entry>clamp(a - b)</entry>
+</row>
+<row>
+<entry>subusw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>subtract with unsigned saturate</entry>
+<entry>clamp(a - b)</entry>
+</row>
+<row>
+<entry>xorw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>bitwise XOR</entry>
+<entry>a ^ b</entry>
+</row>
+<row>
+<entry>absl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry></entry>
+<entry>absolute value</entry>
+<entry>(a &lt; 0) ? -a : a</entry>
+</row>
+<row>
+<entry>addl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>add</entry>
+<entry>a + b</entry>
+</row>
+<row>
+<entry>addssl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>add with signed saturate</entry>
+<entry>clamp(a + b)</entry>
+</row>
+<row>
+<entry>addusl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>add with unsigned saturate</entry>
+<entry>clamp(a + b)</entry>
+</row>
+<row>
+<entry>andl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>bitwise AND</entry>
+<entry>a &amp; b</entry>
+</row>
+<row>
+<entry>andnl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>bitwise AND NOT</entry>
+<entry>a &amp; (~b)</entry>
+</row>
+<row>
+<entry>avgsl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>signed average</entry>
+<entry>(a + b + 1)&gt;&gt;1</entry>
+</row>
+<row>
+<entry>avgul</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>unsigned average</entry>
+<entry>(a + b + 1)&gt;&gt;1</entry>
+</row>
+<row>
+<entry>cmpeql</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>compare equal</entry>
+<entry>(a == b) ? (~0) : 0</entry>
+</row>
+<row>
+<entry>cmpgtsl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>compare greater than</entry>
+<entry>(a &gt; b) ? (~0) : 0</entry>
+</row>
+<row>
+<entry>copyl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry></entry>
+<entry>copy</entry>
+<entry>a</entry>
+</row>
+<row>
+<entry>maxsl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>signed maximum</entry>
+<entry>(a &gt; b) ? a : b</entry>
+</row>
+<row>
+<entry>maxul</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>unsigned maximum</entry>
+<entry>(a &gt; b) ? a : b</entry>
+</row>
+<row>
+<entry>minsl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>signed minimum</entry>
+<entry>(a &lt; b) ? a : b</entry>
+</row>
+<row>
+<entry>minul</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>unsigned minimum</entry>
+<entry>(a &lt; b) ? a : b</entry>
+</row>
+<row>
+<entry>mulll</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>low bits of multiply</entry>
+<entry>a * b</entry>
+</row>
+<row>
+<entry>mulhsl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>high bits of signed multiply</entry>
+<entry>(a * b) &gt;&gt; 8</entry>
+</row>
+<row>
+<entry>mulhul</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>high bits of unsigned multiply</entry>
+<entry>(a * b) &gt;&gt; 8</entry>
+</row>
+<row>
+<entry>orl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>bitwise or</entry>
+<entry>a | b</entry>
+</row>
+<row>
+<entry>shll</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>shift left</entry>
+<entry>a &lt;&lt; b</entry>
+</row>
+<row>
+<entry>shrsl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>signed shift right</entry>
+<entry>a &gt;&gt; b</entry>
+</row>
+<row>
+<entry>shrul</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>unsigned shift right</entry>
+<entry>a &gt;&gt; b</entry>
+</row>
+<row>
+<entry>signl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry></entry>
+<entry>sign</entry>
+<entry>sign(a)</entry>
+</row>
+<row>
+<entry>subl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>subtract</entry>
+<entry>a - b</entry>
+</row>
+<row>
+<entry>subssl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>subtract with signed saturate</entry>
+<entry>clamp(a - b)</entry>
+</row>
+<row>
+<entry>subusl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>subtract with unsigned saturate</entry>
+<entry>clamp(a - b)</entry>
+</row>
+<row>
+<entry>xorl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>bitwise XOR</entry>
+<entry>a ^ b</entry>
+</row>
+<row>
+<entry>convsbw</entry>
+<entry>2</entry>
+<entry>1</entry>
+<entry></entry>
+<entry>convert signed</entry>
+<entry>a</entry>
+</row>
+<row>
+<entry>convubw</entry>
+<entry>2</entry>
+<entry>1</entry>
+<entry></entry>
+<entry>convert unsigned</entry>
+<entry>a</entry>
+</row>
+<row>
+<entry>convswl</entry>
+<entry>4</entry>
+<entry>2</entry>
+<entry></entry>
+<entry>convert signed</entry>
+<entry>a</entry>
+</row>
+<row>
+<entry>convuwl</entry>
+<entry>4</entry>
+<entry>2</entry>
+<entry></entry>
+<entry>convert unsigned</entry>
+<entry>a</entry>
+</row>
+<row>
+<entry>convwb</entry>
+<entry>1</entry>
+<entry>2</entry>
+<entry></entry>
+<entry>convert</entry>
+<entry>a</entry>
+</row>
+<row>
+<entry>convssswb</entry>
+<entry>1</entry>
+<entry>2</entry>
+<entry></entry>
+<entry>convert signed to signed with saturation</entry>
+<entry>clamp(a)</entry>
+</row>
+<row>
+<entry>convsuswb</entry>
+<entry>1</entry>
+<entry>2</entry>
+<entry></entry>
+<entry>convert signed to unsigned with saturation</entry>
+<entry>clamp(a)</entry>
+</row>
+<row>
+<entry>convusswb</entry>
+<entry>1</entry>
+<entry>2</entry>
+<entry></entry>
+<entry>convert unsigned to signed with saturation</entry>
+<entry>clamp(a)</entry>
+</row>
+<row>
+<entry>convuuswb</entry>
+<entry>1</entry>
+<entry>2</entry>
+<entry></entry>
+<entry>convert unsigned to unsigned with saturation</entry>
+<entry>clamp(a)</entry>
+</row>
+<row>
+<entry>convlw</entry>
+<entry>2</entry>
+<entry>4</entry>
+<entry></entry>
+<entry>convert</entry>
+<entry>a</entry>
+</row>
+<row>
+<entry>convssslw</entry>
+<entry>2</entry>
+<entry>4</entry>
+<entry></entry>
+<entry>convert signed to unsigned with saturation</entry>
+<entry>clamp(a)</entry>
+</row>
+<row>
+<entry>convsuslw</entry>
+<entry>2</entry>
+<entry>4</entry>
+<entry></entry>
+<entry>convert signed to signed with saturation</entry>
+<entry>clamp(a)</entry>
+</row>
+<row>
+<entry>convusslw</entry>
+<entry>2</entry>
+<entry>4</entry>
+<entry></entry>
+<entry>convert unsigned to unsigned with saturation</entry>
+<entry>clamp(a)</entry>
+</row>
+<row>
+<entry>convuuslw</entry>
+<entry>2</entry>
+<entry>4</entry>
+<entry></entry>
+<entry>convert unsigned to signed with saturation</entry>
+<entry>clamp(a)</entry>
+</row>
+<row>
+<entry>mulsbw</entry>
+<entry>2</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>multiply signed</entry>
+<entry>a * b</entry>
+</row>
+<row>
+<entry>mulubw</entry>
+<entry>2</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>multiply unsigned</entry>
+<entry>a * b</entry>
+</row>
+<row>
+<entry>mulswl</entry>
+<entry>4</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>multiply signed</entry>
+<entry>a * b</entry>
+</row>
+<row>
+<entry>muluwl</entry>
+<entry>4</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>multiply unsigned</entry>
+<entry>a * b</entry>
+</row>
+<row>
+<entry>accw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry></entry>
+<entry>accumulate</entry>
+<entry>+= a</entry>
+</row>
+<row>
+<entry>accl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry></entry>
+<entry>accumulate</entry>
+<entry>+= a</entry>
+</row>
+<row>
+<entry>accsadubl</entry>
+<entry>4</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>accumulate absolute difference</entry>
+<entry>+= abs(a - b)</entry>
+</row>
+<row>
+<entry>swapw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry></entry>
+<entry>endianness swap</entry>
+<entry>special</entry>
+</row>
+<row>
+<entry>swapl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry></entry>
+<entry>endianness swap</entry>
+<entry>special</entry>
+</row>
+<row>
+<entry>select0wb</entry>
+<entry>1</entry>
+<entry>2</entry>
+<entry></entry>
+<entry>select first half</entry>
+<entry>special</entry>
+</row>
+<row>
+<entry>select1wb</entry>
+<entry>1</entry>
+<entry>2</entry>
+<entry></entry>
+<entry>select second half</entry>
+<entry>special</entry>
+</row>
+<row>
+<entry>select0lw</entry>
+<entry>2</entry>
+<entry>4</entry>
+<entry></entry>
+<entry>select first half</entry>
+<entry>special</entry>
+</row>
+<row>
+<entry>select1lw</entry>
+<entry>2</entry>
+<entry>4</entry>
+<entry></entry>
+<entry>select second half</entry>
+<entry>special</entry>
+</row>
+<row>
+<entry>mergewl</entry>
+<entry>4</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>merge halves</entry>
+<entry>special</entry>
+</row>
+<row>
+<entry>mergebw</entry>
+<entry>2</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>merge halves</entry>
+<entry>special</entry>
+</row>
+</tbody>
+</tgroup>
+</table>

@@ -1,0 +1,251 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+<!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+]>
+<refentry id="orc-concepts" revision="29 may 2009">
+<refmeta>
+<refentrytitle>Orc Concepts</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>Orc</refmiscinfo>
+</refmeta>
+
+<refnamediv>
+<refname>Orc Concepts</refname>
+<refpurpose>
+High-level view of what Orc does.
+</refpurpose>
+</refnamediv>
+
+<refsect1>
+<title>Orc Concepts</title>
+
+  <para>
+    Orc is a compiler for a simple assembly-like language.  Unlike
+    most compilers, Orc is primarily a library, which means that
+    all its features can be controlled from any application that
+    uses it.  Also unlike most compilers, Orc creates code that
+    can be immediately exectued by the application.
+  </para>
+
+  <para>
+    Orc is mainly useful for generating code that performs simple
+    mathematical operations on continguous arrays.  An example Orc
+    function, translated to C, might look like:
+
+    <programlisting>
+      void function (int *dest, int *src1, int *src2, int n)
+      {
+        int i;
+	for (i = 0; i &lt; n; i++) {
+	  dest[i] = (src1[i] + src2[i] + 1) >> 1;
+	}
+      }
+    </programlisting>
+
+  </para>
+
+  <para>
+    Orc is primarily targetted toward generating code for vector
+    CPU extensions such as SSE, Altivec, and NEON.
+  </para>
+
+  <para>
+    Possible usage patterns:
+  </para>
+
+  <para>
+    The application generates Orc code programmatically.
+    Generate Orc programs programmatically at runtime, compile at
+    runtime, and execute.  This is what many of the Orc test programs
+    do, and is the most flexible and well-developed method at this
+    time.  This requires depending on the Orc library at runtime.
+  </para>
+
+  <para>
+    The application developer uses Orc to produce assembly source
+    code that is then compiled into the application.  This requires
+    the developer to have Orc installed at build time.  The advantage
+    of this method is no Orc dependency at runtime.  Disadvantages
+    are a more complex build process, potential for compiler
+    incompatibilities with generated assembly source code, and any
+    Orc improvements require the application to be recompiled.
+  </para>
+
+  <para>
+    The application developer writes Orc source files, and compiles
+    them into Orc bytecode to be included in the application.  At
+    runtime, Orc compiles the bytecode into executable code.  This
+    has the advantage of being easily editable.  This method is
+    still somewhat experimental.
+  </para>
+
+  <para>
+    A wide variety of additional workflows are possible, although
+    tools are not yet available to make it convenient.
+  </para>
+
+  <para>
+  </para>
+
+  <para>
+  </para>
+
+</refsect1>
+
+<refsect1>
+<title>Concepts</title>
+
+<para>
+  The OrcProgram is the primary object that applications use when
+  using Orc to create code.  It contains all the information related to
+  what is essentially a function definition in C.  Orc programs can
+  be compiled into assembly source code, or directly into binary code
+  that can be executed as part of the running process.  On CPUs that
+  are not supported, programs can also be executed via emulation.  Orc
+  programs can also be compiled into C source code.
+</para>
+
+<para>
+  A program contains one or more instructions and operates on one or
+  more source and destination arrays, and may use scalar parameters.
+  When compiled and executed, or emulated, the instructions define
+  the operations performed on each source array member, and the results
+  are placed in the destination array.  Another way of thinking about
+  it is that the compiler generates code that iterates over the
+  destination array, calculating the value of each members based on
+  the program instructions and the corresponding values in the source
+  arrays and scalar parameters.
+</para>
+
+<para>
+  The form of programs is strictly limited so that they may be compiled
+  into vector instructions effectively.  It is anticipated that future
+  versions of Orc will allow more complex programs.
+</para>
+
+<para>
+  The arrays that Orc programs operate on must be contiguous.
+</para>
+
+<para>
+  Some example operations are "addw" which adds two 16-bit integers,
+  "convsbw" which converts a signed byte to a signed 16-bit integer,
+  and "minul" which selects the lesser of two 32-bit unsigned
+  integers.  Orc only checks that the size of the operand matches
+  the size of the variable.  Thus, the compiler will not warn against
+  using "minul" with signed 32-bit integers, because it does not know
+  that the variables are signed or unsigned.
+</para>
+
+<para>
+  Orc has a main set of opcodes, that is, an OrcOpcodeSet, with the
+  name "sys".  These opcodes are always available.  They cover most
+  common arithmetic and conversion instructions for 8, 16, and 32-bit
+  integers.  There are two auxiliary libraries that provide additional
+  opcode sets, the liborc-float library that contains the "float"
+  opcode set for 32 and 64-bit floating point operations, and the
+  liborc-pixel library containing the "pixel" opcode set for operations
+  on 32-bit RGBA pixels.  
+</para>
+
+<para>
+  Orc programs are compiled using the function orc_program_compile().
+  The compiled code will be targetted for the current processor, which
+  is useful for compiling code that will be immediately executed.
+  Compiling for other processor families or processor family variants,
+  in order to produce assembly source code, can be accomplished using
+  one of the orc_program_compile variants.
+</para>
+
+<para>
+  Once an Orc program is compiled, it can be executed by creating
+  an OrcExecutor structure, linking it to the program to be executed,
+  setting the arrays and parameters, and setting the iteration count.
+  Orc executors are the equivalent of stack frames in a called function
+  in normal C code.  However, all Orc programs use the same OrcExecutor
+  structure, which makes code that manipulates executors simpler in
+  respect to those that manipulate stack frames.  Executors can be
+  reused.
+</para>
+
+<para>
+  An OrcTarget represents a particular instruction set or CPU family
+  for which code can be generated.  Current targets include MMX, SSE,
+  Altivec, and ARM.  Entropy Wave also has non-open-source NEON and
+  C64x+ targets.  There is also a special target that generates C
+  source code, but is not capable of producing executable code at
+  runtime.  In most cases, the default target is the most appropriate
+  target for the current CPU.
+</para>
+
+<para>
+  Individual Orc targets may have various options that control code
+  generation for that target.  For example, the various CPUs handled
+  by the SSE target have different subsets of SSE instructions that
+  are supported.  The target flags for SSE enable generation of the
+  different subsets of SSE instructions.
+</para>
+
+<para>
+  In order to produce target code, the Orc compiler finds an appropriate
+  OrcRule to translate the instruction to target code.  An OrcRuleSet
+  is an array of rules that all have the required target flags, and
+  a target may have one or more rule sets that can be enabled or
+  disabled based on the target flags.  In many cases, Orc instructions
+  can be translated into one or two target instructions, which generates
+  fast code.  In other cases, the CPU indicated by the target and target
+  flags does not have a fast method of performing the Orc instruction,
+  and a slower method is chosen.  This is indicated in the value returned
+  by the compiling function call.  In yet other cases, there is no
+  implemented rule to translate an Orc instruction to target code, so
+  compilation fails.
+</para>
+
+<para>
+  Compilation can fail for one of two main reasons.  One reason is that
+  the compiler was unable to parse the correct meaning, such as an
+  unknown opcode, undeclared variable, or a size mismatch.  These are
+  uncorrectible errors, and the program cannot be executed or emulated.
+  The other reason for a compilation failure is that target code could
+  not be generated for a variety of reasons, including missing rules
+  or unimplemented features.  In this case, the program can be emulated.
+  This process occurs automatically.
+</para>
+
+<para>
+  Emulation is generally slower than corresponding C code.  Since the
+  Orc compiler can produce C source code, it is possible to generate
+  and compile backup C code for programs.  This process is not yet
+  automatic.
+</para>
+
+</refsect1>
+
+<refsect1>
+<title>Extending Orc</title>
+
+<para>
+  Developers can extend Orc primarily by adding new opcode sets, adding
+  new targets, and by adding new target rules.
+</para>
+
+<para>
+  Additional opcode sets can be created and registered in a manner
+  similar to how the liborc-float and liborc-pixel libraries.  In order
+  to make full use of new opcode sets, one must also define rules for
+  translating these opcodes into target code.  The example libraries
+  do this by registering rule sets for various targets (mainly SSE)
+  for their opcode sets.  Orc provides low-level API for generating
+  target code.  Not all possible target instructions can be generated
+  with the target API, so developers may need to modify and add
+  functions to the main Orc library as necessary to generate target
+  code.
+</para>
+
+</refsect1>
+
+</refentry>
+

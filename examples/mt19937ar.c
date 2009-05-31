@@ -90,7 +90,7 @@ mt19937_ref (uint32_t *d, uint32_t *mt)
 }
 
 
-OrcProgram *p1, *p2, *p3;
+OrcProgram *p1, *p2;
 
 void
 create_programs (void)
@@ -107,7 +107,6 @@ create_programs (void)
   orc_program_add_constant (p1, 4, UPPER_MASK, "c1");
   orc_program_add_constant (p1, 4, LOWER_MASK, "c2");
   orc_program_add_constant (p1, 4, 1, "c3");
-  orc_program_add_constant (p1, 4, 31, "c5");
   orc_program_add_constant (p1, 4, MATRIX_A, "c6");
 
   orc_program_append_str (p1, "andl", "t1", "s1", "c1");
@@ -117,14 +116,37 @@ create_programs (void)
   orc_program_append_str (p1, "shrul", "t1", "y", "c3");
   orc_program_append_str (p1, "xorl", "t2", "s3", "t1");
   orc_program_append_str (p1, "andl", "y", "y", "c3");
-  orc_program_append_str (p1, "shll", "y", "y", "c5");
-  orc_program_append_str (p1, "shrsl", "y", "y", "c5");
+  orc_program_append_str (p1, "cmpeql", "y", "y", "c3");
   orc_program_append_str (p1, "andl", "y", "y", "c6");
   orc_program_append_str (p1, "xorl", "d1", "t2", "y");
   
   orc_program_compile (p1);
 
-  printf("%s", orc_program_get_asm_code (p1));
+
+  p2 = orc_program_new ();
+  orc_program_add_destination (p2, 4, "d1");
+  orc_program_add_temporary (p2, 4, "y");
+  orc_program_add_temporary (p2, 4, "t1");
+
+  orc_program_add_constant (p2, 4, 11, "c11");
+  orc_program_add_constant (p2, 4, 7, "c7");
+  orc_program_add_constant (p2, 4, 0x9d2c5680, "x1");
+  orc_program_add_constant (p2, 4, 15, "c15");
+  orc_program_add_constant (p2, 4, 0xefc60000, "x2");
+  orc_program_add_constant (p2, 4, 15, "c18");
+
+  orc_program_append_str (p2, "shrul", "t1", "d1", "c11");
+  orc_program_append_str (p2, "xorl", "y", "d1", "t1");
+  orc_program_append_str (p2, "shll", "t1", "y", "c7");
+  orc_program_append_str (p2, "andl", "t1", "t1", "x1");
+  orc_program_append_str (p2, "xorl", "y", "y", "t1");
+  orc_program_append_str (p2, "shll", "t1", "y", "c15");
+  orc_program_append_str (p2, "andl", "t1", "t1", "x2");
+  orc_program_append_str (p2, "xorl", "y", "y", "t1");
+  orc_program_append_str (p2, "shrul", "t1", "y", "c18");
+  orc_program_append_str (p2, "xorl", "d1", "y", "t1");
+
+  orc_program_compile (p2);
 
 }
 

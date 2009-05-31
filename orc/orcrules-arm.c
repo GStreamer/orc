@@ -9,7 +9,7 @@
 #include <sys/types.h>
 
 #include <orc/orcprogram.h>
-#include <orc/arm.h>
+#include <orc/orcarm.h>
 
 
 
@@ -117,7 +117,7 @@ orc_arm_rule_shrsw (OrcCompiler *p, void *user, OrcInstruction *insn)
 
 
 void
-orc_compiler_arm_register_rules (OrcTarget *target)
+orc_compiler_orc_arm_register_rules (OrcTarget *target)
 {
   OrcRuleSet *rule_set;
 
@@ -125,7 +125,7 @@ orc_compiler_arm_register_rules (OrcTarget *target)
 
 #if 0
 #define REG(x) \
-  orc_rule_register (rule_set, #x , arm_rule_ ## x, NULL)
+  orc_rule_register (rule_set, #x , orc_arm_rule_ ## x, NULL)
 
   REG(absb);
   REG(addb);
@@ -199,16 +199,16 @@ orc_compiler_arm_register_rules (OrcTarget *target)
   //REG(subusl);
   REG(xorl);
 
-  orc_rule_register (rule_set, "copyb", arm_rule_copyx, NULL);
-  orc_rule_register (rule_set, "copyw", arm_rule_copyx, NULL);
-  orc_rule_register (rule_set, "copyl", arm_rule_copyx, NULL);
+  orc_rule_register (rule_set, "copyb", orc_arm_rule_copyx, NULL);
+  orc_rule_register (rule_set, "copyw", orc_arm_rule_copyx, NULL);
+  orc_rule_register (rule_set, "copyl", orc_arm_rule_copyx, NULL);
 
-  orc_rule_register (rule_set, "shlw", arm_rule_shlw, NULL);
-  orc_rule_register (rule_set, "shrsw", arm_rule_shrsw, NULL);
+  orc_rule_register (rule_set, "shlw", orc_arm_rule_shlw, NULL);
+  orc_rule_register (rule_set, "shrsw", orc_arm_rule_shrsw, NULL);
 
-  orc_rule_register (rule_set, "convsbw", arm_rule_convsbw, NULL);
-  orc_rule_register (rule_set, "convubw", arm_rule_convubw, NULL);
-  orc_rule_register (rule_set, "convsuswb", arm_rule_convsuswb, NULL);
+  orc_rule_register (rule_set, "convsbw", orc_arm_rule_convsbw, NULL);
+  orc_rule_register (rule_set, "convubw", orc_arm_rule_convubw, NULL);
+  orc_rule_register (rule_set, "convsuswb", orc_arm_rule_convsuswb, NULL);
 #endif
   orc_rule_register (rule_set, "addw", orc_arm_rule_addw, NULL);
   orc_rule_register (rule_set, "subw", orc_arm_rule_subw, NULL);

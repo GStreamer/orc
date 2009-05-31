@@ -4,63 +4,62 @@
 
 #include <orc/orcprogram.h>
 
-#define ARM_R0 (ORC_GP_REG_BASE+0)
 
-#define ARM_A1 (ORC_GP_REG_BASE+0)
-#define ARM_A2 (ORC_GP_REG_BASE+1)
-#define ARM_A3 (ORC_GP_REG_BASE+2)
-#define ARM_A4 (ORC_GP_REG_BASE+3)
-#define ARM_V1 (ORC_GP_REG_BASE+4)
-#define ARM_V2 (ORC_GP_REG_BASE+5)
-#define ARM_V3 (ORC_GP_REG_BASE+6)
-#define ARM_V4 (ORC_GP_REG_BASE+7)
-#define ARM_V5 (ORC_GP_REG_BASE+8)
-#define ARM_V6 (ORC_GP_REG_BASE+9)
-#define ARM_V7 (ORC_GP_REG_BASE+10)
-#define ARM_V8 (ORC_GP_REG_BASE+11)
-#define ARM_IP (ORC_GP_REG_BASE+12)
-#define ARM_SP (ORC_GP_REG_BASE+13)
-#define ARM_LR (ORC_GP_REG_BASE+14)
-#define ARM_PC (ORC_GP_REG_BASE+15)
+typedef enum {
+  ORC_ARM_A1 = ORC_GP_REG_BASE+0,
+  ORC_ARM_A2,
+  ORC_ARM_A3,
+  ORC_ARM_A4,
+  ORC_ARM_V1,
+  ORC_ARM_V2,
+  ORC_ARM_V3,
+  ORC_ARM_V4,
+  ORC_ARM_V5,
+  ORC_ARM_V6,
+  ORC_ARM_V7,
+  ORC_ARM_V8,
+  ORC_ARM_IP,
+  ORC_ARM_SP,
+  ORC_ARM_LR,
+  ORC_ARM_PC
+} OrcArmRegister;
 
-#define ARM_SB (ORC_GP_REG_BASE+9)
+typedef enum {
+  ORC_ARM_DP_AND = 0,
+  ORC_ARM_DP_EOR,
+  ORC_ARM_DP_SUB,
+  ORC_ARM_DP_RSB,
+  ORC_ARM_DP_ADD,
+  ORC_ARM_DP_ADC,
+  ORC_ARM_DP_SBC,
+  ORC_ARM_DP_RSC,
+  ORC_ARM_DP_TST,
+  ORC_ARM_DP_TEQ,
+  ORC_ARM_DP_CMP,
+  ORC_ARM_DP_CMN,
+  ORC_ARM_DP_ORR,
+  ORC_ARM_DP_MOV,
+  ORC_ARM_DP_BIC,
+  ORC_ARM_DP_MVN
+} OrcArmDP;
 
-enum {
-  ARM_DP_AND = 0,
-  ARM_DP_EOR,
-  ARM_DP_SUB,
-  ARM_DP_RSB,
-  ARM_DP_ADD,
-  ARM_DP_ADC,
-  ARM_DP_SBC,
-  ARM_DP_RSC,
-  ARM_DP_TST,
-  ARM_DP_TEQ,
-  ARM_DP_CMP,
-  ARM_DP_CMN,
-  ARM_DP_ORR,
-  ARM_DP_MOV,
-  ARM_DP_BIC,
-  ARM_DP_MVN
-};
-
-enum {
-  ARM_COND_EQ = 0,
-  ARM_COND_NE,
-  ARM_COND_CS,
-  ARM_COND_CC,
-  ARM_COND_MI,
-  ARM_COND_PL,
-  ARM_COND_VS,
-  ARM_COND_VC,
-  ARM_COND_HI,
-  ARM_COND_LS,
-  ARM_COND_GE,
-  ARM_COND_LT,
-  ARM_COND_GT,
-  ARM_COND_LE,
-  ARM_COND_AL,
-};
+typedef enum {
+  ORC_ARM_COND_EQ = 0,
+  ORC_ARM_COND_NE,
+  ORC_ARM_COND_CS,
+  ORC_ARM_COND_CC,
+  ORC_ARM_COND_MI,
+  ORC_ARM_COND_PL,
+  ORC_ARM_COND_VS,
+  ORC_ARM_COND_VC,
+  ORC_ARM_COND_HI,
+  ORC_ARM_COND_LS,
+  ORC_ARM_COND_GE,
+  ORC_ARM_COND_LT,
+  ORC_ARM_COND_GT,
+  ORC_ARM_COND_LE,
+  ORC_ARM_COND_AL,
+} OrcArmCond;
 
 void orc_arm_emit (OrcCompiler *compiler, uint32_t insn);
 void orc_arm_emit_bx_lr (OrcCompiler *compiler);

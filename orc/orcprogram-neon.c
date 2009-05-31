@@ -9,7 +9,7 @@
 #include <sys/types.h>
 
 #include <orc/orcprogram.h>
-#include <orc/arm.h>
+#include <orc/orcarm.h>
 #include <orc/orcutils.h>
 #include <orc/orcdebug.h>
 
@@ -55,17 +55,17 @@ orc_neon_dump_insns (OrcCompiler *compiler)
 
   orc_arm_emit_label (compiler, 0);
 
-  orc_arm_emit_add (compiler, ARM_A2, ARM_A3, ARM_A4);
-  orc_arm_emit_sub (compiler, ARM_A2, ARM_A3, ARM_A4);
+  orc_arm_emit_add (compiler, ORC_ARM_A2, ORC_ARM_A3, ORC_ARM_A4);
+  orc_arm_emit_sub (compiler, ORC_ARM_A2, ORC_ARM_A3, ORC_ARM_A4);
   orc_arm_emit_push (compiler, 0x06);
-  orc_arm_emit_mov (compiler, ARM_A2, ARM_A3);
+  orc_arm_emit_mov (compiler, ORC_ARM_A2, ORC_ARM_A3);
 
-  orc_arm_emit_branch (compiler, ARM_COND_LE, 0);
-  orc_arm_emit_branch (compiler, ARM_COND_AL, 0);
+  orc_arm_emit_branch (compiler, ORC_ARM_COND_LE, 0);
+  orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, 0);
 
-  orc_arm_emit_load_imm (compiler, ARM_A3, 0xa500);
-  orc_arm_loadw (compiler, ARM_A3, ARM_A4, 0xa5);
-  orc_arm_emit_load_reg (compiler, ARM_A3, ARM_A4, 0x5a5);
+  orc_arm_emit_load_imm (compiler, ORC_ARM_A3, 0xa500);
+  orc_arm_loadw (compiler, ORC_ARM_A3, ORC_ARM_A4, 0xa5);
+  orc_arm_emit_load_reg (compiler, ORC_ARM_A3, ORC_ARM_A4, 0x5a5);
 }
 
 void
@@ -124,11 +124,11 @@ orc_compiler_neon_init (OrcCompiler *compiler)
   for(i=ORC_VEC_REG_BASE+0;i<ORC_VEC_REG_BASE+32;i+=2){
     compiler->valid_regs[i] = 1;
   }
-  //compiler->valid_regs[ARM_SB] = 0;
-  compiler->valid_regs[ARM_IP] = 0;
-  compiler->valid_regs[ARM_SP] = 0;
-  compiler->valid_regs[ARM_LR] = 0;
-  compiler->valid_regs[ARM_PC] = 0;
+  //compiler->valid_regs[ORC_ARM_SB] = 0;
+  compiler->valid_regs[ORC_ARM_IP] = 0;
+  compiler->valid_regs[ORC_ARM_SP] = 0;
+  compiler->valid_regs[ORC_ARM_LR] = 0;
+  compiler->valid_regs[ORC_ARM_PC] = 0;
   for(i=4;i<11;i++) {
     compiler->save_regs[ORC_GP_REG_BASE+i] = 1;
   }
@@ -138,9 +138,9 @@ orc_compiler_neon_init (OrcCompiler *compiler)
     compiler->used_regs[i] = 0;
   }
 
-  compiler->exec_reg = ARM_R0;
+  compiler->exec_reg = ORC_ARM_A1;
   compiler->valid_regs[compiler->exec_reg] = 0;
-  compiler->gp_tmpreg = ARM_A2;
+  compiler->gp_tmpreg = ORC_ARM_A2;
   compiler->valid_regs[compiler->gp_tmpreg] = 0;
   compiler->tmpreg = ORC_VEC_REG_BASE + 0;
   compiler->valid_regs[compiler->tmpreg] = 0;
@@ -228,7 +228,7 @@ orc_neon_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
     //arm_emit_mov_memoffset_reg (compiler, arm_ptr_size,
     //    (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]),
     //    p->exec_reg, X86_ECX);
-    ptr_reg = ARM_PC;
+    ptr_reg = ORC_ARM_PC;
   } else {
     ptr_reg = var->ptr_register;
   }
@@ -262,7 +262,7 @@ orc_neon_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
   if (var->ptr_register == 0) {
     //arm_emit_mov_memoffset_reg (compiler, arm_ptr_size,
     //    var->ptr_offset, p->exec_reg, X86_ECX);
-    ptr_reg = ARM_PC;
+    ptr_reg = ORC_ARM_PC;
   } else {
     ptr_reg = var->ptr_register;
   }
@@ -329,43 +329,43 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   if (compiler->loop_shift > 0) {
     int align_shift = 3;
 
-    orc_arm_emit_load_imm (compiler, ARM_IP, 1<<align_shift);
+    orc_arm_emit_load_imm (compiler, ORC_ARM_IP, 1<<align_shift);
 
-    orc_arm_emit_load_reg (compiler, ARM_A3, compiler->exec_reg,
+    orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
-    orc_arm_emit_load_reg (compiler, ARM_A2, compiler->exec_reg,
+    orc_arm_emit_load_reg (compiler, ORC_ARM_A2, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,arrays[align_var]));
-    orc_arm_emit_sub (compiler, ARM_IP, ARM_IP, ARM_A2);
-    orc_arm_emit_and_imm (compiler, ARM_IP, ARM_IP, (1<<align_shift)-1);
+    orc_arm_emit_sub (compiler, ORC_ARM_IP, ORC_ARM_IP, ORC_ARM_A2);
+    orc_arm_emit_and_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, (1<<align_shift)-1);
     if (align_shift > 0) {
-      orc_arm_emit_asr_imm (compiler, ARM_IP, ARM_IP, align_shift);
+      orc_arm_emit_asr_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, align_shift);
     }
 
-    orc_arm_emit_cmp (compiler, ARM_A3, ARM_IP);
-    orc_arm_emit_branch (compiler, ARM_COND_LE, 6);
+    orc_arm_emit_cmp (compiler, ORC_ARM_A3, ORC_ARM_IP);
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_LE, 6);
 
-    orc_arm_emit_store_reg (compiler, ARM_IP, compiler->exec_reg,
+    orc_arm_emit_store_reg (compiler, ORC_ARM_IP, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1));
-    orc_arm_emit_sub (compiler, ARM_A2, ARM_A3, ARM_IP);
+    orc_arm_emit_sub (compiler, ORC_ARM_A2, ORC_ARM_A3, ORC_ARM_IP);
 
-    orc_arm_emit_asr_imm (compiler, ARM_A3, ARM_A2, compiler->loop_shift);
-    orc_arm_emit_store_reg (compiler, ARM_A3, compiler->exec_reg,
+    orc_arm_emit_asr_imm (compiler, ORC_ARM_A3, ORC_ARM_A2, compiler->loop_shift);
+    orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
 
-    orc_arm_emit_and_imm (compiler, ARM_A3, ARM_A2, (1<<compiler->loop_shift)-1);
-    orc_arm_emit_store_reg (compiler, ARM_A3, compiler->exec_reg,
+    orc_arm_emit_and_imm (compiler, ORC_ARM_A3, ORC_ARM_A2, (1<<compiler->loop_shift)-1);
+    orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3));
 
-    orc_arm_emit_branch (compiler, ARM_COND_AL, 7);
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, 7);
     orc_arm_emit_label (compiler, 6);
 
-    orc_arm_emit_store_reg (compiler, ARM_A3, compiler->exec_reg,
+    orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1));
 
-    orc_arm_emit_load_imm (compiler, ARM_A3, 0);
-    orc_arm_emit_store_reg (compiler, ARM_A3, compiler->exec_reg,
+    orc_arm_emit_load_imm (compiler, ORC_ARM_A3, 0);
+    orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
-    orc_arm_emit_store_reg (compiler, ARM_A3, compiler->exec_reg,
+    orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3));
 
     orc_arm_emit_label (compiler, 7);
@@ -377,17 +377,17 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
     int save_loop_shift = compiler->loop_shift;
     compiler->loop_shift = 0;
 
-    orc_arm_emit_load_reg (compiler, ARM_IP, compiler->exec_reg,
+    orc_arm_emit_load_reg (compiler, ORC_ARM_IP, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1));
 
-    orc_arm_emit_cmp_imm (compiler, ARM_IP, 0);
-    orc_arm_emit_branch (compiler, ARM_COND_EQ, 1);
+    orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, 1);
 
     orc_arm_emit_label (compiler, 0);
     orc_neon_emit_loop (compiler);
-    orc_arm_emit_sub_imm (compiler, ARM_IP, ARM_IP, 1);
-    orc_arm_emit_cmp_imm (compiler, ARM_IP, 0);
-    orc_arm_emit_branch (compiler, ARM_COND_NE, 0);
+    orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1);
+    orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, 0);
     orc_arm_emit_label (compiler, 1);
 
     compiler->loop_shift = save_loop_shift;
@@ -395,21 +395,21 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   }
 
   if (compiler->loop_shift > 0) {
-    orc_arm_emit_load_reg (compiler, ARM_IP, compiler->exec_reg,
+    orc_arm_emit_load_reg (compiler, ORC_ARM_IP, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
   } else {
-    orc_arm_emit_load_reg (compiler, ARM_IP, compiler->exec_reg,
+    orc_arm_emit_load_reg (compiler, ORC_ARM_IP, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
   }
 
-  orc_arm_emit_cmp_imm (compiler, ARM_IP, 0);
-  orc_arm_emit_branch (compiler, ARM_COND_EQ, 3);
+  orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
+  orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, 3);
 
   orc_arm_emit_label (compiler, 2);
   orc_neon_emit_loop (compiler);
-  orc_arm_emit_sub_imm (compiler, ARM_IP, ARM_IP, 1);
-  orc_arm_emit_cmp_imm (compiler, ARM_IP, 0);
-  orc_arm_emit_branch (compiler, ARM_COND_NE, 2);
+  orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1);
+  orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
+  orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, 2);
   orc_arm_emit_label (compiler, 3);
 
   if (compiler->loop_shift > 0) {
@@ -418,17 +418,17 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
 
     compiler->vars[align_var].is_aligned = FALSE;
 
-    orc_arm_emit_load_reg (compiler, ARM_IP, compiler->exec_reg,
+    orc_arm_emit_load_reg (compiler, ORC_ARM_IP, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3));
 
-    orc_arm_emit_cmp_imm (compiler, ARM_IP, 0);
-    orc_arm_emit_branch (compiler, ARM_COND_EQ, 5);
+    orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, 5);
 
     orc_arm_emit_label (compiler, 4);
     orc_neon_emit_loop (compiler);
-    orc_arm_emit_sub_imm (compiler, ARM_IP, ARM_IP, 1);
-    orc_arm_emit_cmp_imm (compiler, ARM_IP, 0);
-    orc_arm_emit_branch (compiler, ARM_COND_NE, 4);
+    orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1);
+    orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, 4);
     orc_arm_emit_label (compiler, 5);
 
     compiler->loop_shift = save_loop_shift;

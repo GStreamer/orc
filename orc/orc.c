@@ -7,8 +7,21 @@
 
 #include <orc/orcprogram.h>
 
+/**
+ * SECTION:orc
+ * @title: Orc
+ * @short_description: Library Initialization
+ */
+
 void _orc_debug_init(void);
 
+/**
+ * orc_init:
+ * 
+ * This function initializes the Orc library, and
+ * should be called before using any other Orc function.
+ * Subsequent calls to this function have no effect.
+ */
 void
 orc_init (void)
 {
