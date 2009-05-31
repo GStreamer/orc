@@ -117,6 +117,7 @@ AC_SUBST(orcbindir)
 AC_CONFIG_FILES([
 Makefile 
 doc/Makefile
+doc/version.entities
 orc/Makefile
 orc-float/Makefile
 orc-pixel/Makefile

@@ -51,6 +51,18 @@ typedef void (*OrcDebugPrintFunc) (int level, const char *file,
 
 /**
  * OrcDebugLevel:
+ * @ORC_DEBUG_NONE: No debugging.  Used to disable debugging output.
+ * @ORC_DEBUG_ERROR: The level for messages indicating that an error
+ *   has occurred that causes Orc to produce incorrect results.  Also
+ *   used temporarily by developers for testing code.
+ * @ORC_DEBUG_WARNING: Messages at this level indicate something has
+ *   occurred that a developer looking into an application problem may
+ *   want to know.
+ * @ORC_DEBUG_INFO: Messages at this level provide high-level
+ *   information about Orc internals.
+ * @ORC_DEBUG_DEBUG: The default level for logging messages.
+ * @ORC_DEBUG_LOG: The level for messages that probably don't need to
+ *   be logged at all.
  *
  * Enumeration describing debug levels in Orc.
  */
@@ -65,30 +77,35 @@ typedef enum {
 
 /**
  * ORC_ERROR:
+ * @...: printf-style format and arguments
  *
  * Macro to call ORC_DEBUG_PRINT() with a level of #ORC_DEBUG_ERROR.
  */
 #define ORC_ERROR(...) ORC_DEBUG_PRINT(ORC_DEBUG_ERROR, __VA_ARGS__)
 /**
  * ORC_WARNING:
+ * @...: printf-style format and arguments
  *
  * Macro to call ORC_DEBUG_PRINT() with a level of #ORC_DEBUG_WARNING.
  */
 #define ORC_WARNING(...) ORC_DEBUG_PRINT(ORC_DEBUG_WARNING, __VA_ARGS__)
 /**
  * ORC_INFO:
+ * @...: printf-style format and arguments
  *
  * Macro to call ORC_DEBUG_PRINT() with a level of #ORC_DEBUG_INFO.
  */
 #define ORC_INFO(...) ORC_DEBUG_PRINT(ORC_DEBUG_INFO, __VA_ARGS__)
 /**
  * ORC_DEBUG:
+ * @...: printf-style format and arguments
  *
  * Macro to call ORC_DEBUG_PRINT() with a level of #ORC_DEBUG_DEBUG.
  */
 #define ORC_DEBUG(...) ORC_DEBUG_PRINT(ORC_DEBUG_DEBUG, __VA_ARGS__)
 /**
  * ORC_LOG:
+ * @...: printf-style format and arguments
  *
  * Macro to call ORC_DEBUG_PRINT() with a level of #ORC_DEBUG_LOG.
  */
@@ -110,8 +127,8 @@ typedef enum {
 
 /**
  * ORC_DEBUG_PRINT:
- * @level:
- * @...:
+ * @level: debug level of message
+ * @Varargs: printf-style format and arguments
  *
  * Macro to call orc_debug_print() with the correct values for
  * the name of the source file, line of source file, and function.

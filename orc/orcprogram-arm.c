@@ -243,7 +243,7 @@ orc_arm_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
 void
 orc_compiler_orc_arm_assemble (OrcCompiler *compiler)
 {
-  int dest_var = orc_compiler_get_dest (compiler);
+  int dest_var = ORC_VAR_D1;
 
   compiler->vars[dest_var].is_aligned = FALSE;
 

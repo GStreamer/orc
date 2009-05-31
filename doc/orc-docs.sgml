@@ -12,11 +12,18 @@
   </bookinfo>
 
   <chapter>
+    <title>Overview</title>
+    <xi:include href="building.xml"/>
+    <xi:include href="concepts.xml"/>
+  </chapter>
+
+  <chapter>
     <title>Application API</title>
     <xi:include href="xml/orc.xml"/>
     <xi:include href="xml/orcprogram.xml"/>
     <xi:include href="xml/orccompiler.xml"/>
     <xi:include href="xml/orcexecutor.xml"/>
+    <xi:include href="opcodes.xml"/>
   </chapter>
   <chapter>
     <title>Extension API</title>
@@ -29,6 +36,7 @@
     <title>Code Generation</title>
     <xi:include href="xml/orcarm.xml"/>
     <xi:include href="xml/orcmmx.xml"/>
+    <xi:include href="xml/orcpowerpc.xml"/>
     <xi:include href="xml/orcsse.xml"/>
     <xi:include href="xml/orcx86.xml"/>
   </chapter>

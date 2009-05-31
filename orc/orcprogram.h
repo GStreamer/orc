@@ -157,6 +157,11 @@ typedef enum {
 #define ORC_COMPILE_RESULT_IS_SUCCESSFUL(x) ((x) < 0x100)
 #define ORC_COMPILE_RESULT_IS_FATAL(x) ((x) >= 0x200)
 
+/**
+ * OrcVariable:
+ *
+ * The OrcVariable structure has no public members
+ */
 struct _OrcVariable {
   /*< private >*/
   char *name;
@@ -181,12 +186,22 @@ struct _OrcVariable {
   int ptr_offset;
 };
 
+/**
+ * OrcRule:
+ *
+ * The OrcRule structure has no public members
+ */
 struct _OrcRule {
   /*< private >*/
   OrcRuleEmitFunc emit;
   void *emit_user;
 };
 
+/**
+ * OrcRuleSet:
+ *
+ * The OrcRuleSet structure has no public members
+ */
 struct _OrcRuleSet {
   /*< private >*/
   OrcOpcodeSet *opcode_set;
@@ -196,6 +211,11 @@ struct _OrcRuleSet {
   int n_rules;
 };
 
+/**
+ * OrcOpcodeSet:
+ *
+ * The OrcOpcodeSet structure has no public members
+ */
 struct _OrcOpcodeSet {
   /*< private >*/
   int opcode_major;
@@ -216,6 +236,11 @@ struct _OrcStaticOpcode {
   int src_size[ORC_STATIC_OPCODE_N_SRC];
 };
 
+/**
+ * OrcInstruction:
+ *
+ * The OrcInstruction structure has no public members
+ */
 struct _OrcInstruction {
   /*< private >*/
   OrcStaticOpcode *opcode;
@@ -225,6 +250,11 @@ struct _OrcInstruction {
   OrcRule *rule;
 };
 
+/**
+ * OrcConstant:
+ *
+ * The OrcConstant structure has no public members
+ */
 struct _OrcConstant {
   /*< private >*/
   int type;
@@ -233,6 +263,11 @@ struct _OrcConstant {
   unsigned int full_value[4];
 };
 
+/**
+ * OrcFixup:
+ *
+ * The OrcFixup structure has no public members
+ */
 struct _OrcFixup {
   /*< private >*/
   unsigned char *ptr;
@@ -240,6 +275,11 @@ struct _OrcFixup {
   int label;
 };
 
+/**
+ * OrcProgram:
+ *
+ * The OrcProgram structure has no public members
+ */
 struct _OrcProgram {
   /*< private >*/
   OrcInstruction insns[ORC_N_INSNS];
@@ -261,6 +301,11 @@ struct _OrcProgram {
   int code_size;
 };
 
+/**
+ * OrcCompiler:
+ *
+ * The OrcCompiler structure has no public members
+ */
 struct _OrcCompiler {
   /*< private >*/
   OrcProgram *program;
@@ -305,12 +350,21 @@ struct _OrcCompiler {
   int gp_tmpreg;
 };
 
+/**
+ * OrcOpcodeExecutor:
+ *
+ * The OrcOpcodeExecutor structure has no public members
+ */
 struct _OrcOpcodeExecutor {
   /*< private >*/
   int src_values[ORC_STATIC_OPCODE_N_SRC];
   int dest_values[ORC_STATIC_OPCODE_N_DEST];
 };
 
+/**
+ * OrcExecutor:
+ *
+ */
 struct _OrcExecutor {
   /*< private >*/
   OrcProgram *program;
@@ -324,6 +378,10 @@ struct _OrcExecutor {
   int accumulators[4];
 };
 
+/**
+ * OrcTarget:
+ *
+ */
 struct _OrcTarget {
   const char *name;
   orc_bool executable;
@@ -374,7 +432,6 @@ OrcCompileResult orc_program_compile_full (OrcProgram *p, OrcTarget *target,
 void orc_program_free (OrcProgram *program);
 
 int orc_program_find_var_by_name (OrcProgram *program, const char *name);
-int orc_compiler_get_dest (OrcCompiler *compiler);
 
 int orc_program_add_temporary (OrcProgram *program, int size, const char *name);
 int orc_program_dup_temporary (OrcProgram *program, int i, int j);

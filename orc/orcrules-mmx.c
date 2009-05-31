@@ -764,7 +764,7 @@ orc_compiler_mmx_register_rules (OrcTarget *target)
 
   /* MMX */
   rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target,
-      ORC_TARGET_MMX_MMX | ORC_TARGET_MMX_MMXEXT);
+      ORC_TARGET_MMX_MMX);
 
   REG(addb);
   REG(addssb);

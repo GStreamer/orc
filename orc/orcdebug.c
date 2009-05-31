@@ -123,7 +123,7 @@ orc_debug_set_level (int level)
 
 /**
  * orc_debug_set_print_function:
- * @func:
+ * @func: the function to call
  *
  * Sets the function to call when outputting debugging information.
  * A value of NULL for @func will restore the default handler,

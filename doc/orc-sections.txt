@@ -298,3 +298,27 @@ orc_arm_reg_name
 orc_arm_storew
 </SECTION>
 
+<SECTION>
+<FILE>orcpowerpc</FILE>
+powerpc_get_regname
+powerpc_regnum
+powerpc_add_fixup
+powerpc_do_fixups
+powerpc_emit
+powerpc_emit_655510
+powerpc_emit_VA
+powerpc_emit_VX
+powerpc_emit_VX_2
+powerpc_emit_X
+powerpc_emit_addi
+powerpc_emit_b
+powerpc_emit_beq
+powerpc_emit_bne
+powerpc_emit_label
+powerpc_emit_lwz
+powerpc_emit_ret
+powerpc_emit_srawi
+powerpc_emit_stwu
+powerpc_flush
+powerpc_get_constant
+</SECTION>

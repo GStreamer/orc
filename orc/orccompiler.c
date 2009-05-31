@@ -13,6 +13,19 @@
  * SECTION:orccompiler
  * @title: OrcCompiler
  * @short_description: Compile Orc programs
+ *
+ * OrcCompiler is the object used to convert Orc programs contained
+ * in an OrcProgram object into assembly code and object code.
+ *
+ * The OrcCompileResult enum is used to indicate whether or not
+ * a compilation attempt was successful or not.  The macros
+ * ORC_COMPILE_RESULT_IS_SUCCESSFUL() and ORC_COMPILE_RESULT_IS_FATAL()
+ * should be used instead of checking values directly.
+ *
+ * When a program is compiled, the compiler calls the functions
+ * contained in various OrcRule structures.  These functions generate
+ * assembly and object instructions by calling ORC_ASM_CODE()
+ * or functions that use ORC_ASM_CODE() internally.
  */
 
 void orc_compiler_assign_rules (OrcCompiler *compiler);
@@ -70,12 +83,40 @@ orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
   return 0;
 }
 
+/**
+ * orc_program_compile:
+ * @program: the OrcProgram to compile
+ *
+ * Compiles an Orc program for the current CPU.  If successful,
+ * executable code for the program was generated and can be
+ * executed.
+ *
+ * The return value indicates various levels of success or failure.
+ * Success can be determined by checking for a true value of the
+ * macro ORC_COMPILE_RESULT_IS_SUCCESSFUL() on the return value.  This
+ * indicates that executable code was generated.  If the macro
+ * ORC_COMPILE_RESULT_IS_FATAL() on the return value evaluates to
+ * true, then there was a syntactical error in the program.  If the
+ * result is neither successful nor fatal, the program can still be
+ * emulated.
+ *
+ * Returns: an OrcCompileResult
+ */
 OrcCompileResult
 orc_program_compile (OrcProgram *program)
 {
   return orc_program_compile_for_target (program, orc_target_get_default ());
 }
 
+/**
+ * orc_program_compile_for_target:
+ * @program: the OrcProgram to compile
+ *
+ * Compiles an Orc program for the given target, using the
+ * default target flags for that target.
+ *
+ * Returns: an OrcCompileResult
+ */
 OrcCompileResult
 orc_program_compile_for_target (OrcProgram *program, OrcTarget *target)
 {
@@ -86,6 +127,15 @@ orc_program_compile_for_target (OrcProgram *program, OrcTarget *target)
   return orc_program_compile_full (program, target, flags);
 }
 
+/**
+ * orc_program_compile_full:
+ * @program: the OrcProgram to compile
+ *
+ * Compiles an Orc program for the given target, using the
+ * given target flags.
+ *
+ * Returns: an OrcCompileResult
+ */
 OrcCompileResult
 orc_program_compile_full (OrcProgram *program, OrcTarget *target,
     unsigned int flags)
@@ -463,6 +513,21 @@ orc_compiler_dump_asm (OrcCompiler *compiler)
   printf("%s", compiler->asm_code);
 }
 
+/**
+ * orc_compiler_append_code:
+ * @p: an OrcCompiler object
+ * @fmt: a printf-style format string
+ * @...: optional printf-style arguments
+ *
+ * Generates a string using sprintf() on the given format and
+ * arguments, and appends that string to the generated assembly
+ * code for the compiler.
+ *
+ * This function is used by the ORC_ASM_CODE() macro.
+ *
+ * This function is useful in a function implementing an OrcRule
+ * or implementing a target.
+ */
 void
 orc_compiler_append_code (OrcCompiler *p, const char *fmt, ...)
 {

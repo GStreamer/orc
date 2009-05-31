@@ -12,6 +12,12 @@
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
 
+/**
+ * SECTION:orcpowerpc
+ * @title: PowerPC
+ * @short_description: code generation for PowerPC
+ */
+
 
 void orc_compiler_powerpc_init (OrcCompiler *compiler);
 void orc_compiler_powerpc_assemble (OrcCompiler *compiler);
