@@ -62,6 +62,7 @@ add_s16(int16_t *dest, int16_t *src1, int16_t *src2, int n)
   }
 
   /* Set the values on the executor structure */
+  orc_executor_set_program (ex, p);
   orc_executor_set_n (ex, n);
   orc_executor_set_array_str (ex, "s1", src1);
   orc_executor_set_array_str (ex, "s2", src2);
