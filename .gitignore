@@ -2,9 +2,9 @@
 *.la
 *.lo
 orc.pc
-orc-0.3.pc
+orc-0.4.pc
 orc-uninstalled.pc
-orc-0.3-uninstalled.pc
+orc-0.4-uninstalled.pc
 Makefile
 Makefile.in
 config.h

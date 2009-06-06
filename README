@@ -38,8 +38,9 @@ Features:
  - An application can add rules for converting existing or new opcodes
    to binary code for a specific target.
 
- - Current targets: SSE, MMX, ARM, Altivec.  (SSE is the only target
-   that has gotten much testing.)
+ - Current targets: SSE, MMX, ARM, Altivec.  (ARM is very limited.)
+   The NEON and TI c64x+ DSP targets are not open source and can be
+   licensed separately from Entropy Wave.
 
  - Programs can optionally be emulated, which is useful for testing, or
    if no rules are available to convert Orc opcodes to executable code.
@@ -54,7 +55,7 @@ Questions and Answers:
    second, Orc can generate code for functions you define at runtime.
    Many algorithms require gluing together several stages of operations,
    and if each stage has several options, the total amount of code to
-   cover all combinations
+   cover all combinations could be inconveniently large.
 
  - Q: Why not use compiler intrinsics for SIMD code?
 
@@ -66,25 +67,22 @@ Questions and Answers:
  - Q: How big is the Orc library?
 
    A: Compiled with only one target (SSE), the library size is about
-   60 kB uncompressed, or 20 kB compressed.  The goal is to keep the
+   86 kB uncompressed, or 30 kB compressed.  The goal is to keep the
    uncompressed size under about 100 kB.
 
 
 Caveats (Known Bugs):
 
- - The SSE target may generate illegal instructions on your CPU, since
-   it doesn't (yet) check which instructions are legal.  This will be
-   fixed in the next release.
-
- - Most other targets are very limited in their instruction coverage.
+ - ?
 
 
 Future directions:
 
- - A parser, so that programs can be written in text form instead
-   of constructed directly in intermediate form using function calls.
+ - A more full-featured compiler tool, in order to make it easier to
+   convert Orc language source into assembly source code that can be
+   compiled and distributed without depending on the Orc library.
 
- - Addition of various convenience functions.
+ - Addition of convenience functions.
 
  - Addition of an option to compile the Orc library with only the
    runtime features for a single target, e.g., for embedded systems.
