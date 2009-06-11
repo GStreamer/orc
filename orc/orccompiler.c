@@ -144,6 +144,7 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   int i;
   OrcCompileResult result;
 
+  ORC_INFO("initializing compiler");
   compiler = malloc (sizeof(OrcCompiler));
   memset (compiler, 0, sizeof(OrcCompiler));
 
@@ -152,14 +153,16 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   compiler->target_flags = flags;
 
   {
+    ORC_LOG("variables");
     for(i=0;i<ORC_N_VARIABLES;i++){
-      ORC_INFO("%d: %s %d %d", i,
+      ORC_LOG("%d: %s %d %d", i,
           program->vars[i].name,
           program->vars[i].size,
           program->vars[i].vartype);
     }
+    ORC_LOG("instructions");
     for(i=0;i<program->n_insns;i++){
-      ORC_INFO("%d: %s %d %d %d %d", i,
+      ORC_LOG("%d: %s %d %d %d %d", i,
           program->insns[i].opcode->name,
           program->insns[i].dest_args[0],
           program->insns[i].dest_args[1],
@@ -200,10 +203,12 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   orc_compiler_rewrite_vars2 (compiler);
   if (compiler->error) goto error;
 
+  ORC_INFO("allocating code memory");
   //if (compiler->target != ORC_TARGET_C) {
     orc_compiler_allocate_codemem (compiler);
   //}
 
+  ORC_INFO("compiling for target");
   compiler->target->compile (compiler);
   if (compiler->error) goto error;
 
@@ -212,6 +217,7 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
 
   result = compiler->result;
   free (compiler);
+  ORC_INFO("finished compiling (success)");
 
   return result;
 error:
@@ -222,6 +228,7 @@ error:
     result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
   free (compiler);
+  ORC_INFO("finished compiling (fail)");
   return result;
 }
 
