@@ -65,7 +65,8 @@ pkginclude_HEADERS = \
 	orcmmx.h \
 	orcx86.h \
 	orcc64x.h \
-	orcpowerpc.h
+	orcpowerpc.h \
+	orcarm.h
 
 nodist_pkginclude_HEADERS = orc-stdint.h
 
