@@ -443,14 +443,7 @@ void
 orc_arm_flush_cache (OrcCompiler *compiler)
 {
 #ifdef HAVE_ARM
-  unsigned char *ptr;
-  int size = compiler->codeptr - compiler->program->code;
-
-  ptr = compiler->program->code;
-  __clear_cache (ptr, ptr + size);
-
-  ptr = compiler->program->code_exec;
-  __clear_cache (ptr, ptr + size);
+  __clear_cache (compiler->program->code, compiler->codeptr);
 #endif
 }
 
