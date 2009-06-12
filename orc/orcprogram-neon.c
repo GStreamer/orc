@@ -439,6 +439,8 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   orc_neon_emit_epilogue (compiler);
 
   orc_arm_do_fixups (compiler);
+
+  orc_arm_flush_cache (compiler);
 }
 
 void

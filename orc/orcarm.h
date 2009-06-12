@@ -96,5 +96,7 @@ const char *orc_neon_reg_name (int reg);
 const char *orc_neon_reg_name_quad (int reg);
 void orc_neon_emit_mov (OrcCompiler *compiler, int src, int dest);
 
+void orc_arm_flush_cache (OrcCompiler *compiler);
+
 #endif
 
