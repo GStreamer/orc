@@ -326,6 +326,18 @@ orc_neon_storeq (OrcCompiler *compiler, int dest, int update, int src1, int is_a
   orc_arm_emit (compiler, code);
 }
 
+static int
+orc_neon_get_const_shift (unsigned int value)
+{
+  int shift = 0;
+
+  while((value & 0xff) != value) {
+    shift++;
+    value >>= 1;
+  }
+  return shift;
+}
+
 void
 orc_neon_emit_loadib (OrcCompiler *compiler, int reg, int value)
 {
@@ -339,24 +351,27 @@ orc_neon_emit_loadib (OrcCompiler *compiler, int reg, int value)
     code |= (reg&0xf) << 12;
     code |= (reg&0xf) << 0;
     orc_arm_emit (compiler, code);
-  } else if (value == (value & 0xff)) {
-    ORC_ASM_CODE(compiler,"  vmov.i8 %s, #%d\n",
-        orc_neon_reg_name (reg), value);
-    code = 0xf2800e10;
-    code |= (reg&0xf) << 12;
-    code |= ((reg>>4)&0x1) << 22;
-    code |= (value&0xf) << 0;
-    code |= (value&0xf0) << 12;
-    orc_arm_emit (compiler, code);
-  } else {
-    ORC_COMPILER_ERROR(compiler, "unimplemented load of constant %d", value);
+    return;
   }
+
+  value &= 0xff;
+  ORC_ASM_CODE(compiler,"  vmov.i8 %s, #%d\n",
+      orc_neon_reg_name (reg), value);
+  code = 0xf2800e10;
+  code |= (reg&0xf) << 12;
+  code |= ((reg>>4)&0x1) << 22;
+  code |= (value&0xf) << 0;
+  code |= (value&0x70) << 12;
+  code |= (value&0x80) << 17;
+  orc_arm_emit (compiler, code);
 }
 
 void
 orc_neon_emit_loadiw (OrcCompiler *compiler, int reg, int value)
 {
   uint32_t code;
+  int shift;
+  int neg = FALSE;
 
   if (value == 0) {
     ORC_ASM_CODE(compiler,"  veor %s, %s, %s\n",
@@ -366,24 +381,56 @@ orc_neon_emit_loadiw (OrcCompiler *compiler, int reg, int value)
     code |= (reg&0xf) << 12;
     code |= (reg&0xf) << 0;
     orc_arm_emit (compiler, code);
-  } else if (value == (value & 0xff)) {
-    ORC_ASM_CODE(compiler,"  vmov.i16 %s, #%d\n",
-        orc_neon_reg_name (reg), value);
-    code = 0xf2800810;
+    return;
+  }
+
+  if (value < 0) {
+    neg = TRUE;
+    value = -value;
+  }
+  shift = orc_neon_get_const_shift (value);
+  if ((value & (0xff<<shift)) == value) {
+    value >>= shift;
+    if (neg) {
+      ORC_ASM_CODE(compiler,"  vmvn.i16 %s, #%d\n",
+          orc_neon_reg_name (reg), value);
+      code = 0xf2800830;
+    } else {
+      ORC_ASM_CODE(compiler,"  vmov.i16 %s, #%d\n",
+          orc_neon_reg_name (reg), value);
+      code = 0xf2800810;
+    }
     code |= (reg&0xf) << 12;
     code |= ((reg>>4)&0x1) << 22;
     code |= (value&0xf) << 0;
-    code |= (value&0xf0) << 12;
+    code |= (value&0x70) << 12;
+    code |= (value&0x80) << 17;
     orc_arm_emit (compiler, code);
-  } else {
-    ORC_COMPILER_ERROR(compiler, "unimplemented load of constant %d", value);
+
+    if (shift > 0) {
+      ORC_ASM_CODE(compiler,"  vshl.i16 %s, %s, #%d\n",
+          orc_neon_reg_name (reg), orc_neon_reg_name (reg), shift);
+      code = 0xf2900510;
+      code |= (reg&0xf) << 12;
+      code |= ((reg>>4)&0x1) << 22;
+      code |= (reg&0xf) << 0;
+      code |= ((reg>>4)&0x1) << 5;
+      code |= (shift&0xf) << 16;
+      orc_arm_emit (compiler, code);
+    }
+
+    return;
   }
+
+  ORC_COMPILER_ERROR(compiler, "unimplemented load of constant %d", value);
 }
 
 void
 orc_neon_emit_loadil (OrcCompiler *compiler, int reg, int value)
 {
   uint32_t code;
+  int shift;
+  int neg = FALSE;
 
   if (value == 0) {
     ORC_ASM_CODE(compiler,"  veor %s, %s, %s\n",
@@ -393,18 +440,48 @@ orc_neon_emit_loadil (OrcCompiler *compiler, int reg, int value)
     code |= (reg&0xf) << 12;
     code |= (reg&0xf) << 0;
     orc_arm_emit (compiler, code);
-  } else if (value == (value & 0xff)) {
-    ORC_ASM_CODE(compiler,"  vmov.i32 %s, #%d\n",
-        orc_neon_reg_name (reg), value);
-    code = 0xf2800010;
+    return;
+  }
+
+  if (value < 0) {
+    neg = TRUE;
+    value = -value;
+  }
+  shift = orc_neon_get_const_shift (value);
+  if ((value & (0xff<<shift)) == value) {
+    value >>= shift;
+    if (neg) {
+      ORC_ASM_CODE(compiler,"  vmvn.i32 %s, #%d\n",
+          orc_neon_reg_name (reg), value);
+      code = 0xf2800030;
+    } else {
+      ORC_ASM_CODE(compiler,"  vmov.i32 %s, #%d\n",
+          orc_neon_reg_name (reg), value);
+      code = 0xf2800010;
+    }
     code |= (reg&0xf) << 12;
     code |= ((reg>>4)&0x1) << 22;
     code |= (value&0xf) << 0;
-    code |= (value&0xf0) << 12;
+    code |= (value&0x70) << 12;
+    code |= (value&0x80) << 17;
     orc_arm_emit (compiler, code);
-  } else {
-    ORC_COMPILER_ERROR(compiler, "unimplemented load of constant %d", value);
+
+    if (shift > 0) {
+      ORC_ASM_CODE(compiler,"  vshl.i32 %s, %s, #%d\n",
+          orc_neon_reg_name (reg), orc_neon_reg_name (reg), shift);
+      code = 0xf2a00510;
+      code |= (reg&0xf) << 12;
+      code |= ((reg>>4)&0x1) << 22;
+      code |= (reg&0xf) << 0;
+      code |= ((reg>>4)&0x1) << 5;
+      code |= (shift&0xf) << 16;
+      orc_arm_emit (compiler, code);
+    }
+
+    return;
   }
+
+  ORC_COMPILER_ERROR(compiler, "unimplemented load of constant %d", value);
 }
 
 void
@@ -667,6 +744,10 @@ orc_neon_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
     int shift = p->vars[insn->src_args[1]].value;
+    if (shift < 0) {
+      ORC_COMPILER_ERROR(p, "shift negative");
+      return;
+    }
     if (shift >= immshift_info[type].bits) {
       ORC_COMPILER_ERROR(p, "shift too large");
       return;
