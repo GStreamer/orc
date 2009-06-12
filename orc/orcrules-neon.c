@@ -339,14 +339,17 @@ orc_neon_emit_loadib (OrcCompiler *compiler, int reg, int value)
     code |= (reg&0xf) << 12;
     code |= (reg&0xf) << 0;
     orc_arm_emit (compiler, code);
-  } else {
+  } else if (value == (value & 0xff)) {
     ORC_ASM_CODE(compiler,"  vmov.i8 %s, #%d\n",
         orc_neon_reg_name (reg), value);
     code = 0xf2800e10;
     code |= (reg&0xf) << 12;
     code |= ((reg>>4)&0x1) << 22;
     code |= (value&0xf) << 0;
+    code |= (value&0xf0) << 12;
     orc_arm_emit (compiler, code);
+  } else {
+    ORC_COMPILER_ERROR(compiler, "unimplemented load of constant %d", value);
   }
 }
 
@@ -363,14 +366,17 @@ orc_neon_emit_loadiw (OrcCompiler *compiler, int reg, int value)
     code |= (reg&0xf) << 12;
     code |= (reg&0xf) << 0;
     orc_arm_emit (compiler, code);
-  } else {
+  } else if (value == (value & 0xff)) {
     ORC_ASM_CODE(compiler,"  vmov.i16 %s, #%d\n",
         orc_neon_reg_name (reg), value);
     code = 0xf2800810;
     code |= (reg&0xf) << 12;
     code |= ((reg>>4)&0x1) << 22;
     code |= (value&0xf) << 0;
+    code |= (value&0xf0) << 12;
     orc_arm_emit (compiler, code);
+  } else {
+    ORC_COMPILER_ERROR(compiler, "unimplemented load of constant %d", value);
   }
 }
 
@@ -387,14 +393,17 @@ orc_neon_emit_loadil (OrcCompiler *compiler, int reg, int value)
     code |= (reg&0xf) << 12;
     code |= (reg&0xf) << 0;
     orc_arm_emit (compiler, code);
-  } else {
+  } else if (value == (value & 0xff)) {
     ORC_ASM_CODE(compiler,"  vmov.i32 %s, #%d\n",
         orc_neon_reg_name (reg), value);
     code = 0xf2800010;
     code |= (reg&0xf) << 12;
     code |= ((reg>>4)&0x1) << 22;
     code |= (value&0xf) << 0;
+    code |= (value&0xf0) << 12;
     orc_arm_emit (compiler, code);
+  } else {
+    ORC_COMPILER_ERROR(compiler, "unimplemented load of constant %d", value);
   }
 }
 
@@ -658,6 +667,10 @@ orc_neon_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
     int shift = p->vars[insn->src_args[1]].value;
+    if (shift >= immshift_info[type].bits) {
+      ORC_COMPILER_ERROR(p, "shift too large");
+      return;
+    }
     code = immshift_info[type].code;
     ORC_ASM_CODE(p,"  %s %s, %s, #%d\n",
         immshift_info[type].name,
