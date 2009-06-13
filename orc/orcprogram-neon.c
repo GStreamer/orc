@@ -495,8 +495,8 @@ orc_neon_emit_loop (OrcCompiler *compiler)
 #if 0
       if (compiler->vars[insn->dest_args[0]].alloc !=
           compiler->vars[insn->src_args[0]].alloc) {
-        orc_neon_emit_mov (compiler, compiler->vars[insn->src_args[0]].alloc,
-            compiler->vars[insn->dest_args[0]].alloc);
+        orc_neon_emit_mov (compiler, compiler->vars[insn->dest_args[0]].alloc,
+            compiler->vars[insn->src_args[0]].alloc);
       }
 #endif
       rule->emit (compiler, rule->emit_user, insn);

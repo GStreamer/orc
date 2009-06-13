@@ -58,6 +58,8 @@ static void
 orc_neon_emit_binary (OrcCompiler *p, const char *name, unsigned int code,
     int dest, int src1, int src2)
 {
+  ORC_ASSERT((code & 0x004ff0af) == 0);
+
   ORC_ASM_CODE(p,"  %s %s, %s, %s\n", name,
       orc_neon_reg_name (dest), orc_neon_reg_name (src1),
       orc_neon_reg_name (src2));
@@ -71,9 +73,49 @@ orc_neon_emit_binary (OrcCompiler *p, const char *name, unsigned int code,
 }
 
 static void
+orc_neon_emit_binary_long (OrcCompiler *p, const char *name, unsigned int code,
+    int dest, int src1, int src2)
+{
+  ORC_ASSERT((code & 0x004ff0af) == 0);
+
+  ORC_ASM_CODE(p,"  %s %s, %s, %s\n", name,
+      orc_neon_reg_name_quad (dest), orc_neon_reg_name (src1),
+      orc_neon_reg_name (src2));
+  code |= (dest&0xf)<<12;
+  code |= ((dest>>4)&0x1)<<22;
+  code |= (src1&0xf)<<16;
+  code |= ((src1>>4)&0x1)<<7;
+  code |= (src2&0xf)<<0;
+  code |= ((src2>>4)&0x1)<<5;
+  orc_arm_emit (p, code);
+}
+
+#if 0
+static void
+orc_neon_emit_binary_narrow (OrcCompiler *p, const char *name, unsigned int code,
+    int dest, int src1, int src2)
+{
+  ORC_ASSERT((code & 0x004ff0af) == 0);
+
+  ORC_ASM_CODE(p,"  %s %s, %s, %s\n", name,
+      orc_neon_reg_name (dest), orc_neon_reg_name_quad (src1),
+      orc_neon_reg_name_quad (src2));
+  code |= (dest&0xf)<<12;
+  code |= ((dest>>4)&0x1)<<22;
+  code |= (src1&0xf)<<16;
+  code |= ((src1>>4)&0x1)<<7;
+  code |= (src2&0xf)<<0;
+  code |= ((src2>>4)&0x1)<<5;
+  orc_arm_emit (p, code);
+}
+#endif
+
+static void
 orc_neon_emit_unary (OrcCompiler *p, const char *name, unsigned int code,
     int dest, int src1)
 {
+  ORC_ASSERT((code & 0x0040f02f) == 0);
+
   ORC_ASM_CODE(p,"  %s %s, %s\n", name,
       orc_neon_reg_name (dest), orc_neon_reg_name (src1));
   code |= (dest&0xf)<<12;
@@ -81,11 +123,40 @@ orc_neon_emit_unary (OrcCompiler *p, const char *name, unsigned int code,
   code |= (src1&0xf)<<0;
   code |= ((src1>>4)&0x1)<<5;
   orc_arm_emit (p, code);
+}
 
+static void
+orc_neon_emit_unary_long (OrcCompiler *p, const char *name, unsigned int code,
+    int dest, int src1)
+{
+  ORC_ASSERT((code & 0x0040f02f) == 0);
+
+  ORC_ASM_CODE(p,"  %s %s, %s\n", name,
+      orc_neon_reg_name_quad (dest), orc_neon_reg_name (src1));
+  code |= (dest&0xf)<<12;
+  code |= ((dest>>4)&0x1)<<22;
+  code |= (src1&0xf)<<0;
+  code |= ((src1>>4)&0x1)<<5;
+  orc_arm_emit (p, code);
+}
+
+static void
+orc_neon_emit_unary_narrow (OrcCompiler *p, const char *name, unsigned int code,
+    int dest, int src1)
+{
+  ORC_ASSERT((code & 0x0040f02f) == 0);
+
+  ORC_ASM_CODE(p,"  %s %s, %s\n", name,
+      orc_neon_reg_name (dest), orc_neon_reg_name_quad (src1));
+  code |= (dest&0xf)<<12;
+  code |= ((dest>>4)&0x1)<<22;
+  code |= (src1&0xf)<<0;
+  code |= ((src1>>4)&0x1)<<5;
+  orc_arm_emit (p, code);
 }
 
 void
-orc_neon_emit_mov (OrcCompiler *compiler, int src, int dest)
+orc_neon_emit_mov (OrcCompiler *compiler, int dest, int src)
 {
   orc_neon_emit_binary (compiler, "vorr", 0xf2200110,
       dest, src, src);
@@ -213,17 +284,7 @@ orc_neon_loadq (OrcCompiler *compiler, int dest, int src1, int update, int is_al
 void
 orc_neon_emit_neg (OrcCompiler *compiler, int dest)
 {
-  uint32_t code;
-
-  ORC_ASM_CODE(compiler,"  vneg.s8 %s, %s\n",
-      orc_neon_reg_name (dest),
-      orc_neon_reg_name (dest));
-  code = 0xf3b10380;
-  code |= (dest&0xf) << 12;
-  code |= ((dest>>4)&0x1) << 22;
-  code |= (dest&0xf) << 0;
-  code |= ((dest>>4)&0x1) << 5;
-  orc_arm_emit (compiler, code);
+  orc_neon_emit_unary(compiler, "vneg.s8", 0xf3b10380, dest, dest);
 }
 
 void
@@ -363,13 +424,7 @@ orc_neon_emit_loadib (OrcCompiler *compiler, int reg, int value)
   uint32_t code;
 
   if (value == 0) {
-    ORC_ASM_CODE(compiler,"  veor %s, %s, %s\n",
-        orc_neon_reg_name (reg), orc_neon_reg_name (reg), orc_neon_reg_name (reg));
-    code = 0xf3000110;
-    code |= (reg&0xf) << 16;
-    code |= (reg&0xf) << 12;
-    code |= (reg&0xf) << 0;
-    orc_arm_emit (compiler, code);
+    orc_neon_emit_binary (compiler, "veor", 0xf3000110, reg, reg, reg);
     return;
   }
 
@@ -393,13 +448,7 @@ orc_neon_emit_loadiw (OrcCompiler *compiler, int reg, int value)
   int neg = FALSE;
 
   if (value == 0) {
-    ORC_ASM_CODE(compiler,"  veor %s, %s, %s\n",
-        orc_neon_reg_name (reg), orc_neon_reg_name (reg), orc_neon_reg_name (reg));
-    code = 0xf3000110;
-    code |= (reg&0xf) << 16;
-    code |= (reg&0xf) << 12;
-    code |= (reg&0xf) << 0;
-    orc_arm_emit (compiler, code);
+    orc_neon_emit_binary (compiler, "veor", 0xf3000110, reg, reg, reg);
     return;
   }
 
@@ -452,13 +501,7 @@ orc_neon_emit_loadil (OrcCompiler *compiler, int reg, int value)
   int neg = FALSE;
 
   if (value == 0) {
-    ORC_ASM_CODE(compiler,"  veor %s, %s, %s\n",
-        orc_neon_reg_name (reg), orc_neon_reg_name (reg), orc_neon_reg_name (reg));
-    code = 0xf3000110;
-    code |= (reg&0xf) << 16;
-    code |= (reg&0xf) << 12;
-    code |= (reg&0xf) << 0;
-    orc_arm_emit (compiler, code);
+    orc_neon_emit_binary (compiler, "veor", 0xf3000110, reg, reg, reg);
     return;
   }
 
@@ -558,99 +601,57 @@ orc_neon_emit_loadpl (OrcCompiler *compiler, int dest, int param)
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  uint32_t x = code; \
-  ORC_ASM_CODE(p,"  " insn_name " %s, %s\n", \
-      orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc), \
-      orc_neon_reg_name (p->vars[insn->src_args[0]].alloc)); \
-  x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12; \
-  x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22; \
-  x |= (p->vars[insn->src_args[0]].alloc&0xf)<<0; \
-  x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5; \
-  orc_arm_emit (p, x); \
+  orc_neon_emit_unary (p, insn_name, code, \
+      p->vars[insn->dest_args[0]].alloc, \
+      p->vars[insn->src_args[0]].alloc); \
 }
 
 #define UNARY_LONG(opcode,insn_name,code) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  uint32_t x = code; \
-  ORC_ASM_CODE(p,"  " insn_name " %s, %s\n", \
-      orc_neon_reg_name_quad (p->vars[insn->dest_args[0]].alloc), \
-      orc_neon_reg_name (p->vars[insn->src_args[0]].alloc)); \
-  x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12; \
-  x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22; \
-  x |= (p->vars[insn->src_args[0]].alloc&0xf)<<0; \
-  x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5; \
-  orc_arm_emit (p, x); \
+  orc_neon_emit_unary_long (p, insn_name, code, \
+      p->vars[insn->dest_args[0]].alloc, \
+      p->vars[insn->src_args[0]].alloc); \
 }
 
 #define UNARY_NARROW(opcode,insn_name,code) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  uint32_t x = code; \
-  ORC_ASM_CODE(p,"  " insn_name " %s, %s\n", \
-      orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc), \
-      orc_neon_reg_name_quad (p->vars[insn->src_args[0]].alloc)); \
-  x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12; \
-  x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22; \
-  x |= (p->vars[insn->src_args[0]].alloc&0xf)<<0; \
-  x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5; \
-  orc_arm_emit (p, x); \
+  orc_neon_emit_unary_narrow (p, insn_name, code, \
+      p->vars[insn->dest_args[0]].alloc, \
+      p->vars[insn->src_args[0]].alloc); \
 }
 
 #define BINARY(opcode,insn_name,code) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  uint32_t x = code; \
-  ORC_ASM_CODE(p,"  " insn_name " %s, %s, %s\n", \
-      orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc), \
-      orc_neon_reg_name (p->vars[insn->src_args[0]].alloc), \
-      orc_neon_reg_name (p->vars[insn->src_args[1]].alloc)); \
-  x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<16; \
-  x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<7; \
-  x |= (p->vars[insn->src_args[0]].alloc&0xf)<<12; \
-  x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<22; \
-  x |= (p->vars[insn->src_args[1]].alloc&0xf)<<0; \
-  x |= ((p->vars[insn->src_args[1]].alloc>>4)&0x1)<<5; \
-  orc_arm_emit (p, x); \
+  orc_neon_emit_binary (p, insn_name, code, \
+      p->vars[insn->dest_args[0]].alloc, \
+      p->vars[insn->src_args[0]].alloc, \
+      p->vars[insn->src_args[1]].alloc); \
 }
 
 #define BINARY_LONG(opcode,insn_name,code) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  uint32_t x = code; \
-  ORC_ASM_CODE(p,"  " insn_name " %s, %s, %s\n", \
-      orc_neon_reg_name_quad (p->vars[insn->dest_args[0]].alloc), \
-      orc_neon_reg_name (p->vars[insn->src_args[0]].alloc), \
-      orc_neon_reg_name (p->vars[insn->src_args[1]].alloc)); \
-  x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<16; \
-  x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<7; \
-  x |= (p->vars[insn->src_args[0]].alloc&0xf)<<12; \
-  x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<22; \
-  x |= (p->vars[insn->src_args[1]].alloc&0xf)<<0; \
-  x |= ((p->vars[insn->src_args[1]].alloc>>4)&0x1)<<5; \
-  orc_arm_emit (p, x); \
+  orc_neon_emit_binary_long (p, insn_name, code, \
+      p->vars[insn->dest_args[0]].alloc, \
+      p->vars[insn->src_args[0]].alloc, \
+      p->vars[insn->src_args[1]].alloc); \
 }
 
 #define BINARY_NARROW(opcode,insn_name,code) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  uint32_t x = code; \
-  ORC_ASM_CODE(p,"  " insn_name " %s, %s, %s\n", \
-      orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc), \
-      orc_neon_reg_name_quad (p->vars[insn->src_args[0]].alloc), \
-      orc_neon_reg_name_quad (p->vars[insn->src_args[1]].alloc)); \
-  x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<16; \
-  x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<7; \
-  x |= (p->vars[insn->src_args[0]].alloc&0xf)<<12; \
-  x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<22; \
-  x |= (p->vars[insn->src_args[1]].alloc&0xf)<<0; \
-  x |= ((p->vars[insn->src_args[1]].alloc>>4)&0x1)<<5; \
-  orc_arm_emit (p, x); \
+  orc_neon_emit_binary_narrow (p, insn_name, code, \
+      p->vars[insn->dest_args[0]].alloc, \
+      p->vars[insn->src_args[0]].alloc, \
+      p->vars[insn->src_args[1]].alloc); \
 }
 
 #define MOVE(opcode,insn_name,code) \
@@ -670,61 +671,6 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
   orc_arm_emit (p, x); \
 }
 
-#if 0
-#define LSHIFT(opcode,insn_name,code) \
-static void \
-orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
-{ \
-  uint32_t x = code; \
-  if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) { \
-    ORC_ASM_CODE(p,"  " insn_name " %s, %s, #%d\n", \
-        orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc), \
-        orc_neon_reg_name (p->vars[insn->src_args[0]].alloc), \
-        p->vars[insn->src_args[1]].value); \
-    x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12; \
-    x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22; \
-    x |= (p->vars[insn->src_args[0]].alloc&0xf)<<0; \
-    x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5; \
-    x |= p->vars[insn->src_args[1]].value << 16; \
-    orc_arm_emit (p, x); \
-  } else { \
-    ORC_PROGRAM_ERROR(p,"shift rule only works with constants"); \
-  } \
-}
-
-#define RSHIFT(opcode,insn_name,code,n) \
-static void \
-orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
-{ \
-  uint32_t x = code; \
-  if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) { \
-    ORC_ASM_CODE(p,"  " insn_name " %s, %s, #%d\n", \
-        orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc), \
-        orc_neon_reg_name (p->vars[insn->src_args[0]].alloc), \
-        p->vars[insn->src_args[1]].value); \
-    x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12; \
-    x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22; \
-    x |= (p->vars[insn->src_args[0]].alloc&0xf)<<0; \
-    x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5; \
-    x |= ((n - p->vars[insn->src_args[1]].value)&(n-1))<<16; \
-    orc_arm_emit (p, x); \
-  } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) { \
-    ORC_ASM_CODE(p,"  " insn_name " %s, %s, %s\n", \
-        orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc), \
-        orc_neon_reg_name (p->vars[insn->src_args[0]].alloc), \
-        orc_neon_reg_name (p->vars[insn->src_args[1]].alloc)); \
-    x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12; \
-    x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22; \
-    x |= (p->vars[insn->src_args[0]].alloc&0xf)<<0; \
-    x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5; \
-    x |= (p->vars[insn->src_args[1]].alloc)<<16; \
-    x |= ((p->vars[insn->src_args[1]].alloc>>4))<<7; \
-    orc_arm_emit (p, x); \
-  } else { \
-    ORC_PROGRAM_ERROR(p,"shift rule only works with constants and params"); \
-  } \
-}
-#endif
 
 typedef struct {
   uint32_t code;
@@ -885,19 +831,11 @@ orc_neon_rule_shrsl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 orc_neon_rule_andn (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  uint32_t x = 0xf2100110;
   /* this is special because the operand order is reversed */
-  ORC_ASM_CODE(p,"  vbic %s, %s, %s\n",
-      orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
-      orc_neon_reg_name (p->vars[insn->src_args[1]].alloc),
-      orc_neon_reg_name (p->vars[insn->src_args[0]].alloc));
-  x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12;
-  x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22;
-  x |= (p->vars[insn->src_args[1]].alloc&0xf)<<16;
-  x |= ((p->vars[insn->src_args[1]].alloc>>4)&0x1)<<7;
-  x |= (p->vars[insn->src_args[0]].alloc&0xf)<<0;
-  x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5;
-  orc_arm_emit (p, x);
+  orc_neon_emit_binary (p, "vbic", 0xf2100110,
+      p->vars[insn->dest_args[0]].alloc,
+      p->vars[insn->src_args[1]].alloc,
+      p->vars[insn->src_args[0]].alloc);
 }
 
 
@@ -1024,74 +962,35 @@ orc_neon_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 orc_neon_rule_select1wb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  uint32_t x;
-  
-  x = 0xf3b00100;
-  ORC_ASM_CODE(p,"  vrev16.i8 %s, %s\n",
-      orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
-      orc_neon_reg_name (p->vars[insn->src_args[0]].alloc));
-  x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12;
-  x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22;
-  //x |= (p->vars[insn->src_args[0]].alloc&0xf)<<16;
-  //x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<7;
-  x |= (p->vars[insn->src_args[0]].alloc&0xf)<<0;
-  x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5;
-  orc_arm_emit (p, x);
-
-  x = 0xf3b20200;
-  ORC_ASM_CODE(p,"  vmovn.i16 %s, %s\n",
-      orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
-      orc_neon_reg_name_quad (p->vars[insn->src_args[0]].alloc));
-  x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12;
-  x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22;
-  //x |= (p->vars[insn->src_args[0]].alloc&0xf)<<16;
-  //x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<7;
-  x |= (p->vars[insn->src_args[0]].alloc&0xf)<<0;
-  x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5;
-  orc_arm_emit (p, x);
+  orc_neon_emit_unary (p, "vrev16.i8", 0xf3b00100,
+      p->vars[insn->dest_args[0]].alloc,
+      p->vars[insn->src_args[0]].alloc);
+  orc_neon_emit_unary_narrow (p, "vmovn.i16", 0xf3b20200,
+      p->vars[insn->dest_args[0]].alloc,
+      p->vars[insn->src_args[0]].alloc);
 }
 
 static void
 orc_neon_rule_select1lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  uint32_t x;
-  
-  x = 0xf3b40080;
-  ORC_ASM_CODE(p,"  vrev32.i16 %s, %s\n",
-      orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
-      orc_neon_reg_name (p->vars[insn->src_args[0]].alloc));
-  x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12;
-  x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22;
-  //x |= (p->vars[insn->src_args[1]].alloc&0xf)<<16;
-  //x |= ((p->vars[insn->src_args[1]].alloc>>4)&0x1)<<7;
-  x |= (p->vars[insn->src_args[0]].alloc&0xf)<<0;
-  x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5;
-  orc_arm_emit (p, x);
-
-  x = 0xf3b60200;
-  ORC_ASM_CODE(p,"  vmovn.i32 %s, %s\n",
-      orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
-      orc_neon_reg_name_quad (p->vars[insn->src_args[0]].alloc));
-  x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12;
-  x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22;
-  //x |= (p->vars[insn->src_args[0]].alloc&0xf)<<16;
-  //x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<7;
-  x |= (p->vars[insn->src_args[0]].alloc&0xf)<<0;
-  x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5;
-  orc_arm_emit (p, x);
+  orc_neon_emit_unary (p, "vrev32.i16", 0xf3b40080,
+      p->vars[insn->dest_args[0]].alloc,
+      p->vars[insn->src_args[0]].alloc);
+  orc_neon_emit_unary_narrow (p, "vmovn.i32", 0xf3b60200,
+      p->vars[insn->dest_args[0]].alloc,
+      p->vars[insn->src_args[0]].alloc);
 }
 
 static void
 orc_neon_rule_mergebw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
-    orc_neon_emit_mov (p, p->vars[insn->src_args[0]].alloc,
-        p->vars[insn->dest_args[0]].alloc);
+    orc_neon_emit_mov (p, p->vars[insn->dest_args[0]].alloc,
+        p->vars[insn->src_args[0]].alloc);
   }
 
   if (p->vars[insn->src_args[1]].last_use != p->insn_index) {
-    orc_neon_emit_mov (p, p->vars[insn->src_args[1]].alloc,
-        p->tmpreg);
+    orc_neon_emit_mov (p, p->tmpreg, p->vars[insn->src_args[1]].alloc);
     orc_neon_emit_unary (p, "vzip.8", 0xf3b20180,
         p->vars[insn->dest_args[0]].alloc,
         p->tmpreg);
@@ -1106,13 +1005,12 @@ static void
 orc_neon_rule_mergewl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
-    orc_neon_emit_mov (p, p->vars[insn->src_args[0]].alloc,
-        p->vars[insn->dest_args[0]].alloc);
+    orc_neon_emit_mov (p, p->vars[insn->dest_args[0]].alloc,
+        p->vars[insn->src_args[0]].alloc);
   }
 
   if (p->vars[insn->src_args[1]].last_use != p->insn_index) {
-    orc_neon_emit_mov (p, p->vars[insn->src_args[1]].alloc,
-        p->tmpreg);
+    orc_neon_emit_mov (p, p->tmpreg, p->vars[insn->src_args[1]].alloc);
     orc_neon_emit_unary (p, "vzip.16", 0xf3b60180,
         p->vars[insn->dest_args[0]].alloc,
         p->tmpreg);
@@ -1141,17 +1039,9 @@ orc_neon_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
   x |= ((p->vars[insn->src_args[1]].alloc>>4)&0x1)<<5;
   orc_arm_emit (p, x);
 
-  x = 0xf3b40680;
-  ORC_ASM_CODE(p,"  vpadal.u16 %s, %s\n",
-      orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
-      orc_neon_reg_name (p->tmpreg));
-  x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12;
-  x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22;
-  //x |= (p->vars[insn->src_args[0]].alloc&0xf)<<16;
-  //x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<7;
-  x |= (p->tmpreg&0xf)<<0;
-  x |= ((p->tmpreg>>4)&0x1)<<5;
-  orc_arm_emit (p, x);
+  orc_neon_emit_unary (p, "vpadal.u16", 0xf3b40680,
+      p->vars[insn->dest_args[0]].alloc,
+      p->tmpreg);
 }
 
 void

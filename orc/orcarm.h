@@ -94,7 +94,7 @@ void orc_arm_do_fixups (OrcCompiler *compiler);
 
 const char *orc_neon_reg_name (int reg);
 const char *orc_neon_reg_name_quad (int reg);
-void orc_neon_emit_mov (OrcCompiler *compiler, int src, int dest);
+void orc_neon_emit_mov (OrcCompiler *compiler, int dest, int src);
 
 void orc_arm_flush_cache (OrcCompiler *compiler);
 
