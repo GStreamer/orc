@@ -453,6 +453,7 @@ orc_neon_emit_loop (OrcCompiler *compiler)
   OrcRule *rule;
 
   for(j=0;j<compiler->n_insns;j++){
+    compiler->insn_index = j;
     insn = compiler->insns + j;
     opcode = insn->opcode;
 

@@ -348,6 +348,8 @@ struct _OrcCompiler {
   int tmpreg;
   int exec_reg;
   int gp_tmpreg;
+
+  int insn_index;
 };
 
 /**
