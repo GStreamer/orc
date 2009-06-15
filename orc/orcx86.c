@@ -596,6 +596,34 @@ orc_x86_emit_cmp_imm_memoffset (OrcCompiler *compiler, int size, int value,
 }
 
 void
+orc_x86_emit_test_imm_memoffset (OrcCompiler *compiler, int size, int value,
+    int offset, int reg)
+{
+  if (size == 2) {
+    ORC_ASM_CODE(compiler,"  testw $%d, %d(%%%s)\n", value, offset,
+        orc_x86_get_regname_ptr(compiler, reg));
+    *compiler->codeptr++ = 0x66;
+  } else if (size == 4) {
+    ORC_ASM_CODE(compiler,"  testl $%d, %d(%%%s)\n", value, offset,
+        orc_x86_get_regname_ptr(compiler, reg));
+  } else {
+    ORC_ASM_CODE(compiler,"  test $%d, %d(%%%s)\n", value, offset,
+        orc_x86_get_regname_ptr(compiler, reg));
+  }
+
+  orc_x86_emit_rex(compiler, size, 0, 0, reg);
+
+  *compiler->codeptr++ = 0xf7;
+  orc_x86_emit_modrm_memoffset (compiler, 0, offset, reg);
+  *compiler->codeptr++ = (value & 0xff);
+  *compiler->codeptr++ = ((value>>8) & 0xff);
+  if (size == 4) {
+    *compiler->codeptr++ = ((value>>16) & 0xff);
+    *compiler->codeptr++ = ((value>>24) & 0xff);
+  }
+}
+
+void
 orc_x86_emit_dec_memoffset (OrcCompiler *compiler, int size,
     int offset, int reg)
 {

@@ -50,6 +50,8 @@ void orc_x86_emit_cmp_reg_memoffset (OrcCompiler *compiler, int size, int reg1,
     int offset, int reg);
 void orc_x86_emit_cmp_imm_memoffset (OrcCompiler *compiler, int size, int value,
     int offset, int reg);
+void orc_x86_emit_test_imm_memoffset (OrcCompiler *compiler, int size, int value,
+    int offset, int reg);
 void orc_x86_emit_emms (OrcCompiler *compiler);
 void orc_x86_emit_ret (OrcCompiler *compiler);
 void orc_x86_emit_jle (OrcCompiler *compiler, int label);
