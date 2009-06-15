@@ -165,6 +165,7 @@ typedef enum {
 struct _OrcVariable {
   /*< private >*/
   char *name;
+  char *type_name;
 
   int size;
   OrcVarType vartype;
@@ -444,6 +445,7 @@ int orc_program_add_destination (OrcProgram *program, int size, const char *name
 int orc_program_add_constant (OrcProgram *program, int size, int value, const char *name);
 int orc_program_add_parameter (OrcProgram *program, int size, const char *name);
 int orc_program_add_accumulator (OrcProgram *program, int size, const char *name);
+void orc_program_set_type_name (OrcProgram *program, int var, const char *type_name);
 
 OrcExecutor * orc_executor_new (OrcProgram *program);
 void orc_executor_free (OrcExecutor *ex);
