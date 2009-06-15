@@ -112,18 +112,33 @@ orc_parse (const char *code, OrcProgram ***programs)
         parser->creg_index = 1;
       } else if (strcmp (token[0], ".source") == 0) {
         int size = strtol (token[1], NULL, 0);
-        orc_program_add_source (parser->program, size, token[2]);
+        int var;
+        var = orc_program_add_source (parser->program, size, token[2]);
+        if (n_tokens > 3) {
+          orc_program_set_type_name (parser->program, var, token[3]);
+        }
       } else if (strcmp (token[0], ".dest") == 0) {
         int size = strtol (token[1], NULL, 0);
-        orc_program_add_destination (parser->program, size, token[2]);
+        int var;
+        var = orc_program_add_destination (parser->program, size, token[2]);
+        if (n_tokens > 3) {
+          orc_program_set_type_name (parser->program, var, token[3]);
+        }
+      } else if (strcmp (token[0], ".accumulator") == 0) {
+        int size = strtol (token[1], NULL, 0);
+        int var;
+        var = orc_program_add_accumulator (parser->program, size, token[2]);
+        if (n_tokens > 3) {
+          orc_program_set_type_name (parser->program, var, token[3]);
+        }
       } else if (strcmp (token[0], ".temp") == 0) {
         int size = strtol (token[1], NULL, 0);
         orc_program_add_temporary (parser->program, size, token[2]);
       } else if (strcmp (token[0], ".param") == 0) {
-        int size = 2;
-        orc_program_add_parameter (parser->program, size, token[1]);
+        int size = strtol (token[1], NULL, 0);
+        orc_program_add_parameter (parser->program, size, token[2]);
       } else {
-        //printf("ERROR: unknown directive: %s\n", token[0]);
+        ORC_ERROR("ERROR: unknown directive: %s", token[0]);
       }
     } else {
       OrcStaticOpcode *o;
