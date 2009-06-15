@@ -525,13 +525,14 @@ OrcTestResult
 orc_test_compare_output (OrcProgram *program)
 {
   OrcExecutor *ex;
-  int n = 64;
-  int dest_index;
-  void *dest_exec;
-  void *dest_emul;
-  void *ptr_exec;
-  void *ptr_emul;
+  int n = 64 + (random()&0xf);
+  void *dest_exec[4] = { NULL, NULL, NULL, NULL };
+  void *dest_emul[4] = { NULL, NULL, NULL, NULL };
+  void *ptr_exec[4];
+  void *ptr_emul[4];
   int i;
+  int k;
+  int have_dest = FALSE;
   OrcCompileResult result;
 
   result = orc_program_compile (program);
@@ -542,7 +543,6 @@ orc_test_compare_output (OrcProgram *program)
   ex = orc_executor_new (program);
   orc_executor_set_n (ex, n);
 
-  dest_index = -1;
   for(i=0;i<ORC_N_VARIABLES;i++){
     if (program->vars[i].name == NULL) continue;
 
@@ -552,64 +552,73 @@ orc_test_compare_output (OrcProgram *program)
       orc_test_random_bits (data, n*program->vars[i].size);
       orc_executor_set_array (ex, i, data);
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
-      dest_index = i;
+      dest_exec[i] = alloc_array (n, program->vars[i].size, &ptr_exec[i]);
+      dest_emul[i] = alloc_array (n, program->vars[i].size, &ptr_emul[i]);
+      memset (dest_exec[i], 0xa5, n*program->vars[i].size);
+      memset (dest_emul[i], 0xa5, n*program->vars[i].size);
+
+      orc_executor_set_array (ex, i, dest_exec[i]);
+      have_dest = TRUE;
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_PARAM) {
       orc_executor_set_param (ex, i, 2);
     }
   }
-  if (dest_index == -1) {
-    return FALSE;
+  if (!have_dest) {
+    return ORC_TEST_INDETERMINATE;
   }
 
-  dest_exec = alloc_array (n, program->vars[dest_index].size, &ptr_exec);
-  dest_emul = alloc_array (n, program->vars[dest_index].size, &ptr_emul);
-  memset (dest_exec, 0xa5, n*program->vars[dest_index].size);
-  memset (dest_emul, 0xa5, n*program->vars[dest_index].size);
-
-  orc_executor_set_array (ex, dest_index, dest_exec);
   orc_executor_run (ex);
 
-  orc_executor_set_array (ex, dest_index, dest_emul);
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
+      orc_executor_set_array (ex, i, dest_emul[i]);
+    }
+  }
   orc_executor_emulate (ex);
 
-  if (memcmp (dest_exec, dest_emul, n*program->vars[dest_index].size) != 0) {
-    for(i=0;i<n;i++){
-      int a,b;
-      int j;
+  for(k=0;k<ORC_N_VARIABLES;k++){
+    if (program->vars[k].vartype == ORC_VAR_TYPE_DEST) {
+      if (memcmp (dest_exec[k], dest_emul[k], n*program->vars[k].size) != 0) {
+        for(i=0;i<n;i++){
+          int a,b;
+          int j;
 
-      printf("%2d:", i);
+          printf("%2d:", i);
 
-      for(j=0;j<ORC_N_VARIABLES;j++){
-        if (program->vars[j].name == NULL) continue;
-        if (program->vars[j].vartype == ORC_VAR_TYPE_SRC &&
-            program->vars[j].size > 0) {
-          print_array_val_signed (ex->arrays[j], program->vars[j].size, i);
+          for(j=0;j<ORC_N_VARIABLES;j++){
+            if (program->vars[j].name == NULL) continue;
+            if (program->vars[j].vartype == ORC_VAR_TYPE_SRC &&
+                program->vars[j].size > 0) {
+              print_array_val_signed (ex->arrays[j], program->vars[j].size, i);
+            }
+          }
+
+          printf(" ->");
+          a = print_array_val_signed (dest_emul[k], program->vars[k].size, i);
+          b = print_array_val_signed (dest_exec[k], program->vars[k].size, i);
+
+          if (a != b) {
+            printf(" *");
+          }
+
+          printf("\n");
         }
+
+        printf("%s", orc_program_get_asm_code (program));
+
+        return FALSE;
+      }
+      if (!check_bounds (dest_exec[k], n, program->vars[k].size)) {
+        printf("out of bounds failure\n");
+
+        return FALSE;
       }
 
-      printf(" ->");
-      a = print_array_val_signed (dest_emul, program->vars[dest_index].size, i);
-      b = print_array_val_signed (dest_exec, program->vars[dest_index].size, i);
-
-      if (a != b) {
-        printf(" *");
-      }
-
-      printf("\n");
+      free (ptr_exec[k]);
+      free (ptr_emul[k]);
     }
-
-    printf("%s", orc_program_get_asm_code (program));
-
-    return FALSE;
-  }
-  if (!check_bounds (dest_exec, n, program->vars[dest_index].size)) {
-    printf("out of bounds failure\n");
-
-    return FALSE;
   }
 
-  free (ptr_exec);
-  free (ptr_emul);
   orc_executor_free (ex);
 
   return TRUE;
