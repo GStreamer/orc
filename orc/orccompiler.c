@@ -144,7 +144,7 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   int i;
   OrcCompileResult result;
 
-  ORC_INFO("initializing compiler");
+  ORC_INFO("initializing compiler for program \"%s\"", program->name);
   compiler = malloc (sizeof(OrcCompiler));
   memset (compiler, 0, sizeof(OrcCompiler));
 
@@ -254,7 +254,8 @@ orc_compiler_check_sizes (OrcCompiler *compiler)
     for(j=0;j<ORC_STATIC_OPCODE_N_SRC;j++){
       if (opcode->src_size[j] == 0) continue;
       if (opcode->src_size[j] != compiler->vars[insn->src_args[j]].size &&
-          compiler->vars[insn->src_args[j]].vartype != ORC_VAR_TYPE_PARAM) {
+          compiler->vars[insn->src_args[j]].vartype != ORC_VAR_TYPE_PARAM &&
+          compiler->vars[insn->src_args[j]].vartype != ORC_VAR_TYPE_CONST) {
         ORC_COMPILER_ERROR(compiler, "size mismatch, opcode %s src[%d] is %d should be %d",
             opcode->name, j, compiler->vars[insn->src_args[j]].size,
             opcode->src_size[j]);
