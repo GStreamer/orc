@@ -519,6 +519,7 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
 
   mmx_save_accumulators (compiler);
 
+  orc_x86_emit_emms (compiler);
   orc_x86_emit_epilogue (compiler);
 
   orc_x86_do_fixups (compiler);
