@@ -237,7 +237,7 @@ orc_neon_load_alignment_masks (OrcCompiler *compiler)
 
         for(j=0;j<8;j++){
           ORC_ASM_CODE(compiler,"  vmov.8 %s[%d], %s\n",
-              orc_neon_reg_name (compiler->tmpreg), j,
+              orc_neon_reg_name (var->mask_alloc), j,
               orc_arm_reg_name (compiler->gp_tmpreg));
           code = 0xee400b10;
           code |= (compiler->tmpreg&0xf)<<16;
