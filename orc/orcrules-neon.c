@@ -247,32 +247,69 @@ orc_neon_loadb (OrcCompiler *compiler, OrcVariable *var, int update)
 }
 
 void
-orc_neon_loadw (OrcCompiler *compiler, int dest, int src1, int update, int is_aligned)
+orc_neon_loadw (OrcCompiler *compiler, OrcVariable *var, int update)
 {
   uint32_t code;
   int i;
 
-  if (is_aligned && compiler->loop_shift == 2) {
+  if (var->is_aligned && compiler->loop_shift == 2) {
     ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]%s\n",
-        orc_neon_reg_name (dest),
-        orc_arm_reg_name (src1),
+        orc_neon_reg_name (var->alloc),
+        orc_arm_reg_name (var->ptr_register),
         update ? "!" : "");
     code = 0xf42007cd;
-    code |= (src1&0xf) << 16;
-    code |= (dest&0xf) << 12;
-    code |= ((dest>>4)&0x1) << 22;
+    code |= (var->ptr_register&0xf) << 16;
+    code |= (var->alloc&0xf) << 12;
+    code |= ((var->alloc>>4)&0x1) << 22;
     code |= (!update) << 1;
     orc_arm_emit (compiler, code);
+  } else if (compiler->loop_shift == 2) {
+    orc_arm_emit_sub (compiler, var->ptr_register, var->ptr_register,
+        var->ptr_offset);
+
+    ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]%s\n",
+        orc_neon_reg_name (var->alloc),
+        orc_arm_reg_name (var->ptr_register),
+        update ? "!" : "");
+    code = 0xf42007cd;
+    code |= (var->ptr_register&0xf) << 16;
+    code |= (var->alloc&0xf) << 12;
+    code |= ((var->alloc>>4)&0x1) << 22;
+    code |= (!update) << 1;
+    orc_arm_emit (compiler, code);
+
+    update = 0;
+    ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]%s\n",
+        orc_neon_reg_name (var->alloc + 1),
+        orc_arm_reg_name (var->ptr_register),
+        update ? "!" : "");
+    code = 0xf42007cd;
+    code |= (var->ptr_register&0xf) << 16;
+    code |= ((var->alloc+1)&0xf) << 12;
+    code |= (((var->alloc+1)>>4)&0x1) << 22;
+    code |= (!update) << 1;
+    orc_arm_emit (compiler, code);
+
+    ORC_ASM_CODE(compiler,"  vtbl.8 %s, {%s,%s}, %s\n",
+        orc_neon_reg_name (var->alloc),
+        orc_neon_reg_name (var->alloc),
+        orc_neon_reg_name (var->alloc + 1),
+        orc_neon_reg_name (var->mask_alloc));
+    code = NEON_BINARY(0xf3b00900, var->alloc, var->alloc, var->mask_alloc);
+    orc_arm_emit (compiler, code);
+
+    orc_arm_emit_add (compiler, var->ptr_register, var->ptr_register,
+        var->ptr_offset);
   } else {
     for(i=0;i<(1<<compiler->loop_shift);i++){
       ORC_ASM_CODE(compiler,"  vld1.16 %s[%d], [%s]%s\n",
-          orc_neon_reg_name (dest), i,
-          orc_arm_reg_name (src1),
+          orc_neon_reg_name (var->alloc), i,
+          orc_arm_reg_name (var->ptr_register),
           update ? "!" : "");
       code = 0xf4a0040d;
-      code |= (src1&0xf) << 16;
-      code |= (dest&0xf) << 12;
-      code |= ((dest>>4)&0x1) << 22;
+      code |= (var->ptr_register&0xf) << 16;
+      code |= (var->alloc&0xf) << 12;
+      code |= ((var->alloc>>4)&0x1) << 22;
       code |= i << 6;
       code |= (!update) << 1;
       orc_arm_emit (compiler, code);
@@ -281,32 +318,69 @@ orc_neon_loadw (OrcCompiler *compiler, int dest, int src1, int update, int is_al
 }
 
 void
-orc_neon_loadl (OrcCompiler *compiler, int dest, int src1, int update, int is_aligned)
+orc_neon_loadl (OrcCompiler *compiler, OrcVariable *var, int update)
 {
   uint32_t code;
   int i;
 
-  if (is_aligned && compiler->loop_shift == 1) {
+  if (var->is_aligned && compiler->loop_shift == 1) {
     ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]%s\n",
-        orc_neon_reg_name (dest),
-        orc_arm_reg_name (src1),
+        orc_neon_reg_name (var->alloc),
+        orc_arm_reg_name (var->ptr_register),
         update ? "!" : "");
     code = 0xf42007cd;
-    code |= (src1&0xf) << 16;
-    code |= (dest&0xf) << 12;
-    code |= ((dest>>4)&0x1) << 22;
+    code |= (var->ptr_register&0xf) << 16;
+    code |= (var->alloc&0xf) << 12;
+    code |= ((var->alloc>>4)&0x1) << 22;
     code |= (!update) << 1;
     orc_arm_emit (compiler, code);
+  } else if (compiler->loop_shift == 1) {
+    orc_arm_emit_sub (compiler, var->ptr_register, var->ptr_register,
+        var->ptr_offset);
+
+    ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]%s\n",
+        orc_neon_reg_name (var->alloc),
+        orc_arm_reg_name (var->ptr_register),
+        update ? "!" : "");
+    code = 0xf42007cd;
+    code |= (var->ptr_register&0xf) << 16;
+    code |= (var->alloc&0xf) << 12;
+    code |= ((var->alloc>>4)&0x1) << 22;
+    code |= (!update) << 1;
+    orc_arm_emit (compiler, code);
+
+    update = 0;
+    ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]%s\n",
+        orc_neon_reg_name (var->alloc + 1),
+        orc_arm_reg_name (var->ptr_register),
+        update ? "!" : "");
+    code = 0xf42007cd;
+    code |= (var->ptr_register&0xf) << 16;
+    code |= ((var->alloc+1)&0xf) << 12;
+    code |= (((var->alloc+1)>>4)&0x1) << 22;
+    code |= (!update) << 1;
+    orc_arm_emit (compiler, code);
+
+    ORC_ASM_CODE(compiler,"  vtbl.8 %s, {%s,%s}, %s\n",
+        orc_neon_reg_name (var->alloc),
+        orc_neon_reg_name (var->alloc),
+        orc_neon_reg_name (var->alloc + 1),
+        orc_neon_reg_name (var->mask_alloc));
+    code = NEON_BINARY(0xf3b00900, var->alloc, var->alloc, var->mask_alloc);
+    orc_arm_emit (compiler, code);
+
+    orc_arm_emit_add (compiler, var->ptr_register, var->ptr_register,
+        var->ptr_offset);
   } else {
     for(i=0;i<(1<<compiler->loop_shift);i++){
       ORC_ASM_CODE(compiler,"  vld1.32 %s[%d], [%s]%s\n",
-          orc_neon_reg_name (dest), i,
-          orc_arm_reg_name (src1),
+          orc_neon_reg_name (var->alloc), i,
+          orc_arm_reg_name (var->ptr_register),
           update ? "!" : "");
       code = 0xf4a0080d;
-      code |= (src1&0xf) << 16;
-      code |= (dest&0xf) << 12;
-      code |= ((dest>>4)&0x1) << 22;
+      code |= (var->ptr_register&0xf) << 16;
+      code |= (var->alloc&0xf) << 12;
+      code |= ((var->alloc>>4)&0x1) << 22;
       code |= i<<7;
       code |= (!update) << 1;
       orc_arm_emit (compiler, code);

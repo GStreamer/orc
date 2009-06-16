@@ -328,10 +328,10 @@ orc_neon_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
       orc_neon_loadb (compiler, var, update);
       break;
     case 2:
-      orc_neon_loadw (compiler, var->alloc, ptr_reg, update, var->is_aligned);
+      orc_neon_loadw (compiler, var, update);
       break;
     case 4:
-      orc_neon_loadl (compiler, var->alloc, ptr_reg, update, var->is_aligned);
+      orc_neon_loadl (compiler, var, update);
       break;
     case 8:
       orc_neon_loadq (compiler, var->alloc, ptr_reg, update, var->is_aligned);

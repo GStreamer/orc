@@ -6,8 +6,8 @@
 #include <orc/orcarm.h>
 
 void orc_neon_loadb (OrcCompiler *compiler, OrcVariable *var, int update);
-void orc_neon_loadw (OrcCompiler *compiler, int dest, int src1, int update, int is_aligned);
-void orc_neon_loadl (OrcCompiler *compiler, int dest, int src1, int update, int is_aligned);
+void orc_neon_loadw (OrcCompiler *compiler, OrcVariable *var, int update);
+void orc_neon_loadl (OrcCompiler *compiler, OrcVariable *var, int update);
 void orc_neon_loadq (OrcCompiler *compiler, int dest, int src1, int update, int is_aligned);
 void orc_neon_neg (OrcCompiler *compiler, int dest);
 void orc_neon_storeb (OrcCompiler *compiler, int dest, int update, int src1, int is_aligned);
