@@ -215,6 +215,7 @@ orc_neon_loadb (OrcCompiler *compiler, OrcVariable *var, int update)
     code |= (!update) << 1;
     orc_arm_emit (compiler, code);
 
+#if 0
     ORC_ASM_CODE(compiler,"  vtbl.8 %s, {%s,%s}, %s\n",
         orc_neon_reg_name (var->alloc),
         orc_neon_reg_name (var->alloc),
@@ -226,6 +227,7 @@ orc_neon_loadb (OrcCompiler *compiler, OrcVariable *var, int update)
     //code |= (var->alloc&0xf) << 12;
     //code |= ((var->alloc>>4)&0x1) << 22;
     orc_arm_emit (compiler, code);
+#endif
 
     orc_arm_emit_add (compiler, var->ptr_register, var->ptr_register,
         var->ptr_offset);
@@ -708,17 +710,19 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  uint32_t x = code; \
-  ORC_ASM_CODE(p,"  " insn_name " %s, %s\n", \
-      orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc), \
-      orc_neon_reg_name (p->vars[insn->src_args[0]].alloc)); \
-  x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<16; \
-  x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<7; \
-  x |= (p->vars[insn->src_args[0]].alloc&0xf)<<12; \
-  x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<22; \
-  x |= (p->vars[insn->src_args[0]].alloc&0xf)<<0; \
-  x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5; \
-  orc_arm_emit (p, x); \
+  if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) { \
+    uint32_t x = code; \
+    ORC_ASM_CODE(p,"  " insn_name " %s, %s\n", \
+        orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc), \
+        orc_neon_reg_name (p->vars[insn->src_args[0]].alloc)); \
+    x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<16; \
+    x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<7; \
+    x |= (p->vars[insn->src_args[0]].alloc&0xf)<<12; \
+    x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<22; \
+    x |= (p->vars[insn->src_args[0]].alloc&0xf)<<0; \
+    x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5; \
+    orc_arm_emit (p, x); \
+  } \
 }
 
 
