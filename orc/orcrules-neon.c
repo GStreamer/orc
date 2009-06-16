@@ -120,6 +120,25 @@ orc_neon_emit_binary_narrow (OrcCompiler *p, const char *name, unsigned int code
 #endif
 
 static void
+orc_neon_emit_binary_quad (OrcCompiler *p, const char *name, unsigned int code,
+    int dest, int src1, int src2)
+{
+  ORC_ASSERT((code & 0x004ff0af) == 0);
+
+  ORC_ASM_CODE(p,"  %s %s, %s, %s\n", name,
+      orc_neon_reg_name_quad (dest), orc_neon_reg_name_quad (src1),
+      orc_neon_reg_name_quad (src2));
+  code |= (dest&0xf)<<12;
+  code |= ((dest>>4)&0x1)<<22;
+  code |= (src1&0xf)<<16;
+  code |= ((src1>>4)&0x1)<<7;
+  code |= (src2&0xf)<<0;
+  code |= ((src2>>4)&0x1)<<5;
+  code |= 0x40;
+  orc_arm_emit (p, code);
+}
+
+static void
 orc_neon_emit_unary (OrcCompiler *p, const char *name, unsigned int code,
     int dest, int src1)
 {
@@ -161,6 +180,22 @@ orc_neon_emit_unary_narrow (OrcCompiler *p, const char *name, unsigned int code,
   code |= ((dest>>4)&0x1)<<22;
   code |= (src1&0xf)<<0;
   code |= ((src1>>4)&0x1)<<5;
+  orc_arm_emit (p, code);
+}
+
+static void
+orc_neon_emit_unary_quad (OrcCompiler *p, const char *name, unsigned int code,
+    int dest, int src1)
+{
+  ORC_ASSERT((code & 0x0040f02f) == 0);
+
+  ORC_ASM_CODE(p,"  %s %s, %s\n", name,
+      orc_neon_reg_name_quad (dest), orc_neon_reg_name_quad (src1));
+  code |= (dest&0xf)<<12;
+  code |= ((dest>>4)&0x1)<<22;
+  code |= (src1&0xf)<<0;
+  code |= ((src1>>4)&0x1)<<5;
+  code |= 0x40;
   orc_arm_emit (p, code);
 }
 
@@ -291,14 +326,12 @@ orc_neon_loadb (OrcCompiler *compiler, OrcVariable *var, int update)
   } else {
     for(i=0;i<(1<<compiler->loop_shift);i++){
       ORC_ASM_CODE(compiler,"  vld1.8 %s[%d], [%s]%s\n",
-          orc_neon_reg_name (var->alloc), i,
+          orc_neon_reg_name (var->alloc + (i>>3)), i&7,
           orc_arm_reg_name (var->ptr_register),
           update ? "!" : "");
-      code = NEON_BINARY(0xf4a0000d, var->alloc, var->ptr_register, 0);
-      //code |= (src1&0xf) << 16;
-      //code |= (var->alloc&0xf) << 12;
-      //code |= ((var->alloc>>4)&0x1) << 22;
-      code |= i << 5;
+      code = NEON_BINARY(0xf4a0000d, var->alloc + (i>>3),
+          var->ptr_register, 0);
+      code |= (i&7) << 5;
       code |= (!update) << 1;
       orc_arm_emit (compiler, code);
     }
@@ -318,14 +351,12 @@ orc_neon_loadw (OrcCompiler *compiler, OrcVariable *var, int update)
   } else {
     for(i=0;i<(1<<compiler->loop_shift);i++){
       ORC_ASM_CODE(compiler,"  vld1.16 %s[%d], [%s]%s\n",
-          orc_neon_reg_name (var->alloc), i,
+          orc_neon_reg_name (var->alloc + (i>>2)), i&3,
           orc_arm_reg_name (var->ptr_register),
           update ? "!" : "");
-      code = 0xf4a0040d;
-      code |= (var->ptr_register&0xf) << 16;
-      code |= (var->alloc&0xf) << 12;
-      code |= ((var->alloc>>4)&0x1) << 22;
-      code |= i << 6;
+      code = NEON_BINARY(0xf4a0040d, var->alloc + (i>>2),
+          var->ptr_register, 0);
+      code |= (i&3) << 6;
       code |= (!update) << 1;
       orc_arm_emit (compiler, code);
     }
@@ -343,14 +374,12 @@ orc_neon_loadl (OrcCompiler *compiler, OrcVariable *var, int update)
   } else {
     for(i=0;i<(1<<compiler->loop_shift);i++){
       ORC_ASM_CODE(compiler,"  vld1.32 %s[%d], [%s]%s\n",
-          orc_neon_reg_name (var->alloc), i,
+          orc_neon_reg_name (var->alloc + (i>>1)), i & 1,
           orc_arm_reg_name (var->ptr_register),
           update ? "!" : "");
-      code = 0xf4a0080d;
-      code |= (var->ptr_register&0xf) << 16;
-      code |= (var->alloc&0xf) << 12;
-      code |= ((var->alloc>>4)&0x1) << 22;
-      code |= i<<7;
+      code = NEON_BINARY(0xf4a0080d, var->alloc + (i>>1),
+          var->ptr_register, 0);
+      code |= (i&1)<<7;
       code |= (!update) << 1;
       orc_arm_emit (compiler, code);
     }
@@ -400,14 +429,14 @@ orc_neon_storeb (OrcCompiler *compiler, int dest, int update, int src1, int is_a
   } else {
     for(i=0;i<(1<<compiler->loop_shift);i++){
       ORC_ASM_CODE(compiler,"  vst1.8 %s[%d], [%s]%s\n",
-          orc_neon_reg_name (src1), i,
+          orc_neon_reg_name (src1 + (i>>3)), i&7,
           orc_arm_reg_name (dest),
           update ? "!" : "");
       code = 0xf480000d;
       code |= (dest&0xf) << 16;
-      code |= (src1&0xf) << 12;
+      code |= ((src1 + (i>>3))&0xf) << 12;
       code |= ((src1>>4)&0x1) << 22;
-      code |= i<<5;
+      code |= (i&7)<<5;
       code |= (!update) << 1;
       orc_arm_emit (compiler, code);
     }
@@ -434,14 +463,14 @@ orc_neon_storew (OrcCompiler *compiler, int dest, int update, int src1, int is_a
   } else {
     for(i=0;i<(1<<compiler->loop_shift);i++){
       ORC_ASM_CODE(compiler,"  vst1.16 %s[%d], [%s]%s\n",
-          orc_neon_reg_name (src1), i,
+          orc_neon_reg_name (src1 + (i>>2)), i&3,
           orc_arm_reg_name (dest),
           update ? "!" : "");
       code = 0xf480040d;
       code |= (dest&0xf) << 16;
-      code |= (src1&0xf) << 12;
+      code |= ((src1 + (i>>2))&0xf) << 12;
       code |= ((src1>>4)&0x1) << 22;
-      code |= i<<6;
+      code |= (i&3)<<6;
       code |= (!update) << 1;
       orc_arm_emit (compiler, code);
     }
@@ -468,14 +497,14 @@ orc_neon_storel (OrcCompiler *compiler, int dest, int update, int src1, int is_a
   } else {
     for(i=0;i<(1<<compiler->loop_shift);i++){
       ORC_ASM_CODE(compiler,"  vst1.32 %s[%d], [%s]%s\n",
-          orc_neon_reg_name (src1), i,
+          orc_neon_reg_name (src1 + (i>>1)), i&1,
           orc_arm_reg_name (dest),
           update ? "!" : "");
       code = 0xf480080d;
       code |= (dest&0xf) << 16;
-      code |= (src1&0xf) << 12;
+      code |= ((src1 + (i>>1))&0xf) << 12;
       code |= ((src1>>4)&0x1) << 22;
-      code |= i<<7;
+      code |= (i&1)<<7;
       code |= (!update) << 1;
       orc_arm_emit (compiler, code);
     }
@@ -690,68 +719,104 @@ orc_neon_emit_loadpl (OrcCompiler *compiler, int dest, int param)
   orc_arm_emit (compiler, code);
 }
 
-#define UNARY(opcode,insn_name,code) \
+#define UNARY(opcode,insn_name,code,vec_shift) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  orc_neon_emit_unary (p, insn_name, code, \
-      p->vars[insn->dest_args[0]].alloc, \
-      p->vars[insn->src_args[0]].alloc); \
+  if (p->loop_shift <= vec_shift) { \
+    orc_neon_emit_unary (p, insn_name, code, \
+        p->vars[insn->dest_args[0]].alloc, \
+        p->vars[insn->src_args[0]].alloc); \
+  } else if (p->loop_shift == vec_shift + 1) { \
+    orc_neon_emit_unary_quad (p, insn_name, code, \
+        p->vars[insn->dest_args[0]].alloc, \
+        p->vars[insn->src_args[0]].alloc); \
+  } else { \
+    ORC_COMPILER_ERROR(p, "shift too large"); \
+  } \
 }
 
-#define UNARY_LONG(opcode,insn_name,code) \
+#define UNARY_LONG(opcode,insn_name,code,vec_shift) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  orc_neon_emit_unary_long (p, insn_name, code, \
-      p->vars[insn->dest_args[0]].alloc, \
-      p->vars[insn->src_args[0]].alloc); \
+  if (p->loop_shift <= vec_shift) { \
+    orc_neon_emit_unary_long (p, insn_name, code, \
+        p->vars[insn->dest_args[0]].alloc, \
+        p->vars[insn->src_args[0]].alloc); \
+  } else { \
+    ORC_COMPILER_ERROR(p, "shift too large"); \
+  } \
 }
 
-#define UNARY_NARROW(opcode,insn_name,code) \
+#define UNARY_NARROW(opcode,insn_name,code,vec_shift) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  orc_neon_emit_unary_narrow (p, insn_name, code, \
-      p->vars[insn->dest_args[0]].alloc, \
-      p->vars[insn->src_args[0]].alloc); \
+  if (p->loop_shift <= vec_shift) { \
+    orc_neon_emit_unary_narrow (p, insn_name, code, \
+        p->vars[insn->dest_args[0]].alloc, \
+        p->vars[insn->src_args[0]].alloc); \
+  } else { \
+    ORC_COMPILER_ERROR(p, "shift too large"); \
+  } \
 }
 
-#define BINARY(opcode,insn_name,code) \
+#define BINARY(opcode,insn_name,code,vec_shift) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  orc_neon_emit_binary (p, insn_name, code, \
-      p->vars[insn->dest_args[0]].alloc, \
-      p->vars[insn->src_args[0]].alloc, \
-      p->vars[insn->src_args[1]].alloc); \
+  if (p->loop_shift <= vec_shift) { \
+    orc_neon_emit_binary (p, insn_name, code, \
+        p->vars[insn->dest_args[0]].alloc, \
+        p->vars[insn->src_args[0]].alloc, \
+        p->vars[insn->src_args[1]].alloc); \
+  } else if (p->loop_shift == vec_shift + 1) { \
+    orc_neon_emit_binary_quad (p, insn_name, code, \
+        p->vars[insn->dest_args[0]].alloc, \
+        p->vars[insn->src_args[0]].alloc, \
+        p->vars[insn->src_args[1]].alloc); \
+  } else { \
+    ORC_COMPILER_ERROR(p, "shift too large"); \
+  } \
 }
 
-#define BINARY_LONG(opcode,insn_name,code) \
+#define BINARY_LONG(opcode,insn_name,code,vec_shift) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
+  if (p->loop_shift <= vec_shift) { \
   orc_neon_emit_binary_long (p, insn_name, code, \
       p->vars[insn->dest_args[0]].alloc, \
       p->vars[insn->src_args[0]].alloc, \
       p->vars[insn->src_args[1]].alloc); \
+  } else { \
+    ORC_COMPILER_ERROR(p, "shift too large"); \
+  } \
 }
 
-#define BINARY_NARROW(opcode,insn_name,code) \
+#define BINARY_NARROW(opcode,insn_name,code,vec_shift) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
+  if (p->loop_shift <= vec_shift) { \
   orc_neon_emit_binary_narrow (p, insn_name, code, \
       p->vars[insn->dest_args[0]].alloc, \
       p->vars[insn->src_args[0]].alloc, \
       p->vars[insn->src_args[1]].alloc); \
+  } else { \
+    ORC_COMPILER_ERROR(p, "shift too large"); \
+  } \
 }
 
-#define MOVE(opcode,insn_name,code) \
+#define MOVE(opcode,insn_name,code,vec_shift) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) { \
+  if (p->vars[insn->dest_args[0]].alloc == p->vars[insn->src_args[0]].alloc) { \
+    return; \
+  } \
+  if (p->loop_shift <= vec_shift) { \
     uint32_t x = code; \
     ORC_ASM_CODE(p,"  " insn_name " %s, %s\n", \
         orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc), \
@@ -760,6 +825,17 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
         p->vars[insn->src_args[0]].alloc, \
         p->vars[insn->src_args[0]].alloc); \
     orc_arm_emit (p, x); \
+  } else if (p->loop_shift == vec_shift + 1) { \
+    uint32_t x = code; \
+    ORC_ASM_CODE(p,"  " insn_name " %s, %s\n", \
+        orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc), \
+        orc_neon_reg_name (p->vars[insn->src_args[0]].alloc)); \
+    x = NEON_BINARY(code, p->vars[insn->dest_args[0]].alloc, \
+        p->vars[insn->src_args[0]].alloc, \
+        p->vars[insn->src_args[0]].alloc); \
+    orc_arm_emit (p, x); \
+  } else { \
+    ORC_COMPILER_ERROR(p, "shift too large"); \
   } \
 }
 
@@ -931,104 +1007,104 @@ orc_neon_rule_andn (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 
-UNARY(absb,"vabs.s8",0xf3b10300)
-BINARY(addb,"vadd.i8",0xf2000800)
-BINARY(addssb,"vqadd.s8",0xf2000010)
-BINARY(addusb,"vqadd.u8",0xf3000010)
-BINARY(andb,"vand",0xf2000110)
-//BINARY(andnb,"vbic",0xf2100110)
-BINARY(avgsb,"vrhadd.s8",0xf2000100)
-BINARY(avgub,"vrhadd.u8",0xf3000100)
-BINARY(cmpeqb,"vceq.i8",0xf3000810)
-BINARY(cmpgtsb,"vcgt.s8",0xf2000300)
-MOVE(copyb,"vmov",0xf2200110)
-BINARY(maxsb,"vmax.s8",0xf2000600)
-BINARY(maxub,"vmax.u8",0xf3000600)
-BINARY(minsb,"vmin.s8",0xf2000610)
-BINARY(minub,"vmin.u8",0xf3000610)
-BINARY(mullb,"vmul.i8",0xf2000910)
-BINARY(orb,"vorr",0xf2200110)
-//LSHIFT(shlb,"vshl.i8",0xf2880510)
-//RSHIFT(shrsb,"vshr.s8",0xf2880010,8)
-//RSHIFT(shrub,"vshr.u8",0xf3880010,8)
-BINARY(subb,"vsub.i8",0xf3000800)
-BINARY(subssb,"vqsub.s8",0xf2000210)
-BINARY(subusb,"vqsub.u8",0xf3000210)
-BINARY(xorb,"veor",0xf3000110)
+UNARY(absb,"vabs.s8",0xf3b10300, 3)
+BINARY(addb,"vadd.i8",0xf2000800, 3)
+BINARY(addssb,"vqadd.s8",0xf2000010, 3)
+BINARY(addusb,"vqadd.u8",0xf3000010, 3)
+BINARY(andb,"vand",0xf2000110, 3)
+//BINARY(andnb,"vbic",0xf2100110, 3)
+BINARY(avgsb,"vrhadd.s8",0xf2000100, 3)
+BINARY(avgub,"vrhadd.u8",0xf3000100, 3)
+BINARY(cmpeqb,"vceq.i8",0xf3000810, 3)
+BINARY(cmpgtsb,"vcgt.s8",0xf2000300, 3)
+MOVE(copyb,"vmov",0xf2200110, 3)
+BINARY(maxsb,"vmax.s8",0xf2000600, 3)
+BINARY(maxub,"vmax.u8",0xf3000600, 3)
+BINARY(minsb,"vmin.s8",0xf2000610, 3)
+BINARY(minub,"vmin.u8",0xf3000610, 3)
+BINARY(mullb,"vmul.i8",0xf2000910, 3)
+BINARY(orb,"vorr",0xf2200110, 3)
+//LSHIFT(shlb,"vshl.i8",0xf2880510, 3)
+//RSHIFT(shrsb,"vshr.s8",0xf2880010,8, 3)
+//RSHIFT(shrub,"vshr.u8",0xf3880010,8, 3)
+BINARY(subb,"vsub.i8",0xf3000800, 3)
+BINARY(subssb,"vqsub.s8",0xf2000210, 3)
+BINARY(subusb,"vqsub.u8",0xf3000210, 3)
+BINARY(xorb,"veor",0xf3000110, 3)
 
-UNARY(absw,"vabs.s16",0xf3b50300)
-BINARY(addw,"vadd.i16",0xf2100800)
-BINARY(addssw,"vqadd.s16",0xf2100010)
-BINARY(addusw,"vqadd.u16",0xf3100010)
-BINARY(andw,"vand",0xf2000110)
-//BINARY(andnw,"vbic",0xf2100110)
-BINARY(avgsw,"vrhadd.s16",0xf2100100)
-BINARY(avguw,"vrhadd.u16",0xf3100100)
-BINARY(cmpeqw,"vceq.i16",0xf3100810)
-BINARY(cmpgtsw,"vcgt.s16",0xf2100300)
-MOVE(copyw,"vmov",0xf2200110)
-BINARY(maxsw,"vmax.s16",0xf2100600)
-BINARY(maxuw,"vmax.u16",0xf3100600)
-BINARY(minsw,"vmin.s16",0xf2100610)
-BINARY(minuw,"vmin.u16",0xf3100610)
-BINARY(mullw,"vmul.i16",0xf2100910)
-BINARY(orw,"vorr",0xf2200110)
-//LSHIFT(shlw,"vshl.i16",0xf2900510)
-//RSHIFT(shrsw,"vshr.s16",0xf2900010,16)
-//RSHIFT(shruw,"vshr.u16",0xf3900010,16)
-BINARY(subw,"vsub.i16",0xf3100800)
-BINARY(subssw,"vqsub.s16",0xf2100210)
-BINARY(subusw,"vqsub.u16",0xf3100210)
-BINARY(xorw,"veor",0xf3000110)
+UNARY(absw,"vabs.s16",0xf3b50300, 2)
+BINARY(addw,"vadd.i16",0xf2100800, 2)
+BINARY(addssw,"vqadd.s16",0xf2100010, 2)
+BINARY(addusw,"vqadd.u16",0xf3100010, 2)
+BINARY(andw,"vand",0xf2000110, 2)
+//BINARY(andnw,"vbic",0xf2100110, 2)
+BINARY(avgsw,"vrhadd.s16",0xf2100100, 2)
+BINARY(avguw,"vrhadd.u16",0xf3100100, 2)
+BINARY(cmpeqw,"vceq.i16",0xf3100810, 2)
+BINARY(cmpgtsw,"vcgt.s16",0xf2100300, 2)
+MOVE(copyw,"vmov",0xf2200110, 2)
+BINARY(maxsw,"vmax.s16",0xf2100600, 2)
+BINARY(maxuw,"vmax.u16",0xf3100600, 2)
+BINARY(minsw,"vmin.s16",0xf2100610, 2)
+BINARY(minuw,"vmin.u16",0xf3100610, 2)
+BINARY(mullw,"vmul.i16",0xf2100910, 2)
+BINARY(orw,"vorr",0xf2200110, 2)
+//LSHIFT(shlw,"vshl.i16",0xf2900510, 2)
+//RSHIFT(shrsw,"vshr.s16",0xf2900010,16, 2)
+//RSHIFT(shruw,"vshr.u16",0xf3900010,16, 2)
+BINARY(subw,"vsub.i16",0xf3100800, 2)
+BINARY(subssw,"vqsub.s16",0xf2100210, 2)
+BINARY(subusw,"vqsub.u16",0xf3100210, 2)
+BINARY(xorw,"veor",0xf3000110, 2)
 
-UNARY(absl,"vabs.s32",0xf3b90300)
-BINARY(addl,"vadd.i32",0xf2200800)
-BINARY(addssl,"vqadd.s32",0xf2200010)
-BINARY(addusl,"vqadd.u32",0xf3200010)
-BINARY(andl,"vand",0xf2000110)
-//BINARY(andnl,"vbic",0xf2100110)
-BINARY(avgsl,"vrhadd.s32",0xf2200100)
-BINARY(avgul,"vrhadd.u32",0xf3200100)
-BINARY(cmpeql,"vceq.i32",0xf3200810)
-BINARY(cmpgtsl,"vcgt.s32",0xf2200300)
-MOVE(copyl,"vmov",0xf2200110)
-BINARY(maxsl,"vmax.s32",0xf2200600)
-BINARY(maxul,"vmax.u32",0xf3200600)
-BINARY(minsl,"vmin.s32",0xf2200610)
-BINARY(minul,"vmin.u32",0xf3200610)
-BINARY(mulll,"vmul.i32",0xf2200910)
-BINARY(orl,"vorr",0xf2200110)
-//LSHIFT(shll,"vshl.i32",0xf2a00510)
-//RSHIFT(shrsl,"vshr.s32",0xf2a00010,32)
-//RSHIFT(shrul,"vshr.u32",0xf3a00010,32)
-BINARY(subl,"vsub.i32",0xf3200800)
-BINARY(subssl,"vqsub.s32",0xf2200210)
-BINARY(subusl,"vqsub.u32",0xf3200210)
-BINARY(xorl,"veor",0xf3000110)
+UNARY(absl,"vabs.s32",0xf3b90300, 1)
+BINARY(addl,"vadd.i32",0xf2200800, 1)
+BINARY(addssl,"vqadd.s32",0xf2200010, 1)
+BINARY(addusl,"vqadd.u32",0xf3200010, 1)
+BINARY(andl,"vand",0xf2000110, 1)
+//BINARY(andnl,"vbic",0xf2100110, 1)
+BINARY(avgsl,"vrhadd.s32",0xf2200100, 1)
+BINARY(avgul,"vrhadd.u32",0xf3200100, 1)
+BINARY(cmpeql,"vceq.i32",0xf3200810, 1)
+BINARY(cmpgtsl,"vcgt.s32",0xf2200300, 1)
+MOVE(copyl,"vmov",0xf2200110, 1)
+BINARY(maxsl,"vmax.s32",0xf2200600, 1)
+BINARY(maxul,"vmax.u32",0xf3200600, 1)
+BINARY(minsl,"vmin.s32",0xf2200610, 1)
+BINARY(minul,"vmin.u32",0xf3200610, 1)
+BINARY(mulll,"vmul.i32",0xf2200910, 1)
+BINARY(orl,"vorr",0xf2200110, 1)
+//LSHIFT(shll,"vshl.i32",0xf2a00510, 1)
+//RSHIFT(shrsl,"vshr.s32",0xf2a00010,32, 1)
+//RSHIFT(shrul,"vshr.u32",0xf3a00010,32, 1)
+BINARY(subl,"vsub.i32",0xf3200800, 1)
+BINARY(subssl,"vqsub.s32",0xf2200210, 1)
+BINARY(subusl,"vqsub.u32",0xf3200210, 1)
+BINARY(xorl,"veor",0xf3000110, 1)
 
-UNARY_LONG(convsbw,"vmovl.s8",0xf2880a10)
-UNARY_LONG(convubw,"vmovl.u8",0xf3880a10)
-UNARY_LONG(convswl,"vmovl.s16",0xf2900a10)
-UNARY_LONG(convuwl,"vmovl.u16",0xf3900a10)
-UNARY_NARROW(convwb,"vmovn.i16",0xf3b20200)
-UNARY_NARROW(convssswb,"vqmovn.s16",0xf3b20280)
-UNARY_NARROW(convsuswb,"vqmovun.s16",0xf3b20240)
-UNARY_NARROW(convuuswb,"vqmovn.u16",0xf3b202c0)
-UNARY_NARROW(convlw,"vmovn.i32",0xf3b60200)
-UNARY_NARROW(convssslw,"vqmovn.s32",0xf3b60280)
-UNARY_NARROW(convsuslw,"vqmovun.s32",0xf3b60240)
-UNARY_NARROW(convuuslw,"vqmovn.u32",0xf3b602c0)
+UNARY_LONG(convsbw,"vmovl.s8",0xf2880a10, 3)
+UNARY_LONG(convubw,"vmovl.u8",0xf3880a10, 3)
+UNARY_LONG(convswl,"vmovl.s16",0xf2900a10, 2)
+UNARY_LONG(convuwl,"vmovl.u16",0xf3900a10, 2)
+UNARY_NARROW(convwb,"vmovn.i16",0xf3b20200, 3)
+UNARY_NARROW(convssswb,"vqmovn.s16",0xf3b20280, 3)
+UNARY_NARROW(convsuswb,"vqmovun.s16",0xf3b20240, 3)
+UNARY_NARROW(convuuswb,"vqmovn.u16",0xf3b202c0, 3)
+UNARY_NARROW(convlw,"vmovn.i32",0xf3b60200, 2)
+UNARY_NARROW(convssslw,"vqmovn.s32",0xf3b60280, 2)
+UNARY_NARROW(convsuslw,"vqmovun.s32",0xf3b60240, 2)
+UNARY_NARROW(convuuslw,"vqmovn.u32",0xf3b602c0, 2)
 
-BINARY_LONG(mulsbw,"vmull.s8",0xf2800c00)
-BINARY_LONG(mulubw,"vmull.u8",0xf3800c00)
-BINARY_LONG(mulswl,"vmull.s16",0xf2900c00)
-BINARY_LONG(muluwl,"vmull.u16",0xf3900c00)
+BINARY_LONG(mulsbw,"vmull.s8",0xf2800c00, 3)
+BINARY_LONG(mulubw,"vmull.u8",0xf3800c00, 3)
+BINARY_LONG(mulswl,"vmull.s16",0xf2900c00, 2)
+BINARY_LONG(muluwl,"vmull.u16",0xf3900c00, 2)
 
-UNARY(swapw,"vrev16.i8",0xf3b00100)
-UNARY(swapl,"vrev32.i8",0xf3b00080)
+UNARY(swapw,"vrev16.i8",0xf3b00100, 2)
+UNARY(swapl,"vrev32.i8",0xf3b00080, 1)
 
-UNARY_NARROW(select0lw,"vmovn.i32",0xf3b60200)
-UNARY_NARROW(select0wb,"vmovn.i16",0xf3b20200)
+UNARY_NARROW(select0lw,"vmovn.i32",0xf3b60200, 2)
+UNARY_NARROW(select0wb,"vmovn.i16",0xf3b20200, 3)
 
 //UNARY(mergebw,"vzip.8",0xf3b20180)
 //UNARY(mergewl,"vzip.16",0xf3b60180)
