@@ -240,8 +240,8 @@ orc_neon_load_alignment_masks (OrcCompiler *compiler)
               orc_neon_reg_name (var->mask_alloc), j,
               orc_arm_reg_name (compiler->gp_tmpreg));
           code = 0xee400b10;
-          code |= (compiler->tmpreg&0xf)<<16;
-          code |= ((compiler->tmpreg>>4)&0x1)<<7;
+          code |= (var->mask_alloc&0xf)<<16;
+          code |= ((var->mask_alloc>>4)&0x1)<<7;
           code |= (compiler->gp_tmpreg&0xf)<<12;
           code |= (j&3)<<5;
           code |= (j>>2)<<21;
