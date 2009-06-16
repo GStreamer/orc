@@ -713,12 +713,9 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
     ORC_ASM_CODE(p,"  " insn_name " %s, %s\n", \
         orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc), \
         orc_neon_reg_name (p->vars[insn->src_args[0]].alloc)); \
-    x |= (p->vars[insn->dest_args[0]].alloc&0xf)<<16; \
-    x |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<7; \
-    x |= (p->vars[insn->src_args[0]].alloc&0xf)<<12; \
-    x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<22; \
-    x |= (p->vars[insn->src_args[0]].alloc&0xf)<<0; \
-    x |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5; \
+    x = NEON_BINARY(code, p->vars[insn->dest_args[0]].alloc, \
+        p->vars[insn->src_args[0]].alloc, \
+        p->vars[insn->src_args[0]].alloc); \
     orc_arm_emit (p, x); \
   } \
 }

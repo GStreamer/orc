@@ -21,11 +21,13 @@ CLEANFILES = temp-orc-test-*
 TESTS += compile_opcodes_sys_neon \
 	compile_opcodes_float_neon \
 	compile_opcodes_pixel_neon \
-	compile_opcodes_sys_c64x
+	compile_opcodes_sys_c64x \
+	compile_parse_neon
 orcbin_PROGRAMS += compile_opcodes_sys_neon \
 	compile_opcodes_float_neon \
 	compile_opcodes_pixel_neon \
-	compile_opcodes_sys_c64x
+	compile_opcodes_sys_c64x \
+	compile_parse_neon
 
 AM_CFLAGS = $(ORC_CFLAGS)
 LIBS = $(ORC_LIBS) $(top_builddir)/orc-test/liborc-test-@ORC_MAJORMINOR@.la
