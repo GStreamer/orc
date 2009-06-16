@@ -246,6 +246,7 @@ orc_neon_load_alignment_masks (OrcCompiler *compiler)
   int i;
   int j;
   unsigned int code;
+  int size;
 
   for(i=0;i<ORC_N_VARIABLES;i++){
     OrcVariable *var = &compiler->vars[i];
@@ -256,10 +257,16 @@ orc_neon_load_alignment_masks (OrcCompiler *compiler)
       case ORC_VAR_TYPE_SRC:
         if (var->is_aligned) continue;
 
-        orc_arm_emit_and_imm (compiler, compiler->gp_tmpreg,
-            var->ptr_register, 7);
+        size = var->size << compiler->loop_shift;
 
-        for(j=0;j<8;j++){
+        orc_arm_emit_and_imm (compiler, compiler->gp_tmpreg,
+            var->ptr_register, size-1);
+
+        if (size != 4 && size != 8) {
+          ORC_ERROR("strange size %d", size);
+        }
+
+        for(j=0;j<size;j++){
           ORC_ASM_CODE(compiler,"  vmov.8 %s[%d], %s\n",
               orc_neon_reg_name (var->mask_alloc), j,
               orc_arm_reg_name (compiler->gp_tmpreg));
@@ -275,7 +282,8 @@ orc_neon_load_alignment_masks (OrcCompiler *compiler)
               compiler->gp_tmpreg, 1);
         }
 
-        orc_arm_emit_and_imm (compiler, var->ptr_offset, var->ptr_register, 7);
+        orc_arm_emit_and_imm (compiler, var->ptr_offset, var->ptr_register,
+            size - 1);
         //orc_arm_emit_sub (compiler, var->ptr_register, var->ptr_register,
         //    var->ptr_offset);
 

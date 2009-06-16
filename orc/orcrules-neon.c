@@ -324,6 +324,9 @@ orc_neon_loadb (OrcCompiler *compiler, OrcVariable *var, int update)
   } else if (compiler->loop_shift == 2) {
     orc_neon_load_halfvec_unaligned (compiler, var, update);
   } else {
+    if (compiler->loop_shift > 0) {
+      ORC_ERROR("slow load");
+    }
     for(i=0;i<(1<<compiler->loop_shift);i++){
       ORC_ASM_CODE(compiler,"  vld1.8 %s[%d], [%s]%s\n",
           orc_neon_reg_name (var->alloc + (i>>3)), i&7,
@@ -349,6 +352,9 @@ orc_neon_loadw (OrcCompiler *compiler, OrcVariable *var, int update)
   } else if (compiler->loop_shift == 2) {
     orc_neon_load_vec_unaligned (compiler, var, update);
   } else {
+    if (compiler->loop_shift > 0) {
+      ORC_ERROR("slow load");
+    }
     for(i=0;i<(1<<compiler->loop_shift);i++){
       ORC_ASM_CODE(compiler,"  vld1.16 %s[%d], [%s]%s\n",
           orc_neon_reg_name (var->alloc + (i>>2)), i&3,
@@ -372,6 +378,9 @@ orc_neon_loadl (OrcCompiler *compiler, OrcVariable *var, int update)
   if (var->is_aligned && compiler->loop_shift == 1) {
     orc_neon_load_vec_aligned (compiler, var, update);
   } else {
+    if (compiler->loop_shift > 0) {
+      //ORC_ERROR("slow load");
+    }
     for(i=0;i<(1<<compiler->loop_shift);i++){
       ORC_ASM_CODE(compiler,"  vld1.32 %s[%d], [%s]%s\n",
           orc_neon_reg_name (var->alloc + (i>>1)), i & 1,
