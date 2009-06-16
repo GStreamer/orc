@@ -177,6 +177,7 @@ struct _OrcVariable {
   int replacement;
 
   int alloc;
+  int mask_alloc;
   int is_chained;
   int is_aligned;
   int is_uncached;
