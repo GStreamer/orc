@@ -228,6 +228,7 @@ orc_neon_loadb (OrcCompiler *compiler, OrcVariable *var, int update)
     //code |= ((var->alloc>>4)&0x1) << 22;
     orc_arm_emit (compiler, code);
 #endif
+    orc_neon_emit_mov (compiler, var->alloc, var->mask_alloc);
 
     orc_arm_emit_add (compiler, var->ptr_register, var->ptr_register,
         var->ptr_offset);
