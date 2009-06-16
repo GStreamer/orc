@@ -179,6 +179,66 @@ orc_neon_loadb (OrcCompiler *compiler, int dest, int src1, int update, int is_al
     code |= ((dest>>4)&0x1) << 22;
     code |= (!update) << 1;
     orc_arm_emit (compiler, code);
+  } else if (compiler->loop_shift == 3) {
+    int i;
+
+    orc_arm_emit_and_imm (compiler, compiler->gp_tmpreg, src1, 7);
+
+    for(i=0;i<8;i++){
+      ORC_ASM_CODE(compiler,"  vmov.8 %s[%d], %s\n",
+          orc_neon_reg_name (compiler->tmpreg), i,
+          orc_arm_reg_name (compiler->gp_tmpreg));
+      code = 0xee400b10;
+      code |= (compiler->tmpreg&0xf)<<16;
+      code |= ((compiler->tmpreg>>4)&0x1)<<7;
+      code |= (compiler->gp_tmpreg&0xf)<<12;
+      code |= (i&3)<<5;
+      code |= (i>>2)<<21;
+      orc_arm_emit (compiler, code);
+
+      orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
+          compiler->gp_tmpreg, 1);
+    }
+
+    orc_arm_emit_and_imm (compiler, compiler->gp_tmpreg, src1, 7);
+    orc_arm_emit_sub (compiler, src1, src1, compiler->gp_tmpreg);
+
+    ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]%s\n",
+        orc_neon_reg_name (dest),
+        orc_arm_reg_name (src1),
+        update ? "!" : "");
+    code = 0xf42007cd;
+    code |= (src1&0xf) << 16;
+    code |= (dest&0xf) << 12;
+    code |= ((dest>>4)&0x1) << 22;
+    code |= (!update) << 1;
+    orc_arm_emit (compiler, code);
+
+    update = 0;
+    ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]%s\n",
+        orc_neon_reg_name (dest + 1),
+        orc_arm_reg_name (src1),
+        update ? "!" : "");
+    code = 0xf42007cd;
+    code |= (src1&0xf) << 16;
+    code |= ((dest+1)&0xf) << 12;
+    code |= (((dest+1)>>4)&0x1) << 22;
+    code |= (!update) << 1;
+    orc_arm_emit (compiler, code);
+
+    ORC_ASM_CODE(compiler,"  vtbl.8 %s, {%s,%s}, %s\n",
+        orc_neon_reg_name (dest),
+        orc_neon_reg_name (dest),
+        orc_neon_reg_name (dest + 1),
+        orc_neon_reg_name (compiler->tmpreg));
+    code = 0xf3b00900;
+    code |= (dest&0xf) << 16;
+    code |= ((dest>>4)&0x1) << 7;
+    code |= (dest&0xf) << 12;
+    code |= ((dest>>4)&0x1) << 22;
+    orc_arm_emit (compiler, code);
+
+    orc_arm_emit_add (compiler, src1, src1, compiler->gp_tmpreg);
   } else {
     for(i=0;i<(1<<compiler->loop_shift);i++){
       ORC_ASM_CODE(compiler,"  vld1.8 %s[%d], [%s]%s\n",
