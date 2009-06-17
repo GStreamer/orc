@@ -832,28 +832,29 @@ typedef struct {
   char *name;
   int negate;
   int bits;
+  int vec_shift;
 } ShiftInfo;
 ShiftInfo immshift_info[] = {
-  { 0xf2880510, "vshl.i8", FALSE, 8 }, /* shlb */
-  { 0xf2880010, "vshr.s8", TRUE, 8 }, /* shrsb */
-  { 0xf3880010, "vshr.u8", TRUE, 8 }, /* shrub */
-  { 0xf2900510, "vshl.i16", FALSE, 16 },
-  { 0xf2900010, "vshr.s16", TRUE, 16 },
-  { 0xf3900010, "vshr.u16", TRUE, 16 },
-  { 0xf2a00510, "vshl.i32", FALSE, 32 },
-  { 0xf2a00010, "vshr.s32", TRUE, 32 },
-  { 0xf3a00010, "vshr.u32", TRUE, 32 }
+  { 0xf2880510, "vshl.i8", FALSE, 8, 3 }, /* shlb */
+  { 0xf2880010, "vshr.s8", TRUE, 8, 3 }, /* shrsb */
+  { 0xf3880010, "vshr.u8", TRUE, 8, 3 }, /* shrub */
+  { 0xf2900510, "vshl.i16", FALSE, 16, 2 },
+  { 0xf2900010, "vshr.s16", TRUE, 16, 2 },
+  { 0xf3900010, "vshr.u16", TRUE, 16, 2 },
+  { 0xf2a00510, "vshl.i32", FALSE, 32, 1 },
+  { 0xf2a00010, "vshr.s32", TRUE, 32, 1 },
+  { 0xf3a00010, "vshr.u32", TRUE, 32, 1 }
 };
 ShiftInfo regshift_info[] = {
-  { 0xf3000400, "vshl.u8", FALSE }, /* shlb */
-  { 0xf2000400, "vshl.s8", TRUE }, /* shrsb */
-  { 0xf3000400, "vshl.u8", TRUE }, /* shrub */
-  { 0xf3100400, "vshl.u16", FALSE },
-  { 0xf2100400, "vshl.s16", TRUE },
-  { 0xf3100400, "vshl.u16", TRUE },
-  { 0xf3200400, "vshl.u32", FALSE },
-  { 0xf2200400, "vshl.s32", TRUE },
-  { 0xf3200400, "vshl.u32", TRUE }
+  { 0xf3000400, "vshl.u8", FALSE, 0, 3 }, /* shlb */
+  { 0xf2000400, "vshl.s8", TRUE, 0, 3 }, /* shrsb */
+  { 0xf3000400, "vshl.u8", TRUE, 0, 3 }, /* shrub */
+  { 0xf3100400, "vshl.u16", FALSE, 0, 2 },
+  { 0xf2100400, "vshl.s16", TRUE, 0, 2 },
+  { 0xf3100400, "vshl.u16", TRUE, 0, 2 },
+  { 0xf3200400, "vshl.u32", FALSE, 0, 1 },
+  { 0xf2200400, "vshl.s32", TRUE, 0, 1 },
+  { 0xf3200400, "vshl.u32", TRUE, 0, 1 }
 };
 
 static void
@@ -873,11 +874,20 @@ orc_neon_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
       return;
     }
     code = immshift_info[type].code;
-    ORC_ASM_CODE(p,"  %s %s, %s, #%d\n",
-        immshift_info[type].name,
-        orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
-        orc_neon_reg_name (p->vars[insn->src_args[0]].alloc),
-        p->vars[insn->src_args[1]].value);
+    if (p->loop_shift <= immshift_info[type].vec_shift) {
+      ORC_ASM_CODE(p,"  %s %s, %s, #%d\n",
+          immshift_info[type].name,
+          orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
+          orc_neon_reg_name (p->vars[insn->src_args[0]].alloc),
+          p->vars[insn->src_args[1]].value);
+    } else {
+      ORC_ASM_CODE(p,"  %s %s, %s, #%d\n",
+          immshift_info[type].name,
+          orc_neon_reg_name_quad (p->vars[insn->dest_args[0]].alloc),
+          orc_neon_reg_name_quad (p->vars[insn->src_args[0]].alloc),
+          p->vars[insn->src_args[1]].value);
+      code |= 0x40;
+    }
     code |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12;
     code |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22;
     code |= (p->vars[insn->src_args[0]].alloc&0xf)<<0;
@@ -895,11 +905,20 @@ orc_neon_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
     }
 
     code = regshift_info[type].code;
-    ORC_ASM_CODE(p,"  %s %s, %s, %s\n",
-        regshift_info[type].name,
-        orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
-        orc_neon_reg_name (p->vars[insn->src_args[0]].alloc),
-        orc_neon_reg_name (p->tmpreg));
+    if (p->loop_shift <= regshift_info[type].vec_shift) {
+      ORC_ASM_CODE(p,"  %s %s, %s, %s\n",
+          regshift_info[type].name,
+          orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
+          orc_neon_reg_name (p->vars[insn->src_args[0]].alloc),
+          orc_neon_reg_name (p->tmpreg));
+    } else {
+      ORC_ASM_CODE(p,"  %s %s, %s, %s\n",
+          regshift_info[type].name,
+          orc_neon_reg_name_quad (p->vars[insn->dest_args[0]].alloc),
+          orc_neon_reg_name_quad (p->vars[insn->src_args[0]].alloc),
+          orc_neon_reg_name_quad (p->tmpreg));
+      code |= 0x40;
+    }
     code |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12;
     code |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22;
     code |= (p->vars[insn->src_args[0]].alloc&0xf)<<0;
