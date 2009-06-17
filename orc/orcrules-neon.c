@@ -248,7 +248,7 @@ orc_neon_load_vec_unaligned (OrcCompiler *compiler, OrcVariable *var,
   code = NEON_BINARY(0xf3b00900, var->alloc, var->aligned_data,
       var->mask_alloc);
   orc_arm_emit (compiler, code);
-orc_neon_emit_mov (compiler, var->alloc, var->mask_alloc);
+//orc_neon_emit_mov (compiler, var->alloc, var->mask_alloc);
 
   orc_neon_emit_mov (compiler, var->aligned_data, var->aligned_data + 1);
 }
