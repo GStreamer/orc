@@ -229,8 +229,6 @@ orc_neon_load_vec_unaligned (OrcCompiler *compiler, OrcVariable *var,
 {
   uint32_t code;
 
-  orc_neon_emit_mov (compiler, var->aligned_data, var->aligned_data + 1);
-
   ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]%s\n",
       orc_neon_reg_name (var->aligned_data + 1),
       orc_arm_reg_name (var->ptr_register),
@@ -250,6 +248,8 @@ orc_neon_load_vec_unaligned (OrcCompiler *compiler, OrcVariable *var,
   code = NEON_BINARY(0xf3b00900, var->alloc, var->aligned_data,
       var->mask_alloc);
   orc_arm_emit (compiler, code);
+
+  orc_neon_emit_mov (compiler, var->aligned_data, var->aligned_data + 1);
 }
 
 void
@@ -257,9 +257,6 @@ orc_neon_load_halfvec_unaligned (OrcCompiler *compiler, OrcVariable *var,
     int update)
 {
   uint32_t code;
-
-  orc_neon_emit_unary (compiler, "vrev64.i32", 0xf3b80000,
-      var->aligned_data, var->aligned_data);
 
   ORC_ASM_CODE(compiler,"  vld1.32 %s[1], [%s]%s\n",
       orc_neon_reg_name (var->aligned_data),
@@ -279,6 +276,9 @@ orc_neon_load_halfvec_unaligned (OrcCompiler *compiler, OrcVariable *var,
       orc_neon_reg_name (var->mask_alloc));
   code = NEON_BINARY(0xf3b00900, var->alloc, var->aligned_data, var->mask_alloc);
   orc_arm_emit (compiler, code);
+
+  orc_neon_emit_unary (compiler, "vrev64.i32", 0xf3b80000,
+      var->aligned_data, var->aligned_data);
 }
 
 void
@@ -660,9 +660,10 @@ orc_neon_emit_loadpb (OrcCompiler *compiler, int dest, int param)
   orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
       compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
 
-  ORC_ASM_CODE(compiler,"  vld1.8 %s[], [%s]\n",
-      orc_neon_reg_name (dest), orc_arm_reg_name (compiler->gp_tmpreg));
-  code = 0xf4a00c0f;
+  ORC_ASM_CODE(compiler,"  vld1.8 {%s[],%s[]}, [%s]\n",
+      orc_neon_reg_name (dest), orc_neon_reg_name (dest+1),
+      orc_arm_reg_name (compiler->gp_tmpreg));
+  code = 0xf4a00c2f;
   code |= (compiler->gp_tmpreg&0xf) << 16;
   code |= (dest&0xf) << 12;
   code |= ((dest>>4)&0x1) << 22;
@@ -677,9 +678,10 @@ orc_neon_emit_loadpw (OrcCompiler *compiler, int dest, int param)
   orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
       compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
 
-  ORC_ASM_CODE(compiler,"  vld1.16 %s[], [%s]\n",
-      orc_neon_reg_name (dest), orc_arm_reg_name (compiler->gp_tmpreg));
-  code = 0xf4a00c4f;
+  ORC_ASM_CODE(compiler,"  vld1.16 {%s[],%s[]}, [%s]\n",
+      orc_neon_reg_name (dest), orc_neon_reg_name (dest+1),
+      orc_arm_reg_name (compiler->gp_tmpreg));
+  code = 0xf4a00c6f;
   code |= (compiler->gp_tmpreg&0xf) << 16;
   code |= (dest&0xf) << 12;
   code |= ((dest>>4)&0x1) << 22;
@@ -694,9 +696,10 @@ orc_neon_emit_loadpl (OrcCompiler *compiler, int dest, int param)
   orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
       compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
 
-  ORC_ASM_CODE(compiler,"  vld1.32 %s[], [%s]\n",
-      orc_neon_reg_name (dest), orc_arm_reg_name (compiler->gp_tmpreg));
-  code = 0xf4a00c8f;
+  ORC_ASM_CODE(compiler,"  vld1.32 {%s[],%s[]}, [%s]\n",
+      orc_neon_reg_name (dest), orc_neon_reg_name (dest+1),
+      orc_arm_reg_name (compiler->gp_tmpreg));
+  code = 0xf4a00caf;
   code |= (compiler->gp_tmpreg&0xf) << 16;
   code |= (dest&0xf) << 12;
   code |= ((dest>>4)&0x1) << 22;

@@ -290,11 +290,11 @@ orc_neon_load_alignment_masks (OrcCompiler *compiler)
 
           if (size == 4) {
             int update = 1;
-            ORC_ASM_CODE(compiler,"  vld1.32 %s[1], [%s]%s\n",
+            ORC_ASM_CODE(compiler,"  vld1.32 %s[0], [%s]%s\n",
                 orc_neon_reg_name (var->aligned_data),
                 orc_arm_reg_name (var->ptr_register),
                 update ? "!" : "");
-            code = 0xf4a0088d;
+            code = 0xf4a0080d;
             code |= (var->ptr_register&0xf) << 16;
             code |= ((var->aligned_data)&0xf) << 12;
             code |= (((var->aligned_data)>>4)&0x1) << 22;
@@ -303,13 +303,13 @@ orc_neon_load_alignment_masks (OrcCompiler *compiler)
           } else {
             int update = 1;
             ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]%s\n",
-                orc_neon_reg_name (var->aligned_data + 1),
+                orc_neon_reg_name (var->aligned_data),
                 orc_arm_reg_name (var->ptr_register),
                 update ? "!" : "");
             code = 0xf42007cd;
             code |= (var->ptr_register&0xf) << 16;
-            code |= ((var->aligned_data+1)&0xf) << 12;
-            code |= (((var->aligned_data+1)>>4)&0x1) << 22;
+            code |= ((var->aligned_data)&0xf) << 12;
+            code |= (((var->aligned_data)>>4)&0x1) << 22;
             code |= (!update) << 1;
             orc_arm_emit (compiler, code);
           }
