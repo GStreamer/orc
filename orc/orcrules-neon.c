@@ -382,11 +382,6 @@ orc_neon_loadq (OrcCompiler *compiler, int dest, int src1, int update, int is_al
   orc_arm_emit (compiler, code);
 }
 
-void
-orc_neon_emit_neg (OrcCompiler *compiler, int dest)
-{
-  orc_neon_emit_unary(compiler, "vneg.s8", 0xf3b10380, dest, dest);
-}
 
 void
 orc_neon_storeb (OrcCompiler *compiler, int dest, int update, int src1, int is_aligned)
@@ -901,7 +896,8 @@ orc_neon_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_neon_emit_loadpb (p, p->tmpreg, insn->src_args[1]);
 
     if (regshift_info[type].negate) {
-      orc_neon_emit_neg (p, p->tmpreg);
+      orc_neon_emit_unary_quad (p, "vneg.s8", 0xf3b10380,
+          p->tmpreg, p->tmpreg);
     }
 
     code = regshift_info[type].code;
