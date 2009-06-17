@@ -244,9 +244,10 @@ void
 orc_neon_load_alignment_masks (OrcCompiler *compiler)
 {
   int i;
-  int j;
+  //int j;
   unsigned int code;
   int size;
+  int b = 0;
 
   for(i=0;i<ORC_N_VARIABLES;i++){
     OrcVariable *var = &compiler->vars[i];
@@ -262,12 +263,35 @@ orc_neon_load_alignment_masks (OrcCompiler *compiler)
 
           orc_arm_emit_and_imm (compiler, compiler->gp_tmpreg,
               var->ptr_register, size-1);
+          orc_arm_emit_lsl_imm (compiler, compiler->gp_tmpreg,
+              compiler->gp_tmpreg, 3);
+          orc_arm_emit_add (compiler, compiler->gp_tmpreg,
+              compiler->gp_tmpreg, ORC_ARM_PC);
 
           if (size != 4 && size != 8) {
             ORC_ERROR("strange size %d", size);
           }
 
-if (0) {
+          ORC_ASM_CODE(compiler, "  vld1.64 %s, [%s]\n",
+              orc_neon_reg_name (var->mask_alloc),
+              orc_arm_reg_name (compiler->gp_tmpreg));
+          code = 0xf42007cf;
+          code |= (compiler->gp_tmpreg&0xf) << 16;
+          code |= (var->mask_alloc&0xf) << 12;
+          code |= ((var->mask_alloc>>4)&0x1) << 22;
+          orc_arm_emit (compiler, code);
+
+  orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, 16+b);
+  for(i=0;i<8;i++){
+    ORC_ASM_CODE(compiler, "  .word 0x%02x%02x%02x%02x\n", i+3, i+2, i+1, i+0);
+    orc_arm_emit (compiler, ((i+0)<<0) | ((i+1)<<8) | ((i+2)<<16) | ((i+3)<<24));
+    ORC_ASM_CODE(compiler, "  .word 0x%02x%02x%02x%02x\n", i+7, i+6, i+5, i+4);
+    orc_arm_emit (compiler, ((i+4)<<0) | ((i+5)<<8) | ((i+6)<<16) | ((i+7)<<24));
+  }
+  orc_arm_emit_label (compiler, 16+b);
+  b++;
+
+#if 0
           for(j=0;j<size;j++){
             ORC_ASM_CODE(compiler,"  vmov.8 %s[%d], %s\n",
                 orc_neon_reg_name (var->mask_alloc), j,
@@ -283,7 +307,7 @@ if (0) {
             orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
                 compiler->gp_tmpreg, 1);
           }
-}
+#endif
 
           orc_arm_emit_and_imm (compiler, var->ptr_offset, var->ptr_register,
               size - 1);
@@ -597,6 +621,8 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   orc_neon_save_accumulators (compiler);
 
   orc_neon_emit_epilogue (compiler);
+
+  orc_arm_emit_align (compiler, 3);
 
   orc_arm_do_fixups (compiler);
 

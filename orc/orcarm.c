@@ -145,11 +145,30 @@ orc_arm_do_fixups (OrcCompiler *compiler)
     uint32_t code;
     int diff;
 
-    code = ORC_READ_UINT32_LE (ptr);
-    diff = ORC_READ_UINT32_LE (ptr) + ((label - ptr) >> 2);
-    ORC_WRITE_UINT32_LE(ptr, (code&0xff000000) | (diff&0x00ffffff));
+    if (compiler->fixups[i].type == 0) {
+      code = ORC_READ_UINT32_LE (ptr);
+      diff = ORC_READ_UINT32_LE (ptr) + ((label - ptr) >> 2);
+      ORC_WRITE_UINT32_LE(ptr, (code&0xff000000) | (diff&0x00ffffff));
+    } else {
+      code = ORC_READ_UINT32_LE (ptr);
+      diff = (code&0xff) + ((label - ptr) >> 2);
+      ORC_WRITE_UINT32_LE(ptr, (code&0xffffff00) | (diff&0x000000ff));
+    }
   }
 
+}
+
+void
+orc_arm_emit_align (OrcCompiler *compiler, int align_shift)
+{
+  int diff;
+
+  diff = (compiler->program->code - compiler->codeptr)&((1<<align_shift) - 1);
+  while (diff) {
+    ORC_ASM_CODE(compiler,"  nop\n");
+    orc_arm_emit (compiler, 0xe1a00000);
+    diff-=4;
+  }
 }
 
 void
@@ -358,6 +377,26 @@ orc_arm_emit_asr_imm (OrcCompiler *compiler, int dest, int src1, int value)
   code |= (value) << 7;
 
   ORC_ASM_CODE(compiler,"  asr %s, %s, #%d\n",
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1),
+      value);
+  orc_arm_emit (compiler, code);
+}
+
+void
+orc_arm_emit_lsl_imm (OrcCompiler *compiler, int dest, int src1, int value)
+{
+  uint32_t code;
+
+  if (value == 0) {
+    ORC_ERROR("bad immediate value");
+  }
+  code = 0xe1a00000;
+  code |= (src1&0xf) << 0;
+  code |= (dest&0xf) << 12;
+  code |= (value) << 7;
+
+  ORC_ASM_CODE(compiler,"  lsl %s, %s, #%d\n",
       orc_arm_reg_name (dest),
       orc_arm_reg_name (src1),
       value);

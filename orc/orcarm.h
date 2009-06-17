@@ -72,6 +72,7 @@ void orc_arm_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int value)
 void orc_arm_emit_and_imm (OrcCompiler *compiler, int dest, int src1, int value);
 void orc_arm_emit_sub_imm (OrcCompiler *compiler, int dest, int src1, int value);
 void orc_arm_emit_asr_imm (OrcCompiler *compiler, int dest, int src1, int value);
+void orc_arm_emit_lsl_imm (OrcCompiler *compiler, int dest, int src1, int value);
 void orc_arm_emit_cmp_imm (OrcCompiler *compiler, int src1, int value);
 void orc_arm_emit_cmp (OrcCompiler *compiler, int src1, int src2);
 
@@ -90,11 +91,14 @@ void orc_arm_storew (OrcCompiler *compiler, int dest, int offset, int src1);
 void orc_arm_emit_load_reg (OrcCompiler *compiler, int dest, int src1, int offset);
 void orc_arm_emit_store_reg (OrcCompiler *compiler, int src, int dest, int offset);
 
+void orc_arm_add_fixup (OrcCompiler *compiler, int label, int type);
 void orc_arm_do_fixups (OrcCompiler *compiler);
 
 const char *orc_neon_reg_name (int reg);
 const char *orc_neon_reg_name_quad (int reg);
 void orc_neon_emit_mov (OrcCompiler *compiler, int dest, int src);
+
+void orc_arm_emit_align (OrcCompiler *compiler, int align_shift);
 
 void orc_arm_flush_cache (OrcCompiler *compiler);
 
