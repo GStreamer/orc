@@ -186,6 +186,7 @@ struct _OrcVariable {
 
   int ptr_register;
   int ptr_offset;
+  int aligned_data;
 };
 
 /**

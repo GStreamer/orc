@@ -229,42 +229,27 @@ orc_neon_load_vec_unaligned (OrcCompiler *compiler, OrcVariable *var,
 {
   uint32_t code;
 
-  //orc_arm_emit_sub (compiler, var->ptr_register, var->ptr_register,
-  //    var->ptr_offset);
+  orc_neon_emit_mov (compiler, var->aligned_data, var->aligned_data + 1);
 
   ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]%s\n",
-      orc_neon_reg_name (var->alloc),
+      orc_neon_reg_name (var->aligned_data + 1),
       orc_arm_reg_name (var->ptr_register),
       update ? "!" : "");
   code = 0xf42007cd;
   code |= (var->ptr_register&0xf) << 16;
-  code |= (var->alloc&0xf) << 12;
-  code |= ((var->alloc>>4)&0x1) << 22;
-  code |= (!update) << 1;
-  orc_arm_emit (compiler, code);
-
-  update = 0;
-  ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]%s\n",
-      orc_neon_reg_name (var->alloc + 1),
-      orc_arm_reg_name (var->ptr_register),
-      update ? "!" : "");
-  code = 0xf42007cd;
-  code |= (var->ptr_register&0xf) << 16;
-  code |= ((var->alloc+1)&0xf) << 12;
-  code |= (((var->alloc+1)>>4)&0x1) << 22;
+  code |= ((var->aligned_data+1)&0xf) << 12;
+  code |= (((var->aligned_data+1)>>4)&0x1) << 22;
   code |= (!update) << 1;
   orc_arm_emit (compiler, code);
 
   ORC_ASM_CODE(compiler,"  vtbl.8 %s, {%s,%s}, %s\n",
       orc_neon_reg_name (var->alloc),
-      orc_neon_reg_name (var->alloc),
-      orc_neon_reg_name (var->alloc + 1),
+      orc_neon_reg_name (var->aligned_data),
+      orc_neon_reg_name (var->aligned_data+1),
       orc_neon_reg_name (var->mask_alloc));
-  code = NEON_BINARY(0xf3b00900, var->alloc, var->alloc, var->mask_alloc);
+  code = NEON_BINARY(0xf3b00900, var->alloc, var->aligned_data,
+      var->mask_alloc);
   orc_arm_emit (compiler, code);
-
-  //orc_arm_emit_add (compiler, var->ptr_register, var->ptr_register,
-  //    var->ptr_offset);
 }
 
 void
@@ -273,42 +258,27 @@ orc_neon_load_halfvec_unaligned (OrcCompiler *compiler, OrcVariable *var,
 {
   uint32_t code;
 
-  //orc_arm_emit_sub (compiler, var->ptr_register, var->ptr_register,
-  //    var->ptr_offset);
+  orc_neon_emit_unary (compiler, "vrev64.i32", 0xf3b80000,
+      var->aligned_data, var->aligned_data);
 
-  ORC_ASM_CODE(compiler,"  vld1.32 %s[0], [%s]%s\n",
-      orc_neon_reg_name (var->alloc),
-      orc_arm_reg_name (var->ptr_register),
-      update ? "!" : "");
-  code = 0xf4a0080d;
-  code |= (var->ptr_register&0xf) << 16;
-  code |= (var->alloc&0xf) << 12;
-  code |= ((var->alloc>>4)&0x1) << 22;
-  code |= (!update) << 1;
-  orc_arm_emit (compiler, code);
-
-  update = 0;
   ORC_ASM_CODE(compiler,"  vld1.32 %s[1], [%s]%s\n",
-      orc_neon_reg_name (var->alloc),
+      orc_neon_reg_name (var->aligned_data),
       orc_arm_reg_name (var->ptr_register),
       update ? "!" : "");
-  code = 0xf4a0088f;
+  code = 0xf4a0088d;
   code |= (var->ptr_register&0xf) << 16;
-  code |= ((var->alloc)&0xf) << 12;
-  code |= (((var->alloc)>>4)&0x1) << 22;
+  code |= ((var->aligned_data)&0xf) << 12;
+  code |= (((var->aligned_data)>>4)&0x1) << 22;
   code |= (!update) << 1;
   orc_arm_emit (compiler, code);
 
   ORC_ASM_CODE(compiler,"  vtbl.8 %s, {%s,%s}, %s\n",
       orc_neon_reg_name (var->alloc),
-      orc_neon_reg_name (var->alloc),
-      orc_neon_reg_name (var->alloc + 1),
+      orc_neon_reg_name (var->aligned_data),
+      orc_neon_reg_name (var->aligned_data + 1),
       orc_neon_reg_name (var->mask_alloc));
-  code = NEON_BINARY(0xf3b00900, var->alloc, var->alloc, var->mask_alloc);
+  code = NEON_BINARY(0xf3b00900, var->alloc, var->aligned_data, var->mask_alloc);
   orc_arm_emit (compiler, code);
-
-  //orc_arm_emit_add (compiler, var->ptr_register, var->ptr_register,
-  //    var->ptr_offset);
 }
 
 void
@@ -324,7 +294,7 @@ orc_neon_loadb (OrcCompiler *compiler, OrcVariable *var, int update)
   } else if (compiler->loop_shift == 2) {
     orc_neon_load_halfvec_unaligned (compiler, var, update);
   } else {
-    if (compiler->loop_shift > 0) {
+    if (compiler->loop_shift > 1) {
       ORC_ERROR("slow load");
     }
     for(i=0;i<(1<<compiler->loop_shift);i++){
@@ -352,7 +322,7 @@ orc_neon_loadw (OrcCompiler *compiler, OrcVariable *var, int update)
   } else if (compiler->loop_shift == 2) {
     orc_neon_load_vec_unaligned (compiler, var, update);
   } else {
-    if (compiler->loop_shift > 0) {
+    if (compiler->loop_shift > 1) {
       ORC_ERROR("slow load");
     }
     for(i=0;i<(1<<compiler->loop_shift);i++){
@@ -1149,7 +1119,7 @@ orc_neon_rule_select1wb (OrcCompiler *p, void *user, OrcInstruction *insn)
       p->vars[insn->src_args[0]].alloc);
   orc_neon_emit_unary_narrow (p, "vmovn.i16", 0xf3b20200,
       p->vars[insn->dest_args[0]].alloc,
-      p->vars[insn->src_args[0]].alloc);
+      p->vars[insn->dest_args[0]].alloc);
 }
 
 static void
@@ -1160,7 +1130,7 @@ orc_neon_rule_select1lw (OrcCompiler *p, void *user, OrcInstruction *insn)
       p->vars[insn->src_args[0]].alloc);
   orc_neon_emit_unary_narrow (p, "vmovn.i32", 0xf3b60200,
       p->vars[insn->dest_args[0]].alloc,
-      p->vars[insn->src_args[0]].alloc);
+      p->vars[insn->dest_args[0]].alloc);
 }
 
 static void
