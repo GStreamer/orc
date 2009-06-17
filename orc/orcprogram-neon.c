@@ -265,6 +265,7 @@ orc_neon_load_alignment_masks (OrcCompiler *compiler)
               var->ptr_register, size-1);
           orc_arm_emit_lsl_imm (compiler, compiler->gp_tmpreg,
               compiler->gp_tmpreg, 3);
+orc_arm_emit_load_imm (compiler, compiler->gp_tmpreg, 0);
           orc_arm_emit_align (compiler, 3);
           orc_arm_emit_add (compiler, compiler->gp_tmpreg,
               compiler->gp_tmpreg, ORC_ARM_PC);
@@ -285,17 +286,17 @@ orc_neon_load_alignment_masks (OrcCompiler *compiler)
           orc_arm_emit (compiler, code);
 
   orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, 8+b);
-  for(i=0;i<8;i++){
+  for(i=0;i<1;i++){
     ORC_ASM_CODE(compiler, "  .word 0x%02x%02x%02x%02x\n", i+3, i+2, i+1, i+0);
     orc_arm_emit (compiler, ((i+0)<<0) | ((i+1)<<8) | ((i+2)<<16) | ((i+3)<<24));
     ORC_ASM_CODE(compiler, "  .word 0x%02x%02x%02x%02x\n", i+7, i+6, i+5, i+4);
     orc_arm_emit (compiler, ((i+4)<<0) | ((i+5)<<8) | ((i+6)<<16) | ((i+7)<<24));
   }
-  for(i=0;i<8;i++){
-    ORC_ASM_CODE(compiler, "  .word 0x%02x%02x%02x%02x\n", i+3, i+2, i+1, i+0);
-    orc_arm_emit (compiler, ((i+0)<<0) | ((i+1)<<8) | ((i+2)<<16) | ((i+3)<<24));
-    ORC_ASM_CODE(compiler, "  .word 0x%02x%02x%02x%02x\n", i+7, i+6, i+5, i+4);
-    orc_arm_emit (compiler, ((i+4)<<0) | ((i+5)<<8) | ((i+6)<<16) | ((i+7)<<24));
+  for(i=1;i<16;i++){
+    ORC_ASM_CODE(compiler, "  .word 0x00000000\n");
+    orc_arm_emit (compiler, 0x00000000);
+    ORC_ASM_CODE(compiler, "  .word 0x00000000\n");
+    orc_arm_emit (compiler, 0x00000000);
   }
   orc_arm_emit_label (compiler, 8+b);
   b++;
