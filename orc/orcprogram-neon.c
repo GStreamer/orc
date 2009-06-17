@@ -267,6 +267,7 @@ orc_neon_load_alignment_masks (OrcCompiler *compiler)
             ORC_ERROR("strange size %d", size);
           }
 
+if (0) {
           for(j=0;j<size;j++){
             ORC_ASM_CODE(compiler,"  vmov.8 %s[%d], %s\n",
                 orc_neon_reg_name (var->mask_alloc), j,
@@ -282,6 +283,7 @@ orc_neon_load_alignment_masks (OrcCompiler *compiler)
             orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
                 compiler->gp_tmpreg, 1);
           }
+}
 
           orc_arm_emit_and_imm (compiler, var->ptr_offset, var->ptr_register,
               size - 1);
