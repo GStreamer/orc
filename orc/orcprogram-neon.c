@@ -257,35 +257,37 @@ orc_neon_load_alignment_masks (OrcCompiler *compiler)
       case ORC_VAR_TYPE_SRC:
         if (var->is_aligned) continue;
 
-        size = var->size << compiler->loop_shift;
+        if (compiler->loop_shift > 1) {
+          size = var->size << compiler->loop_shift;
 
-        orc_arm_emit_and_imm (compiler, compiler->gp_tmpreg,
-            var->ptr_register, size-1);
+          orc_arm_emit_and_imm (compiler, compiler->gp_tmpreg,
+              var->ptr_register, size-1);
 
-        if (size != 4 && size != 8) {
-          ORC_ERROR("strange size %d", size);
+          if (size != 4 && size != 8) {
+            ORC_ERROR("strange size %d", size);
+          }
+
+          for(j=0;j<size;j++){
+            ORC_ASM_CODE(compiler,"  vmov.8 %s[%d], %s\n",
+                orc_neon_reg_name (var->mask_alloc), j,
+                orc_arm_reg_name (compiler->gp_tmpreg));
+            code = 0xee400b10;
+            code |= (var->mask_alloc&0xf)<<16;
+            code |= ((var->mask_alloc>>4)&0x1)<<7;
+            code |= (compiler->gp_tmpreg&0xf)<<12;
+            code |= (j&3)<<5;
+            code |= (j>>2)<<21;
+            orc_arm_emit (compiler, code);
+
+            orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
+                compiler->gp_tmpreg, 1);
+          }
+
+          orc_arm_emit_and_imm (compiler, var->ptr_offset, var->ptr_register,
+              size - 1);
+          orc_arm_emit_sub (compiler, var->ptr_register, var->ptr_register,
+              var->ptr_offset);
         }
-
-        for(j=0;j<size;j++){
-          ORC_ASM_CODE(compiler,"  vmov.8 %s[%d], %s\n",
-              orc_neon_reg_name (var->mask_alloc), j,
-              orc_arm_reg_name (compiler->gp_tmpreg));
-          code = 0xee400b10;
-          code |= (var->mask_alloc&0xf)<<16;
-          code |= ((var->mask_alloc>>4)&0x1)<<7;
-          code |= (compiler->gp_tmpreg&0xf)<<12;
-          code |= (j&3)<<5;
-          code |= (j>>2)<<21;
-          orc_arm_emit (compiler, code);
-
-          orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
-              compiler->gp_tmpreg, 1);
-        }
-
-        orc_arm_emit_and_imm (compiler, var->ptr_offset, var->ptr_register,
-            size - 1);
-        //orc_arm_emit_sub (compiler, var->ptr_register, var->ptr_register,
-        //    var->ptr_offset);
 
         break;
       case ORC_VAR_TYPE_DEST:
@@ -316,9 +318,10 @@ orc_neon_restore_unalignment (OrcCompiler *compiler)
       case ORC_VAR_TYPE_SRC:
         if (var->is_aligned) continue;
 
-        //orc_arm_emit_add (compiler, var->ptr_register, var->ptr_register,
-        //    var->ptr_offset);
-
+        if (compiler->loop_shift > 1) {
+          orc_arm_emit_add (compiler, var->ptr_register, var->ptr_register,
+              var->ptr_offset);
+        }
         break;
       case ORC_VAR_TYPE_DEST:
         break;

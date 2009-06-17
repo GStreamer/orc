@@ -229,8 +229,8 @@ orc_neon_load_vec_unaligned (OrcCompiler *compiler, OrcVariable *var,
 {
   uint32_t code;
 
-  orc_arm_emit_sub (compiler, var->ptr_register, var->ptr_register,
-      var->ptr_offset);
+  //orc_arm_emit_sub (compiler, var->ptr_register, var->ptr_register,
+  //    var->ptr_offset);
 
   ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]%s\n",
       orc_neon_reg_name (var->alloc),
@@ -263,8 +263,8 @@ orc_neon_load_vec_unaligned (OrcCompiler *compiler, OrcVariable *var,
   code = NEON_BINARY(0xf3b00900, var->alloc, var->alloc, var->mask_alloc);
   orc_arm_emit (compiler, code);
 
-  orc_arm_emit_add (compiler, var->ptr_register, var->ptr_register,
-      var->ptr_offset);
+  //orc_arm_emit_add (compiler, var->ptr_register, var->ptr_register,
+  //    var->ptr_offset);
 }
 
 void
@@ -273,8 +273,8 @@ orc_neon_load_halfvec_unaligned (OrcCompiler *compiler, OrcVariable *var,
 {
   uint32_t code;
 
-  orc_arm_emit_sub (compiler, var->ptr_register, var->ptr_register,
-      var->ptr_offset);
+  //orc_arm_emit_sub (compiler, var->ptr_register, var->ptr_register,
+  //    var->ptr_offset);
 
   ORC_ASM_CODE(compiler,"  vld1.32 %s[0], [%s]%s\n",
       orc_neon_reg_name (var->alloc),
@@ -307,8 +307,8 @@ orc_neon_load_halfvec_unaligned (OrcCompiler *compiler, OrcVariable *var,
   code = NEON_BINARY(0xf3b00900, var->alloc, var->alloc, var->mask_alloc);
   orc_arm_emit (compiler, code);
 
-  orc_arm_emit_add (compiler, var->ptr_register, var->ptr_register,
-      var->ptr_offset);
+  //orc_arm_emit_add (compiler, var->ptr_register, var->ptr_register,
+  //    var->ptr_offset);
 }
 
 void
