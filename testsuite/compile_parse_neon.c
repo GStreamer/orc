@@ -39,9 +39,9 @@ main (int argc, char *argv[])
   for(i=0;i<n;i++){
     OrcCompileResult ret;
 
+    printf("%s:\n", programs[i]->name);
     ret = orc_test_gcc_compile_neon (programs[i]);
     if (ret == ORC_TEST_FAILED) {
-      printf("%s", orc_program_get_asm_code (programs[i]));
       error = TRUE;
     }
   }
