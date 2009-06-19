@@ -399,6 +399,13 @@ orc_compiler_global_reg_alloc (OrcCompiler *compiler)
         var->alloc = orc_compiler_allocate_register (compiler, TRUE);
         break;
       case ORC_VAR_TYPE_SRC:
+        var->ptr_register = orc_compiler_allocate_register (compiler, FALSE);
+        if (compiler->need_mask_regs) {
+          var->mask_alloc = orc_compiler_allocate_register (compiler, TRUE);
+          var->ptr_offset = orc_compiler_allocate_register (compiler, FALSE);
+          var->aligned_data = orc_compiler_allocate_register (compiler, TRUE);
+        }
+        break;
       case ORC_VAR_TYPE_DEST:
         var->ptr_register = orc_compiler_allocate_register (compiler, FALSE);
         break;

@@ -185,6 +185,8 @@ struct _OrcVariable {
 
   int ptr_register;
   int ptr_offset;
+  int mask_alloc;
+  int aligned_data;
 };
 
 /**
@@ -349,6 +351,8 @@ struct _OrcCompiler {
   int tmpreg;
   int exec_reg;
   int gp_tmpreg;
+
+  int need_mask_regs;
 };
 
 /**
