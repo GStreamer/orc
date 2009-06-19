@@ -109,16 +109,20 @@ fprintf(output, "SchroMutex *orc_mutex;\n");
 
   fclose (output);
 
-#if 0
+
+  output = fopen ("out-neon.s", "w");
+
   for(i=0;i<n;i++){
     OrcCompileResult result;
 
-    result = orc_program_compile (programs[i]);
+    result = orc_program_compile_for_target (programs[i],
+        orc_target_get_by_name("neon"));
     if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
-      printf("%s\n", orc_program_get_asm_code (programs[i]));
+      fprintf(output, "%s\n", orc_program_get_asm_code (programs[i]));
     }
   }
-#endif
+
+  fclose (output);
 
   return 0;
 }
@@ -406,8 +410,7 @@ output_code (OrcProgram *p, FILE *output)
     }
   }
   fprintf(output, "\n");
-  //fprintf(output, "  orc_executor_run (ex);\n");
-  fprintf(output, "  ((void (*)(OrcExecutor *))ex->program->code_exec)(ex);\n");
+  fprintf(output, "  orc_executor_run (ex);\n");
   for(i=0;i<4;i++){
     var = &p->vars[ORC_VAR_A1 + i];
     if (var->size) {
