@@ -187,6 +187,8 @@ orc_compiler_neon_init (OrcCompiler *compiler)
   if (loop_shift < compiler->loop_shift) {
     compiler->loop_shift = loop_shift;
   }
+
+  compiler->need_mask_regs = TRUE;
 }
 
 void

@@ -181,7 +181,6 @@ struct _OrcVariable {
   int is_chained;
   int is_aligned;
   int is_uncached;
-  int need_mask_regs;
 
   int value;
 
@@ -354,6 +353,7 @@ struct _OrcCompiler {
   int gp_tmpreg;
 
   int insn_index;
+  int need_mask_regs;
 };
 
 /**
