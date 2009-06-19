@@ -81,9 +81,9 @@ shlw d1, s1, 2
 .source 2 s2
 .temp 2 t1
 .temp 4 t2
-.param p1
-.param p2
-.param p3
+.param 2 p1
+.param 2 p2
+.param 2 p3
 
 addw t1, s1, s2
 mulswl t2, t1, p1
@@ -99,8 +99,8 @@ addw d1, d1, t1
 .source 2 s1
 .source 2 s2
 .source 2 s3
-.param p1
-.param p2
+.param 2 p1
+.param 2 p2
 .temp 2 t1
 .temp 2 t2
 
@@ -119,8 +119,8 @@ addw d1, d1, t1
 .source 2 s1
 .source 2 s2
 .source 2 s3
-.param p1
-.param p2
+.param 2 p1
+.param 2 p2
 .temp 2 t1
 .temp 2 t2
 
