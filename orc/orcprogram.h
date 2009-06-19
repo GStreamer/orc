@@ -181,6 +181,7 @@ struct _OrcVariable {
   int is_chained;
   int is_aligned;
   int is_uncached;
+  int need_mask_regs;
 
   int value;
 
