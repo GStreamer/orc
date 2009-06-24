@@ -394,9 +394,11 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
 {
   int align_var;
   int align_shift;
+  int var_size_shift;
 
   align_var = get_align_var (compiler);
-  align_shift = get_shift (compiler->vars[align_var].size);
+  var_size_shift = get_shift (compiler->vars[align_var].size);
+  align_shift = var_size_shift + compiler->loop_shift;
 
   compiler->vars[align_var].is_aligned = FALSE;
 
@@ -407,8 +409,8 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
     orc_x86_emit_sub_memoffset_reg (compiler, 4,
         (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[align_var]),
         compiler->exec_reg, X86_EAX);
-    orc_x86_emit_and_imm_reg (compiler, 4, 15, X86_EAX);
-    orc_x86_emit_sar_imm_reg (compiler, 4, align_shift, X86_EAX);
+    orc_x86_emit_and_imm_reg (compiler, 4, (1<<align_shift) - 1, X86_EAX);
+    orc_x86_emit_sar_imm_reg (compiler, 4, var_size_shift, X86_EAX);
 
     orc_x86_emit_cmp_reg_memoffset (compiler, 4, X86_EAX,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,n), compiler->exec_reg);
@@ -425,7 +427,8 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
 
     orc_x86_emit_mov_reg_reg (compiler, 4, compiler->gp_tmpreg, X86_EAX);
 
-    orc_x86_emit_sar_imm_reg (compiler, 4, compiler->loop_shift, compiler->gp_tmpreg);
+    orc_x86_emit_sar_imm_reg (compiler, 4, compiler->loop_shift,
+        compiler->gp_tmpreg);
     orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2), compiler->exec_reg);
 
@@ -463,7 +466,7 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
     save_loop_shift = compiler->loop_shift;
     compiler->vars[align_var].is_aligned = FALSE;
 
-    for (l=0;l<save_loop_shift + 1;l++){
+    for (l=0;l<save_loop_shift;l++){
       compiler->loop_shift = l;
       ORC_ASM_CODE(compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
 

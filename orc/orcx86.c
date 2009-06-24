@@ -328,6 +328,8 @@ orc_x86_emit_test_reg_reg (OrcCompiler *compiler, int size, int reg1, int reg2)
 void
 orc_x86_emit_sar_imm_reg (OrcCompiler *compiler, int size, int value, int reg)
 {
+  if (value == 0) return;
+
   if (size == 2) {
     ORC_ASM_CODE(compiler,"  sarw $%d, %%%s\n", value, orc_x86_get_regname_16(reg));
   } else if (size == 4) {
