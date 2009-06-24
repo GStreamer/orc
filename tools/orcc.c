@@ -302,12 +302,13 @@ output_code (OrcProgram *p, FILE *output)
   }
   fprintf(output, "int n)\n");
   fprintf(output, "{\n");
+  fprintf(output, "  static int p_inited = 0;\n");
   fprintf(output, "  static OrcProgram *p = NULL;\n");
   fprintf(output, "  OrcExecutor _ex, *ex = &_ex;\n");
   fprintf(output, "\n");
-  fprintf(output, "  if (p == NULL) {\n");
+  fprintf(output, "  if (!p_inited) {\n");
   fprintf(output, "    MUTEX_LOCK\n");
-  fprintf(output, "    if (p == NULL) {\n");
+  fprintf(output, "    if (!p_inited) {\n");
   fprintf(output, "      OrcCompileResult result;\n");
   fprintf(output, "\n");
   fprintf(output, "      p = orc_program_new ();\n");
@@ -375,6 +376,7 @@ output_code (OrcProgram *p, FILE *output)
   fprintf(output, "        abort();\n");
   fprintf(output, "      }\n");
   fprintf(output, "    }\n");
+  fprintf(output, "    p_inited = TRUE;\n");
   fprintf(output, "    MUTEX_UNLOCK\n");
   fprintf(output, "  }\n");
   fprintf(output, "\n");
