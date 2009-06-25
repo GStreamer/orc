@@ -201,6 +201,9 @@ sse_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src = p->vars[insn->src_args[0]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
 
+  if (p->loop_shift == 0) {
+    orc_sse_emit_shiftimm (p, "pslldq", 0x73, 7, 12, src);
+  }
   orc_sse_emit_660f (p, "paddd", 0xfe, src, dest);
 }
 
