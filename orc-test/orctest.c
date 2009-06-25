@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+//#include <time.h>
 
 
 void
@@ -16,6 +17,8 @@ orc_test_init (void)
   orc_init ();
 
   setvbuf (stdout, NULL, _IONBF, 0);
+
+  //srand (time(NULL));
 }
 
 
@@ -341,6 +344,9 @@ orc_test_compare_output (OrcProgram *program)
   int k;
   int have_dest = FALSE;
   OrcCompileResult result;
+  int have_acc = FALSE;
+  int acc_exec = 0, acc_emul = 0;
+  int ret = ORC_TEST_OK;
 
   result = orc_program_compile (program);
   if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
@@ -370,15 +376,16 @@ orc_test_compare_output (OrcProgram *program)
       orc_executor_set_param (ex, i, 2);
     }
   }
-  if (!have_dest) {
-    return ORC_TEST_INDETERMINATE;
-  }
 
   orc_executor_run (ex);
 
   for(i=0;i<ORC_N_VARIABLES;i++){
     if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
       orc_executor_set_array (ex, i, dest_emul[i]);
+    }
+    if (program->vars[i].vartype == ORC_VAR_TYPE_ACCUMULATOR) {
+      acc_exec = ex->accumulators[0];
+      have_acc = TRUE;
     }
   }
   orc_executor_emulate (ex);
@@ -411,24 +418,37 @@ orc_test_compare_output (OrcProgram *program)
           printf("\n");
         }
 
-        printf("%s", orc_program_get_asm_code (program));
-
-        return FALSE;
+        ret = ORC_TEST_FAILED;
       }
       if (!check_bounds (dest_exec[k], n, program->vars[k].size)) {
         printf("out of bounds failure\n");
 
-        return FALSE;
+        ret = ORC_TEST_FAILED;
       }
 
       free (ptr_exec[k]);
       free (ptr_emul[k]);
     }
+    if (program->vars[k].vartype == ORC_VAR_TYPE_ACCUMULATOR) {
+      acc_emul = ex->accumulators[0];
+    }
+  }
+
+  if (have_acc) {
+    printf("acc %d %d\n", acc_emul, acc_exec);
+    printf("n %d\n", n);
+    if (acc_emul != acc_exec) {
+      ret = ORC_TEST_FAILED;
+    }
+  }
+
+  if (ret == ORC_TEST_FAILED) {
+    printf("%s", orc_program_get_asm_code (program));
   }
 
   orc_executor_free (ex);
 
-  return TRUE;
+  return ret;
 }
 
 OrcProgram *
