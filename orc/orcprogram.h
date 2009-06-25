@@ -352,10 +352,7 @@ struct _OrcCompiler {
   int exec_reg;
   int gp_tmpreg;
 
-<<<<<<< HEAD:orc/orcprogram.h
   int insn_index;
-=======
->>>>>>> master:orc/orcprogram.h
   int need_mask_regs;
 };
 
