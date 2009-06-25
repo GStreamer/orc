@@ -85,7 +85,7 @@ orc_executor_set_param_str (OrcExecutor *ex, const char *name, int value)
 int
 orc_executor_get_accumulator (OrcExecutor *ex, int var)
 {
-  return ex->accumulators[var];
+  return ex->accumulators[var - ORC_VAR_A1];
 }
 
 int
@@ -112,6 +112,8 @@ orc_executor_emulate (OrcExecutor *ex)
   OrcInstruction *insn;
   OrcStaticOpcode *opcode;
   OrcOpcodeExecutor opcode_ex;
+
+  ex->accumulators[0] = 0;
 
   memset (&opcode_ex, 0, sizeof(opcode_ex));
 
@@ -187,6 +189,8 @@ orc_executor_emulate (OrcExecutor *ex)
             default:
               ORC_ERROR("unhandled size %d", program->vars[insn->dest_args[k]].size);
           }
+        } else if (var->vartype == ORC_VAR_TYPE_ACCUMULATOR) {
+          ex->accumulators[0] += opcode_ex.dest_values[k];
         } else {
           ORC_ERROR("shouldn't be reached (%d)", var->vartype);
         }
