@@ -177,7 +177,6 @@ struct _OrcVariable {
   int replacement;
 
   int alloc;
-  int mask_alloc;
   int is_chained;
   int is_aligned;
   int is_uncached;
@@ -186,6 +185,7 @@ struct _OrcVariable {
 
   int ptr_register;
   int ptr_offset;
+  int mask_alloc;
   int aligned_data;
 };
 
@@ -352,7 +352,10 @@ struct _OrcCompiler {
   int exec_reg;
   int gp_tmpreg;
 
+<<<<<<< HEAD:orc/orcprogram.h
   int insn_index;
+=======
+>>>>>>> master:orc/orcprogram.h
   int need_mask_regs;
 };
 

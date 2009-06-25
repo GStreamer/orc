@@ -628,9 +628,23 @@ orc_test_compare_output (OrcProgram *program)
   }
 
   if (have_acc) {
-    printf("acc %d %d\n", acc_emul, acc_exec);
-    printf("n %d\n", n);
     if (acc_emul != acc_exec) {
+      for(i=0;i<n;i++){
+        int j;
+
+        printf("%2d:", i);
+
+        for(j=0;j<ORC_N_VARIABLES;j++){
+          if (program->vars[j].name == NULL) continue;
+          if (program->vars[j].vartype == ORC_VAR_TYPE_SRC &&
+              program->vars[j].size > 0) {
+            print_array_val_signed (ex->arrays[j], program->vars[j].size, i);
+          }
+        }
+
+        printf(" -> acc\n");
+      }
+      printf("acc %d %d\n", acc_emul, acc_exec);
       ret = ORC_TEST_FAILED;
     }
   }

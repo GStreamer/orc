@@ -109,7 +109,6 @@ fprintf(output, "SchroMutex *orc_mutex;\n");
 
   fclose (output);
 
-
   output = fopen ("out-neon.s", "w");
 
   for(i=0;i<n;i++){
@@ -412,7 +411,8 @@ output_code (OrcProgram *p, FILE *output)
     }
   }
   fprintf(output, "\n");
-  fprintf(output, "  orc_executor_run (ex);\n");
+  //fprintf(output, "  orc_executor_run (ex);\n");
+  fprintf(output, "  ((void (*)(OrcExecutor *))ex->program->code_exec)(ex);\n");
   for(i=0;i<4;i++){
     var = &p->vars[ORC_VAR_A1 + i];
     if (var->size) {
