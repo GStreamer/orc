@@ -772,8 +772,8 @@ orc_neon_save_accumulators (OrcCompiler *compiler)
 
             ORC_ASM_CODE(compiler,"  vst1.16 %s[%d], [%s], %s\n",
                 orc_neon_reg_name (src), 0,
-                orc_arm_reg_name (compiler->gp_tmpreg),
-                orc_arm_reg_name (compiler->exec_reg));
+                orc_arm_reg_name (compiler->exec_reg),
+                orc_arm_reg_name (compiler->gp_tmpreg));
             code = 0xf4800400;
             code |= (compiler->gp_tmpreg&0xf) << 16;
             code |= (src&0xf) << 12;
@@ -792,8 +792,8 @@ orc_neon_save_accumulators (OrcCompiler *compiler)
 
             ORC_ASM_CODE(compiler,"  vst1.32 %s[%d], [%s], %s\n",
                 orc_neon_reg_name (src), 0,
-                orc_arm_reg_name (compiler->gp_tmpreg),
-                orc_arm_reg_name (compiler->exec_reg));
+                orc_arm_reg_name (compiler->exec_reg),
+                orc_arm_reg_name (compiler->gp_tmpreg));
             code = 0xf4800800;
             code |= (compiler->gp_tmpreg&0xf) << 16;
             code |= (src&0xf) << 12;
