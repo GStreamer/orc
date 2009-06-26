@@ -187,6 +187,7 @@ orc_compiler_neon_init (OrcCompiler *compiler)
   if (loop_shift < compiler->loop_shift) {
     compiler->loop_shift = loop_shift;
   }
+compiler->loop_shift = 0;
 
   compiler->need_mask_regs = TRUE;
 }
@@ -269,53 +270,54 @@ orc_neon_load_alignment_masks (OrcCompiler *compiler)
               var->ptr_register, size-1);
           orc_arm_emit_lsl_imm (compiler, compiler->gp_tmpreg,
               compiler->gp_tmpreg, 3);
-//orc_arm_emit_load_imm (compiler, compiler->gp_tmpreg, 0);
-          orc_arm_emit_align (compiler, 3);
-          orc_arm_emit_add (compiler, compiler->gp_tmpreg,
-              compiler->gp_tmpreg, ORC_ARM_PC);
-          orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
-              compiler->gp_tmpreg, 16-8);
 
-          if (size != 4 && size != 8) {
-            ORC_ERROR("strange size %d", size);
-          }
+          if (1) {
+            orc_arm_emit_align (compiler, 3);
+            orc_arm_emit_add (compiler, compiler->gp_tmpreg,
+                compiler->gp_tmpreg, ORC_ARM_PC);
+            orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
+                compiler->gp_tmpreg, 16-8);
 
-          ORC_ASM_CODE(compiler, "  vld1.64 %s, [%s]\n",
-              orc_neon_reg_name (var->mask_alloc),
-              orc_arm_reg_name (compiler->gp_tmpreg));
-          code = 0xf42007cf;
-          code |= (compiler->gp_tmpreg&0xf) << 16;
-          code |= (var->mask_alloc&0xf) << 12;
-          code |= ((var->mask_alloc>>4)&0x1) << 22;
-          orc_arm_emit (compiler, code);
+            if (size != 4 && size != 8) {
+              ORC_ERROR("strange size %d", size);
+            }
 
-          orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, 8+b);
-          for(j=0;j<8;j++){
-            ORC_ASM_CODE(compiler, "  .word 0x%02x%02x%02x%02x\n", j+3, j+2, j+1, j+0);
-            orc_arm_emit (compiler, ((j+0)<<0) | ((j+1)<<8) | ((j+2)<<16) | ((j+3)<<24));
-            ORC_ASM_CODE(compiler, "  .word 0x%02x%02x%02x%02x\n", j+7, j+6, j+5, j+4);
-            orc_arm_emit (compiler, ((j+4)<<0) | ((j+5)<<8) | ((j+6)<<16) | ((j+7)<<24));
-          }
-          orc_arm_emit_label (compiler, 8+b);
-          b++;
-
-#if 0
-          for(j=0;j<size;j++){
-            ORC_ASM_CODE(compiler,"  vmov.8 %s[%d], %s\n",
-                orc_neon_reg_name (var->mask_alloc), j,
+            ORC_ASM_CODE(compiler, "  vld1.64 %s, [%s]\n",
+                orc_neon_reg_name (var->mask_alloc),
                 orc_arm_reg_name (compiler->gp_tmpreg));
-            code = 0xee400b10;
-            code |= (var->mask_alloc&0xf)<<16;
-            code |= ((var->mask_alloc>>4)&0x1)<<7;
-            code |= (compiler->gp_tmpreg&0xf)<<12;
-            code |= (j&3)<<5;
-            code |= (j>>2)<<21;
+            code = 0xf42007cf;
+            code |= (compiler->gp_tmpreg&0xf) << 16;
+            code |= (var->mask_alloc&0xf) << 12;
+            code |= ((var->mask_alloc>>4)&0x1) << 22;
             orc_arm_emit (compiler, code);
 
-            orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
-                compiler->gp_tmpreg, 1);
+            orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, 8+b);
+            for(j=0;j<8;j++){
+              ORC_ASM_CODE(compiler, "  .word 0x%02x%02x%02x%02x\n", j+3, j+2, j+1, j+0);
+              orc_arm_emit (compiler, ((j+0)<<0) | ((j+1)<<8) | ((j+2)<<16) | ((j+3)<<24));
+              ORC_ASM_CODE(compiler, "  .word 0x%02x%02x%02x%02x\n", j+7, j+6, j+5, j+4);
+              orc_arm_emit (compiler, ((j+4)<<0) | ((j+5)<<8) | ((j+6)<<16) | ((j+7)<<24));
+            }
+            orc_arm_emit_label (compiler, 8+b);
+            b++;
+
+          } else {
+            for(j=0;j<size;j++){
+              ORC_ASM_CODE(compiler,"  vmov.8 %s[%d], %s\n",
+                  orc_neon_reg_name (var->mask_alloc), j,
+                  orc_arm_reg_name (compiler->gp_tmpreg));
+              code = 0xee400b10;
+              code |= (var->mask_alloc&0xf)<<16;
+              code |= ((var->mask_alloc>>4)&0x1)<<7;
+              code |= (compiler->gp_tmpreg&0xf)<<12;
+              code |= (j&3)<<5;
+              code |= (j>>2)<<21;
+              orc_arm_emit (compiler, code);
+
+              orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
+                  compiler->gp_tmpreg, 1);
+            }
           }
-#endif
 
           orc_arm_emit_and_imm (compiler, var->ptr_offset, var->ptr_register,
               size - 1);
@@ -757,23 +759,25 @@ orc_neon_save_accumulators (OrcCompiler *compiler)
             compiler->gp_tmpreg, compiler->exec_reg);
         switch (var->size) {
           case 2:
-            ORC_ASM_CODE(compiler,"  vpaddl.u16 %s, %s\n",
-                orc_neon_reg_name (src),
-                orc_neon_reg_name (src));
-            code = 0xf3b40280;
-            code |= (src&0xf) << 12;
-            code |= ((src>>4)&0x1) << 22;
-            code |= (src&0xf) << 0;
-            orc_arm_emit (compiler, code);
+            if (compiler->loop_shift > 0) {
+              ORC_ASM_CODE(compiler,"  vpaddl.u16 %s, %s\n",
+                  orc_neon_reg_name (src),
+                  orc_neon_reg_name (src));
+              code = 0xf3b40280;
+              code |= (src&0xf) << 12;
+              code |= ((src>>4)&0x1) << 22;
+              code |= (src&0xf) << 0;
+              orc_arm_emit (compiler, code);
 
-            ORC_ASM_CODE(compiler,"  vpaddl.u32 %s, %s\n",
-                orc_neon_reg_name (src),
-                orc_neon_reg_name (src));
-            code = 0xf3b80280;
-            code |= (src&0xf) << 12;
-            code |= ((src>>4)&0x1) << 22;
-            code |= (src&0xf) << 0;
-            orc_arm_emit (compiler, code);
+              ORC_ASM_CODE(compiler,"  vpaddl.u32 %s, %s\n",
+                  orc_neon_reg_name (src),
+                  orc_neon_reg_name (src));
+              code = 0xf3b80280;
+              code |= (src&0xf) << 12;
+              code |= ((src>>4)&0x1) << 22;
+              code |= (src&0xf) << 0;
+              orc_arm_emit (compiler, code);
+            }
 
             ORC_ASM_CODE(compiler,"  vst1.16 %s[%d], [%s]\n",
                 orc_neon_reg_name (src), 0,
@@ -785,14 +789,16 @@ orc_neon_save_accumulators (OrcCompiler *compiler)
             orc_arm_emit (compiler, code);
             break;
           case 4:
-            ORC_ASM_CODE(compiler,"  vpaddl.u32 %s, %s\n",
-                orc_neon_reg_name (src),
-                orc_neon_reg_name (src));
-            code = 0xf3b80280;
-            code |= (src&0xf) << 12;
-            code |= ((src>>4)&0x1) << 22;
-            code |= (src&0xf) << 0;
-            orc_arm_emit (compiler, code);
+            if (compiler->loop_shift > 0) {
+              ORC_ASM_CODE(compiler,"  vpaddl.u32 %s, %s\n",
+                  orc_neon_reg_name (src),
+                  orc_neon_reg_name (src));
+              code = 0xf3b80280;
+              code |= (src&0xf) << 12;
+              code |= ((src>>4)&0x1) << 22;
+              code |= (src&0xf) << 0;
+              orc_arm_emit (compiler, code);
+            }
 
             ORC_ASM_CODE(compiler,"  vst1.32 %s[%d], [%s]\n",
                 orc_neon_reg_name (src), 0,
