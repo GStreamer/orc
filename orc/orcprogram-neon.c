@@ -504,9 +504,11 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
 {
   int align_var;
   int align_shift;
+  int var_size_shift;
   
   align_var = get_align_var (compiler);
-  align_shift = get_shift (compiler->vars[align_var].size);
+  var_size_shift = get_shift (compiler->vars[align_var].size);
+  align_shift = var_size_shift + compiler->loop_shift;
 
   compiler->vars[align_var].is_aligned = FALSE;
 
@@ -522,9 +524,10 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
     orc_arm_emit_load_reg (compiler, ORC_ARM_A2, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,arrays[align_var]));
     orc_arm_emit_sub (compiler, ORC_ARM_IP, ORC_ARM_IP, ORC_ARM_A2);
-    orc_arm_emit_and_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, (1<<align_shift)-1);
-    if (align_shift > 0) {
-      orc_arm_emit_asr_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, align_shift);
+    orc_arm_emit_and_imm (compiler, ORC_ARM_IP, ORC_ARM_IP,
+        (1<<align_shift)-1);
+    if (var_size_shift > 0) {
+      orc_arm_emit_asr_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, var_size_shift);
     }
 
     orc_arm_emit_cmp (compiler, ORC_ARM_A3, ORC_ARM_IP);
