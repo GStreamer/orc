@@ -1155,11 +1155,17 @@ orc_neon_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
         p->vars[insn->src_args[0]].alloc);
     code |= (32) << 16;
     orc_arm_emit (p, code);
+
+    orc_neon_emit_binary (p, "vadd.i32", 0xf2200800,
+        p->vars[insn->dest_args[0]].alloc,
+        p->vars[insn->dest_args[0]].alloc,
+        p->tmpreg);
+  } else {
+    orc_neon_emit_binary (p, "vadd.i32", 0xf2200800,
+        p->vars[insn->dest_args[0]].alloc,
+        p->vars[insn->dest_args[0]].alloc,
+        p->vars[insn->src_args[0]].alloc);
   }
-  orc_neon_emit_binary (p, "vadd.i32", 0xf2200800,
-      p->vars[insn->dest_args[0]].alloc,
-      p->vars[insn->dest_args[0]].alloc,
-      p->vars[insn->src_args[0]].alloc);
 }
 
 static void
