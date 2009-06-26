@@ -750,6 +750,8 @@ orc_neon_save_accumulators (OrcCompiler *compiler)
 
         orc_arm_emit_load_imm (compiler, compiler->gp_tmpreg,
             ORC_STRUCT_OFFSET(OrcExecutor, accumulators[i-ORC_VAR_A1]));
+        orc_arm_emit_add (compiler, compiler->gp_tmpreg,
+            compiler->gp_tmpreg, compiler->exec_reg);
         switch (var->size) {
           case 2:
             ORC_ASM_CODE(compiler,"  vpaddl.u16 %s, %s\n",
@@ -770,11 +772,10 @@ orc_neon_save_accumulators (OrcCompiler *compiler)
             code |= (src&0xf) << 0;
             orc_arm_emit (compiler, code);
 
-            ORC_ASM_CODE(compiler,"  vst1.16 %s[%d], [%s], %s\n",
+            ORC_ASM_CODE(compiler,"  vst1.16 %s[%d], [%s]\n",
                 orc_neon_reg_name (src), 0,
-                orc_arm_reg_name (compiler->exec_reg),
                 orc_arm_reg_name (compiler->gp_tmpreg));
-            code = 0xf4800400;
+            code = 0xf480040f;
             code |= (compiler->gp_tmpreg&0xf) << 16;
             code |= (src&0xf) << 12;
             code |= ((src>>4)&0x1) << 22;
@@ -790,11 +791,10 @@ orc_neon_save_accumulators (OrcCompiler *compiler)
             code |= (src&0xf) << 0;
             orc_arm_emit (compiler, code);
 
-            ORC_ASM_CODE(compiler,"  vst1.32 %s[%d], [%s], %s\n",
+            ORC_ASM_CODE(compiler,"  vst1.32 %s[%d], [%s]\n",
                 orc_neon_reg_name (src), 0,
-                orc_arm_reg_name (compiler->exec_reg),
                 orc_arm_reg_name (compiler->gp_tmpreg));
-            code = 0xf4800800;
+            code = 0xf480080f;
             code |= (compiler->gp_tmpreg&0xf) << 16;
             code |= (src&0xf) << 12;
             code |= ((src>>4)&0x1) << 22;
