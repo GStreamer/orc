@@ -76,6 +76,10 @@ enum {
   ORC_TARGET_ALTIVEC_ALTIVEC = (1<<0)
 };
 
+enum {
+  ORC_TARGET_NEON_CLEAN_COMPILE = (1<<0)
+};
+
 typedef enum {
   ORC_VAR_TYPE_TEMP,
   ORC_VAR_TYPE_SRC,
