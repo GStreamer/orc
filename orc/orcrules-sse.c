@@ -283,14 +283,28 @@ sse_rule_convsbw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_convubw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  /* FIXME should do this by unpacking with a zero reg */
+  /* FIXME need a zero register */
 
-  orc_sse_emit_660f (p, "punpcklbw", 0x60,
-      p->vars[insn->src_args[0]].alloc,
-      p->vars[insn->dest_args[0]].alloc);
+  if (0) {
+    orc_sse_emit_660f (p, "punpcklbw", 0x60,
+        p->vars[insn->src_args[0]].alloc,
+        p->vars[insn->dest_args[0]].alloc);
 
-  orc_sse_emit_shiftimm (p, "psrlw", 0x71, 2, 8,
-      p->vars[insn->dest_args[0]].alloc);
+    orc_sse_emit_shiftimm (p, "psrlw", 0x71, 2, 8,
+        p->vars[insn->dest_args[0]].alloc);
+  } else {
+    if (p->vars[insn->src_args[0]].alloc !=
+        p->vars[insn->dest_args[0]].alloc) {
+      orc_sse_emit_660f (p, "movdqa", 0x6f,
+          p->vars[insn->src_args[0]].alloc,
+          p->vars[insn->dest_args[0]].alloc);
+    }
+    orc_sse_emit_660f (p, "pxor", 0xef,
+        p->tmpreg, p->tmpreg);
+    orc_sse_emit_660f (p, "punpcklbw", 0x60,
+        p->tmpreg,
+        p->vars[insn->dest_args[0]].alloc);
+  }
 }
 
 static void
@@ -344,14 +358,27 @@ sse_rule_convswl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_convuwl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  /* FIXME should do this by unpacking with a zero reg */
+  /* FIXME need a zero register */
 
-  orc_sse_emit_660f (p, "punpcklwd", 0x61,
-      p->vars[insn->src_args[0]].alloc,
-      p->vars[insn->dest_args[0]].alloc);
-
-  orc_sse_emit_shiftimm (p, "psrld", 0x72, 2, 16,
-      p->vars[insn->dest_args[0]].alloc);
+  if (0) {
+    orc_sse_emit_660f (p, "punpcklwd", 0x61,
+        p->vars[insn->src_args[0]].alloc,
+        p->vars[insn->dest_args[0]].alloc);
+    orc_sse_emit_shiftimm (p, "psrld", 0x72, 2, 16,
+        p->vars[insn->dest_args[0]].alloc);
+  } else {
+    if (p->vars[insn->src_args[0]].alloc !=
+        p->vars[insn->dest_args[0]].alloc) {
+      orc_sse_emit_660f (p, "movdqa", 0x6f,
+          p->vars[insn->src_args[0]].alloc,
+          p->vars[insn->dest_args[0]].alloc);
+    }
+    orc_sse_emit_660f (p, "pxor", 0xef,
+        p->tmpreg, p->tmpreg);
+    orc_sse_emit_660f (p, "punpcklwd", 0x61,
+        p->tmpreg,
+        p->vars[insn->dest_args[0]].alloc);
+  }
 }
 
 static void
@@ -387,6 +414,20 @@ sse_rule_convsuslw (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_660f (p, "packusdw", 0x382b,
       p->vars[insn->src_args[0]].alloc,
       p->vars[insn->dest_args[0]].alloc);
+}
+
+static void
+sse_rule_mulsbw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[1]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = p->tmpreg;
+
+  orc_sse_emit_660f (p, "punpcklbw", 0x60, src, tmp);
+  orc_sse_emit_shiftimm (p, "psraw", 0x71, 4, 8, tmp);
+  orc_sse_emit_660f (p, "punpcklbw", 0x60, dest, dest);
+  orc_sse_emit_shiftimm (p, "psraw", 0x71, 4, 8, dest);
+  orc_sse_emit_660f (p, "pmullw", 0xd5, tmp, dest);
 }
 
 static void
@@ -862,6 +903,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "convuwl", sse_rule_convuwl, NULL);
   orc_rule_register (rule_set, "convssslw", sse_rule_convssslw, NULL);
 
+  orc_rule_register (rule_set, "mulsbw", sse_rule_mulsbw, NULL);
   orc_rule_register (rule_set, "mulswl", sse_rule_mulswl, NULL);
 
   orc_rule_register (rule_set, "accw", sse_rule_accw, NULL);
