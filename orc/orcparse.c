@@ -137,6 +137,10 @@ orc_parse (const char *code, OrcProgram ***programs)
       } else if (strcmp (token[0], ".param") == 0) {
         int size = strtol (token[1], NULL, 0);
         orc_program_add_parameter (parser->program, size, token[2]);
+      } else if (strcmp (token[0], ".const") == 0) {
+        int size = strtol (token[1], NULL, 0);
+        int value = strtoul (token[3], NULL, 0);
+        orc_program_add_constant (parser->program, size, value, token[2]);
       } else {
         ORC_ERROR("ERROR: unknown directive: %s", token[0]);
       }

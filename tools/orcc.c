@@ -354,8 +354,13 @@ output_code (OrcProgram *p, FILE *output)
   for(i=0;i<8;i++){
     var = &p->vars[ORC_VAR_C1 + i];
     if (var->size) {
-      fprintf(output, "      orc_program_add_constant (p, %d, %d, \"%s\");\n",
-          var->size, var->value, varnames[ORC_VAR_C1 + i]);
+      if (var->value != 0x80000000) {
+        fprintf(output, "      orc_program_add_constant (p, %d, %u, \"%s\");\n",
+            var->size, var->value, varnames[ORC_VAR_C1 + i]);
+      } else {
+        fprintf(output, "      orc_program_add_constant (p, %d, 0x%08x, \"%s\");\n",
+            var->size, var->value, varnames[ORC_VAR_C1 + i]);
+      }
     }
   }
   for(i=0;i<8;i++){
