@@ -431,6 +431,20 @@ sse_rule_mulsbw (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+sse_rule_mulubw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[1]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = p->tmpreg;
+
+  orc_sse_emit_660f (p, "punpcklbw", 0x60, src, tmp);
+  orc_sse_emit_shiftimm (p, "psrlw", 0x71, 2, 8, tmp);
+  orc_sse_emit_660f (p, "punpcklbw", 0x60, dest, dest);
+  orc_sse_emit_shiftimm (p, "psrlw", 0x71, 2, 8, dest);
+  orc_sse_emit_660f (p, "pmullw", 0xd5, tmp, dest);
+}
+
+static void
 sse_rule_mulswl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[1]].alloc;
@@ -904,6 +918,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "convssslw", sse_rule_convssslw, NULL);
 
   orc_rule_register (rule_set, "mulsbw", sse_rule_mulsbw, NULL);
+  orc_rule_register (rule_set, "mulubw", sse_rule_mulubw, NULL);
   orc_rule_register (rule_set, "mulswl", sse_rule_mulswl, NULL);
 
   orc_rule_register (rule_set, "accw", sse_rule_accw, NULL);
