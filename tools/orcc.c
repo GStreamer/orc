@@ -11,6 +11,12 @@ void output_code (OrcProgram *p, FILE *output);
 void output_code_header (OrcProgram *p, FILE *output);
 void output_code_test (OrcProgram *p, FILE *output);
 
+typedef enum {
+  MUTEX_STYLE_SCHRO,
+  MUTEX_STYLE_GLIB
+} MutexStyle;
+MutexStyle mutex_style = MUTEX_STYLE_GLIB;
+
 int
 main (int argc, char *argv[])
 {
@@ -43,16 +49,28 @@ main (int argc, char *argv[])
   fprintf(output, "#include <orc/orc.h>\n");
   fprintf(output, "#include <stdio.h>\n");
   fprintf(output, "#include <stdlib.h>\n");
-fprintf(output, "#include <schroedinger/schro.h>\n");
-fprintf(output, "#define MUTEX_LOCK schro_mutex_lock (orc_mutex);\n");
-fprintf(output, "#define MUTEX_UNLOCK schro_mutex_unlock (orc_mutex);\n");
-fprintf(output, "SchroMutex *orc_mutex;\n");
+  switch (mutex_style) {
+    case MUTEX_STYLE_SCHRO:
+      fprintf(output, "#include <schroedinger/schro.h>\n");
+      fprintf(output, "#define MUTEX_LOCK() schro_mutex_lock (orc_mutex)\n");
+      fprintf(output, "#define MUTEX_UNLOCK() schro_mutex_unlock (orc_mutex)\n");
+      fprintf(output, "SchroMutex *orc_mutex;\n");
+      break;
+    case MUTEX_STYLE_GLIB:
+      fprintf(output, "#include <glib/gthread.h>\n");
+      fprintf(output, "#define MUTEX_LOCK() g_static_mutex_lock (&orc_mutex)\n");
+      fprintf(output, "#define MUTEX_UNLOCK() g_static_mutex_unlock (&orc_mutex)\n");
+      fprintf(output, "static GStaticMutex orc_mutex = G_STATIC_MUTEX_INIT;\n");
+      break;
+    default:
+      break;
+  }
   fprintf(output, "\n");
   fprintf(output, "#ifndef MUTEX_LOCK\n");
-  fprintf(output, "#define MUTEX_LOCK\n");
+  fprintf(output, "#define MUTEX_LOCK do { } while (0)\n");
   fprintf(output, "#endif\n");
   fprintf(output, "#ifndef MUTEX_UNLOCK\n");
-  fprintf(output, "#define MUTEX_UNLOCK\n");
+  fprintf(output, "#define MUTEX_UNLOCK do { } while (0)\n");
   fprintf(output, "#endif\n");
   fprintf(output, "\n");
   fprintf(output, "\n");
@@ -93,7 +111,8 @@ fprintf(output, "SchroMutex *orc_mutex;\n");
   fprintf(output, "#include <stdlib.h>\n");
   fprintf(output, "\n");
   fprintf(output, "\n");
-  fprintf(output, "int main (int argc, char *argv[])\n");
+  fprintf(output, "int\n");
+  fprintf(output, "main (int argc, char *argv[])\n");
   fprintf(output, "{\n");
   fprintf(output, "  int error = FALSE;\n");
   fprintf(output, "\n");
@@ -103,7 +122,9 @@ fprintf(output, "SchroMutex *orc_mutex;\n");
     output_code_test (programs[i], output);
   }
   fprintf(output, "\n");
-  fprintf(output, "  if (error) return 1;\n");
+  fprintf(output, "  if (error) {\n");
+  fprintf(output, "    return 1;\n");
+  fprintf(output, "  };\n");
   fprintf(output, "  return 0;\n");
   fprintf(output, "}\n");
 
@@ -205,10 +226,10 @@ output_code_header (OrcProgram *p, FILE *output)
     var = &p->vars[ORC_VAR_D1 + i];
     if (var->size) {
       if (var->type_name) {
-        fprintf(output, "%s *%s, ", var->type_name,
+        fprintf(output, "%s * %s, ", var->type_name,
             varnames[ORC_VAR_D1 + i]);
       } else {
-        fprintf(output, "uint%d_t *%s, ", var->size*8,
+        fprintf(output, "uint%d_t * %s, ", var->size*8,
             varnames[ORC_VAR_D1 + i]);
       }
     }
@@ -217,10 +238,10 @@ output_code_header (OrcProgram *p, FILE *output)
     var = &p->vars[ORC_VAR_A1 + i];
     if (var->size) {
       if (var->type_name) {
-        fprintf(output, "%s *%s, ", var->type_name,
+        fprintf(output, "%s * %s, ", var->type_name,
             varnames[ORC_VAR_A1 + i]);
       } else {
-        fprintf(output, "uint%d_t *%s, ", var->size*8,
+        fprintf(output, "uint%d_t * %s, ", var->size*8,
             varnames[ORC_VAR_A1 + i]);
       }
     }
@@ -229,10 +250,10 @@ output_code_header (OrcProgram *p, FILE *output)
     var = &p->vars[ORC_VAR_S1 + i];
     if (var->size) {
       if (var->type_name) {
-        fprintf(output, "%s *%s, ", var->type_name,
+        fprintf(output, "%s * %s, ", var->type_name,
             varnames[ORC_VAR_S1 + i]);
       } else {
-        fprintf(output, "uint%d_t *%s, ", var->size*8,
+        fprintf(output, "uint%d_t * %s, ", var->size*8,
             varnames[ORC_VAR_S1 + i]);
       }
     }
@@ -261,10 +282,10 @@ output_code (OrcProgram *p, FILE *output)
     var = &p->vars[ORC_VAR_D1 + i];
     if (var->size) {
       if (var->type_name) {
-        fprintf(output, "%s *%s, ", var->type_name,
+        fprintf(output, "%s * %s, ", var->type_name,
             varnames[ORC_VAR_D1 + i]);
       } else {
-        fprintf(output, "uint%d_t *%s, ", var->size*8,
+        fprintf(output, "uint%d_t * %s, ", var->size*8,
             varnames[ORC_VAR_D1 + i]);
       }
     }
@@ -273,10 +294,10 @@ output_code (OrcProgram *p, FILE *output)
     var = &p->vars[ORC_VAR_A1 + i];
     if (var->size) {
       if (var->type_name) {
-        fprintf(output, "%s *%s, ", var->type_name,
+        fprintf(output, "%s * %s, ", var->type_name,
             varnames[ORC_VAR_A1 + i]);
       } else {
-        fprintf(output, "uint%d_t *%s, ", var->size*8,
+        fprintf(output, "uint%d_t * %s, ", var->size*8,
             varnames[ORC_VAR_A1 + i]);
       }
     }
@@ -285,10 +306,10 @@ output_code (OrcProgram *p, FILE *output)
     var = &p->vars[ORC_VAR_S1 + i];
     if (var->size) {
       if (var->type_name) {
-        fprintf(output, "%s *%s, ", var->type_name,
+        fprintf(output, "%s * %s, ", var->type_name,
             varnames[ORC_VAR_S1 + i]);
       } else {
-        fprintf(output, "uint%d_t *%s, ", var->size*8,
+        fprintf(output, "uint%d_t * %s, ", var->size*8,
             varnames[ORC_VAR_S1 + i]);
       }
     }
@@ -306,7 +327,7 @@ output_code (OrcProgram *p, FILE *output)
   fprintf(output, "  OrcExecutor _ex, *ex = &_ex;\n");
   fprintf(output, "\n");
   fprintf(output, "  if (!p_inited) {\n");
-  fprintf(output, "    MUTEX_LOCK\n");
+  fprintf(output, "    MUTEX_LOCK ();\n");
   fprintf(output, "    if (!p_inited) {\n");
   fprintf(output, "      OrcCompileResult result;\n");
   fprintf(output, "\n");
@@ -372,11 +393,11 @@ output_code (OrcProgram *p, FILE *output)
   fprintf(output, "\n");
   fprintf(output, "      result = orc_program_compile (p);\n");
   fprintf(output, "      if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL (result)) {\n");
-  fprintf(output, "        abort();\n");
+  fprintf(output, "        abort ();\n");
   fprintf(output, "      }\n");
   fprintf(output, "    }\n");
   fprintf(output, "    p_inited = TRUE;\n");
-  fprintf(output, "    MUTEX_UNLOCK\n");
+  fprintf(output, "    MUTEX_UNLOCK ();\n");
   fprintf(output, "  }\n");
   fprintf(output, "\n");
   //fprintf(output, "  orc_executor_set_program (ex, p);\n");
@@ -411,8 +432,8 @@ output_code (OrcProgram *p, FILE *output)
     }
   }
   fprintf(output, "\n");
-  //fprintf(output, "  orc_executor_run (ex);\n");
-  fprintf(output, "  ((void (*)(OrcExecutor *))ex->program->code_exec)(ex);\n");
+  fprintf(output, "  orc_executor_run (ex);\n");
+  //fprintf(output, "  ((void (*)(OrcExecutor *))ex->program->code_exec)(ex);\n");
   for(i=0;i<4;i++){
     var = &p->vars[ORC_VAR_A1 + i];
     if (var->size) {
@@ -421,7 +442,6 @@ output_code (OrcProgram *p, FILE *output)
     }
   }
   fprintf(output, "}\n");
-  fprintf(output, "\n");
 
 }
 
@@ -438,7 +458,7 @@ output_code_test (OrcProgram *p, FILE *output)
   fprintf(output, "\n");
   fprintf(output, "    OrcCompileResult result;\n");
   fprintf(output, "\n");
-  fprintf(output, "    printf(\"%s:\\n\");\n", p->name);
+  fprintf(output, "    printf (\"%s:\\n\");\n", p->name);
   fprintf(output, "    p = orc_program_new ();\n");
   fprintf(output, "    orc_program_set_name (p, \"%s\");\n", p->name);
   for(i=0;i<4;i++){
@@ -500,7 +520,9 @@ output_code_test (OrcProgram *p, FILE *output)
 
   fprintf(output, "\n");
   fprintf(output, "    ret = orc_test_compare_output (p);\n");
-  fprintf(output, "    if (!ret) error = TRUE;\n");
+  fprintf(output, "    if (!ret) {\n");
+  fprintf(output, "      error = TRUE;\n");
+  fprintf(output, "    }\n");
   fprintf(output, "\n");
   fprintf(output, "    orc_program_free (p);\n");
   fprintf(output, "  }\n");
