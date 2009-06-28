@@ -438,6 +438,7 @@ OrcCompileResult orc_program_compile (OrcProgram *p);
 OrcCompileResult orc_program_compile_for_target (OrcProgram *p, OrcTarget *target);
 OrcCompileResult orc_program_compile_full (OrcProgram *p, OrcTarget *target,
     unsigned int flags);
+void orc_program_set_backup_function (OrcProgram *p, OrcExecutorFunc func);
 void orc_program_free (OrcProgram *program);
 
 int orc_program_find_var_by_name (OrcProgram *program, const char *name);
