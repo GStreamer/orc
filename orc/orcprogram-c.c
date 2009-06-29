@@ -107,8 +107,13 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     if (var->name == NULL) continue;
     switch (var->vartype) {
       case ORC_VAR_TYPE_CONST:
-        ORC_ASM_CODE(compiler,"  const %s var%d = %d;\n",
-            c_get_type_name(var->size), i, var->value);
+        if (var->value == 0x80000000) {
+          ORC_ASM_CODE(compiler,"  const %s var%d = 0x80000000;\n",
+              c_get_type_name(var->size), i);
+        } else {
+          ORC_ASM_CODE(compiler,"  const %s var%d = %d;\n",
+              c_get_type_name(var->size), i, var->value);
+        }
         break;
       case ORC_VAR_TYPE_TEMP:
         ORC_ASM_CODE(compiler,"  %s var%d;\n", c_get_type_name(var->size), i);
