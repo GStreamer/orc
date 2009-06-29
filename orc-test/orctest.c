@@ -335,7 +335,7 @@ OrcTestResult
 orc_test_compare_output (OrcProgram *program)
 {
   OrcExecutor *ex;
-  int n = 64 + (random()&0xf);
+  int n = 64 + (rand()&0xf);
   void *dest_exec[4] = { NULL, NULL, NULL, NULL };
   void *dest_emul[4] = { NULL, NULL, NULL, NULL };
   void *ptr_exec[4];
