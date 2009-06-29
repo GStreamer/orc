@@ -75,6 +75,7 @@ main (int argc, char *argv[])
   fprintf(output, "#define MUTEX_UNLOCK do { } while (0)\n");
   fprintf(output, "#endif\n");
   fprintf(output, "\n");
+  print_defines (output);
   fprintf(output, "\n");
   for(i=0;i<n;i++){
     output_code (programs[i], output);
