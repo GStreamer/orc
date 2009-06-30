@@ -68,7 +68,7 @@ orc_test_gcc_compile (OrcProgram *p)
   fclose (file);
 
 #if defined(HAVE_POWERPC)
-  sprintf (cmd, "gcc -Wa,-mregnames -Wall -c %s -o %d", source_filename,
+  sprintf (cmd, "gcc -Wa,-mregnames -Wall -c %s -o %s", source_filename,
       obj_filename);
 #else
   sprintf (cmd, "gcc -Wall -c %s -o %s", source_filename,
