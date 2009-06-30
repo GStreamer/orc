@@ -17,7 +17,7 @@ typedef enum {
   MUTEX_STYLE_SCHRO,
   MUTEX_STYLE_GLIB
 } MutexStyle;
-MutexStyle mutex_style = MUTEX_STYLE_GLIB;
+MutexStyle mutex_style = MUTEX_STYLE_SCHRO;
 
 int
 main (int argc, char *argv[])
@@ -457,9 +457,12 @@ output_code (OrcProgram *p, FILE *output)
 
   fprintf(output, "\n");
   fprintf(output, "      result = orc_program_compile (p);\n");
+#if 0
+  /* don't care.  we have a backup function */
   fprintf(output, "      if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL (result)) {\n");
   fprintf(output, "        abort ();\n");
   fprintf(output, "      }\n");
+#endif
   fprintf(output, "    }\n");
   fprintf(output, "    p_inited = TRUE;\n");
   fprintf(output, "    MUTEX_UNLOCK ();\n");
