@@ -263,6 +263,28 @@ sse_rule_signw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+sse_rule_absw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp;
+
+  if (src == dest) {
+    tmp = p->tmpreg;
+    orc_sse_emit_660f (p, "movdqa", 0x6f, src, tmp);
+  } else {
+    tmp = p->tmpreg;
+    orc_sse_emit_660f (p, "movdqa", 0x6f, src, tmp);
+    orc_sse_emit_660f (p, "movdqa", 0x6f, tmp, dest);
+  }
+
+  orc_sse_emit_shiftimm (p, "psraw", 0x71, 4, 15, tmp);
+  orc_sse_emit_660f (p, "pxor", 0xef, tmp, dest);
+  orc_sse_emit_660f (p, "psubw", 0xf9, tmp, dest);
+
+}
+
+static void
 sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int type = ORC_PTR_TO_INT(user);
@@ -959,6 +981,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "minul", sse_rule_minul_slow, NULL);
   orc_rule_register (rule_set, "convlw", sse_rule_convlw, NULL);
   orc_rule_register (rule_set, "signw", sse_rule_signw_slow, NULL);
+  orc_rule_register (rule_set, "absw", sse_rule_absw_slow, NULL);
 
   /* SSE 3 -- no rules */
 
