@@ -45,7 +45,7 @@
 
 #endif
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) || defined(__APPLE__)
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #endif
@@ -71,33 +71,27 @@ test_altivec (void * ignored)
 }
 #endif
 
-#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
-static void
-orc_check_altivec_sysctl_freebsd (void)
-{
-  int ret, av;
-  size_t len;
-
-  len = sizeof(av);
-  ret = sysctlbyname("hw.altivec", &av, &len, NULL, 0);
-  if (!ret && av) {
-    orc_cpu_flags |= ORC_IMPL_FLAG_ALTIVEC;
-  }
-}
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+#if defined(__APPLE__)
+#define SYSCTL "hw.vectorunit"
+#else
+#define SYSCTL "hw.altivec"
 #endif
 
-#if defined(__APPLE__)
-static void
-orc_check_altivec_sysctl_darwin (void)
+static unsigned long
+orc_check_altivec_sysctl_bsd (void)
 {
+  unsigned long cpu_flags = 0;
   int ret, vu;
   size_t len;
 
   len = sizeof(vu);
-  ret = sysctlbyname("hw.vectorunit", &vu, &len, NULL, 0);
+  ret = sysctlbyname(SYSCTL, &vu, &len, NULL, 0);
   if (!ret && vu) {
-    orc_cpu_flags |= ORC_IMPL_FLAG_ALTIVEC;
+    cpu_flags |= ORC_TARGET_ALTIVEC_ALTIVEC;
   }
+
+  return cpu_flags;
 }
 #endif
 
@@ -170,10 +164,8 @@ orc_check_altivec_fault (void)
 void
 orc_cpu_detect_arch(void)
 {
-#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
-  orc_check_altivec_sysctl_freebsd();
-#elif defined(__APPLE__)
-  orc_check_altivec_sysctl_darwin();
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__APPLE__)
+  orc_check_altivec_sysctl_bsd();
 #elif defined(__linux__)
   orc_check_altivec_proc_auxv();
 #else
