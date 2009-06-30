@@ -220,7 +220,7 @@ sse_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
-sse_rule_signX (OrcCompiler *p, void *user, OrcInstruction *insn)
+sse_rule_signX_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[0]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
@@ -239,6 +239,27 @@ sse_rule_signX (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_pshufd (p, 0, dest, dest);
 
   orc_sse_emit_660f (p, names[ORC_PTR_TO_INT(user)], codes[ORC_PTR_TO_INT(user)], src, dest);
+}
+
+static void
+sse_rule_signw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src != dest) {
+    orc_sse_emit_660f (p, "movdqa", 0x6f, src, dest);
+  }
+
+  orc_x86_emit_mov_imm_reg (p, 4, 0x00010001, p->gp_tmpreg);
+  orc_x86_emit_mov_reg_sse (p, p->gp_tmpreg, p->tmpreg);
+  orc_sse_emit_pshufd (p, 0, p->tmpreg, p->tmpreg);
+  orc_sse_emit_660f (p, "pminsw", 0xea, p->tmpreg, dest);
+
+  orc_x86_emit_mov_imm_reg (p, 4, 0xffffffff, p->gp_tmpreg);
+  orc_x86_emit_mov_reg_sse (p, p->gp_tmpreg, p->tmpreg);
+  orc_sse_emit_pshufd (p, 0, p->tmpreg, p->tmpreg);
+  orc_sse_emit_660f (p, "pmaxsw", 0xee, p->tmpreg, dest);
 }
 
 static void
@@ -937,6 +958,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "maxul", sse_rule_maxul_slow, NULL);
   orc_rule_register (rule_set, "minul", sse_rule_minul_slow, NULL);
   orc_rule_register (rule_set, "convlw", sse_rule_convlw, NULL);
+  orc_rule_register (rule_set, "signw", sse_rule_signw_slow, NULL);
 
   /* SSE 3 -- no rules */
 
@@ -944,9 +966,9 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target,
       ORC_TARGET_SSE_SSSE3);
 
-  orc_rule_register (rule_set, "signb", sse_rule_signX, (void *)0);
-  orc_rule_register (rule_set, "signw", sse_rule_signX, (void *)1);
-  orc_rule_register (rule_set, "signl", sse_rule_signX, (void *)2);
+  orc_rule_register (rule_set, "signb", sse_rule_signX_ssse3, (void *)0);
+  orc_rule_register (rule_set, "signw", sse_rule_signX_ssse3, (void *)1);
+  orc_rule_register (rule_set, "signl", sse_rule_signX_ssse3, (void *)2);
   REG(absb);
   REG(absw);
   REG(absl);
