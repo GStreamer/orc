@@ -1,0 +1,39 @@
+
+0.4.1
+=====
+
+This release introduces the orcc program, which parses .orc files and
+outputs C source files to compile into a library or application.  The
+main source file implements the functions described by the .orc source
+code, by creating Orc programs and compiling them at runtime.  Another
+source file that it outputs is a test program that can be compiled and
+run to determine if Orc is generating code correctly.  In future
+releases, the orcc tool will be expanded to output assembly code, as
+well as make it easier to use Orc in a variety of ways.
+
+Much of Schroedinger and GStreamer have been converted to use Orc
+instead of liboil, as well as converting code that wasn't able to
+use liboil.  To enable this in Schroedinger, use the --enable-orc
+configure option.  The GStreamer changes are in the orc branch in
+the repository at http://cgit.freedesktop.org/~ds/gstreamer
+
+Scheduled changes for 0.4.2 include a 2-D array mode for converting
+the remaining liboil functions used in Schroedinger and GStreamer.
+
+
+Major changes:
+
+ - Add the orcc compiler.  Generates C code that creates Orc programs
+   from .orc source files.
+ - Improved testing
+ - Fixes in the C backend
+ - Fix the MMX backend to emit 'emms' instructions.
+ - Add a few rules to the SSE backend.
+
+
+
+0.4.0
+=====
+
+Stuff happened.
+
