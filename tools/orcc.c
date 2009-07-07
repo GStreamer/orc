@@ -10,6 +10,14 @@ static char * read_file (const char *filename);
 void output_code (OrcProgram *p, FILE *output);
 void output_code_header (OrcProgram *p, FILE *output);
 void output_code_test (OrcProgram *p, FILE *output);
+void output_code_backup (OrcProgram *p, FILE *output);
+static void print_defines (FILE *output);
+
+typedef enum {
+  MUTEX_STYLE_SCHRO,
+  MUTEX_STYLE_GLIB
+} MutexStyle;
+MutexStyle mutex_style = MUTEX_STYLE_SCHRO;
 
 typedef enum {
   MUTEX_STYLE_SCHRO,
@@ -73,6 +81,7 @@ main (int argc, char *argv[])
   fprintf(output, "#define MUTEX_UNLOCK do { } while (0)\n");
   fprintf(output, "#endif\n");
   fprintf(output, "\n");
+  print_defines (output);
   fprintf(output, "\n");
   for(i=0;i<n;i++){
     output_code (programs[i], output);
@@ -110,6 +119,12 @@ main (int argc, char *argv[])
   fprintf(output, "#include <stdio.h>\n");
   fprintf(output, "#include <stdlib.h>\n");
   fprintf(output, "\n");
+  print_defines (output);
+  fprintf(output, "\n");
+  for(i=0;i<n;i++){
+    fprintf(output, "/* %s */\n", programs[i]->name);
+    output_code_backup (programs[i], output);
+  }
   fprintf(output, "\n");
   fprintf(output, "int\n");
   fprintf(output, "main (int argc, char *argv[])\n");
@@ -147,6 +162,36 @@ main (int argc, char *argv[])
   return 0;
 }
 
+
+static void
+print_defines (FILE *output)
+{
+  fprintf(output,
+    "#define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))\n"
+    "#define ORC_ABS(a) ((a)<0 ? (-a) : (a))\n"
+    "#define ORC_MIN(a,b) ((a)<(b) ? (a) : (b))\n"
+    "#define ORC_MAX(a,b) ((a)>(b) ? (a) : (b))\n"
+    "#define ORC_SB_MAX 127\n"
+    "#define ORC_SB_MIN (-1-ORC_SB_MAX)\n"
+    "#define ORC_UB_MAX 255\n"
+    "#define ORC_UB_MIN 0\n"
+    "#define ORC_SW_MAX 32767\n"
+    "#define ORC_SW_MIN (-1-ORC_SW_MAX)\n"
+    "#define ORC_UW_MAX 65535\n"
+    "#define ORC_UW_MIN 0\n"
+    "#define ORC_SL_MAX 2147483647\n"
+    "#define ORC_SL_MIN (-1-ORC_SL_MAX)\n"
+    "#define ORC_UL_MAX 4294967295U\n"
+    "#define ORC_UL_MIN 0\n"
+    "#define ORC_CLAMP_SB(x) ORC_CLAMP(x,ORC_SB_MIN,ORC_SB_MAX)\n"
+    "#define ORC_CLAMP_UB(x) ORC_CLAMP(x,ORC_UB_MIN,ORC_UB_MAX)\n"
+    "#define ORC_CLAMP_SW(x) ORC_CLAMP(x,ORC_SW_MIN,ORC_SW_MAX)\n"
+    "#define ORC_CLAMP_UW(x) ORC_CLAMP(x,ORC_UW_MIN,ORC_UW_MAX)\n"
+    "#define ORC_CLAMP_SL(x) ORC_CLAMP(x,ORC_SL_MIN,ORC_SL_MAX)\n"
+    "#define ORC_CLAMP_UL(x) ORC_CLAMP(x,ORC_UL_MIN,ORC_UL_MAX)\n"
+    "#define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))\n"
+    "#define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))\n");
+}
 
 static char *
 read_file (const char *filename)
@@ -269,6 +314,27 @@ output_code_header (OrcProgram *p, FILE *output)
 }
 
 void
+output_code_backup (OrcProgram *p, FILE *output)
+{
+
+  fprintf(output, "static void\n");
+  fprintf(output, "_backup_%s (OrcExecutor *ex)\n", p->name);
+  fprintf(output, "{\n");
+  {
+    OrcCompileResult result;
+
+    result = orc_program_compile_full (p, orc_target_get_by_name("c"),
+        ORC_TARGET_C_BARE);
+    if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
+      fprintf(output, "%s\n", orc_program_get_asm_code (p));
+    }
+  }
+  fprintf(output, "}\n");
+  fprintf(output, "\n");
+
+}
+
+void
 output_code (OrcProgram *p, FILE *output)
 {
   OrcVariable *var;
@@ -276,6 +342,7 @@ output_code (OrcProgram *p, FILE *output)
 
   fprintf(output, "\n");
   fprintf(output, "/* %s */\n", p->name);
+  output_code_backup (p, output);
   fprintf(output, "void\n");
   fprintf(output, "%s (", p->name);
   for(i=0;i<4;i++){
@@ -333,6 +400,8 @@ output_code (OrcProgram *p, FILE *output)
   fprintf(output, "\n");
   fprintf(output, "      p = orc_program_new ();\n");
   fprintf(output, "      orc_program_set_name (p, \"%s\");\n", p->name);
+  fprintf(output, "      orc_program_set_backup_function (p, _backup_%s);\n",
+      p->name);
   for(i=0;i<4;i++){
     var = &p->vars[ORC_VAR_D1 + i];
     if (var->size) {
@@ -397,9 +466,12 @@ output_code (OrcProgram *p, FILE *output)
 
   fprintf(output, "\n");
   fprintf(output, "      result = orc_program_compile (p);\n");
+#if 0
+  /* don't care.  we have a backup function */
   fprintf(output, "      if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL (result)) {\n");
   fprintf(output, "        abort ();\n");
   fprintf(output, "      }\n");
+#endif
   fprintf(output, "    }\n");
   fprintf(output, "    p_inited = TRUE;\n");
   fprintf(output, "    MUTEX_UNLOCK ();\n");
@@ -466,6 +538,8 @@ output_code_test (OrcProgram *p, FILE *output)
   fprintf(output, "    printf (\"%s:\\n\");\n", p->name);
   fprintf(output, "    p = orc_program_new ();\n");
   fprintf(output, "    orc_program_set_name (p, \"%s\");\n", p->name);
+  fprintf(output, "    orc_program_set_backup_function (p, _backup_%s);\n",
+      p->name);
   for(i=0;i<4;i++){
     var = &p->vars[ORC_VAR_D1 + i];
     if (var->size) {

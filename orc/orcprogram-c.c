@@ -70,13 +70,13 @@ orc_target_get_asm_preamble (const char *target)
     "#define ORC_UL_MAX 4294967295U\n"
     "#define ORC_UL_MIN 0\n"
     "#define ORC_CLAMP_SB(x) ORC_CLAMP(x,ORC_SB_MIN,ORC_SB_MAX)\n"
-    "#define ORC_CLAMP_UB(x) ORC_CLAMP(x,ORC_UB_MIN,ORC_SB_MAX)\n"
-    "#define ORC_CLAMP_SW(x) ORC_CLAMP(x,ORC_SW_MIN,ORC_SB_MAX)\n"
-    "#define ORC_CLAMP_UW(x) ORC_CLAMP(x,ORC_UW_MIN,ORC_SB_MAX)\n"
-    "#define ORC_CLAMP_SL(x) ORC_CLAMP(x,ORC_SL_MIN,ORC_SB_MAX)\n"
-    "#define ORC_CLAMP_UL(x) ORC_CLAMP(x,ORC_UL_MIN,ORC_SB_MAX)\n"
+    "#define ORC_CLAMP_UB(x) ORC_CLAMP(x,ORC_UB_MIN,ORC_UB_MAX)\n"
+    "#define ORC_CLAMP_SW(x) ORC_CLAMP(x,ORC_SW_MIN,ORC_SW_MAX)\n"
+    "#define ORC_CLAMP_UW(x) ORC_CLAMP(x,ORC_UW_MIN,ORC_UW_MAX)\n"
+    "#define ORC_CLAMP_SL(x) ORC_CLAMP(x,ORC_SL_MIN,ORC_SL_MAX)\n"
+    "#define ORC_CLAMP_UL(x) ORC_CLAMP(x,ORC_UL_MIN,ORC_UL_MAX)\n"
     "#define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))\n"
-    "#define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)<<24))\n"
+    "#define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))\n"
     "/* end Orc C target preamble */\n\n";
 }
 
@@ -95,9 +95,11 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
   OrcStaticOpcode *opcode;
   OrcRule *rule;
 
-  ORC_ASM_CODE(compiler,"void\n");
-  ORC_ASM_CODE(compiler,"%s (OrcExecutor *ex)\n", compiler->program->name);
-  ORC_ASM_CODE(compiler,"{\n");
+  if (!(compiler->target_flags & ORC_TARGET_C_BARE)) {
+    ORC_ASM_CODE(compiler,"void\n");
+    ORC_ASM_CODE(compiler,"%s (OrcExecutor *ex)\n", compiler->program->name);
+    ORC_ASM_CODE(compiler,"{\n");
+  }
   ORC_ASM_CODE(compiler,"  int i;\n");
 
   for(i=0;i<ORC_N_VARIABLES;i++){
@@ -105,22 +107,36 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     if (var->name == NULL) continue;
     switch (var->vartype) {
       case ORC_VAR_TYPE_CONST:
-        ORC_ASM_CODE(compiler,"  %s var%d = %d;\n",
-            c_get_type_name(var->size), i, var->value);
+        if (var->value == 0x80000000) {
+          ORC_ASM_CODE(compiler,"  const %s var%d = 0x80000000;\n",
+              c_get_type_name(var->size), i);
+        } else {
+          ORC_ASM_CODE(compiler,"  const %s var%d = %d;\n",
+              c_get_type_name(var->size), i, var->value);
+        }
         break;
       case ORC_VAR_TYPE_TEMP:
         ORC_ASM_CODE(compiler,"  %s var%d;\n", c_get_type_name(var->size), i);
         break;
       case ORC_VAR_TYPE_SRC:
+        ORC_ASM_CODE(compiler,"  const %s *%s var%d = ex->arrays[%d];\n",
+            c_get_type_name (var->size),
+            (compiler->target_flags & ORC_TARGET_C_C99) ? "restrict " : "",
+            i, i);
+        break;
       case ORC_VAR_TYPE_DEST:
-      case ORC_VAR_TYPE_ACCUMULATOR:
         ORC_ASM_CODE(compiler,"  %s *%s var%d = ex->arrays[%d];\n",
             c_get_type_name (var->size),
             (compiler->target_flags & ORC_TARGET_C_C99) ? "restrict " : "",
             i, i);
         break;
+      case ORC_VAR_TYPE_ACCUMULATOR:
+        ORC_ASM_CODE(compiler,"  %s var%d = 0;\n",
+            c_get_type_name (var->size),
+            i);
+        break;
       case ORC_VAR_TYPE_PARAM:
-        ORC_ASM_CODE(compiler,"  %s var%d = ex->arrays[%d];\n",
+        ORC_ASM_CODE(compiler,"  const %s var%d = ex->params[%d];\n",
             c_get_type_name (var->size), i, i);
         break;
       default:
@@ -148,9 +164,24 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     }
   }
 
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    OrcVariable *var = compiler->vars + i;
+    if (var->name == NULL) continue;
+    switch (var->vartype) {
+      case ORC_VAR_TYPE_ACCUMULATOR:
+        ORC_ASM_CODE(compiler,"  ex->accumulators[%d] = var%d;\n",
+            i - ORC_VAR_A1, i);
+        break;
+      default:
+        break;
+    }
+  }
+
   ORC_ASM_CODE(compiler,"  }\n");
-  ORC_ASM_CODE(compiler,"}\n");
-  ORC_ASM_CODE(compiler,"\n");
+  if (!(compiler->target_flags & ORC_TARGET_C_BARE)) {
+    ORC_ASM_CODE(compiler,"}\n");
+    ORC_ASM_CODE(compiler,"\n");
+  }
 }
 
 
@@ -163,11 +194,11 @@ c_get_name (char *name, OrcCompiler *p, int var)
     case ORC_VAR_TYPE_CONST:
     case ORC_VAR_TYPE_PARAM:
     case ORC_VAR_TYPE_TEMP:
+    case ORC_VAR_TYPE_ACCUMULATOR:
       sprintf(name, "var%d", var);
       break;
     case ORC_VAR_TYPE_SRC:
     case ORC_VAR_TYPE_DEST:
-    case ORC_VAR_TYPE_ACCUMULATOR:
       sprintf(name, "var%d[i]", var);
       break;
     default:

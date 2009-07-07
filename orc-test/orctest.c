@@ -68,7 +68,7 @@ orc_test_gcc_compile (OrcProgram *p)
   fclose (file);
 
 #if defined(HAVE_POWERPC)
-  sprintf (cmd, "gcc -Wa,-mregnames -Wall -c %s -o %d", source_filename,
+  sprintf (cmd, "gcc -Wa,-mregnames -Wall -c %s -o %s", source_filename,
       obj_filename);
 #else
   sprintf (cmd, "gcc -Wall -c %s -o %s", source_filename,
@@ -529,7 +529,7 @@ OrcTestResult
 orc_test_compare_output (OrcProgram *program)
 {
   OrcExecutor *ex;
-  int n = 64 + (random()&0xf);
+  int n = 64 + (rand()&0xf);
   void *dest_exec[4] = { NULL, NULL, NULL, NULL };
   void *dest_emul[4] = { NULL, NULL, NULL, NULL };
   void *ptr_exec[4];

@@ -170,6 +170,25 @@ orc_program_set_name (OrcProgram *program, const char *name)
 }
 
 /**
+ * orc_program_set_backup_function:
+ * @program: a pointer to an OrcProgram structure
+ * @func: a function that performs the operations in the program
+ *
+ * Normally, if a program cannot be compiled for a particular CPU,
+ * Orc will emulate the function, which is typically very slow.  This
+ * function allows the developer to provide a function that is called
+ * instead of resorting to emulation.
+ */
+void
+orc_program_set_backup_function (OrcProgram *program, OrcExecutorFunc func)
+{
+  program->backup_func = func;
+  if (program->code_exec == NULL) {
+    program->code_exec = func;
+  }
+}
+
+/**
  * orc_program_get_name:
  * @program: a pointer to an OrcProgram structure
  *

@@ -21,6 +21,7 @@ typedef struct _OrcTarget OrcTarget;
 
 typedef void (*OrcOpcodeEmulateFunc)(OrcOpcodeExecutor *ex, void *user);
 typedef void (*OrcRuleEmitFunc)(OrcCompiler *p, void *user, OrcInstruction *insn);
+typedef void (*OrcExecutorFunc)(OrcExecutor *ex);
 
 #define ORC_N_REGS (32*4)
 #define ORC_N_INSNS 100
@@ -69,7 +70,8 @@ typedef void (*OrcRuleEmitFunc)(OrcCompiler *p, void *user, OrcInstruction *insn
 } while (0)
 
 enum {
-  ORC_TARGET_C_C99 = (1<<0)
+  ORC_TARGET_C_C99 = (1<<0),
+  ORC_TARGET_C_BARE = (1<<1)
 };
 
 enum {
@@ -306,6 +308,8 @@ struct _OrcProgram {
   unsigned char *code;
   void *code_exec;
   int code_size;
+
+  void *backup_func;
 };
 
 /**
@@ -441,6 +445,7 @@ OrcCompileResult orc_program_compile (OrcProgram *p);
 OrcCompileResult orc_program_compile_for_target (OrcProgram *p, OrcTarget *target);
 OrcCompileResult orc_program_compile_full (OrcProgram *p, OrcTarget *target,
     unsigned int flags);
+void orc_program_set_backup_function (OrcProgram *p, OrcExecutorFunc func);
 void orc_program_free (OrcProgram *program);
 
 int orc_program_find_var_by_name (OrcProgram *program, const char *name);

@@ -78,11 +78,7 @@ Caveats (Known Bugs):
 
 Future directions:
 
- - A more full-featured compiler tool, in order to make it easier to
-   convert Orc language source into assembly source code that can be
-   compiled and distributed without depending on the Orc library.
-
- - Addition of convenience functions.
+ - Addition of more complex loop control and array structures.
 
  - Addition of an option to compile the Orc library with only the
    runtime features for a single target, e.g., for embedded systems.
