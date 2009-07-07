@@ -17,12 +17,6 @@ typedef enum {
   MUTEX_STYLE_SCHRO,
   MUTEX_STYLE_GLIB
 } MutexStyle;
-MutexStyle mutex_style = MUTEX_STYLE_SCHRO;
-
-typedef enum {
-  MUTEX_STYLE_SCHRO,
-  MUTEX_STYLE_GLIB
-} MutexStyle;
 MutexStyle mutex_style = MUTEX_STYLE_GLIB;
 
 int
