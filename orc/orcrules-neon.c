@@ -1271,6 +1271,24 @@ orc_neon_rule_signw (OrcCompiler *p, void *user, OrcInstruction *insn)
       p->vars[insn->dest_args[0]].alloc);
 }
 
+static void
+orc_neon_rule_mulhuw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  unsigned int code;
+
+  orc_neon_emit_binary_long (p, "vmull.u16",0xf3900c00,
+      p->tmpreg,
+      p->vars[insn->src_args[0]].alloc,
+      p->vars[insn->src_args[1]].alloc);
+  ORC_ASM_CODE(p,"  vshrn.i32 %s, %s, #%d\n",
+      orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
+      orc_neon_reg_name_quad (p->tmpreg), 16);
+  code = NEON_BINARY (0xf2900810,
+      p->vars[insn->dest_args[0]].alloc,
+      p->tmpreg, 0);
+  orc_arm_emit (p, code);
+}
+
 void
 orc_compiler_neon_register_rules (OrcTarget *target)
 {
@@ -1322,6 +1340,7 @@ orc_compiler_neon_register_rules (OrcTarget *target)
   REG(minsw);
   REG(minuw);
   REG(mullw);
+  REG(mulhuw);
   REG(orw);
   //REG(shlw);
   //REG(shrsw);
