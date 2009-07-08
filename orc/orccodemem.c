@@ -7,12 +7,15 @@
 
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #ifdef HAVE_CODEMEM_MMAP
 #include <sys/mman.h>
 #endif
 
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
+
 
 #define SIZE 65536
 
@@ -21,17 +24,37 @@
 void
 orc_compiler_allocate_codemem (OrcCompiler *compiler)
 {
-  char filename[32] = "/tmp/orcexecXXXXXX";
   int fd;
   int n;
 
-  fd = mkstemp (filename);
-  if (fd == -1) {
-    /* FIXME oh crap */
-    ORC_COMPILER_ERROR (compiler, "failed to create temp file");
-    return;
+#if 0
+  {
+    char filename[32] = "/tmp/orcexecXXXXXX";
+    fd = mkstemp (filename);
+    if (fd == -1) {
+      /* FIXME oh crap */
+      ORC_COMPILER_ERROR (compiler, "failed to create temp file");
+      return;
+    }
+    unlink (filename);
   }
-  unlink (filename);
+#else
+  {
+    char *filename;
+
+    filename = malloc (strlen ("/tmp/orcexec") +
+        strlen (compiler->program->name) + 1);
+    sprintf(filename, "/tmp/orcexec%s", compiler->program->name);
+    fd = open (filename, O_RDWR);
+    if (fd == -1) {
+      /* FIXME oh crap */
+      ORC_COMPILER_ERROR (compiler, "failed to create temp file");
+      return;
+    }
+    unlink (filename);
+    free (filename);
+  }
+#endif
 
   n = ftruncate (fd, SIZE);
 
