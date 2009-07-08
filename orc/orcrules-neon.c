@@ -1031,6 +1031,7 @@ orc_neon_rule_andn (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 
+
 UNARY(absb,"vabs.s8",0xf3b10300, 3)
 BINARY(addb,"vadd.i8",0xf2000800, 3)
 BINARY(addssb,"vqadd.s8",0xf2000010, 3)
@@ -1253,6 +1254,23 @@ orc_neon_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
       p->tmpreg);
 }
 
+static void
+orc_neon_rule_signw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  /* slow */
+
+  orc_neon_emit_loadiw (p, p->tmpreg, 1);
+  orc_neon_emit_binary (p, "vmin.s16", 0xf2100610,
+      p->vars[insn->dest_args[0]].alloc,
+      p->tmpreg,
+      p->vars[insn->src_args[0]].alloc);
+  orc_neon_emit_loadiw (p, p->tmpreg, -1);
+  orc_neon_emit_binary (p, "vmax.s16", 0xf2100600,
+      p->vars[insn->dest_args[0]].alloc,
+      p->tmpreg,
+      p->vars[insn->dest_args[0]].alloc);
+}
+
 void
 orc_compiler_neon_register_rules (OrcTarget *target)
 {
@@ -1308,6 +1326,7 @@ orc_compiler_neon_register_rules (OrcTarget *target)
   //REG(shlw);
   //REG(shrsw);
   //REG(shruw);
+  REG(signw);
   REG(subw);
   REG(subssw);
   REG(subusw);
