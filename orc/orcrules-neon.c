@@ -573,7 +573,7 @@ orc_neon_emit_loadiw (OrcCompiler *compiler, int reg, int value)
 
   if (value < 0) {
     neg = TRUE;
-    value = -value;
+    value = ~value;
   }
   shift = orc_neon_get_const_shift (value);
   if ((value & (0xff<<shift)) == value) {
@@ -628,7 +628,7 @@ orc_neon_emit_loadil (OrcCompiler *compiler, int reg, int value)
 
   if (value < 0) {
     neg = TRUE;
-    value = -value;
+    value = ~value;
   }
   shift = orc_neon_get_const_shift (value);
   if ((value & (0xff<<shift)) == value) {
