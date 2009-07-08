@@ -45,7 +45,7 @@ orc_compiler_allocate_codemem (OrcCompiler *compiler)
     filename = malloc (strlen ("/tmp/orcexec") +
         strlen (compiler->program->name) + 1);
     sprintf(filename, "/tmp/orcexec%s", compiler->program->name);
-    fd = open (filename, O_RDWR);
+    fd = open (filename, O_RDWR | O_CREAT, S_IRWXU);
     if (fd == -1) {
       /* FIXME oh crap */
       ORC_COMPILER_ERROR (compiler, "failed to create temp file");
