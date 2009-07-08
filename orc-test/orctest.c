@@ -543,9 +543,11 @@ orc_test_compare_output (OrcProgram *program)
   int ret = ORC_TEST_OK;
 
   result = orc_program_compile (program);
+#if 0
   if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
     return ORC_TEST_INDETERMINATE;
   }
+#endif
 
   ex = orc_executor_new (program);
   orc_executor_set_n (ex, n);
