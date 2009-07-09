@@ -54,7 +54,7 @@ orc_target_get_asm_preamble (const char *target)
     "  //OrcVariable *args[ORC_OPCODE_N_ARGS];\n"
     "};\n"
     "#define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))\n"
-    "#define ORC_ABS(a) ((a)<0 ? (-a) : (a))\n"
+    "#define ORC_ABS(a) ((a)<0 ? -(a) : (a))\n"
     "#define ORC_MIN(a,b) ((a)<(b) ? (a) : (b))\n"
     "#define ORC_MAX(a,b) ((a)>(b) ? (a) : (b))\n"
     "#define ORC_SB_MAX 127\n"
@@ -163,6 +163,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
       compiler->error = TRUE;
     }
   }
+  ORC_ASM_CODE(compiler,"  }\n");
 
   for(i=0;i<ORC_N_VARIABLES;i++){
     OrcVariable *var = compiler->vars + i;
@@ -177,7 +178,6 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     }
   }
 
-  ORC_ASM_CODE(compiler,"  }\n");
   if (!(compiler->target_flags & ORC_TARGET_C_BARE)) {
     ORC_ASM_CODE(compiler,"}\n");
     ORC_ASM_CODE(compiler,"\n");
@@ -326,7 +326,9 @@ c_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
   c_get_name (src1, p, insn->src_args[0]);
   c_get_name (src2, p, insn->src_args[1]);
 
-  ORC_ASM_CODE(p,"    %s = %s + ORC_ABS(%s - %s);\n", dest, dest, src1, src2);
+  ORC_ASM_CODE(p,
+      "    %s = %s + ORC_ABS((int32_t)(uint8_t)%s - (int32_t)(uint8_t)%s);\n",
+      dest, dest, src1, src2);
 }
 
 static OrcTarget c_target = {
