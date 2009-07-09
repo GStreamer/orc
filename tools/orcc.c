@@ -139,17 +139,6 @@ main (int argc, char *argv[])
 
   fclose (output);
 
-#if 0
-  for(i=0;i<n;i++){
-    OrcCompileResult result;
-
-    result = orc_program_compile (programs[i]);
-    if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
-      printf("%s\n", orc_program_get_asm_code (programs[i]));
-    }
-  }
-#endif
-
   return 0;
 }
 
@@ -524,8 +513,6 @@ output_code_test (OrcProgram *p, FILE *output)
   fprintf(output, "    OrcProgram *p = NULL;\n");
   fprintf(output, "    int ret;\n");
   fprintf(output, "\n");
-  fprintf(output, "    OrcCompileResult result;\n");
-  fprintf(output, "\n");
   fprintf(output, "    printf (\"%s:\\n\");\n", p->name);
   fprintf(output, "    p = orc_program_new ();\n");
   fprintf(output, "    orc_program_set_name (p, \"%s\");\n", p->name);
@@ -588,6 +575,11 @@ output_code_test (OrcProgram *p, FILE *output)
     }
   }
 
+  fprintf(output, "\n");
+  fprintf(output, "    ret = orc_test_compare_output_backup (p);\n");
+  fprintf(output, "    if (!ret) {\n");
+  fprintf(output, "      error = TRUE;\n");
+  fprintf(output, "    }\n");
   fprintf(output, "\n");
   fprintf(output, "    ret = orc_test_compare_output (p);\n");
   fprintf(output, "    if (!ret) {\n");
