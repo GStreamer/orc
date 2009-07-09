@@ -33,6 +33,7 @@ struct _OrcParser {
 
   OrcProgram **programs;
   int n_programs;
+  int n_programs_alloc;
 };
 
 static void orc_parse_get_line (OrcParser *parser);
@@ -52,7 +53,6 @@ orc_parse (const char *code, OrcProgram ***programs)
   parser->line_number = -1;
   parser->p = code;
   parser->opcode_set = orc_opcode_set_get ("sys");
-  parser->programs = malloc (sizeof(OrcProgram *)*100);
 
   while (parser->p[0] != 0) {
     char *p;
@@ -107,6 +107,11 @@ orc_parse (const char *code, OrcProgram ***programs)
       if (strcmp (token[0], ".function") == 0) {
         parser->program = orc_program_new ();
         orc_program_set_name (parser->program, token[1]);
+        if (parser->n_programs == parser->n_programs_alloc) {
+          parser->n_programs_alloc += 32;
+          parser->programs = realloc (parser->programs,
+              sizeof(OrcProgram *)*parser->n_programs_alloc);
+        }
         parser->programs[parser->n_programs] = parser->program;
         parser->n_programs++;
         parser->creg_index = 1;
