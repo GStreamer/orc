@@ -525,8 +525,24 @@ check_bounds (void *ptr, int n, int size)
   return TRUE;
 }
 
+static OrcTestResult orc_test_compare_output_full (OrcProgram *program,
+    int backup);
+
 OrcTestResult
 orc_test_compare_output (OrcProgram *program)
+{
+  return orc_test_compare_output_full (program, 0);
+}
+
+OrcTestResult
+orc_test_compare_output_backup (OrcProgram *program)
+{
+  return orc_test_compare_output_full (program, 1);
+}
+
+
+OrcTestResult
+orc_test_compare_output_full (OrcProgram *program, int backup)
 {
   OrcExecutor *ex;
   int n = 64 + (rand()&0xf);
@@ -542,9 +558,11 @@ orc_test_compare_output (OrcProgram *program)
   int acc_exec = 0, acc_emul = 0;
   int ret = ORC_TEST_OK;
 
-  result = orc_program_compile (program);
-  if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
-    return ORC_TEST_INDETERMINATE;
+  if (!backup) {
+    result = orc_program_compile (program);
+    if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
+      return ORC_TEST_INDETERMINATE;
+    }
   }
 
   ex = orc_executor_new (program);
