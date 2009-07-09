@@ -123,6 +123,7 @@ orc-float/Makefile
 orc-pixel/Makefile
 orc-test/Makefile
 testsuite/Makefile
+testsuite/orcc/Makefile
 examples/Makefile
 tools/Makefile
 orc-uninstalled.pc
