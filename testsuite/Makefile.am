@@ -1,4 +1,6 @@
 
+SUBDIRS = orcc
+
 TESTS = \
 	compile_opcodes_sys_c \
 	compile_opcodes_float_c \
@@ -14,7 +16,8 @@ XFAIL_TESTS = \
 	exec_opcodes_float \
 	exec_opcodes_pixel
 
-orcbin_PROGRAMS = $(TESTS) generate_xml_table generate_xml_table2
+orcbin_PROGRAMS = $(TESTS) generate_xml_table generate_xml_table2 \
+	generate_opcodes_sys
 
 CLEANFILES = temp-orc-test-*
 
