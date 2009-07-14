@@ -60,13 +60,13 @@ typedef void (*OrcExecutorFunc)(OrcExecutor *ex);
 
 #define ORC_PROGRAM_ERROR(program, ...) do { \
   program->error = TRUE; \
-  orc_debug_print(ORC_DEBUG_ERROR, __FILE__, ORC_FUNCTION, __LINE__, __VA_ARGS__); \
+  orc_debug_print(ORC_DEBUG_WARNING, __FILE__, ORC_FUNCTION, __LINE__, __VA_ARGS__); \
 } while (0)
 
 #define ORC_COMPILER_ERROR(compiler, ...) do { \
   compiler->error = TRUE; \
   compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE; \
-  orc_debug_print(ORC_DEBUG_ERROR, __FILE__, ORC_FUNCTION, __LINE__, __VA_ARGS__); \
+  orc_debug_print(ORC_DEBUG_WARNING, __FILE__, ORC_FUNCTION, __LINE__, __VA_ARGS__); \
 } while (0)
 
 enum {

@@ -78,7 +78,7 @@ orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
   }
 
   /* FIXME on !x86, this is an error */
-  ORC_ERROR ("register overflow");
+  ORC_COMPILER_ERROR (compiler, "register overflow");
 
   return 0;
 }
