@@ -148,7 +148,7 @@ print_defines (FILE *output)
 {
   fprintf(output,
     "#define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))\n"
-    "#define ORC_ABS(a) ((a)<0 ? (-a) : (a))\n"
+    "#define ORC_ABS(a) ((a)<0 ? -(a) : (a))\n"
     "#define ORC_MIN(a,b) ((a)<(b) ? (a) : (b))\n"
     "#define ORC_MAX(a,b) ((a)>(b) ? (a) : (b))\n"
     "#define ORC_SB_MAX 127\n"
