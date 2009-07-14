@@ -1,4 +1,13 @@
 
+0.4.2
+=====
+
+Bug fixes to C backend.  Turns out this is rather important on
+CPUs that don't have a native backend.
+
+New features have been postponed to 0.4.3.
+
+
 0.4.1
 =====
 
