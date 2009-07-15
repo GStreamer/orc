@@ -18,7 +18,7 @@ orc_once_mutex_lock (void)
 }
 
 void
-orc_mutex_unlock (OrcMutex *mutex)
+orc_once_mutex_unlock (void)
 {
   pthread_mutex_unlock (&once_mutex);
 }
