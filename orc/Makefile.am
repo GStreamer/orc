@@ -24,6 +24,7 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orcprogram.h \
 	orcopcodes.c \
 	orcparse.c \
+	orconce.c \
 	orcrules-altivec.c \
 	orcrules-mmx.c \
 	orcrules-sse.c \
@@ -61,6 +62,7 @@ pkginclude_HEADERS = \
 	orcutils.h \
 	orcparse.h \
 	opcodes.h \
+	orconce.h \
 	orcsse.h \
 	orcmmx.h \
 	orcx86.h \

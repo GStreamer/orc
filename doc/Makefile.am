@@ -70,5 +70,5 @@ EXTRA_DIST +=
 
 
 sync:
-	cd html && rsync -a . freedesktop.org:/srv/liboil.freedesktop.org/www/documentation/
+	cd html && rsync -a . home.schleef.org:/srv/schleef.org/www/orc/documentation/
 

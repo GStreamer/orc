@@ -13,12 +13,6 @@ void output_code_test (OrcProgram *p, FILE *output);
 void output_code_backup (OrcProgram *p, FILE *output);
 static void print_defines (FILE *output);
 
-typedef enum {
-  MUTEX_STYLE_SCHRO,
-  MUTEX_STYLE_GLIB
-} MutexStyle;
-MutexStyle mutex_style = MUTEX_STYLE_SCHRO;
-
 int
 main (int argc, char *argv[])
 {
@@ -51,29 +45,7 @@ main (int argc, char *argv[])
   fprintf(output, "#include <orc/orc.h>\n");
   fprintf(output, "#include <stdio.h>\n");
   fprintf(output, "#include <stdlib.h>\n");
-  switch (mutex_style) {
-    case MUTEX_STYLE_SCHRO:
-      fprintf(output, "#include <schroedinger/schro.h>\n");
-      fprintf(output, "#define MUTEX_LOCK() schro_mutex_lock (orc_mutex)\n");
-      fprintf(output, "#define MUTEX_UNLOCK() schro_mutex_unlock (orc_mutex)\n");
-      fprintf(output, "SchroMutex *orc_mutex;\n");
-      break;
-    case MUTEX_STYLE_GLIB:
-      fprintf(output, "#include <glib/gthread.h>\n");
-      fprintf(output, "#define MUTEX_LOCK() g_static_mutex_lock (&orc_mutex)\n");
-      fprintf(output, "#define MUTEX_UNLOCK() g_static_mutex_unlock (&orc_mutex)\n");
-      fprintf(output, "static GStaticMutex orc_mutex = G_STATIC_MUTEX_INIT;\n");
-      break;
-    default:
-      break;
-  }
   fprintf(output, "\n");
-  fprintf(output, "#ifndef MUTEX_LOCK\n");
-  fprintf(output, "#define MUTEX_LOCK do { } while (0)\n");
-  fprintf(output, "#endif\n");
-  fprintf(output, "#ifndef MUTEX_UNLOCK\n");
-  fprintf(output, "#define MUTEX_UNLOCK do { } while (0)\n");
-  fprintf(output, "#endif\n");
   fprintf(output, "\n");
   print_defines (output);
   fprintf(output, "\n");
@@ -164,7 +136,7 @@ print_defines (FILE *output)
 {
   fprintf(output,
     "#define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))\n"
-    "#define ORC_ABS(a) ((a)<0 ? (-a) : (a))\n"
+    "#define ORC_ABS(a) ((a)<0 ? -(a) : (a))\n"
     "#define ORC_MIN(a,b) ((a)<(b) ? (a) : (b))\n"
     "#define ORC_MAX(a,b) ((a)>(b) ? (a) : (b))\n"
     "#define ORC_SB_MAX 127\n"
@@ -390,7 +362,7 @@ output_code (OrcProgram *p, FILE *output)
   fprintf(output, "  OrcExecutor _ex, *ex = &_ex;\n");
   fprintf(output, "\n");
   fprintf(output, "  if (!p_inited) {\n");
-  fprintf(output, "    MUTEX_LOCK ();\n");
+  fprintf(output, "    orc_once_mutex_lock ();\n");
   fprintf(output, "    if (!p_inited) {\n");
   fprintf(output, "      OrcCompileResult result;\n");
   fprintf(output, "\n");
@@ -470,7 +442,7 @@ output_code (OrcProgram *p, FILE *output)
 #endif
   fprintf(output, "    }\n");
   fprintf(output, "    p_inited = TRUE;\n");
-  fprintf(output, "    MUTEX_UNLOCK ();\n");
+  fprintf(output, "    orc_once_mutex_unlock ();\n");
   fprintf(output, "  }\n");
   fprintf(output, "\n");
   //fprintf(output, "  orc_executor_set_program (ex, p);\n");
