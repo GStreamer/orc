@@ -341,7 +341,7 @@ orc_neon_loadw (OrcCompiler *compiler, OrcVariable *var, int update)
     orc_neon_load_vec_aligned (compiler, var, update);
   } else if (var->is_aligned && compiler->loop_shift == 1) {
     orc_neon_load_halfvec_aligned (compiler, var, update);
-  } else if (compiler->loop_shift == 2) {
+  } else if (compiler->loop_shift == 2 && var->mask_alloc) {
     orc_neon_load_vec_unaligned (compiler, var, update);
   } else {
     if (compiler->loop_shift > 1) {
