@@ -341,10 +341,14 @@ orc_neon_loadw (OrcCompiler *compiler, OrcVariable *var, int update)
   } else if (compiler->loop_shift == 2 && var->mask_alloc) {
     orc_neon_load_vec_unaligned (compiler, var, update);
   } else {
-#if 0
     uint32_t code;
     int i;
 
+    if (compiler->loop_shift == 2) {
+      orc_neon_load_vec_aligned (compiler, var, update);
+    } else if (compiler->loop_shift == 1) {
+      orc_neon_load_halfvec_aligned (compiler, var, update);
+    }
     if (compiler->loop_shift > 1) {
       ORC_ERROR("slow load");
     }
@@ -359,9 +363,6 @@ orc_neon_loadw (OrcCompiler *compiler, OrcVariable *var, int update)
       code |= (!update) << 1;
       orc_arm_emit (compiler, code);
     }
-#else
-    orc_neon_load_vec_aligned (compiler, var, update);
-#endif
   }
 }
 
