@@ -346,8 +346,10 @@ orc_neon_loadw (OrcCompiler *compiler, OrcVariable *var, int update)
 
     if (compiler->loop_shift == 2) {
       orc_neon_load_vec_aligned (compiler, var, update);
+      return;
     } else if (compiler->loop_shift == 1) {
       orc_neon_load_halfvec_aligned (compiler, var, update);
+      return;
     }
     if (compiler->loop_shift > 1) {
       ORC_ERROR("slow load");
