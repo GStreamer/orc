@@ -87,7 +87,7 @@ then
 fi
 
 case "${host_os}" in
-  mingw*|cygwin*)
+  mingw*|pw32*|cygwin*)
     AC_DEFINE(HAVE_CODEMEM_MALLOC, 1, [Use malloc to allocate code for execution])
     ;;
   linux*|darwin*|solaris*|netbsd*|freebsd*|openbsd*)
@@ -97,6 +97,16 @@ case "${host_os}" in
     AC_ERROR([no code allocation backend])
     ;;
 esac
+
+case "${host_os}" in
+  mingw*|pw32*|cygwin*)
+    AC_DEFINE(HAVE_THREAD_WIN32, 1, [Use Windows thread code])
+    ;;
+  *)
+    AC_DEFINE(HAVE_THREAD_PTHREAD, 1, [Use pthread thread code])
+    ;;
+esac
+
 
 AC_DEFINE(ORC_EXPORTS, 1, [Defined for compiling internal code])
 
