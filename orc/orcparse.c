@@ -115,6 +115,19 @@ orc_parse (const char *code, OrcProgram ***programs)
         parser->programs[parser->n_programs] = parser->program;
         parser->n_programs++;
         parser->creg_index = 1;
+      } else if (strcmp (token[0], ".flags") == 0) {
+        int i;
+        for(i=1;i<n_tokens;i++){
+          if (!strcmp (token[i], "2d")) {
+            orc_program_set_2d (parser->program);
+          }
+        }
+      } else if (strcmp (token[0], ".n") == 0) {
+        int size = strtol (token[1], NULL, 0);
+        orc_program_set_constant_n (parser->program, size);
+      } else if (strcmp (token[0], ".m") == 0) {
+        int size = strtol (token[1], NULL, 0);
+        orc_program_set_constant_m (parser->program, size);
       } else if (strcmp (token[0], ".source") == 0) {
         int size = strtol (token[1], NULL, 0);
         int var;

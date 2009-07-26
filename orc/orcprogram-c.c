@@ -101,6 +101,9 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     ORC_ASM_CODE(compiler,"{\n");
   }
   ORC_ASM_CODE(compiler,"  int i;\n");
+  if (compiler->program->is_2d) {
+    ORC_ASM_CODE(compiler,"  int j;\n");
+  }
 
   for(i=0;i<ORC_N_VARIABLES;i++){
     OrcVariable *var = compiler->vars + i;
@@ -147,7 +150,20 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
   }
 
   ORC_ASM_CODE(compiler,"\n");
-  ORC_ASM_CODE(compiler,"  for (i = 0; i < ex->n; i++) {\n");
+  if (compiler->program->is_2d) {
+    if (compiler->program->constant_m == 0) {
+      ORC_ASM_CODE(compiler,"  for (j = 0; j < ex->params[ORC_VAR_A1]; j++) {\n");
+    } else {
+      ORC_ASM_CODE(compiler,"  for (j = 0; j < %d; j++) {\n",
+          compiler->program->constant_m);
+    }
+  }
+  if (compiler->program->constant_n == 0) {
+    ORC_ASM_CODE(compiler,"  for (i = 0; i < ex->n; i++) {\n");
+  } else {
+    ORC_ASM_CODE(compiler,"  for (i = 0; i < %d; i++) {\n",
+        compiler->program->constant_n);
+  }
 
   for(j=0;j<compiler->n_insns;j++){
     insn = compiler->insns + j;
@@ -164,6 +180,9 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     }
   }
   ORC_ASM_CODE(compiler,"  }\n");
+  if (compiler->program->is_2d) {
+    ORC_ASM_CODE(compiler,"  }\n");
+  }
 
   for(i=0;i<ORC_N_VARIABLES;i++){
     OrcVariable *var = compiler->vars + i;

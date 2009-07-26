@@ -183,6 +183,16 @@ orc_program_set_2d (OrcProgram *program)
   program->is_2d = TRUE;
 }
 
+void orc_program_set_constant_n (OrcProgram *program, int n)
+{
+  program->constant_n = n;
+}
+
+void orc_program_set_constant_m (OrcProgram *program, int m)
+{
+  program->constant_m = m;
+}
+
 /**
  * orc_program_set_backup_function:
  * @program: a pointer to an OrcProgram structure

@@ -456,6 +456,8 @@ void orc_opcode_init (void);
 const char * orc_program_get_name (OrcProgram *program);
 void orc_program_set_name (OrcProgram *program, const char *name);
 void orc_program_set_2d (OrcProgram *program);
+void orc_program_set_constant_n (OrcProgram *program, int n);
+void orc_program_set_constant_m (OrcProgram *program, int m);
 
 void orc_program_append (OrcProgram *p, const char *opcode, int arg0, int arg1, int arg2);
 void orc_program_append_str (OrcProgram *p, const char *opcode,
