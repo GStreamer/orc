@@ -114,6 +114,9 @@ orc_executor_emulate (OrcExecutor *ex)
   OrcOpcodeExecutor opcode_ex;
 
   ex->accumulators[0] = 0;
+  ex->accumulators[1] = 0;
+  ex->accumulators[2] = 0;
+  ex->accumulators[3] = 0;
 
   memset (&opcode_ex, 0, sizeof(opcode_ex));
 
@@ -190,6 +193,19 @@ orc_executor_emulate (OrcExecutor *ex)
               ORC_ERROR("unhandled size %d", program->vars[insn->dest_args[k]].size);
           }
         } else if (var->vartype == ORC_VAR_TYPE_ACCUMULATOR) {
+          switch (var->size) {
+            case 2:
+              ex->accumulators[insn->dest_args[k] - ORC_VAR_A1] +=
+                opcode_ex.dest_values[k];
+              ex->accumulators[insn->dest_args[k] - ORC_VAR_A1] &= 0xffff;
+              break;
+            case 4:
+              ex->accumulators[insn->dest_args[k] - ORC_VAR_A1] +=
+                opcode_ex.dest_values[k];
+              break;
+            default:
+              ORC_ERROR("unhandled size %d",program->vars[insn->dest_args[k]].size);
+          }
           ex->accumulators[0] += opcode_ex.dest_values[k];
         } else {
           ORC_ERROR("shouldn't be reached (%d)", var->vartype);

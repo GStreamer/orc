@@ -170,8 +170,13 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     if (var->name == NULL) continue;
     switch (var->vartype) {
       case ORC_VAR_TYPE_ACCUMULATOR:
-        ORC_ASM_CODE(compiler,"  ex->accumulators[%d] = var%d;\n",
-            i - ORC_VAR_A1, i);
+        if (var->size == 2) {
+          ORC_ASM_CODE(compiler,"  ex->accumulators[%d] = (var%d & 0xffff);\n",
+              i - ORC_VAR_A1, i);
+        } else {
+          ORC_ASM_CODE(compiler,"  ex->accumulators[%d] = var%d;\n",
+              i - ORC_VAR_A1, i);
+        }
         break;
       default:
         break;

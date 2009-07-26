@@ -198,7 +198,8 @@ sse_save_accumulators (OrcCompiler *compiler)
 
         if (compiler->vars[i].size == 2) {
           orc_x86_emit_mov_sse_reg (compiler, src, compiler->gp_tmpreg);
-          orc_x86_emit_mov_reg_memoffset (compiler, 2, compiler->gp_tmpreg,
+          orc_x86_emit_and_imm_reg (compiler, 4, 0xffff, compiler->gp_tmpreg);
+          orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
               (int)ORC_STRUCT_OFFSET(OrcExecutor, accumulators[i-ORC_VAR_A1]),
               compiler->exec_reg);
         } else {
