@@ -7,6 +7,7 @@
 
 typedef struct _OrcOpcodeExecutor OrcOpcodeExecutor;
 typedef struct _OrcExecutor OrcExecutor;
+typedef struct _OrcExecutorAlt OrcExecutorAlt;
 typedef struct _OrcVariable OrcVariable;
 typedef struct _OrcOpcodeSet OrcOpcodeSet;
 typedef struct _OrcStaticOpcode OrcStaticOpcode;
@@ -26,6 +27,7 @@ typedef void (*OrcExecutorFunc)(OrcExecutor *ex);
 #define ORC_N_REGS (32*4)
 #define ORC_N_INSNS 100
 #define ORC_N_VARIABLES 64
+#define ORC_N_ARRAYS 12
 #define ORC_N_REGISTERS 20
 #define ORC_N_FIXUPS 20
 #define ORC_N_CONSTANTS 20
@@ -306,6 +308,9 @@ struct _OrcProgram {
   int code_size;
 
   void *backup_func;
+  int is_2d;
+  int constant_n;
+  int constant_m;
 };
 
 /**
@@ -385,7 +390,38 @@ struct _OrcExecutor {
   void *arrays[ORC_N_VARIABLES];
   int params[ORC_N_VARIABLES];
   int accumulators[4];
+  /* exec pointer is stored in arrays[ORC_VAR_A1] */
+  /* the stride for arrays[x] is stored in params[x] */
+  /* m is stored in params[ORC_VAR_A1] */
+  /* m_index is stored in params[ORC_VAR_A2] */
+  /* elapsed time is stored in params[ORC_VAR_A3] */
 };
+
+/* the alternate view of OrcExecutor */
+struct _OrcExecutorAlt {
+  /*< private >*/
+  OrcProgram *program;
+  int n;
+  int counter1;
+  int counter2;
+  int counter3;
+
+  void *arrays[ORC_N_ARRAYS];
+  OrcExecutorFunc exec;
+  void *unused1[ORC_N_VARIABLES - ORC_N_ARRAYS - 1];
+  int strides[ORC_N_ARRAYS];
+  int m;
+  int m_index;
+  int time;
+  int unused2[ORC_VAR_P1-ORC_VAR_A4];
+  int params[ORC_VAR_T1-ORC_VAR_P1];
+  int unused3[ORC_N_VARIABLES - ORC_VAR_T1];
+  int accumulators[4];
+};
+#define ORC_EXECUTOR_EXEC(ex) ((OrcExecutorFunc)((ex)->arrays[ORC_VAR_A1]))
+#define ORC_EXECUTOR_M(ex) ((ex)->params[ORC_VAR_A1])
+#define ORC_EXECUTOR_M_INDEX(ex) ((ex)->params[ORC_VAR_A2])
+#define ORC_EXECUTOR_TIME(ex) ((ex)->params[ORC_VAR_A3])
 
 /**
  * OrcTarget:
@@ -419,6 +455,7 @@ void orc_opcode_init (void);
 
 const char * orc_program_get_name (OrcProgram *program);
 void orc_program_set_name (OrcProgram *program, const char *name);
+void orc_program_set_2d (OrcProgram *program);
 
 void orc_program_append (OrcProgram *p, const char *opcode, int arg0, int arg1, int arg2);
 void orc_program_append_str (OrcProgram *p, const char *opcode,
@@ -462,6 +499,7 @@ void orc_executor_set_param_str (OrcExecutor *ex, const char *name, int value);
 int orc_executor_get_accumulator (OrcExecutor *ex, int var);
 int orc_executor_get_accumulator_str (OrcExecutor *ex, const char *name);
 void orc_executor_set_n (OrcExecutor *ex, int n);
+void orc_executor_set_m (OrcExecutor *ex, int m);
 void orc_executor_emulate (OrcExecutor *ex);
 void orc_executor_run (OrcExecutor *ex);
 

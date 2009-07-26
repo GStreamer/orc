@@ -405,6 +405,20 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
 
   orc_x86_emit_prologue (compiler);
 
+  if (compiler->program->is_2d) {
+    orc_x86_emit_mov_memoffset_reg (compiler, 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A1]),
+        compiler->exec_reg, X86_EAX);
+    orc_x86_emit_test_reg_reg (compiler, 4, X86_EAX, X86_EAX);
+    orc_x86_emit_jle (compiler, 17);
+
+    orc_x86_emit_mov_reg_memoffset (compiler, 4, X86_EAX,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A2]),
+        compiler->exec_reg);
+
+    orc_x86_emit_label (compiler, 16);
+  }
+
   if (compiler->loop_shift > 0) {
     orc_x86_emit_mov_imm_reg (compiler, 4, 16, X86_EAX);
     orc_x86_emit_sub_memoffset_reg (compiler, 4,
@@ -519,6 +533,14 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
     }
 
     compiler->loop_shift = save_loop_shift;
+  }
+
+  if (compiler->program->is_2d) {
+    orc_x86_emit_dec_memoffset (compiler, 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]),
+        compiler->exec_reg);
+    orc_x86_emit_jne (compiler, 16);
+    orc_x86_emit_label (compiler, 17);
   }
 
   sse_save_accumulators (compiler);

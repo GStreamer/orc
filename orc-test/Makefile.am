@@ -6,11 +6,16 @@ lib_LTLIBRARIES = liborc-test-@ORC_MAJORMINOR@.la
 liborc_test_@ORC_MAJORMINOR@_la_LIBADD = $(ORC_LIBS)
 liborc_test_@ORC_MAJORMINOR@_la_LDFLAGS = \
 	-no-undefined -export-symbols-regex 'orc_'
-liborc_test_@ORC_MAJORMINOR@_la_CFLAGS = $(ORC_CFLAGS)
+liborc_test_@ORC_MAJORMINOR@_la_CFLAGS = $(ORC_CFLAGS) \
+	-DORC_ENABLE_UNSTABLE_API
 
 liborc_test_@ORC_MAJORMINOR@_la_SOURCES = \
-	orctest.c
+	orctest.c \
+	orcarray.c \
+	orcrandom.c
 
 pkginclude_HEADERS = \
-	orctest.h
+	orctest.h \
+	orcarray.h \
+	orcrandom.h
 

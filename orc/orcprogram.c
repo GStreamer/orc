@@ -170,6 +170,20 @@ orc_program_set_name (OrcProgram *program, const char *name)
 }
 
 /**
+ * orc_program_set_2d:
+ * @program: a pointer to an OrcProgram structure
+ *
+ * Sets a flag on the program indicating that arrays are two
+ * dimensional.  This causes the compiler to generate code for
+ * an OrcExec2D executor.
+ */
+void
+orc_program_set_2d (OrcProgram *program)
+{
+  program->is_2d = TRUE;
+}
+
+/**
  * orc_program_set_backup_function:
  * @program: a pointer to an OrcProgram structure
  * @func: a function that performs the operations in the program

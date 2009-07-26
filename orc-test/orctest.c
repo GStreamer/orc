@@ -2,14 +2,18 @@
 #include "config.h"
 
 #include <orc-test/orctest.h>
+#include <orc-test/orcarray.h>
+#include <orc-test/orcrandom.h>
 #include <orc/orc.h>
 #include <orc/orcdebug.h>
+
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//#include <time.h>
 
+
+OrcRandom rand_context;
 
 void
 orc_test_init (void)
@@ -18,7 +22,7 @@ orc_test_init (void)
 
   setvbuf (stdout, NULL, _IONBF, 0);
 
-  //srand (time(NULL));
+  orc_random_init (&rand_context, 0x12345678);
 }
 
 
@@ -130,61 +134,29 @@ orc_test_gcc_compile (OrcProgram *p)
 }
 
 
-void
-orc_test_random_bits (void *data, int n_bytes)
-{
-#if 1
-  uint8_t *d = data;
-  int i;
-  for(i=0;i<n_bytes;i++){
-    d[i] = rand();
-  }
-#endif
-#if 0
-  float *d = data;
-  int i;
-  for(i=0;i<n_bytes/4;i++){
-    d[i] = ((rand() & 0xffff)-32768)*0.01;
-  }
-#endif
-}
-
 int
-print_array_val_signed (void *array, int size, int i)
+print_array_val_signed (OrcArray *array, int i, int j)
 {
-  switch (size) {
+  void *ptr = ORC_PTR_OFFSET (array->data,
+      i*array->element_size + j*array->stride);
+
+  switch (array->element_size) {
     case 1:
-      {
-        int8_t *a = array;
-        printf(" %4d", a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %4d", *(int8_t *)ptr);
+      return *(int8_t *)ptr;
     case 2:
-      {
-        int16_t *a = array;
-        printf(" %5d", a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %5d", *(int16_t *)ptr);
+      return *(int16_t *)ptr;
     case 4:
-      {
-        int32_t *a = array;
-        printf(" %10d", a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %10d", *(int32_t *)ptr);
+      return *(int32_t *)ptr;
     case 8:
-      {
-        int64_t *a = array;
 #ifdef HAVE_AMD64
-        printf(" %20ld", a[i]);
+      printf(" %20ld", *(int64_t *)ptr);
 #else
-        printf(" %20lld", a[i]);
+      printf(" %20lld", *(int64_t *)ptr);
 #endif
-        return a[i];
-      }
-      break;
+      return *(int64_t *)ptr;
     default:
       return -1;
   }
@@ -296,41 +268,6 @@ print_array_val_float (void *array, int size, int i)
   }
 }
 
-int delign_index = 1;
-
-void *
-alloc_array (int n, int size, void **m_ptr)
-{
-  unsigned char *ptr = malloc (n*size+256*2);
-  memset (ptr, 0xa5, n*size+256*2);
-  if (m_ptr) *m_ptr = ptr;
-
-  delign_index++;
-  delign_index &= 0xf;
-
-  return (ptr + 256 + size*delign_index);
-}
-
-int
-check_bounds (void *ptr, int n, int size)
-{
-  unsigned char *data = ptr;
-  int i;
-
-  for(i=0;i<100;i++){
-    if (data[-1-i] != 0xa5) {
-      ORC_ERROR("early bounds failure at %d", i);
-      return FALSE;
-    }
-    if (data[n*size+i] != 0xa5) {
-      ORC_ERROR("late bounds failure at %d", i);
-      return FALSE;
-    }
-  }
-
-  return TRUE;
-}
-
 static OrcTestResult orc_test_compare_output_full (OrcProgram *program,
     int backup);
 
@@ -351,11 +288,10 @@ OrcTestResult
 orc_test_compare_output_full (OrcProgram *program, int backup)
 {
   OrcExecutor *ex;
-  int n = 64 + (rand()&0xf);
-  void *dest_exec[4] = { NULL, NULL, NULL, NULL };
-  void *dest_emul[4] = { NULL, NULL, NULL, NULL };
-  void *ptr_exec[4];
-  void *ptr_emul[4];
+  int n = 64 + (orc_random(&rand_context)&0xf);
+  OrcArray *dest_exec[4] = { NULL, NULL, NULL, NULL };
+  OrcArray *dest_emul[4] = { NULL, NULL, NULL, NULL };
+  OrcArray *src[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
   int i;
   int k;
   int have_dest = FALSE;
@@ -363,6 +299,8 @@ orc_test_compare_output_full (OrcProgram *program, int backup)
   int have_acc = FALSE;
   int acc_exec = 0, acc_emul = 0;
   int ret = ORC_TEST_OK;
+
+  ORC_DEBUG ("got here");
 
   if (!backup) {
     result = orc_program_compile (program);
@@ -373,44 +311,61 @@ orc_test_compare_output_full (OrcProgram *program, int backup)
 
   ex = orc_executor_new (program);
   orc_executor_set_n (ex, n);
+  if (program->is_2d) {
+    orc_executor_set_m (ex, 1);
+  } else {
+    orc_executor_set_m (ex, 1);
+  }
+  ORC_DEBUG("size %d %d", ex->n, ex->params[ORC_VAR_A1]);
 
   for(i=0;i<ORC_N_VARIABLES;i++){
     if (program->vars[i].name == NULL) continue;
 
     if (program->vars[i].vartype == ORC_VAR_TYPE_SRC) {
-      uint8_t *data;
-      data = alloc_array (n,program->vars[i].size, NULL);
-      orc_test_random_bits (data, n*program->vars[i].size);
-      orc_executor_set_array (ex, i, data);
+      src[i] = orc_array_new (n, 1, program->vars[i].size);
+      orc_array_set_random (src[i], &rand_context);
+      orc_executor_set_array (ex, i, src[i]->data);
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
-      dest_exec[i] = alloc_array (n, program->vars[i].size, &ptr_exec[i]);
-      dest_emul[i] = alloc_array (n, program->vars[i].size, &ptr_emul[i]);
-      memset (dest_exec[i], 0xa5, n*program->vars[i].size);
-      memset (dest_emul[i], 0xa5, n*program->vars[i].size);
-
-      orc_executor_set_array (ex, i, dest_exec[i]);
-      have_dest = TRUE;
+      dest_exec[i] = orc_array_new (n, 1, program->vars[i].size);
+      orc_array_set_pattern (dest_exec[i], 0xa5);
+      dest_emul[i] = orc_array_new (n, 1, program->vars[i].size);
+      orc_array_set_pattern (dest_emul[i], 0xa5);
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_PARAM) {
       orc_executor_set_param (ex, i, 2);
     }
   }
 
-  orc_executor_run (ex);
-
   for(i=0;i<ORC_N_VARIABLES;i++){
     if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
-      orc_executor_set_array (ex, i, dest_emul[i]);
+      orc_executor_set_array (ex, i, dest_exec[i]->data);
+      have_dest = TRUE;
     }
+  }
+  ORC_DEBUG ("running");
+  orc_executor_run (ex);
+  ORC_DEBUG ("done running");
+  for(i=0;i<ORC_N_VARIABLES;i++){
     if (program->vars[i].vartype == ORC_VAR_TYPE_ACCUMULATOR) {
       acc_exec = ex->accumulators[0];
       have_acc = TRUE;
     }
   }
+
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
+      orc_executor_set_array (ex, i, dest_emul[i]->data);
+    }
+  }
   orc_executor_emulate (ex);
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    if (program->vars[i].vartype == ORC_VAR_TYPE_ACCUMULATOR) {
+      acc_emul = ex->accumulators[0];
+    }
+  }
 
   for(k=0;k<ORC_N_VARIABLES;k++){
     if (program->vars[k].vartype == ORC_VAR_TYPE_DEST) {
-      if (memcmp (dest_exec[k], dest_emul[k], n*program->vars[k].size) != 0) {
+      if (!orc_array_compare (dest_exec[k], dest_emul[k])) {
         for(i=0;i<n;i++){
           int a,b;
           int j;
@@ -421,13 +376,13 @@ orc_test_compare_output_full (OrcProgram *program, int backup)
             if (program->vars[j].name == NULL) continue;
             if (program->vars[j].vartype == ORC_VAR_TYPE_SRC &&
                 program->vars[j].size > 0) {
-              print_array_val_signed (ex->arrays[j], program->vars[j].size, i);
+              print_array_val_signed (ex->arrays[j], i, 0);
             }
           }
 
           printf(" ->");
-          a = print_array_val_signed (dest_emul[k], program->vars[k].size, i);
-          b = print_array_val_signed (dest_exec[k], program->vars[k].size, i);
+          a = print_array_val_signed (dest_emul[k], i, 0);
+          b = print_array_val_signed (dest_exec[k], i, 0);
 
           if (a != b) {
             printf(" *");
@@ -438,17 +393,11 @@ orc_test_compare_output_full (OrcProgram *program, int backup)
 
         ret = ORC_TEST_FAILED;
       }
-      if (!check_bounds (dest_exec[k], n, program->vars[k].size)) {
+      if (!orc_array_check_out_of_bounds (dest_exec[k])) {
         printf("out of bounds failure\n");
 
         ret = ORC_TEST_FAILED;
       }
-
-      free (ptr_exec[k]);
-      free (ptr_emul[k]);
-    }
-    if (program->vars[k].vartype == ORC_VAR_TYPE_ACCUMULATOR) {
-      acc_emul = ex->accumulators[0];
     }
   }
 
@@ -476,6 +425,14 @@ orc_test_compare_output_full (OrcProgram *program, int backup)
 
   if (ret == ORC_TEST_FAILED) {
     printf("%s", orc_program_get_asm_code (program));
+  }
+
+  for(i=0;i<4;i++){
+    if (dest_exec[i]) orc_array_free (dest_exec[i]);
+    if (dest_emul[i]) orc_array_free (dest_emul[i]);
+  }
+  for(i=0;i<8;i++){
+    if (src[i]) orc_array_free (src[i]);
   }
 
   orc_executor_free (ex);
