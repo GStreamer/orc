@@ -221,12 +221,14 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
 
   return result;
 error:
+
   ORC_WARNING("program %s failed to compile, reason %d",
       program->name, compiler->result);
   result = compiler->result;
   if (result == 0) {
     result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
+  if (compiler->asm_code) free (compiler->asm_code);
   free (compiler);
   ORC_INFO("finished compiling (fail)");
   return result;

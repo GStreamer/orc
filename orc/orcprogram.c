@@ -147,6 +147,9 @@ orc_program_free (OrcProgram *program)
   for(i=0;i<ORC_N_VARIABLES;i++){
     if (program->vars[i].name) free (program->vars[i].name);
   }
+  if (program->asm_code) {
+    free (program->asm_code);
+  }
   if (program->name) {
     free (program->name);
   }
