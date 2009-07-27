@@ -217,7 +217,7 @@ sse_save_accumulators (OrcCompiler *compiler)
 }
 
 void
-sse_load_constants (OrcCompiler *compiler)
+sse_load_constants_outer (OrcCompiler *compiler)
 {
   int i;
   for(i=0;i<ORC_N_VARIABLES;i++){
@@ -252,6 +252,33 @@ sse_load_constants (OrcCompiler *compiler)
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
+        break;
+      case ORC_VAR_TYPE_ACCUMULATOR:
+        orc_sse_emit_660f (compiler, "pxor", 0xef,
+            compiler->vars[i].alloc, compiler->vars[i].alloc);
+        break;
+      case ORC_VAR_TYPE_TEMP:
+        break;
+      default:
+        ORC_COMPILER_ERROR(compiler,"bad vartype");
+        break;
+    }
+  }
+}
+
+void
+sse_load_constants_inner (OrcCompiler *compiler)
+{
+  int i;
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    if (compiler->vars[i].name == NULL) continue;
+    switch (compiler->vars[i].vartype) {
+      case ORC_VAR_TYPE_CONST:
+        break;
+      case ORC_VAR_TYPE_PARAM:
+        break;
+      case ORC_VAR_TYPE_SRC:
+      case ORC_VAR_TYPE_DEST:
         if (compiler->vars[i].ptr_register) {
           orc_x86_emit_mov_memoffset_reg (compiler, compiler->is_64bit ? 8 : 4,
               (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]), compiler->exec_reg,
@@ -261,8 +288,38 @@ sse_load_constants (OrcCompiler *compiler)
         }
         break;
       case ORC_VAR_TYPE_ACCUMULATOR:
-        orc_sse_emit_660f (compiler, "pxor", 0xef,
-            compiler->vars[i].alloc, compiler->vars[i].alloc);
+        break;
+      case ORC_VAR_TYPE_TEMP:
+        break;
+      default:
+        ORC_COMPILER_ERROR(compiler,"bad vartype");
+        break;
+    }
+  }
+}
+
+void
+sse_add_strides (OrcCompiler *compiler)
+{
+  int i;
+
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    if (compiler->vars[i].name == NULL) continue;
+    switch (compiler->vars[i].vartype) {
+      case ORC_VAR_TYPE_CONST:
+        break;
+      case ORC_VAR_TYPE_PARAM:
+        break;
+      case ORC_VAR_TYPE_SRC:
+      case ORC_VAR_TYPE_DEST:
+        orc_x86_emit_mov_memoffset_reg (compiler, 4,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[i]), compiler->exec_reg,
+            X86_ECX);
+        orc_x86_emit_add_reg_memoffset (compiler, compiler->is_64bit ? 8 : 4,
+            X86_ECX,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]), compiler->exec_reg);
+        break;
+      case ORC_VAR_TYPE_ACCUMULATOR:
         break;
       case ORC_VAR_TYPE_TEMP:
         break;
@@ -405,13 +462,17 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
 
   orc_x86_emit_prologue (compiler);
 
+  sse_load_constants_outer (compiler);
+
   if (compiler->program->is_2d) {
+
     orc_x86_emit_mov_memoffset_reg (compiler, 4,
         (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A1]),
         compiler->exec_reg, X86_EAX);
     orc_x86_emit_test_reg_reg (compiler, 4, X86_EAX, X86_EAX);
     orc_x86_emit_jle (compiler, 17);
 
+    orc_x86_emit_mov_imm_reg (compiler, 4, 0, X86_EAX);
     orc_x86_emit_mov_reg_memoffset (compiler, 4, X86_EAX,
         (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A2]),
         compiler->exec_reg);
@@ -472,7 +533,7 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2), compiler->exec_reg);
   }
 
-  sse_load_constants (compiler);
+  sse_load_constants_inner (compiler);
 
   if (compiler->loop_shift > 0) {
     int save_loop_shift;
@@ -536,7 +597,15 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
   }
 
   if (compiler->program->is_2d) {
-    orc_x86_emit_dec_memoffset (compiler, 4,
+    sse_add_strides (compiler);
+
+    orc_x86_emit_add_imm_memoffset (compiler, 4, 1,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]),
+        compiler->exec_reg);
+    orc_x86_emit_mov_memoffset_reg (compiler, 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A1]),
+        compiler->exec_reg, X86_EAX);
+    orc_x86_emit_cmp_reg_memoffset (compiler, 4, X86_EAX,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]),
         compiler->exec_reg);
     orc_x86_emit_jne (compiler, 16);

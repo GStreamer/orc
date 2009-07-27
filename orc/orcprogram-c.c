@@ -77,6 +77,7 @@ orc_target_get_asm_preamble (const char *target)
     "#define ORC_CLAMP_UL(x) ORC_CLAMP(x,ORC_UL_MIN,ORC_UL_MAX)\n"
     "#define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))\n"
     "#define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))\n"
+    "#define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))\n"
     "/* end Orc C target preamble */\n\n";
 }
 
@@ -94,13 +95,15 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
   OrcInstruction *insn;
   OrcStaticOpcode *opcode;
   OrcRule *rule;
+  int prefix = 0;
 
   if (!(compiler->target_flags & ORC_TARGET_C_BARE)) {
     ORC_ASM_CODE(compiler,"void\n");
     ORC_ASM_CODE(compiler,"%s (OrcExecutor *ex)\n", compiler->program->name);
     ORC_ASM_CODE(compiler,"{\n");
   }
-  ORC_ASM_CODE(compiler,"  int i;\n");
+
+  ORC_ASM_CODE(compiler,"%*s  int i;\n", prefix, "");
   if (compiler->program->is_2d) {
     ORC_ASM_CODE(compiler,"  int j;\n");
   }
@@ -122,16 +125,16 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
         ORC_ASM_CODE(compiler,"  %s var%d;\n", c_get_type_name(var->size), i);
         break;
       case ORC_VAR_TYPE_SRC:
-        ORC_ASM_CODE(compiler,"  const %s *%s var%d = ex->arrays[%d];\n",
+        ORC_ASM_CODE(compiler,"  const %s *%s var%d;\n",
             c_get_type_name (var->size),
             (compiler->target_flags & ORC_TARGET_C_C99) ? "restrict " : "",
-            i, i);
+            i);
         break;
       case ORC_VAR_TYPE_DEST:
-        ORC_ASM_CODE(compiler,"  %s *%s var%d = ex->arrays[%d];\n",
+        ORC_ASM_CODE(compiler,"  %s *%s var%d;\n",
             c_get_type_name (var->size),
             (compiler->target_flags & ORC_TARGET_C_C99) ? "restrict " : "",
-            i, i);
+            i);
         break;
       case ORC_VAR_TYPE_ACCUMULATOR:
         ORC_ASM_CODE(compiler,"  %s var%d = 0;\n",
@@ -146,7 +149,6 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
         ORC_COMPILER_ERROR(compiler, "bad vartype");
         break;
     }
-
   }
 
   ORC_ASM_CODE(compiler,"\n");
@@ -157,11 +159,47 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
       ORC_ASM_CODE(compiler,"  for (j = 0; j < %d; j++) {\n",
           compiler->program->constant_m);
     }
-  }
-  if (compiler->program->constant_n == 0) {
-    ORC_ASM_CODE(compiler,"  for (i = 0; i < ex->n; i++) {\n");
+    prefix = 2;
+
+    for(i=0;i<ORC_N_VARIABLES;i++){
+      OrcVariable *var = compiler->vars + i;
+      if (var->name == NULL) continue;
+      switch (var->vartype) {
+        case ORC_VAR_TYPE_SRC:
+          ORC_ASM_CODE(compiler,"    var%d = ORC_PTR_OFFSET(ex->arrays[%d], ex->params[%d] * j);\n",
+              i, i, i);
+          break;
+        case ORC_VAR_TYPE_DEST:
+          ORC_ASM_CODE(compiler,"    var%d = ORC_PTR_OFFSET(ex->arrays[%d], ex->params[%d] * j);\n",
+              i, i, i);
+          break;
+        default:
+          break;
+      }
+    }
   } else {
-    ORC_ASM_CODE(compiler,"  for (i = 0; i < %d; i++) {\n",
+    for(i=0;i<ORC_N_VARIABLES;i++){
+      OrcVariable *var = compiler->vars + i;
+      if (var->name == NULL) continue;
+      switch (var->vartype) {
+        case ORC_VAR_TYPE_SRC:
+          ORC_ASM_CODE(compiler,"  var%d = ex->arrays[%d];\n", i, i);
+          break;
+        case ORC_VAR_TYPE_DEST:
+          ORC_ASM_CODE(compiler,"  var%d = ex->arrays[%d];\n", i, i);
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  ORC_ASM_CODE(compiler,"\n");
+  if (compiler->program->constant_n == 0) {
+    ORC_ASM_CODE(compiler,"%*s  for (i = 0; i < ex->n; i++) {\n", prefix, "");
+  } else {
+    ORC_ASM_CODE(compiler,"%*s  for (i = 0; i < %d; i++) {\n",
+        prefix, "",
         compiler->program->constant_n);
   }
 
@@ -169,17 +207,19 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     insn = compiler->insns + j;
     opcode = insn->opcode;
 
-    ORC_ASM_CODE(compiler,"    /* %d: %s */\n", j, insn->opcode->name);
+    ORC_ASM_CODE(compiler,"%*s    /* %d: %s */\n", prefix, "",
+        j, insn->opcode->name);
 
     rule = insn->rule;
     if (rule) {
+      ORC_ASM_CODE(compiler,"%*s", prefix, "");
       rule->emit (compiler, rule->emit_user, insn);
     } else {
       ORC_COMPILER_ERROR(compiler, "No rule for: %s\n", opcode->name);
       compiler->error = TRUE;
     }
   }
-  ORC_ASM_CODE(compiler,"  }\n");
+  ORC_ASM_CODE(compiler,"%*s  }\n", prefix, "");
   if (compiler->program->is_2d) {
     ORC_ASM_CODE(compiler,"  }\n");
   }

@@ -500,6 +500,26 @@ orc_x86_emit_add_imm_reg (OrcCompiler *compiler, int size, int value, int reg)
 }
 
 void
+orc_x86_emit_add_reg_reg (OrcCompiler *compiler, int size, int reg1, int reg2)
+{
+  if (size == 2) {
+    ORC_ASM_CODE(compiler,"  addw %%%s, %%%s\n", orc_x86_get_regname_16(reg1),
+        orc_x86_get_regname_16(reg2));
+    *compiler->codeptr++ = 0x66;
+  } else if (size == 4) {
+    ORC_ASM_CODE(compiler,"  addl %%%s, %%%s\n", orc_x86_get_regname(reg1),
+        orc_x86_get_regname(reg2));
+  } else {
+    ORC_ASM_CODE(compiler,"  add %%%s, %%%s\n", orc_x86_get_regname_64(reg1),
+        orc_x86_get_regname_64(reg2));
+  }
+
+  orc_x86_emit_rex(compiler, size, reg2, 0, reg1);
+  *compiler->codeptr++ = 0x01;
+  orc_x86_emit_modrm_reg (compiler, reg2, reg1);
+}
+
+void
 orc_x86_emit_sub_reg_reg (OrcCompiler *compiler, int size, int reg1, int reg2)
 {
   if (size == 2) {
@@ -517,6 +537,20 @@ orc_x86_emit_sub_reg_reg (OrcCompiler *compiler, int size, int reg1, int reg2)
   orc_x86_emit_rex(compiler, size, reg2, 0, reg1);
   *compiler->codeptr++ = 0x29;
   orc_x86_emit_modrm_reg (compiler, reg2, reg1);
+}
+
+void
+orc_x86_emit_imul_memoffset_reg (OrcCompiler *compiler, int size,
+    int offset, int reg, int destreg)
+{
+  ORC_ASM_CODE(compiler,"  imul %d(%%%s), %%%s\n", offset,
+      orc_x86_get_regname_ptr(compiler, reg),
+      orc_x86_get_regname(destreg));
+
+  orc_x86_emit_rex(compiler, size, 0, 0, reg);
+  *compiler->codeptr++ = 0x0f;
+  *compiler->codeptr++ = 0xaf;
+  orc_x86_emit_modrm_memoffset (compiler, destreg, offset, reg);
 }
 
 void

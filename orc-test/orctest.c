@@ -289,10 +289,12 @@ orc_test_compare_output_full (OrcProgram *program, int backup)
 {
   OrcExecutor *ex;
   int n = 64 + (orc_random(&rand_context)&0xf);
+  int m;
   OrcArray *dest_exec[4] = { NULL, NULL, NULL, NULL };
   OrcArray *dest_emul[4] = { NULL, NULL, NULL, NULL };
   OrcArray *src[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
   int i;
+  int j;
   int k;
   int have_dest = FALSE;
   OrcCompileResult result;
@@ -303,7 +305,13 @@ orc_test_compare_output_full (OrcProgram *program, int backup)
   ORC_DEBUG ("got here");
 
   if (!backup) {
-    result = orc_program_compile (program);
+    OrcTarget *target;
+    unsigned int flags;
+
+    target = orc_target_get_default ();
+    flags = orc_target_get_default_flags (target);
+
+    result = orc_program_compile_full (program, target, flags);
     if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
       return ORC_TEST_INDETERMINATE;
     }
@@ -312,23 +320,23 @@ orc_test_compare_output_full (OrcProgram *program, int backup)
   ex = orc_executor_new (program);
   orc_executor_set_n (ex, n);
   if (program->is_2d) {
-    orc_executor_set_m (ex, 1);
+    m = 8 + (orc_random(&rand_context)&0xf);
   } else {
-    orc_executor_set_m (ex, 1);
+    m = 1;
   }
+  orc_executor_set_m (ex, m);
   ORC_DEBUG("size %d %d", ex->n, ex->params[ORC_VAR_A1]);
 
   for(i=0;i<ORC_N_VARIABLES;i++){
     if (program->vars[i].name == NULL) continue;
 
     if (program->vars[i].vartype == ORC_VAR_TYPE_SRC) {
-      src[i] = orc_array_new (n, 1, program->vars[i].size);
-      orc_array_set_random (src[i], &rand_context);
-      orc_executor_set_array (ex, i, src[i]->data);
+      src[i-ORC_VAR_S1] = orc_array_new (n, m, program->vars[i].size);
+      orc_array_set_random (src[i-ORC_VAR_S1], &rand_context);
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
-      dest_exec[i] = orc_array_new (n, 1, program->vars[i].size);
+      dest_exec[i] = orc_array_new (n, m, program->vars[i].size);
       orc_array_set_pattern (dest_exec[i], 0xa5);
-      dest_emul[i] = orc_array_new (n, 1, program->vars[i].size);
+      dest_emul[i] = orc_array_new (n, m, program->vars[i].size);
       orc_array_set_pattern (dest_emul[i], 0xa5);
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_PARAM) {
       orc_executor_set_param (ex, i, 2);
@@ -338,7 +346,12 @@ orc_test_compare_output_full (OrcProgram *program, int backup)
   for(i=0;i<ORC_N_VARIABLES;i++){
     if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
       orc_executor_set_array (ex, i, dest_exec[i]->data);
+      orc_executor_set_stride (ex, i, dest_exec[i]->stride);
       have_dest = TRUE;
+    }
+    if (program->vars[i].vartype == ORC_VAR_TYPE_SRC) {
+      orc_executor_set_array (ex, i, src[i-ORC_VAR_S1]->data);
+      orc_executor_set_stride (ex, i, src[i-ORC_VAR_S1]->stride);
     }
   }
   ORC_DEBUG ("running");
@@ -354,6 +367,12 @@ orc_test_compare_output_full (OrcProgram *program, int backup)
   for(i=0;i<ORC_N_VARIABLES;i++){
     if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
       orc_executor_set_array (ex, i, dest_emul[i]->data);
+      orc_executor_set_stride (ex, i, dest_emul[i]->stride);
+    }
+    if (program->vars[i].vartype == ORC_VAR_TYPE_SRC) {
+      ORC_DEBUG("setting array %p", src[i-ORC_VAR_S1]->data);
+      orc_executor_set_array (ex, i, src[i-ORC_VAR_S1]->data);
+      orc_executor_set_stride (ex, i, src[i-ORC_VAR_S1]->stride);
     }
   }
   orc_executor_emulate (ex);
@@ -366,29 +385,31 @@ orc_test_compare_output_full (OrcProgram *program, int backup)
   for(k=0;k<ORC_N_VARIABLES;k++){
     if (program->vars[k].vartype == ORC_VAR_TYPE_DEST) {
       if (!orc_array_compare (dest_exec[k], dest_emul[k])) {
-        for(i=0;i<n;i++){
-          int a,b;
-          int j;
+        for(j=0;j<m;j++){
+          for(i=0;i<n;i++){
+            int a,b;
+            int l;
 
-          printf("%2d:", i);
+            printf("%2d %2d:", i, j);
 
-          for(j=0;j<ORC_N_VARIABLES;j++){
-            if (program->vars[j].name == NULL) continue;
-            if (program->vars[j].vartype == ORC_VAR_TYPE_SRC &&
-                program->vars[j].size > 0) {
-              print_array_val_signed (ex->arrays[j], i, 0);
+            for(l=0;l<ORC_N_VARIABLES;l++){
+              if (program->vars[l].name == NULL) continue;
+              if (program->vars[l].vartype == ORC_VAR_TYPE_SRC &&
+                  program->vars[l].size > 0) {
+                print_array_val_signed (src[l-ORC_VAR_S1], i, j);
+              }
             }
+
+            printf(" ->");
+            a = print_array_val_signed (dest_emul[k], i, j);
+            b = print_array_val_signed (dest_exec[k], i, j);
+
+            if (a != b) {
+              printf(" *");
+            }
+
+            printf("\n");
           }
-
-          printf(" ->");
-          a = print_array_val_signed (dest_emul[k], i, 0);
-          b = print_array_val_signed (dest_exec[k], i, 0);
-
-          if (a != b) {
-            printf(" *");
-          }
-
-          printf("\n");
         }
 
         ret = ORC_TEST_FAILED;
@@ -403,20 +424,21 @@ orc_test_compare_output_full (OrcProgram *program, int backup)
 
   if (have_acc) {
     if (acc_emul != acc_exec) {
-      for(i=0;i<n;i++){
-        int j;
+      for(j=0;j<m;j++){
+        for(i=0;i<n;i++){
 
-        printf("%2d:", i);
+          printf("%2d %2d:", i, j);
 
-        for(j=0;j<ORC_N_VARIABLES;j++){
-          if (program->vars[j].name == NULL) continue;
-          if (program->vars[j].vartype == ORC_VAR_TYPE_SRC &&
-              program->vars[j].size > 0) {
-            print_array_val_signed (ex->arrays[j], program->vars[j].size, i);
+          for(k=0;k<ORC_N_VARIABLES;k++){
+            if (program->vars[k].name == NULL) continue;
+            if (program->vars[k].vartype == ORC_VAR_TYPE_SRC &&
+                program->vars[k].size > 0) {
+              print_array_val_signed (src[k-ORC_VAR_S1], i, j);
+            }
           }
-        }
 
-        printf(" -> acc\n");
+          printf(" -> acc\n");
+        }
       }
       printf("acc %d %d\n", acc_emul, acc_exec);
       ret = ORC_TEST_FAILED;
@@ -464,6 +486,7 @@ orc_test_get_program_for_opcode (OrcStaticOpcode *opcode)
 
   sprintf(s, "test_%s", opcode->name);
   orc_program_set_name (p, s);
+  orc_program_set_2d (p);
 
   if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
     orc_program_append_str (p, opcode->name, "a1", "s1", "s2");

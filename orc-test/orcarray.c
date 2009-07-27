@@ -8,7 +8,12 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
+#define EXTEND_ROWS 16
+#define EXTEND_STRIDE 256
+
+#define OOB_VALUE 0xa5
 
 OrcArray *
 orc_array_new (int n, int m, int element_size)
@@ -22,11 +27,11 @@ orc_array_new (int n, int m, int element_size)
   ar->m = m;
   ar->element_size = element_size;
 
-  ar->stride = (n*element_size + 256);
-  ar->alloc_len = ar->stride * (m+32);
+  ar->stride = (n*element_size + EXTEND_STRIDE);
+  ar->alloc_len = ar->stride * (m+2*EXTEND_ROWS);
   ar->alloc_data = malloc (ar->alloc_len);
 
-  ar->data = ORC_PTR_OFFSET (ar->alloc_data, ar->stride * 32 + 128);
+  ar->data = ORC_PTR_OFFSET (ar->alloc_data, ar->stride * EXTEND_ROWS);
   
   return ar;
 }
@@ -35,6 +40,7 @@ void
 orc_array_free (OrcArray *array)
 {
   free (array->alloc_data);
+  free (array);
 }
 
 void
@@ -64,7 +70,36 @@ orc_array_compare (OrcArray *array1, OrcArray *array2)
 int
 orc_array_check_out_of_bounds (OrcArray *array)
 {
-  /* FIXME */
+  int i;
+  int j;
+  unsigned char *data;
+  
+  data = array->alloc_data;
+  for(i=0;i<array->stride * EXTEND_ROWS;i++){
+    if (data[i] != OOB_VALUE) {
+      printf("OOB check failed at start-%d\n", array->stride * EXTEND_ROWS - i);
+      return FALSE;
+    }
+  }
+
+  for(j=0;j<array->m;j++){
+    data = array->data + array->stride * j;
+    for(i=array->element_size * array->n;i<array->stride;i++){
+      if (data[i] != OOB_VALUE) {
+        printf("OOB check failed on row %d, end+%d\n", j,
+            i - array->element_size * array->n);
+        return FALSE;
+      }
+    }
+  }
+
+  data = array->data + array->stride * array->m;
+  for(i=0;i<array->stride * EXTEND_ROWS;i++){
+    if (data[i] != OOB_VALUE) {
+      printf("OOB check failed at end+%d\n", i);
+      return FALSE;
+    }
+  }
 
   return TRUE;
 }

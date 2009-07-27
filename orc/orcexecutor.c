@@ -68,6 +68,12 @@ orc_executor_set_array (OrcExecutor *ex, int var, void *ptr)
 }
 
 void
+orc_executor_set_stride (OrcExecutor *ex, int var, int stride)
+{
+  ex->params[var] = stride;
+}
+
+void
 orc_executor_set_array_str (OrcExecutor *ex, const char *name, void *ptr)
 {
   int var;
@@ -141,7 +147,9 @@ orc_executor_emulate (OrcExecutor *ex)
   } else {
     m = 1;
   }
+  ORC_DEBUG("src ptr %p stride %d", ex->arrays[ORC_VAR_S1], ex->params[ORC_VAR_S1]);
   for(m_index=0;m_index<m;m_index++){
+    ORC_DEBUG("m_index %d m %d", m_index, m);
     for(i=0;i<ex->n;i++){
       for(j=0;j<program->n_insns;j++){
         insn = program->insns + j;

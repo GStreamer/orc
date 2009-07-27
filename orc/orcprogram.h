@@ -391,6 +391,7 @@ struct _OrcExecutor {
   int params[ORC_N_VARIABLES];
   int accumulators[4];
   /* exec pointer is stored in arrays[ORC_VAR_A1] */
+  /* row pointers are stored in arrays[i+ORC_VAR_C1] */
   /* the stride for arrays[x] is stored in params[x] */
   /* m is stored in params[ORC_VAR_A1] */
   /* m_index is stored in params[ORC_VAR_A2] */
@@ -495,6 +496,7 @@ OrcExecutor * orc_executor_new (OrcProgram *program);
 void orc_executor_free (OrcExecutor *ex);
 void orc_executor_set_program (OrcExecutor *ex, OrcProgram *program);
 void orc_executor_set_array (OrcExecutor *ex, int var, void *ptr);
+void orc_executor_set_stride (OrcExecutor *ex, int var, int stride);
 void orc_executor_set_array_str (OrcExecutor *ex, const char *name, void *ptr);
 void orc_executor_set_param (OrcExecutor *ex, int var, int value);
 void orc_executor_set_param_str (OrcExecutor *ex, const char *name, int value);
