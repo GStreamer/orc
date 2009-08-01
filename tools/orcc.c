@@ -11,6 +11,7 @@ void output_code (OrcProgram *p, FILE *output);
 void output_code_header (OrcProgram *p, FILE *output);
 void output_code_test (OrcProgram *p, FILE *output);
 void output_code_backup (OrcProgram *p, FILE *output);
+void output_code_no_orc (OrcProgram *p, FILE *output);
 static void print_defines (FILE *output);
 static void print_exec_header (FILE *output);
 
@@ -119,6 +120,7 @@ main (int argc, char *argv[])
 static void
 print_exec_header (FILE *output)
 {
+#if 0
   fprintf(output,
       "typedef struct _OrcExecutor OrcExecutor;\n"
       "typedef struct _OrcProgram OrcProgram;\n"
@@ -183,6 +185,7 @@ print_exec_header (FILE *output)
       "  ORC_VAR_T14,\n"
       "  ORC_VAR_T15\n"
       "};\n");
+#endif
 }
 
 static void
@@ -384,6 +387,27 @@ output_code_backup (OrcProgram *p, FILE *output)
 }
 
 void
+output_code_no_orc (OrcProgram *p, FILE *output)
+{
+
+  fprintf(output, "void\n");
+  output_prototype (p, output);
+  fprintf(output, "{\n");
+  {
+    OrcCompileResult result;
+
+    result = orc_program_compile_full (p, orc_target_get_by_name("c"),
+        ORC_TARGET_C_BARE | ORC_TARGET_C_NOEXEC);
+    if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
+      fprintf(output, "%s\n", orc_program_get_asm_code (p));
+    }
+  }
+  fprintf(output, "}\n");
+  fprintf(output, "\n");
+
+}
+
+void
 output_code (OrcProgram *p, FILE *output)
 {
   OrcVariable *var;
@@ -391,13 +415,15 @@ output_code (OrcProgram *p, FILE *output)
 
   fprintf(output, "\n");
   fprintf(output, "/* %s */\n", p->name);
+  fprintf(output, "#ifdef DISABLE_ORC\n");
+  output_code_no_orc (p, output);
+  fprintf(output, "#else\n");
   output_code_backup (p, output);
   fprintf(output, "void\n");
   output_prototype (p, output);
   fprintf(output, "\n");
   fprintf(output, "{\n");
   fprintf(output, "  OrcExecutor _ex, *ex = &_ex;\n");
-  fprintf(output, "#ifndef DISABLE_ORC\n");
   fprintf(output, "  static int p_inited = 0;\n");
   fprintf(output, "  static OrcProgram *p = 0;\n");
   fprintf(output, "\n");
@@ -490,7 +516,6 @@ output_code (OrcProgram *p, FILE *output)
   fprintf(output, "    orc_once_mutex_unlock ();\n");
   fprintf(output, "  }\n");
   fprintf(output, "  ex->program = p;\n");
-  fprintf(output, "#endif\n");
   fprintf(output, "\n");
   if (p->constant_n) {
     fprintf(output, "  ex->n = %d;\n", p->constant_n);
@@ -526,11 +551,7 @@ output_code (OrcProgram *p, FILE *output)
     }
   }
   fprintf(output, "\n");
-  fprintf(output, "#ifndef DISABLE_ORC\n");
   fprintf(output, "  orc_executor_run (ex);\n");
-  fprintf(output, "#else\n");
-  fprintf(output, "  _backup_%s (ex);\n", p->name);
-  fprintf(output, "#endif\n");
   for(i=0;i<4;i++){
     var = &p->vars[ORC_VAR_A1 + i];
     if (var->size) {
@@ -539,6 +560,8 @@ output_code (OrcProgram *p, FILE *output)
     }
   }
   fprintf(output, "}\n");
+  fprintf(output, "#endif\n");
+  fprintf(output, "\n");
 
 }
 

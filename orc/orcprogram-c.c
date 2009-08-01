@@ -87,6 +87,21 @@ orc_compiler_c_get_default_flags (void)
   return 0;
 }
 
+const char *varnames[] = {
+  "d1", "d2", "d3", "d4",
+  "s1", "s2", "s3", "s4",
+  "s5", "s6", "s7", "s8",
+  "a1", "a2", "a3", "d4",
+  "c1", "c2", "c3", "c4",
+  "c5", "c6", "c7", "c8",
+  "p1", "p2", "p3", "p4",
+  "p5", "p6", "p7", "p8",
+  "t1", "t2", "t3", "t4",
+  "t5", "t6", "t7", "t8",
+  "t9", "t10", "t11", "t12",
+  "t13", "t14", "t15", "t16"
+};
+
 void
 orc_compiler_c_assemble (OrcCompiler *compiler)
 {
@@ -142,8 +157,13 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
             i);
         break;
       case ORC_VAR_TYPE_PARAM:
-        ORC_ASM_CODE(compiler,"  const %s var%d = ex->params[%d];\n",
-            c_get_type_name (var->size), i, i);
+        if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
+          ORC_ASM_CODE(compiler,"  const %s var%d = ex->params[%d];\n",
+              c_get_type_name (var->size), i, i);
+        } else {
+          ORC_ASM_CODE(compiler,"  const %s var%d = %s;\n",
+              c_get_type_name (var->size), i, varnames[i]);
+        }
         break;
       default:
         ORC_COMPILER_ERROR(compiler, "bad vartype");
@@ -154,7 +174,11 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
   ORC_ASM_CODE(compiler,"\n");
   if (compiler->program->is_2d) {
     if (compiler->program->constant_m == 0) {
-      ORC_ASM_CODE(compiler,"  for (j = 0; j < ex->params[ORC_VAR_A1]; j++) {\n");
+      if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
+        ORC_ASM_CODE(compiler,"  for (j = 0; j < ex->params[ORC_VAR_A1]; j++) {\n");
+      } else {
+        ORC_ASM_CODE(compiler,"  for (j = 0; j < m; j++) {\n");
+      }
     } else {
       ORC_ASM_CODE(compiler,"  for (j = 0; j < %d; j++) {\n",
           compiler->program->constant_m);
@@ -166,12 +190,22 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
       if (var->name == NULL) continue;
       switch (var->vartype) {
         case ORC_VAR_TYPE_SRC:
-          ORC_ASM_CODE(compiler,"    var%d = ORC_PTR_OFFSET(ex->arrays[%d], ex->params[%d] * j);\n",
-              i, i, i);
+          if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
+            ORC_ASM_CODE(compiler,"    var%d = ORC_PTR_OFFSET(ex->arrays[%d], ex->params[%d] * j);\n",
+                i, i, i);
+          } else {
+            ORC_ASM_CODE(compiler,"    var%d = ORC_PTR_OFFSET(%s, %s_stride * j);\n",
+                i, varnames[i], varnames[i]);
+          }
           break;
         case ORC_VAR_TYPE_DEST:
-          ORC_ASM_CODE(compiler,"    var%d = ORC_PTR_OFFSET(ex->arrays[%d], ex->params[%d] * j);\n",
-              i, i, i);
+          if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
+            ORC_ASM_CODE(compiler,"    var%d = ORC_PTR_OFFSET(ex->arrays[%d], ex->params[%d] * j);\n",
+                i, i, i);
+          } else {
+            ORC_ASM_CODE(compiler,"    var%d = ORC_PTR_OFFSET(%s, %s_stride * j);\n",
+                i, varnames[i], varnames[i]);
+          }
           break;
         default:
           break;
@@ -183,10 +217,18 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
       if (var->name == NULL) continue;
       switch (var->vartype) {
         case ORC_VAR_TYPE_SRC:
-          ORC_ASM_CODE(compiler,"  var%d = ex->arrays[%d];\n", i, i);
+          if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
+            ORC_ASM_CODE(compiler,"  var%d = ex->arrays[%d];\n", i, i);
+          } else {
+            ORC_ASM_CODE(compiler,"  var%d = (void *)%s;\n", i, varnames[i]);
+          }
           break;
         case ORC_VAR_TYPE_DEST:
-          ORC_ASM_CODE(compiler,"  var%d = ex->arrays[%d];\n", i, i);
+          if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
+            ORC_ASM_CODE(compiler,"  var%d = ex->arrays[%d];\n", i, i);
+          } else {
+            ORC_ASM_CODE(compiler,"  var%d = (void *)%s;\n", i, varnames[i]);
+          }
           break;
         default:
           break;
@@ -196,7 +238,11 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
 
   ORC_ASM_CODE(compiler,"\n");
   if (compiler->program->constant_n == 0) {
-    ORC_ASM_CODE(compiler,"%*s  for (i = 0; i < ex->n; i++) {\n", prefix, "");
+    if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
+      ORC_ASM_CODE(compiler,"%*s  for (i = 0; i < ex->n; i++) {\n", prefix, "");
+    } else {
+      ORC_ASM_CODE(compiler,"%*s  for (i = 0; i < n; i++) {\n", prefix, "");
+    }
   } else {
     ORC_ASM_CODE(compiler,"%*s  for (i = 0; i < %d; i++) {\n",
         prefix, "",
