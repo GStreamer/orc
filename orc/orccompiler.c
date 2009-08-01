@@ -178,6 +178,7 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   memcpy (compiler->vars, program->vars,
       ORC_N_VARIABLES * sizeof(OrcVariable));
   compiler->n_temp_vars = program->n_temp_vars;
+  compiler->n_dup_vars = 0;
 
   for(i=0;i<32;i++) {
     compiler->valid_regs[i] = 1;
@@ -216,6 +217,9 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   program->code_size = compiler->codeptr - program->code;
 
   result = compiler->result;
+  for (i=0;i<compiler->n_dup_vars;i++){
+    free(compiler->vars[ORC_VAR_T1 + compiler->n_temp_vars + i].name);
+  }
   free (compiler);
   ORC_INFO("finished compiling (success)");
 
@@ -229,6 +233,9 @@ error:
     result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
   if (compiler->asm_code) free (compiler->asm_code);
+  for (i=0;i<compiler->n_dup_vars;i++){
+    free(compiler->vars[ORC_VAR_T1 + compiler->n_temp_vars + i].name);
+  }
   free (compiler);
   ORC_INFO("finished compiling (fail)");
   return result;
@@ -513,13 +520,13 @@ orc_compiler_rewrite_vars2 (OrcCompiler *compiler)
 int
 orc_compiler_dup_temporary (OrcCompiler *compiler, int var, int j)
 {
-  int i = ORC_VAR_T1 + compiler->n_temp_vars;
+  int i = ORC_VAR_T1 + compiler->n_temp_vars + compiler->n_dup_vars;
 
   compiler->vars[i].vartype = ORC_VAR_TYPE_TEMP;
   compiler->vars[i].size = compiler->vars[var].size;
   compiler->vars[i].name = malloc (strlen(compiler->vars[var].name) + 10);
   sprintf(compiler->vars[i].name, "%s.dup%d", compiler->vars[var].name, j);
-  compiler->n_temp_vars++;
+  compiler->n_dup_vars++;
 
   return i;
 }

@@ -330,6 +330,7 @@ struct _OrcCompiler {
 
   OrcVariable vars[ORC_N_VARIABLES];
   int n_temp_vars;
+  int n_dup_vars;
 
   unsigned char *codeptr;
   
