@@ -1,5 +1,5 @@
 
-SUBDIRS = orcc
+DIST_SUBDIRS = orcc
 
 TESTS = \
 	compile_opcodes_sys_c \
