@@ -117,18 +117,23 @@ unsigned int orc_mmx_get_cpu_flags (void);
 #define orc_mmx_instr_paddw(p,a,b)      orc_mmx_emit_660f (p, "paddw", 0xfd, a, b)
 #define orc_mmx_instr_paddd(p,a,b)      orc_mmx_emit_660f (p, "paddd", 0xfe, a, b)
 
+/* MMX EXT instructions */
 /* MMX SSE instructions */
-#define orc_mmx_instr_pavgb(p,a,b)      orc_mmx_emit_660f (p, "pavgb", 0xe0, a, b)
-#define orc_mmx_instr_pavgw(p,a,b)      orc_mmx_emit_660f (p, "pavgw", 0xe3, a, b)
-#define orc_mmx_instr_psadbw(p,a,b)     orc_mmx_emit_660f (p, "psadbw", 0xf6, a, b)
 #define orc_mmx_instr_pinsrw(p,a,b)     orc_mmx_emit_660f (p, "pinsrw", 0xc4, a, b)
 #define orc_mmx_instr_pextrw(p,a,b)     orc_mmx_emit_660f (p, "pextrw", 0xc5, a, b)
-#define orc_mmx_instr_pmaxsw(p,a,b)     orc_mmx_emit_660f (p, "pmaxsw", 0xee, a, b)
-#define orc_mmx_instr_pmaxub(p,a,b)     orc_mmx_emit_660f (p, "pmaxub", 0xde, a, b)
-#define orc_mmx_instr_pminsw(p,a,b)     orc_mmx_emit_660f (p, "pminsw", 0xea, a, b)
 #define orc_mmx_instr_pminub(p,a,b)     orc_mmx_emit_660f (p, "pminub", 0xda, a, b)
+#define orc_mmx_instr_pmaxub(p,a,b)     orc_mmx_emit_660f (p, "pmaxub", 0xde, a, b)
+#define orc_mmx_instr_pavgb(p,a,b)      orc_mmx_emit_660f (p, "pavgb", 0xe0, a, b)
+#define orc_mmx_instr_pavgw(p,a,b)      orc_mmx_emit_660f (p, "pavgw", 0xe3, a, b)
 #define orc_mmx_instr_pmulhuw(p,a,b)    orc_mmx_emit_660f (p, "pmulhuw", 0xe4, a, b)
+#define orc_mmx_instr_pminsw(p,a,b)     orc_mmx_emit_660f (p, "pminsw", 0xea, a, b)
+#define orc_mmx_instr_pmaxsw(p,a,b)     orc_mmx_emit_660f (p, "pmaxsw", 0xee, a, b)
 #define orc_mmx_instr_pshufw(p,s,a,b)   orc_mmx_emit_pshufw (p, s, a, b)
+#define orc_mmx_instr_psadbw(p,a,b)     orc_mmx_emit_660f (p, "psadbw", 0xf6, a, b)
+
+/* 3DNow! instrunctions, FIXME, not correct */
+#define orc_mmx_instr_pmulhrw(p,a,b)    orc_mmx_emit_660f (p, "pmulhrw", 0xb7, a, b)
+#define orc_mmx_instr_pavgusb(p,a,b)    orc_mmx_emit_660f (p, "pavgusb", 0xbf, a, b)
 
 /* MMX SSE2 instructions */
 #define orc_mmx_instr_paddq(p,a,b)      orc_mmx_emit_660f (p, "paddq", 0xd4, a, b)
