@@ -87,7 +87,7 @@ unsigned int orc_sse_get_cpu_flags (void);
 #define orc_sse_instr_punpcklqdq(p,a,b) orc_sse_emit_660f (p, "punpcklqdq", 0x6c, a, b)
 #define orc_sse_instr_punpckhqdq(p,a,b) orc_sse_emit_660f (p, "punpckhqdq", 0x6d, a, b)
 
-#define orc_sse_instr_movdqa(p,a,b)       orc_sse_emit_660f (p, "movdqa", 0x6f, a, b)
+#define orc_sse_instr_movdqa(p,a,b)     orc_sse_emit_660f (p, "movdqa", 0x6f, a, b)
 
 #define orc_sse_instr_pshufd(p,s,a,b)   orc_sse_emit_pshufd (p, s, a, b)
 #define orc_sse_instr_pshufhw(p,s,a,b)  orc_sse_emit_pshufhw (p, s, a, b)
