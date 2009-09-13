@@ -227,18 +227,19 @@ sse_rule_signX_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
   int imm_vals[] = { 0x01010101, 0x00010001, 0x00000001 };
   const char * names[] = { "psignb", "psignw", "psignd" };
   int codes[] = { 0x3808, 0x3809, 0x380a };
+  int type = ORC_PTR_TO_INT(user);
 
   if (src == dest) {
     orc_sse_emit_660f (p, "movdqa", 0x6f, src, p->tmpreg);
     src = p->tmpreg;
   }
 
-  orc_x86_emit_mov_imm_reg (p, 4, imm_vals[ORC_PTR_TO_INT(user)], p->gp_tmpreg);
+  orc_x86_emit_mov_imm_reg (p, 4, imm_vals[type], p->gp_tmpreg);
 
   orc_x86_emit_mov_reg_sse (p, p->gp_tmpreg, dest);
   orc_sse_emit_pshufd (p, 0, dest, dest);
 
-  orc_sse_emit_660f (p, names[ORC_PTR_TO_INT(user)], codes[ORC_PTR_TO_INT(user)], src, dest);
+  orc_sse_emit_660f (p, names[type], codes[type], src, dest);
 }
 
 static void
