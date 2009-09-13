@@ -75,12 +75,15 @@ unsigned int orc_mmx_get_cpu_flags (void);
 #define orc_mmx_instr_movq(p,a,b)       orc_mmx_emit_660f (p, "movq", 0x6f, a, b)
 
 #define orc_mmx_instr_psraw(p,a,b)      orc_mmx_emit_shiftimm (p, "psraw", 0x71, 4, a, b)
-#define orc_mmx_instr_psrlw(p,a,b)      orc_mmx_emit_shiftimm (p, "psraw", 0x71, 2, a, b)
-#define orc_mmx_instr_psllw(p,a,b)      orc_mmx_emit_shiftimm (p, "psraw", 0x71, 6, a, b)
+#define orc_mmx_instr_psrlw(p,a,b)      orc_mmx_emit_shiftimm (p, "psrlw", 0x71, 2, a, b)
+#define orc_mmx_instr_psllw(p,a,b)      orc_mmx_emit_shiftimm (p, "psllw", 0x71, 6, a, b)
 
-#define orc_mmx_instr_psrad(p,a,b)      orc_mmx_emit_shiftimm (p, "psraw", 0x72, 4, a, b)
-#define orc_mmx_instr_psrld(p,a,b)      orc_mmx_emit_shiftimm (p, "psraw", 0x72, 2, a, b)
-#define orc_mmx_instr_pslld(p,a,b)      orc_mmx_emit_shiftimm (p, "psraw", 0x72, 6, a, b)
+#define orc_mmx_instr_psrad(p,a,b)      orc_mmx_emit_shiftimm (p, "psrad", 0x72, 4, a, b)
+#define orc_mmx_instr_psrld(p,a,b)      orc_mmx_emit_shiftimm (p, "psrld", 0x72, 2, a, b)
+#define orc_mmx_instr_pslld(p,a,b)      orc_mmx_emit_shiftimm (p, "pslld", 0x72, 6, a, b)
+
+#define orc_mmx_instr_psrlq(p,a,b)      orc_mmx_emit_shiftimm (p, "psrlq", 0x73, 2, a, b)
+#define orc_mmx_instr_psllq(p,a,b)      orc_mmx_emit_shiftimm (p, "psllq", 0x73, 6, a, b)
 
 #define orc_mmx_instr_pcmpeqb(p,a,b)    orc_mmx_emit_660f (p, "pcmpeqb", 0x74, a, b);
 #define orc_mmx_instr_pcmpeqw(p,a,b)    orc_mmx_emit_660f (p, "pcmpeqw", 0x75, a, b);
