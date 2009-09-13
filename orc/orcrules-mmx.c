@@ -384,7 +384,7 @@ mmx_rule_select0lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   orc_mmx_instr_pslld (p, 16, dest);
   orc_mmx_instr_psrad (p, 16, dest);
-  urc_mmx_instr_ackssdw (p, dest, dest);
+  orc_mmx_instr_packssdw (p, dest, dest);
 }
 
 static void
