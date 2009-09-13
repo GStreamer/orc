@@ -212,7 +212,7 @@ struct _OrcRule {
  */
 struct _OrcRuleSet {
   /*< private >*/
-  OrcOpcodeSet *opcode_set;
+  int opcode_major;
   int required_target_flags;
 
   OrcRule *rules;
@@ -366,6 +366,9 @@ struct _OrcCompiler {
   int need_mask_regs;
 };
 
+#define ORC_SRC_ARG(p,i,n) ((p)->vars[(i)->src_args[(n)]].alloc)
+#define ORC_DEST_ARG(p,i,n) ((p)->vars[(i)->dest_args[(n)]].alloc)
+
 /**
  * OrcOpcodeExecutor:
  *
@@ -510,6 +513,7 @@ void orc_executor_emulate (OrcExecutor *ex);
 void orc_executor_run (OrcExecutor *ex);
 
 OrcOpcodeSet *orc_opcode_set_get (const char *name);
+OrcOpcodeSet *orc_opcode_set_get_nth (int opcode_major);
 int orc_opcode_set_find_by_name (OrcOpcodeSet *opcode_set, const char *name);
 int orc_opcode_register_static (OrcStaticOpcode *sopcode, char *prefix);
 

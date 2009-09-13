@@ -131,7 +131,7 @@ orc_rule_set_new (OrcOpcodeSet *opcode_set, OrcTarget *target,
 
   memset (rule_set, 0, sizeof(OrcRuleSet));
 
-  rule_set->opcode_set = opcode_set;
+  rule_set->opcode_major = opcode_set->opcode_major;
   rule_set->required_target_flags = required_flags;
 
   rule_set->rules = malloc (sizeof(OrcRule) * opcode_set->n_opcodes);
@@ -156,7 +156,7 @@ orc_target_get_rule (OrcTarget *target, OrcStaticOpcode *opcode,
     if (opcode_sets[k].opcodes + j != opcode) continue;
 
     for(i=0;i<target->n_rule_sets;i++){
-      if (target->rule_sets[i].opcode_set != opcode_sets + k) continue;
+      if (target->rule_sets[i].opcode_major != opcode_sets[k].opcode_major) continue;
       if (target->rule_sets[i].required_target_flags & (~target_flags)) continue;
 
       rule = target->rule_sets[i].rules + j;
@@ -204,6 +204,12 @@ orc_opcode_set_get (const char *name)
   }
 
   return NULL;
+}
+
+OrcOpcodeSet *
+orc_opcode_set_get_nth (int opcode_major)
+{
+  return opcode_sets + opcode_major;
 }
 
 int
