@@ -160,9 +160,9 @@ make_volume_orc()
   orc_program_add_temporary (p, 4, "t1");
 
   /* multiply with the volume, keeping only the high 32bits */
-  orc_program_append_str (p, "mulhslw", "t1", "s1", "s2");
+  orc_program_append (p, "mulhslw", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_S2);
   /* pack an saturate do 16 bits again */
-  orc_program_append_ds_str (p, "convssslw", "d1", "t1");
+  orc_program_append_ds (p, "convssslw", ORC_VAR_D1, ORC_VAR_T1);
 
   /* Compile the program */
   res = orc_program_compile (p);
@@ -181,9 +181,9 @@ do_volume_orc (int16_t *dest, int32_t *volumes, int16_t *samp, int length)
   /* Set the values on the executor structure */
   orc_executor_set_program (ex, p);
   orc_executor_set_n (ex, length);
-  orc_executor_set_array_str (ex, "d1", dest);
-  orc_executor_set_array_str (ex, "s1", volumes);
-  orc_executor_set_array_str (ex, "s2", samp);
+  orc_executor_set_array (ex, ORC_VAR_D1, dest);
+  orc_executor_set_array (ex, ORC_VAR_S1, volumes);
+  orc_executor_set_array (ex, ORC_VAR_S2, samp);
 
   /* Run the program.  This calls the code that was generated above,
    * or, if the compilation failed, will emulate the program. */
