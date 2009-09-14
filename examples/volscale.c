@@ -136,9 +136,9 @@ do_volume_backup (OrcExecutor *ex)
   const int16_t *samp;
   int len;
 
-  dest = ex->arrays[0];
-  vols = ex->arrays[1];
-  samp = ex->arrays[2];
+  dest = ex->arrays[ORC_VAR_D1];
+  vols = ex->arrays[ORC_VAR_S1];
+  samp = ex->arrays[ORC_VAR_S2];
   len = ex->n;
 
   do_volume_c (dest, vols, samp, len);
