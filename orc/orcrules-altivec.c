@@ -23,7 +23,7 @@ powerpc_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
   int src1 = ORC_SRC_ARG (p, insn, 0); \
   int src2 = ORC_SRC_ARG (p, insn, 1); \
   int dest = ORC_DEST_ARG (p, insn, 0); \
-  powerpc_emit_VX_2 (p, code , dest, src1, src2);\
+  powerpc_emit_VX_2 (p, opcode, code , dest, src1, src2);\
 }
 
 #define RULE_SHIFT(name, opcode, code) \
@@ -37,7 +37,7 @@ powerpc_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
       p->vars[insn->src_args[1]].vartype != ORC_VAR_TYPE_PARAM) { \
     ORC_COMPILER_ERROR(p,"rule only works with constants or params"); \
   } \
-  powerpc_emit_VX_2 (p, code , dest, src1, src2);\
+  powerpc_emit_VX_2 (p, opcode, code , dest, src1, src2);\
 }
 
 RULE(addb, "vaddubm", 0x10000000)
