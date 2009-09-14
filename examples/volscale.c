@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <sys/time.h>
+
+#define ORC_ENABLE_UNSTABLE_API
+
 #include <orc/orc.h>
 
 static OrcProgram *p = NULL;
@@ -21,13 +24,13 @@ mmx_rule_mulhslw (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   orc_mmx_emit_pxor (p, tmp1, tmp1);      /* .. |    0  |    0  | */
   orc_mmx_emit_punpcklwd (p, tmp1, src2); /* .. |    0  |   p0  | */
-  orc_mmx_emit_pcmpgtw (p, dest, tmp1);   /* .. |    0  | s(vl) | */ 
+  orc_mmx_emit_pcmpgtw (p, dest, tmp1);   /* .. |    0  | s(vl) | */
   orc_mmx_emit_pand (p, src2, tmp1);      /* .. |    0  |  (p0) |  (vl >> 15) & p */
-  orc_mmx_emit_movq (p, src2, tmp2);     
+  orc_mmx_emit_movq (p, src2, tmp2);
   orc_mmx_emit_pmulhw (p, src1, src2);    /* .. |    0  | vl*p0 | */
   orc_mmx_emit_paddw (p, tmp1, src2);     /* .. |    0  | vl*p0 | + sign correct */
   orc_mmx_emit_psrld (p, 16, dest);       /* .. |    0  |   vh  | */
-  orc_mmx_emit_pmaddwd (p, tmp2, dest);   /* .. |    p0 * vh    | */ 
+  orc_mmx_emit_pmaddwd (p, tmp2, dest);   /* .. |    p0 * vh    | */
   orc_mmx_emit_paddd (p, src2, dest);     /* .. |    p0 * v0    | */
 }
 
@@ -46,13 +49,13 @@ sse_rule_mulhslw (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   orc_sse_emit_pxor (p, tmp1, tmp1);      /* .. |    0  |    0  | */
   orc_sse_emit_punpcklwd (p, tmp1, src2); /* .. |    0  |   p0  | */
-  orc_sse_emit_pcmpgtw (p, dest, tmp1);   /* .. |    0  | s(vl) | */ 
+  orc_sse_emit_pcmpgtw (p, dest, tmp1);   /* .. |    0  | s(vl) | */
   orc_sse_emit_pand (p, src2, tmp1);      /* .. |    0  |  (p0) |  (vl >> 15) & p */
-  orc_sse_emit_movdqa (p, src2, tmp2);     
+  orc_sse_emit_movdqa (p, src2, tmp2);
   orc_sse_emit_pmulhw (p, src1, src2);    /* .. |    0  | vl*p0 | */
   orc_sse_emit_paddw (p, tmp1, src2);     /* .. |    0  | vl*p0 | + sign correct */
   orc_sse_emit_psrld (p, 16, dest);       /* .. |    0  |   vh  | */
-  orc_sse_emit_pmaddwd (p, tmp2, dest);   /* .. |    p0 * vh    | */ 
+  orc_sse_emit_pmaddwd (p, tmp2, dest);   /* .. |    p0 * vh    | */
   orc_sse_emit_paddd (p, src2, dest);     /* .. |    p0 * v0    | */
 }
 
@@ -108,12 +111,47 @@ register_instr (void)
 }
 
 static void
+do_volume_c (int16_t *dest, const int32_t *vols, const int16_t *samp, int len)
+{
+  int i;
+
+  for (i = 0; i < len; i++) {
+    int32_t t, hi, lo;
+
+    hi = vols[i] >> 16;
+    lo = vols[i] & 0xffff;
+
+    t = (int32_t)(samp[i]);
+    t = ((t * lo) >> 16) + (t * hi);
+    dest[i] = (int16_t) ORC_CLAMP (t, -0x8000, 0x7FFF);
+  }
+}
+
+
+static void
+do_volume_backup (OrcExecutor *ex)
+{
+  int16_t *dest;
+  int32_t *vols;
+  const int16_t *samp;
+  int len;
+
+  dest = ex->arrays[0];
+  vols = ex->arrays[1];
+  samp = ex->arrays[2];
+  len = ex->n;
+
+  do_volume_c (dest, vols, samp, len);
+}
+
+static void
 make_volume_orc()
 {
   OrcCompileResult res;
 
   /* int16 destination samples that get scaled by int32 volumes */
   p = orc_program_new ();
+  orc_program_set_backup_function (p, do_volume_backup);
   orc_program_add_destination (p, 2, "d1");
   orc_program_add_source (p, 4, "s1");
   orc_program_add_source (p, 2, "s2");
@@ -135,7 +173,7 @@ make_volume_orc()
 }
 
 static void
-do_volume_orc (int16_t *ptr, int32_t *volumes, int n_channels, int length)
+do_volume_orc (int16_t *dest, int32_t *volumes, int16_t *samp, int length)
 {
   OrcExecutor _ex;
   OrcExecutor *ex = &_ex;
@@ -143,21 +181,16 @@ do_volume_orc (int16_t *ptr, int32_t *volumes, int n_channels, int length)
   /* Set the values on the executor structure */
   orc_executor_set_program (ex, p);
   orc_executor_set_n (ex, length);
+  orc_executor_set_array_str (ex, "d1", dest);
   orc_executor_set_array_str (ex, "s1", volumes);
-  orc_executor_set_array_str (ex, "s2", ptr);
-  orc_executor_set_array_str (ex, "d1", ptr);
+  orc_executor_set_array_str (ex, "s2", samp);
 
   /* Run the program.  This calls the code that was generated above,
    * or, if the compilation failed, will emulate the program. */
   orc_executor_run (ex);
 }
 
-#define TIMES 100000
-//#define TIMES 10000
-#define N 1024
-#define MAX_CHANNELS 32
-
-static uint64_t 
+static uint64_t
 get_timestamp ()
 {
   struct timeval now;
@@ -167,9 +200,12 @@ get_timestamp ()
   return now.tv_sec * 1000000LL + now.tv_usec;
 }
 
-int16_t a[N];
-int16_t b[N];
-int32_t volume[MAX_CHANNELS + N];
+#define TIMES 100000
+#define N 1024
+
+int16_t dest[N];
+int16_t samp[N];
+int32_t vols[N];
 
 int
 main (int argc, char *argv[])
@@ -184,23 +220,31 @@ main (int argc, char *argv[])
   register_instr ();
 
   make_volume_orc();
+  orc_debug_set_level (ORC_DEBUG_NONE);
 
   /* Create some data in the source arrays */
   for(i=0;i<N;i++){
-    a[i] = b[i] = i + 1;
-    volume[i] = 0x10000 + i;
+    dest[i] = 0;
+    samp[i] = i + 1;
+    vols[i] = 0x10000 + i;
   }
 
   start = get_timestamp ();
   for (i = 0; i < TIMES; i++)
-  //for (i = 0; i < 0; i++)
-    do_volume_orc (b, volume, 2, N);
+    do_volume_c (dest, vols, samp, N);
   stop = get_timestamp ();
-  printf ("elapsed 32: %llu ms\n", (long long unsigned int) (stop - start));
+  printf ("elapsed C: %llu ms\n", (long long unsigned int) (stop - start));
+
+
+  start = get_timestamp ();
+  for (i = 0; i < TIMES; i++)
+    do_volume_orc (dest, vols, samp, N);
+  stop = get_timestamp ();
+  printf ("elapsed ORC: %llu ms\n", (long long unsigned int) (stop - start));
 
   /* Print the results */
   for(i=0;i<20;i++){
-    printf("%d: %d -> %d\n", i, a[i], b[i]);
+    printf("%d: %d -> %d\n", i, samp[i], dest[i]);
   }
 
   return 0;
