@@ -179,23 +179,23 @@ mmx_save_accumulators (OrcCompiler *compiler)
         //orc_mmx_emit_pshufd (compiler, 0xee, src, compiler->tmpreg);
 
         if (compiler->vars[i].size == 2) {
-          orc_mmx_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
+          orc_mmx_emit_paddw (compiler, compiler->tmpreg, src);
         } else {
-          orc_mmx_emit_660f (compiler, "paddd", 0xfe, compiler->tmpreg, src);
+          orc_mmx_emit_paddd (compiler, compiler->tmpreg, src);
         }
 
         //orc_mmx_emit_pshufd (compiler, 0x55, src, compiler->tmpreg);
 
         if (compiler->vars[i].size == 2) {
-          orc_mmx_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
+          orc_mmx_emit_paddw (compiler, compiler->tmpreg, src);
         } else {
-          orc_mmx_emit_660f (compiler, "paddd", 0xfe, compiler->tmpreg, src);
+          orc_mmx_emit_paddd (compiler, compiler->tmpreg, src);
         }
 
         if (compiler->vars[i].size == 2) {
           orc_mmx_emit_pshufw (compiler, 0x55, src, compiler->tmpreg);
 
-          orc_mmx_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
+          orc_mmx_emit_paddw (compiler, compiler->tmpreg, src);
         }
 
         if (compiler->vars[i].size == 2) {
@@ -262,7 +262,7 @@ mmx_load_constants (OrcCompiler *compiler)
         }
         break;
       case ORC_VAR_TYPE_ACCUMULATOR:
-        orc_mmx_emit_660f (compiler, "pxor", 0xef,
+        orc_mmx_emit_pxor (compiler,
             compiler->vars[i].alloc, compiler->vars[i].alloc);
         break;
       case ORC_VAR_TYPE_TEMP:
