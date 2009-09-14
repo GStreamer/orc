@@ -165,6 +165,22 @@ powerpc_emit_VA (OrcCompiler *compiler, int major, int d, int a, int b,
 }
 
 void
+powerpc_emit_VA_2 (OrcCompiler *p, const char *name, int major, int d, int a, int b,
+    int c, int minor)
+{
+  ORC_ASM_CODE(p,"  %s %s, %s, %s, %s\n", name,
+      powerpc_get_regname(d),
+      powerpc_get_regname(a),
+      powerpc_get_regname(b),
+      powerpc_get_regname(c));
+  powerpc_emit_VA(p, major,
+      powerpc_regnum(d),
+      powerpc_regnum(a),
+      powerpc_regnum(b),
+      powerpc_regnum(c), minor);
+}
+
+void
 powerpc_emit_VX (OrcCompiler *compiler, unsigned int insn, int d, int a, int b)
 {
   insn |= ((d&0x1f)<<21);
@@ -185,6 +201,33 @@ powerpc_emit_VX_2 (OrcCompiler *p, const char *name,
       powerpc_regnum(d),
       powerpc_regnum(a),
       powerpc_regnum(b));
+}
+
+void
+powerpc_emit_VX_3 (OrcCompiler *p, const char *name,
+    unsigned int insn, int d, int a, int b, int c)
+{
+  ORC_ASM_CODE(p,"  %s %s, %s, %s, %d\n", name,
+      powerpc_get_regname(d),
+      powerpc_get_regname(a),
+      powerpc_get_regname(b), c);
+  powerpc_emit_VX(p, insn,
+      powerpc_regnum(d),
+      powerpc_regnum(a),
+      powerpc_regnum(b));
+}
+
+void
+powerpc_emit_VX_4 (OrcCompiler *p, const char *name,
+    unsigned int insn, int d, int a)
+{
+  ORC_ASM_CODE(p,"  %s %s, %s\n", name,
+      powerpc_get_regname(d),
+      powerpc_get_regname(a));
+  powerpc_emit_VX(p, insn,
+      powerpc_regnum(d),
+      0,
+      powerpc_regnum(a));
 }
 
 void

@@ -97,11 +97,62 @@ void powerpc_emit_X (OrcCompiler *compiler, unsigned int insn, int d, int a,
     int b);
 void powerpc_emit_VA (OrcCompiler *compiler, int major, int d, int a, int b,
     int c, int minor);
+void powerpc_emit_VA_2 (OrcCompiler *compiler, const char *name, int major, int d,
+    int a, int b, int c, int minor);
 void powerpc_emit_VX (OrcCompiler *compiler, unsigned int insn, int d, int a,
     int b);
 void powerpc_emit_VX_2 (OrcCompiler *p, const char *name, unsigned int insn,
     int d, int a, int b);
+void powerpc_emit_VX_3 (OrcCompiler *p, const char *name, unsigned int insn,
+    int d, int a, int b, int c);
+void powerpc_emit_VX_4 (OrcCompiler *p, const char *name, unsigned int insn,
+    int d, int a);
 int powerpc_get_constant (OrcCompiler *p, int type, int value);
+
+/* instructions */
+#define powerpc_emit_vandc(p,a,b,c)        powerpc_emit_VX_2 (p, "vandc", 0x10000444, a, b, c)
+
+#define powerpc_emit_vor(p,a,b,c)          powerpc_emit_VX_2 (p, "vor", 0x10000484, a, b, c)
+#define powerpc_emit_vxor(p,a,b,c)         powerpc_emit_VX_2 (p, "vxor", 0x100004c4, a, b, c)
+
+#define powerpc_emit_vmulesb(p,a,b,c)      powerpc_emit_VX_2 (p, "vmulesb", 0x10000308, a, b, c)
+#define powerpc_emit_vmuleub(p,a,b,c)      powerpc_emit_VX_2 (p, "vmuleub", 0x10000208, a, b, c)
+#define powerpc_emit_vmulesh(p,a,b,c)      powerpc_emit_VX_2 (p, "vmulesh", 0x10000348, a, b, c)
+#define powerpc_emit_vmuleuh(p,a,b,c)      powerpc_emit_VX_2 (p, "vmuleuh", 0x10000248, a, b, c)
+
+#define powerpc_emit_vmrghb(p,a,b,c)       powerpc_emit_VX_2 (p, "vmrghb", 0x1000000c, a, b, c)
+#define powerpc_emit_vmrghh(p,a,b,c)       powerpc_emit_VX_2 (p, "vmrghh", 0x1000004c, a, b, c)
+
+#define powerpc_emit_vpkshss(p,a,b,c)      powerpc_emit_VX_2 (p, "vpkshss", 0x1000018e, a, b, c)
+#define powerpc_emit_vpkshus(p,a,b,c)      powerpc_emit_VX_2 (p, "vpkshus", 0x1000010e, a, b, c)
+#define powerpc_emit_vpkswss(p,a,b,c)      powerpc_emit_VX_2 (p, "vpkswss", 0x100001ce, a, b, c)
+#define powerpc_emit_vpkswus(p,a,b,c)      powerpc_emit_VX_2 (p, "vpkswus", 0x1000014e, a, b, c)
+#define powerpc_emit_vpkuhus(p,a,b,c)      powerpc_emit_VX_2 (p, "vpkuhus", 0x1000008e, a, b, c)
+#define powerpc_emit_vpkuhum(p,a,b,c)      powerpc_emit_VX_2 (p, "vpkuhum", 0x1000000e, a, b, c)
+#define powerpc_emit_vpkuwus(p,a,b,c)      powerpc_emit_VX_2 (p, "vpkuwus", 0x100000ce, a, b, c)
+#define powerpc_emit_vpkuwum(p,a,b,c)      powerpc_emit_VX_2 (p, "vpkuwum", 0x1000004e, a, b, c)
+
+#define powerpc_emit_vadduhm(p,a,b,c)      powerpc_emit_VX_2 (p, "vadduhm", 0x10000040, a, b, c)
+#define powerpc_emit_vadduwm(p,a,b,c)      powerpc_emit_VX_2 (p, "vadduwm", 0x10000080, a, b, c)
+#define powerpc_emit_vsububm(p,a,b,c)      powerpc_emit_VX_2 (p, "vsububm", 0x10000400, a, b, c)
+#define powerpc_emit_vsum4ubs(p,a,b,c)     powerpc_emit_VX_2 (p, "vsum4ubs", 0x10000608, a, b, c)
+
+#define powerpc_emit_vmaxub(p,a,b,c)       powerpc_emit_VX_2 (p, "vmaxub", 0x10000002, a, b, c)
+#define powerpc_emit_vmaxsb(p,a,b,c)       powerpc_emit_VX_2 (p, "vmaxsb", 0x10000102, a, b, c)
+#define powerpc_emit_vmaxsh(p,a,b,c)       powerpc_emit_VX_2 (p, "vmaxsh", 0x10000142, a, b, c)
+#define powerpc_emit_vmaxsw(p,a,b,c)       powerpc_emit_VX_2 (p, "vmaxsw", 0x10000182, a, b, c)
+
+#define powerpc_emit_vminub(p,a,b,c)       powerpc_emit_VX_2 (p, "vminub", 0x10000202, a, b, c)
+#define powerpc_emit_vminsb(p,a,b,c)       powerpc_emit_VX_2 (p, "vminsb", 0x10000302, a, b, c)
+#define powerpc_emit_vminsh(p,a,b,c)       powerpc_emit_VX_2 (p, "vminsh", 0x10000342, a, b, c)
+#define powerpc_emit_vminsw(p,a,b,c)       powerpc_emit_VX_2 (p, "vminsw", 0x10000382, a, b, c)
+
+#define powerpc_emit_vsldoi(p,a,b,c,d)     powerpc_emit_VX_3 (p, "vsldoi", 0x1000002c | (d<<6), a, b, c, d)
+#define powerpc_emit_vmladduhm(p,a,b,c,d)  powerpc_emit_VA_2 (p, "vmladduhm", 4, a, b, c, d, 34)
+
+#define powerpc_emit_vupkhsb(p,a,b)        powerpc_emit_VX_4 (p, "vupkhsb", 0x1000020e, a, b)
+#define powerpc_emit_vupkhsh(p,a,b)        powerpc_emit_VX_4 (p, "vupkhsh", 0x1000024e, a, b)
+
 
 #endif
 
