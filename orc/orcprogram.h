@@ -368,6 +368,10 @@ struct _OrcCompiler {
 
 #define ORC_SRC_ARG(p,i,n) ((p)->vars[(i)->src_args[(n)]].alloc)
 #define ORC_DEST_ARG(p,i,n) ((p)->vars[(i)->dest_args[(n)]].alloc)
+#define ORC_SRC_TYPE(p,i,n) ((p)->vars[(i)->src_args[(n)]].vartype)
+#define ORC_DEST_TYPE(p,i,n) ((p)->vars[(i)->dest_args[(n)]].vartype)
+#define ORC_SRC_VAL(p,i,n) ((p)->vars[(i)->src_args[(n)]].value)
+#define ORC_DEST_VAL(p,i,n) ((p)->vars[(i)->dest_args[(n)]].value)
 
 /**
  * OrcOpcodeExecutor:
