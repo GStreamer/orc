@@ -49,7 +49,7 @@
 #define SHIFT_LSR  1
 #define SHIFT_ASR  2
 #define SHIFT_ROR  3
-#define arm_so_rrx_reg(Rs,Rm) arm_dp_shift_imm(0,SHIFT_ROR,Rm)
+#define arm_so_rrx_reg(Rm)     arm_so_shift_imm(0,SHIFT_ROR,Rm)
 #define arm_so_reg(Rm)        (Rm)
 /*    1
  *  1 0 9 8 7 6 5 4 3 2 1 0
@@ -183,9 +183,39 @@ orc_arm_storew (OrcCompiler *compiler, int dest, int offset, int src1)
   orc_arm_emit (compiler, code);
 }
 
-#if 0
-UNARY_SB(absb, "ORC_ABS(%s)")
-#endif
+static void
+arm_rule_absX (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  uint32_t code;
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+  int type = ORC_PTR_TO_INT(user);
+  const char *codes[] = { "sxtb", "sxth", NULL };
+  const int opcodes[] = { 0x06af0070, 0x06ef0070, 0 };
+
+  if (codes[type]) {
+    code = (opcodes[type]|((COND_AL)<<28)|((src1)<<12)|(src1));
+    ORC_ASM_CODE(p,"  %s %s, %s\n",
+        codes[type],
+        orc_arm_reg_name (src1),
+        orc_arm_reg_name (src1));
+    orc_arm_emit (p, code);
+  }
+
+  code = arm_dp_reg (COND_AL, DP_EOR, 0, src1, dest, arm_so_shift_imm (31,SHIFT_ASR,src1));
+  ORC_ASM_CODE(p,"  eor %s, %s, %s, ASR #31\n",
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (src1));
+  orc_arm_emit (p, code);
+
+  code = arm_dp_reg (COND_AL, DP_SUB, 0, dest, dest, arm_so_shift_imm (31,SHIFT_ASR,src1));
+  ORC_ASM_CODE(p,"  sub %s, %s, %s, ASR #31\n",
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1));
+  orc_arm_emit (p, code);
+}
 BINARY_MM (addb, "sadd8", MM_OP_ADD8, MM_MODE_S);
 BINARY_MM (addssb, "qadd8", MM_OP_ADD8, MM_MODE_Q);
 BINARY_MM (addusb, "uqadd8", MM_OP_ADD8, MM_MODE_UQ);
@@ -231,9 +261,10 @@ arm_rule_avguX (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
+  int type = ORC_PTR_TO_INT(user);
 
-  code = arm_dp_reg (COND_AL, DP_ADD, 0, src1, dest, arm_so_reg (src2));
-  ORC_ASM_CODE(p,"  add %s, %s, %s\n",
+  code = arm_dp_reg (COND_AL, DP_ADD, 1, src1, dest, arm_so_reg (src2));
+  ORC_ASM_CODE(p,"  adds %s, %s, %s\n",
       orc_arm_reg_name (dest),
       orc_arm_reg_name (src1),
       orc_arm_reg_name (src2));
@@ -243,11 +274,22 @@ arm_rule_avguX (OrcCompiler *p, void *user, OrcInstruction *insn)
   ORC_ASM_CODE(p,"  add %s, %s, #1\n",
       orc_arm_reg_name (dest),
       orc_arm_reg_name (dest));
+  orc_arm_emit (p, code);
 
-  code = arm_dp_reg (COND_AL, DP_MOV, 0, 0, dest, arm_so_shift_imm (1,SHIFT_LSR,dest));
-  ORC_ASM_CODE(p,"  mov %s, %s, LSR #1\n",
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (dest));
+  if (type == 0) {
+    code = arm_dp_reg (COND_AL, DP_MOV, 0, 0, dest, arm_so_shift_imm (1,SHIFT_LSR,dest));
+    ORC_ASM_CODE(p,"  mov %s, %s, LSR #1\n",
+        orc_arm_reg_name (dest),
+        orc_arm_reg_name (dest));
+    orc_arm_emit (p, code);
+  } else {
+    /* FIXME, must set carry correctly */
+    code = arm_dp_reg (COND_AL, DP_MOV, 0, 0, dest, arm_so_rrx_reg (dest));
+    ORC_ASM_CODE(p,"  mov %s, %s, RRX\n",
+        orc_arm_reg_name (dest),
+        orc_arm_reg_name (dest));
+    orc_arm_emit (p, code);
+  }
 }
 #if 0
 BINARY_SB(cmpeqb, "(%s == %s) ? (~0) : 0")
@@ -452,9 +494,6 @@ BINARY_MM (subssb, "qsub8", MM_OP_SUB8, MM_MODE_Q);
 BINARY_MM (subusb, "uqsub8", MM_OP_SUB8, MM_MODE_UQ);
 BINARY_DP (xorX, "eor", DP_EOR);
 
-#if 0
-UNARY_SW(absw, "ORC_ABS(%s)")
-#endif
 BINARY_MM (addw, "sadd16", MM_OP_ADD16, MM_MODE_S);
 BINARY_MM (addssw, "qadd16", MM_OP_ADD16, MM_MODE_Q);
 BINARY_MM (addusw, "uqadd16", MM_OP_ADD16, MM_MODE_UQ);
@@ -612,13 +651,30 @@ BINARY_MM (subw, "ssub16", MM_OP_SUB16, MM_MODE_S);
 BINARY_MM (subssw, "qsub16", MM_OP_SUB16, MM_MODE_Q);
 BINARY_MM (subusw, "uqsub16", MM_OP_SUB16, MM_MODE_UQ);
 
-#if 0
-UNARY_SL(absl, "ORC_ABS(%s)")
-#endif
+
 BINARY_DP (addl, "add", DP_ADD);
 BINARY_MM (addssl, "qadd", 0x5, 0x10);
+static void
+arm_rule_addusl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  uint32_t code;
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  code = arm_dp_reg (COND_AL, DP_ADD, 1, src1, dest, arm_so_reg (src2));
+  ORC_ASM_CODE(p,"  adds %s, %s, %s\n",
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (src2));
+  orc_arm_emit (p, code);
+
+  code = arm_dp_reg (COND_CS, DP_MVN, 0, 0, dest, arm_so_imm (0,0));
+  ORC_ASM_CODE(p,"  mvncs %s, #0\n",
+      orc_arm_reg_name (dest));
+  orc_arm_emit (p, code);
+}
 #if 0
-BINARY_UL(addusl, "ORC_CLAMP_UL((int64_t)(uint32_t)%s + (int64_t)(uint32_t)%s)")
 BINARY_SL(avgsl, "((int64_t)%s + (int64_t)%s + 1)>>1")
 BINARY_UL(avgul, "((uint64_t)(uint32_t)%s + (uint64_t)(uint32_t)%s + 1)>>1")
 BINARY_SL(cmpeql, "(%s == %s) ? (~0) : 0")
@@ -776,13 +832,14 @@ orc_compiler_orc_arm_register_rules (OrcTarget *target)
 
   rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target, 0);
 
+  orc_rule_register (rule_set, "absb", arm_rule_absX, (void *)0);
   orc_rule_register (rule_set, "addb", arm_rule_addb, NULL);
   orc_rule_register (rule_set, "addssb", arm_rule_addssb, NULL);
   orc_rule_register (rule_set, "addusb", arm_rule_addusb, NULL);
   orc_rule_register (rule_set, "andb", arm_rule_andX, NULL);
   orc_rule_register (rule_set, "andnb", arm_rule_andnX, NULL);
   orc_rule_register (rule_set, "avgsb", arm_rule_avgsb, NULL);
-  orc_rule_register (rule_set, "avgub", arm_rule_avguX, NULL);
+  orc_rule_register (rule_set, "avgub", arm_rule_avguX, (void *)0);
   orc_rule_register (rule_set, "copyb", arm_rule_copyX, NULL);
   orc_rule_register (rule_set, "maxsb", arm_rule_maxsb, NULL);
   orc_rule_register (rule_set, "maxub", arm_rule_maxub, NULL);
@@ -798,13 +855,14 @@ orc_compiler_orc_arm_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "subusb", arm_rule_subusb, NULL);
   orc_rule_register (rule_set, "xorb", arm_rule_xorX, NULL);
 
+  orc_rule_register (rule_set, "absw", arm_rule_absX, (void *)1);
   orc_rule_register (rule_set, "addw", arm_rule_addw, NULL);
   orc_rule_register (rule_set, "addssw", arm_rule_addssw, NULL);
   orc_rule_register (rule_set, "addusw", arm_rule_addusw, NULL);
   orc_rule_register (rule_set, "andw", arm_rule_andX, NULL);
   orc_rule_register (rule_set, "andnw", arm_rule_andnX, NULL);
   orc_rule_register (rule_set, "avgsw", arm_rule_avgsw, NULL);
-  orc_rule_register (rule_set, "avguw", arm_rule_avguX, NULL);
+  orc_rule_register (rule_set, "avguw", arm_rule_avguX, (void *)0);
   orc_rule_register (rule_set, "copyw", arm_rule_copyX, NULL);
   orc_rule_register (rule_set, "maxsw", arm_rule_maxsw, NULL);
   orc_rule_register (rule_set, "maxuw", arm_rule_maxuw, NULL);
@@ -821,10 +879,13 @@ orc_compiler_orc_arm_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "xorw", arm_rule_xorX, NULL);
   orc_rule_register (rule_set, "mullw", arm_rule_mullw, NULL);
 
+  orc_rule_register (rule_set, "absl", arm_rule_absX, (void *)2);
   orc_rule_register (rule_set, "addl", arm_rule_addl, NULL);
   orc_rule_register (rule_set, "addssl", arm_rule_addssl, NULL);
+  orc_rule_register (rule_set, "addusl", arm_rule_addusl, NULL);
   orc_rule_register (rule_set, "andl", arm_rule_andX, NULL);
   orc_rule_register (rule_set, "andnl", arm_rule_andnX, NULL);
+  orc_rule_register (rule_set, "avguw", arm_rule_avguX, (void *)1);
   orc_rule_register (rule_set, "copyl", arm_rule_copyX, NULL);
   orc_rule_register (rule_set, "maxsl", arm_rule_maxsl, NULL);
   orc_rule_register (rule_set, "maxul", arm_rule_maxul, NULL);
