@@ -242,6 +242,7 @@ arm_rule_avgsb (OrcCompiler *p, void *user, OrcInstruction *insn)
       orc_arm_reg_name (dest));
   orc_arm_emit (p, code);
 
+  /* FIXME, wrong */
   code = arm_emit_sxtb (COND_AL, dest, 0, dest);
   ORC_ASM_CODE(p,"  sxtb %s, %s\n",
       orc_arm_reg_name (dest),
@@ -261,35 +262,37 @@ arm_rule_avguX (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
-  int type = ORC_PTR_TO_INT(user);
+  int shift = ORC_PTR_TO_INT(user);
 
-  code = arm_dp_reg (COND_AL, DP_ADD, 1, src1, dest, arm_so_reg (src2));
-  ORC_ASM_CODE(p,"  adds %s, %s, %s\n",
+  /* dest = (s1 | s2) - (((s1 ^ s2) & ~(0x1 >>> (shift*2))) >> 1) */
+  code = arm_dp_reg (COND_AL, DP_EOR, 0, src1, dest, arm_so_reg (src2));
+  ORC_ASM_CODE(p,"  eor %s, %s, %s\n",
       orc_arm_reg_name (dest),
       orc_arm_reg_name (src1),
       orc_arm_reg_name (src2));
   orc_arm_emit (p, code);
 
-  code = arm_dp_reg (COND_AL, DP_ADD, 0, dest, dest, arm_so_imm (0,1));
-  ORC_ASM_CODE(p,"  add %s, %s, #1\n",
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (dest));
+  code = arm_dp_reg (COND_AL, DP_ORR, 0, src1, src1, arm_so_reg (src2));
+  ORC_ASM_CODE(p,"  orr %s, %s, %s\n",
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (src2));
   orc_arm_emit (p, code);
 
-  if (type == 0) {
-    code = arm_dp_reg (COND_AL, DP_MOV, 0, 0, dest, arm_so_shift_imm (1,SHIFT_LSR,dest));
-    ORC_ASM_CODE(p,"  mov %s, %s, LSR #1\n",
-        orc_arm_reg_name (dest),
-        orc_arm_reg_name (dest));
-    orc_arm_emit (p, code);
-  } else {
-    /* FIXME, must set carry correctly */
-    code = arm_dp_reg (COND_AL, DP_MOV, 0, 0, dest, arm_so_rrx_reg (dest));
-    ORC_ASM_CODE(p,"  mov %s, %s, RRX\n",
-        orc_arm_reg_name (dest),
-        orc_arm_reg_name (dest));
-    orc_arm_emit (p, code);
-  }
+  /* clear the bit we will shift into view in the next instruction */
+  code = arm_dp_reg (COND_AL, DP_BIC, 0, dest, dest, arm_so_imm (shift,1));
+  ORC_ASM_CODE(p,"  bic %s, %s, #%d\n",
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (dest),
+      shift);
+  orc_arm_emit (p, code);
+
+  code = arm_dp_reg (COND_AL, DP_SUB, 0, src1, dest, arm_so_shift_imm (1,SHIFT_LSR,dest));
+  ORC_ASM_CODE(p,"  sub %s, %s, %s LSR #1\n",
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (dest));
+  orc_arm_emit (p, code);
 }
 #if 0
 BINARY_SB(cmpeqb, "(%s == %s) ? (~0) : 0")
@@ -839,7 +842,7 @@ orc_compiler_orc_arm_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "andb", arm_rule_andX, NULL);
   orc_rule_register (rule_set, "andnb", arm_rule_andnX, NULL);
   orc_rule_register (rule_set, "avgsb", arm_rule_avgsb, NULL);
-  orc_rule_register (rule_set, "avgub", arm_rule_avguX, (void *)0);
+  orc_rule_register (rule_set, "avgub", arm_rule_avguX, (void *)12);
   orc_rule_register (rule_set, "copyb", arm_rule_copyX, NULL);
   orc_rule_register (rule_set, "maxsb", arm_rule_maxsb, NULL);
   orc_rule_register (rule_set, "maxub", arm_rule_maxub, NULL);
@@ -862,7 +865,7 @@ orc_compiler_orc_arm_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "andw", arm_rule_andX, NULL);
   orc_rule_register (rule_set, "andnw", arm_rule_andnX, NULL);
   orc_rule_register (rule_set, "avgsw", arm_rule_avgsw, NULL);
-  orc_rule_register (rule_set, "avguw", arm_rule_avguX, (void *)0);
+  orc_rule_register (rule_set, "avguw", arm_rule_avguX, (void *)8);
   orc_rule_register (rule_set, "copyw", arm_rule_copyX, NULL);
   orc_rule_register (rule_set, "maxsw", arm_rule_maxsw, NULL);
   orc_rule_register (rule_set, "maxuw", arm_rule_maxuw, NULL);
@@ -885,7 +888,7 @@ orc_compiler_orc_arm_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "addusl", arm_rule_addusl, NULL);
   orc_rule_register (rule_set, "andl", arm_rule_andX, NULL);
   orc_rule_register (rule_set, "andnl", arm_rule_andnX, NULL);
-  orc_rule_register (rule_set, "avguw", arm_rule_avguX, (void *)1);
+  orc_rule_register (rule_set, "avguw", arm_rule_avguX, (void *)0);
   orc_rule_register (rule_set, "copyl", arm_rule_copyX, NULL);
   orc_rule_register (rule_set, "maxsl", arm_rule_maxsl, NULL);
   orc_rule_register (rule_set, "maxul", arm_rule_maxul, NULL);
