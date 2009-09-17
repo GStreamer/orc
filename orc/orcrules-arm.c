@@ -111,7 +111,7 @@ arm_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
  * | cond  |      mode     |   Rn  |  Rd   |0 0 0 0|  op   |  Rm   |
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
-#define arm_code_mm(cond,mode,Rn,Rd,op,Rm) (((cond)<<28)|((mode)<<20)|((src1)<<16)|((dest)<<12)|((op)<<4)|(src2))
+#define arm_code_mm(cond,mode,Rn,Rd,op,Rm) (((cond)<<28)|((mode)<<20)|((Rn)<<16)|((Rd)<<12)|((op)<<4)|(Rm))
 #define MM_MODE_S      0x61
 #define MM_MODE_Q      0x62
 #define MM_MODE_SH     0x63
@@ -189,31 +189,54 @@ arm_rule_absX (OrcCompiler *p, void *user, OrcInstruction *insn)
   uint32_t code;
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int dest = ORC_DEST_ARG (p, insn, 0);
+  int tmp = p->tmpreg;
   int type = ORC_PTR_TO_INT(user);
-  const char *codes[] = { "sxtb", "sxth", NULL };
-  const int opcodes[] = { 0x06af0070, 0x06ef0070, 0 };
 
-  if (codes[type]) {
-    code = (opcodes[type]|((COND_AL)<<28)|((src1)<<12)|(src1));
-    ORC_ASM_CODE(p,"  %s %s, %s\n",
-        codes[type],
-        orc_arm_reg_name (src1),
+  code = arm_dp_imm (COND_AL, DP_MOV, 0, 0, dest, arm_so_imm (0,0));
+  ORC_ASM_CODE(p,"  mov %s, #0\n",
+      orc_arm_reg_name (dest));
+  orc_arm_emit (p, code);
+
+  if (type == 0) {
+    /* negate tmp = 0 - src1 */
+    code = arm_code_mm (COND_AL, MM_MODE_S, dest, tmp, MM_OP_SUB8, src1);
+    ORC_ASM_CODE(p,"  ssub8 %s, %s, %s\n",
+        orc_arm_reg_name (tmp),
+        orc_arm_reg_name (dest),
         orc_arm_reg_name (src1));
+    orc_arm_emit (p, code);
+
+    /* check sign dest = src1 - 0 */
+    code = arm_code_mm (COND_AL, MM_MODE_S, src1, dest, MM_OP_SUB8, dest);
+    ORC_ASM_CODE(p,"  ssub8 %s, %s, %s\n",
+        orc_arm_reg_name (dest),
+        orc_arm_reg_name (src1),
+        orc_arm_reg_name (dest));
+    orc_arm_emit (p, code);
+  } else {
+    /* negate tmp = 0 - src1 */
+    code = arm_code_mm (COND_AL, MM_MODE_S, dest, tmp, MM_OP_SUB16, src1);
+    ORC_ASM_CODE(p,"  ssub16 %s, %s, %s\n",
+        orc_arm_reg_name (tmp),
+        orc_arm_reg_name (dest),
+        orc_arm_reg_name (src1));
+    orc_arm_emit (p, code);
+
+    /* check sign dest = src1 - 0 */
+    code = arm_code_mm (COND_AL, MM_MODE_S, src1, dest, MM_OP_SUB16, dest);
+    ORC_ASM_CODE(p,"  ssub16 %s, %s, %s\n",
+        orc_arm_reg_name (dest),
+        orc_arm_reg_name (src1),
+        orc_arm_reg_name (dest));
     orc_arm_emit (p, code);
   }
 
-  code = arm_dp_reg (COND_AL, DP_EOR, 0, src1, dest, arm_so_shift_imm (31,SHIFT_ASR,src1));
-  ORC_ASM_CODE(p,"  eor %s, %s, %s, ASR #31\n",
+  /* take positive or negative values */
+  code = arm_code_mm (COND_AL, 0x68, src1, dest, 0xb, tmp);
+  ORC_ASM_CODE(p,"  sel %s, %s, %s\n",
       orc_arm_reg_name (dest),
       orc_arm_reg_name (src1),
-      orc_arm_reg_name (src1));
-  orc_arm_emit (p, code);
-
-  code = arm_dp_reg (COND_AL, DP_SUB, 0, dest, dest, arm_so_shift_imm (31,SHIFT_ASR,src1));
-  ORC_ASM_CODE(p,"  sub %s, %s, %s, ASR #31\n",
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (src1));
+      orc_arm_reg_name (tmp));
   orc_arm_emit (p, code);
 }
 BINARY_MM (addb, "sadd8", MM_OP_ADD8, MM_MODE_S);
@@ -222,47 +245,57 @@ BINARY_MM (addusb, "uqadd8", MM_OP_ADD8, MM_MODE_UQ);
 BINARY_DP (andX, "and", DP_AND);
 BINARY_DP (andnX, "bic", DP_BIC);
 static void
-arm_rule_avgsb (OrcCompiler *p, void *user, OrcInstruction *insn)
+arm_rule_avgX (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   uint32_t code;
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int src2 = ORC_SRC_ARG (p, insn, 1);
+  int mask = p->tmpreg;
   int dest = ORC_DEST_ARG (p, insn, 0);
+  int type = ORC_PTR_TO_INT(user);
 
-  code = arm_dp_reg (COND_AL, DP_ADD, 0, src1, dest, arm_so_reg (src2));
-  ORC_ASM_CODE(p,"  add %s, %s, %s\n",
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (src1),
-      orc_arm_reg_name (src2));
-  orc_arm_emit (p, code);
+  /* signed variant, make a mask, FIXME, instruction constants */
+  if (type >= 2) {
+    /* mask for word 0x80008000 */
+    code = arm_dp_reg (COND_AL, DP_MOV, 0, 0, mask, arm_so_imm (4,8));
+    ORC_ASM_CODE(p,"  mov %s, #0x80000000\n",
+        orc_arm_reg_name (mask));
+    orc_arm_emit (p, code);
 
-  code = arm_dp_imm (COND_AL, DP_ADD, 0, dest, dest, arm_so_imm (0,1));
-  ORC_ASM_CODE(p,"  add %s, %s, #1\n",
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (dest));
-  orc_arm_emit (p, code);
+    code = arm_dp_imm (COND_AL, DP_ORR, 0, 0, mask, arm_so_shift_imm (16,SHIFT_LSR,mask));
+    ORC_ASM_CODE(p,"  orr %s, %s, %s, LSR #16\n",
+        orc_arm_reg_name (mask),
+        orc_arm_reg_name (mask),
+        orc_arm_reg_name (mask));
+    orc_arm_emit (p, code);
 
-  /* FIXME, wrong */
-  code = arm_emit_sxtb (COND_AL, dest, 0, dest);
-  ORC_ASM_CODE(p,"  sxtb %s, %s\n",
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (dest));
-  orc_arm_emit (p, code);
+    if (type >= 3) {
+      /* mask for byte 0x80808080 */
+      code = arm_dp_imm (COND_AL, DP_ADD, 0, 0, mask, arm_so_shift_imm (8,SHIFT_LSR,mask));
+      ORC_ASM_CODE(p,"  orr %s, %s, %s, LSR #8\n",
+          orc_arm_reg_name (mask),
+          orc_arm_reg_name (mask),
+          orc_arm_reg_name (mask));
+      orc_arm_emit (p, code);
+    }
+  }
 
-  code = arm_dp_reg (COND_AL, DP_MOV, 0, 0, dest, arm_so_shift_imm (1,SHIFT_LSR,dest));
-  ORC_ASM_CODE(p,"  mov %s, %s, LSR #1\n",
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (dest));
-  orc_arm_emit (p, code);
-}
-static void
-arm_rule_avguX (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  uint32_t code;
-  int src1 = ORC_SRC_ARG (p, insn, 0);
-  int src2 = ORC_SRC_ARG (p, insn, 1);
-  int dest = ORC_DEST_ARG (p, insn, 0);
-  int shift = ORC_PTR_TO_INT(user);
+  if (type >= 2) {
+    /* signed variant, bias the inputs */
+    code = arm_dp_reg (COND_AL, DP_EOR, 0, src1, src1, arm_so_reg (mask));
+    ORC_ASM_CODE(p,"  eor %s, %s, %s\n",
+        orc_arm_reg_name (src1),
+        orc_arm_reg_name (src1),
+        orc_arm_reg_name (mask));
+    orc_arm_emit (p, code);
+
+    code = arm_dp_reg (COND_AL, DP_EOR, 0, src2, src2, arm_so_reg (mask));
+    ORC_ASM_CODE(p,"  eor %s, %s, %s\n",
+        orc_arm_reg_name (src2),
+        orc_arm_reg_name (src2),
+        orc_arm_reg_name (mask));
+    orc_arm_emit (p, code);
+  }
 
   /* dest = (s1 | s2) - (((s1 ^ s2) & ~(0x1 >>> (shift*2))) >> 1) */
   code = arm_dp_reg (COND_AL, DP_EOR, 0, src1, dest, arm_so_reg (src2));
@@ -279,13 +312,37 @@ arm_rule_avguX (OrcCompiler *p, void *user, OrcInstruction *insn)
       orc_arm_reg_name (src2));
   orc_arm_emit (p, code);
 
-  /* clear the bit we will shift into view in the next instruction */
-  code = arm_dp_reg (COND_AL, DP_BIC, 0, dest, dest, arm_so_imm (shift,1));
-  ORC_ASM_CODE(p,"  bic %s, %s, #%d\n",
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (dest),
-      shift);
-  orc_arm_emit (p, code);
+  /* clear the bits we will shift into view in the next instruction, FIXME, we
+   * need instruction wide constants */
+  if (type <= 1) {
+    code = arm_dp_imm (COND_AL, DP_BIC, 0, dest, dest, arm_so_imm (8,1));
+    ORC_ASM_CODE(p,"  bic %s, %s, #0x00010000\n",
+        orc_arm_reg_name (dest),
+        orc_arm_reg_name (dest));
+    orc_arm_emit (p, code);
+
+    if (type == 0) {
+      code = arm_dp_imm (COND_AL, DP_BIC, 0, dest, dest, arm_so_imm (12,1));
+      ORC_ASM_CODE(p,"  bic %s, %s, #0x00000100\n",
+          orc_arm_reg_name (dest),
+          orc_arm_reg_name (dest));
+      orc_arm_emit (p, code);
+
+      code = arm_dp_imm (COND_AL, DP_BIC, 0, dest, dest, arm_so_imm (4,1));
+      ORC_ASM_CODE(p,"  bic %s, %s, #0x01000000\n",
+          orc_arm_reg_name (dest),
+          orc_arm_reg_name (dest));
+      orc_arm_emit (p, code);
+    }
+  } else if (type >= 2) {
+    /* already have a mask, use it here */
+    code = arm_dp_imm (COND_AL, DP_BIC, 0, dest, dest, arm_so_shift_imm (7,SHIFT_LSR,mask));
+    ORC_ASM_CODE(p,"  bic %s, %s, %s, LSR #7\n",
+        orc_arm_reg_name (dest),
+        orc_arm_reg_name (dest),
+        orc_arm_reg_name (mask));
+    orc_arm_emit (p, code);
+  }
 
   code = arm_dp_reg (COND_AL, DP_SUB, 0, src1, dest, arm_so_shift_imm (1,SHIFT_LSR,dest));
   ORC_ASM_CODE(p,"  sub %s, %s, %s LSR #1\n",
@@ -293,11 +350,116 @@ arm_rule_avguX (OrcCompiler *p, void *user, OrcInstruction *insn)
       orc_arm_reg_name (src1),
       orc_arm_reg_name (dest));
   orc_arm_emit (p, code);
+
+  if (type >= 2) {
+    /* signed variant, unbias the output */
+    code = arm_dp_reg (COND_AL, DP_EOR, 0, src1, src1, arm_so_reg (mask));
+    ORC_ASM_CODE(p,"  eor %s, %s, %s\n",
+        orc_arm_reg_name (dest),
+        orc_arm_reg_name (dest),
+        orc_arm_reg_name (mask));
+    orc_arm_emit (p, code);
+  }
 }
-#if 0
-BINARY_SB(cmpeqb, "(%s == %s) ? (~0) : 0")
-BINARY_SB(cmpgtsb, "(%s > %s) ? (~0) : 0")
-#endif
+static void
+arm_rule_cmpeqX (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  uint32_t code;
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+  int type = ORC_PTR_TO_INT(user);
+
+  /* bytes that are equal will have all bits 0 */
+  code = arm_dp_reg (COND_AL, DP_EOR, 0, src1, dest, arm_so_reg (src1));
+  ORC_ASM_CODE(p,"  eor %s, %s, %s\n",
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (src2));
+  orc_arm_emit (p, code);
+
+  /* clear src1 register */
+  code = arm_dp_imm (COND_AL, DP_MOV, 0, 0, src1, arm_so_imm (0,0));
+  ORC_ASM_CODE(p,"  mov %s, #0\n",
+      orc_arm_reg_name (src1));
+  orc_arm_emit (p, code);
+
+  /* make 0xffffffff in src2 */
+  code = arm_dp_imm (COND_AL, DP_MVN, 0, 0, src2, arm_so_imm (0,0));
+  ORC_ASM_CODE(p,"  mvn %s, #0\n",
+      orc_arm_reg_name (src2));
+  orc_arm_emit (p, code);
+
+  /* dest = 0 - dest, set GE flags for 0 bytes */
+  if (type == 0) {
+    code = arm_code_mm (COND_AL, MM_MODE_U, src1, dest, MM_OP_SUB8, dest);
+    ORC_ASM_CODE(p,"  usub8 %s, %s, %s\n",
+        orc_arm_reg_name (dest),
+        orc_arm_reg_name (src1),
+        orc_arm_reg_name (dest));
+    orc_arm_emit (p, code);
+  } else {
+    code = arm_code_mm (COND_AL, MM_MODE_U, src1, dest, MM_OP_SUB16, dest);
+    ORC_ASM_CODE(p,"  usub16 %s, %s, %s\n",
+        orc_arm_reg_name (dest),
+        orc_arm_reg_name (src1),
+        orc_arm_reg_name (dest));
+    orc_arm_emit (p, code);
+  }
+
+  /* set 0xff for 0 bytes, 0x00 otherwise */
+  code = arm_code_mm (COND_AL, 0x68, src2, dest, 0xb, src1);
+  ORC_ASM_CODE(p,"  sel %s, %s, %s\n",
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src2),
+      orc_arm_reg_name (src1));
+  orc_arm_emit (p, code);
+}
+static void
+arm_rule_cmpgtsX (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  uint32_t code;
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+  int type = ORC_PTR_TO_INT(user);
+
+  /* dest = src2 - src1, set GE flags for src2 >= src1 */
+  if (type == 0) {
+    code = arm_code_mm (COND_AL, MM_MODE_S, src2, dest, MM_OP_SUB8, src1);
+    ORC_ASM_CODE(p,"  ssub8 %s, %s, %s\n",
+        orc_arm_reg_name (dest),
+        orc_arm_reg_name (src2),
+        orc_arm_reg_name (src1));
+    orc_arm_emit (p, code);
+  } else {
+    code = arm_code_mm (COND_AL, MM_MODE_S, src2, dest, MM_OP_SUB16, src1);
+    ORC_ASM_CODE(p,"  ssub16 %s, %s, %s\n",
+        orc_arm_reg_name (dest),
+        orc_arm_reg_name (src2),
+        orc_arm_reg_name (src1));
+    orc_arm_emit (p, code);
+  }
+
+  /* clear src1 register */
+  code = arm_dp_imm (COND_AL, DP_MOV, 0, 0, src1, arm_so_imm (0,0));
+  ORC_ASM_CODE(p,"  mov %s, #0\n",
+      orc_arm_reg_name (src1));
+  orc_arm_emit (p, code);
+
+  /* make 0xffffffff in src2 */
+  code = arm_dp_imm (COND_AL, DP_MVN, 0, 0, src2, arm_so_imm (0,0));
+  ORC_ASM_CODE(p,"  mvn %s, #0\n",
+      orc_arm_reg_name (src2));
+
+  /* set 0x00 for src2 >= src1 bytes, 0xff if src2 < src1 */
+  code = arm_code_mm (COND_AL, 0x68, src1, dest, 0xb, src2);
+  ORC_ASM_CODE(p,"  sel %s, %s, %s\n",
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (src2));
+  orc_arm_emit (p, code);
+}
 static void
 arm_rule_copyX (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -410,6 +572,7 @@ BINARY_DP (orX, "orr", DP_ORR);
 static void
 arm_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
+  /* FIXME not parallel */
   uint32_t code;
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int src2 = ORC_SRC_ARG (p, insn, 1);
@@ -443,7 +606,7 @@ arm_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_arm_emit (p, code);
   } else if (ORC_SRC_TYPE (p, insn, 1) == ORC_VAR_TYPE_PARAM) {
     code = arm_dp_reg (COND_AL, DP_MOV, 0, 0, dest,
-        arm_so_shift_reg (src2, opshifts[shtype], src1));
+        arm_so_shift_imm (src2, opshifts[shtype], src1));
     ORC_ASM_CODE(p,"  mov %s, %s, %s %s\n",
         orc_arm_reg_name (dest),
         orc_arm_reg_name (src1),
@@ -457,6 +620,7 @@ arm_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 arm_rule_signX (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
+  /* FIXME, not parallel */
   uint32_t code;
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int dest = ORC_DEST_ARG (p, insn, 0);
@@ -473,7 +637,7 @@ arm_rule_signX (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_arm_emit (p, code);
   }
 
-  code = arm_dp_reg (COND_AL, DP_RSB, 0, src1, dest, arm_so_imm (0,0));
+  code = arm_dp_imm (COND_AL, DP_RSB, 0, src1, dest, arm_so_imm (0,0));
   ORC_ASM_CODE(p,"  rsb %s, %s, #0\n",
       orc_arm_reg_name (dest),
       orc_arm_reg_name (src1));
@@ -500,43 +664,6 @@ BINARY_DP (xorX, "eor", DP_EOR);
 BINARY_MM (addw, "sadd16", MM_OP_ADD16, MM_MODE_S);
 BINARY_MM (addssw, "qadd16", MM_OP_ADD16, MM_MODE_Q);
 BINARY_MM (addusw, "uqadd16", MM_OP_ADD16, MM_MODE_UQ);
-static void
-arm_rule_avgsw (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  uint32_t code;
-  int src1 = ORC_SRC_ARG (p, insn, 0);
-  int src2 = ORC_SRC_ARG (p, insn, 1);
-  int dest = ORC_DEST_ARG (p, insn, 0);
-
-  code = arm_dp_reg (COND_AL, DP_ADD, 0, src1, dest, arm_so_reg (src2));
-  ORC_ASM_CODE(p,"  add %s, %s, %s\n",
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (src1),
-      orc_arm_reg_name (src2));
-  orc_arm_emit (p, code);
-
-  code = arm_dp_imm (COND_AL, DP_ADD, 0, dest, dest, arm_so_imm (0,1));
-  ORC_ASM_CODE(p,"  add %s, %s, #1\n",
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (dest));
-  orc_arm_emit (p, code);
-
-  code = arm_emit_sxth (COND_AL, dest, 0, dest);
-  ORC_ASM_CODE(p,"  sxth %s, %s\n",
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (dest));
-  orc_arm_emit (p, code);
-
-  code = arm_dp_reg (COND_AL, DP_MOV, 0, 0, dest, arm_so_shift_imm (1,SHIFT_LSR,dest));
-  ORC_ASM_CODE(p,"  mov %s, %s, LSR #1\n",
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (dest));
-  orc_arm_emit (p, code);
-}
-#if 0
-BINARY_SW(cmpeqw, "(%s == %s) ? (~0) : 0")
-BINARY_SW(cmpgtsw, "(%s > %s) ? (~0) : 0")
-#endif
 static void
 arm_rule_maxsw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -654,6 +781,27 @@ BINARY_MM (subw, "ssub16", MM_OP_SUB16, MM_MODE_S);
 BINARY_MM (subssw, "qsub16", MM_OP_SUB16, MM_MODE_Q);
 BINARY_MM (subusw, "uqsub16", MM_OP_SUB16, MM_MODE_UQ);
 
+static void
+arm_rule_absl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  uint32_t code;
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  /* reverse sign 0 - src1, assume the value is negative */
+  code = arm_dp_imm (COND_AL, DP_RSB, 1, src1, dest, arm_so_imm (0,0));
+  ORC_ASM_CODE(p,"  rsbs %s, %s, #0\n",
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1));
+  orc_arm_emit (p, code);
+
+  /* if we got negative, copy the original value again */
+  code = arm_dp_reg (COND_PL, DP_MOV, 0, 0, dest, arm_so_reg (src1));
+  ORC_ASM_CODE(p,"  movmi %s, %s\n",
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1));
+  orc_arm_emit (p, code);
+}
 
 BINARY_DP (addl, "add", DP_ADD);
 BINARY_MM (addssl, "qadd", 0x5, 0x10);
@@ -672,17 +820,92 @@ arm_rule_addusl (OrcCompiler *p, void *user, OrcInstruction *insn)
       orc_arm_reg_name (src2));
   orc_arm_emit (p, code);
 
-  code = arm_dp_reg (COND_CS, DP_MVN, 0, 0, dest, arm_so_imm (0,0));
+  code = arm_dp_imm (COND_CS, DP_MVN, 0, 0, dest, arm_so_imm (0,0));
   ORC_ASM_CODE(p,"  mvncs %s, #0\n",
       orc_arm_reg_name (dest));
   orc_arm_emit (p, code);
 }
-#if 0
-BINARY_SL(avgsl, "((int64_t)%s + (int64_t)%s + 1)>>1")
-BINARY_UL(avgul, "((uint64_t)(uint32_t)%s + (uint64_t)(uint32_t)%s + 1)>>1")
-BINARY_SL(cmpeql, "(%s == %s) ? (~0) : 0")
-BINARY_SL(cmpgtsl, "(%s > %s) ? (~0) : 0")
-#endif
+static void
+arm_rule_avgXl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  uint32_t code;
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  /* set the carry flag */
+  code = arm_dp_reg (COND_AL, DP_SUB, 1, src1, dest, arm_so_reg (src1));
+  ORC_ASM_CODE(p,"  subs %s, %s, %s\n",
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (src1));
+  orc_arm_emit (p, code);
+
+  /* src1 + src2 + 1 */
+  code = arm_dp_reg (COND_AL, DP_ADC, 0, src1, dest, arm_so_reg (src2));
+  ORC_ASM_CODE(p,"  adc %s, %s, %s\n",
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (src2));
+  orc_arm_emit (p, code);
+
+  /* rotate right, top bit is the carry */
+  code = arm_dp_reg (COND_AL, DP_MOV, 0, 0, dest, arm_so_rrx_reg (dest));
+  ORC_ASM_CODE(p,"  mov %s, %s, RRX\n",
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (dest));
+  orc_arm_emit (p, code);
+
+}
+static void
+arm_rule_cmpeql (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  uint32_t code;
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  code = arm_dp_reg (COND_AL, DP_CMP, 1, src1, 0, arm_so_reg (src2));
+  ORC_ASM_CODE(p,"  cmp %s, %s\n",
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (src2));
+  orc_arm_emit (p, code);
+
+  code = arm_dp_imm (COND_NE, DP_MOV, 0, 0, dest, arm_so_imm (0,0));
+  ORC_ASM_CODE(p,"  movne %s, #0\n",
+      orc_arm_reg_name (dest));
+  orc_arm_emit (p, code);
+
+  code = arm_dp_imm (COND_EQ, DP_MVN, 0, 0, dest, arm_so_imm (0,0));
+  ORC_ASM_CODE(p,"  mvneq %s, #0\n",
+      orc_arm_reg_name (dest));
+  orc_arm_emit (p, code);
+}
+static void
+arm_rule_cmpgtsl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  uint32_t code;
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  code = arm_dp_reg (COND_AL, DP_CMP, 1, src1, 0, arm_so_reg (src2));
+  ORC_ASM_CODE(p,"  cmp %s, %s\n",
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (src2));
+  orc_arm_emit (p, code);
+
+  code = arm_dp_imm (COND_LE, DP_MOV, 0, 0, dest, arm_so_imm (0,0));
+  ORC_ASM_CODE(p,"  movle %s, #0\n",
+      orc_arm_reg_name (dest));
+  orc_arm_emit (p, code);
+
+  code = arm_dp_imm (COND_GT, DP_MVN, 0, 0, dest, arm_so_imm (0,0));
+  ORC_ASM_CODE(p,"  mvngt %s, #0\n",
+      orc_arm_reg_name (dest));
+  orc_arm_emit (p, code);
+}
+
 static void
 arm_rule_maxsl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -841,8 +1064,10 @@ orc_compiler_orc_arm_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "addusb", arm_rule_addusb, NULL);
   orc_rule_register (rule_set, "andb", arm_rule_andX, NULL);
   orc_rule_register (rule_set, "andnb", arm_rule_andnX, NULL);
-  orc_rule_register (rule_set, "avgsb", arm_rule_avgsb, NULL);
-  orc_rule_register (rule_set, "avgub", arm_rule_avguX, (void *)12);
+  orc_rule_register (rule_set, "avgsb", arm_rule_avgX, (void *)3);
+  orc_rule_register (rule_set, "avgub", arm_rule_avgX, (void *)0);
+  orc_rule_register (rule_set, "cmpeqb", arm_rule_cmpeqX, (void *)0);
+  orc_rule_register (rule_set, "cmpgtsb", arm_rule_cmpgtsX, (void *)0);
   orc_rule_register (rule_set, "copyb", arm_rule_copyX, NULL);
   orc_rule_register (rule_set, "maxsb", arm_rule_maxsb, NULL);
   orc_rule_register (rule_set, "maxub", arm_rule_maxub, NULL);
@@ -864,8 +1089,10 @@ orc_compiler_orc_arm_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "addusw", arm_rule_addusw, NULL);
   orc_rule_register (rule_set, "andw", arm_rule_andX, NULL);
   orc_rule_register (rule_set, "andnw", arm_rule_andnX, NULL);
-  orc_rule_register (rule_set, "avgsw", arm_rule_avgsw, NULL);
-  orc_rule_register (rule_set, "avguw", arm_rule_avguX, (void *)8);
+  orc_rule_register (rule_set, "avgsw", arm_rule_avgX, (void *)2);
+  orc_rule_register (rule_set, "avguw", arm_rule_avgX, (void *)1);
+  orc_rule_register (rule_set, "cmpeqw", arm_rule_cmpeqX, (void *)1);
+  orc_rule_register (rule_set, "cmpgtsw", arm_rule_cmpgtsX, (void *)1);
   orc_rule_register (rule_set, "copyw", arm_rule_copyX, NULL);
   orc_rule_register (rule_set, "maxsw", arm_rule_maxsw, NULL);
   orc_rule_register (rule_set, "maxuw", arm_rule_maxuw, NULL);
@@ -882,13 +1109,16 @@ orc_compiler_orc_arm_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "xorw", arm_rule_xorX, NULL);
   orc_rule_register (rule_set, "mullw", arm_rule_mullw, NULL);
 
-  orc_rule_register (rule_set, "absl", arm_rule_absX, (void *)2);
+  orc_rule_register (rule_set, "absl", arm_rule_absl, NULL);
   orc_rule_register (rule_set, "addl", arm_rule_addl, NULL);
   orc_rule_register (rule_set, "addssl", arm_rule_addssl, NULL);
   orc_rule_register (rule_set, "addusl", arm_rule_addusl, NULL);
   orc_rule_register (rule_set, "andl", arm_rule_andX, NULL);
   orc_rule_register (rule_set, "andnl", arm_rule_andnX, NULL);
-  orc_rule_register (rule_set, "avguw", arm_rule_avguX, (void *)0);
+  orc_rule_register (rule_set, "avgul", arm_rule_avgXl, NULL);
+  orc_rule_register (rule_set, "avgsl", arm_rule_avgXl, NULL);
+  orc_rule_register (rule_set, "cmpeql", arm_rule_cmpeql, NULL);
+  orc_rule_register (rule_set, "cmpgtsl", arm_rule_cmpgtsl, NULL);
   orc_rule_register (rule_set, "copyl", arm_rule_copyX, NULL);
   orc_rule_register (rule_set, "maxsl", arm_rule_maxsl, NULL);
   orc_rule_register (rule_set, "maxul", arm_rule_maxul, NULL);
