@@ -50,13 +50,12 @@ orc_arm_emit_prologue (OrcCompiler *compiler)
 void
 orc_arm_dump_insns (OrcCompiler *compiler)
 {
-
   orc_arm_emit_label (compiler, 0);
 
-  orc_arm_emit_add (compiler, ORC_ARM_A2, ORC_ARM_A3, ORC_ARM_A4);
-  orc_arm_emit_sub (compiler, ORC_ARM_A2, ORC_ARM_A3, ORC_ARM_A4);
+  orc_arm_emit_add_r (compiler, ORC_ARM_COND_AL, 0, ORC_ARM_A2, ORC_ARM_A3, ORC_ARM_A4);
+  orc_arm_emit_sub_r (compiler, ORC_ARM_COND_AL, 0, ORC_ARM_A2, ORC_ARM_A3, ORC_ARM_A4);
   orc_arm_emit_push (compiler, 0x06);
-  orc_arm_emit_mov (compiler, ORC_ARM_A2, ORC_ARM_A3);
+  orc_arm_emit_mov_r (compiler, ORC_ARM_COND_AL, 0, ORC_ARM_A2, ORC_ARM_A3);
 
   orc_arm_emit_branch (compiler, ORC_ARM_COND_LE, 0);
   orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, 0);
@@ -255,13 +254,13 @@ orc_compiler_orc_arm_assemble (OrcCompiler *compiler)
 
   orc_arm_emit_label (compiler, 1);
 
-  orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
+  orc_arm_emit_cmp_i (compiler, ORC_ARM_COND_AL, ORC_ARM_IP, 0, 0);
   orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, 3);
 
   orc_arm_emit_label (compiler, 2);
   orc_arm_emit_loop (compiler);
-  orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1);
-  orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
+  orc_arm_emit_sub_i (compiler, ORC_ARM_COND_AL, 0, ORC_ARM_IP, ORC_ARM_IP, 0, 1);
+  orc_arm_emit_cmp_i (compiler, ORC_ARM_COND_AL, ORC_ARM_IP, 0, 0);
   orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, 2);
   orc_arm_emit_label (compiler, 3);
 
@@ -317,10 +316,11 @@ orc_arm_emit_loop (OrcCompiler *compiler)
 
     rule = insn->rule;
     if (rule && rule->emit) {
-      if (compiler->vars[insn->dest_args[0]].alloc !=
-          compiler->vars[insn->src_args[0]].alloc) {
-        orc_arm_emit_mov (compiler, compiler->vars[insn->src_args[0]].alloc,
-            compiler->vars[insn->dest_args[0]].alloc);
+      int src = ORC_SRC_ARG (compiler, insn, 0);
+      int dest = ORC_DEST_ARG (compiler, insn, 0);
+
+      if (dest != src) {
+        orc_arm_emit_mov_r (compiler, ORC_ARM_COND_AL, 0, src, dest);
       }
       rule->emit (compiler, rule->emit_user, insn);
     } else {
@@ -347,9 +347,9 @@ orc_arm_emit_loop (OrcCompiler *compiler)
     if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
         compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
       if (compiler->vars[k].ptr_register) {
-        orc_arm_emit_add_imm (compiler,
+        orc_arm_emit_add_i (compiler, ORC_ARM_COND_AL, 0,
             compiler->vars[k].ptr_register,
-            compiler->vars[k].ptr_register,
+            compiler->vars[k].ptr_register, 0,
             compiler->vars[k].size << compiler->loop_shift);
       } else {
         //orc_arm_emit_add_imm_memoffset (compiler, orc_arm_ptr_size,

@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 
+#include <orc/orcdebug.h>
 #include <orc/orcprogram.h>
 #include <orc/orcarm.h>
 #include <orc/orcutils.h>
@@ -20,6 +21,18 @@
  * @short_description: code generation for ARM
  */
 
+const char *
+orc_arm_cond_name (OrcArmCond cond)
+{
+  static const char *cond_names[] = {
+    "eq", "ne", "cs", "cc", "mi", "pl", "vs", "vc",
+    "hi", "ls", "ge", "lt", "gt", "le", "", ""
+  };
+  if (cond < 0 || cond >= 16) {
+    return "ERROR";
+  }
+  return cond_names[cond&0xf];
+}
 
 const char *
 orc_arm_reg_name (int reg)
@@ -103,20 +116,6 @@ orc_arm_emit_pop (OrcCompiler *compiler, int regs)
 }
 
 void
-orc_arm_emit_mov (OrcCompiler *compiler, int dest, int src)
-{
-  uint32_t code;
-
-  code = 0xe1a00000;
-  code |= (src&0xf) << 0;
-  code |= (dest&0xf) << 12;
-
-  ORC_ASM_CODE(compiler,"  mov %s, %s\n", orc_arm_reg_name (dest), orc_arm_reg_name (src));
-
-  orc_arm_emit (compiler, code);
-}
-
-void
 orc_arm_emit_label (OrcCompiler *compiler, int label)
 {
   ORC_ASM_CODE(compiler,".L%d:\n", label);
@@ -147,15 +146,11 @@ orc_arm_do_fixups (OrcCompiler *compiler)
     diff = ORC_READ_UINT32_LE (ptr) + ((label - ptr) >> 2);
     ORC_WRITE_UINT32_LE(ptr, (code&0xff000000) | (diff&0x00ffffff));
   }
-
 }
 
 void
 orc_arm_emit_branch (OrcCompiler *compiler, int cond, int label)
 {
-  static const char *cond_names[] = {
-    "eq", "ne", "cs", "cc", "mi", "pl", "vs", "vc",
-    "hi", "ls", "ge", "lt", "gt", "le", "", "" };
   uint32_t code;
 
   code = 0x0afffffe;
@@ -163,7 +158,7 @@ orc_arm_emit_branch (OrcCompiler *compiler, int cond, int label)
   orc_arm_add_fixup (compiler, label, 0);
   orc_arm_emit (compiler, code);
 
-  ORC_ASM_CODE(compiler,"  b%s .L%d\n", cond_names[cond], label);
+  ORC_ASM_CODE(compiler,"  b%s .L%d\n", orc_arm_cond_name(cond), label);
 }
 
 void
@@ -188,89 +183,6 @@ orc_arm_emit_loadimm (OrcCompiler *compiler, int dest, int imm)
 }
 
 void
-orc_arm_emit_add (OrcCompiler *compiler, int dest, int src1, int src2)
-{
-  uint32_t code;
-
-  code = 0xe0800000;
-  code |= (src1&0xf) << 16;
-  code |= (dest&0xf) << 12;
-  code |= (src2&0xf) << 0;
-
-  ORC_ASM_CODE(compiler,"  add %s, %s, %s\n",
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (src1),
-      orc_arm_reg_name (src2));
-  orc_arm_emit (compiler, code);
-}
-
-void
-orc_arm_emit_sub (OrcCompiler *compiler, int dest, int src1, int src2)
-{
-  uint32_t code;
-
-  code = 0xe0400000;
-  code |= (src1&0xf) << 16;
-  code |= (dest&0xf) << 12;
-  code |= (src2&0xf) << 0;
-
-  ORC_ASM_CODE(compiler,"  sub %s, %s, %s\n",
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (src1),
-      orc_arm_reg_name (src2));
-  orc_arm_emit (compiler, code);
-}
-
-void
-orc_arm_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int value)
-{
-  uint32_t code;
-
-  code = 0xe2800000;
-  code |= (src1&0xf) << 16;
-  code |= (dest&0xf) << 12;
-  code |= (value) << 0;
-
-  ORC_ASM_CODE(compiler,"  add %s, %s, #%d\n",
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (src1),
-      value);
-  orc_arm_emit (compiler, code);
-}
-
-void
-orc_arm_emit_sub_imm (OrcCompiler *compiler, int dest, int src1, int value)
-{
-  uint32_t code;
-
-  code = 0xe2500000;
-  code |= (src1&0xf) << 16;
-  code |= (dest&0xf) << 12;
-  code |= (value) << 0;
-
-  ORC_ASM_CODE(compiler,"  subs %s, %s, #%d\n",
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (src1),
-      value);
-  orc_arm_emit (compiler, code);
-}
-
-void
-orc_arm_emit_cmp_imm (OrcCompiler *compiler, int src1, int value)
-{
-  uint32_t code;
-
-  code = 0xe3500000;
-  code |= (src1&0xf) << 16;
-  code |= (value) << 0;
-
-  ORC_ASM_CODE(compiler,"  cmp %s, #%d\n",
-      orc_arm_reg_name (src1),
-      value);
-  orc_arm_emit (compiler, code);
-}
-
-void
 orc_arm_emit_load_reg (OrcCompiler *compiler, int dest, int src1, int offset)
 {
   uint32_t code;
@@ -286,47 +198,155 @@ orc_arm_emit_load_reg (OrcCompiler *compiler, int dest, int src1, int offset)
   orc_arm_emit (compiler, code);
 }
 
+/* shifter operands */
+/*    1
+ *  1 0 9 8 7 6 5 4 3 2 1 0
+ * +-+-+-+-+-+-+-+-+-+-+-+-+
+ * |rotimm |   immed_8     |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+
+ */
+#define arm_so_imm(rot,imm) (((rot)<<8)|(imm))
+/*    1
+ *  1 0 9 8 7 6 5 4 3 2 1 0
+ * +-+-+-+-+-+-+-+-+-+-+-+-+
+ * |    Si   | St  |0| Rm  |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+
+ */
+#define arm_so_shift_imm(Si,St,Rm) (((Si)<<7)|((St)<<5)|(Rm))
+#define arm_so_rrx_reg(Rm)     arm_so_shift_imm(0,ORC_ARM_ROR,Rm)
+#define arm_so_reg(Rm)        (Rm)
+/*    1
+ *  1 0 9 8 7 6 5 4 3 2 1 0
+ * +-+-+-+-+-+-+-+-+-+-+-+-+
+ * |  Rs   |0| St  |1| Rm  |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+
+ */
+#define arm_so_shift_reg(Rs,St,Rm) (0x008|((Rs)<<8)|((St)<<5)|(Rm))
 
+/* data processing instructions */
+/*    3   2 2 2 2 2     2 2 1     1 1     1   1
+ *  1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * | cond  |0 0|I| opcode|S|   Rn  |  Rd   |   shifter_operand     |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ */
+#define arm_dp(cond,I,opcode,S,Rn,Rd,So) (((cond)<<28)|((I)<<25)|((opcode)<<21)|((S)<<20)|((Rn)<<16)|((Rd)<<12)|So)
+#define arm_dp_reg(cond,opcode,S,Rn,Rd,So) arm_dp (cond,0,opcode,S,Rn,Rd,So)
+#define arm_dp_imm(cond,opcode,S,Rn,Rd,So) arm_dp (cond,1,opcode,S,Rn,Rd,So)
 
+/*
+ * type 0:  <op>{<cond>}{s} {<Rd>}, <Rn>, #imm   (imm = (val>>(shift*2))|(val<<(32-(shift*2))))
+ * type 1:  <op>{<cond>}{s} {<Rd>}, <Rn>, <Rm>
+ * type 2:  <op>{<cond>}{s} {<Rd>}, <Rn>, <Rm>, [LSL|LSR|ASR] #imm
+ * type 3:  <op>{<cond>}{s} {<Rd>}, <Rn>, <Rm>, [LSL|LSR|ASR] <Rs>
+ * type 4:  <op>{<cond>}{s} {<Rd>,} <Rn>, <Rm>, RRX
+ */
 void
-orc_arm_emit_dp_reg (OrcCompiler *compiler, int cond, int opcode, int dest,
-    int src1, int src2)
+orc_arm_emit_dp (OrcCompiler *p, int type, OrcArmCond cond, OrcArmDP opcode,
+    int S, int Rd, int Rn, int Rm, int shift, int val)
 {
+  uint32_t code;
+  int I = 0;
+  int shifter_op;
+  char shifter[100];
+  uint32_t imm;
+  static const char *shift_names[] = {
+    "LSL", "LSR", "ASR", "ROR"
+  };
+  /* opcodes with Rd */
+  static const int op_Rd[] = {
+    1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1
+  };
+  /* opcodes using Rn */
+  static const int op_Rn[] = {
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0
+  };
   static const char *dp_insn_names[] = {
     "and", "eor", "sub", "rsb", "add", "adc", "sbc", "rsc",
     "tst", "teq", "cmp", "cmn", "orr", "mov", "bic", "mvn"
   };
-  static const int shift_expn[] = {
-    0, 0, 0, 0, 0, 0, 0, 0,
-    1, 1, 1, 1, 0, 1, 0, 1
-  };
-  uint32_t code;
-  int update = 0;
-  
-  code = cond << 28;
-  code |= opcode << 21;
-  code |= update << 20; /* update condition codes */
-  if (opcode >= 8 && opcode < 12) {
-    code |= 1 << 20;
-  }
-  code |= (src1&0xf) << 16;
-  code |= (dest&0xf) << 12;
-  code |= (src2&0xf) << 0;
 
-  if (shift_expn[opcode]) {
-    ORC_ASM_CODE(compiler,"  %s%s %s, %s\n",
-        dp_insn_names[opcode],
-        update ? "s" : "",
-        orc_arm_reg_name (src1),
-        orc_arm_reg_name (src2));
-  } else {
-    ORC_ASM_CODE(compiler,"  %s%s %s, %s, %s\n",
-        dp_insn_names[opcode],
-        update ? "s" : "",
-        orc_arm_reg_name (dest),
-        orc_arm_reg_name (src1),
-        orc_arm_reg_name (src2));
+  switch (type) {
+    case 0:
+      /* #imm */
+      imm = val & 0xff;
+      shifter_op = arm_so_imm (shift, imm);
+      if (shift > 0)
+        imm = (imm >> (shift*2)) | (imm << (32-(shift*2)));
+      snprintf (shifter, sizeof(shifter), "#%08x", imm);
+      I = 1;
+      break;
+    case 1:
+      /* <Rm> */
+      shifter_op = arm_so_reg (Rm);
+      snprintf (shifter, sizeof(shifter), "%s", orc_arm_reg_name (Rm));
+      break;
+    case 2:
+      /* <Rm>, [LSL|LSR|ASR] #imm */
+      shifter_op = arm_so_shift_imm (val,shift,Rm);
+      snprintf (shifter, sizeof(shifter), "%s, %s #%d",
+          orc_arm_reg_name (Rm), shift_names[shift], val);
+      break;
+    case 3:
+      /* <Rm>, [LSL|LSR|ASR] <Rs> */
+      shifter_op = arm_so_shift_reg (val,shift,Rm);
+      snprintf (shifter, sizeof(shifter), "%s, %s %s",
+          orc_arm_reg_name (Rm), shift_names[shift], orc_arm_reg_name (val));
+      break;
+    case 4:
+      /* <Rm>, RRX */
+      shifter_op = arm_so_rrx_reg (Rm);
+      snprintf (shifter, sizeof(shifter), "%s, RRX",
+          orc_arm_reg_name (Rm));
+      break;
+    default:
+      ORC_COMPILER_ERROR(p,"unknown data processing type %d", type);
+      return;
   }
-  orc_arm_emit (compiler, code);
+
+  if (op_Rd[opcode]) {
+    if (op_Rn[opcode]) {
+      /* opcode using Rn */
+      code = arm_dp (cond, I, opcode, S, Rn, Rd, shifter_op);
+      ORC_ASM_CODE(p,"  %s%s%s %s, %s, %s\n",
+          dp_insn_names[opcode], orc_arm_cond_name(cond), (S ? "s" : ""),
+          orc_arm_reg_name (Rd), orc_arm_reg_name (Rn), shifter);
+    } else {
+      /* opcode using Rd and val (mov, mvn) */
+      code = arm_dp (cond, I, opcode, S, Rn, Rd, shifter_op);
+      ORC_ASM_CODE(p,"  %s%s%s %s, %s\n",
+          dp_insn_names[opcode], orc_arm_cond_name(cond), (S ? "s" : ""),
+          orc_arm_reg_name (Rd), shifter);
+    }
+  } else {
+    /* opcode does not change Rd, change status register (cmp, tst, ..) */
+    code = arm_dp (cond, I, opcode, 1, Rn, 0, shifter_op);
+    ORC_ASM_CODE(p,"  %s%s %s, %s\n",
+        dp_insn_names[opcode], orc_arm_cond_name(cond), orc_arm_reg_name (Rn), shifter);
+  }
+  orc_arm_emit (p, code);
 }
 
+/* parallel instructions */
+/*    3   2 2 2 2 2     2 2 1     1 1     1   1
+ *  1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * | cond  |      mode     |   Rn  |  Rd   |0 0 0 0|  op   |  Rm   |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ */
+#define arm_code_mm(cond,mode,Rn,Rd,op,Rm) (((cond)<<28)|((mode)<<20)|((Rn)<<16)|((Rd)<<12)|((op)<<4)|(Rm))
+
+void
+orc_arm_emit_mm (OrcCompiler *p, const char *name, OrcArmCond cond, int mode,
+            int op, int dest, int src1, int src2)
+{
+  uint32_t code;
+
+  code = arm_code_mm (cond, mode, src1, dest, op, src2);
+  ORC_ASM_CODE(p,"  %s%s %s, %s, %s\n",
+      name, orc_arm_cond_name(cond),
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (src2));
+  orc_arm_emit (p, code);
+}
