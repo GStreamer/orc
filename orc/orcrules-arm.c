@@ -35,33 +35,7 @@ arm_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
   orc_arm_emit_##insn_name (p, ORC_ARM_COND_AL, dest, src1, src2);     \
 }
 
-#define orc_arm_xt(op,cond,Rn,Rd,Rm,rot) (op|((cond)<<28)|((Rn)<<16)|((Rd)<<12)|((rot)<<10)|(Rm))
-#define orc_arm_emit_sxtb(p,cond,Rd,Rm,rot)       orc_arm_emit (p, orc_arm_xt (0x06a00070,cond,0xf,Rd,Rm,rot))
-#define orc_arm_emit_sxth(p,cond,Rd,Rm,rot)       orc_arm_emit (p, orc_arm_xt (0x06b00070,cond,0xf,Rd,Rm,rot))
-#define orc_arm_emit_uxtb(p,cond,Rd,Rm,rot)       orc_arm_emit (p, orc_arm_xt (0x06e00070,cond,0xf,Rd,Rm,rot))
-#define orc_arm_emit_uxth(p,cond,Rd,Rm,rot)       orc_arm_emit (p, orc_arm_xt (0x06f00070,cond,0xf,Rd,Rm,rot))
-#define orc_arm_emit_sxtb16(p,cond,Rd,Rm,rot)     orc_arm_emit (p, orc_arm_xt (0x06800070,cond,0xf,Rd,Rm,rot))
-#define orc_arm_emit_uxtb16(p,cond,Rd,Rm,rot)     orc_arm_emit (p, orc_arm_xt (0x06c00070,cond,0xf,Rd,Rm,rot))
-
-#define orc_arm_emit_sxtab(p,cond,Rd,Rn,Rm,rot)   orc_arm_emit (p, orc_arm_xt (0x06a00070,cond,Rn,Rd,Rm,rot))
-#define orc_arm_emit_sxtah(p,cond,Rd,Rn,Rm,rot)   orc_arm_emit (p, orc_arm_xt (0x06b00070,cond,Rn,Rd,Rm,rot))
-#define orc_arm_emit_uxtab(p,cond,Rd,Rn,Rm,rot)   orc_arm_emit (p, orc_arm_xt (0x06e00070,cond,Rn,Rd,Rm,rot))
-#define orc_arm_emit_uxtah(p,cond,Rd,Rn,Rm,rot)   orc_arm_emit (p, orc_arm_xt (0x06f00070,cond,Rn,Rd,Rm,rot))
-#define orc_arm_emit_sxtab16(p,cond,Rd,Rn,Rm,rot) orc_arm_emit (p, orc_arm_xt (0x06800070,cond,Rn,Rd,Rm,rot))
-#define orc_arm_emit_uxtab16(p,cond,Rd,Rn,Rm,rot) orc_arm_emit (p, orc_arm_xt (0x06c00070,cond,Rn,Rd,Rm,rot))
-
-#define orc_arm_pkh(op,cond,Rn,Rd,Rm,sh) (op|((cond)<<28)|((Rn)<<16)|((Rd)<<12)|((sh)<<7)|(Rm))
-#define orc_arm_emit_pkhbt(p,cond,Rd,Rn,Rm,sh) orc_arm_emit (p, orc_arm_xt (0x06800010,cond,Rd,Rn,Rm,sh))
-#define orc_arm_emit_pkhtb(p,cond,Rd,Rn,Rm,sh) orc_arm_emit (p, orc_arm_xt (0x06800050,cond,Rd,Rn,Rm,sh))
-
-#define orc_arm_sat(op,cond,Rd,sat,Rm,sh,a) (op|((cond)<<28)|((sat)<<16)|((Rd)<<12)|((sh)<<7)|((a)<<6)|(Rm))
-#define orc_arm_emit_ssat(p,cond,Rd,sat,Rm,sh,a) orc_arm_emit (p, orc_arm_sat (0x06a00010,cond,Rd,sat,Rm,sh,a))
-#define orc_arm_emit_usat(p,cond,Rd,sat,Rm,sh,a) orc_arm_emit (p, orc_arm_sat (0x06e00010,cond,Rd,sat,Rm,sh,a))
-
-#define orc_arm_rev(op,cond,Rd,Rm) (op|((cond)<<28)|((Rd)<<12)|(Rm))
-#define orc_arm_emit_rev(p,cond,Rd,Rm)   orc_arm_emit (p, orc_arm_rev (0x06b00030,cond,Rd,Rm))
-#define orc_arm_emit_rev16(p,cond,Rd,Rm) orc_arm_emit (p, orc_arm_rev (0x06e000b0,cond,Rd,Rm))
-
+/* multiplies */
 #define orc_arm_smulxy(cond,x,y,Rd,Rm,Rs) (0x01600080|((cond)<<28)|((Rd)<<16)|((Rs)<<8)|((y)<<6)|((x)<<5)|(Rm))
 #define orc_arm_emit_smulbb(p,cond,Rd,Rm,Rs) orc_arm_emit (p, orc_arm_smulxy (cond,0,0,Rd,Rm,Rs))
 #define orc_arm_emit_smulbt(p,cond,Rd,Rm,Rs) orc_arm_emit (p, orc_arm_smulxy (cond,0,1,Rd,Rm,Rs))
@@ -112,14 +86,8 @@ orc_arm_storew (OrcCompiler *compiler, int dest, int offset, int src1)
 void
 orc_arm_emit_mov_iw (OrcCompiler *p, int cond, int dest, int val, int loop)
 {
-  int shift = 0;
-
-  while (val && ((val & 3) == 0)) {
-    val >>= 2;
-    shift++;
-  }
   /* dest = val */
-  orc_arm_emit_mov_i (p, cond, 0, dest, shift, val);
+  orc_arm_emit_mov_i (p, cond, 0, dest, val);
   if (loop > 1)
     /* 2 words:  dest |= dest << 16 */
     orc_arm_emit_orr_rsi (p, cond, 0, dest, dest, dest, ORC_ARM_LSL, 16);
@@ -128,14 +96,8 @@ orc_arm_emit_mov_iw (OrcCompiler *p, int cond, int dest, int val, int loop)
 void
 orc_arm_emit_mov_ib (OrcCompiler *p, int cond, int dest, int val, int loop)
 {
-  int shift = 0;
-
-  while (val && ((val & 3) == 0)) {
-    val >>= 2;
-    shift++;
-  }
   /* 1 byte */
-  orc_arm_emit_mov_i (p, cond, 0, dest, shift, val);
+  orc_arm_emit_mov_i (p, cond, 0, dest, val);
   if (loop > 1)
     /* 2 bytes:  dest |= dest << 8 */
     orc_arm_emit_orr_rsi (p, cond, 0, dest, dest, dest, ORC_ARM_LSL, 8);
@@ -153,7 +115,7 @@ arm_rule_absX (OrcCompiler *p, void *user, OrcInstruction *insn)
   int tmp = p->tmpreg;
   int type = ORC_PTR_TO_INT(user);
 
-  orc_arm_emit_mov_i (p, ORC_ARM_COND_AL, 0, dest, 0, 0);
+  orc_arm_emit_mov_i (p, ORC_ARM_COND_AL, 0, dest, 0);
 
   if (type == 0) {
     /* negate tmp = 0 - src1 */
@@ -187,7 +149,7 @@ arm_rule_avgX (OrcCompiler *p, void *user, OrcInstruction *insn)
   /* signed variant, make a mask, FIXME, instruction constants */
   if (type >= 2) {
     /* mask for word 0x80008000 */
-    orc_arm_emit_mov_i (p, ORC_ARM_COND_AL, 0, mask, 4, 8);
+    orc_arm_emit_mov_i (p, ORC_ARM_COND_AL, 0, mask, 0x80000000);
     orc_arm_emit_orr_rsi (p, ORC_ARM_COND_AL, 0, mask, mask, mask, ORC_ARM_LSR, 16);
 
     if (type >= 3) {
@@ -210,12 +172,12 @@ arm_rule_avgX (OrcCompiler *p, void *user, OrcInstruction *insn)
    * need instruction wide constants */
   if (type <= 1) {
     /* clear 0x00010000 */
-    orc_arm_emit_bic_i (p, ORC_ARM_COND_AL, 0, dest, dest, 8, 1);
+    orc_arm_emit_bic_i (p, ORC_ARM_COND_AL, 0, dest, dest, 0x00010000);
     if (type == 0) {
       /* clear 0x00000100 */
-      orc_arm_emit_bic_i (p, ORC_ARM_COND_AL, 0, dest, dest, 12, 1);
+      orc_arm_emit_bic_i (p, ORC_ARM_COND_AL, 0, dest, dest, 0x00000100);
       /* clear 0x01000000 */
-      orc_arm_emit_bic_i (p, ORC_ARM_COND_AL, 0, dest, dest, 4, 1);
+      orc_arm_emit_bic_i (p, ORC_ARM_COND_AL, 0, dest, dest, 0x01000000);
     }
   } else if (type >= 2) {
     /* already have a mask, use it here */
@@ -244,7 +206,7 @@ arm_rule_cmpeqX (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_arm_emit_eor_r (p, ORC_ARM_COND_AL, 0, tmp, src1, src2);
 
   /* clear dest register */
-  orc_arm_emit_mov_i (p, ORC_ARM_COND_AL, 0, dest, 0, 0);
+  orc_arm_emit_mov_i (p, ORC_ARM_COND_AL, 0, dest, 0);
 
   /* tmp = 0 - tmp, set GE flags for 0 bytes */
   if (size == 1) {
@@ -254,7 +216,7 @@ arm_rule_cmpeqX (OrcCompiler *p, void *user, OrcInstruction *insn)
   }
 
   /* make 0xffffffff in tmp */
-  orc_arm_emit_mvn_i (p, ORC_ARM_COND_AL, 0, tmp, 0, 0);
+  orc_arm_emit_mvn_i (p, ORC_ARM_COND_AL, 0, tmp, 0);
 
   /* set 0xff for 0 bytes, 0x00 otherwise */
   orc_arm_emit_sel (p, ORC_ARM_COND_AL, dest, tmp, dest);
@@ -276,9 +238,9 @@ arm_rule_cmpgtsX (OrcCompiler *p, void *user, OrcInstruction *insn)
   }
 
   /* clear dest register */
-  orc_arm_emit_mov_i (p, ORC_ARM_COND_AL, 0, dest, 0, 0);
+  orc_arm_emit_mov_i (p, ORC_ARM_COND_AL, 0, dest, 0);
   /* make 0xffffffff in tmp */
-  orc_arm_emit_mvn_i (p, ORC_ARM_COND_AL, 0, tmp, 0, 0);
+  orc_arm_emit_mvn_i (p, ORC_ARM_COND_AL, 0, tmp, 0);
 
   /* set 0x00 for src2 >= src1 bytes, 0xff if src2 < src1 */
   orc_arm_emit_sel (p, ORC_ARM_COND_AL, dest, dest, tmp);
@@ -344,34 +306,34 @@ arm_rule_mullb (OrcCompiler *p, void *user, OrcInstruction *insn)
   int tmp3 = ORC_ARM_V8;
   int loop = 1;
 
-  /* first item */
-  orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp1, src1, 0);
-  orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp2, src2, 0);
+  /* extract and multiply first item */
+  orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp1, src1);
+  orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp2, src2);
   orc_arm_emit_smulbb (p, ORC_ARM_COND_AL, dest, tmp1, tmp2);
 
   if (loop > 1) {
     if (loop > 2) {
-      /* third item */
+      /* third item, reuse extracted bits for first item */
       orc_arm_emit_smultt (p, ORC_ARM_COND_AL, tmp1, tmp1, tmp2);
       /* merge with first */
-      orc_arm_emit_pkhbt (p, ORC_ARM_COND_AL, dest, dest, tmp1, 16);
+      orc_arm_emit_pkhbt_s (p, ORC_ARM_COND_AL, dest, dest, tmp1, 16);
     }
     /* clear upper bits */
-    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, dest, 0);
+    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, dest);
 
-    /* second item */
-    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp1, src1, 1);
-    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp2, src2, 1);
+    /* extract and multiply second item */
+    orc_arm_emit_uxtb16_r8 (p, ORC_ARM_COND_AL, tmp1, src1, 8);
+    orc_arm_emit_uxtb16_r8 (p, ORC_ARM_COND_AL, tmp2, src2, 8);
     orc_arm_emit_smulbb (p, ORC_ARM_COND_AL, tmp3, tmp1, tmp2);
 
     if (loop > 2) {
       /* forth item */
       orc_arm_emit_smultt (p, ORC_ARM_COND_AL, tmp1, tmp1, tmp2);
       /* merge with second */
-      orc_arm_emit_pkhbt (p, ORC_ARM_COND_AL, tmp3, tmp3, tmp1, 16);
+      orc_arm_emit_pkhbt_s (p, ORC_ARM_COND_AL, tmp3, tmp3, tmp1, 16);
     }
     /* clear upper bits */
-    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp3, tmp3, 0);
+    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp3, tmp3);
 
     /* merge results */
     orc_arm_emit_orr_rsi (p, ORC_ARM_COND_AL, 0, dest, dest, tmp3, ORC_ARM_LSL, 8);
@@ -391,8 +353,8 @@ arm_rule_mulhsb (OrcCompiler *p, void *user, OrcInstruction *insn)
   int loop = 1;
 
   /* first item (and third) */
-  orc_arm_emit_sxtb16 (p, ORC_ARM_COND_AL, tmp1, src1, 0);
-  orc_arm_emit_sxtb16 (p, ORC_ARM_COND_AL, tmp2, src2, 0);
+  orc_arm_emit_sxtb16 (p, ORC_ARM_COND_AL, tmp1, src1);
+  orc_arm_emit_sxtb16 (p, ORC_ARM_COND_AL, tmp2, src2);
   orc_arm_emit_smulbb (p, ORC_ARM_COND_AL, dest, tmp1, tmp2);
 
   if (loop > 1) {
@@ -400,24 +362,24 @@ arm_rule_mulhsb (OrcCompiler *p, void *user, OrcInstruction *insn)
       /* third item */
       orc_arm_emit_smultt (p, ORC_ARM_COND_AL, tmp1, tmp1, tmp2);
       /* merge with first */
-      orc_arm_emit_pkhbt (p, ORC_ARM_COND_AL, dest, dest, tmp1, 16);
+      orc_arm_emit_pkhbt_s (p, ORC_ARM_COND_AL, dest, dest, tmp1, 16);
     }
     /* extract upper bits */
-    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, dest, 8);
+    orc_arm_emit_uxtb16_r8 (p, ORC_ARM_COND_AL, dest, dest, 8);
 
     /* second item (and fourth) */
-    orc_arm_emit_sxtb16 (p, ORC_ARM_COND_AL, tmp1, src1, 1);
-    orc_arm_emit_sxtb16 (p, ORC_ARM_COND_AL, tmp2, src2, 1);
+    orc_arm_emit_sxtb16_r8 (p, ORC_ARM_COND_AL, tmp1, src1, 8);
+    orc_arm_emit_sxtb16_r8 (p, ORC_ARM_COND_AL, tmp2, src2, 8);
     orc_arm_emit_smulbb (p, ORC_ARM_COND_AL, tmp3, tmp1, tmp2);
 
     if (loop > 2) {
       /* forth item */
       orc_arm_emit_smultt (p, ORC_ARM_COND_AL, tmp1, tmp1, tmp2);
       /* merge with second */
-      orc_arm_emit_pkhbt (p, ORC_ARM_COND_AL, tmp3, tmp3, tmp1, 16);
+      orc_arm_emit_pkhbt_s (p, ORC_ARM_COND_AL, tmp3, tmp3, tmp1, 16);
     }
     /* extract upper bits */
-    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp3, tmp3, 8);
+    orc_arm_emit_uxtb16_r8 (p, ORC_ARM_COND_AL, tmp3, tmp3, 8);
 
     /* merge tmp3 */
     orc_arm_emit_orr_rsi (p, ORC_ARM_COND_AL, 0, dest, dest, tmp3, ORC_ARM_LSL, 8);
@@ -440,8 +402,8 @@ arm_rule_mulhub (OrcCompiler *p, void *user, OrcInstruction *insn)
   int loop = 1;
 
   /* first item (and third) */
-  orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp1, src1, 0);
-  orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp2, src2, 0);
+  orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp1, src1);
+  orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp2, src2);
   orc_arm_emit_smulbb (p, ORC_ARM_COND_AL, dest, tmp1, tmp2);
 
   if (loop > 1) {
@@ -449,24 +411,24 @@ arm_rule_mulhub (OrcCompiler *p, void *user, OrcInstruction *insn)
       /* third item */
       orc_arm_emit_smultt (p, ORC_ARM_COND_AL, tmp1, tmp1, tmp2);
       /* merge with first */
-      orc_arm_emit_pkhbt (p, ORC_ARM_COND_AL, dest, dest, tmp1, 16);
+      orc_arm_emit_pkhbt_s (p, ORC_ARM_COND_AL, dest, dest, tmp1, 16);
     }
     /* extract upper bits */
-    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, dest, 8);
+    orc_arm_emit_uxtb16_r8 (p, ORC_ARM_COND_AL, dest, dest, 8);
 
     /* second item (and fourth) */
-    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp1, src1, 1);
-    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp2, src2, 1);
+    orc_arm_emit_uxtb16_r8 (p, ORC_ARM_COND_AL, tmp1, src1, 8);
+    orc_arm_emit_uxtb16_r8 (p, ORC_ARM_COND_AL, tmp2, src2, 8);
     orc_arm_emit_smulbb (p, ORC_ARM_COND_AL, tmp3, tmp1, tmp2);
 
     if (loop > 2) {
       /* forth item */
       orc_arm_emit_smultt (p, ORC_ARM_COND_AL, tmp1, tmp1, tmp2);
       /* merge with second */
-      orc_arm_emit_pkhbt (p, ORC_ARM_COND_AL, tmp3, tmp3, tmp1, 16);
+      orc_arm_emit_pkhbt_s (p, ORC_ARM_COND_AL, tmp3, tmp3, tmp1, 16);
     }
     /* extract upper bits */
-    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp3, tmp3, 8);
+    orc_arm_emit_uxtb16_r8 (p, ORC_ARM_COND_AL, tmp3, tmp3, 8);
 
     /* merge tmp3 */
     orc_arm_emit_orr_rsi (p, ORC_ARM_COND_AL, 0, dest, dest, tmp3, ORC_ARM_LSL, 8);
@@ -505,7 +467,7 @@ arm_rule_shlX (OrcCompiler *p, void *user, OrcInstruction *insn)
       /* bigger values, shift and mask out excess bits */
       if (val >= size) {
         /* too big, clear all */
-        orc_arm_emit_mov_i (p, ORC_ARM_COND_AL, 0, dest, 0, 0);
+        orc_arm_emit_mov_i (p, ORC_ARM_COND_AL, 0, dest, 0);
       } else if (val > 0) {
         if (loop > 1 && size < 4) {
           /* shift, note that we skip the next instructions when 0 */
@@ -571,27 +533,32 @@ arm_rule_shrsX (OrcCompiler *p, void *user, OrcInstruction *insn)
 
       /* shift */
       if (size < 4) {
-        if (size == 1)
-          /* make loop * 80, position of sign bit after shift */
-          orc_arm_emit_mov_ib (p, ORC_ARM_COND_AL, mask, 0x80, loop);
-        else
-          /* make loop * 8000 */
-          orc_arm_emit_mov_iw (p, ORC_ARM_COND_AL, mask, 0x8000, loop);
-        /* make mask, save in tmp, we need the original mask */
-        orc_arm_emit_sub_rsi (p, ORC_ARM_COND_AL, 0, tmp, mask, mask, ORC_ARM_LSR, val);
+        if (size == 2 && val == 8) {
+          /* half word shift by 8 */
+          orc_arm_emit_sxtb16_r8 (p, ORC_ARM_COND_AL, dest, src1, 8);
+        } else {
+          if (size == 1)
+            /* make loop * 80, position of sign bit after shift */
+            orc_arm_emit_mov_ib (p, ORC_ARM_COND_AL, mask, 0x80, loop);
+          else
+            /* make loop * 8000 */
+            orc_arm_emit_mov_iw (p, ORC_ARM_COND_AL, mask, 0x8000, loop);
+          /* make mask, save in tmp, we need the original mask */
+          orc_arm_emit_sub_rsi (p, ORC_ARM_COND_AL, 0, tmp, mask, mask, ORC_ARM_LSR, val);
 
-        /* do the shift */
-        orc_arm_emit_mov_rsi (p, ORC_ARM_COND_AL, 1, dest, src1, ORC_ARM_LSR, val);
-        /* clear upper bits */
-        orc_arm_emit_bic_rsi (p, ORC_ARM_COND_NE, 0, dest, dest, tmp, ORC_ARM_LSL, 1);
+          /* do the shift */
+          orc_arm_emit_mov_rsi (p, ORC_ARM_COND_AL, 1, dest, src1, ORC_ARM_LSR, val);
+          /* clear upper bits */
+          orc_arm_emit_bic_rsi (p, ORC_ARM_COND_NE, 0, dest, dest, tmp, ORC_ARM_LSL, 1);
 
-        /* flip sign bit */
-        orc_arm_emit_eor_r (p, ORC_ARM_COND_NE, 0, dest, dest, mask);
-        /* extend sign bits */
-        if (size == 1)
-          orc_arm_emit_usub8 (p, ORC_ARM_COND_NE, dest, dest, mask);
-        else
-          orc_arm_emit_usub16 (p, ORC_ARM_COND_NE, dest, dest, mask);
+          /* flip sign bit */
+          orc_arm_emit_eor_r (p, ORC_ARM_COND_NE, 0, dest, dest, mask);
+          /* extend sign bits */
+          if (size == 1)
+            orc_arm_emit_usub8 (p, ORC_ARM_COND_NE, dest, dest, mask);
+          else
+            orc_arm_emit_usub16 (p, ORC_ARM_COND_NE, dest, dest, mask);
+        }
       } else {
         /* full word shift */
         orc_arm_emit_mov_rsi (p, ORC_ARM_COND_AL, 0, dest, src1, ORC_ARM_ASR, val);
@@ -648,24 +615,30 @@ arm_rule_shruX (OrcCompiler *p, void *user, OrcInstruction *insn)
     /* shift and mask out excess bits */
     if (val >= size) {
       /* too big, clear all */
-      orc_arm_emit_mov_i (p, ORC_ARM_COND_AL, 0, dest, 0, 0);
+      orc_arm_emit_mov_i (p, ORC_ARM_COND_AL, 0, dest, 0);
     } else if (val > 0) {
       if (size < 4) {
-        /* do the shift */
-        orc_arm_emit_mov_rsi (p, ORC_ARM_COND_AL, 1, dest, src1, ORC_ARM_LSR, val);
+        if (size == 2 && val == 8) {
+          /* half word shift by 8 */
+          orc_arm_emit_uxtb16_r8 (p, ORC_ARM_COND_AL, dest, src1, 8);
+        } else {
+          /* do the shift, set S flags */
+          orc_arm_emit_mov_rsi (p, ORC_ARM_COND_AL, 1, dest, src1, ORC_ARM_LSR, val);
 
-        if (size == 1)
-          /* make loop * 0x80 */
-          orc_arm_emit_mov_ib (p, ORC_ARM_COND_NE, mask, 0x80, loop);
-        else
-          /* make loop * 0x8000 */
-          orc_arm_emit_mov_iw (p, ORC_ARM_COND_NE, mask, 0x8000, loop);
-        /* make mask */
-        orc_arm_emit_sub_rsi (p, ORC_ARM_COND_NE, 0, mask, mask, mask, ORC_ARM_LSR, val);
+          if (size == 1)
+            /* make loop * 0x80 */
+            orc_arm_emit_mov_ib (p, ORC_ARM_COND_NE, mask, 0x80, loop);
+          else
+            /* make loop * 0x8000 */
+            orc_arm_emit_mov_iw (p, ORC_ARM_COND_NE, mask, 0x8000, loop);
+          /* make mask */
+          orc_arm_emit_sub_rsi (p, ORC_ARM_COND_NE, 0, mask, mask, mask, ORC_ARM_LSR, val);
 
-        /* clear upper bits */
-        orc_arm_emit_bic_rsi (p, ORC_ARM_COND_NE, 0, dest, dest, mask, ORC_ARM_LSL, 1);
+          /* clear upper bits */
+          orc_arm_emit_bic_rsi (p, ORC_ARM_COND_NE, 0, dest, dest, mask, ORC_ARM_LSL, 1);
+        }
       } else {
+        /* one 4 byte shift, no need for the S flag */
         orc_arm_emit_mov_rsi (p, ORC_ARM_COND_AL, 0, dest, src1, ORC_ARM_LSR, val);
       }
     }
@@ -682,7 +655,7 @@ arm_rule_shruX (OrcCompiler *p, void *user, OrcInstruction *insn)
       else
         /* make loop * 0x8000 */
         orc_arm_emit_mov_iw (p, ORC_ARM_COND_NE, mask, 0x8000, loop);
-      /* mask mask */
+      /* make mask */
       orc_arm_emit_sub_rsr (p, ORC_ARM_COND_NE, 0, mask, mask, mask, ORC_ARM_LSR, src2);
 
       /* clear bits */
@@ -707,9 +680,9 @@ arm_rule_signX (OrcCompiler *p, void *user, OrcInstruction *insn)
   int type = ORC_PTR_TO_INT(user);
 
   /* make 0 */
-  orc_arm_emit_mov_i (p, ORC_ARM_COND_AL, 0, zero, 0, 0);
+  orc_arm_emit_mov_i (p, ORC_ARM_COND_AL, 0, zero, 0);
   /* make 0xffffffff */
-  orc_arm_emit_mvn_i (p, ORC_ARM_COND_AL, 0, ones, 0, 0);
+  orc_arm_emit_mvn_i (p, ORC_ARM_COND_AL, 0, ones, 0);
 
   /* dest = src1 - 0 (src1 >= 0 ? 0 : -1) */
   if (type == 0)
@@ -797,7 +770,7 @@ arm_rule_mullw (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   if (loop == 2) {
     orc_arm_emit_smultt (p, ORC_ARM_COND_AL, tmp, src1, src2);
-    orc_arm_emit_pkhbt (p, ORC_ARM_COND_AL, dest, dest, tmp, 16);
+    orc_arm_emit_pkhbt_s (p, ORC_ARM_COND_AL, dest, dest, tmp, 16);
   }
 }
 static void
@@ -814,7 +787,7 @@ arm_rule_mulhsw (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_arm_emit_mov_rsi (p, ORC_ARM_COND_AL, 0, dest, dest, ORC_ARM_ASR, 16);
   } else {
     orc_arm_emit_smultt (p, ORC_ARM_COND_AL, tmp, src1, src2);
-    orc_arm_emit_pkhtb (p, ORC_ARM_COND_AL, dest, tmp, dest, 16);
+    orc_arm_emit_pkhtb_s (p, ORC_ARM_COND_AL, dest, tmp, dest, 16);
   }
 }
 static void
@@ -829,8 +802,8 @@ arm_rule_mulhuw (OrcCompiler *p, void *user, OrcInstruction *insn)
   int loop = 1;
 
   /* extract first halves */
-  orc_arm_emit_uxth (p, ORC_ARM_COND_AL, tmp1, src1, 0);
-  orc_arm_emit_uxth (p, ORC_ARM_COND_AL, tmp2, src2, 0);
+  orc_arm_emit_uxth (p, ORC_ARM_COND_AL, tmp1, src1);
+  orc_arm_emit_uxth (p, ORC_ARM_COND_AL, tmp2, src2);
   /* multiply, result should fit in the word */
   orc_arm_emit_mul (p, ORC_ARM_COND_AL, 0, dest, tmp1, tmp2);
 
@@ -838,11 +811,11 @@ arm_rule_mulhuw (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_arm_emit_mov_rsi (p, ORC_ARM_COND_AL, 0, dest, dest, ORC_ARM_LSR, 16);
   } else {
     /* second halves */
-    orc_arm_emit_uxth (p, ORC_ARM_COND_AL, tmp1, src1, 2);
-    orc_arm_emit_uxth (p, ORC_ARM_COND_AL, tmp2, src2, 2);
+    orc_arm_emit_uxth_r8 (p, ORC_ARM_COND_AL, tmp1, src1, 16);
+    orc_arm_emit_uxth_r8 (p, ORC_ARM_COND_AL, tmp2, src2, 16);
     orc_arm_emit_mul (p, ORC_ARM_COND_AL, 0, tmp1, tmp1, tmp2);
     /* merge */
-    orc_arm_emit_pkhtb (p, ORC_ARM_COND_AL, dest, tmp1, dest, 16);
+    orc_arm_emit_pkhtb_s (p, ORC_ARM_COND_AL, dest, tmp1, dest, 16);
   }
 }
 BINARY_MM (subw, ssub16);
@@ -856,7 +829,7 @@ arm_rule_absl (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = ORC_DEST_ARG (p, insn, 0);
 
   /* reverse sign 0 - src1, assume the value is negative */
-  orc_arm_emit_rsb_i (p, ORC_ARM_COND_AL, 1, dest, src1, 0, 0);
+  orc_arm_emit_rsb_i (p, ORC_ARM_COND_AL, 1, dest, src1, 0);
 
   /* if we got negative, copy the original value again */
   orc_arm_emit_mov_r (p, ORC_ARM_COND_MI, 0, dest, src1);
@@ -875,7 +848,7 @@ arm_rule_addusl (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_arm_emit_add_r (p, ORC_ARM_COND_AL, 1, dest, src1, src2);
 
   /* on overflow, move ffffffff */
-  orc_arm_emit_mvn_i (p, ORC_ARM_COND_CS, 0, dest, 0, 0);
+  orc_arm_emit_mvn_i (p, ORC_ARM_COND_CS, 0, dest, 0);
 }
 static void
 arm_rule_avgXl (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -904,10 +877,10 @@ arm_rule_cmpeql (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_arm_emit_cmp_r (p, ORC_ARM_COND_AL, src1, src2);
 
   /* set to all 0 when not equal */
-  orc_arm_emit_mov_i (p, ORC_ARM_COND_NE, 0, dest, 0, 0);
+  orc_arm_emit_mov_i (p, ORC_ARM_COND_NE, 0, dest, 0);
 
   /* set to all ff when equal */
-  orc_arm_emit_mvn_i (p, ORC_ARM_COND_EQ, 0, dest, 0, 0);
+  orc_arm_emit_mvn_i (p, ORC_ARM_COND_EQ, 0, dest, 0);
 }
 static void
 arm_rule_cmpgtsl (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -920,10 +893,10 @@ arm_rule_cmpgtsl (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_arm_emit_cmp_r (p, ORC_ARM_COND_AL, src1, src2);
 
   /* set to all 0 when less or equal */
-  orc_arm_emit_mov_i (p, ORC_ARM_COND_LE, 0, dest, 0, 0);
+  orc_arm_emit_mov_i (p, ORC_ARM_COND_LE, 0, dest, 0);
 
   /* set to all ff when greater */
-  orc_arm_emit_mvn_i (p, ORC_ARM_COND_GT, 0, dest, 0, 0);
+  orc_arm_emit_mvn_i (p, ORC_ARM_COND_GT, 0, dest, 0);
 }
 
 static void
@@ -1020,7 +993,7 @@ arm_rule_signl (OrcCompiler *p, void *user, OrcInstruction *insn)
   int tmp = p->tmpreg;
 
   /* dest = 0 - src1 */
-  orc_arm_emit_rsb_i (p, ORC_ARM_COND_AL, 0, dest, src1, 0, 0);
+  orc_arm_emit_rsb_i (p, ORC_ARM_COND_AL, 0, dest, src1, 0);
 
   /* move src1 sign into tmp */
   orc_arm_emit_mov_rsi (p, ORC_ARM_COND_AL, 0, tmp, src1, ORC_ARM_ASR, 31);
@@ -1041,7 +1014,7 @@ arm_rule_subusl (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_arm_emit_sub_r (p, ORC_ARM_COND_AL, 1, dest, src1, src2);
 
   /* overflow, move 00000000 */
-  orc_arm_emit_mov_i (p, ORC_ARM_COND_CC, 0, dest, 0, 0);
+  orc_arm_emit_mov_i (p, ORC_ARM_COND_CC, 0, dest, 0);
 }
 
 static void
@@ -1053,11 +1026,11 @@ arm_rule_convsbw (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   if (loop == 1) {
     /* single byte */
-    orc_arm_emit_sxtb (p, ORC_ARM_COND_AL, dest, src1, 0);
+    orc_arm_emit_sxtb (p, ORC_ARM_COND_AL, dest, src1);
   } else {
     /* two bytes */
-    orc_arm_emit_pkhbt (p, ORC_ARM_COND_AL, dest, src1, src1, 8);
-    orc_arm_emit_sxtb16 (p, ORC_ARM_COND_AL, dest, dest, 0);
+    orc_arm_emit_pkhbt_s (p, ORC_ARM_COND_AL, dest, src1, src1, 8);
+    orc_arm_emit_sxtb16 (p, ORC_ARM_COND_AL, dest, dest);
   }
 }
 
@@ -1070,11 +1043,11 @@ arm_rule_convubw (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   if (loop == 1) {
     /* single byte */
-    orc_arm_emit_uxtb (p, ORC_ARM_COND_AL, dest, src1, 0);
+    orc_arm_emit_uxtb (p, ORC_ARM_COND_AL, dest, src1);
   } else {
     /* two bytes */
-    orc_arm_emit_pkhbt (p, ORC_ARM_COND_AL, dest, src1, src1, 8);
-    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, dest, 0);
+    orc_arm_emit_pkhbt_s (p, ORC_ARM_COND_AL, dest, src1, src1, 8);
+    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, dest);
   }
 }
 
@@ -1084,7 +1057,7 @@ arm_rule_convswl (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int dest = ORC_DEST_ARG (p, insn, 0);
 
-  orc_arm_emit_sxth (p, ORC_ARM_COND_AL, dest, src1, 0);
+  orc_arm_emit_sxth (p, ORC_ARM_COND_AL, dest, src1);
 }
 static void
 arm_rule_convuwl (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -1092,7 +1065,7 @@ arm_rule_convuwl (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int dest = ORC_DEST_ARG (p, insn, 0);
 
-  orc_arm_emit_uxth (p, ORC_ARM_COND_AL, dest, src1, 0);
+  orc_arm_emit_uxth (p, ORC_ARM_COND_AL, dest, src1);
 }
 
 static void
@@ -1104,7 +1077,7 @@ arm_rule_convwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   if (loop == 2) {
     /* two words */
-    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, src1, 0);
+    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, src1);
     orc_arm_emit_orr_rsi (p, ORC_ARM_COND_AL, 0, dest, dest, dest, ORC_ARM_LSR, 8);
   }
 }
@@ -1120,7 +1093,7 @@ arm_rule_convssswb (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   if (loop == 2) {
     /* two words */
-    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, src1, 0);
+    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, dest);
     orc_arm_emit_orr_rsi (p, ORC_ARM_COND_AL, 0, dest, dest, dest, ORC_ARM_LSR, 8);
   }
 }
@@ -1135,7 +1108,7 @@ arm_rule_convsuswb (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   if (loop == 2) {
     /* two words */
-    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, src1, 0);
+    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, dest);
     orc_arm_emit_orr_rsi (p, ORC_ARM_COND_AL, 0, dest, dest, dest, ORC_ARM_LSR, 8);
   }
 }
@@ -1147,16 +1120,16 @@ arm_rule_convusswb (OrcCompiler *p, void *user, OrcInstruction *insn)
   int loop = 1;
 
   /* sign bias */
-  orc_arm_emit_eor_i (p, ORC_ARM_COND_AL, 0, dest, src1, 8, 2);
+  orc_arm_emit_eor_i (p, ORC_ARM_COND_AL, 0, dest, src1, 0x00008000);
   if (loop == 2)
-    orc_arm_emit_eor_i (p, ORC_ARM_COND_AL, 0, dest, src1, 1, 2);
+    orc_arm_emit_eor_i (p, ORC_ARM_COND_AL, 0, dest, dest, 0x80000000);
 
   /* saturate to signed region */
   orc_arm_emit_usat16 (p, ORC_ARM_COND_AL, dest, 7, dest);
 
   if (loop == 2) {
     /* pack two words */
-    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, src1, 0);
+    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, dest);
     orc_arm_emit_orr_rsi (p, ORC_ARM_COND_AL, 0, dest, dest, dest, ORC_ARM_LSR, 8);
   }
 }
@@ -1168,16 +1141,16 @@ arm_rule_convuuswb (OrcCompiler *p, void *user, OrcInstruction *insn)
   int loop = 1;
 
   /* sign bias */
-  orc_arm_emit_eor_i (p, ORC_ARM_COND_AL, 0, dest, src1, 8, 2);
+  orc_arm_emit_eor_i (p, ORC_ARM_COND_AL, 0, dest, src1, 0x00008000);
   if (loop == 2)
-    orc_arm_emit_eor_i (p, ORC_ARM_COND_AL, 0, dest, src1, 1, 2);
+    orc_arm_emit_eor_i (p, ORC_ARM_COND_AL, 0, dest, dest, 0x80000000);
 
   /* saturate to unsigned region */
   orc_arm_emit_usat16 (p, ORC_ARM_COND_AL, dest, 8, dest);
 
   if (loop == 2) {
     /* pack two words */
-    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, src1, 0);
+    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, dest);
     orc_arm_emit_orr_rsi (p, ORC_ARM_COND_AL, 0, dest, dest, dest, ORC_ARM_LSR, 8);
   }
 }
@@ -1193,7 +1166,7 @@ arm_rule_convssslw (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int dest = ORC_DEST_ARG (p, insn, 0);
 
-  orc_arm_emit_ssat (p, ORC_ARM_COND_AL, dest, 16, src1, 0, 0);
+  orc_arm_emit_ssat (p, ORC_ARM_COND_AL, dest, 16, src1);
 }
 static void
 arm_rule_convsuslw (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -1201,7 +1174,7 @@ arm_rule_convsuslw (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int dest = ORC_DEST_ARG (p, insn, 0);
 
-  orc_arm_emit_usat (p, ORC_ARM_COND_AL, dest, 16, src1, 0, 0);
+  orc_arm_emit_usat (p, ORC_ARM_COND_AL, dest, 16, src1);
 }
 static void
 arm_rule_convusslw (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -1210,9 +1183,9 @@ arm_rule_convusslw (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = ORC_DEST_ARG (p, insn, 0);
 
   /* sign bias */
-  orc_arm_emit_eor_i (p, ORC_ARM_COND_AL, 0, dest, src1, 1, 2);
+  orc_arm_emit_eor_i (p, ORC_ARM_COND_AL, 0, dest, src1, 0x80000000);
   /* saturate to signed region */
-  orc_arm_emit_usat (p, ORC_ARM_COND_AL, dest, 7, dest, 0, 0);
+  orc_arm_emit_usat (p, ORC_ARM_COND_AL, dest, 15, dest);
 }
 static void
 arm_rule_convuuslw (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -1221,9 +1194,9 @@ arm_rule_convuuslw (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = ORC_DEST_ARG (p, insn, 0);
 
   /* sign bias */
-  orc_arm_emit_eor_i (p, ORC_ARM_COND_AL, 0, dest, src1, 1, 2);
+  orc_arm_emit_eor_i (p, ORC_ARM_COND_AL, 0, dest, src1, 0x80000000);
   /* saturate to unsigned region */
-  orc_arm_emit_usat (p, ORC_ARM_COND_AL, dest, 8, dest, 0, 0);
+  orc_arm_emit_usat (p, ORC_ARM_COND_AL, dest, 16, dest);
 }
 
 static void
@@ -1238,14 +1211,14 @@ arm_rule_mulsbw (OrcCompiler *p, void *user, OrcInstruction *insn)
   int loop = 1;
 
   /* first item */
-  orc_arm_emit_sxtb16 (p, ORC_ARM_COND_AL, tmp1, src1, 0);
-  orc_arm_emit_sxtb16 (p, ORC_ARM_COND_AL, tmp2, src2, 0);
+  orc_arm_emit_sxtb16 (p, ORC_ARM_COND_AL, tmp1, src1);
+  orc_arm_emit_sxtb16 (p, ORC_ARM_COND_AL, tmp2, src2);
   orc_arm_emit_smulbb (p, ORC_ARM_COND_AL, dest, tmp1, tmp2);
 
   if (loop > 1) {
     /* second item */
-    orc_arm_emit_sxtb16 (p, ORC_ARM_COND_AL, tmp1, src1, 1);
-    orc_arm_emit_sxtb16 (p, ORC_ARM_COND_AL, tmp2, src2, 1);
+    orc_arm_emit_sxtb16_r8 (p, ORC_ARM_COND_AL, tmp1, src1, 8);
+    orc_arm_emit_sxtb16_r8 (p, ORC_ARM_COND_AL, tmp2, src2, 8);
     orc_arm_emit_smulbb (p, ORC_ARM_COND_AL, tmp1, tmp1, tmp2);
 
     /* merge results */
@@ -1265,14 +1238,14 @@ arm_rule_mulubw (OrcCompiler *p, void *user, OrcInstruction *insn)
   int loop = 1;
 
   /* first item */
-  orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp1, src1, 0);
-  orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp2, src2, 0);
+  orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp1, src1);
+  orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp2, src2);
   orc_arm_emit_smulbb (p, ORC_ARM_COND_AL, dest, tmp1, tmp2);
 
   if (loop > 1) {
     /* second item */
-    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp1, src1, 1);
-    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp2, src2, 1);
+    orc_arm_emit_uxtb16_r8 (p, ORC_ARM_COND_AL, tmp1, src1, 8);
+    orc_arm_emit_uxtb16_r8 (p, ORC_ARM_COND_AL, tmp2, src2, 8);
     orc_arm_emit_smulbb (p, ORC_ARM_COND_AL, tmp1, tmp1, tmp2);
 
     /* merge results */
@@ -1289,8 +1262,8 @@ arm_rule_mulswl (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = ORC_DEST_ARG (p, insn, 0);
   int tmp1 = p->tmpreg;
 
-  orc_arm_emit_sxth (p, ORC_ARM_COND_AL, tmp1, src1, 0);
-  orc_arm_emit_sxth (p, ORC_ARM_COND_AL, dest, src2, 0);
+  orc_arm_emit_sxth (p, ORC_ARM_COND_AL, tmp1, src1);
+  orc_arm_emit_sxth (p, ORC_ARM_COND_AL, dest, src2);
   orc_arm_emit_mul (p, ORC_ARM_COND_AL, 0, dest, tmp1, dest);
 }
 
@@ -1303,8 +1276,8 @@ arm_rule_muluwl (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = ORC_DEST_ARG (p, insn, 0);
   int tmp1 = p->tmpreg;
 
-  orc_arm_emit_uxth (p, ORC_ARM_COND_AL, tmp1, src1, 0);
-  orc_arm_emit_uxth (p, ORC_ARM_COND_AL, dest, src2, 0);
+  orc_arm_emit_uxth (p, ORC_ARM_COND_AL, tmp1, src1);
+  orc_arm_emit_uxth (p, ORC_ARM_COND_AL, dest, src2);
   orc_arm_emit_mul (p, ORC_ARM_COND_AL, 0, dest, tmp1, dest);
 }
 
@@ -1315,25 +1288,28 @@ arm_rule_mergewl (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
 
-  orc_arm_emit_pkhbt (p, ORC_ARM_COND_AL, dest, src1, src2, 16);
+  orc_arm_emit_pkhbt_s (p, ORC_ARM_COND_AL, dest, src1, src2, 16);
 }
 static void
 arm_rule_mergebw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
+  /* BINARY_BW(mergebw, "((uint8_t)%s) | ((uint8_t)%s << 8)") */
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
   int tmp = p->tmpreg;
   int loop = 1;
 
-  orc_arm_emit_uxtb (p, ORC_ARM_COND_AL, dest, src1, 0);
-
   if (loop == 1) {
     /* 1 word */
+    orc_arm_emit_uxtb (p, ORC_ARM_COND_AL, dest, src1);
     orc_arm_emit_orr_rsi (p, ORC_ARM_COND_AL, 0, dest, dest, src2, ORC_ARM_LSL, 8);
   } else {
     /* 2 words */
-    orc_arm_emit_uxtb (p, ORC_ARM_COND_AL, tmp, src2, 0);
+    orc_arm_emit_pkhbt_s (p, ORC_ARM_COND_AL, dest, src1, src1, 8);
+    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, dest);
+    orc_arm_emit_pkhbt_s (p, ORC_ARM_COND_AL, tmp, src2, src2, 8);
+    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp, tmp);
     orc_arm_emit_orr_rsi (p, ORC_ARM_COND_AL, 0, dest, dest, tmp, ORC_ARM_LSL, 8);
   }
 }
@@ -1341,51 +1317,52 @@ arm_rule_mergebw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 arm_rule_select0wb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
+  /* UNARY_WB(select0wb, "(uint16_t)%s & 0xff") */
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int dest = ORC_DEST_ARG (p, insn, 0);
-  int tmp = p->tmpreg;
   int loop = 1;
 
-  orc_arm_emit_uxtb (p, ORC_ARM_COND_AL, dest, src1, 0);
-
-  if (loop == 2) {
+  if (loop == 1) {
+    /* 1 words */
+    /* NOP */
+  } else {
     /* 2 words */
-    orc_arm_emit_uxtb (p, ORC_ARM_COND_AL, tmp, src1, 2);
-    orc_arm_emit_orr_rsi (p, ORC_ARM_COND_AL, 0, dest, dest, tmp, ORC_ARM_LSL, 8);
+    orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, src1);
+    orc_arm_emit_orr_rsi (p, ORC_ARM_COND_AL, 0, dest, dest, dest, ORC_ARM_LSR, 8);
   }
 }
 
 static void
 arm_rule_select1wb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
+  /* UNARY_WB(select1wb, "((uint16_t)%s >> 8)&0xff") */
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int dest = ORC_DEST_ARG (p, insn, 0);
-  int tmp = p->tmpreg;
   int loop = 1;
 
-  orc_arm_emit_uxtb (p, ORC_ARM_COND_AL, dest, src1, 1);
-
-  if (loop == 2) {
+  if (loop == 1) {
+    /* 1 words */
+    orc_arm_emit_mov_rsi (p, ORC_ARM_COND_AL, 0, dest, src1, ORC_ARM_LSR, 8);
+  } else {
     /* 2 words */
-    orc_arm_emit_uxtb (p, ORC_ARM_COND_AL, tmp, src1, 3);
-    orc_arm_emit_orr_rsi (p, ORC_ARM_COND_AL, 0, dest, dest, tmp, ORC_ARM_LSL, 8);
+    orc_arm_emit_uxtb16_r8 (p, ORC_ARM_COND_AL, dest, src1, 8);
+    orc_arm_emit_orr_rsi (p, ORC_ARM_COND_AL, 0, dest, dest, dest, ORC_ARM_LSR, 8);
   }
 }
 static void
 arm_rule_select0lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src1 = ORC_SRC_ARG (p, insn, 0);
-  int dest = ORC_DEST_ARG (p, insn, 0);
-
-  orc_arm_emit_uxth (p, ORC_ARM_COND_AL, dest, src1, 0);
+  /* UNARY_LW(select0lw, "(uint32_t)%s & 0xffff") */
+  /* NOP */
 }
 static void
 arm_rule_select1lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
+  /* UNARY_LW(select1lw, "((uint32_t)%s >> 16)&0xffff") */
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int dest = ORC_DEST_ARG (p, insn, 0);
 
-  orc_arm_emit_uxth (p, ORC_ARM_COND_AL, dest, src1, 2);
+  orc_arm_emit_mov_rsi (p, ORC_ARM_COND_AL, 0, dest, src1, ORC_ARM_LSR, 16);
 }
 
 static void

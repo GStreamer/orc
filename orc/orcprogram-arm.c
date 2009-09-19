@@ -254,13 +254,13 @@ orc_compiler_orc_arm_assemble (OrcCompiler *compiler)
 
   orc_arm_emit_label (compiler, 1);
 
-  orc_arm_emit_cmp_i (compiler, ORC_ARM_COND_AL, ORC_ARM_IP, 0, 0);
+  orc_arm_emit_cmp_i (compiler, ORC_ARM_COND_AL, ORC_ARM_IP, 0);
   orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, 3);
 
   orc_arm_emit_label (compiler, 2);
   orc_arm_emit_loop (compiler);
-  orc_arm_emit_sub_i (compiler, ORC_ARM_COND_AL, 0, ORC_ARM_IP, ORC_ARM_IP, 0, 1);
-  orc_arm_emit_cmp_i (compiler, ORC_ARM_COND_AL, ORC_ARM_IP, 0, 0);
+  orc_arm_emit_sub_i (compiler, ORC_ARM_COND_AL, 0, ORC_ARM_IP, ORC_ARM_IP, 1);
+  orc_arm_emit_cmp_i (compiler, ORC_ARM_COND_AL, ORC_ARM_IP, 0);
   orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, 2);
   orc_arm_emit_label (compiler, 3);
 
@@ -349,7 +349,7 @@ orc_arm_emit_loop (OrcCompiler *compiler)
       if (compiler->vars[k].ptr_register) {
         orc_arm_emit_add_i (compiler, ORC_ARM_COND_AL, 0,
             compiler->vars[k].ptr_register,
-            compiler->vars[k].ptr_register, 0,
+            compiler->vars[k].ptr_register,
             compiler->vars[k].size << compiler->loop_shift);
       } else {
         //orc_arm_emit_add_imm_memoffset (compiler, orc_arm_ptr_size,
