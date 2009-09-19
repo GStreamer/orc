@@ -166,7 +166,6 @@ arm_rule_absX (OrcCompiler *p, void *user, OrcInstruction *insn)
     /* check sign dest = src1 - 0 */
     orc_arm_emit_ssub16 (p, ORC_ARM_COND_AL, dest, src1, dest);
   }
-
   /* take positive or negative values */
   orc_arm_emit_sel (p, ORC_ARM_COND_AL, dest, src1, tmp);
 }
@@ -341,8 +340,9 @@ arm_rule_mullb (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
   int tmp1 = p->tmpreg;
-  int tmp2 = ORC_VAR_IP;
-  int tmp3 = ORC_VAR_V8;
+  int tmp2 = ORC_ARM_IP;
+  int tmp3 = ORC_ARM_V8;
+  int loop = 1;
 
   /* first item */
   orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp1, src1, 0);
@@ -354,7 +354,7 @@ arm_rule_mullb (OrcCompiler *p, void *user, OrcInstruction *insn)
       /* third item */
       orc_arm_emit_smultt (p, ORC_ARM_COND_AL, tmp1, tmp1, tmp2);
       /* merge with first */
-      orc_arm_emit_pkhbt (p, ORC_COND_AL, dest, dest, tmp1, 16);
+      orc_arm_emit_pkhbt (p, ORC_ARM_COND_AL, dest, dest, tmp1, 16);
     }
     /* clear upper bits */
     orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, dest, 0);
@@ -368,7 +368,7 @@ arm_rule_mullb (OrcCompiler *p, void *user, OrcInstruction *insn)
       /* forth item */
       orc_arm_emit_smultt (p, ORC_ARM_COND_AL, tmp1, tmp1, tmp2);
       /* merge with second */
-      orc_arm_emit_pkhbt (p, ORC_COND_AL, tmp3, tmp3, tmp1, 16);
+      orc_arm_emit_pkhbt (p, ORC_ARM_COND_AL, tmp3, tmp3, tmp1, 16);
     }
     /* clear upper bits */
     orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp3, tmp3, 0);
@@ -386,8 +386,9 @@ arm_rule_mulhsb (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
   int tmp1 = p->tmpreg;
-  int tmp2 = ORC_VAR_IP;
-  int tmp3 = ORC_VAR_V8;
+  int tmp2 = ORC_ARM_IP;
+  int tmp3 = ORC_ARM_V8;
+  int loop = 1;
 
   /* first item (and third) */
   orc_arm_emit_sxtb16 (p, ORC_ARM_COND_AL, tmp1, src1, 0);
@@ -399,7 +400,7 @@ arm_rule_mulhsb (OrcCompiler *p, void *user, OrcInstruction *insn)
       /* third item */
       orc_arm_emit_smultt (p, ORC_ARM_COND_AL, tmp1, tmp1, tmp2);
       /* merge with first */
-      orc_arm_emit_pkhbt (p, ORC_COND_AL, dest, dest, tmp1, 16);
+      orc_arm_emit_pkhbt (p, ORC_ARM_COND_AL, dest, dest, tmp1, 16);
     }
     /* extract upper bits */
     orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, dest, 8);
@@ -413,7 +414,7 @@ arm_rule_mulhsb (OrcCompiler *p, void *user, OrcInstruction *insn)
       /* forth item */
       orc_arm_emit_smultt (p, ORC_ARM_COND_AL, tmp1, tmp1, tmp2);
       /* merge with second */
-      orc_arm_emit_pkhbt (p, ORC_COND_AL, tmp3, tmp3, tmp1, 16);
+      orc_arm_emit_pkhbt (p, ORC_ARM_COND_AL, tmp3, tmp3, tmp1, 16);
     }
     /* extract upper bits */
     orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp3, tmp3, 8);
@@ -434,8 +435,9 @@ arm_rule_mulhub (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
   int tmp1 = p->tmpreg;
-  int tmp2 = ORC_VAR_IP;
-  int tmp3 = ORC_VAR_V8;
+  int tmp2 = ORC_ARM_IP;
+  int tmp3 = ORC_ARM_V8;
+  int loop = 1;
 
   /* first item (and third) */
   orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp1, src1, 0);
@@ -447,7 +449,7 @@ arm_rule_mulhub (OrcCompiler *p, void *user, OrcInstruction *insn)
       /* third item */
       orc_arm_emit_smultt (p, ORC_ARM_COND_AL, tmp1, tmp1, tmp2);
       /* merge with first */
-      orc_arm_emit_pkhbt (p, ORC_COND_AL, dest, dest, tmp1, 16);
+      orc_arm_emit_pkhbt (p, ORC_ARM_COND_AL, dest, dest, tmp1, 16);
     }
     /* extract upper bits */
     orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, dest, dest, 8);
@@ -461,7 +463,7 @@ arm_rule_mulhub (OrcCompiler *p, void *user, OrcInstruction *insn)
       /* forth item */
       orc_arm_emit_smultt (p, ORC_ARM_COND_AL, tmp1, tmp1, tmp2);
       /* merge with second */
-      orc_arm_emit_pkhbt (p, ORC_COND_AL, tmp3, tmp3, tmp1, 16);
+      orc_arm_emit_pkhbt (p, ORC_ARM_COND_AL, tmp3, tmp3, tmp1, 16);
     }
     /* extract upper bits */
     orc_arm_emit_uxtb16 (p, ORC_ARM_COND_AL, tmp3, tmp3, 8);
@@ -823,7 +825,7 @@ arm_rule_mulhuw (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
   int tmp1 = p->tmpreg;
-  int tmp2 = ARM_VAR_V8;
+  int tmp2 = ORC_ARM_V8;
   int loop = 1;
 
   /* extract first halves */
@@ -1232,7 +1234,7 @@ arm_rule_mulsbw (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
   int tmp1 = p->tmpreg;
-  int tmp2 = ORC_VAR_V8;
+  int tmp2 = ORC_ARM_V8;
   int loop = 1;
 
   /* first item */
@@ -1259,7 +1261,7 @@ arm_rule_mulubw (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
   int tmp1 = p->tmpreg;
-  int tmp2 = ORC_VAR_V8;
+  int tmp2 = ORC_ARM_V8;
   int loop = 1;
 
   /* first item */
@@ -1289,7 +1291,7 @@ arm_rule_mulswl (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   orc_arm_emit_sxth (p, ORC_ARM_COND_AL, tmp1, src1, 0);
   orc_arm_emit_sxth (p, ORC_ARM_COND_AL, dest, src2, 0);
-  orc_arm_emit_mul (p, ORC_ARM_COND_AL, dest, tmp1, dest);
+  orc_arm_emit_mul (p, ORC_ARM_COND_AL, 0, dest, tmp1, dest);
 }
 
 static void
@@ -1300,11 +1302,10 @@ arm_rule_muluwl (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
   int tmp1 = p->tmpreg;
-  int loop = 1;
 
   orc_arm_emit_uxth (p, ORC_ARM_COND_AL, tmp1, src1, 0);
   orc_arm_emit_uxth (p, ORC_ARM_COND_AL, dest, src2, 0);
-  orc_arm_emit_mul (p, ORC_ARM_COND_AL, dest, tmp1, dest);
+  orc_arm_emit_mul (p, ORC_ARM_COND_AL, 0, dest, tmp1, dest);
 }
 
 static void
@@ -1436,7 +1437,7 @@ orc_compiler_orc_arm_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "subssb", arm_rule_subssb, NULL);
   orc_rule_register (rule_set, "subusb", arm_rule_subusb, NULL);
   orc_rule_register (rule_set, "xorb", arm_rule_xorX, NULL);
-  orc_rule_register (rule_set, "mullb", arm_rule_mulb, NULL);
+  orc_rule_register (rule_set, "mullb", arm_rule_mullb, NULL);
   orc_rule_register (rule_set, "mulhsb", arm_rule_mulhsb, NULL);
   orc_rule_register (rule_set, "mulhub", arm_rule_mulhub, NULL);
 
