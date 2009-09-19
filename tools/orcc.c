@@ -37,10 +37,11 @@ void help (void)
   printf("\n");
   printf("Application Options:\n");
   printf("  -v, --verbose                   Output more information\n");
-  printf("  -o, --output=FILE               Write output to FILE\n");
+  printf("  -o, --output FILE               Write output to FILE\n");
   printf("  --implementation                Produce C code implementing functions\n");
   printf("  --header                        Produce C header for functions\n");
   printf("  --test                          Produce test code for functions\n");
+  printf("  --include FILE                  Generate #include <FILE> in code\n");
   printf("\n");
 
   exit (0);
@@ -55,6 +56,7 @@ main (int argc, char *argv[])
   OrcProgram **programs;
   char *output_file = NULL;
   char *input_file = NULL;
+  char *include_file = NULL;
   FILE *output;
 
   orc_init ();
@@ -67,6 +69,13 @@ main (int argc, char *argv[])
       mode = MODE_IMPL;
     } else if (strcmp(argv[i], "--test") == 0) {
       mode = MODE_TEST;
+    } else if (strcmp(argv[i], "--include") == 0) {
+      if (i+1 < argc) {
+        include_file = argv[i+1];
+        i++;
+      } else {
+        help();
+      }
     } else if (strcmp (argv[i], "--output") == 0 ||
         strcmp(argv[i], "-o") == 0) {
       if (i+1 < argc) {
@@ -138,6 +147,9 @@ main (int argc, char *argv[])
     fprintf(output, "#include <stdint.h>\n");
     print_exec_header (output);
     fprintf(output, "#endif\n");
+    if (include_file) {
+      fprintf(output, "#include <%s>\n", include_file);
+    }
     fprintf(output, "\n");
     print_defines (output);
     fprintf(output, "\n");
@@ -148,9 +160,21 @@ main (int argc, char *argv[])
     fprintf(output, "#ifndef _ORC_OUT_H_\n");
     fprintf(output, "#define _ORC_OUT_H_\n");
     fprintf(output, "\n");
+    if (include_file) {
+      fprintf(output, "#include <%s>\n", include_file);
+    }
+    fprintf(output, "\n");
+    fprintf(output, "#ifdef __cplusplus\n");
+    fprintf(output, "extern \"C\" {\n");
+    fprintf(output, "#endif\n");
+    fprintf(output, "\n");
     for(i=0;i<n;i++){
       output_code_header (programs[i], output);
     }
+    fprintf(output, "\n");
+    fprintf(output, "#ifdef __cplusplus\n");
+    fprintf(output, "}\n");
+    fprintf(output, "#endif\n");
     fprintf(output, "\n");
     fprintf(output, "#endif\n");
     fprintf(output, "\n");
@@ -159,6 +183,9 @@ main (int argc, char *argv[])
     fprintf(output, "#include <orc-test/orctest.h>\n");
     fprintf(output, "#include <stdio.h>\n");
     fprintf(output, "#include <stdlib.h>\n");
+    if (include_file) {
+      fprintf(output, "#include <%s>\n", include_file);
+    }
     fprintf(output, "\n");
     print_defines (output);
     fprintf(output, "\n");
