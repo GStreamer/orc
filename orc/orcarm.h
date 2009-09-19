@@ -226,6 +226,9 @@ void orc_arm_emit_mm (OrcCompiler *p, const char *name, OrcArmCond cond, int mod
 #define orc_arm_emit_uqsub8(p,cond,Rd,Rn,Rm)    orc_arm_emit_mm(p,"uqsub8",   cond,0x66,0xf,Rd,Rn,Rm)
 #define orc_arm_emit_uhsub8(p,cond,Rd,Rn,Rm)    orc_arm_emit_mm(p,"uhsub8",   cond,0x67,0xf,Rd,Rn,Rm)
 
+#define orc_arm_emit_ssat16(p,cond,Rd,sat,Rm)   orc_arm_emit_mm(p,"ssat16",   cond,0x6a,0x3,Rd,sat,Rm)
+#define orc_arm_emit_usat16(p,cond,Rd,sat,Rm)   orc_arm_emit_mm(p,"usat16",   cond,0x6e,0x3,Rd,sat,Rm)
+
 /* misc instructions */
 #define orc_arm_emit_sel(p,cond,Rd,Rn,Rm)       orc_arm_emit_mm(p,"sel", cond,0x68,0xb,Rd,Rn,Rm)
 
