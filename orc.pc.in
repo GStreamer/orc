@@ -11,4 +11,5 @@ Version: @VERSION@
 Libs: -L${libdir} -lorc-@ORC_MAJORMINOR@ @LIBM@ @LIBRT@
 Cflags: -I${includedir}
 
+orcc=${toolsdir}/orcc@EXEEXT@
 
