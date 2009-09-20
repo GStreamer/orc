@@ -355,26 +355,14 @@ print_array_val_signed (OrcArray *array, int i, int j)
 
   switch (array->element_size) {
     case 1:
-      {
-        uint8_t *a = array;
-        printf(" %4u", a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %4d", *(int8_t *)ptr);
+      return *(int8_t *)ptr;
     case 2:
-      {
-        uint16_t *a = array;
-        printf(" %5u", a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %5d", *(int16_t *)ptr);
+      return *(int16_t *)ptr;
     case 4:
-      {
-        uint32_t *a = array;
-        printf(" %10u", a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %10d", *(int32_t *)ptr);
+      return *(int32_t *)ptr;
     case 8:
 #ifdef HAVE_AMD64
       printf(" %20ld", *(int64_t *)ptr);
