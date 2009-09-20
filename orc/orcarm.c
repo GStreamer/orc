@@ -348,6 +348,36 @@ orc_arm_emit_store_reg (OrcCompiler *compiler, int src1, int dest, int offset)
   orc_arm_emit (compiler, code);
 }
 
+void
+orc_arm_emit_mov (OrcCompiler *compiler, int dest, int src)
+{
+  orc_arm_emit_mov_r(compiler, ORC_ARM_COND_AL, 0, dest, src);
+}
+
+void
+orc_arm_emit_sub (OrcCompiler *compiler, int dest, int src1, int src2)
+{
+  orc_arm_emit_sub_r (compiler, ORC_ARM_COND_AL, 0, dest, src1, src2);
+}
+
+void
+orc_arm_emit_sub_imm (OrcCompiler *compiler, int dest, int src1, int value)
+{
+  orc_arm_emit_sub_i (compiler, ORC_ARM_COND_AL, 0, dest, src1, value);
+}
+
+void
+orc_arm_emit_add (OrcCompiler *compiler, int dest, int src1, int src2)
+{
+  orc_arm_emit_add_r (compiler, ORC_ARM_COND_AL, 0, dest, src1, src2);
+}
+
+void
+orc_arm_emit_cmp_imm (OrcCompiler *compiler, int src1, int value)
+{
+  orc_arm_emit_cmp_i (compiler, ORC_ARM_COND_AL, src1, value);
+}
+
 
 /* shifter operands */
 /*    1
