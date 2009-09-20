@@ -5,6 +5,9 @@
 #include <orc/orc.h>
 #include <orc/orcarm.h>
 
+const char *orc_neon_reg_name (int reg);
+const char *orc_neon_reg_name_quad (int reg);
+
 void orc_neon_loadb (OrcCompiler *compiler, OrcVariable *var, int update);
 void orc_neon_loadw (OrcCompiler *compiler, OrcVariable *var, int update);
 void orc_neon_loadl (OrcCompiler *compiler, OrcVariable *var, int update);
