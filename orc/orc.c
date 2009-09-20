@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #include <orc/orcprogram.h>
+#include <orc/orcdebug.h>
 
 /**
  * SECTION:orc
@@ -29,6 +30,8 @@ orc_init (void)
   if (_inited) return;
 
   _inited = 1;
+
+  ORC_ASSERT(sizeof(OrcExecutor) == sizeof(OrcExecutorAlt));
 
   _orc_debug_init();
   orc_opcode_init();

@@ -147,6 +147,9 @@ orc_program_free (OrcProgram *program)
   for(i=0;i<ORC_N_VARIABLES;i++){
     if (program->vars[i].name) free (program->vars[i].name);
   }
+  if (program->asm_code) {
+    free (program->asm_code);
+  }
   if (program->name) {
     free (program->name);
   }
@@ -167,6 +170,30 @@ orc_program_set_name (OrcProgram *program, const char *name)
     free (program->name);
   }
   program->name = strdup (name);
+}
+
+/**
+ * orc_program_set_2d:
+ * @program: a pointer to an OrcProgram structure
+ *
+ * Sets a flag on the program indicating that arrays are two
+ * dimensional.  This causes the compiler to generate code for
+ * an OrcExec2D executor.
+ */
+void
+orc_program_set_2d (OrcProgram *program)
+{
+  program->is_2d = TRUE;
+}
+
+void orc_program_set_constant_n (OrcProgram *program, int n)
+{
+  program->constant_n = n;
+}
+
+void orc_program_set_constant_m (OrcProgram *program, int m)
+{
+  program->constant_m = m;
 }
 
 /**

@@ -52,6 +52,7 @@ typedef unsigned int orc_bool;
 #define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
 #endif
 #define ORC_PTR_TO_INT(x) ((int)(long)(x))
+#define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
 
 #define ORC_READ_UINT32_LE(ptr) \
   ((uint32_t)( \
