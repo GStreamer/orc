@@ -21,8 +21,11 @@ orc_rule_register (OrcRuleSet *rule_set,
     OrcRuleEmitFunc emit, void *emit_user)
 {
   int i;
+  OrcOpcodeSet *opcode_set;
 
-  i = orc_opcode_set_find_by_name (rule_set->opcode_set, opcode_name);
+  opcode_set = orc_opcode_set_get_nth (rule_set->opcode_major);
+
+  i = orc_opcode_set_find_by_name (opcode_set, opcode_name);
   if (i == -1) {
     ORC_ERROR("failed to find opcode \"%s\"", opcode_name);
     return;

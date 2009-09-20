@@ -27,7 +27,8 @@ orc_compiler_allocate_codemem (OrcCompiler *compiler)
   int fd;
   int n;
 
-#if 0
+  /* FIXME something combining these two would be ideal */
+#if 1
   {
     char filename[32] = "/tmp/orcexecXXXXXX";
     fd = mkstemp (filename);

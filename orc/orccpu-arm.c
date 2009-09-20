@@ -72,6 +72,7 @@ orc_cpu_arm_getflags_cpuinfo (char *cpuinfo)
 
   flags = strsplit(cpuinfo_flags);
   for (f = flags; *f; f++) {
+#if 0
     if (strcmp (*f, "edsp") == 0) {
       ORC_DEBUG ("cpu feature %s", *f);
       //orc_cpu_flags |= ORC_CPU_FLAG_EDSP;
@@ -80,6 +81,7 @@ orc_cpu_arm_getflags_cpuinfo (char *cpuinfo)
       ORC_DEBUG ("cpu feature %s", *f);
       //orc_cpu_flags |= ORC_CPU_FLAG_VFP;
     }
+#endif
 
     free (*f);
   }

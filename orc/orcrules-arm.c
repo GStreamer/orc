@@ -51,16 +51,19 @@ static void
 orc_arm_rule_addw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   uint32_t code;
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
 
   code = 0xe0800000;
-  code |= (p->vars[insn->src_args[0]].alloc&0xf) << 16;
-  code |= (p->vars[insn->dest_args[0]].alloc&0xf) << 12;
-  code |= (p->vars[insn->src_args[1]].alloc&0xf) << 0;
+  code |= (src1 & 0xf) << 16;
+  code |= (dest & 0xf) << 12;
+  code |= (src2 & 0xf) << 0;
 
   ORC_ASM_CODE(p,"  add %s, %s, %s\n",
-      orc_arm_reg_name (p->vars[insn->dest_args[0]].alloc),
-      orc_arm_reg_name (p->vars[insn->src_args[0]].alloc),
-      orc_arm_reg_name (p->vars[insn->src_args[1]].alloc));
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (src2));
   orc_arm_emit (p, code);
 }
 
@@ -68,16 +71,19 @@ static void
 orc_arm_rule_subw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   uint32_t code;
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
 
   code = 0xe0400000;
-  code |= (p->vars[insn->src_args[0]].alloc&0xf) << 16;
-  code |= (p->vars[insn->dest_args[0]].alloc&0xf) << 12;
-  code |= (p->vars[insn->src_args[1]].alloc&0xf) << 0;
+  code |= (src1 & 0xf) << 16;
+  code |= (dest & 0xf) << 12;
+  code |= (src2 & 0xf) << 0;
 
   ORC_ASM_CODE(p,"  sub %s, %s, %s\n",
-      orc_arm_reg_name (p->vars[insn->dest_args[0]].alloc),
-      orc_arm_reg_name (p->vars[insn->src_args[0]].alloc),
-      orc_arm_reg_name (p->vars[insn->src_args[1]].alloc));
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (src2));
   orc_arm_emit (p, code);
 }
 
@@ -85,16 +91,19 @@ static void
 orc_arm_rule_mullw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   uint32_t code;
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
 
   code = 0xe0000090;
-  code |= (p->vars[insn->dest_args[0]].alloc&0xf) << 16;
-  code |= (p->vars[insn->src_args[0]].alloc&0xf) << 0;
-  code |= (p->vars[insn->src_args[1]].alloc&0xf) << 8;
+  code |= (dest & 0xf) << 16;
+  code |= (src1 & 0xf) << 0;
+  code |= (src2 & 0xf) << 8;
 
   ORC_ASM_CODE(p,"  mul %s, %s, %s\n",
-      orc_arm_reg_name (p->vars[insn->dest_args[0]].alloc),
-      orc_arm_reg_name (p->vars[insn->src_args[0]].alloc),
-      orc_arm_reg_name (p->vars[insn->src_args[1]].alloc));
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (src2));
   orc_arm_emit (p, code);
 }
 
@@ -102,16 +111,19 @@ static void
 orc_arm_rule_shrsw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   uint32_t code;
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
 
   code = 0xe1a00050;
-  code |= (p->vars[insn->dest_args[0]].alloc&0xf) << 12;
-  code |= (p->vars[insn->src_args[0]].alloc&0xf) << 0;
-  code |= (p->vars[insn->src_args[1]].alloc&0xf) << 8;
+  code |= (dest & 0xf) << 16;
+  code |= (src1 & 0xf) << 0;
+  code |= (src2 & 0xf) << 8;
 
   ORC_ASM_CODE(p,"  asr %s, %s, %s\n",
-      orc_arm_reg_name (p->vars[insn->dest_args[0]].alloc),
-      orc_arm_reg_name (p->vars[insn->src_args[0]].alloc),
-      orc_arm_reg_name (p->vars[insn->src_args[1]].alloc));
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (src2));
   orc_arm_emit (p, code);
 }
 

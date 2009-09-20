@@ -20,32 +20,24 @@
 static void \
 powerpc_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  ORC_ASM_CODE(p,"  " opcode " %s, %s, %s\n", \
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc), \
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc), \
-      powerpc_get_regname(p->vars[insn->src_args[1]].alloc)); \
-  powerpc_emit_VX(p, code , \
-      powerpc_regnum (p->vars[insn->dest_args[0]].alloc), \
-      powerpc_regnum (p->vars[insn->src_args[0]].alloc), \
-      powerpc_regnum (p->vars[insn->src_args[1]].alloc)); \
+  int src1 = ORC_SRC_ARG (p, insn, 0); \
+  int src2 = ORC_SRC_ARG (p, insn, 1); \
+  int dest = ORC_DEST_ARG (p, insn, 0); \
+  powerpc_emit_VX_2 (p, opcode, code , dest, src1, src2);\
 }
 
 #define RULE_SHIFT(name, opcode, code) \
 static void \
 powerpc_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
+  int src1 = ORC_SRC_ARG (p, insn, 0); \
+  int src2 = ORC_SRC_ARG (p, insn, 1); \
+  int dest = ORC_DEST_ARG (p, insn, 0); \
   if (p->vars[insn->src_args[1]].vartype != ORC_VAR_TYPE_CONST && \
       p->vars[insn->src_args[1]].vartype != ORC_VAR_TYPE_PARAM) { \
     ORC_COMPILER_ERROR(p,"rule only works with constants or params"); \
   } \
-  ORC_ASM_CODE(p,"  " opcode " %s, %s, %s\n", \
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc), \
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc), \
-      powerpc_get_regname(p->vars[insn->src_args[1]].alloc)); \
-  powerpc_emit_VX(p, code , \
-      powerpc_regnum (p->vars[insn->dest_args[0]].alloc), \
-      powerpc_regnum (p->vars[insn->src_args[0]].alloc), \
-      powerpc_regnum (p->vars[insn->src_args[1]].alloc)); \
+  powerpc_emit_VX_2 (p, opcode, code , dest, src1, src2);\
 }
 
 RULE(addb, "vaddubm", 0x10000000)
@@ -117,483 +109,318 @@ RULE(xorl, "vxor", 0x100004c4)
 static void
 powerpc_rule_andnX (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vandc %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[1]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc));
-  powerpc_emit_VX(p, 0x10000444,
-      powerpc_regnum (p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum (p->vars[insn->src_args[1]].alloc),
-      powerpc_regnum (p->vars[insn->src_args[0]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vandc (p, dest, src2, src1);
 }
 
 static void
 powerpc_rule_copyX (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vor %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc));
-  powerpc_emit_VX(p, 0x10000484,
-      powerpc_regnum (p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum (p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum (p->vars[insn->src_args[0]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vor (p, dest, src1, src1);
 }
 
 static void
 powerpc_rule_mullb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vmulesb %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[1]].alloc));
-  powerpc_emit_VX(p, 0x10000308,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[1]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
 
-  ORC_ASM_CODE(p,"  vsldoi %s, %s, %s, 1\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc));
-  powerpc_emit_VX(p, 0x1000002c | (1<<6),
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc));
+  powerpc_emit_vmulesb (p, dest, src1, src2);
+  powerpc_emit_vsldoi (p, dest, dest, dest, 1);
 }
 
 static void
 powerpc_rule_mulhsb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vmulesb %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[1]].alloc));
-  powerpc_emit_VX(p, 0x10000308,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[1]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vmulesb (p, dest, src1, src2);
 }
 
 static void
 powerpc_rule_mulhub (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vmuleub %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[1]].alloc));
-  powerpc_emit_VX(p, 0x10000208,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[1]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vmuleub (p, dest, src1, src2);
 }
 
 static void
 powerpc_rule_mullw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vmulesh %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[1]].alloc));
-  powerpc_emit_VX(p, 0x10000348,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[1]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
 
-  ORC_ASM_CODE(p,"  vsldoi %s, %s, %s, 2\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc));
-  powerpc_emit_VX(p, 0x1000002c | (2<<6),
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc));
+  powerpc_emit_vmulesh (p, dest, src1, src2);
+  powerpc_emit_vsldoi (p, dest, dest, dest, 2);
 }
 
 static void
 powerpc_rule_mulhsw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vmulesh %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[1]].alloc));
-  powerpc_emit_VX(p, 0x10000348,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[1]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vmulesh (p, dest, src1, src2);
 }
 
 static void
 powerpc_rule_mulhuw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vmuleuh %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[1]].alloc));
-  powerpc_emit_VX(p, 0x10000248,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[1]].alloc));
-}
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
 
+  powerpc_emit_vmuleuh (p, dest, src1, src2);
+}
 
 #ifdef alternate
 static void
 powerpc_rule_mullw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vxor %s, %s, %s\n",
-      powerpc_get_regname(POWERPC_V0),
-      powerpc_get_regname(POWERPC_V0),
-      powerpc_get_regname(POWERPC_V0));
-  powerpc_emit_VX(p, 0x100004c4,
-      powerpc_regnum(POWERPC_V0),
-      powerpc_regnum(POWERPC_V0),
-      powerpc_regnum(POWERPC_V0));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+  int tmp = POWERPC_V0;
 
-  ORC_ASM_CODE(p,"  vmladduhm %s, %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[1]].alloc),
-      powerpc_get_regname(POWERPC_V0));
-  powerpc_emit_VA(p, 4, 
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[1]].alloc),
-      powerpc_regnum(POWERPC_V0), 34);
-
+  powerpc_emit_vxor (p, tmp, tmp, tmp);
+  powerpc_emit_vmladduhm (p, dest, src1, src2, POWERPC_V0);
 }
 #endif
 
 static void
 powerpc_rule_convsbw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vupkhsb %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc));
-  powerpc_emit_VX(p, 0x1000020e,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      0,
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vupkhsb (p, dest, src1);
 }
 
 static void
 powerpc_rule_convswl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vupkhsh %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc));
-  powerpc_emit_VX(p, 0x1000024e,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      0,
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vupkhsh (p, dest, src1);
 }
 
 static void
 powerpc_rule_convubw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int reg = powerpc_get_constant (p, ORC_CONST_ZERO, 0);
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
 
-  ORC_ASM_CODE(p,"  vmrghb %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(reg),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc));
-  powerpc_emit_VX(p, 0x1000000c,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(reg),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc));
+  powerpc_emit_vmrghb (p, dest, reg, src1);
 }
 
 static void
 powerpc_rule_convuwl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int reg = powerpc_get_constant (p, ORC_CONST_ZERO, 0);
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
 
-  ORC_ASM_CODE(p,"  vmrghh %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(reg),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc));
-  powerpc_emit_VX(p, 0x1000004c,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(reg),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc));
+  powerpc_emit_vmrghh (p, dest, reg, src1);
 }
 
 static void
 powerpc_rule_convssswb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vpkshss %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc));
-  powerpc_emit_VX(p, 0x1000018e,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vpkshss (p, dest, src1, src1);
 }
 
 static void
 powerpc_rule_convssslw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vpkswss %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc));
-  powerpc_emit_VX(p, 0x100001ce,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vpkswss (p, dest, src1, src1);
 }
 
 static void
 powerpc_rule_convsuswb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vpkshus %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc));
-  powerpc_emit_VX(p, 0x1000010e,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vpkshus (p, dest, src1, src1);
 }
 
 static void
 powerpc_rule_convsuslw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vpkswus %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc));
-  powerpc_emit_VX(p, 0x1000014e,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vpkswus (p, dest, src1, src1);
 }
 
 static void
 powerpc_rule_convuuswb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vpkuhus %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc));
-  powerpc_emit_VX(p, 0x1000008e,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vpkuhus (p, dest, src1, src1);
 }
 
 static void
 powerpc_rule_convuuslw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vpkuwus %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc));
-  powerpc_emit_VX(p, 0x100000ce,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vpkuwus (p, dest, src1, src1);
 }
 
 static void
 powerpc_rule_convwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vpkuhum %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc));
-  powerpc_emit_VX(p, 0x1000000e,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vpkuhum (p, dest, src1, src1);
 }
 
 static void
 powerpc_rule_convlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vpkuwum %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc));
-  powerpc_emit_VX(p, 0x1000004e,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vpkuwum (p, dest, src1, src1);
 }
 
 static void
 powerpc_rule_mulsbw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vmulesb %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[1]].alloc));
-  powerpc_emit_VX(p, 0x10000308,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[1]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vmulesb (p, dest, src1, src2);
 }
 
 static void
 powerpc_rule_mulubw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vmuleub %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[1]].alloc));
-  powerpc_emit_VX(p, 0x10000208,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[1]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vmuleub (p, dest, src1, src2);
 }
 
 static void
 powerpc_rule_mulswl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vmulesh %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[1]].alloc));
-  powerpc_emit_VX(p, 0x10000348,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[1]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vmulesh (p, dest, src1, src2);
 }
 
 static void
 powerpc_rule_muluwl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vmuleuh %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[1]].alloc));
-  powerpc_emit_VX(p, 0x10000248,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[1]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vmuleuh (p, dest, src1, src2);
 }
 
 static void
 powerpc_rule_accw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vadduhm %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc));
-  powerpc_emit_VX(p, 0x10000040,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vadduhm (p, dest, dest, src1);
 }
 
 static void
 powerpc_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"  vadduwm %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc));
-  powerpc_emit_VX(p, 0x10000080,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc));
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vadduwm (p, dest, dest, src1);
 }
 
 static void
 powerpc_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int tmpreg2 = POWERPC_V31;
+  int tmp1 = p->tmpreg;;
+  int tmp2 = POWERPC_V31;
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
 
-  ORC_ASM_CODE(p,"  vmaxub %s, %s, %s\n",
-      powerpc_get_regname(p->tmpreg),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[1]].alloc));
-  powerpc_emit_VX(p, 0x10000002,
-      powerpc_regnum(p->tmpreg),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[1]].alloc));
-
-  ORC_ASM_CODE(p,"  vminub %s, %s, %s\n",
-      powerpc_get_regname(tmpreg2),
-      powerpc_get_regname(p->vars[insn->src_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->src_args[1]].alloc));
-  powerpc_emit_VX(p, 0x10000202,
-      powerpc_regnum(tmpreg2),
-      powerpc_regnum(p->vars[insn->src_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->src_args[1]].alloc));
-
-  ORC_ASM_CODE(p,"  vsububm %s, %s, %s\n",
-      powerpc_get_regname(p->tmpreg),
-      powerpc_get_regname(p->tmpreg),
-      powerpc_get_regname(tmpreg2));
-  powerpc_emit_VX(p, 0x10000400,
-      powerpc_regnum(p->tmpreg),
-      powerpc_regnum(p->tmpreg),
-      powerpc_regnum(tmpreg2));
-
-  ORC_ASM_CODE(p,"  vsum4ubs %s, %s, %s\n",
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->vars[insn->dest_args[0]].alloc),
-      powerpc_get_regname(p->tmpreg));
-  powerpc_emit_VX(p, 0x10000608,
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->vars[insn->dest_args[0]].alloc),
-      powerpc_regnum(p->tmpreg));
+  powerpc_emit_vmaxub (p, tmp1, src1, src2);
+  powerpc_emit_vminub (p, tmp2, src1, src2);
+  powerpc_emit_vsububm (p, tmp1, tmp1, tmp2);
+  powerpc_emit_vsum4ubs (p, dest, dest, tmp1);
 }
 
 static void
 powerpc_rule_signb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int reg;
-  
-  reg = powerpc_get_constant (p, ORC_CONST_SPLAT_B, 1);
-  powerpc_emit_VX_2(p, "vminsb", 0x10000302,
-      p->vars[insn->dest_args[0]].alloc,
-      p->vars[insn->src_args[0]].alloc,
-      reg);
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
 
+  reg = powerpc_get_constant (p, ORC_CONST_SPLAT_B, 1);
+  powerpc_emit_vminsb (p, dest, src1, reg);
   reg = powerpc_get_constant (p, ORC_CONST_SPLAT_B, -1);
-  powerpc_emit_VX_2(p, "vmaxsb", 0x10000102,
-      p->vars[insn->dest_args[0]].alloc,
-      p->vars[insn->dest_args[0]].alloc,
-      reg);
+  powerpc_emit_vmaxsb (p, dest, dest, reg);
 }
 
 static void
 powerpc_rule_signw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int reg;
-  
-  reg = powerpc_get_constant (p, ORC_CONST_SPLAT_W, 1);
-  powerpc_emit_VX_2(p, "vminsh", 0x10000342,
-      p->vars[insn->dest_args[0]].alloc,
-      p->vars[insn->src_args[0]].alloc,
-      reg);
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
 
+  reg = powerpc_get_constant (p, ORC_CONST_SPLAT_W, 1);
+  powerpc_emit_vminsh(p, dest, src1, reg);
   reg = powerpc_get_constant (p, ORC_CONST_SPLAT_W, -1);
-  powerpc_emit_VX_2(p, "vmaxsh", 0x10000142,
-      p->vars[insn->dest_args[0]].alloc,
-      p->vars[insn->dest_args[0]].alloc,
-      reg);
+  powerpc_emit_vmaxsh(p, dest, dest, reg);
 }
 
 static void
 powerpc_rule_signl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int reg;
-  
-  reg = powerpc_get_constant (p, ORC_CONST_SPLAT_L, 1);
-  powerpc_emit_VX_2(p, "vminsw", 0x10000382,
-      p->vars[insn->dest_args[0]].alloc,
-      p->vars[insn->src_args[0]].alloc,
-      reg);
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
 
+  reg = powerpc_get_constant (p, ORC_CONST_SPLAT_L, 1);
+  powerpc_emit_vminsw (p, dest, src1, reg);
   reg = powerpc_get_constant (p, ORC_CONST_SPLAT_L, -1);
-  powerpc_emit_VX_2(p, "vmaxsw", 0x10000182,
-      p->vars[insn->dest_args[0]].alloc,
-      p->vars[insn->dest_args[0]].alloc,
-      reg);
+  powerpc_emit_vmaxsw (p, dest, dest, reg);
 }
 
 void
