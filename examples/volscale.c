@@ -1,0 +1,251 @@
+
+#include <stdio.h>
+#include <stdint.h>
+#include <sys/time.h>
+
+#define ORC_ENABLE_UNSTABLE_API
+
+#include <orc/orc.h>
+
+static OrcProgram *p = NULL;
+
+static void
+mmx_rule_mulhslw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int tmp1 = X86_MM4;
+  int tmp2 = X86_MM5;
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  if (dest != src1) {
+    orc_mmx_emit_movq (p, src1, dest);
+  }
+
+  orc_mmx_emit_pxor (p, tmp1, tmp1);      /* .. |    0  |    0  | */
+  orc_mmx_emit_punpcklwd (p, tmp1, src2); /* .. |    0  |   p0  | */
+  orc_mmx_emit_pcmpgtw (p, dest, tmp1);   /* .. |    0  | s(vl) | */
+  orc_mmx_emit_pand (p, src2, tmp1);      /* .. |    0  |  (p0) |  (vl >> 15) & p */
+  orc_mmx_emit_movq (p, src2, tmp2);
+  orc_mmx_emit_pmulhw (p, src1, src2);    /* .. |    0  | vl*p0 | */
+  orc_mmx_emit_paddw (p, tmp1, src2);     /* .. |    0  | vl*p0 | + sign correct */
+  orc_mmx_emit_psrld (p, 16, dest);       /* .. |    0  |   vh  | */
+  orc_mmx_emit_pmaddwd (p, tmp2, dest);   /* .. |    p0 * vh    | */
+  orc_mmx_emit_paddd (p, src2, dest);     /* .. |    p0 * v0    | */
+}
+
+static void
+sse_rule_mulhslw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int tmp1 = X86_XMM4;
+  int tmp2 = X86_XMM5;
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  if (dest != src1) {
+    orc_sse_emit_movdqa (p, src1, dest);
+  }
+
+  orc_sse_emit_pxor (p, tmp1, tmp1);      /* .. |    0  |    0  | */
+  orc_sse_emit_punpcklwd (p, tmp1, src2); /* .. |    0  |   p0  | */
+  orc_sse_emit_pcmpgtw (p, dest, tmp1);   /* .. |    0  | s(vl) | */
+  orc_sse_emit_pand (p, src2, tmp1);      /* .. |    0  |  (p0) |  (vl >> 15) & p */
+  orc_sse_emit_movdqa (p, src2, tmp2);
+  orc_sse_emit_pmulhw (p, src1, src2);    /* .. |    0  | vl*p0 | */
+  orc_sse_emit_paddw (p, tmp1, src2);     /* .. |    0  | vl*p0 | + sign correct */
+  orc_sse_emit_psrld (p, 16, dest);       /* .. |    0  |   vh  | */
+  orc_sse_emit_pmaddwd (p, tmp2, dest);   /* .. |    p0 * vh    | */
+  orc_sse_emit_paddd (p, src2, dest);     /* .. |    p0 * v0    | */
+}
+
+static void
+mmx_register_rules (void)
+{
+  OrcRuleSet *rule_set;
+
+  rule_set = orc_rule_set_new (orc_opcode_set_get("pulse"),
+      orc_target_get_by_name ("mmx"), ORC_TARGET_MMX_MMX);
+
+  orc_rule_register (rule_set, "mulhslw", mmx_rule_mulhslw, NULL);
+}
+
+static void
+sse_register_rules (void)
+{
+  OrcRuleSet *rule_set;
+
+  rule_set = orc_rule_set_new (orc_opcode_set_get("pulse"),
+      orc_target_get_by_name ("sse"), ORC_TARGET_SSE_SSE2);
+
+  orc_rule_register (rule_set, "mulhslw", sse_rule_mulhslw, NULL);
+}
+
+/* calculate the high 32 bits of a 32x16 signed multiply */
+static void
+mulhslw (OrcOpcodeExecutor *ex, void *user)
+{
+  int32_t src, sl, sh, scale;
+
+  scale = ex->src_values[0];
+  src = ex->src_values[1];
+
+  sh = scale >> 16;
+  sl = scale & 0xffff;
+
+  ex->dest_values[0] = (int32_t) ((src * sl) >> 16) + (src * sh);
+}
+
+static OrcStaticOpcode opcodes[] = {
+  { "mulhslw", mulhslw, NULL, 0, { 4 }, { 4, 2 } },
+
+  { "" }
+};
+
+static void
+register_instr (void)
+{
+  orc_opcode_register_static (opcodes, "pulse");
+  mmx_register_rules ();
+  sse_register_rules ();
+}
+
+static void
+do_volume_c (int16_t *dest, const int32_t *vols, const int16_t *samp, int len)
+{
+  int i;
+
+  for (i = 0; i < len; i++) {
+    int32_t t, hi, lo;
+
+    hi = vols[i] >> 16;
+    lo = vols[i] & 0xffff;
+
+    t = (int32_t)(samp[i]);
+    t = ((t * lo) >> 16) + (t * hi);
+    dest[i] = (int16_t) ORC_CLAMP (t, -0x8000, 0x7FFF);
+  }
+}
+
+
+static void
+do_volume_backup (OrcExecutor *ex)
+{
+  int16_t *dest;
+  int32_t *vols;
+  const int16_t *samp;
+  int len;
+
+  dest = ex->arrays[ORC_VAR_D1];
+  vols = ex->arrays[ORC_VAR_S1];
+  samp = ex->arrays[ORC_VAR_S2];
+  len = ex->n;
+
+  do_volume_c (dest, vols, samp, len);
+}
+
+static void
+make_volume_orc()
+{
+  OrcCompileResult res;
+
+  /* int16 destination samples that get scaled by int32 volumes */
+  p = orc_program_new ();
+  orc_program_set_backup_function (p, do_volume_backup);
+  orc_program_add_destination (p, 2, "d1");
+  orc_program_add_source (p, 4, "s1");
+  orc_program_add_source (p, 2, "s2");
+
+  /* a temporary for the upscaled input samples */
+  orc_program_add_temporary (p, 4, "t1");
+
+  /* multiply with the volume, keeping only the high 32bits */
+  orc_program_append (p, "mulhslw", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_S2);
+  /* pack an saturate do 16 bits again */
+  orc_program_append_ds (p, "convssslw", ORC_VAR_D1, ORC_VAR_T1);
+
+  /* Compile the program */
+  res = orc_program_compile (p);
+  fprintf (stderr, "result: %d\n", res);
+
+  if (res == ORC_COMPILE_RESULT_OK)
+    fprintf (stderr, "%s\n", orc_program_get_asm_code (p));
+}
+
+static void
+do_volume_orc (int16_t *dest, int32_t *volumes, int16_t *samp, int length)
+{
+  OrcExecutor _ex;
+  OrcExecutor *ex = &_ex;
+
+  /* Set the values on the executor structure */
+  orc_executor_set_program (ex, p);
+  orc_executor_set_n (ex, length);
+  orc_executor_set_array (ex, ORC_VAR_D1, dest);
+  orc_executor_set_array (ex, ORC_VAR_S1, volumes);
+  orc_executor_set_array (ex, ORC_VAR_S2, samp);
+
+  /* Run the program.  This calls the code that was generated above,
+   * or, if the compilation failed, will emulate the program. */
+  orc_executor_run (ex);
+}
+
+static uint64_t
+get_timestamp ()
+{
+  struct timeval now;
+
+  gettimeofday (&now, NULL);
+
+  return now.tv_sec * 1000000LL + now.tv_usec;
+}
+
+#define TIMES 100000
+#define N 1024
+
+int16_t dest[N];
+int16_t samp[N];
+int32_t vols[N];
+
+int
+main (int argc, char *argv[])
+{
+  int i;
+  uint64_t start, stop;
+
+  /* orc_init() must be called before any other Orc function */
+  orc_init ();
+
+  orc_debug_set_level (ORC_DEBUG_LOG);
+  register_instr ();
+
+  make_volume_orc();
+  orc_debug_set_level (ORC_DEBUG_NONE);
+
+  /* Create some data in the source arrays */
+  for(i=0;i<N;i++){
+    dest[i] = 0;
+    samp[i] = i + 1;
+    vols[i] = 0x10000 + i;
+  }
+
+  start = get_timestamp ();
+  for (i = 0; i < TIMES; i++)
+    do_volume_c (dest, vols, samp, N);
+  stop = get_timestamp ();
+  printf ("elapsed C: %llu ms\n", (long long unsigned int) (stop - start));
+
+
+  start = get_timestamp ();
+  for (i = 0; i < TIMES; i++)
+    do_volume_orc (dest, vols, samp, N);
+  stop = get_timestamp ();
+  printf ("elapsed ORC: %llu ms\n", (long long unsigned int) (stop - start));
+
+  /* Print the results */
+  for(i=0;i<20;i++){
+    printf("%d: %d -> %d\n", i, samp[i], dest[i]);
+  }
+
+  return 0;
+}
