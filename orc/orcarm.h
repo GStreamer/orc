@@ -72,7 +72,7 @@ void orc_arm_emit (OrcCompiler *compiler, uint32_t insn);
 void orc_arm_emit_bx_lr (OrcCompiler *compiler);
 const char * orc_arm_reg_name (int reg);
 const char * orc_arm_cond_name (OrcArmCond cond);
-void orc_arm_emit_loadimm (OrcCompiler *compiler, int dest, int imm);
+void orc_arm_emit_load_imm (OrcCompiler *compiler, int dest, int imm);
 
 void orc_arm_emit_label (OrcCompiler *compiler, int label);
 void orc_arm_emit_push (OrcCompiler *compiler, int regs);

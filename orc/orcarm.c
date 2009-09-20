@@ -162,7 +162,7 @@ orc_arm_emit_branch (OrcCompiler *compiler, int cond, int label)
 }
 
 void
-orc_arm_emit_loadimm (OrcCompiler *compiler, int dest, int imm)
+orc_arm_emit_load_imm (OrcCompiler *compiler, int dest, int imm)
 {
   uint32_t code;
   int shift2;
