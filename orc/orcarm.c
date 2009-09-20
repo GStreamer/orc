@@ -504,3 +504,11 @@ orc_arm_emit_rv (OrcCompiler *p, int op, OrcArmCond cond,
   orc_arm_emit (p, code);
 }
 
+void
+orc_arm_flush_cache (OrcCompiler *compiler)
+{
+#ifdef HAVE_ARM
+  __clear_cache (compiler->program->code, compiler->codeptr);
+#endif
+}
+

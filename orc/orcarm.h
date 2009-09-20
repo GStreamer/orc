@@ -99,6 +99,8 @@ void orc_arm_emit_sat (OrcCompiler *p, int op, OrcArmCond cond,
 void orc_arm_emit_rv (OrcCompiler *p, int op, OrcArmCond cond,
     int Rd, int Rm);
 
+void orc_arm_flush_cache (OrcCompiler *compiler);
+
 /* ALL cpus */
 /* data procesing instructions */
 /* <op>{<cond>}{s} {<Rd>}, <Rn>, #imm */
