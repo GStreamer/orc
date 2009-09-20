@@ -12,6 +12,7 @@ liborc_@ORC_MAJORMINOR@_la_CFLAGS = $(ORC_CFLAGS) \
 liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orc.c \
 	orcexecutor.c \
+	orcfunctions.c \
 	orcrule.c \
 	orccodemem.c \
 	orcprogram.c \
@@ -54,6 +55,7 @@ pkginclude_HEADERS = \
 	orc.h \
 	orcdebug.h \
 	orcprogram.h \
+	orcfunctions.h \
 	orcutils.h \
 	orcparse.h \
 	opcodes.h \
@@ -67,4 +69,10 @@ pkginclude_HEADERS = \
 nodist_pkginclude_HEADERS = orc-stdint.h
 
 DISTCLEANFILES = orc-stdint.h
+
+
+
+orcfunctions:
+	$(top_builddir)/tools/orcc$(EXEEXT) --implementation -o orcfunctions.c orcfunctions.orc
+	$(top_builddir)/tools/orcc$(EXEEXT) --header -o orcfunctions.h orcfunctions.orc
 

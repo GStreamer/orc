@@ -6,6 +6,7 @@
 #include <orc/orc-stdint.h>
 #include <orc/orcarm.h>
 #include <orc/orcdebug.h>
+#include <orc/orcfunctions.h>
 #include <orc/orcmmx.h>
 #include <orc/orconce.h>
 #include <orc/orcparse.h>
