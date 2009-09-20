@@ -12,7 +12,7 @@
 #include <orc/orcarm.h>
 #include <orc/orcdebug.h>
 
-#include "neon.h"
+#include <orc/orcneon.h>
 
 const char *orc_neon_reg_name (int reg)
 {

@@ -13,7 +13,7 @@
 #include <orc/orcutils.h>
 #include <orc/orcdebug.h>
 
-#include "neon.h"
+#include <orc/orcneon.h>
 
 #define SIZE 65536
 
