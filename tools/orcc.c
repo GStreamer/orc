@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 static char * read_file (const char *filename);
 void output_code (OrcProgram *p, FILE *output);
@@ -17,6 +18,7 @@ void output_code_backup (OrcProgram *p, FILE *output);
 void output_code_no_orc (OrcProgram *p, FILE *output);
 static void print_defines (FILE *output);
 static void print_exec_header (FILE *output);
+static char * get_barrier (const char *s);
 
 int verbose = 0;
 
@@ -157,8 +159,11 @@ main (int argc, char *argv[])
       output_code (programs[i], output);
     }
   } else if (mode == MODE_HEADER) {
-    fprintf(output, "#ifndef _ORC_OUT_H_\n");
-    fprintf(output, "#define _ORC_OUT_H_\n");
+    char *barrier = get_barrier (output_file);
+
+    fprintf(output, "#ifndef _%s_\n", barrier);
+    fprintf(output, "#define _%s_\n", barrier);
+    free (barrier);
     fprintf(output, "\n");
     if (include_file) {
       fprintf(output, "#include <%s>\n", include_file);
@@ -287,6 +292,27 @@ print_exec_header (FILE *output)
       "  ORC_VAR_T15\n"
       "};\n");
 #endif
+}
+
+static char *
+get_barrier (const char *s)
+{
+  char *barrier;
+  int n;
+  int i;
+
+  n = strlen(s);
+  barrier = malloc (n + 1);
+  for(i=0;i<n;i++) {
+    if (isalnum (s[i])) {
+      barrier[i] = toupper(s[i]);
+    } else {
+      barrier[i] = '_';
+    }
+  }
+  barrier[n] = 0;
+
+  return barrier;
 }
 
 static void
