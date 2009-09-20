@@ -15,6 +15,8 @@
 
 #define SIZE 65536
 
+int orc_arm_exec_ptr = ORC_ARM_A1;
+
 void orc_arm_emit_loop (OrcCompiler *compiler);
 
 void orc_compiler_orc_arm_register_rules (OrcTarget *target);
@@ -59,7 +61,7 @@ orc_arm_dump_insns (OrcCompiler *compiler)
   orc_arm_emit_branch (compiler, ORC_ARM_COND_LE, 0);
   orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, 0);
 
-  orc_arm_emit_load_imm (compiler, ORC_ARM_A3, 0xa500);
+  orc_arm_emit_loadimm (compiler, ORC_ARM_A3, 0xa500);
   orc_arm_loadw (compiler, ORC_ARM_A3, ORC_ARM_A4, 0xa5);
   orc_arm_emit_load_reg (compiler, ORC_ARM_A3, ORC_ARM_A4, 0x5a5);
 }
@@ -154,7 +156,7 @@ orc_arm_load_constants (OrcCompiler *compiler)
       case ORC_VAR_TYPE_DEST:
         orc_arm_emit_load_reg (compiler, 
             compiler->vars[i].ptr_register,
-            compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
+            orc_arm_exec_ptr, ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
         break;
       default:
         break;
@@ -247,7 +249,7 @@ orc_compiler_orc_arm_assemble (OrcCompiler *compiler)
 
   orc_arm_emit_prologue (compiler);
 
-  orc_arm_emit_load_reg (compiler, ORC_ARM_IP, compiler->exec_reg,
+  orc_arm_emit_load_reg (compiler, ORC_ARM_IP, orc_arm_exec_ptr,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
   orc_arm_load_constants (compiler);
 
@@ -353,7 +355,7 @@ orc_arm_emit_loop (OrcCompiler *compiler)
         //orc_arm_emit_add_imm_memoffset (compiler, orc_arm_ptr_size,
         //    compiler->vars[k].size << compiler->loop_shift,
         //    (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]),
-        //    p->exec_reg);
+        //    orc_arm_exec_ptr);
       }
     }
   }

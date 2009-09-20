@@ -75,11 +75,11 @@ orc_cpu_arm_getflags_cpuinfo (char *cpuinfo)
 #if 0
     if (strcmp (*f, "edsp") == 0) {
       ORC_DEBUG ("cpu feature %s", *f);
-      //orc_cpu_flags |= ORC_CPU_FLAG_EDSP;
+      orc_cpu_flags |= ORC_CPU_FLAG_EDSP;
     }
     if (strcmp (*f, "vfp") == 0) {
       ORC_DEBUG ("cpu feature %s", *f);
-      //orc_cpu_flags |= ORC_CPU_FLAG_VFP;
+      orc_cpu_flags |= ORC_CPU_FLAG_VFP;
     }
 #endif
 
@@ -150,7 +150,7 @@ orc_cpu_detect_arch(void)
   if (s) {
     arm_arch = strtoul (s, NULL, 0);
     if (arm_arch >= 6)
-      //orc_cpu_flags |= ORC_CPU_FLAG_ARM6;
+      orc_cpu_flags |= ORC_CPU_FLAG_ARM6;
     free(s);
   }
 

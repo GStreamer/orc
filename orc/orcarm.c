@@ -13,8 +13,6 @@
 #include <orc/orcprogram.h>
 #include <orc/orcarm.h>
 #include <orc/orcutils.h>
-#include <orc/orcdebug.h>
-
 
 /**
  * SECTION:orcarm
@@ -145,30 +143,11 @@ orc_arm_do_fixups (OrcCompiler *compiler)
     uint32_t code;
     int diff;
 
-    if (compiler->fixups[i].type == 0) {
-      code = ORC_READ_UINT32_LE (ptr);
-      diff = ORC_READ_UINT32_LE (ptr) + ((label - ptr) >> 2);
-      ORC_WRITE_UINT32_LE(ptr, (code&0xff000000) | (diff&0x00ffffff));
-    } else {
-      code = ORC_READ_UINT32_LE (ptr);
-      diff = (code&0xff) + ((label - ptr) >> 2);
-      ORC_WRITE_UINT32_LE(ptr, (code&0xffffff00) | (diff&0x000000ff));
-    }
+    code = ORC_READ_UINT32_LE (ptr);
+    diff = ORC_READ_UINT32_LE (ptr) + ((label - ptr) >> 2);
+    ORC_WRITE_UINT32_LE(ptr, (code&0xff000000) | (diff&0x00ffffff));
   }
 
-}
-
-void
-orc_arm_emit_align (OrcCompiler *compiler, int align_shift)
-{
-  int diff;
-
-  diff = (compiler->program->code - compiler->codeptr)&((1<<align_shift) - 1);
-  while (diff) {
-    ORC_ASM_CODE(compiler,"  nop\n");
-    orc_arm_emit (compiler, 0xe1a00000);
-    diff-=4;
-  }
 }
 
 void
@@ -188,33 +167,23 @@ orc_arm_emit_branch (OrcCompiler *compiler, int cond, int label)
 }
 
 void
-orc_arm_emit_load_imm (OrcCompiler *compiler, int dest, int imm)
+orc_arm_emit_loadimm (OrcCompiler *compiler, int dest, int imm)
 {
   uint32_t code;
   int shift2;
-  unsigned int x;
 
-  if ((imm & 0xff) == imm) {
-    shift2 = 0;
-    x = imm;
-  } else {
-    shift2 = 0;
-    x = imm & 0xffffffff;
-    while ((x & 3) == 0) {
-      x >>= 2;
-      shift2++;
-    }
-    if (x > 0xff) {
-      ORC_PROGRAM_ERROR(compiler, "bad immediate value");
-    }
+  shift2 = 0;
+  while (imm && ((imm&3)==0)) {
+    imm >>= 2;
+    shift2++;
   }
 
   code = 0xe3a00000;
   code |= (dest&0xf) << 12;
   code |= (((16-shift2)&0xf) << 8);
-  code |= (x&0xff);
+  code |= (imm&0xff);
 
-  ORC_ASM_CODE(compiler,"  mov %s, #0x%08x\n", orc_arm_reg_name (dest), imm);
+  ORC_ASM_CODE(compiler,"  mov %s, #0x%08x\n", orc_arm_reg_name (dest), imm << (shift2*2));
   orc_arm_emit (compiler, code);
 }
 
@@ -253,9 +222,8 @@ orc_arm_emit_sub (OrcCompiler *compiler, int dest, int src1, int src2)
 }
 
 void
-orc_arm_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int imm)
+orc_arm_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int value)
 {
-#if 0
   uint32_t code;
 
   code = 0xe2800000;
@@ -264,52 +232,6 @@ orc_arm_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int imm)
   code |= (value) << 0;
 
   ORC_ASM_CODE(compiler,"  add %s, %s, #%d\n",
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (src1),
-      value);
-  orc_arm_emit (compiler, code);
-#endif
-  uint32_t code;
-  int shift2;
-  unsigned int x;
-
-  if ((imm & 0xff) == imm) {
-    shift2 = 0;
-    x = imm;
-  } else {
-    shift2 = 0;
-    x = imm & 0xffffffff;
-    while ((x & 3) == 0) {
-      x >>= 2;
-      shift2++;
-    }
-    if (x > 0xff) {
-      ORC_PROGRAM_ERROR(compiler, "bad immediate value");
-    }
-  }
-
-  code = 0xe2800000;
-  code |= (src1&0xf) << 16;
-  code |= (dest&0xf) << 12;
-  code |= (((16-shift2)&0xf) << 8);
-  code |= (x&0xff);
-
-  ORC_ASM_CODE(compiler,"  add %s, %s, #0x%08x\n", orc_arm_reg_name (dest),
-      orc_arm_reg_name(src1), imm);
-  orc_arm_emit (compiler, code);
-}
-
-void
-orc_arm_emit_and_imm (OrcCompiler *compiler, int dest, int src1, int value)
-{
-  uint32_t code;
-
-  code = 0xe2000000;
-  code |= (src1&0xf) << 16;
-  code |= (dest&0xf) << 12;
-  code |= (value) << 0;
-
-  ORC_ASM_CODE(compiler,"  and %s, %s, #%d\n",
       orc_arm_reg_name (dest),
       orc_arm_reg_name (src1),
       value);
@@ -349,61 +271,6 @@ orc_arm_emit_cmp_imm (OrcCompiler *compiler, int src1, int value)
 }
 
 void
-orc_arm_emit_cmp (OrcCompiler *compiler, int src1, int src2)
-{
-  uint32_t code;
-
-  code = 0xe1500000;
-  code |= (src1&0xf) << 16;
-  code |= (src2&0xf) << 0;
-
-  ORC_ASM_CODE(compiler,"  cmp %s, %s\n",
-      orc_arm_reg_name (src1),
-      orc_arm_reg_name (src2));
-  orc_arm_emit (compiler, code);
-}
-
-void
-orc_arm_emit_asr_imm (OrcCompiler *compiler, int dest, int src1, int value)
-{
-  uint32_t code;
-
-  if (value == 0) {
-    ORC_ERROR("bad immediate value");
-  }
-  code = 0xe1a00040;
-  code |= (src1&0xf) << 0;
-  code |= (dest&0xf) << 12;
-  code |= (value) << 7;
-
-  ORC_ASM_CODE(compiler,"  asr %s, %s, #%d\n",
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (src1),
-      value);
-  orc_arm_emit (compiler, code);
-}
-
-void
-orc_arm_emit_lsl_imm (OrcCompiler *compiler, int dest, int src1, int value)
-{
-  uint32_t code;
-
-  if (value == 0) {
-    ORC_ERROR("bad immediate value");
-  }
-  code = 0xe1a00000;
-  code |= (src1&0xf) << 0;
-  code |= (dest&0xf) << 12;
-  code |= (value) << 7;
-
-  ORC_ASM_CODE(compiler,"  lsl %s, %s, #%d\n",
-      orc_arm_reg_name (dest),
-      orc_arm_reg_name (src1),
-      value);
-  orc_arm_emit (compiler, code);
-}
-
-void
 orc_arm_emit_load_reg (OrcCompiler *compiler, int dest, int src1, int offset)
 {
   uint32_t code;
@@ -419,21 +286,6 @@ orc_arm_emit_load_reg (OrcCompiler *compiler, int dest, int src1, int offset)
   orc_arm_emit (compiler, code);
 }
 
-void
-orc_arm_emit_store_reg (OrcCompiler *compiler, int src1, int dest, int offset)
-{
-  uint32_t code;
-
-  code = 0xe5800000;
-  code |= (dest&0xf) << 16;
-  code |= (src1&0xf) << 12;
-  code |= offset&0xfff;
-
-  ORC_ASM_CODE(compiler,"  str %s, [%s, #%d]\n",
-      orc_arm_reg_name (src1),
-      orc_arm_reg_name (dest), offset);
-  orc_arm_emit (compiler, code);
-}
 
 
 void
@@ -476,13 +328,5 @@ orc_arm_emit_dp_reg (OrcCompiler *compiler, int cond, int opcode, int dest,
         orc_arm_reg_name (src2));
   }
   orc_arm_emit (compiler, code);
-}
-
-void
-orc_arm_flush_cache (OrcCompiler *compiler)
-{
-#ifdef HAVE_ARM
-  __clear_cache (compiler->program->code, compiler->codeptr);
-#endif
 }
 
