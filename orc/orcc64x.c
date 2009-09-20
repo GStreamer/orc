@@ -254,14 +254,19 @@ orc_c64x_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int imm)
     }
   }
 
+  if (dest != src1) {
+    ORC_ASM_CODE(compiler,"  mv %s, %s\n",
+        orc_c64x_reg_name (dest),
+        orc_c64x_reg_name (src1));
+  }
+
   code = 0xe2800000;
   code |= (src1&0xf) << 16;
   code |= (dest&0xf) << 12;
   code |= (((16-shift2)&0xf) << 8);
   code |= (x&0xff);
 
-  ORC_ASM_CODE(compiler,"  addk 0x%04x, %s, %s\n", imm,
-      orc_c64x_reg_name(src1),
+  ORC_ASM_CODE(compiler,"  addk 0x%04x, %s\n", imm,
       orc_c64x_reg_name (dest));
   orc_c64x_emit (compiler, code);
 }
@@ -357,10 +362,18 @@ orc_c64x_emit_load_reg (OrcCompiler *compiler, int dest, int src1, int offset)
   code |= (dest&0xf) << 12;
   code |= offset&0xfff;
 
-  ORC_ASM_CODE(compiler,"  ldw *+%s(%d), %s\n",
-      orc_c64x_reg_name (src1), offset,
-      orc_c64x_reg_name (dest));
-  orc_c64x_emit (compiler, code);
+  if (offset > 256) {
+    orc_c64x_emit_add_imm (compiler, compiler->tmpreg, src1, offset);
+    ORC_ASM_CODE(compiler,"  ldw *+%s(0), %s\n",
+        orc_c64x_reg_name (compiler->tmpreg),
+        orc_c64x_reg_name (dest));
+    orc_c64x_emit (compiler, code);
+  } else {
+    ORC_ASM_CODE(compiler,"  ldw *+%s(%d), %s\n",
+        orc_c64x_reg_name (src1), offset,
+        orc_c64x_reg_name (dest));
+    orc_c64x_emit (compiler, code);
+  }
 }
 
 void

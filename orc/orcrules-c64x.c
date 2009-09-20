@@ -290,28 +290,58 @@ orc_c64x_emit_loadil (OrcCompiler *compiler, int dest, int value)
 void
 orc_c64x_emit_loadpb (OrcCompiler *compiler, int dest, int param)
 {
-  ORC_ASM_CODE(compiler,"  ldw *+%s(%d), %s\n",
-      orc_c64x_reg_name (compiler->exec_reg),
-      (int)ORC_STRUCT_OFFSET(OrcExecutor, params[param]),
-      orc_c64x_reg_name (dest));
+  int offset = ORC_STRUCT_OFFSET(OrcExecutor, params[param]);
+
+  if (offset >= 256) {
+    orc_c64x_emit_add_imm (compiler, compiler->tmpreg, compiler->exec_reg,
+        offset);
+    ORC_ASM_CODE(compiler,"  ldw *+%s(%d), %s\n",
+        orc_c64x_reg_name (compiler->tmpreg), 0,
+        orc_c64x_reg_name (dest));
+  } else {
+    ORC_ASM_CODE(compiler,"  ldw *+%s(%d), %s\n",
+        orc_c64x_reg_name (compiler->exec_reg),
+        offset,
+        orc_c64x_reg_name (dest));
+  }
 }
 
 void
 orc_c64x_emit_loadpw (OrcCompiler *compiler, int dest, int param)
 {
-  ORC_ASM_CODE(compiler,"  ldw *+%s(%d), %s\n",
-      orc_c64x_reg_name (compiler->exec_reg),
-      (int)ORC_STRUCT_OFFSET(OrcExecutor, params[param]),
-      orc_c64x_reg_name (dest));
+  int offset = ORC_STRUCT_OFFSET(OrcExecutor, params[param]);
+
+  if (offset >= 256) {
+    orc_c64x_emit_add_imm (compiler, compiler->tmpreg, compiler->exec_reg,
+        offset);
+    ORC_ASM_CODE(compiler,"  ldw *+%s(%d), %s\n",
+        orc_c64x_reg_name (compiler->tmpreg), 0,
+        orc_c64x_reg_name (dest));
+  } else {
+    ORC_ASM_CODE(compiler,"  ldw *+%s(%d), %s\n",
+        orc_c64x_reg_name (compiler->exec_reg),
+        offset,
+        orc_c64x_reg_name (dest));
+  }
 }
 
 void
 orc_c64x_emit_loadpl (OrcCompiler *compiler, int dest, int param)
 {
-  ORC_ASM_CODE(compiler,"  ldw *+%s(%d), %s\n",
-      orc_c64x_reg_name (compiler->exec_reg),
-      (int)ORC_STRUCT_OFFSET(OrcExecutor, params[param]),
-      orc_c64x_reg_name (dest));
+  int offset = ORC_STRUCT_OFFSET(OrcExecutor, params[param]);
+
+  if (offset >= 256) {
+    orc_c64x_emit_add_imm (compiler, compiler->tmpreg, compiler->exec_reg,
+        offset);
+    ORC_ASM_CODE(compiler,"  ldw *+%s(%d), %s\n",
+        orc_c64x_reg_name (compiler->tmpreg), 0,
+        orc_c64x_reg_name (dest));
+  } else {
+    ORC_ASM_CODE(compiler,"  ldw *+%s(%d), %s\n",
+        orc_c64x_reg_name (compiler->exec_reg),
+        offset,
+        orc_c64x_reg_name (dest));
+  }
 }
 
 #define UNARY(opcode,insn_name,code) \
