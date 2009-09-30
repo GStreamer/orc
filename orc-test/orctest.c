@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 
 OrcRandom rand_context;
@@ -244,24 +245,25 @@ print_array_val_hex (void *array, int size, int i)
   }
 }
 
-float
-print_array_val_float (void *array, int size, int i)
+int
+print_array_val_float (OrcArray *array, int i, int j)
 {
-  switch (size) {
+  void *ptr = ORC_PTR_OFFSET (array->data,
+      i*array->element_size + j*array->stride);
+
+  switch (array->element_size) {
     case 4:
-      {
-        float *a = array;
-        printf(" %g", a[i]);
-        return a[i];
+      if (isnan(*(float *)ptr)) {
+        printf(" nan %08x", *(uint32_t *)ptr);
+        /* This is to get around signaling/non-signaling nans in the output */
+        return (*(uint32_t *)ptr) & 0xffbfffff;
+      } else {
+        printf(" %12.5g", *(float *)ptr);
+        return *(int32_t *)ptr;
       }
-      break;
     case 8:
-      {
-        double *a = array;
-        printf(" %g", a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %12.5g", *(double *)ptr);
+      return *(int64_t *)ptr;
     default:
       printf(" ERROR");
       return -1;
@@ -269,7 +271,7 @@ print_array_val_float (void *array, int size, int i)
 }
 
 static OrcTestResult orc_test_compare_output_full (OrcProgram *program,
-    int backup);
+    int flags);
 
 OrcTestResult
 orc_test_compare_output (OrcProgram *program)
@@ -280,12 +282,12 @@ orc_test_compare_output (OrcProgram *program)
 OrcTestResult
 orc_test_compare_output_backup (OrcProgram *program)
 {
-  return orc_test_compare_output_full (program, 1);
+  return orc_test_compare_output_full (program, ORC_TEST_FLAGS_BACKUP);
 }
 
 
 OrcTestResult
-orc_test_compare_output_full (OrcProgram *program, int backup)
+orc_test_compare_output_full (OrcProgram *program, int flags)
 {
   OrcExecutor *ex;
   int n = 64 + (orc_random(&rand_context)&0xf);
@@ -304,7 +306,8 @@ orc_test_compare_output_full (OrcProgram *program, int backup)
 
   ORC_DEBUG ("got here");
 
-  if (!backup) {
+flags |= ORC_TEST_FLAGS_FLOAT;
+  if (!(flags & ORC_TEST_FLAGS_BACKUP)) {
     OrcTarget *target;
     unsigned int flags;
 
@@ -384,7 +387,7 @@ orc_test_compare_output_full (OrcProgram *program, int backup)
 
   for(k=0;k<ORC_N_VARIABLES;k++){
     if (program->vars[k].vartype == ORC_VAR_TYPE_DEST) {
-      if (!orc_array_compare (dest_exec[k], dest_emul[k])) {
+      if (!orc_array_compare (dest_exec[k], dest_emul[k], flags)) {
         for(j=0;j<m;j++){
           for(i=0;i<n;i++){
             int a,b;
@@ -396,13 +399,22 @@ orc_test_compare_output_full (OrcProgram *program, int backup)
               if (program->vars[l].name == NULL) continue;
               if (program->vars[l].vartype == ORC_VAR_TYPE_SRC &&
                   program->vars[l].size > 0) {
-                print_array_val_signed (src[l-ORC_VAR_S1], i, j);
+                if (flags & ORC_TEST_FLAGS_FLOAT) {
+                  print_array_val_float (src[l-ORC_VAR_S1], i, j);
+                } else {
+                  print_array_val_signed (src[l-ORC_VAR_S1], i, j);
+                }
               }
             }
 
             printf(" ->");
-            a = print_array_val_signed (dest_emul[k], i, j);
-            b = print_array_val_signed (dest_exec[k], i, j);
+            if (flags & ORC_TEST_FLAGS_FLOAT) {
+              a = print_array_val_float (dest_emul[k], i, j);
+              b = print_array_val_float (dest_exec[k], i, j);
+            } else {
+              a = print_array_val_signed (dest_emul[k], i, j);
+              b = print_array_val_signed (dest_exec[k], i, j);
+            }
 
             if (a != b) {
               printf(" *");
@@ -433,7 +445,11 @@ orc_test_compare_output_full (OrcProgram *program, int backup)
             if (program->vars[k].name == NULL) continue;
             if (program->vars[k].vartype == ORC_VAR_TYPE_SRC &&
                 program->vars[k].size > 0) {
-              print_array_val_signed (src[k-ORC_VAR_S1], i, j);
+              if (flags & ORC_TEST_FLAGS_FLOAT) {
+                print_array_val_float (src[k-ORC_VAR_S1], i, j);
+              } else {
+                print_array_val_signed (src[k-ORC_VAR_S1], i, j);
+              }
             }
           }
 

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
@@ -554,6 +555,88 @@ accsadubl (OrcOpcodeExecutor *ex, void *user)
       (int)((uint8_t)ex->src_values[1]));
 }
 
+/* float ops */
+
+static float
+ORC_FLOAT_READ(void *addr)
+{
+  union {
+    float f;
+    unsigned int i;
+  } x;
+  x.i = *(unsigned int *)(addr);
+  return x.f;
+}
+
+static void
+ORC_FLOAT_WRITE(void *addr, float value)
+{
+  union {
+    float f;
+    unsigned int i;
+  } x;
+  x.f = value;
+  *(unsigned int *)(addr) = x.i;
+}
+
+#if 0
+/* Oh noes!  Aliasing rules! */
+#define ORC_FLOAT_READ(addr) (*(float *)(addr))
+#define ORC_FLOAT_WRITE(addr,value) do{ (*(float *)(addr)) = (value); }while(0
+#endif
+
+#define UNARY_F(name,code) \
+static void \
+name (OrcOpcodeExecutor *ex, void *user) \
+{ \
+  float a = ORC_FLOAT_READ(&ex->src_values[0]); \
+  ORC_FLOAT_WRITE(&ex->dest_values[0], code ); \
+}
+
+#define BINARY_F(name,code) \
+static void \
+name (OrcOpcodeExecutor *ex, void *user) \
+{ \
+  void *pa = &ex->src_values[0]; \
+  void *pb = &ex->src_values[1]; \
+  float a = ORC_FLOAT_READ(pa); \
+  float b = ORC_FLOAT_READ(pb); \
+  ORC_FLOAT_WRITE(&ex->dest_values[0], code ); \
+}
+
+#define BINARY_FL(name,code) \
+static void \
+name (OrcOpcodeExecutor *ex, void *user) \
+{ \
+  float a = ORC_FLOAT_READ(&ex->src_values[0]); \
+  float b = ORC_FLOAT_READ(&ex->src_values[1]); \
+  ex->dest_values[0] = code ; \
+}
+
+BINARY_F(addf, a + b)
+BINARY_F(subf, a - b)
+BINARY_F(mulf, a * b)
+BINARY_F(divf, a / b)
+UNARY_F(orc_sqrtf, sqrt(a) )
+BINARY_F(maxf, (a>b) ? a : b)
+BINARY_F(minf, (a<b) ? a : b)
+
+BINARY_FL(cmpeqf, (a == b) ? (~0) : 0)
+BINARY_FL(cmpltf, (a < b) ? (~0) : 0)
+BINARY_FL(cmplef, (a <= b) ? (~0) : 0)
+
+static void
+convfl (OrcOpcodeExecutor *ex, void *user)
+{
+  ex->dest_values[0] = rintf(ORC_FLOAT_READ(&ex->src_values[0]));
+}
+
+static void
+convlf (OrcOpcodeExecutor *ex, void *user)
+{
+  ORC_FLOAT_WRITE(&ex->dest_values[0], ex->src_values[0]);
+}
+
 
 static OrcStaticOpcode opcodes[] = {
 
@@ -693,6 +776,20 @@ static OrcStaticOpcode opcodes[] = {
   { "select1lw", select1lw, NULL, 0, { 2 }, { 4 } },
   { "mergewl", mergewl, NULL, 0, { 4 }, { 2, 2 } },
   { "mergebw", mergebw, NULL, 0, { 2 }, { 1, 1 } },
+
+  /* float ops */
+  { "addf", addf, NULL, ORC_STATIC_OPCODE_FLOAT, { 4 }, { 4, 4 } },
+  { "subf", subf, NULL, ORC_STATIC_OPCODE_FLOAT, { 4 }, { 4, 4 } },
+  { "mulf", mulf, NULL, ORC_STATIC_OPCODE_FLOAT, { 4 }, { 4, 4 } },
+  { "divf", divf, NULL, ORC_STATIC_OPCODE_FLOAT, { 4 }, { 4, 4 } },
+  { "sqrtf", orc_sqrtf, NULL, ORC_STATIC_OPCODE_FLOAT, { 4 }, { 4 } },
+  { "maxf", maxf, NULL, ORC_STATIC_OPCODE_FLOAT, { 4 }, { 4, 4 } },
+  { "minf", minf, NULL, ORC_STATIC_OPCODE_FLOAT, { 4 }, { 4, 4 } },
+  { "cmpeqf", cmpeqf, NULL, ORC_STATIC_OPCODE_FLOAT_SRC, { 4 }, { 4, 4 } },
+  { "cmpltf", cmpltf, NULL, ORC_STATIC_OPCODE_FLOAT_SRC, { 4 }, { 4, 4 } },
+  { "cmplef", cmplef, NULL, ORC_STATIC_OPCODE_FLOAT_SRC, { 4 }, { 4, 4 } },
+  { "convfl", convfl, NULL, ORC_STATIC_OPCODE_FLOAT_SRC, { 4 }, { 4 } },
+  { "convlf", convlf, NULL, ORC_STATIC_OPCODE_FLOAT_DEST, { 4 }, { 4 } },
 
   { "" }
 };

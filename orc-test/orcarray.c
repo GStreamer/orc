@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 
 #define EXTEND_ROWS 16
 #define EXTEND_STRIDE 256
@@ -57,11 +58,29 @@ orc_array_set_random (OrcArray *array, OrcRandom *context)
 
 
 int
-orc_array_compare (OrcArray *array1, OrcArray *array2)
+orc_array_compare (OrcArray *array1, OrcArray *array2, int flags)
 {
-  if (memcmp (array1->alloc_data, array2->alloc_data,
-        array1->alloc_len) == 0) {
+  if (flags & ORC_TEST_FLAGS_FLOAT && array1->element_size == 4) {
+    int j;
+    for(j=0;j<array1->m;j++){
+      float *a, *b;
+      int i;
+
+      a = ORC_PTR_OFFSET (array1->data, j*array1->stride);
+      b = ORC_PTR_OFFSET (array2->data, j*array2->stride);
+
+      for (i=0;i<array1->n;i++){
+        if (!((isnan(a[i]) && isnan(b[i])) || a[i] == b[i])) {
+          return FALSE;
+        }
+      }
+    }
     return TRUE;
+  } else {
+    if (memcmp (array1->alloc_data, array2->alloc_data,
+          array1->alloc_len) == 0) {
+      return TRUE;
+    }
   }
 
   return FALSE;

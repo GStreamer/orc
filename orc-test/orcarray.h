@@ -24,7 +24,7 @@ void orc_array_free (OrcArray *array);
 void orc_array_set_pattern (OrcArray *array, int value);
 void orc_array_set_random (OrcArray *array, OrcRandom *context);
 
-int orc_array_compare (OrcArray *array1, OrcArray *array2);
+int orc_array_compare (OrcArray *array1, OrcArray *array2, int flags);
 int orc_array_check_out_of_bounds (OrcArray *array);
 
 #endif

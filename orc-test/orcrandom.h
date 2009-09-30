@@ -13,6 +13,7 @@ struct _OrcRandom {
 
 void orc_random_init (OrcRandom *context, int seed);
 void orc_random_bits (OrcRandom *context, void *data, int n_bytes);
+void orc_random_floats (OrcRandom *context, float *data, int n);
 unsigned int orc_random (OrcRandom *context);
 
 ORC_END_DECLS

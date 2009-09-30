@@ -29,6 +29,16 @@ orc_random_bits (OrcRandom *context, void *data, int n_bytes)
   }
 }
 
+void
+orc_random_floats (OrcRandom *context, float *data, int n)
+{
+  int i;
+  for(i=0;i<n;i++){
+    context->x = 1103515245*context->x + 12345;
+    data[i] = (double)(context->x>>16) / 32768.0 - 1.0;
+  }
+}
+
 unsigned int
 orc_random (OrcRandom *context)
 {
