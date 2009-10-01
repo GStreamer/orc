@@ -12,10 +12,12 @@ liborc_test_@ORC_MAJORMINOR@_la_CFLAGS = $(ORC_CFLAGS) \
 liborc_test_@ORC_MAJORMINOR@_la_SOURCES = \
 	orctest.c \
 	orcarray.c \
-	orcrandom.c
+	orcrandom.c \
+	orcprofile.c
 
 pkginclude_HEADERS = \
 	orctest.h \
 	orcarray.h \
-	orcrandom.h
+	orcrandom.h \
+	orcprofile.h
 
