@@ -14,7 +14,7 @@
 #include <math.h>
 
 
-OrcRandom rand_context;
+OrcRandomContext rand_context;
 
 void
 orc_test_init (void)

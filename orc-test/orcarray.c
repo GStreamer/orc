@@ -51,7 +51,7 @@ orc_array_set_pattern (OrcArray *array, int value)
 }
 
 void
-orc_array_set_random (OrcArray *array, OrcRandom *context)
+orc_array_set_random (OrcArray *array, OrcRandomContext *context)
 {
   orc_random_bits (context, array->alloc_data, array->alloc_len);
 }

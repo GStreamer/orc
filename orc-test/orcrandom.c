@@ -9,7 +9,7 @@
 
 
 void
-orc_random_init (OrcRandom *context, int seed)
+orc_random_init (OrcRandomContext *context, int seed)
 {
 
   context->x = seed;
@@ -19,7 +19,7 @@ orc_random_init (OrcRandom *context, int seed)
 
 
 void
-orc_random_bits (OrcRandom *context, void *data, int n_bytes)
+orc_random_bits (OrcRandomContext *context, void *data, int n_bytes)
 {
   uint8_t *d = data;
   int i;
@@ -30,7 +30,7 @@ orc_random_bits (OrcRandom *context, void *data, int n_bytes)
 }
 
 void
-orc_random_floats (OrcRandom *context, float *data, int n)
+orc_random_floats (OrcRandomContext *context, float *data, int n)
 {
   int i;
   for(i=0;i<n;i++){
@@ -40,7 +40,7 @@ orc_random_floats (OrcRandom *context, float *data, int n)
 }
 
 unsigned int
-orc_random (OrcRandom *context)
+orc_random (OrcRandomContext *context)
 {
   context->x = 1103515245*context->x + 12345;
   return context->x;
