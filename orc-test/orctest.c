@@ -13,6 +13,7 @@
 #include <string.h>
 #include <math.h>
 
+void _orc_profile_init(void);
 
 OrcRandomContext rand_context;
 
@@ -24,6 +25,7 @@ orc_test_init (void)
   setvbuf (stdout, NULL, _IONBF, 0);
 
   orc_random_init (&rand_context, 0x12345678);
+  _orc_profile_init ();
 }
 
 

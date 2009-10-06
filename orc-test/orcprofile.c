@@ -148,7 +148,24 @@ orc_profile_get_ave_std (OrcProfile *prof, double *ave_p, double *std_p)
   if (std_p) *std_p = std;
 }
 
-unsigned long (*_orc_profile_stamp)(void);
+
+static unsigned long
+oil_profile_stamp_default (void)
+{
+#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_MONOTONIC_CLOCK)
+  struct timespec ts;
+  clock_gettime (CLOCK_MONOTONIC, &ts);
+  return 1000000000*ts.tv_sec + ts.tv_nsec;
+#elif defined(HAVE_GETTIMEOFDAY)
+  struct timeval tv;
+  gettimeofday(&tv,NULL);
+  return 1000000*(unsigned long)tv.tv_sec + (unsigned long)tv.tv_usec;
+#else
+  return 0;
+#endif
+}
+
+static unsigned long (*_orc_profile_stamp)(void) = oil_profile_stamp_default;
 
 /**
  * orc_profile_stamp:
@@ -162,5 +179,11 @@ unsigned long
 orc_profile_stamp (void)
 {
   return _orc_profile_stamp();
+}
+
+void
+_orc_profile_init (void)
+{
+
 }
 

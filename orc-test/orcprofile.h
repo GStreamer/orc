@@ -32,8 +32,6 @@
 
 ORC_BEGIN_DECLS
 
-#ifdef ORC_ENABLE_UNSTABLE_API
-
 /**
  * ORC_PROFILE_HIST_LENGTH
  *
@@ -89,10 +87,8 @@ void orc_profile_get_ave_std (OrcProfile *prof, double *ave_p, double *std_p);
         orc_profile_stop_handle(x); \
 }while(0)
 
-#endif
 
 ORC_END_DECLS
-
 
 #endif
 
