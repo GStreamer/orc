@@ -16,7 +16,7 @@ XFAIL_TESTS = \
 	exec_opcodes_float \
 	exec_opcodes_pixel
 
-orcbin_PROGRAMS = $(TESTS) generate_xml_table generate_xml_table2 \
+noinst_PROGRAMS = $(TESTS) generate_xml_table generate_xml_table2 \
 	generate_opcodes_sys
 
 CLEANFILES = temp-orc-test-*
