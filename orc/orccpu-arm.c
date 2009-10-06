@@ -123,7 +123,6 @@ orc_cpu_detect_arch(void)
 {
 #ifdef __linux__
   int arm_implementer = 0;
-  int arm_arch;
   char *cpuinfo;
   char *s;
 
@@ -149,6 +148,7 @@ orc_cpu_detect_arch(void)
 #if 0
   s = get_cpuinfo_line(cpuinfo, "CPU architecture");
   if (s) {
+    int arm_arch;
     arm_arch = strtoul (s, NULL, 0);
     if (arm_arch >= 6)
       orc_cpu_flags |= ORC_CPU_FLAG_ARM6;
