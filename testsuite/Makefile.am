@@ -26,7 +26,7 @@ TESTS += compile_opcodes_sys_neon \
 	compile_opcodes_pixel_neon \
 	compile_opcodes_sys_c64x \
 	compile_parse_neon
-orcbin_PROGRAMS += compile_opcodes_sys_neon \
+noinst_PROGRAMS += compile_opcodes_sys_neon \
 	compile_opcodes_float_neon \
 	compile_opcodes_pixel_neon \
 	compile_opcodes_sys_c64x \
