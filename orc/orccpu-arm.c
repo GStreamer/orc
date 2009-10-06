@@ -146,6 +146,7 @@ orc_cpu_detect_arch(void)
       break;
   }
 
+#if 0
   s = get_cpuinfo_line(cpuinfo, "CPU architecture");
   if (s) {
     arm_arch = strtoul (s, NULL, 0);
@@ -153,6 +154,7 @@ orc_cpu_detect_arch(void)
       orc_cpu_flags |= ORC_CPU_FLAG_ARM6;
     free(s);
   }
+#endif
 
   orc_cpu_arm_getflags_cpuinfo (cpuinfo);
   free (cpuinfo);
