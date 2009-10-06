@@ -237,7 +237,11 @@ struct _OrcOpcodeSet {
   OrcStaticOpcode *opcodes;
 };
 
-#define ORC_STATIC_OPCODE_ACCUMULATOR 1
+#define ORC_STATIC_OPCODE_ACCUMULATOR (1<<0)
+#define ORC_STATIC_OPCODE_FLOAT_SRC (1<<1)
+#define ORC_STATIC_OPCODE_FLOAT_DEST (1<<2)
+#define ORC_STATIC_OPCODE_FLOAT (ORC_STATIC_OPCODE_FLOAT_SRC|ORC_STATIC_OPCODE_FLOAT_DEST)
+
 
 struct _OrcStaticOpcode {
   char name[16];

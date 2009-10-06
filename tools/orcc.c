@@ -433,6 +433,9 @@ output_prototype (OrcProgram *p, FILE *output)
         fprintf(output, "uint%d_t * %s", var->size*8,
             varnames[ORC_VAR_D1 + i]);
       }
+      if (p->is_2d) {
+        fprintf(output, ", int %s_stride", varnames[ORC_VAR_D1 + i]);
+      }
       need_comma = TRUE;
     }
   }
@@ -460,6 +463,9 @@ output_prototype (OrcProgram *p, FILE *output)
       } else {
         fprintf(output, "uint%d_t * %s", var->size*8,
             varnames[ORC_VAR_S1 + i]);
+      }
+      if (p->is_2d) {
+        fprintf(output, ", int %s_stride", varnames[ORC_VAR_S1 + i]);
       }
       need_comma = TRUE;
     }
@@ -661,6 +667,10 @@ output_code (OrcProgram *p, FILE *output)
     if (var->size) {
       fprintf(output, "  ex->arrays[%s] = %s;\n",
           enumnames[ORC_VAR_D1 + i], varnames[ORC_VAR_D1 + i]);
+      if (p->is_2d) {
+        fprintf(output, "  ex->params[%s] = %s_stride;\n",
+            enumnames[ORC_VAR_D1 + i], varnames[ORC_VAR_D1 + i]);
+      }
     }
   }
   for(i=0;i<8;i++){
@@ -668,6 +678,10 @@ output_code (OrcProgram *p, FILE *output)
     if (var->size) {
       fprintf(output, "  ex->arrays[%s] = %s;\n",
           enumnames[ORC_VAR_S1 + i], varnames[ORC_VAR_S1 + i]);
+      if (p->is_2d) {
+        fprintf(output, "  ex->params[%s] = %s_stride;\n",
+            enumnames[ORC_VAR_S1 + i], varnames[ORC_VAR_S1 + i]);
+      }
     }
   }
   for(i=0;i<8;i++){

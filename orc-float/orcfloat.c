@@ -76,31 +76,9 @@ name (OrcOpcodeExecutor *ex, void *user) \
   ex->dest_values[0] = code ; \
 }
 
-BINARY_F(addf, a + b)
-BINARY_F(subf, a - b)
-BINARY_F(mulf, a * b)
-BINARY_F(divf, a / b)
 UNARY_F(invf, (1.0f/a) )
-UNARY_F(orc_sqrtf, sqrtf(a) )
-BINARY_F(maxf, (a>b) ? a : b)
-BINARY_F(minf, (a<b) ? a : b)
 UNARY_F(invsqrtf, 1.0f/sqrtf(a))
 
-BINARY_FL(cmpeqf, (a == b) ? (~0) : 0)
-BINARY_FL(cmpltf, (a < b) ? (~0) : 0)
-BINARY_FL(cmplef, (a <= b) ? (~0) : 0)
-
-static void
-convfl (OrcOpcodeExecutor *ex, void *user)
-{
-  ex->dest_values[0] = ORC_FLOAT_READ(&ex->src_values[0]);
-}
-
-static void
-convlf (OrcOpcodeExecutor *ex, void *user)
-{
-  ORC_FLOAT_WRITE(&ex->dest_values[0], ex->src_values[0]);
-}
 
 static double
 ORC_DOUBLE_READ(void *addr)
@@ -194,22 +172,8 @@ convfg (OrcOpcodeExecutor *ex, void *user)
 
 
 static OrcStaticOpcode opcodes[] = {
-  { "addf", addf, NULL, 0, { 4 }, { 4, 4 } },
-  { "subf", subf, NULL, 0, { 4 }, { 4, 4 } },
-  { "mulf", mulf, NULL, 0, { 4 }, { 4, 4 } },
-  { "divf", divf, NULL, 0, { 4 }, { 4, 4 } },
   { "invf", invf, NULL, 0, { 4 }, { 4 } },
-  { "sqrtf", orc_sqrtf, NULL, 0, { 4 }, { 4 } },
-  { "maxf", maxf, NULL, 0, { 4 }, { 4, 4 } },
-  { "minf", minf, NULL, 0, { 4 }, { 4, 4 } },
   { "invsqrtf", invsqrtf, NULL, 0, { 4 }, { 4 } },
-
-  { "cmpeqf", cmpeqf, NULL, 0, { 4 }, { 4, 4 } },
-  { "cmpltf", cmpltf, NULL, 0, { 4 }, { 4, 4 } },
-  { "cmplef", cmplef, NULL, 0, { 4 }, { 4, 4 } },
-
-  { "convfl", convfl, NULL, 0, { 4 }, { 4 } },
-  { "convlf", convlf, NULL, 0, { 4 }, { 4 } },
 
   { "addg", addg, NULL, 0, { 8 }, { 8, 8 } },
   { "subg", subg, NULL, 0, { 8 }, { 8, 8 } },

@@ -6,14 +6,15 @@
 
 ORC_BEGIN_DECLS
 
-typedef struct _OrcRandom OrcRandom;
-struct _OrcRandom {
+typedef struct _OrcRandomContext OrcRandomContext;
+struct _OrcRandomContext {
   unsigned int x;
 };
 
-void orc_random_init (OrcRandom *context, int seed);
-void orc_random_bits (OrcRandom *context, void *data, int n_bytes);
-unsigned int orc_random (OrcRandom *context);
+void orc_random_init (OrcRandomContext *context, int seed);
+void orc_random_bits (OrcRandomContext *context, void *data, int n_bytes);
+void orc_random_floats (OrcRandomContext *context, float *data, int n);
+unsigned int orc_random (OrcRandomContext *context);
 
 ORC_END_DECLS
 
