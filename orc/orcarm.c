@@ -395,7 +395,7 @@ orc_arm_emit_cmp_imm (OrcCompiler *compiler, int src1, int value)
  */
 #define arm_so_rsi(Si,St,Rm)   ((((Si)&31)<<7)|(((St)&7)<<5)|((Rm)&7))
 #define arm_so_rrx(Rm)         arm_so_rsi(0,ORC_ARM_ROR,Rm)
-#define arm_so_r(Rm)           ((Rm)&7)
+#define arm_so_r(Rm)           ((Rm)&15)
 /*    1
  *  1 0 9 8 7 6 5 4 3 2 1 0
  * +-+-+-+-+-+-+-+-+-+-+-+-+
@@ -463,7 +463,7 @@ orc_arm_emit_dp (OrcCompiler *p, int type, OrcArmCond cond, OrcArmDP opcode,
         return;
       }
       shifter_op = arm_so_i (shift, imm);
-      snprintf (shifter, sizeof(shifter), "#%08x", val);
+      snprintf (shifter, sizeof(shifter), "#0x%08x", val);
       I = 1;
       break;
     case 1:
