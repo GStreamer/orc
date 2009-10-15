@@ -2,6 +2,7 @@
 #include "config.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <orc/orc.h>
 #include <orc-test/orctest.h>
@@ -49,13 +50,19 @@ test_opcode (OrcStaticOpcode *opcode)
 {
   OrcProgram *p;
   OrcCompileResult result;
+  const char *s;
 
   p = orc_test_get_program_for_opcode (opcode);
   if (!p) return;
 
   result = orc_program_compile_for_target (p, orc_target_get_by_name("c"));
   if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
-    printf("%s", orc_program_get_asm_code (p));
+    s = orc_program_get_asm_code (p);
+    if (s != NULL) {
+      printf("%s\n", s);
+    } else {
+      printf("no code\n");
+    }
     error = TRUE;
     return;
   }
@@ -68,13 +75,19 @@ test_opcode_const (OrcStaticOpcode *opcode)
 {
   OrcProgram *p;
   OrcCompileResult result;
+  const char *s;
 
   p = orc_test_get_program_for_opcode_const (opcode);
   if (!p) return;
 
   result = orc_program_compile_for_target (p, orc_target_get_by_name("c"));
   if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
-    printf("%s", orc_program_get_asm_code (p));
+    s = orc_program_get_asm_code (p);
+    if (s != NULL) {
+      printf("%s\n", s);
+    } else {
+      printf("no code\n");
+    }
     error = TRUE;
     return;
   }
@@ -87,13 +100,19 @@ test_opcode_param (OrcStaticOpcode *opcode)
 {
   OrcProgram *p;
   OrcCompileResult result;
+  const char *s;
 
   p = orc_test_get_program_for_opcode_param (opcode);
   if (!p) return;
 
   result = orc_program_compile_for_target (p, orc_target_get_by_name("c"));
   if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
-    printf("%s", orc_program_get_asm_code (p));
+    s = orc_program_get_asm_code (p);
+    if (s != NULL) {
+      printf("%s\n", s);
+    } else {
+      printf("no code\n");
+    }
     error = TRUE;
     return;
   }
