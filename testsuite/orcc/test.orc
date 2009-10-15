@@ -847,3 +847,96 @@ mergewl d1, s1, s2
 mergebw d1, s1, s2
 
 
+.function orc_addf
+.dest 4 d1
+.source 4 s1
+.source 4 s2
+
+addf d1, s1, s2
+
+
+.function orc_subf
+.dest 4 d1
+.source 4 s1
+.source 4 s2
+
+subf d1, s1, s2
+
+
+.function orc_mulf
+.dest 4 d1
+.source 4 s1
+.source 4 s2
+
+mulf d1, s1, s2
+
+
+.function orc_divf
+.dest 4 d1
+.source 4 s1
+.source 4 s2
+
+divf d1, s1, s2
+
+
+.function orc_sqrtf
+.dest 4 d1
+.source 4 s1
+
+sqrtf d1, s1
+
+
+.function orc_maxf
+.dest 4 d1
+.source 4 s1
+.source 4 s2
+
+maxf d1, s1, s2
+
+
+.function orc_minf
+.dest 4 d1
+.source 4 s1
+.source 4 s2
+
+minf d1, s1, s2
+
+
+.function orc_cmpeqf
+.dest 4 d1
+.source 4 s1
+.source 4 s2
+
+cmpeqf d1, s1, s2
+
+
+.function orc_cmpltf
+.dest 4 d1
+.source 4 s1
+.source 4 s2
+
+cmpltf d1, s1, s2
+
+
+.function orc_cmplef
+.dest 4 d1
+.source 4 s1
+.source 4 s2
+
+cmplef d1, s1, s2
+
+
+.function orc_convfl
+.dest 4 d1
+.source 4 s1
+
+convfl d1, s1
+
+
+.function orc_convlf
+.dest 4 d1
+.source 4 s1
+
+convlf d1, s1
+
+
