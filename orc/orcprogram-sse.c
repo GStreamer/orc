@@ -16,6 +16,7 @@
 
 #define SIZE 65536
 
+#define ORC_SSE_ALIGNED_DEST_CUTOFF 64
 
 void orc_sse_emit_loop (OrcCompiler *compiler);
 
@@ -535,65 +536,85 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
 
   sse_load_constants_inner (compiler);
 
-  if (compiler->loop_shift > 0) {
+  if (compiler->program->constant_n > 0 &&
+      compiler->program->constant_n <= ORC_SSE_ALIGNED_DEST_CUTOFF) {
+    int n_left = compiler->program->constant_n;
     int save_loop_shift;
-    int l;
+    int loop_shift;
 
     save_loop_shift = compiler->loop_shift;
-    compiler->vars[align_var].is_aligned = FALSE;
-
-    for (l=0;l<save_loop_shift;l++){
-      compiler->loop_shift = l;
-      ORC_ASM_CODE(compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
-
-      orc_x86_emit_test_imm_memoffset (compiler, 4, 1<<compiler->loop_shift,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1), compiler->exec_reg);
-      orc_x86_emit_je (compiler, 12 + compiler->loop_shift);
+    while (n_left >= (1<<compiler->loop_shift)) {
       orc_sse_emit_loop (compiler);
-      orc_x86_emit_label (compiler, 12 + compiler->loop_shift);
+
+      n_left -= 1<<compiler->loop_shift;
+    }
+    for(loop_shift = compiler->loop_shift-1; loop_shift>=0; loop_shift--) {
+      if (n_left >= (1<<loop_shift)) {
+        compiler->loop_shift = loop_shift;
+        orc_sse_emit_loop (compiler);
+        n_left -= 1<<loop_shift;
+      }
+    }
+    compiler->loop_shift = save_loop_shift;
+  } else {
+    if (compiler->loop_shift > 0) {
+      int save_loop_shift;
+      int l;
+
+      save_loop_shift = compiler->loop_shift;
+      compiler->vars[align_var].is_aligned = FALSE;
+
+      for (l=0;l<save_loop_shift;l++){
+        compiler->loop_shift = l;
+        ORC_ASM_CODE(compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
+
+        orc_x86_emit_test_imm_memoffset (compiler, 4, 1<<compiler->loop_shift,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1), compiler->exec_reg);
+        orc_x86_emit_je (compiler, 12 + compiler->loop_shift);
+        orc_sse_emit_loop (compiler);
+        orc_x86_emit_label (compiler, 12 + compiler->loop_shift);
+      }
+
+      compiler->loop_shift = save_loop_shift;
+      compiler->vars[align_var].is_aligned = TRUE;
     }
 
-    compiler->loop_shift = save_loop_shift;
+    orc_x86_emit_label (compiler, 1);
 
-    compiler->loop_shift = save_loop_shift;
-    compiler->vars[align_var].is_aligned = TRUE;
-  }
+    orc_x86_emit_cmp_imm_memoffset (compiler, 4, 0,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2), compiler->exec_reg);
+    orc_x86_emit_je (compiler, 3);
 
-  orc_x86_emit_label (compiler, 1);
+    ORC_ASM_CODE(compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
+    orc_x86_emit_align (compiler);
+    orc_x86_emit_label (compiler, 2);
+    orc_sse_emit_loop (compiler);
+    orc_x86_emit_dec_memoffset (compiler, 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2),
+        compiler->exec_reg);
+    orc_x86_emit_jne (compiler, 2);
+    orc_x86_emit_label (compiler, 3);
 
-  orc_x86_emit_cmp_imm_memoffset (compiler, 4, 0,
-      (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2), compiler->exec_reg);
-  orc_x86_emit_je (compiler, 3);
+    if (compiler->loop_shift > 0) {
+      int save_loop_shift;
+      int l;
 
-  ORC_ASM_CODE(compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
-  orc_x86_emit_align (compiler);
-  orc_x86_emit_label (compiler, 2);
-  orc_sse_emit_loop (compiler);
-  orc_x86_emit_dec_memoffset (compiler, 4,
-      (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2),
-      compiler->exec_reg);
-  orc_x86_emit_jne (compiler, 2);
-  orc_x86_emit_label (compiler, 3);
+      save_loop_shift = compiler->loop_shift;
+      compiler->vars[align_var].is_aligned = FALSE;
 
-  if (compiler->loop_shift > 0) {
-    int save_loop_shift;
-    int l;
+      for(l=save_loop_shift - 1; l >= 0; l--) {
+        compiler->loop_shift = l;
+        ORC_ASM_CODE(compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
 
-    save_loop_shift = compiler->loop_shift;
-    compiler->vars[align_var].is_aligned = FALSE;
+        orc_x86_emit_test_imm_memoffset (compiler, 4, 1<<compiler->loop_shift,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3), compiler->exec_reg);
+        orc_x86_emit_je (compiler, 8 + compiler->loop_shift);
+        orc_sse_emit_loop (compiler);
+        orc_x86_emit_label (compiler, 8 + compiler->loop_shift);
+      }
 
-    for(l=save_loop_shift - 1; l >= 0; l--) {
-      compiler->loop_shift = l;
-      ORC_ASM_CODE(compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
-
-      orc_x86_emit_test_imm_memoffset (compiler, 4, 1<<compiler->loop_shift,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3), compiler->exec_reg);
-      orc_x86_emit_je (compiler, 8 + compiler->loop_shift);
-      orc_sse_emit_loop (compiler);
-      orc_x86_emit_label (compiler, 8 + compiler->loop_shift);
+      compiler->loop_shift = save_loop_shift;
     }
-
-    compiler->loop_shift = save_loop_shift;
   }
 
   if (compiler->program->is_2d) {

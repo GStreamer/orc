@@ -292,7 +292,7 @@ OrcTestResult
 orc_test_compare_output_full (OrcProgram *program, int flags)
 {
   OrcExecutor *ex;
-  int n = 64 + (orc_random(&rand_context)&0xf);
+  int n;
   int m;
   OrcArray *dest_exec[4] = { NULL, NULL, NULL, NULL };
   OrcArray *dest_emul[4] = { NULL, NULL, NULL, NULL };
@@ -308,7 +308,6 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
 
   ORC_DEBUG ("got here");
 
-flags |= ORC_TEST_FLAGS_FLOAT;
   if (!(flags & ORC_TEST_FLAGS_BACKUP)) {
     OrcTarget *target;
     unsigned int flags;
@@ -322,10 +321,20 @@ flags |= ORC_TEST_FLAGS_FLOAT;
     }
   }
 
+  if (program->constant_n > 0) {
+    n = program->constant_n;
+  } else {
+    n = 64 + (orc_random(&rand_context)&0xf);
+  }
+
   ex = orc_executor_new (program);
   orc_executor_set_n (ex, n);
   if (program->is_2d) {
-    m = 8 + (orc_random(&rand_context)&0xf);
+    if (program->constant_m > 0) {
+      m = program->constant_m;
+    } else {
+      m = 8 + (orc_random(&rand_context)&0xf);
+    }
   } else {
     m = 1;
   }
