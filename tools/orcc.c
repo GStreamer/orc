@@ -22,6 +22,7 @@ static void print_exec_header (FILE *output);
 static char * get_barrier (const char *s);
 
 int verbose = 0;
+int error = 0;
 
 enum {
   MODE_IMPL,
@@ -240,6 +241,8 @@ main (int argc, char *argv[])
   }
 
   fclose (output);
+
+  if (error) exit(1);
 
   return 0;
 }
@@ -534,6 +537,9 @@ output_code_backup (OrcProgram *p, FILE *output)
         ORC_TARGET_C_BARE);
     if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
       fprintf(output, "%s\n", orc_program_get_asm_code (p));
+    } else {
+      printf("Failed to compile %s\n", p->name);
+      error = TRUE;
     }
   }
   fprintf(output, "}\n");
@@ -555,6 +561,9 @@ output_code_no_orc (OrcProgram *p, FILE *output)
         ORC_TARGET_C_BARE | ORC_TARGET_C_NOEXEC);
     if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
       fprintf(output, "%s\n", orc_program_get_asm_code (p));
+    } else {
+      printf("Failed to compile %s\n", p->name);
+      error = TRUE;
     }
   }
   fprintf(output, "}\n");
@@ -848,7 +857,8 @@ output_code_assembly (OrcProgram *p, FILE *output)
     if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
       fprintf(output, "%s\n", orc_program_get_asm_code (p));
     } else {
-      fprintf(output, "/* failed to compile */\n");
+      printf("Failed to compile %s\n", p->name);
+      error = TRUE;
     }
   }
   fprintf(output, "\n");
