@@ -27,58 +27,8 @@ sse_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 }
 
 
-BINARY(addf, "addps", 0x58)
-BINARY(subf, "subps", 0x5c)
-BINARY(mulf, "mulps", 0x59)
-BINARY(divf, "divps", 0x5e)
-BINARY(maxf, "maxps", 0x5f)
-BINARY(minf, "minps", 0x5d)
 UNARY(invf, "rcpps", 0x53)
-UNARY(sqrtf, "sqrtps", 0x51)
 UNARY(invsqrtf, "rsqrtps", 0x52)
-
-static void
-sse_rule_cmpeqf (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  orc_sse_emit_0f (p, "cmpeqps", 0xc2,
-      p->vars[insn->src_args[1]].alloc,
-      p->vars[insn->dest_args[0]].alloc);
-  *p->codeptr++ = 0x00;
-}
-
-static void
-sse_rule_cmpltf (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  orc_sse_emit_0f (p, "cmpltps", 0xc2,
-      p->vars[insn->src_args[1]].alloc,
-      p->vars[insn->dest_args[0]].alloc);
-  *p->codeptr++ = 0x01;
-}
-
-static void
-sse_rule_cmplef (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  orc_sse_emit_0f (p, "cmpleps", 0xc2,
-      p->vars[insn->src_args[1]].alloc,
-      p->vars[insn->dest_args[0]].alloc);
-  *p->codeptr++ = 0x02;
-}
-
-static void
-sse_rule_convfl (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  orc_sse_emit_660f (p, "cvtps2dq", 0x5b,
-      p->vars[insn->src_args[0]].alloc,
-      p->vars[insn->dest_args[0]].alloc);
-}
-
-static void
-sse_rule_convlf (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  orc_sse_emit_0f (p, "cvtdq2ps", 0x5b,
-      p->vars[insn->src_args[0]].alloc,
-      p->vars[insn->dest_args[0]].alloc);
-}
 
 #define UNARY_66(opcode,insn_name,code) \
 static void \
@@ -179,20 +129,8 @@ orc_float_sse_register_rules (OrcTarget *target)
   rule_set = orc_rule_set_new (orc_opcode_set_get("float"),
       orc_target_get_by_name ("sse"), ORC_TARGET_SSE_SSE2);
 
-  orc_rule_register (rule_set, "addf", sse_rule_addf, NULL);
-  orc_rule_register (rule_set, "subf", sse_rule_subf, NULL);
-  orc_rule_register (rule_set, "mulf", sse_rule_mulf, NULL);
-  orc_rule_register (rule_set, "divf", sse_rule_divf, NULL);
-  orc_rule_register (rule_set, "minf", sse_rule_minf, NULL);
-  orc_rule_register (rule_set, "maxf", sse_rule_maxf, NULL);
   orc_rule_register (rule_set, "invf", sse_rule_invf, NULL);
-  orc_rule_register (rule_set, "sqrtf", sse_rule_sqrtf, NULL);
   orc_rule_register (rule_set, "invsqrtf", sse_rule_invsqrtf, NULL);
-  orc_rule_register (rule_set, "cmpeqf", sse_rule_cmpeqf, NULL);
-  orc_rule_register (rule_set, "cmpltf", sse_rule_cmpltf, NULL);
-  orc_rule_register (rule_set, "cmplef", sse_rule_cmplef, NULL);
-  orc_rule_register (rule_set, "convfl", sse_rule_convfl, NULL);
-  orc_rule_register (rule_set, "convlf", sse_rule_convlf, NULL);
 
   orc_rule_register (rule_set, "addg", sse_rule_addg, NULL);
   orc_rule_register (rule_set, "subg", sse_rule_subg, NULL);
