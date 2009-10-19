@@ -18,7 +18,7 @@
 
 #define ORC_SSE_ALIGNED_DEST_CUTOFF 64
 
-void orc_sse_emit_loop (OrcCompiler *compiler);
+void orc_sse_emit_loop (OrcCompiler *compiler, int update);
 
 void orc_compiler_sse_init (OrcCompiler *compiler);
 unsigned int orc_compiler_sse_get_default_flags (void);
@@ -466,12 +466,19 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
   sse_load_constants_outer (compiler);
 
   if (compiler->program->is_2d) {
-
-    orc_x86_emit_mov_memoffset_reg (compiler, 4,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A1]),
-        compiler->exec_reg, X86_EAX);
-    orc_x86_emit_test_reg_reg (compiler, 4, X86_EAX, X86_EAX);
-    orc_x86_emit_jle (compiler, 17);
+    if (compiler->program->constant_m > 0) {
+      orc_x86_emit_mov_imm_reg (compiler, 4, compiler->program->constant_m,
+          X86_EAX);
+      orc_x86_emit_mov_reg_memoffset (compiler, 4, X86_EAX,
+          (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A1]),
+          compiler->exec_reg);
+    } else {
+      orc_x86_emit_mov_memoffset_reg (compiler, 4,
+          (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A1]),
+          compiler->exec_reg, X86_EAX);
+      orc_x86_emit_test_reg_reg (compiler, 4, X86_EAX, X86_EAX);
+      orc_x86_emit_jle (compiler, 17);
+    }
 
     orc_x86_emit_mov_imm_reg (compiler, 4, 0, X86_EAX);
     orc_x86_emit_mov_reg_memoffset (compiler, 4, X86_EAX,
@@ -481,7 +488,10 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
     orc_x86_emit_label (compiler, 16);
   }
 
-  if (compiler->loop_shift > 0) {
+  if (compiler->program->constant_n > 0 &&
+      compiler->program->constant_n <= ORC_SSE_ALIGNED_DEST_CUTOFF) {
+    /* don't need to load n */
+  } else if (compiler->loop_shift > 0) {
     orc_x86_emit_mov_imm_reg (compiler, 4, 16, X86_EAX);
     orc_x86_emit_sub_memoffset_reg (compiler, 4,
         (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[align_var]),
@@ -544,14 +554,14 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
 
     save_loop_shift = compiler->loop_shift;
     while (n_left >= (1<<compiler->loop_shift)) {
-      orc_sse_emit_loop (compiler);
+      orc_sse_emit_loop (compiler, (n_left != (1<<compiler->loop_shift)));
 
       n_left -= 1<<compiler->loop_shift;
     }
     for(loop_shift = compiler->loop_shift-1; loop_shift>=0; loop_shift--) {
       if (n_left >= (1<<loop_shift)) {
         compiler->loop_shift = loop_shift;
-        orc_sse_emit_loop (compiler);
+        orc_sse_emit_loop (compiler, (n_left >= (1<<loop_shift)));
         n_left -= 1<<loop_shift;
       }
     }
@@ -571,7 +581,7 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
         orc_x86_emit_test_imm_memoffset (compiler, 4, 1<<compiler->loop_shift,
             (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1), compiler->exec_reg);
         orc_x86_emit_je (compiler, 12 + compiler->loop_shift);
-        orc_sse_emit_loop (compiler);
+        orc_sse_emit_loop (compiler, TRUE);
         orc_x86_emit_label (compiler, 12 + compiler->loop_shift);
       }
 
@@ -588,7 +598,7 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
     ORC_ASM_CODE(compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
     orc_x86_emit_align (compiler);
     orc_x86_emit_label (compiler, 2);
-    orc_sse_emit_loop (compiler);
+    orc_sse_emit_loop (compiler, TRUE);
     orc_x86_emit_dec_memoffset (compiler, 4,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2),
         compiler->exec_reg);
@@ -609,7 +619,7 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
         orc_x86_emit_test_imm_memoffset (compiler, 4, 1<<compiler->loop_shift,
             (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3), compiler->exec_reg);
         orc_x86_emit_je (compiler, 8 + compiler->loop_shift);
-        orc_sse_emit_loop (compiler);
+        orc_sse_emit_loop (compiler, TRUE);
         orc_x86_emit_label (compiler, 8 + compiler->loop_shift);
       }
 
@@ -641,7 +651,7 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
 }
 
 void
-orc_sse_emit_loop (OrcCompiler *compiler)
+orc_sse_emit_loop (OrcCompiler *compiler, int update)
 {
   int j;
   int k;
@@ -720,19 +730,21 @@ orc_sse_emit_loop (OrcCompiler *compiler)
     }
   }
 
-  for(k=0;k<ORC_N_VARIABLES;k++){
-    if (compiler->vars[k].name == NULL) continue;
-    if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
-        compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
-      if (compiler->vars[k].ptr_register) {
-        orc_x86_emit_add_imm_reg (compiler, compiler->is_64bit ? 8 : 4,
-            compiler->vars[k].size << compiler->loop_shift,
-            compiler->vars[k].ptr_register);
-      } else {
-        orc_x86_emit_add_imm_memoffset (compiler, compiler->is_64bit ? 8 : 4,
-            compiler->vars[k].size << compiler->loop_shift,
-            (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]),
-            compiler->exec_reg);
+  if (update) {
+    for(k=0;k<ORC_N_VARIABLES;k++){
+      if (compiler->vars[k].name == NULL) continue;
+      if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
+          compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
+        if (compiler->vars[k].ptr_register) {
+          orc_x86_emit_add_imm_reg (compiler, compiler->is_64bit ? 8 : 4,
+              compiler->vars[k].size << compiler->loop_shift,
+              compiler->vars[k].ptr_register);
+        } else {
+          orc_x86_emit_add_imm_memoffset (compiler, compiler->is_64bit ? 8 : 4,
+              compiler->vars[k].size << compiler->loop_shift,
+              (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]),
+              compiler->exec_reg);
+        }
       }
     }
   }
