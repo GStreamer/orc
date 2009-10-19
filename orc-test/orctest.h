@@ -20,6 +20,7 @@ void orc_test_init (void);
 OrcTestResult orc_test_gcc_compile (OrcProgram *p);
 void orc_test_random_bits (void *data, int n_bytes);
 OrcTestResult orc_test_compare_output (OrcProgram *program);
+OrcTestResult orc_test_compare_output_full (OrcProgram *program, int flags);
 OrcTestResult orc_test_compare_output_backup (OrcProgram *program);
 
 OrcProgram *orc_test_get_program_for_opcode (OrcStaticOpcode *opcode);

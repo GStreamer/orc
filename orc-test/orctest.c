@@ -272,9 +272,6 @@ print_array_val_float (OrcArray *array, int i, int j)
   }
 }
 
-static OrcTestResult orc_test_compare_output_full (OrcProgram *program,
-    int flags);
-
 OrcTestResult
 orc_test_compare_output (OrcProgram *program)
 {
