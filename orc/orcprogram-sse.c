@@ -470,7 +470,7 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
       orc_x86_emit_mov_imm_reg (compiler, 4, compiler->program->constant_m,
           X86_EAX);
       orc_x86_emit_mov_reg_memoffset (compiler, 4, X86_EAX,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A1]),
+          (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A2]),
           compiler->exec_reg);
     } else {
       orc_x86_emit_mov_memoffset_reg (compiler, 4,
@@ -478,12 +478,10 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
           compiler->exec_reg, X86_EAX);
       orc_x86_emit_test_reg_reg (compiler, 4, X86_EAX, X86_EAX);
       orc_x86_emit_jle (compiler, 17);
+      orc_x86_emit_mov_reg_memoffset (compiler, 4, X86_EAX,
+          (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A2]),
+          compiler->exec_reg);
     }
-
-    orc_x86_emit_mov_imm_reg (compiler, 4, 0, X86_EAX);
-    orc_x86_emit_mov_reg_memoffset (compiler, 4, X86_EAX,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A2]),
-        compiler->exec_reg);
 
     orc_x86_emit_label (compiler, 16);
   }
@@ -630,13 +628,7 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
   if (compiler->program->is_2d) {
     sse_add_strides (compiler);
 
-    orc_x86_emit_add_imm_memoffset (compiler, 4, 1,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]),
-        compiler->exec_reg);
-    orc_x86_emit_mov_memoffset_reg (compiler, 4,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A1]),
-        compiler->exec_reg, X86_EAX);
-    orc_x86_emit_cmp_reg_memoffset (compiler, 4, X86_EAX,
+    orc_x86_emit_add_imm_memoffset (compiler, 4, -1,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]),
         compiler->exec_reg);
     orc_x86_emit_jne (compiler, 16);
