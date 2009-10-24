@@ -16,16 +16,19 @@ void output_code_header (OrcProgram *p, FILE *output);
 void output_code_test (OrcProgram *p, FILE *output);
 void output_code_backup (OrcProgram *p, FILE *output);
 void output_code_no_orc (OrcProgram *p, FILE *output);
+void output_code_assembly (OrcProgram *p, FILE *output);
 static void print_defines (FILE *output);
 static void print_exec_header (FILE *output);
 static char * get_barrier (const char *s);
 
 int verbose = 0;
+int error = 0;
 
 enum {
   MODE_IMPL,
   MODE_HEADER,
-  MODE_TEST
+  MODE_TEST,
+  MODE_ASSEMBLY
 };
 int mode = MODE_IMPL;
 
@@ -43,6 +46,7 @@ void help (void)
   printf("  --implementation                Produce C code implementing functions\n");
   printf("  --header                        Produce C header for functions\n");
   printf("  --test                          Produce test code for functions\n");
+  printf("  --assembly                      Produce assembly code for functions\n");
   printf("  --include FILE                  Generate #include <FILE> in code\n");
   printf("\n");
 
@@ -71,6 +75,8 @@ main (int argc, char *argv[])
       mode = MODE_IMPL;
     } else if (strcmp(argv[i], "--test") == 0) {
       mode = MODE_TEST;
+    } else if (strcmp(argv[i], "--assembly") == 0) {
+      mode = MODE_ASSEMBLY;
     } else if (strcmp(argv[i], "--include") == 0) {
       if (i+1 < argc) {
         include_file = argv[i+1];
@@ -216,9 +222,27 @@ main (int argc, char *argv[])
     fprintf(output, "  };\n");
     fprintf(output, "  return 0;\n");
     fprintf(output, "}\n");
+  } else if (mode == MODE_ASSEMBLY) {
+    //fprintf(output, "#ifndef DISABLE_ORC\n");
+    //fprintf(output, "#include <orc/orc.h>\n");
+    //fprintf(output, "#else\n");
+    //fprintf(output, "#include <stdint.h>\n");
+    //print_exec_header (output);
+    //fprintf(output, "#endif\n");
+    //if (include_file) {
+      //fprintf(output, "#include <%s>\n", include_file);
+    //}
+    //fprintf(output, "\n");
+    //print_defines (output);
+    //fprintf(output, "\n");
+    for(i=0;i<n;i++){
+      output_code_assembly (programs[i], output);
+    }
   }
 
   fclose (output);
+
+  if (error) exit(1);
 
   return 0;
 }
@@ -513,6 +537,9 @@ output_code_backup (OrcProgram *p, FILE *output)
         ORC_TARGET_C_BARE);
     if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
       fprintf(output, "%s\n", orc_program_get_asm_code (p));
+    } else {
+      printf("Failed to compile %s\n", p->name);
+      error = TRUE;
     }
   }
   fprintf(output, "}\n");
@@ -534,6 +561,9 @@ output_code_no_orc (OrcProgram *p, FILE *output)
         ORC_TARGET_C_BARE | ORC_TARGET_C_NOEXEC);
     if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
       fprintf(output, "%s\n", orc_program_get_asm_code (p));
+    } else {
+      printf("Failed to compile %s\n", p->name);
+      error = TRUE;
     }
   }
   fprintf(output, "}\n");
@@ -809,6 +839,28 @@ output_code_test (OrcProgram *p, FILE *output)
   fprintf(output, "\n");
   fprintf(output, "    orc_program_free (p);\n");
   fprintf(output, "  }\n");
+  fprintf(output, "\n");
+
+}
+
+void
+output_code_assembly (OrcProgram *p, FILE *output)
+{
+
+  fprintf(output, "/* %s */\n", p->name);
+  //output_prototype (p, output);
+  {
+    OrcCompileResult result;
+
+    //result = orc_program_compile_full (p, orc_target_get_by_name("sse"), 0);
+    result = orc_program_compile (p);
+    if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
+      fprintf(output, "%s\n", orc_program_get_asm_code (p));
+    } else {
+      printf("Failed to compile %s\n", p->name);
+      error = TRUE;
+    }
+  }
   fprintf(output, "\n");
 
 }
