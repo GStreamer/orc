@@ -88,6 +88,17 @@ orc_target_get_default_flags (OrcTarget *target)
   return target->get_default_flags();
 }
 
+const char *
+orc_target_get_asm_preamble (const char *target)
+{
+  OrcTarget *t;
+
+  t = orc_target_get_by_name (target);
+  if (t == NULL) return NULL;
+
+  return t->get_asm_preamble ();
+}
+
 #if 0
 int
 orc_opcode_get_list (OrcOpcode **list)

@@ -19,6 +19,7 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orccompiler.c \
 	orcprogram-arm.c \
 	orcprogram-c.c \
+	orcprogram-c64x-c.c \
 	orcprogram-altivec.c \
 	orcprogram-mmx.c \
 	orcprogram-sse.c \

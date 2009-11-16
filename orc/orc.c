@@ -36,6 +36,7 @@ orc_init (void)
   _orc_debug_init();
   orc_opcode_init();
   orc_c_init();
+  orc_c64x_c_init();
   orc_mmx_init();
   orc_sse_init();
   orc_powerpc_init();

@@ -17,12 +17,13 @@ void output_code_test (OrcProgram *p, FILE *output);
 void output_code_backup (OrcProgram *p, FILE *output);
 void output_code_no_orc (OrcProgram *p, FILE *output);
 void output_code_assembly (OrcProgram *p, FILE *output);
-static void print_defines (FILE *output);
 static void print_exec_header (FILE *output);
 static char * get_barrier (const char *s);
 
 int verbose = 0;
 int error = 0;
+
+const char *target = "c64x-c";
 
 enum {
   MODE_IMPL,
@@ -159,7 +160,7 @@ main (int argc, char *argv[])
       fprintf(output, "#include <%s>\n", include_file);
     }
     fprintf(output, "\n");
-    print_defines (output);
+    fprintf(output, "%s", orc_target_get_asm_preamble ("c"));
     fprintf(output, "\n");
     for(i=0;i<n;i++){
       output_code (programs[i], output);
@@ -199,7 +200,7 @@ main (int argc, char *argv[])
       fprintf(output, "#include <%s>\n", include_file);
     }
     fprintf(output, "\n");
-    print_defines (output);
+    fprintf(output, "%s", orc_target_get_asm_preamble ("c"));
     fprintf(output, "\n");
     for(i=0;i<n;i++){
       fprintf(output, "/* %s */\n", programs[i]->name);
@@ -234,6 +235,7 @@ main (int argc, char *argv[])
     //}
     //fprintf(output, "\n");
     //print_defines (output);
+    fprintf(output, "%s", orc_target_get_asm_preamble ("c"));
     //fprintf(output, "\n");
     for(i=0;i<n;i++){
       output_code_assembly (programs[i], output);
@@ -340,6 +342,7 @@ get_barrier (const char *s)
   return barrier;
 }
 
+#if 0
 static void
 print_defines (FILE *output)
 {
@@ -370,6 +373,7 @@ print_defines (FILE *output)
     "#define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))\n"
     "#define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))\n");
 }
+#endif
 
 static char *
 read_file (const char *filename)
@@ -852,8 +856,8 @@ output_code_assembly (OrcProgram *p, FILE *output)
   {
     OrcCompileResult result;
 
-    //result = orc_program_compile_full (p, orc_target_get_by_name("sse"), 0);
-    result = orc_program_compile (p);
+    result = orc_program_compile_full (p, orc_target_get_by_name(target), 0);
+    //result = orc_program_compile (p);
     if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
       fprintf(output, "%s\n", orc_program_get_asm_code (p));
     } else {

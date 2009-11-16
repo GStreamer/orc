@@ -8,12 +8,12 @@
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
 
-static const char *c_get_type_name (int size);
+//static const char *c_get_type_name (int size);
 
 void orc_c_init (void);
 
 void
-orc_compiler_c_init (OrcCompiler *compiler)
+orc_compiler_c64x_c_init (OrcCompiler *compiler)
 {
   int i;
 
@@ -24,7 +24,7 @@ orc_compiler_c_init (OrcCompiler *compiler)
 }
 
 const char *
-orc_target_c_get_asm_preamble (void)
+orc_target_c64x_c_get_asm_preamble (void)
 {
   return "\n"
     "/* begin Orc C target preamble */\n"
@@ -82,12 +82,12 @@ orc_target_c_get_asm_preamble (void)
 }
 
 unsigned int
-orc_compiler_c_get_default_flags (void)
+orc_compiler_c64x_c_get_default_flags (void)
 {
-  return 0;
+  return ORC_TARGET_C_NOEXEC;
 }
 
-const char *varnames[] = {
+static const char *varnames[] = {
   "d1", "d2", "d3", "d4",
   "s1", "s2", "s3", "s4",
   "s5", "s6", "s7", "s8",
@@ -103,7 +103,85 @@ const char *varnames[] = {
 };
 
 void
-orc_compiler_c_assemble (OrcCompiler *compiler)
+output_prototype (OrcCompiler *compiler)
+{
+  OrcProgram *p = compiler->program;
+  OrcVariable *var;
+  int i;
+  int need_comma;
+
+  ORC_ASM_CODE(compiler, "%s (", p->name);
+  need_comma = FALSE;
+  for(i=0;i<4;i++){
+    var = &p->vars[ORC_VAR_D1 + i];
+    if (var->size) {
+      if (need_comma) ORC_ASM_CODE(compiler, ", ");
+      if (var->type_name) {
+        ORC_ASM_CODE(compiler, "%s * %s", var->type_name,
+            varnames[ORC_VAR_D1 + i]);
+      } else {
+        ORC_ASM_CODE(compiler, "uint%d_t * %s", var->size*8,
+            varnames[ORC_VAR_D1 + i]);
+      }
+      if (p->is_2d) {
+        ORC_ASM_CODE(compiler, ", int %s_stride", varnames[ORC_VAR_D1 + i]);
+      }
+      need_comma = TRUE;
+    }
+  }
+  for(i=0;i<4;i++){
+    var = &p->vars[ORC_VAR_A1 + i];
+    if (var->size) {
+      if (need_comma) ORC_ASM_CODE(compiler, ", ");
+      if (var->type_name) {
+        ORC_ASM_CODE(compiler, "%s * %s", var->type_name,
+            varnames[ORC_VAR_A1 + i]);
+      } else {
+        ORC_ASM_CODE(compiler, "uint%d_t * %s", var->size*8,
+            varnames[ORC_VAR_A1 + i]);
+      }
+      need_comma = TRUE;
+    }
+  }
+  for(i=0;i<8;i++){
+    var = &p->vars[ORC_VAR_S1 + i];
+    if (var->size) {
+      if (need_comma) ORC_ASM_CODE(compiler, ", ");
+      if (var->type_name) {
+        ORC_ASM_CODE(compiler, "%s * %s", var->type_name,
+            varnames[ORC_VAR_S1 + i]);
+      } else {
+        ORC_ASM_CODE(compiler, "uint%d_t * %s", var->size*8,
+            varnames[ORC_VAR_S1 + i]);
+      }
+      if (p->is_2d) {
+        ORC_ASM_CODE(compiler, ", int %s_stride", varnames[ORC_VAR_S1 + i]);
+      }
+      need_comma = TRUE;
+    }
+  }
+  for(i=0;i<8;i++){
+    var = &p->vars[ORC_VAR_P1 + i];
+    if (var->size) {
+      if (need_comma) ORC_ASM_CODE(compiler, ", ");
+      ORC_ASM_CODE(compiler, "int %s", varnames[ORC_VAR_P1 + i]);
+      need_comma = TRUE;
+    }
+  }
+  if (p->constant_n == 0) {
+    if (need_comma) ORC_ASM_CODE(compiler, ", ");
+    ORC_ASM_CODE(compiler, "int n");
+    need_comma = TRUE;
+  }
+  if (p->is_2d && p->constant_m == 0) {
+    if (need_comma) ORC_ASM_CODE(compiler, ", ");
+    ORC_ASM_CODE(compiler, "int m");
+  }
+  ORC_ASM_CODE(compiler, ")");
+}
+
+void
+orc_compiler_c64x_c_assemble (OrcCompiler *compiler)
 {
   int i;
   int j;
@@ -111,10 +189,19 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
   OrcStaticOpcode *opcode;
   OrcRule *rule;
   int prefix = 0;
+  int loop_shift = 0;
+
+compiler->target_flags |= ORC_TARGET_C_NOEXEC;
 
   if (!(compiler->target_flags & ORC_TARGET_C_BARE)) {
-    ORC_ASM_CODE(compiler,"void\n");
-    ORC_ASM_CODE(compiler,"%s (OrcExecutor *ex)\n", compiler->program->name);
+    if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
+      ORC_ASM_CODE(compiler,"void\n");
+      ORC_ASM_CODE(compiler,"%s (OrcExecutor *ex)\n", compiler->program->name);
+    } else{
+      ORC_ASM_CODE(compiler,"void\n");
+      output_prototype (compiler);
+      ORC_ASM_CODE(compiler,"\n");
+    }
     ORC_ASM_CODE(compiler,"{\n");
   }
 
@@ -128,41 +215,44 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     if (var->name == NULL) continue;
     switch (var->vartype) {
       case ORC_VAR_TYPE_CONST:
-        if (var->value == 0x80000000) {
-          ORC_ASM_CODE(compiler,"  const %s var%d = 0x80000000;\n",
-              c_get_type_name(var->size), i);
-        } else {
-          ORC_ASM_CODE(compiler,"  const %s var%d = %d;\n",
-              c_get_type_name(var->size), i, var->value);
+        {
+          int value = var->value;
+
+          if (var->size == 1) {
+            value = (value&0xff);
+            value |= (value<<8);
+            value |= (value<<16);
+          }
+          if (var->size == 2) {
+            value = (value&0xffff);
+            value |= (value<<16);
+          }
+
+          if (value == 0x80000000) {
+            ORC_ASM_CODE(compiler,"  const int var%d = 0x80000000;\n", i);
+          } else {
+            ORC_ASM_CODE(compiler,"  const int var%d = %d;\n",
+                i, value);
+          }
         }
         break;
       case ORC_VAR_TYPE_TEMP:
-        ORC_ASM_CODE(compiler,"  %s var%d;\n", c_get_type_name(var->size), i);
+        ORC_ASM_CODE(compiler,"  int var%d;\n", i);
         break;
       case ORC_VAR_TYPE_SRC:
-        ORC_ASM_CODE(compiler,"  const %s *%s var%d;\n",
-            c_get_type_name (var->size),
-            (compiler->target_flags & ORC_TARGET_C_C99) ? "restrict " : "",
-            i);
+        ORC_ASM_CODE(compiler,"  const unsigned char * restrict var%d;\n", i);
         break;
       case ORC_VAR_TYPE_DEST:
-        ORC_ASM_CODE(compiler,"  %s *%s var%d;\n",
-            c_get_type_name (var->size),
-            (compiler->target_flags & ORC_TARGET_C_C99) ? "restrict " : "",
-            i);
+        ORC_ASM_CODE(compiler,"  unsigned char * restrict var%d;\n", i);
         break;
       case ORC_VAR_TYPE_ACCUMULATOR:
-        ORC_ASM_CODE(compiler,"  %s var%d = 0;\n",
-            c_get_type_name (var->size),
-            i);
+        ORC_ASM_CODE(compiler,"  int var%d = 0;\n", i);
         break;
       case ORC_VAR_TYPE_PARAM:
         if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-          ORC_ASM_CODE(compiler,"  const %s var%d = ex->params[%d];\n",
-              c_get_type_name (var->size), i, i);
+          ORC_ASM_CODE(compiler,"  const int var%d = ex->params[%d];\n", i, i);
         } else {
-          ORC_ASM_CODE(compiler,"  const %s var%d = %s;\n",
-              c_get_type_name (var->size), i, varnames[i]);
+          ORC_ASM_CODE(compiler,"  const int var%d = %s;\n", i, varnames[i]);
         }
         break;
       default:
@@ -265,6 +355,21 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
       compiler->error = TRUE;
     }
   }
+  ORC_ASM_CODE(compiler,"\n");
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    OrcVariable *var = compiler->vars + i;
+    if (var->name == NULL) continue;
+    switch (var->vartype) {
+      case ORC_VAR_TYPE_SRC:
+      case ORC_VAR_TYPE_DEST:
+        ORC_ASM_CODE(compiler,"%*s    var%d += %d;\n", prefix, "",
+            i, var->size << loop_shift);
+        break;
+      default:
+        break;
+    }
+  }
+
   ORC_ASM_CODE(compiler,"%*s  }\n", prefix, "");
   if (compiler->program->is_2d) {
     ORC_ASM_CODE(compiler,"  }\n");
@@ -318,8 +423,10 @@ c_get_name (char *name, OrcCompiler *p, int var)
       sprintf(name, "var%d", var);
       break;
     case ORC_VAR_TYPE_SRC:
+      sprintf(name, "_mem4_const(var%d+i)", var);
+      break;
     case ORC_VAR_TYPE_DEST:
-      sprintf(name, "var%d[i]", var);
+      sprintf(name, "_mem4(var%d+i)", var);
       break;
     default:
       ORC_COMPILER_ERROR(p, "bad vartype");
@@ -349,6 +456,7 @@ c_get_name_float (char *name, OrcCompiler *p, int var)
   }
 }
 
+#if 0
 static const char *
 c_get_type_name (int size)
 {
@@ -365,6 +473,7 @@ c_get_type_name (int size)
       return "ERROR";
   }
 }
+#endif
 
 
 #define UNARY(name,op) \
@@ -481,7 +590,7 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 #define UNARY_FL(a,b) UNARYFL(a,b)
 #define UNARY_LF(a,b) UNARYLF(a,b)
 
-#include "opcodes.h"
+#include "opcodes-c64x-c.h"
 
 #undef BINARY_SB
 #undef BINARY_UB
@@ -546,20 +655,20 @@ c_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static OrcTarget c_target = {
-  "c",
+  "c64x-c",
   FALSE,
   ORC_GP_REG_BASE,
-  orc_compiler_c_get_default_flags,
-  orc_compiler_c_init,
-  orc_compiler_c_assemble,
+  orc_compiler_c64x_c_get_default_flags,
+  orc_compiler_c64x_c_init,
+  orc_compiler_c64x_c_assemble,
   { { 0 } },
   0,
-  orc_target_c_get_asm_preamble,
+  orc_target_c64x_c_get_asm_preamble,
 };
 
 
 void
-orc_c_init (void)
+orc_c64x_c_init (void)
 {
   OrcRuleSet *rule_set;
 
@@ -594,7 +703,7 @@ orc_c_init (void)
 #define BINARY_FL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define UNARY_LF(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 
-#include "opcodes.h"
+#include "opcodes-c64x-c.h"
 
   orc_rule_register (rule_set, "accw", c_rule_accw, NULL);
   orc_rule_register (rule_set, "accl", c_rule_accl, NULL);

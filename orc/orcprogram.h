@@ -453,7 +453,9 @@ struct _OrcTarget {
   OrcRuleSet rule_sets[ORC_N_RULE_SETS];
   int n_rule_sets;
 
-  void *_unused[10];
+  const char * (*get_asm_preamble)(void);
+
+  void *_unused[9];
 };
 
 
@@ -486,6 +488,7 @@ void orc_sse_init (void);
 void orc_arm_init (void);
 void orc_powerpc_init (void);
 void orc_c_init (void);
+void orc_c64x_c_init (void);
 
 OrcCompileResult orc_program_compile (OrcProgram *p);
 OrcCompileResult orc_program_compile_for_target (OrcProgram *p, OrcTarget *target);
