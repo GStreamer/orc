@@ -555,12 +555,12 @@ orc_compiler_dump_asm (OrcCompiler *compiler)
 void
 orc_compiler_append_code (OrcCompiler *p, const char *fmt, ...)
 {
-  char tmp[100];
+  char tmp[200];
   va_list varargs;
   int n;
 
   va_start (varargs, fmt);
-  vsnprintf(tmp, 100 - 1, fmt, varargs);
+  vsnprintf(tmp, 200 - 1, fmt, varargs);
   va_end (varargs);
 
   n = strlen (tmp);

@@ -12,6 +12,8 @@
 
 void orc_c_init (void);
 
+void emit_loop (OrcCompiler *compiler, int prefix);
+
 void
 orc_compiler_c64x_c_init (OrcCompiler *compiler)
 {
@@ -180,18 +182,62 @@ output_prototype (OrcCompiler *compiler)
   ORC_ASM_CODE(compiler, ")");
 }
 
+static int
+get_align_var (OrcCompiler *compiler)
+{
+  if (compiler->vars[ORC_VAR_D1].size) return ORC_VAR_D1;
+  if (compiler->vars[ORC_VAR_S1].size) return ORC_VAR_S1;
+
+  ORC_COMPILER_ERROR(compiler, "could not find alignment variable");
+
+  return -1;
+}
+
+static int
+get_shift (int size)
+{
+  switch (size) {
+    case 1:
+      return 0;
+    case 2:
+      return 1;
+    case 4:
+      return 2;
+    case 8:
+      return 3;
+    default:
+      ORC_ERROR("bad size %d", size);
+  }
+  return -1;
+}
+
 void
 orc_compiler_c64x_c_assemble (OrcCompiler *compiler)
 {
   int i;
-  int j;
-  OrcInstruction *insn;
-  OrcStaticOpcode *opcode;
-  OrcRule *rule;
   int prefix = 0;
   int loop_shift = 0;
+  int align_var;
 
-compiler->target_flags |= ORC_TARGET_C_NOEXEC;
+  align_var = get_align_var (compiler);
+
+  switch (orc_program_get_max_var_size (compiler->program)) {
+    case 1:
+      loop_shift = 2;
+      break;
+    case 2:
+      loop_shift = 1;
+      break;
+    case 4:
+      loop_shift = 0;
+      break;
+    default:
+      ORC_ERROR("unhandled max var size %d",
+          orc_program_get_max_var_size (compiler->program));
+      break;
+  }
+
+  compiler->target_flags |= ORC_TARGET_C_NOEXEC;
 
   if (!(compiler->target_flags & ORC_TARGET_C_BARE)) {
     if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
@@ -261,6 +307,15 @@ compiler->target_flags |= ORC_TARGET_C_NOEXEC;
     }
   }
 
+  if (compiler->program->constant_n == 0) {
+    if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
+      ORC_ASM_CODE(compiler,"%*s  int n;\n", prefix, "");
+    }
+  }
+  if (loop_shift > 0) {
+    ORC_ASM_CODE(compiler,"%*s  int n1, n2, n3;\n", prefix, "");
+  }
+
   ORC_ASM_CODE(compiler,"\n");
   if (compiler->program->is_2d) {
     if (compiler->program->constant_m == 0) {
@@ -326,51 +381,46 @@ compiler->target_flags |= ORC_TARGET_C_NOEXEC;
     }
   }
 
-  ORC_ASM_CODE(compiler,"\n");
   if (compiler->program->constant_n == 0) {
     if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-      ORC_ASM_CODE(compiler,"%*s  for (i = 0; i < ex->n; i++) {\n", prefix, "");
-    } else {
-      ORC_ASM_CODE(compiler,"%*s  for (i = 0; i < n; i++) {\n", prefix, "");
+      ORC_ASM_CODE(compiler,"%*s  n = ex->n;\n", prefix, "");
     }
+  }
+  if (loop_shift > 0) {
+    ORC_ASM_CODE(compiler,"%*s  n1 = ((4 - (int)var%d)&0x3) >> %d;\n",
+        prefix, "", align_var, get_shift(compiler->vars[align_var].size));
+    ORC_ASM_CODE(compiler,"%*s  n2 = (n - n1) >> %d;\n",
+        prefix, "", loop_shift);
+    ORC_ASM_CODE(compiler,"%*s  n3 = n & ((1 << %d) - 1);\n",
+        prefix, "", loop_shift);
+
+    ORC_ASM_CODE(compiler,"\n");
+
+    ORC_ASM_CODE(compiler,"#pragma MUST_ITERATE(0,%d)\n", (1<<loop_shift)-1);
+    ORC_ASM_CODE(compiler,"%*s  for (i = 0; i < n1; i++) {\n", prefix, "");
+    compiler->loop_shift = 0;
+    emit_loop (compiler, prefix);
+    ORC_ASM_CODE(compiler,"%*s  }\n", prefix, "");
+
+    ORC_ASM_CODE(compiler,"%*s  for (i = 0; i < n2; i++) {\n", prefix, "");
+    compiler->vars[align_var].is_aligned = TRUE;
+    compiler->loop_shift = loop_shift;
+    emit_loop (compiler, prefix);
+    compiler->vars[align_var].is_aligned = FALSE;
+    ORC_ASM_CODE(compiler,"%*s  }\n", prefix, "");
+
+    ORC_ASM_CODE(compiler,"#pragma MUST_ITERATE(0,%d)\n", (1<<loop_shift)-1);
+    ORC_ASM_CODE(compiler,"%*s  for (i = 0; i < n3; i++) {\n", prefix, "");
+    compiler->loop_shift = 0;
+    emit_loop (compiler, prefix);
+    ORC_ASM_CODE(compiler,"%*s  }\n", prefix, "");
   } else {
-    ORC_ASM_CODE(compiler,"%*s  for (i = 0; i < %d; i++) {\n",
-        prefix, "",
-        compiler->program->constant_n);
+    ORC_ASM_CODE(compiler,"%*s  for (i = 0; i < n; i++) {\n", prefix, "");
+    compiler->loop_shift = loop_shift;
+    emit_loop (compiler, prefix);
+    ORC_ASM_CODE(compiler,"%*s  }\n", prefix, "");
   }
 
-  for(j=0;j<compiler->n_insns;j++){
-    insn = compiler->insns + j;
-    opcode = insn->opcode;
-
-    ORC_ASM_CODE(compiler,"%*s    /* %d: %s */\n", prefix, "",
-        j, insn->opcode->name);
-
-    rule = insn->rule;
-    if (rule) {
-      ORC_ASM_CODE(compiler,"%*s", prefix, "");
-      rule->emit (compiler, rule->emit_user, insn);
-    } else {
-      ORC_COMPILER_ERROR(compiler, "No rule for: %s\n", opcode->name);
-      compiler->error = TRUE;
-    }
-  }
-  ORC_ASM_CODE(compiler,"\n");
-  for(i=0;i<ORC_N_VARIABLES;i++){
-    OrcVariable *var = compiler->vars + i;
-    if (var->name == NULL) continue;
-    switch (var->vartype) {
-      case ORC_VAR_TYPE_SRC:
-      case ORC_VAR_TYPE_DEST:
-        ORC_ASM_CODE(compiler,"%*s    var%d += %d;\n", prefix, "",
-            i, var->size << loop_shift);
-        break;
-      default:
-        break;
-    }
-  }
-
-  ORC_ASM_CODE(compiler,"%*s  }\n", prefix, "");
   if (compiler->program->is_2d) {
     ORC_ASM_CODE(compiler,"  }\n");
   }
@@ -409,12 +459,56 @@ compiler->target_flags |= ORC_TARGET_C_NOEXEC;
   }
 }
 
+void
+emit_loop (OrcCompiler *compiler, int prefix)
+{
+  int j;
+  int i;
+  OrcInstruction *insn;
+  OrcStaticOpcode *opcode;
+  OrcRule *rule;
+
+  for(j=0;j<compiler->n_insns;j++){
+    insn = compiler->insns + j;
+    opcode = insn->opcode;
+
+    ORC_ASM_CODE(compiler,"%*s    /* %d: %s */\n", prefix, "",
+        j, insn->opcode->name);
+
+    rule = insn->rule;
+    if (rule) {
+      ORC_ASM_CODE(compiler,"%*s", prefix, "");
+      rule->emit (compiler, rule->emit_user, insn);
+    } else {
+      ORC_COMPILER_ERROR(compiler, "No rule for: %s\n", opcode->name);
+      compiler->error = TRUE;
+    }
+  }
+  ORC_ASM_CODE(compiler,"\n");
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    OrcVariable *var = compiler->vars + i;
+    if (var->name == NULL) continue;
+    switch (var->vartype) {
+      case ORC_VAR_TYPE_SRC:
+      case ORC_VAR_TYPE_DEST:
+        ORC_ASM_CODE(compiler,"%*s    var%d += %d;\n", prefix, "",
+            i, var->size << compiler->loop_shift);
+        break;
+      default:
+        break;
+    }
+  }
+}
 
 /* rules */
 
 static void
 c_get_name (char *name, OrcCompiler *p, int var)
 {
+  int size;
+
+  size = p->vars[var].size << p->loop_shift;
+
   switch (p->vars[var].vartype) {
     case ORC_VAR_TYPE_CONST:
     case ORC_VAR_TYPE_PARAM:
@@ -423,10 +517,15 @@ c_get_name (char *name, OrcCompiler *p, int var)
       sprintf(name, "var%d", var);
       break;
     case ORC_VAR_TYPE_SRC:
-      sprintf(name, "_mem4_const(var%d+i)", var);
-      break;
     case ORC_VAR_TYPE_DEST:
-      sprintf(name, "_mem4(var%d+i)", var);
+      if (size == 1) {
+        sprintf(name, "(*(%sint8_t *)var%d)",
+            (p->vars[var].vartype == ORC_VAR_TYPE_SRC) ? "const " : "", var);
+      } else {
+        sprintf(name, "_%smem%d%s(var%d)",
+            (p->vars[var].is_aligned) ? "a" : "", size,
+            (p->vars[var].vartype == ORC_VAR_TYPE_SRC) ? "_const" : "", var);
+      }
       break;
     default:
       ORC_COMPILER_ERROR(p, "bad vartype");
@@ -480,7 +579,7 @@ c_get_type_name (int size)
 static void \
 c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  char dest[20], src1[20]; \
+  char dest[40], src1[40]; \
 \
   c_get_name (dest, p, insn->dest_args[0]); \
   c_get_name (src1, p, insn->src_args[0]); \
@@ -492,7 +591,7 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 static void \
 c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  char dest[20], src1[20], src2[20]; \
+  char dest[40], src1[40], src2[40]; \
 \
   c_get_name (dest, p, insn->dest_args[0]); \
   c_get_name (src1, p, insn->src_args[0]); \
@@ -590,38 +689,226 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 #define UNARY_FL(a,b) UNARYFL(a,b)
 #define UNARY_LF(a,b) UNARYLF(a,b)
 
-#include "opcodes-c64x-c.h"
+BINARY_SB(addb, "_add4(%s,%s)")
+BINARY_SB(addssb, "0x80808080^_saddu4(0x80808080^%s,0x80808080^%s)")
+BINARY_SB(addusb, "_saddu4(%s,%s)")
+BINARY_SB(andb, "%s & %s")
+BINARY_SB(andnb, "(~%s) & %s")
+BINARY_SB(avgsb, "0x7f7f7f7f^_avgu4(0x7f7f7f7f^%s,0x7f7f7f7f^%s)")
+BINARY_UB(avgub, "_avgu4(%s,%s)")
+BINARY_SB(cmpeqb, "_cmpeq4(%s,%s)")
+BINARY_SB(cmpgtsb, "_cmpgtu4(0x80808080^%s,0x80808080^%s)")
+UNARY_SB(copyb, "%s")
+BINARY_SB(maxsb, "0x80808080^_maxu4(0x80808080^%s,0x80808080^%s)")
+BINARY_UB(maxub, "_maxu4(%s,%s)")
+BINARY_SB(minsb, "0x80808080^_minu4(0x80808080^%s,0x80808080^%s)")
+BINARY_UB(minub, "_minu4(%s,%s)")
+BINARY_SB(orb, "%s | %s")
+UNARY_SB(signb, "0x80808080^_maxu4(0x7f7f7f7f,_minu4(0x81818181,0x80808080^%s))")
+BINARY_SB(subb, "_sub4(%s,%s)")
+BINARY_SB(xorb, "%s ^ %s")
 
-#undef BINARY_SB
-#undef BINARY_UB
-#undef BINARY_SW
-#undef BINARY_UW
-#undef BINARY_SL
-#undef BINARY_UL
-#undef BINARY_F
-#undef UNARY_SB
-#undef UNARY_UB
-#undef UNARY_SW
-#undef UNARY_UW
-#undef UNARY_SL
-#undef UNARY_UL
-#undef UNARY_F
-#undef BINARY_BW
-#undef BINARY_WL
-#undef BINARY_LW
-#undef BINARY_WB
-#undef UNARY_BW
-#undef UNARY_WL
-#undef UNARY_LW
-#undef UNARY_WB
-#undef UNARY_FL
-#undef UNARY_LF
-#undef BINARY_FL
+UNARY_SW(absw, "_abs2(%s)")
+BINARY_SW(addw, "_add2(%s,%s)")
+BINARY_SW(addssw, "_sadd2(%s,%s)")
+BINARY_SW(addusw, "0x80008000^_sadd2(0x80008000^%s,0x80008000^%s)")
+BINARY_SW(andw, "%s & %s")
+BINARY_SW(andnw, "(~%s) & %s")
+BINARY_SW(avgsw, "_avg2(%s,%s)")
+BINARY_UW(avguw, "0x7fff7fff^_avg2(0x7fff7fff^%s,0x7fff7fff^%s)")
+BINARY_SW(cmpeqw, "_cmpeq2(%s,%s)")
+BINARY_SW(cmpgtsw, "_cmpgt2(%s,%s)")
+UNARY_SW(copyw, "%s")
+BINARY_SW(maxsw, "_max2(%s,%s)")
+BINARY_SW(maxuw, "_max2(0x80008000^%s,0x80008000^%s)")
+BINARY_SW(minsw, "_min2(%s,%s)")
+BINARY_SW(minuw, "_min2(0x80008000^%s,0x80008000^%s)")
+BINARY_SW(orw, "%s | %s")
+BINARY_SW(shrsw, "_shr2(%s,%s)")
+BINARY_UW(shruw, "_shru2(%s,%s)")
+UNARY_SW(signw, "_max2(-1,_min2(1,%s))")
+BINARY_SW(subw, "_sub2(%s,%s)")
+BINARY_SW(subssw, "_ssub2(%s,%s)")
+BINARY_SW(subusw, "0x80008000^_ssub2(0x80008000^%s,0x80008000^%s)")
+BINARY_SW(xorw, "%s ^ %s")
+
+UNARY_SL(absl, "_abs(%s)")
+BINARY_SL(addl, "%s + %s")
+BINARY_SL(addssl, "_sadd(%s,%s)")
+BINARY_UL(addusl, "ORC_CLAMP_UL((int64_t)(uint32_t)%s + (int64_t)(uint32_t)%s)")
+BINARY_SL(andl, "%s & %s")
+BINARY_SL(andnl, "(~%s) & %s")
+BINARY_SL(avgsl, "((int64_t)%s + (int64_t)%s + 1)>>1")
+BINARY_UL(avgul, "((uint64_t)(uint32_t)%s + (uint64_t)(uint32_t)%s + 1)>>1")
+BINARY_SL(cmpeql, "(%s == %s) ? (~0) : 0")
+BINARY_SL(cmpgtsl, "(%s > %s) ? (~0) : 0")
+UNARY_SL(copyl, "%s")
+BINARY_SL(maxsl, "ORC_MAX(%s, %s)")
+BINARY_UL(maxul, "ORC_MAX((uint32_t)%s, (uint32_t)%s)")
+BINARY_SL(minsl, "ORC_MIN(%s, %s)")
+BINARY_UL(minul, "ORC_MIN((uint32_t)%s, (uint32_t)%s)")
+BINARY_SL(mulll, "_loll(_mpy32ll(%s,%s))")
+BINARY_SL(mulhsl, "_hill(_mpy32ll(%s,%s))")
+BINARY_UL(mulhul, "_hill(_mpy32u(%s,%s))")
+BINARY_SL(orl, "%s | %s")
+BINARY_SL(shll, "%s << %s")
+BINARY_SL(shrsl, "%s >> %s")
+BINARY_UL(shrul, "((uint32_t)%s) >> %s")
+UNARY_SL(signl, "ORC_CLAMP((int)%s,-1,1)")
+BINARY_SL(subl, "%s - %s")
+BINARY_SL(subssl, "_ssub(%s,%s)")
+BINARY_UL(subusl, "ORC_CLAMP_UL((int64_t)(uint32_t)%s - (int64_t)(uint32_t)%s)")
+BINARY_SL(xorl, "%s ^ %s")
+
+UNARY_BW(convsbw, "%s")
+UNARY_BW(convubw, "_unpklu4(%s)")
+UNARY_WL(convswl, "(int16_t)%s")
+UNARY_WL(convuwl, "(uint16_t)%s")
+UNARY_WB(convwb, "_packl4(0,%s)")
+UNARY_WB(convsuswb, "_spacku4(0,%s)")
+UNARY_LW(convlw, "_pack2(0,%s)")
+UNARY_LW(convssslw, "_spack2(0,%s)")
+
+BINARY_BW(mulsbw, "%s * %s")
+BINARY_BW(mulubw, "(uint8_t)%s * (uint8_t)%s")
+BINARY_WL(mulswl, "%s * %s")
+BINARY_WL(muluwl, "(uint16_t)%s * (uint16_t)%s")
+
+BINARY_WL(mergewl, "_pack2(%s, %s)")
+BINARY_BW(mergebw, "_packl4(%s, %s)")
+UNARY_WB(select0wb, "_packl4(0,%s)")
+UNARY_WB(select1wb, "_packh4(0,%s)")
+UNARY_LW(select0lw, "_pack2(0,%s)")
+UNARY_LW(select1lw, "_packh2(0,%s)")
+UNARY_UW(swapw, "_swap4(%s)")
+
+#if 0
+BINARY_F(addf, "%s + %s")
+BINARY_F(subf, "%s - %s")
+BINARY_F(mulf, "%s * %s")
+BINARY_F(divf, "%s / %s")
+UNARY_F(sqrtf, "sqrt(%s)")
+BINARY_F(maxf, "ORC_MAX(%s,%s)")
+BINARY_F(minf, "ORC_MIN(%s,%s)")
+BINARY_FL(cmpeqf, "(%s == %s) ? (~0) : 0")
+BINARY_FL(cmpltf, "(%s < %s) ? (~0) : 0")
+BINARY_FL(cmplef, "(%s <= %s) ? (~0) : 0")
+UNARY_FL(convfl, "rintf(%s)")
+UNARY_LF(convlf, "%s")
+#else
+BINARY_F(addf, "0 /* float disabled %s %s */")
+BINARY_F(subf, "0 /* float disabled %s %s */")
+BINARY_F(mulf, "0 /* float disabled %s %s */")
+BINARY_F(divf, "0 /* float disabled %s %s */")
+UNARY_F(sqrtf, "0 /* float disabled %s */")
+BINARY_F(maxf, "0 /* float disabled %s %s */")
+BINARY_F(minf, "0 /* float disabled %s %s */")
+BINARY_FL(cmpeqf, "0 /* float disabled %s %s */")
+BINARY_FL(cmpltf, "0 /* float disabled %s %s */")
+BINARY_FL(cmplef, "0 /* float disabled %s %s */")
+UNARY_FL(convfl, "0 /* float disabled %s */")
+UNARY_LF(convlf, "0 /* float disabled %s */")
+#endif
+
+
+static void
+c_rule_absb (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src1[40];
+
+  c_get_name (dest, p, insn->dest_args[0]);
+  c_get_name (src1, p, insn->src_args[0]);
+
+  ORC_ASM_CODE(p,"    %s = _subabs4(0x80808080,0x80808080^%s);\n", dest, src1);
+}
+
+static void
+c_rule_mullw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src1[40], src2[40];
+
+  c_get_name (dest, p, insn->dest_args[0]);
+  c_get_name (src1, p, insn->src_args[0]);
+  c_get_name (src2, p, insn->src_args[1]);
+
+  ORC_ASM_CODE(p,"    {\n");
+  ORC_ASM_CODE(p,"      long long x = _mpy2ll(%s,%s);\n", src1, src2);
+  ORC_ASM_CODE(p,"      %s = _pack2(_hill(x),_loll(x));\n", dest);
+  ORC_ASM_CODE(p,"    }\n");
+}
+
+static void
+c_rule_mulhsw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src1[40], src2[40];
+
+  c_get_name (dest, p, insn->dest_args[0]);
+  c_get_name (src1, p, insn->src_args[0]);
+  c_get_name (src2, p, insn->src_args[1]);
+
+  ORC_ASM_CODE(p,"    {\n");
+  ORC_ASM_CODE(p,"      long long x = _mpy2ll(%s,%s);\n", src1, src2);
+  ORC_ASM_CODE(p,"      %s = _packh2(_hill(x),_loll(x));\n", dest);
+  ORC_ASM_CODE(p,"    }\n");
+}
+
+static void
+c_rule_mulhuw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src1[40], src2[40];
+
+  c_get_name (dest, p, insn->dest_args[0]);
+  c_get_name (src1, p, insn->src_args[0]);
+  c_get_name (src2, p, insn->src_args[1]);
+
+  ORC_ASM_CODE(p,"    {\n");
+  ORC_ASM_CODE(p,"      long long x = _mpy2ll(%s,%s);\n", src1, src2);
+  ORC_ASM_CODE(p,"      %s = _packh2(_hill(x),_loll(x));\n", dest);
+  ORC_ASM_CODE(p,"    }\n");
+}
+
+static void
+c_rule_shlw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src1[40], src2[40];
+
+  c_get_name (dest, p, insn->dest_args[0]);
+  c_get_name (src1, p, insn->src_args[0]);
+  c_get_name (src2, p, insn->src_args[1]);
+
+  ORC_ASM_CODE(p,"    %s = (%s<<%s) & (~(((1<<%s)-1)<<16 | ((1<<%s)-1)));\n",
+      dest, src1, src2, src2, src2);
+}
+
+static void
+c_rule_convssswb (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src1[40];
+
+  c_get_name (dest, p, insn->dest_args[0]);
+  c_get_name (src1, p, insn->src_args[0]);
+
+  ORC_ASM_CODE(p,"    %s = _packl4(0,_max2(0xff80ff80,_min2(0x007f007f,%s)));\n",
+      dest, src1);
+}
+
+static void
+c_rule_swapl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src1[40], src2[40];
+
+  c_get_name (dest, p, insn->dest_args[0]);
+  c_get_name (src1, p, insn->src_args[0]);
+  c_get_name (src2, p, insn->src_args[1]);
+
+  ORC_ASM_CODE(p,"    %s = _packlh2(_swap4(%s),_swap4(%s));\n",
+      dest, src1, src2);
+}
 
 static void
 c_rule_accw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  char dest[20], src1[20];
+  char dest[40], src1[40];
 
   c_get_name (dest, p, insn->dest_args[0]);
   c_get_name (src1, p, insn->src_args[0]);
@@ -632,7 +919,7 @@ c_rule_accw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 c_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  char dest[20], src1[20];
+  char dest[40], src1[40];
 
   c_get_name (dest, p, insn->dest_args[0]);
   c_get_name (src1, p, insn->src_args[0]);
@@ -643,7 +930,7 @@ c_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 c_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  char dest[20], src1[20], src2[20];
+  char dest[40], src1[40], src2[40];
 
   c_get_name (dest, p, insn->dest_args[0]);
   c_get_name (src1, p, insn->src_args[0]);
@@ -676,37 +963,124 @@ orc_c64x_c_init (void)
 
   rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), &c_target, 0);
 
-#define BINARY_SB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define BINARY_UB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define BINARY_SW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define BINARY_UW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define BINARY_SL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define BINARY_UL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define BINARY_F(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define UNARY_SB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define UNARY_UB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define UNARY_SW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define UNARY_UW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define UNARY_SL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define UNARY_UL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define UNARY_F(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define BINARY_BW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define BINARY_WL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define BINARY_LW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define BINARY_WB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define UNARY_BW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define UNARY_WL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define UNARY_LW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define UNARY_WB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define REG(a) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 
-#define UNARY_FL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define BINARY_FL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
-#define UNARY_LF(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+  REG(absb);
+  REG(addb);
+  REG(addssb);
+  REG(addusb);
+  REG(andb);
+  REG(andnb);
+  REG(avgsb);
+  REG(avgub);
+  REG(cmpeqb);
+  REG(cmpgtsb);
+  REG(copyb);
+  REG(maxsb);
+  REG(maxub);
+  REG(minsb);
+  REG(minub);
+  REG(orb);
+  REG(signb);
+  REG(subb);
+  REG(xorb);
 
-#include "opcodes-c64x-c.h"
+  REG(absw);
+  REG(addw);
+  REG(addssw);
+  REG(addusw);
+  REG(andw);
+  REG(andnw);
+  REG(avgsw);
+  REG(avguw);
+  REG(cmpeqw);
+  REG(cmpgtsw);
+  REG(copyw);
+  REG(maxsw);
+  REG(maxuw);
+  REG(minsw);
+  REG(minuw);
+  REG(mullw);
+  REG(mulhsw);
+  REG(mulhuw);
+  REG(orw);
+  REG(shlw);
+  REG(shrsw);
+  REG(shruw);
+  REG(signw);
+  REG(subssw);
+  REG(subusw);
+  REG(subw);
+  REG(xorw);
 
-  orc_rule_register (rule_set, "accw", c_rule_accw, NULL);
-  orc_rule_register (rule_set, "accl", c_rule_accl, NULL);
-  orc_rule_register (rule_set, "accsadubl", c_rule_accsadubl, NULL);
+  REG(absl);
+  REG(addl);
+  REG(addssl);
+  REG(addusl);
+  REG(andl);
+  REG(andnl);
+  REG(avgsl);
+  REG(avgul);
+  REG(cmpeql);
+  REG(cmpgtsl);
+  REG(copyl);
+  REG(maxsl);
+  REG(maxul);
+  REG(minsl);
+  REG(minul);
+  REG(mulll);
+  REG(mulhsl);
+  REG(mulhul);
+  REG(orl);
+  REG(shll);
+  REG(shrsl);
+  REG(shrul);
+  REG(signl);
+  REG(subl);
+  REG(subssl);
+  REG(subusl);
+  REG(xorl);
+
+  REG(convsbw);
+  REG(convubw);
+  REG(convswl);
+  REG(convuwl);
+  REG(convwb);
+  REG(convssswb);
+  REG(convsuswb);
+  REG(convlw);
+  REG(convssslw);
+
+  REG(mulsbw);
+  REG(mulubw);
+  REG(mulswl);
+  REG(muluwl);
+
+  REG(mergewl);
+  REG(mergebw);
+  REG(select0wb);
+  REG(select1wb);
+  REG(select0lw);
+  REG(select1lw);
+  REG(swapw);
+  REG(swapl);
+
+  REG(addf);
+  REG(subf);
+  REG(mulf);
+  REG(divf);
+  REG(sqrtf);
+  REG(maxf);
+  REG(minf);
+  REG(cmpeqf);
+  REG(cmpltf);
+  REG(cmplef);
+  REG(convfl);
+  REG(convlf);
+
+  REG(accw);
+  REG(accl);
+  REG(accsadubl);
+
 }
 
