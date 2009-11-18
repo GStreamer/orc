@@ -120,6 +120,22 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
   if (compiler->program->is_2d) {
     ORC_ASM_CODE(compiler,"  int j;\n");
   }
+  if (compiler->program->constant_n == 0) {
+    if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
+      ORC_ASM_CODE(compiler,"  int n = ex->n;\n");
+    }
+  } else {
+    ORC_ASM_CODE(compiler,"  int n = %d;\n", compiler->program->constant_n);
+  }
+  if (compiler->program->is_2d) {
+    if (compiler->program->constant_m == 0) {
+      if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
+        ORC_ASM_CODE(compiler,"  int m = ex->params[ORC_VAR_A1];\n");
+      }
+    } else {
+      ORC_ASM_CODE(compiler,"  int m = %d;\n", compiler->program->constant_m);
+    }
+  }
 
   for(i=0;i<ORC_N_VARIABLES;i++){
     OrcVariable *var = compiler->vars + i;
@@ -173,16 +189,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
 
   ORC_ASM_CODE(compiler,"\n");
   if (compiler->program->is_2d) {
-    if (compiler->program->constant_m == 0) {
-      if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-        ORC_ASM_CODE(compiler,"  for (j = 0; j < ex->params[ORC_VAR_A1]; j++) {\n");
-      } else {
-        ORC_ASM_CODE(compiler,"  for (j = 0; j < m; j++) {\n");
-      }
-    } else {
-      ORC_ASM_CODE(compiler,"  for (j = 0; j < %d; j++) {\n",
-          compiler->program->constant_m);
-    }
+    ORC_ASM_CODE(compiler,"  for (j = 0; j < m; j++) {\n");
     prefix = 2;
 
     for(i=0;i<ORC_N_VARIABLES;i++){
@@ -251,17 +258,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
   }
 
   ORC_ASM_CODE(compiler,"\n");
-  if (compiler->program->constant_n == 0) {
-    if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-      ORC_ASM_CODE(compiler,"%*s  for (i = 0; i < ex->n; i++) {\n", prefix, "");
-    } else {
-      ORC_ASM_CODE(compiler,"%*s  for (i = 0; i < n; i++) {\n", prefix, "");
-    }
-  } else {
-    ORC_ASM_CODE(compiler,"%*s  for (i = 0; i < %d; i++) {\n",
-        prefix, "",
-        compiler->program->constant_n);
-  }
+  ORC_ASM_CODE(compiler,"%*s  for (i = 0; i < n; i++) {\n", prefix, "");
 
   /* Load from source (and maybe destination) arrays */
   for(i=0;i<ORC_N_VARIABLES;i++){
@@ -273,7 +270,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
       ORC_ASM_CODE (compiler, "%*s    %s = *ptr%d;\n", prefix, "", s, i);
       ORC_ASM_CODE (compiler, "%*s    ptr%d++;\n", prefix, "", i);
     }
-    if (var->vartype == ORC_VAR_TYPE_SRC && var->load_dest) {
+    if (var->vartype == ORC_VAR_TYPE_DEST && var->load_dest) {
       ORC_ASM_CODE (compiler, "%*s    %s = *ptr%d;\n", prefix, "", s, i);
     }
   }

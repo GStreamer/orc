@@ -18,7 +18,7 @@
 
 #define ORC_SSE_ALIGNED_DEST_CUTOFF 64
 
-void orc_sse_emit_loop (OrcCompiler *compiler, int update);
+void orc_sse_emit_loop (OrcCompiler *compiler, int offset, int update);
 
 void orc_compiler_sse_init (OrcCompiler *compiler);
 unsigned int orc_compiler_sse_get_default_flags (void);
@@ -332,7 +332,7 @@ sse_add_strides (OrcCompiler *compiler)
 }
 
 void
-orc_sse_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
+orc_sse_emit_load_src (OrcCompiler *compiler, OrcVariable *var, int offset)
 {
   int ptr_reg;
   if (var->ptr_register == 0) {
@@ -347,23 +347,23 @@ orc_sse_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
   }
   switch (var->size << compiler->loop_shift) {
     case 1:
-      orc_x86_emit_mov_memoffset_reg (compiler, 1, 0, ptr_reg, compiler->gp_tmpreg);
+      orc_x86_emit_mov_memoffset_reg (compiler, 1, offset, ptr_reg, compiler->gp_tmpreg);
       orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, var->alloc);
       break;
     case 2:
-      orc_x86_emit_mov_memoffset_reg (compiler, 2, 0, ptr_reg, compiler->gp_tmpreg);
+      orc_x86_emit_mov_memoffset_reg (compiler, 2, offset, ptr_reg, compiler->gp_tmpreg);
       orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, var->alloc);
       break;
     case 4:
-      orc_x86_emit_mov_memoffset_sse (compiler, 4, 0, ptr_reg, var->alloc,
+      orc_x86_emit_mov_memoffset_sse (compiler, 4, offset, ptr_reg, var->alloc,
           var->is_aligned);
       break;
     case 8:
-      orc_x86_emit_mov_memoffset_sse (compiler, 8, 0, ptr_reg, var->alloc,
+      orc_x86_emit_mov_memoffset_sse (compiler, 8, offset, ptr_reg, var->alloc,
           var->is_aligned);
       break;
     case 16:
-      orc_x86_emit_mov_memoffset_sse (compiler, 16, 0, ptr_reg, var->alloc,
+      orc_x86_emit_mov_memoffset_sse (compiler, 16, offset, ptr_reg, var->alloc,
           var->is_aligned);
       break;
     default:
@@ -374,7 +374,7 @@ orc_sse_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
 }
 
 void
-orc_sse_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
+orc_sse_emit_store_dest (OrcCompiler *compiler, OrcVariable *var, int offset)
 {
   int ptr_reg;
   if (var->ptr_register == 0) {
@@ -391,7 +391,7 @@ orc_sse_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
         ORC_COMPILER_ERROR(compiler,"unimplemented");
       }
       orc_x86_emit_mov_sse_reg (compiler, var->alloc, compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_memoffset (compiler, 1, compiler->gp_tmpreg, 0, ptr_reg);
+      orc_x86_emit_mov_reg_memoffset (compiler, 1, compiler->gp_tmpreg, offset, ptr_reg);
       break;
     case 2:
       /* FIXME we might be using ecx twice here */
@@ -399,18 +399,18 @@ orc_sse_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
         ORC_COMPILER_ERROR(compiler,"unimplemented");
       }
       orc_x86_emit_mov_sse_reg (compiler, var->alloc, compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_memoffset (compiler, 2, compiler->gp_tmpreg, 0, ptr_reg);
+      orc_x86_emit_mov_reg_memoffset (compiler, 2, compiler->gp_tmpreg, offset, ptr_reg);
       break;
     case 4:
-      orc_x86_emit_mov_sse_memoffset (compiler, 4, var->alloc, 0, ptr_reg,
+      orc_x86_emit_mov_sse_memoffset (compiler, 4, var->alloc, offset, ptr_reg,
           var->is_aligned, var->is_uncached);
       break;
     case 8:
-      orc_x86_emit_mov_sse_memoffset (compiler, 8, var->alloc, 0, ptr_reg,
+      orc_x86_emit_mov_sse_memoffset (compiler, 8, var->alloc, offset, ptr_reg,
           var->is_aligned, var->is_uncached);
       break;
     case 16:
-      orc_x86_emit_mov_sse_memoffset (compiler, 16, var->alloc, 0, ptr_reg,
+      orc_x86_emit_mov_sse_memoffset (compiler, 16, var->alloc, offset, ptr_reg,
           var->is_aligned, var->is_uncached);
       break;
     default:
@@ -569,18 +569,23 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
     int n_left = compiler->program->constant_n;
     int save_loop_shift;
     int loop_shift;
+    int offset = 0;
 
     save_loop_shift = compiler->loop_shift;
     while (n_left >= (1<<compiler->loop_shift)) {
-      orc_sse_emit_loop (compiler, (n_left != (1<<compiler->loop_shift)));
+      ORC_ASM_CODE(compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
+      orc_sse_emit_loop (compiler, offset, FALSE);
 
       n_left -= 1<<compiler->loop_shift;
+      offset += 1<<compiler->loop_shift;
     }
     for(loop_shift = compiler->loop_shift-1; loop_shift>=0; loop_shift--) {
       if (n_left >= (1<<loop_shift)) {
         compiler->loop_shift = loop_shift;
-        orc_sse_emit_loop (compiler, (n_left >= (1<<loop_shift)));
+        ORC_ASM_CODE(compiler, "# LOOP SHIFT %d\n", loop_shift);
+        orc_sse_emit_loop (compiler, offset, FALSE);
         n_left -= 1<<loop_shift;
+        offset += 1<<loop_shift;
       }
     }
     compiler->loop_shift = save_loop_shift;
@@ -599,7 +604,7 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
         orc_x86_emit_test_imm_memoffset (compiler, 4, 1<<compiler->loop_shift,
             (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1), compiler->exec_reg);
         orc_x86_emit_je (compiler, 12 + compiler->loop_shift);
-        orc_sse_emit_loop (compiler, TRUE);
+        orc_sse_emit_loop (compiler, 0, TRUE);
         orc_x86_emit_label (compiler, 12 + compiler->loop_shift);
       }
 
@@ -616,7 +621,7 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
     ORC_ASM_CODE(compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
     orc_x86_emit_align (compiler);
     orc_x86_emit_label (compiler, 2);
-    orc_sse_emit_loop (compiler, TRUE);
+    orc_sse_emit_loop (compiler, 0, TRUE);
     orc_x86_emit_dec_memoffset (compiler, 4,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2),
         compiler->exec_reg);
@@ -637,7 +642,7 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
         orc_x86_emit_test_imm_memoffset (compiler, 4, 1<<compiler->loop_shift,
             (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3), compiler->exec_reg);
         orc_x86_emit_je (compiler, 8 + compiler->loop_shift);
-        orc_sse_emit_loop (compiler, TRUE);
+        orc_sse_emit_loop (compiler, 0, TRUE);
         orc_x86_emit_label (compiler, 8 + compiler->loop_shift);
       }
 
@@ -663,7 +668,7 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
 }
 
 void
-orc_sse_emit_loop (OrcCompiler *compiler, int update)
+orc_sse_emit_loop (OrcCompiler *compiler, int offset, int update)
 {
   int j;
   int k;
@@ -697,7 +702,7 @@ orc_sse_emit_loop (OrcCompiler *compiler, int update)
       switch (var->vartype) {
         case ORC_VAR_TYPE_SRC:
         case ORC_VAR_TYPE_DEST:
-          orc_sse_emit_load_src (compiler, var);
+          orc_sse_emit_load_src (compiler, var, offset);
           break;
         case ORC_VAR_TYPE_CONST:
           break;
@@ -731,7 +736,7 @@ orc_sse_emit_loop (OrcCompiler *compiler, int update)
 
       switch (var->vartype) {
         case ORC_VAR_TYPE_DEST:
-          orc_sse_emit_store_dest (compiler, var);
+          orc_sse_emit_store_dest (compiler, var, offset);
           break;
         case ORC_VAR_TYPE_TEMP:
           break;

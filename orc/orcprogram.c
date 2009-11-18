@@ -579,7 +579,8 @@ orc_program_get_max_var_size (OrcProgram *program)
 
   max = 0;
   for(i=0;i<ORC_N_VARIABLES;i++){
-    if (program->vars[i].size) {
+    if (program->vars[i].size &&
+        program->vars[i].vartype != ORC_VAR_TYPE_ACCUMULATOR) {
       max = MAX(max, program->vars[i].size);
     }
   }
