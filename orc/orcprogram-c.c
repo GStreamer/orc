@@ -54,6 +54,7 @@ orc_target_c_get_asm_preamble (void)
     "#define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))\n"
     "#define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))\n"
     "#define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))\n"
+    "#define ORC_AS_FLOAT(x) (((union { int i; float f; } *)(&x))->f)\n"
     "/* end Orc C target preamble */\n\n";
 }
 
@@ -367,11 +368,9 @@ c_get_name_float (char *name, OrcCompiler *p, int var)
     case ORC_VAR_TYPE_PARAM:
     case ORC_VAR_TYPE_TEMP:
     case ORC_VAR_TYPE_ACCUMULATOR:
-      sprintf(name, "(*(float *)(&var%d))", var);
-      break;
     case ORC_VAR_TYPE_SRC:
     case ORC_VAR_TYPE_DEST:
-      sprintf(name, "((float *)var%d)[i]", var);
+      sprintf(name, "ORC_AS_FLOAT(var%d)", var);
       break;
     default:
       ORC_COMPILER_ERROR(p, "bad vartype");
