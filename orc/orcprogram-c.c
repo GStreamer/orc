@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <orc/orc.h>
 #include <orc/orcprogram.h>
@@ -102,6 +103,26 @@ const char *varnames[] = {
   "t13", "t14", "t15", "t16"
 };
 
+static void
+get_varname (char *s, OrcCompiler *compiler, int var)
+{
+  if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
+    sprintf(s, "ex->arrays[%d]", var);
+  } else {
+    strcpy (s, varnames[var]);
+  }
+}
+
+static void
+get_varname_stride (char *s, OrcCompiler *compiler, int var)
+{
+  if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
+    sprintf(s, "ex->params[%d]", var);
+  } else {
+    sprintf(s, "%s_stride", varnames[var]);
+  }
+}
+
 void
 orc_compiler_c_assemble (OrcCompiler *compiler)
 {
@@ -190,21 +211,41 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
       if (var->name == NULL) continue;
       switch (var->vartype) {
         case ORC_VAR_TYPE_SRC:
-          if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-            ORC_ASM_CODE(compiler,"    var%d = ORC_PTR_OFFSET(ex->arrays[%d], ex->params[%d] * j);\n",
-                i, i, i);
-          } else {
-            ORC_ASM_CODE(compiler,"    var%d = ORC_PTR_OFFSET(%s, %s_stride * j);\n",
-                i, varnames[i], varnames[i]);
+          {
+            char s1[20], s2[20];
+            get_varname(s1, compiler, i);
+            get_varname_stride(s2, compiler, i);
+            switch (var->sampling_type) {
+              case ORC_SAMPLE_REGULAR:
+                ORC_ASM_CODE(compiler,
+                    "    var%d = ORC_PTR_OFFSET(%s, %s * j);\n",
+                    i, s1, s2);
+                break;
+              case ORC_SAMPLE_TRANSPOSED:
+                ORC_ASM_CODE(compiler,
+                    "    var%d = ORC_PTR_OFFSET(%s, %d * j);\n",
+                    i, s1, var->size);
+                break;
+              case ORC_SAMPLE_NEAREST:
+              case ORC_SAMPLE_BILINEAR:
+              case ORC_SAMPLE_FOUR_TAP:
+                ORC_ASM_CODE(compiler,
+                    "    var%d = ORC_PTR_OFFSET(%s, %s * j);\n",
+                    i, s1, s2);
+                break;
+              default:
+                ORC_COMPILER_ERROR(compiler, "eeek");
+            }
           }
           break;
         case ORC_VAR_TYPE_DEST:
-          if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-            ORC_ASM_CODE(compiler,"    var%d = ORC_PTR_OFFSET(ex->arrays[%d], ex->params[%d] * j);\n",
-                i, i, i);
-          } else {
-            ORC_ASM_CODE(compiler,"    var%d = ORC_PTR_OFFSET(%s, %s_stride * j);\n",
-                i, varnames[i], varnames[i]);
+          {
+            char s1[20], s2[20];
+            get_varname(s1, compiler, i),
+            get_varname_stride(s2, compiler, i),
+            ORC_ASM_CODE(compiler,
+                "    var%d = ORC_PTR_OFFSET(%s, %s * j);\n",
+                i, s1, s2);
           }
           break;
         default:
@@ -214,21 +255,15 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
   } else {
     for(i=0;i<ORC_N_VARIABLES;i++){
       OrcVariable *var = compiler->vars + i;
+      char s[20];
       if (var->name == NULL) continue;
+      get_varname(s, compiler, i);
       switch (var->vartype) {
         case ORC_VAR_TYPE_SRC:
-          if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-            ORC_ASM_CODE(compiler,"  var%d = ex->arrays[%d];\n", i, i);
-          } else {
-            ORC_ASM_CODE(compiler,"  var%d = (void *)%s;\n", i, varnames[i]);
-          }
+          ORC_ASM_CODE(compiler,"  var%d = %s;\n", i, s);
           break;
         case ORC_VAR_TYPE_DEST:
-          if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-            ORC_ASM_CODE(compiler,"  var%d = ex->arrays[%d];\n", i, i);
-          } else {
-            ORC_ASM_CODE(compiler,"  var%d = (void *)%s;\n", i, varnames[i]);
-          }
+          ORC_ASM_CODE(compiler,"  var%d = %s;\n", i, s);
           break;
         default:
           break;
@@ -318,6 +353,27 @@ c_get_name (char *name, OrcCompiler *p, int var)
       sprintf(name, "var%d", var);
       break;
     case ORC_VAR_TYPE_SRC:
+      switch(p->vars[var].sampling_type) {
+        case ORC_SAMPLE_REGULAR:
+          sprintf(name, "var%d[i]", var);
+          break;
+        case ORC_SAMPLE_TRANSPOSED:
+          {
+            char s2[20];
+            get_varname_stride(s2, p, var);
+            sprintf(name, "ORC_PTR_OFFSET(var%d, %s * i)", var, s2);
+          }
+          break;
+        case ORC_SAMPLE_NEAREST:
+        case ORC_SAMPLE_BILINEAR:
+        case ORC_SAMPLE_FOUR_TAP:
+          sprintf(name, "var%d[i]", var);
+          break;
+        default:
+          ORC_COMPILER_ERROR(p, "eeek");
+          break;
+      }
+      break;
     case ORC_VAR_TYPE_DEST:
       sprintf(name, "var%d[i]", var);
       break;

@@ -147,6 +147,14 @@ enum {
   ORC_CONST_SPLAT_L,
 };
 
+enum {
+  ORC_SAMPLE_REGULAR = 0,
+  ORC_SAMPLE_TRANSPOSED,
+  ORC_SAMPLE_NEAREST,
+  ORC_SAMPLE_BILINEAR,
+  ORC_SAMPLE_FOUR_TAP
+};
+
 typedef enum {
   ORC_COMPILE_RESULT_OK = 0,
 
@@ -192,6 +200,7 @@ struct _OrcVariable {
   int ptr_offset;
   int mask_alloc;
   int aligned_data;
+  int sampling_type;
 };
 
 /**
@@ -409,6 +418,7 @@ struct _OrcExecutor {
   /* m is stored in params[ORC_VAR_A1] */
   /* m_index is stored in params[ORC_VAR_A2] */
   /* elapsed time is stored in params[ORC_VAR_A3] */
+  /* source resampling parameters are in params[ORC_VAR_C1..C8] */
 };
 
 /* the alternate view of OrcExecutor */
@@ -427,7 +437,8 @@ struct _OrcExecutorAlt {
   int m;
   int m_index;
   int time;
-  int unused2[ORC_VAR_P1-ORC_VAR_A4];
+  int unused2;
+  int src_resample[8];
   int params[ORC_VAR_T1-ORC_VAR_P1];
   int unused3[ORC_N_VARIABLES - ORC_VAR_T1];
   int accumulators[4];
@@ -507,6 +518,7 @@ int orc_program_add_constant (OrcProgram *program, int size, int value, const ch
 int orc_program_add_parameter (OrcProgram *program, int size, const char *name);
 int orc_program_add_accumulator (OrcProgram *program, int size, const char *name);
 void orc_program_set_type_name (OrcProgram *program, int var, const char *type_name);
+void orc_program_set_sampling_type (OrcProgram *program, int var, int sampling_type);
 
 OrcExecutor * orc_executor_new (OrcProgram *program);
 void orc_executor_free (OrcExecutor *ex);

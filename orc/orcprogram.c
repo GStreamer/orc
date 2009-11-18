@@ -400,6 +400,13 @@ orc_program_set_type_name (OrcProgram *program, int var, const char *type_name)
   program->vars[var].type_name = strdup(type_name);
 }
 
+void
+orc_program_set_sampling_type (OrcProgram *program, int var,
+    int sampling_type)
+{
+  program->vars[var].sampling_type = sampling_type;
+}
+
 /**
  * orc_program_append_ds:
  * @program: a pointer to an OrcProgram structure
