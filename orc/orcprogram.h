@@ -201,6 +201,7 @@ struct _OrcVariable {
   int mask_alloc;
   int aligned_data;
   int sampling_type;
+  int load_dest;
 };
 
 /**

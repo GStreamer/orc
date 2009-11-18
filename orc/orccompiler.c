@@ -311,11 +311,9 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
       if (opcode->src_size[k] == 0) continue;
 
       var = insn->src_args[k];
-#if 0
       if (compiler->vars[var].vartype == ORC_VAR_TYPE_DEST) {
-        ORC_COMPILER_ERROR(compiler, "using dest var as source");
+        compiler->vars[var].load_dest = TRUE;
       }
-#endif
 
       actual_var = var;
       if (compiler->vars[var].replaced) {
