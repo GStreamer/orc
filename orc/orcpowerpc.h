@@ -153,6 +153,8 @@ int powerpc_get_constant (OrcCompiler *p, int type, int value);
 #define powerpc_emit_vupkhsb(p,a,b)        powerpc_emit_VX_4 (p, "vupkhsb", 0x1000020e, a, b)
 #define powerpc_emit_vupkhsh(p,a,b)        powerpc_emit_VX_4 (p, "vupkhsh", 0x1000024e, a, b)
 
+#define powerpc_emit_vperm(p,a,b,c,d)      powerpc_emit_VX_3 (p, "vperm", 0x1000002b, a, b, c, d)
+
 
 #endif
 

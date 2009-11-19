@@ -423,6 +423,74 @@ powerpc_rule_signl (OrcCompiler *p, void *user, OrcInstruction *insn)
   powerpc_emit_vmaxsw (p, dest, dest, reg);
 }
 
+static int
+load_constant (OrcCompiler *compiler, int a, int b, int c, int d)
+{
+  return 0;
+}
+
+static void
+powerpc_rule_select0wb (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+  int perm;
+
+  perm = load_constant (p, 0x00010405, 0x08090c0d, 0x10111415, 0x18191c1d);
+  powerpc_emit_vperm (p, dest, src1, src1, perm);
+}
+
+static void
+powerpc_rule_select1wb (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vpkuhum (p, dest, src1, src1);
+}
+
+static void
+powerpc_rule_select0lw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+  int perm;
+
+  perm = load_constant (p, 0x00020406, 0x080a0c0e, 0x10121416, 0x181a1c1e);
+  powerpc_emit_vperm (p, dest, src1, src1, perm);
+}
+
+static void
+powerpc_rule_select1lw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+
+  powerpc_emit_vpkuwum (p, dest, src1, src1);
+}
+
+static void
+powerpc_rule_mergebw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+  int perm;
+
+  perm = load_constant (p, 0x00100111, 0x02120313, 0x04140515, 0x06160717);
+  powerpc_emit_vperm (p, dest, src1, src1, perm);
+}
+
+static void
+powerpc_rule_mergewl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+  int perm;
+
+  perm = load_constant (p, 0x00011011, 0x02031213, 0x04051415, 0x06071617);
+  powerpc_emit_vperm (p, dest, src1, src1, perm);
+}
+
 void
 orc_compiler_powerpc_register_rules (OrcTarget *target)
 {
@@ -528,6 +596,13 @@ orc_compiler_powerpc_register_rules (OrcTarget *target)
   REG(signb);
   REG(signw);
   REG(signl);
+
+  REG(select0wb);
+  REG(select1wb);
+  REG(select0lw);
+  REG(select1lw);
+  REG(mergebw);
+  REG(mergewl);
 
   orc_rule_register (rule_set, "andnb", powerpc_rule_andnX, NULL);
   orc_rule_register (rule_set, "andnw", powerpc_rule_andnX, NULL);
