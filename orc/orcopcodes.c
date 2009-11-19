@@ -89,14 +89,22 @@ orc_target_get_default_flags (OrcTarget *target)
 }
 
 const char *
+orc_target_get_preamble (OrcTarget *target)
+{
+  if (target->get_asm_preamble == NULL) return "";
+
+  return target->get_asm_preamble ();
+}
+
+const char *
 orc_target_get_asm_preamble (const char *target)
 {
   OrcTarget *t;
 
   t = orc_target_get_by_name (target);
-  if (t == NULL) return NULL;
+  if (t == NULL) return "";
 
-  return t->get_asm_preamble ();
+  return orc_target_get_preamble (t);
 }
 
 #if 0

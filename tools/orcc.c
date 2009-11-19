@@ -23,7 +23,7 @@ static char * get_barrier (const char *s);
 int verbose = 0;
 int error = 0;
 
-const char *target = "c64x-c";
+char *target = "sse";
 
 enum {
   MODE_IMPL,
@@ -49,6 +49,7 @@ void help (void)
   printf("  --test                          Produce test code for functions\n");
   printf("  --assembly                      Produce assembly code for functions\n");
   printf("  --include FILE                  Generate #include <FILE> in code\n");
+  printf("  --target TARGET                 Generate assembly for TARGET\n");
   printf("\n");
 
   exit (0);
@@ -92,6 +93,13 @@ main (int argc, char *argv[])
         i++;
       } else {
         help();
+      }
+    } else if (strcmp(argv[i], "--target") == 0 ||
+        strcmp(argv[i], "-t") == 0) {
+      if (i+1 < argc) {
+        target = argv[i+1];
+        i++;
+      } else {
       }
     } else if (strcmp(argv[i], "--help") == 0 ||
         strcmp(argv[i], "-h") == 0) {
@@ -224,19 +232,7 @@ main (int argc, char *argv[])
     fprintf(output, "  return 0;\n");
     fprintf(output, "}\n");
   } else if (mode == MODE_ASSEMBLY) {
-    //fprintf(output, "#ifndef DISABLE_ORC\n");
-    //fprintf(output, "#include <orc/orc.h>\n");
-    //fprintf(output, "#else\n");
-    //fprintf(output, "#include <stdint.h>\n");
-    //print_exec_header (output);
-    //fprintf(output, "#endif\n");
-    //if (include_file) {
-      //fprintf(output, "#include <%s>\n", include_file);
-    //}
-    //fprintf(output, "\n");
-    //print_defines (output);
-    fprintf(output, "%s", orc_target_get_asm_preamble ("c"));
-    //fprintf(output, "\n");
+    fprintf(output, "%s", orc_target_get_asm_preamble (target));
     for(i=0;i<n;i++){
       output_code_assembly (programs[i], output);
     }
@@ -855,9 +851,10 @@ output_code_assembly (OrcProgram *p, FILE *output)
   //output_prototype (p, output);
   {
     OrcCompileResult result;
+    OrcTarget *t = orc_target_get_by_name(target);
 
-    result = orc_program_compile_full (p, orc_target_get_by_name(target), 0);
-    //result = orc_program_compile (p);
+    result = orc_program_compile_full (p, orc_target_get_by_name(target),
+        orc_target_get_default_flags (t));
     if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
       fprintf(output, "%s\n", orc_program_get_asm_code (p));
     } else {

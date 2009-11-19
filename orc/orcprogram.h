@@ -558,6 +558,7 @@ int orc_compiler_label_new (OrcCompiler *compiler);
 
 const char *orc_program_get_asm_code (OrcProgram *program);
 const char *orc_target_get_asm_preamble (const char *target);
+const char * orc_target_get_preamble (OrcTarget *target);
 
 void orc_compiler_append_code (OrcCompiler *p, const char *fmt, ...)
   ORC_GNU_PRINTF(2,3);
