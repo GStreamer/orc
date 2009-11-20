@@ -154,11 +154,7 @@ print_array_val_signed (OrcArray *array, int i, int j)
       printf(" %10d", *(int32_t *)ptr);
       return *(int32_t *)ptr;
     case 8:
-#ifdef HAVE_AMD64
-      printf(" %20ld", *(int64_t *)ptr);
-#else
-      printf(" %20lld", *(int64_t *)ptr);
-#endif
+      printf(" %20lld", (long long)*(int64_t *)ptr);
       return *(int64_t *)ptr;
     default:
       return -1;
@@ -193,11 +189,7 @@ print_array_val_unsigned (void *array, int size, int i)
     case 8:
       {
         uint64_t *a = array;
-#ifdef HAVE_AMD64
-        printf(" %20lu", a[i]);
-#else
-        printf(" %20llu", a[i]);
-#endif
+        printf(" %20llu", (long long)a[i]);
         return a[i];
       }
       break;
@@ -234,11 +226,7 @@ print_array_val_hex (void *array, int size, int i)
     case 8:
       {
         uint64_t *a = array;
-#ifdef HAVE_AMD64
-        printf(" %20lx", a[i]);
-#else
-        printf(" %16llx", a[i]);
-#endif
+        printf(" %16llx", (long long)a[i]);
         return a[i];
       }
       break;
