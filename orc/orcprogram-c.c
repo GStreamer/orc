@@ -578,6 +578,32 @@ c_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
       dest, dest, src1, src2);
 }
 
+static void
+c_rule_splitlw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest1[20], dest2[20], src[20];
+
+  c_get_name (dest1, p, insn->dest_args[0]);
+  c_get_name (dest2, p, insn->dest_args[1]);
+  c_get_name (src, p, insn->src_args[0]);
+
+  ORC_ASM_CODE(p,"    %s = (%s >> 16) & 0xffff;\n", dest1, src);
+  ORC_ASM_CODE(p,"    %s = %s & 0xffff;\n", dest2, src);
+}
+
+static void
+c_rule_splitwb (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest1[20], dest2[20], src[20];
+
+  c_get_name (dest1, p, insn->dest_args[0]);
+  c_get_name (dest2, p, insn->dest_args[1]);
+  c_get_name (src, p, insn->src_args[0]);
+
+  ORC_ASM_CODE(p,"    %s = (%s >> 8) & 0xff;\n", dest1, src);
+  ORC_ASM_CODE(p,"    %s = %s & 0xff;\n", dest2, src);
+}
+
 static OrcTarget c_target = {
   "c",
   FALSE,
@@ -632,5 +658,7 @@ orc_c_init (void)
   orc_rule_register (rule_set, "accw", c_rule_accw, NULL);
   orc_rule_register (rule_set, "accl", c_rule_accl, NULL);
   orc_rule_register (rule_set, "accsadubl", c_rule_accsadubl, NULL);
+  orc_rule_register (rule_set, "splitlw", c_rule_splitlw, NULL);
+  orc_rule_register (rule_set, "splitwb", c_rule_splitwb, NULL);
 }
 

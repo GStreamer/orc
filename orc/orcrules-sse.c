@@ -554,6 +554,55 @@ sse_rule_select1wb (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+sse_rule_splitlw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest1 = p->vars[insn->dest_args[0]].alloc;
+  int dest2 = p->vars[insn->dest_args[1]].alloc;
+
+  /* FIXME slow */
+
+  if (dest1 != src) {
+    orc_sse_emit_movdqa (p, src, dest1);
+  }
+  orc_sse_emit_psrad (p, 16, dest1);
+  orc_sse_emit_packssdw (p, dest1, dest1);
+
+  if (dest2 != src) {
+    orc_sse_emit_movdqa (p, src, dest2);
+  }
+  orc_sse_emit_pslld (p, 16, dest2);
+  orc_sse_emit_psrad (p, 16, dest2);
+  orc_sse_emit_packssdw (p, dest2, dest2);
+
+}
+
+static void
+sse_rule_splitwb (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest1 = p->vars[insn->dest_args[0]].alloc;
+  int dest2 = p->vars[insn->dest_args[1]].alloc;
+
+  /* FIXME slow */
+
+  if (dest1 != src) {
+    orc_sse_emit_movdqa (p, src, dest1);
+  }
+
+  orc_sse_emit_psraw (p, 8, dest1);
+  orc_sse_emit_packsswb (p, dest1, dest1);
+
+  if (dest2 != src) {
+    orc_sse_emit_movdqa (p, src, dest2);
+  }
+
+  orc_sse_emit_psllw (p, 8, dest2);
+  orc_sse_emit_psraw (p, 8, dest2);
+  orc_sse_emit_packsswb (p, dest2, dest2);
+}
+
+static void
 sse_rule_mergebw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[1]].alloc;
@@ -1072,6 +1121,8 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "select1lw", sse_rule_select1lw_sse3, NULL);
   orc_rule_register (rule_set, "select0wb", sse_rule_select0wb_sse3, NULL);
   orc_rule_register (rule_set, "select1wb", sse_rule_select1wb_sse3, NULL);
+  orc_rule_register (rule_set, "splitlw", sse_rule_splitlw, NULL);
+  orc_rule_register (rule_set, "splitwb", sse_rule_splitwb, NULL);
 
   /* SSE 4.1 */
   rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target,

@@ -544,6 +544,20 @@ select1wb (OrcOpcodeExecutor *ex, void *user)
 }
 
 static void
+splitlw (OrcOpcodeExecutor *ex, void *user)
+{
+  ex->dest_values[0] = (ex->src_values[0] >> 16) & 0xffff;
+  ex->dest_values[1] = ex->src_values[0] & 0xffff;
+}
+
+static void
+splitwb (OrcOpcodeExecutor *ex, void *user)
+{
+  ex->dest_values[0] = (ex->src_values[0] >> 8) & 0xff;
+  ex->dest_values[1] = ex->src_values[0] & 0xff;
+}
+
+static void
 mergewl (OrcOpcodeExecutor *ex, void *user)
 {
   union {
@@ -795,6 +809,8 @@ static OrcStaticOpcode opcodes[] = {
   { "select1lw", select1lw, NULL, 0, { 2 }, { 4 } },
   { "mergewl", mergewl, NULL, 0, { 4 }, { 2, 2 } },
   { "mergebw", mergebw, NULL, 0, { 2 }, { 1, 1 } },
+  { "splitlw", splitlw, NULL, 0, { 2, 2 }, { 4 } },
+  { "splitwb", splitwb, NULL, 0, { 1, 1 }, { 2 } },
 
   /* float ops */
   { "addf", addf, NULL, ORC_STATIC_OPCODE_FLOAT, { 4 }, { 4, 4 } },
