@@ -155,10 +155,12 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   {
     ORC_LOG("variables");
     for(i=0;i<ORC_N_VARIABLES;i++){
-      ORC_LOG("%d: %s %d %d", i,
-          program->vars[i].name,
-          program->vars[i].size,
-          program->vars[i].vartype);
+      if (program->vars[i].size > 0) {
+        ORC_LOG("%d: %s %d %d", i,
+            program->vars[i].name,
+            program->vars[i].size,
+            program->vars[i].vartype);
+      }
     }
     ORC_LOG("instructions");
     for(i=0;i<program->n_insns;i++){
