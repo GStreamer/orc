@@ -701,7 +701,7 @@ orc_sse_emit_loop (OrcCompiler *compiler, int offset, int update)
       switch (var->vartype) {
         case ORC_VAR_TYPE_SRC:
         case ORC_VAR_TYPE_DEST:
-          orc_sse_emit_load_src (compiler, var, offset);
+          orc_sse_emit_load_src (compiler, var, offset*var->size);
           break;
         case ORC_VAR_TYPE_CONST:
           break;
@@ -735,7 +735,7 @@ orc_sse_emit_loop (OrcCompiler *compiler, int offset, int update)
 
       switch (var->vartype) {
         case ORC_VAR_TYPE_DEST:
-          orc_sse_emit_store_dest (compiler, var, offset);
+          orc_sse_emit_store_dest (compiler, var, offset*var->size);
           break;
         case ORC_VAR_TYPE_TEMP:
           break;
