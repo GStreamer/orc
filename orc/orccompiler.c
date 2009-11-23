@@ -470,8 +470,10 @@ orc_compiler_rewrite_vars2 (OrcCompiler *compiler)
     /* must be true to chain src1 to dest:
      *  - rule must handle it
      *  - src1 must be last_use
+     *  - only one dest
      */
-    if (!(compiler->insns[j].opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR)) {
+    if (!(compiler->insns[j].opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR)
+        && compiler->insns[j].opcode->dest_size[1] == 0) {
       int src1 = compiler->insns[j].src_args[0];
       int dest = compiler->insns[j].dest_args[0];
 
