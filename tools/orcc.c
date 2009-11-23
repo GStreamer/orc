@@ -483,10 +483,10 @@ output_prototype (OrcProgram *p, FILE *output)
     if (var->size) {
       if (need_comma) fprintf(output, ", ");
       if (var->type_name) {
-        fprintf(output, "%s * %s", var->type_name,
+        fprintf(output, "const %s * %s", var->type_name,
             varnames[ORC_VAR_S1 + i]);
       } else {
-        fprintf(output, "uint%d_t * %s", var->size*8,
+        fprintf(output, "const uint%d_t * %s", var->size*8,
             varnames[ORC_VAR_S1 + i]);
       }
       if (p->is_2d) {
@@ -707,7 +707,7 @@ output_code (OrcProgram *p, FILE *output)
   for(i=0;i<8;i++){
     var = &p->vars[ORC_VAR_S1 + i];
     if (var->size) {
-      fprintf(output, "  ex->arrays[%s] = %s;\n",
+      fprintf(output, "  ex->arrays[%s] = (void *)%s;\n",
           enumnames[ORC_VAR_S1 + i], varnames[ORC_VAR_S1 + i]);
       if (p->is_2d) {
         fprintf(output, "  ex->params[%s] = %s_stride;\n",
