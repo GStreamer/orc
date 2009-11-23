@@ -494,6 +494,8 @@ void orc_program_append_ds (OrcProgram *program, const char *opcode, int arg0,
     int arg1);
 void orc_program_append_ds_str (OrcProgram *p, const char *opcode,
     const char * arg0, const char * arg1);
+void orc_program_append_dds_str (OrcProgram *program, const char *name,
+    const char *arg1, const char *arg2, const char *arg3);
 
 void orc_mmx_init (void);
 void orc_sse_init (void);

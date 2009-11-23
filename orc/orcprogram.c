@@ -547,6 +547,25 @@ orc_program_append_ds_str (OrcProgram *program, const char *name,
   program->n_insns++;
 }
 
+void
+orc_program_append_dds_str (OrcProgram *program, const char *name,
+    const char *arg1, const char *arg2, const char *arg3)
+{
+  OrcInstruction *insn;
+
+  insn = program->insns + program->n_insns;
+
+  insn->opcode = orc_opcode_find_by_name (name);
+  if (!insn->opcode) {
+    ORC_ERROR ("unknown opcode: %s", name);
+  }
+  insn->dest_args[0] = orc_program_find_var_by_name (program, arg1);
+  insn->dest_args[1] = orc_program_find_var_by_name (program, arg2);
+  insn->src_args[0] = orc_program_find_var_by_name (program, arg3);
+  
+  program->n_insns++;
+}
+
 /**
  * orc_program_get_asm_code:
  * @program: a pointer to an OrcProgram structure

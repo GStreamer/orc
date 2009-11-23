@@ -29,9 +29,10 @@ main (int argc, char *argv[])
   opcode_set = orc_opcode_set_get ("sys");
 
   for(i=0;i<opcode_set->n_opcodes;i++){
-    printf("/* %s src %d,%d,%d */\n",
+    printf("/* %s src %d,%d,%d,%d */\n",
         opcode_set->opcodes[i].name,
         opcode_set->opcodes[i].dest_size[0],
+        opcode_set->opcodes[i].dest_size[1],
         opcode_set->opcodes[i].src_size[0],
         opcode_set->opcodes[i].src_size[1]);
     test_opcode_src (opcode_set->opcodes + i);
@@ -95,14 +96,18 @@ test_opcode_src (OrcStaticOpcode *opcode)
   OrcProgram *p;
   char s[40];
   int ret;
-  int flags;
+  int flags = 0;
 
-  if (opcode->src_size[1] == 0) {
-    p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);
-  } else {
-    p = orc_program_new_dss (opcode->dest_size[0], opcode->src_size[0],
-        opcode->src_size[1]);
+  p = orc_program_new ();
+  orc_program_add_destination (p, opcode->dest_size[0], "d1");
+  if (opcode->dest_size[1] != 0) {
+    orc_program_add_destination (p, opcode->dest_size[1], "d2");
   }
+  orc_program_add_source (p, opcode->src_size[0], "s1");
+  if (opcode->src_size[1] != 0) {
+    orc_program_add_source (p, opcode->src_size[1], "s2");
+  }
+
   if ((opcode->flags & ORC_STATIC_OPCODE_FLOAT_SRC) ||
       (opcode->flags & ORC_STATIC_OPCODE_FLOAT_DEST)) {
     flags = ORC_TEST_FLAGS_FLOAT;
@@ -111,7 +116,11 @@ test_opcode_src (OrcStaticOpcode *opcode)
   sprintf(s, "test_s_%s", opcode->name);
   orc_program_set_name (p, s);
 
-  orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
+  if (opcode->dest_size[1] != 0) {
+    orc_program_append_dds_str (p, opcode->name, "d1", "d2", "s1");
+  } else {
+    orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
+  }
 
   ret = orc_test_compare_output_full (p, flags);
   if (!ret) {
@@ -127,7 +136,7 @@ test_opcode_const (OrcStaticOpcode *opcode)
   OrcProgram *p;
   char s[40];
   int ret;
-  int flags;
+  int flags = 0;
 
   if (opcode->src_size[1] == 0) {
     return;
@@ -158,7 +167,7 @@ test_opcode_param (OrcStaticOpcode *opcode)
   OrcProgram *p;
   char s[40];
   int ret;
-  int flags;
+  int flags = 0;
 
   if (opcode->src_size[1] == 0) {
     return;
@@ -189,7 +198,7 @@ test_opcode_inplace (OrcStaticOpcode *opcode)
   OrcProgram *p;
   char s[40];
   int ret;
-  int flags;
+  int flags = 0;
 
   if (opcode->dest_size[0] != opcode->src_size[0]) return;
 
@@ -223,7 +232,7 @@ test_opcode_src_2d (OrcStaticOpcode *opcode)
   OrcProgram *p;
   char s[40];
   int ret;
-  int flags;
+  int flags = 0;
 
   if (opcode->src_size[1] == 0) {
     p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);
@@ -256,7 +265,7 @@ test_opcode_src_const_n (OrcStaticOpcode *opcode)
   OrcProgram *p;
   char s[40];
   int ret;
-  int flags;
+  int flags = 0;
 
   if (opcode->src_size[1] == 0) {
     p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);
@@ -289,7 +298,7 @@ test_opcode_src_const_n_2d (OrcStaticOpcode *opcode)
   OrcProgram *p;
   char s[40];
   int ret;
-  int flags;
+  int flags = 0;
 
   if (opcode->src_size[1] == 0) {
     p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);

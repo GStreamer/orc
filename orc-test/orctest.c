@@ -268,6 +268,7 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
   int have_acc = FALSE;
   int acc_exec = 0, acc_emul = 0;
   int ret = ORC_TEST_OK;
+  int bad = 0;
 
   ORC_DEBUG ("got here");
 
@@ -311,9 +312,9 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
       src[i-ORC_VAR_S1] = orc_array_new (n, m, program->vars[i].size);
       orc_array_set_random (src[i-ORC_VAR_S1], &rand_context);
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
-      dest_exec[i] = orc_array_new (n, m, program->vars[i].size);
+      dest_exec[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size);
       orc_array_set_pattern (dest_exec[i], 0xa5);
-      dest_emul[i] = orc_array_new (n, m, program->vars[i].size);
+      dest_emul[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size);
       orc_array_set_pattern (dest_emul[i], 0xa5);
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_PARAM) {
       orc_executor_set_param (ex, i, 2);
@@ -322,8 +323,8 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
 
   for(i=0;i<ORC_N_VARIABLES;i++){
     if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
-      orc_executor_set_array (ex, i, dest_exec[i]->data);
-      orc_executor_set_stride (ex, i, dest_exec[i]->stride);
+      orc_executor_set_array (ex, i, dest_exec[i-ORC_VAR_D1]->data);
+      orc_executor_set_stride (ex, i, dest_exec[i-ORC_VAR_D1]->stride);
       have_dest = TRUE;
     }
     if (program->vars[i].vartype == ORC_VAR_TYPE_SRC) {
@@ -359,53 +360,63 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
     }
   }
 
-  for(k=0;k<ORC_N_VARIABLES;k++){
-    if (program->vars[k].vartype == ORC_VAR_TYPE_DEST) {
-      if (!orc_array_compare (dest_exec[k], dest_emul[k], flags)) {
-        for(j=0;j<m;j++){
-          for(i=0;i<n;i++){
-            int a,b;
-            int l;
-
-            printf("%2d %2d:", i, j);
-
-            for(l=0;l<ORC_N_VARIABLES;l++){
-              if (program->vars[l].name == NULL) continue;
-              if (program->vars[l].vartype == ORC_VAR_TYPE_SRC &&
-                  program->vars[l].size > 0) {
-                if (flags & ORC_TEST_FLAGS_FLOAT) {
-                  print_array_val_float (src[l-ORC_VAR_S1], i, j);
-                } else {
-                  print_array_val_signed (src[l-ORC_VAR_S1], i, j);
-                }
-              }
-            }
-
-            printf(" ->");
-            if (flags & ORC_TEST_FLAGS_FLOAT) {
-              a = print_array_val_float (dest_emul[k], i, j);
-              b = print_array_val_float (dest_exec[k], i, j);
-            } else {
-              a = print_array_val_signed (dest_emul[k], i, j);
-              b = print_array_val_signed (dest_exec[k], i, j);
-            }
-
-            if (a != b) {
-              printf(" *");
-            }
-
-            printf("\n");
-          }
-        }
-
-        ret = ORC_TEST_FAILED;
+  for(k=ORC_VAR_D1;k<ORC_VAR_D1+4;k++){
+    if (program->vars[k].size > 0) {
+      if (!orc_array_compare (dest_exec[k-ORC_VAR_D1], dest_emul[k-ORC_VAR_D1], flags)) {
+        printf("dest array %d bad\n", k);
+        bad = TRUE;
       }
-      if (!orc_array_check_out_of_bounds (dest_exec[k])) {
+      if (!orc_array_check_out_of_bounds (dest_exec[k-ORC_VAR_D1])) {
         printf("out of bounds failure\n");
 
         ret = ORC_TEST_FAILED;
       }
     }
+  }
+  if (bad) {
+    for(j=0;j<m;j++){
+      for(i=0;i<n;i++){
+        int a,b;
+        int l;
+        int line_bad = 0;
+
+        printf("%2d %2d:", i, j);
+
+        for(l=ORC_VAR_S1;l<ORC_VAR_S1+8;l++){
+          if (program->vars[l].size > 0) {
+            if (flags & ORC_TEST_FLAGS_FLOAT) {
+              print_array_val_float (src[l-ORC_VAR_S1], i, j);
+            } else {
+              print_array_val_hex (src[l-ORC_VAR_S1], i, j);
+            }
+          }
+        }
+
+        printf(" ->");
+        for(l=ORC_VAR_D1;l<ORC_VAR_D1+4;l++){
+          if (program->vars[l].size > 0) {
+            if (flags & ORC_TEST_FLAGS_FLOAT) {
+              a = print_array_val_float (dest_emul[l-ORC_VAR_D1], i, j);
+              b = print_array_val_float (dest_exec[l-ORC_VAR_D1], i, j);
+            } else {
+              a = print_array_val_hex (dest_emul[l-ORC_VAR_D1], i, j);
+              b = print_array_val_hex (dest_exec[l-ORC_VAR_D1], i, j);
+            }
+            if (a != b) {
+              line_bad = TRUE;
+            }
+          }
+        }
+
+        if (line_bad) {
+          printf(" *");
+        }
+
+        printf("\n");
+      }
+    }
+
+    ret = ORC_TEST_FAILED;
   }
 
   if (have_acc) {
