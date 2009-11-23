@@ -166,74 +166,48 @@ print_array_val_signed (OrcArray *array, int i, int j)
 }
 
 int
-print_array_val_unsigned (void *array, int size, int i)
+print_array_val_unsigned (OrcArray *array, int i, int j)
 {
-  switch (size) {
+  void *ptr = ORC_PTR_OFFSET (array->data,
+      i*array->element_size + j*array->stride);
+
+  switch (array->element_size) {
     case 1:
-      {
-        uint8_t *a = array;
-        printf(" %4u", a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %4u", *(uint8_t *)ptr);
+      return *(int8_t *)ptr;
     case 2:
-      {
-        uint16_t *a = array;
-        printf(" %5u", a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %5u", *(uint16_t *)ptr);
+      return *(int16_t *)ptr;
     case 4:
-      {
-        uint32_t *a = array;
-        printf(" %10u", a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %10u", *(uint32_t *)ptr);
+      return *(int32_t *)ptr;
     case 8:
-      {
-        uint64_t *a = array;
-        printf(" %20llu", (long long)a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %20llu", (long long)*(uint64_t *)ptr);
+      return *(int64_t *)ptr;
     default:
       return -1;
   }
 }
 
 int
-print_array_val_hex (void *array, int size, int i)
+print_array_val_hex (OrcArray *array, int i, int j)
 {
-  switch (size) {
+  void *ptr = ORC_PTR_OFFSET (array->data,
+      i*array->element_size + j*array->stride);
+
+  switch (array->element_size) {
     case 1:
-      {
-        uint8_t *a = array;
-        printf(" %2x", a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %02x", *(uint8_t *)ptr);
+      return *(int8_t *)ptr;
     case 2:
-      {
-        uint16_t *a = array;
-        printf(" %4x", a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %04x", *(uint16_t *)ptr);
+      return *(int16_t *)ptr;
     case 4:
-      {
-        uint32_t *a = array;
-        printf(" %8x", a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %08x", *(uint32_t *)ptr);
+      return *(int32_t *)ptr;
     case 8:
-      {
-        uint64_t *a = array;
-        printf(" %16llx", (long long)a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %016llx", (long long)*(uint64_t *)ptr);
+      return *(int64_t *)ptr;
     default:
       return -1;
   }
