@@ -283,6 +283,7 @@ struct _OrcConstant {
   int alloc_reg;
   unsigned int value;
   unsigned int full_value[4];
+  int use_count;
 };
 
 /**
@@ -466,8 +467,9 @@ struct _OrcTarget {
   int n_rule_sets;
 
   const char * (*get_asm_preamble)(void);
+  void (*load_constant)(OrcCompiler *compiler, int reg, int size, int value);
 
-  void *_unused[9];
+  void *_unused[8];
 };
 
 
@@ -557,6 +559,7 @@ int orc_program_allocate_register (OrcProgram *program, int is_data);
 
 void orc_compiler_allocate_codemem (OrcCompiler *compiler);
 int orc_compiler_label_new (OrcCompiler *compiler);
+int orc_compiler_get_constant (OrcCompiler *compiler, int size, int value);
 
 const char *orc_program_get_asm_code (OrcProgram *program);
 const char *orc_target_get_asm_preamble (const char *target);

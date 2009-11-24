@@ -27,6 +27,7 @@ void orc_compiler_sse_register_rules (OrcTarget *target);
 
 void orc_compiler_rewrite_vars (OrcCompiler *compiler);
 void orc_compiler_dump (OrcCompiler *compiler);
+void sse_load_constant (OrcCompiler *compiler, int reg, int size, int value);
 
 static OrcTarget sse_target = {
   "sse",
@@ -38,7 +39,12 @@ static OrcTarget sse_target = {
   ORC_VEC_REG_BASE,
   orc_compiler_sse_get_default_flags,
   orc_compiler_sse_init,
-  orc_compiler_sse_assemble
+  orc_compiler_sse_assemble,
+  { { 0 } },
+  0,
+  NULL,
+  sse_load_constant
+
 };
 
 
@@ -214,6 +220,21 @@ sse_save_accumulators (OrcCompiler *compiler)
         break;
     }
   }
+}
+
+void
+sse_load_constant (OrcCompiler *compiler, int reg, int size, int value)
+{
+  if (size == 1) {
+    orc_sse_emit_loadib (compiler, reg, value);
+  } else if (size == 2) {
+    orc_sse_emit_loadiw (compiler, reg, value);
+  } else if (size == 4) {
+    orc_sse_emit_loadil (compiler, reg, value);
+  } else {
+    ORC_COMPILER_ERROR(compiler, "unimplemented");
+  }
+
 }
 
 void

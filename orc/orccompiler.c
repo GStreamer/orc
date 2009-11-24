@@ -577,3 +577,45 @@ orc_compiler_label_new (OrcCompiler *compiler)
   return compiler->n_labels++;
 }
 
+void
+orc_compiler_load_constant (OrcCompiler *compiler, int reg, int size,
+    int value)
+{
+  compiler->target->load_constant (compiler, reg, size, value);
+}
+
+int
+orc_compiler_get_constant (OrcCompiler *compiler, int size, int value)
+{
+  int i;
+
+  if (size < 4) {
+    if (size < 2) {
+      value &= 0xff;
+      value |= (value<<8);
+    }
+    value &= 0xffff;
+    value |= (value<<16);
+  }
+
+  for(i=0;i<compiler->n_constants;i++){
+    if (compiler->constants[i].value == value) {
+      break;
+    }
+  }
+  if (i == compiler->n_constants) {
+    compiler->n_constants++;
+    compiler->constants[i].value = value;
+    compiler->constants[i].alloc_reg = 0;
+    compiler->constants[i].use_count = 0;
+  }
+
+  compiler->constants[i].use_count++;
+
+  if (compiler->constants[i].alloc_reg != 0) {;
+    return compiler->constants[i].alloc_reg;
+  }
+  orc_compiler_load_constant (compiler, compiler->tmpreg, size, value);
+  return compiler->tmpreg;
+}
+
