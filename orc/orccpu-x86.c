@@ -34,14 +34,12 @@
 #include <orc/orcprogram.h>
 #include <orc/orcutils.h>
 
-#include <unistd.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <setjmp.h>
 #include <signal.h>
-#include <sys/time.h>
 #include <time.h>
 
 #if defined(__FreeBSD__) || defined(__APPLE__)
@@ -165,6 +163,19 @@ orc_mmx_getflags_cpuinfo (char *cpuinfo)
 #endif
 
 #ifdef USE_I386_CPUID
+#ifdef _MSC_VER
+static void
+get_cpuid (uint32_t op, uint32_t *a, uint32_t *b, uint32_t *c, uint32_t *d)
+{
+  int tmp[4];
+  __cpuid(tmp, op);
+  *a = tmp[0];
+  *b = tmp[1];
+  *c = tmp[2];
+  *d = tmp[3];
+}
+#endif
+
 #ifdef __i386__
 static void
 get_cpuid (uint32_t op, uint32_t *a, uint32_t *b, uint32_t *c, uint32_t *d)

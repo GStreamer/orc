@@ -16,6 +16,10 @@
 
 #define OOB_VALUE 0xa5
 
+#ifdef _MSC_VER
+#define isnan(x) _isnan(x)
+#endif
+
 OrcArray *
 orc_array_new (int n, int m, int element_size)
 {
@@ -102,7 +106,7 @@ orc_array_check_out_of_bounds (OrcArray *array)
   }
 
   for(j=0;j<array->m;j++){
-    data = array->data + array->stride * j;
+    data = ORC_PTR_OFFSET(array->data, array->stride * j);
     for(i=array->element_size * array->n;i<array->stride;i++){
       if (data[i] != OOB_VALUE) {
         printf("OOB check failed on row %d, end+%d\n", j,
@@ -112,7 +116,7 @@ orc_array_check_out_of_bounds (OrcArray *array)
     }
   }
 
-  data = array->data + array->stride * array->m;
+  data = ORC_PTR_OFFSET (array->data, array->stride * array->m);
   for(i=0;i<array->stride * EXTEND_ROWS;i++){
     if (data[i] != OOB_VALUE) {
       printf("OOB check failed at end+%d\n", i);

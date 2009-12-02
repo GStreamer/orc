@@ -7,7 +7,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <unistd.h>
 #include <sys/types.h>
 
 #include <orc/orcdebug.h>
@@ -463,30 +462,30 @@ orc_arm_emit_dp (OrcCompiler *p, int type, OrcArmCond cond, OrcArmDP opcode,
         return;
       }
       shifter_op = arm_so_i (shift, imm);
-      snprintf (shifter, sizeof(shifter), "#0x%08x", val);
+      sprintf (shifter, "#0x%08x", val);
       I = 1;
       break;
     case 1:
       /* <Rm> */
       shifter_op = arm_so_r (Rm);
-      snprintf (shifter, sizeof(shifter), "%s", orc_arm_reg_name (Rm));
+      sprintf (shifter, "%s", orc_arm_reg_name (Rm));
       break;
     case 2:
       /* <Rm>, [LSL|LSR|ASR] #imm */
       shifter_op = arm_so_rsi (val,shift,Rm);
-      snprintf (shifter, sizeof(shifter), "%s, %s #%d",
+      sprintf (shifter, "%s, %s #%d",
           orc_arm_reg_name (Rm), shift_names[shift], val);
       break;
     case 3:
       /* <Rm>, [LSL|LSR|ASR] <Rs> */
       shifter_op = arm_so_rsr (val,shift,Rm);
-      snprintf (shifter, sizeof(shifter), "%s, %s %s",
+      sprintf (shifter, "%s, %s %s",
           orc_arm_reg_name (Rm), shift_names[shift], orc_arm_reg_name (val));
       break;
     case 4:
       /* <Rm>, RRX */
       shifter_op = arm_so_rrx (Rm);
-      snprintf (shifter, sizeof(shifter), "%s, RRX",
+      sprintf (shifter, "%s, RRX",
           orc_arm_reg_name (Rm));
       break;
     default:
@@ -577,7 +576,7 @@ orc_arm_emit_xt (OrcCompiler *p, int op, OrcArmCond cond,
   };
 
   if (r8 & 0x18)
-    snprintf (shifter, sizeof (shifter), ", ROR #%d", r8 & 0x18);
+    sprintf (shifter, sizeof (shifter), ", ROR #%d", r8 & 0x18);
   else
     shifter[0] = '\0';
 
@@ -611,7 +610,7 @@ orc_arm_emit_pkh (OrcCompiler *p, int op, OrcArmCond cond,
   static const char *pkh_insn_names[] = { "pkhbt", "pkhtb" };
 
   if (sh > 0) {
-    snprintf (shifter, sizeof (shifter), ", %s #%d",
+    sprintf (shifter, sizeof (shifter), ", %s #%d",
         (op == 0 ? "LSL" : "ASR"), sh);
   } else {
     shifter[0] = '\0';
@@ -649,7 +648,7 @@ orc_arm_emit_sat (OrcCompiler *p, int op, OrcArmCond cond,
   static const int par_op[] = { 0, 0, 3, 3 };
 
   if (sh > 0) {
-    snprintf (shifter, sizeof (shifter), ", %s #%d",
+    sprintf (shifter, sizeof (shifter), ", %s #%d",
         (asr&1 ? "ASR" : "LSL"), sh);
   } else {
     shifter[0] = '\0';

@@ -8,7 +8,7 @@
 #include <string.h>
 #include <math.h>
 
-static OrcStaticOpcode opcodes[];
+extern OrcStaticOpcode opcodes[];
 
 void orc_float_sse_register_rules (void);
 

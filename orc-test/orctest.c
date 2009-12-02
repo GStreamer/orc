@@ -13,6 +13,10 @@
 #include <string.h>
 #include <math.h>
 
+#ifdef _MSC_VER
+#define isnan(x) _isnan(x)
+#endif
+
 void _orc_profile_init(void);
 
 OrcRandomContext rand_context;

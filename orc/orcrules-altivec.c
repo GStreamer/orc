@@ -5,7 +5,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <unistd.h>
 #include <sys/types.h>
 
 #include <orc/orcpowerpc.h>
@@ -372,7 +371,7 @@ powerpc_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 powerpc_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int tmp1 = p->tmpreg;;
+  int tmp1 = p->tmpreg;
   int tmp2 = POWERPC_V31;
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int src2 = ORC_SRC_ARG (p, insn, 1);

@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static OrcStaticOpcode opcodes[];
+extern OrcStaticOpcode opcodes[];
 
 void orc_pixel_sse_register_rules (void);
 

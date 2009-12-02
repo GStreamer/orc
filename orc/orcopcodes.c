@@ -647,7 +647,7 @@ BINARY_FL(cmplef, (a <= b) ? (~0) : 0)
 static void
 convfl (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->dest_values[0] = rintf(ORC_FLOAT_READ(&ex->src_values[0]));
+  ex->dest_values[0] = floor(0.5 + ORC_FLOAT_READ(&ex->src_values[0]));
 }
 
 static void
