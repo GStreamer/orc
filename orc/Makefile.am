@@ -32,7 +32,6 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orcrules-sse.c \
 	orcrules-arm.c \
 	orcdebug.c \
-	orcutils.c \
 	orcpowerpc.c \
 	orcsse.c \
 	orcmmx.c \

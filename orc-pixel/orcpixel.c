@@ -7,7 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern OrcStaticOpcode opcodes[];
+/* This should be static, but compilers can't agree on what to use
+ * for forward declarations of static arrays. */
+OrcStaticOpcode opcodes[];
 
 void orc_pixel_sse_register_rules (void);
 
@@ -89,7 +91,7 @@ compadd (OrcOpcodeExecutor *ex, void *user)
       COMPOSITE_ADD(ORC_ARGB_B(src1), ORC_ARGB_B(src2)));
 }
 
-static OrcStaticOpcode opcodes[] = {
+OrcStaticOpcode opcodes[] = {
   { "compin", compin, NULL, 0, { 4 }, { 4, 1 } },
   { "compover", compover, NULL, 0, { 4 }, { 4, 4 } },
   { "compovera", compovera, NULL, 0, { 1 }, { 1, 1 } },

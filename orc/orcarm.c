@@ -576,7 +576,7 @@ orc_arm_emit_xt (OrcCompiler *p, int op, OrcArmCond cond,
   };
 
   if (r8 & 0x18)
-    sprintf (shifter, sizeof (shifter), ", ROR #%d", r8 & 0x18);
+    sprintf (shifter, ", ROR #%d", r8 & 0x18);
   else
     shifter[0] = '\0';
 
@@ -610,7 +610,7 @@ orc_arm_emit_pkh (OrcCompiler *p, int op, OrcArmCond cond,
   static const char *pkh_insn_names[] = { "pkhbt", "pkhtb" };
 
   if (sh > 0) {
-    sprintf (shifter, sizeof (shifter), ", %s #%d",
+    sprintf (shifter, ", %s #%d",
         (op == 0 ? "LSL" : "ASR"), sh);
   } else {
     shifter[0] = '\0';
@@ -648,7 +648,7 @@ orc_arm_emit_sat (OrcCompiler *p, int op, OrcArmCond cond,
   static const int par_op[] = { 0, 0, 3, 3 };
 
   if (sh > 0) {
-    sprintf (shifter, sizeof (shifter), ", %s #%d",
+    sprintf (shifter, ", %s #%d",
         (asr&1 ? "ASR" : "LSL"), sh);
   } else {
     shifter[0] = '\0';
