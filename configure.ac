@@ -1,5 +1,5 @@
 AC_PREREQ([2.58])
-AC_INIT(orc,0.4.2.1)
+AC_INIT(orc,0.4.3)
 
 AS_NANO(ORC_CVS=no,ORC_CVS=yes)
 
