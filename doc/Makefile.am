@@ -70,5 +70,5 @@ EXTRA_DIST +=
 
 
 sync:
-	cd html && rsync -a . home.schleef.org:/srv/schleef.org/www/orc/documentation/
+	cd html && rsync -a . cooker.entropywave.com:/srv/code.entropywave.com/www/documentation/orc/
 
