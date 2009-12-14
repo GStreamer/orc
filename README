@@ -67,7 +67,7 @@ Questions and Answers:
  - Q: How big is the Orc library?
 
    A: Compiled with only one target (SSE), the library size is about
-   86 kB uncompressed, or 30 kB compressed.  The goal is to keep the
+   95 kB uncompressed, or 32 kB compressed.  The goal is to keep the
    uncompressed size under about 100 kB.
 
 

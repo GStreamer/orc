@@ -1,4 +1,28 @@
 
+0.4.3
+=====
+
+New opcodes: all the 32-bit float opcodes from the orc-float
+library have been moved into the core library.
+
+New opcodes: splitlw and splitwb, which are equivalent to
+select0lw, select1lw, select0wb, and select1wb, except that
+the new opcodes split a value into two destinations in one
+opcode.
+
+New backend: c64x-c, for the TI C64x+ DSP.  This backend only
+produces source code, unlike other backends which can produce
+both source and binary code.  Generating code for this backend
+can be done using 'orcc --assembly --target=c64x-c'.
+
+Orc now understands and can generate code for two-dimensional
+arrays.  If the size of the array is known at compile time,
+this information can be used to improve generated code.
+
+Various improvements to the ARM backend by Wim Taymans.  The
+ARM backend is still experimental.
+
+
 0.4.2
 =====
 
