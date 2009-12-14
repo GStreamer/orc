@@ -8,8 +8,7 @@ TESTS = \
 	test_accsadubl test-schro \
 	compile_opcodes_sys exec_opcodes_sys \
 	compile_opcodes_float exec_opcodes_float \
-	compile_opcodes_pixel exec_opcodes_pixel \
-	compile_parse_c
+	compile_opcodes_pixel exec_opcodes_pixel
 
 XFAIL_TESTS = \
 	compile_opcodes_float_c \
@@ -18,7 +17,9 @@ XFAIL_TESTS = \
 	exec_opcodes_pixel
 
 noinst_PROGRAMS = $(TESTS) generate_xml_table generate_xml_table2 \
-	generate_opcodes_sys
+	generate_opcodes_sys compile_parse_c
+
+EXTRA_DIST = test.orc
 
 CLEANFILES = temp-orc-test-*
 
