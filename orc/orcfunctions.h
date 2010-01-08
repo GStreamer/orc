@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-void orc_memcpy (void * d1, void * s1, int n);
+void orc_memcpy (void * d1, const void * s1, int n);
 void orc_memset (void * d1, int p1, int n);
 
 #ifdef __cplusplus

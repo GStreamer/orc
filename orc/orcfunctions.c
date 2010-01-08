@@ -7,6 +7,8 @@
 #include <stdint.h>
 #endif
 
+
+/* begin Orc C target preamble */
 #define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
 #define ORC_ABS(a) ((a)<0 ? -(a) : (a))
 #define ORC_MIN(a,b) ((a)<(b) ? (a) : (b))
@@ -32,22 +34,31 @@
 #define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
+#define ORC_AS_FLOAT(x) (((union { int i; float f; } *)(&x))->f)
+/* end Orc C target preamble */
+
 
 
 /* orc_memcpy */
 #ifdef DISABLE_ORC
 void
-orc_memcpy (void * d1, void * s1, int n){
+orc_memcpy (void * d1, const void * s1, int n){
   int i;
-  int8_t * var0;
-  const int8_t * var4;
+  int8_t var0;
+  int8_t * ptr0;
+  int8_t var4;
+  const int8_t * ptr4;
 
-  var0 = (void *)d1;
-  var4 = (void *)s1;
+  ptr0 = d1;
+  ptr4 = s1;
 
   for (i = 0; i < n; i++) {
+    var4 = *ptr4;
+    ptr4++;
     /* 0: copyb */
-    var0[i] = var4[i];
+    var0 = var4;
+    *ptr0 = var0;
+    ptr0++;
   }
 
 }
@@ -57,25 +68,33 @@ static void
 _backup_orc_memcpy (OrcExecutor *ex)
 {
   int i;
-  int8_t * var0;
-  const int8_t * var4;
+  int n = ex->n;
+  int8_t var0;
+  int8_t * ptr0;
+  int8_t var4;
+  const int8_t * ptr4;
 
-  var0 = ex->arrays[0];
-  var4 = ex->arrays[4];
+  ptr0 = ex->arrays[0];
+  ptr4 = ex->arrays[4];
 
-  for (i = 0; i < ex->n; i++) {
+  for (i = 0; i < n; i++) {
+    var4 = *ptr4;
+    ptr4++;
     /* 0: copyb */
-    var0[i] = var4[i];
+    var0 = var4;
+    *ptr0 = var0;
+    ptr0++;
   }
 
 }
 
 void
-orc_memcpy (void * d1, void * s1, int n)
+orc_memcpy (void * d1, const void * s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
   static OrcProgram *p = 0;
+  void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
@@ -99,9 +118,10 @@ orc_memcpy (void * d1, void * s1, int n)
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
-  ex->arrays[ORC_VAR_S1] = s1;
+  ex->arrays[ORC_VAR_S1] = (void *)s1;
 
-  orc_executor_run (ex);
+  func = p->code_exec;
+  func (ex);
 }
 #endif
 
@@ -111,14 +131,17 @@ orc_memcpy (void * d1, void * s1, int n)
 void
 orc_memset (void * d1, int p1, int n){
   int i;
-  int8_t * var0;
+  int8_t var0;
+  int8_t * ptr0;
   const int8_t var24 = p1;
 
-  var0 = (void *)d1;
+  ptr0 = d1;
 
   for (i = 0; i < n; i++) {
     /* 0: copyb */
-    var0[i] = var24;
+    var0 = var24;
+    *ptr0 = var0;
+    ptr0++;
   }
 
 }
@@ -128,14 +151,18 @@ static void
 _backup_orc_memset (OrcExecutor *ex)
 {
   int i;
-  int8_t * var0;
+  int n = ex->n;
+  int8_t var0;
+  int8_t * ptr0;
   const int8_t var24 = ex->params[24];
 
-  var0 = ex->arrays[0];
+  ptr0 = ex->arrays[0];
 
-  for (i = 0; i < ex->n; i++) {
+  for (i = 0; i < n; i++) {
     /* 0: copyb */
-    var0[i] = var24;
+    var0 = var24;
+    *ptr0 = var0;
+    ptr0++;
   }
 
 }
@@ -146,6 +173,7 @@ orc_memset (void * d1, int p1, int n)
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
   static OrcProgram *p = 0;
+  void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
@@ -171,7 +199,8 @@ orc_memset (void * d1, int p1, int n)
   ex->arrays[ORC_VAR_D1] = d1;
   ex->params[ORC_VAR_P1] = p1;
 
-  orc_executor_run (ex);
+  func = p->code_exec;
+  func (ex);
 }
 #endif
 
