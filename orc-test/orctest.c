@@ -4,6 +4,7 @@
 #include <orc-test/orctest.h>
 #include <orc-test/orcarray.h>
 #include <orc-test/orcrandom.h>
+#include <orc-test/orcprofile.h>
 #include <orc/orc.h>
 #include <orc/orcdebug.h>
 
@@ -554,5 +555,110 @@ orc_test_get_program_for_opcode_param (OrcStaticOpcode *opcode)
   }
 
   return p;
+}
+
+
+void
+orc_test_performance (OrcProgram *program, int flags)
+{
+  OrcExecutor *ex;
+  int n;
+  int m;
+  OrcArray *dest_exec[4] = { NULL, NULL, NULL, NULL };
+  OrcArray *dest_emul[4] = { NULL, NULL, NULL, NULL };
+  OrcArray *src[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+  int i, j;
+  OrcCompileResult result;
+  OrcProfile prof;
+  double ave, std;
+
+  ORC_DEBUG ("got here");
+
+  if (!(flags & ORC_TEST_FLAGS_BACKUP)) {
+    OrcTarget *target;
+    unsigned int flags;
+
+    target = orc_target_get_default ();
+    flags = orc_target_get_default_flags (target);
+
+    result = orc_program_compile_full (program, target, flags);
+    if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
+      printf("compile failed\n");
+      return;
+    }
+  }
+
+  if (program->constant_n > 0) {
+    n = program->constant_n;
+  } else {
+    //n = 64 + (orc_random(&rand_context)&0xf);
+    n = 10000;
+  }
+
+  ex = orc_executor_new (program);
+  orc_executor_set_n (ex, n);
+  if (program->is_2d) {
+    if (program->constant_m > 0) {
+      m = program->constant_m;
+    } else {
+      m = 8 + (orc_random(&rand_context)&0xf);
+    }
+  } else {
+    m = 1;
+  }
+  orc_executor_set_m (ex, m);
+  ORC_DEBUG("size %d %d", ex->n, ex->params[ORC_VAR_A1]);
+
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    if (program->vars[i].name == NULL) continue;
+
+    if (program->vars[i].vartype == ORC_VAR_TYPE_SRC) {
+      src[i-ORC_VAR_S1] = orc_array_new (n, m, program->vars[i].size);
+      orc_array_set_random (src[i-ORC_VAR_S1], &rand_context);
+    } else if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
+      dest_exec[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size);
+      orc_array_set_pattern (dest_exec[i], 0xa5);
+      dest_emul[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size);
+      orc_array_set_pattern (dest_emul[i], 0xa5);
+    } else if (program->vars[i].vartype == ORC_VAR_TYPE_PARAM) {
+      orc_executor_set_param (ex, i, 2);
+    }
+  }
+
+  ORC_DEBUG ("running");
+  orc_profile_init (&prof);
+  for(i=0;i<10;i++){
+    orc_executor_set_n (ex, n);
+    orc_executor_set_m (ex, m);
+    for(j=0;j<ORC_N_VARIABLES;j++){
+      if (program->vars[j].vartype == ORC_VAR_TYPE_DEST) {
+        orc_executor_set_array (ex, j, dest_exec[j-ORC_VAR_D1]->data);
+        orc_executor_set_stride (ex, j, dest_exec[j-ORC_VAR_D1]->stride);
+      }
+      if (program->vars[j].vartype == ORC_VAR_TYPE_SRC) {
+        orc_executor_set_array (ex, j, src[j-ORC_VAR_S1]->data);
+        orc_executor_set_stride (ex, j, src[j-ORC_VAR_S1]->stride);
+      }
+    }
+    orc_profile_start (&prof);
+    orc_executor_run (ex);
+    orc_profile_stop (&prof);
+  }
+  ORC_DEBUG ("done running");
+
+  orc_profile_get_ave_std (&prof, &ave, &std);
+  printf("%g %g\n", (ave - 108)/(n*m), std/(n*m));
+
+  for(i=0;i<4;i++){
+    if (dest_exec[i]) orc_array_free (dest_exec[i]);
+    if (dest_emul[i]) orc_array_free (dest_emul[i]);
+  }
+  for(i=0;i<8;i++){
+    if (src[i]) orc_array_free (src[i]);
+  }
+
+  orc_executor_free (ex);
+
+  return;
 }
 
