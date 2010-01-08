@@ -29,26 +29,13 @@ orc_compiler_allocate_codemem (OrcCompiler *compiler)
   int fd;
   int n;
 
-  /* FIXME something combining these two would be ideal */
-#if 1
-  {
-    char filename[32] = "/tmp/orcexecXXXXXX";
-    fd = mkstemp (filename);
-    if (fd == -1) {
-      /* FIXME oh crap */
-      ORC_COMPILER_ERROR (compiler, "failed to create temp file");
-      return;
-    }
-    unlink (filename);
-  }
-#else
   {
     char *filename;
 
-    filename = malloc (strlen ("/tmp/orcexec") +
-        strlen (compiler->program->name) + 1);
-    sprintf(filename, "/tmp/orcexec%s", compiler->program->name);
-    fd = open (filename, O_RDWR | O_CREAT, S_IRWXU);
+    filename = malloc (strlen ("/tmp/orcexec..") +
+        strlen (compiler->program->name) + 6 + 1);
+    sprintf(filename, "/tmp/orcexec.%s.XXXXXX", compiler->program->name);
+    fd = mkstemp (filename);
     if (fd == -1) {
       /* FIXME oh crap */
       ORC_COMPILER_ERROR (compiler, "failed to create temp file");
@@ -57,7 +44,6 @@ orc_compiler_allocate_codemem (OrcCompiler *compiler)
     unlink (filename);
     free (filename);
   }
-#endif
 
   n = ftruncate (fd, SIZE);
 
