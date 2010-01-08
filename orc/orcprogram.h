@@ -379,6 +379,7 @@ struct _OrcCompiler {
   int gp_tmpreg;
 
   int need_mask_regs;
+  int unroll_shift;
 };
 
 #define ORC_SRC_ARG(p,i,n) ((p)->vars[(i)->src_args[(n)]].alloc)
