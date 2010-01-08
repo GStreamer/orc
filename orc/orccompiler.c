@@ -148,6 +148,12 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   compiler = malloc (sizeof(OrcCompiler));
   memset (compiler, 0, sizeof(OrcCompiler));
 
+  if (program->backup_func) {
+    program->code = program->backup_func;
+  } else {
+    program->code = (void *)orc_executor_emulate;
+  }
+
   compiler->program = program;
   compiler->target = target;
   compiler->target_flags = flags;
