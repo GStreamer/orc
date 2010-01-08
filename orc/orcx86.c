@@ -666,7 +666,12 @@ orc_x86_emit_dec_memoffset (OrcCompiler *compiler, int size,
     ORC_ASM_CODE(compiler,"  decw %d(%%%s)\n", offset, orc_x86_get_regname_ptr(compiler, reg));
     *compiler->codeptr++ = 0x66;
   } else if (size == 4) {
-    ORC_ASM_CODE(compiler,"  decl %d(%%%s)\n", offset, orc_x86_get_regname_ptr(compiler, reg));
+    ORC_ASM_CODE(compiler,"  addl $-1, %d(%%%s)\n", offset, orc_x86_get_regname_ptr(compiler, reg));
+    orc_x86_emit_rex(compiler, size, 0, 0, reg);
+    *compiler->codeptr++ = 0x83;
+    orc_x86_emit_modrm_memoffset (compiler, 0, offset, reg);
+    *compiler->codeptr++ = 0xff;
+    return;
   } else {
     ORC_ASM_CODE(compiler,"  dec %d(%%%s)\n", offset, orc_x86_get_regname_ptr(compiler, reg));
   }
