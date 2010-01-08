@@ -590,6 +590,7 @@ output_code (OrcProgram *p, FILE *output)
   fprintf(output, "  OrcExecutor _ex, *ex = &_ex;\n");
   fprintf(output, "  static int p_inited = 0;\n");
   fprintf(output, "  static OrcProgram *p = 0;\n");
+  fprintf(output, "  void (*func) (OrcExecutor *);\n");
   fprintf(output, "\n");
   fprintf(output, "  if (!p_inited) {\n");
   fprintf(output, "    orc_once_mutex_lock ();\n");
@@ -723,7 +724,8 @@ output_code (OrcProgram *p, FILE *output)
     }
   }
   fprintf(output, "\n");
-  fprintf(output, "  orc_executor_run (ex);\n");
+  fprintf(output, "  func = p->code_exec;\n");
+  fprintf(output, "  func (ex);\n");
   for(i=0;i<4;i++){
     var = &p->vars[ORC_VAR_A1 + i];
     if (var->size) {
