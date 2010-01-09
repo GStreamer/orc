@@ -965,7 +965,7 @@ sse_rule_cmplef (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_convfl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  orc_sse_emit_660f (p, "cvtps2dq", 0x5b,
+  orc_sse_emit_f30f (p, "cvttps2dq", 0x5b,
       p->vars[insn->src_args[0]].alloc,
       p->vars[insn->dest_args[0]].alloc);
 }
