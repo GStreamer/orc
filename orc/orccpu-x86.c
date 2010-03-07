@@ -367,12 +367,12 @@ orc_sse_detect_getisax (void)
   if (ui & AV_386_SSE4_2) {
      sse_flags |= ORC_TARGET_SSE_SSE4_2;
   }
-  if (ui & AV_386_SSE4A) {
+  if (ui & AV_386_AMD_SSE4A) {
      sse_flags |= ORC_TARGET_SSE_SSE4A;
   }
-  if (ui & AV_386_SSE5) {
-     sse_flags |= ORC_TARGET_SSE_SSE5;
-  }
+//  if (ui & AV_386_SSE5) {
+//     sse_flags |= ORC_TARGET_SSE_SSE5;
+//  }
 
   return sse_flags;
 }
@@ -390,16 +390,16 @@ orc_mmx_detect_getisax (void)
   }
 
   /* guesses.  if these fail to compile, please fix */
-  if (ui & AV_386_MMXEXT) {
+  if (ui & AV_386_AMD_MMX) {
      mmx_flags |= ORC_TARGET_MMX_MMXEXT;
   }
   if (ui & AV_386_SSSE3) {
      mmx_flags |= ORC_TARGET_MMX_SSSE3;
   }
-  if (ui & AV_386_3DNOW) {
+  if (ui & AV_386_AMD_3DNow) {
      mmx_flags |= ORC_TARGET_MMX_3DNOW;
   }
-  if (ui & AV_386_3DNOWEXT) {
+  if (ui & AV_386_AMD_3DNowx) {
      mmx_flags |= ORC_TARGET_MMX_3DNOWEXT;
   }
 
