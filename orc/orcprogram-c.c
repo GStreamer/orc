@@ -77,7 +77,7 @@ const char *varnames[] = {
   "t1", "t2", "t3", "t4",
   "t5", "t6", "t7", "t8",
   "t9", "t10", "t11", "t12",
-  "t13", "t14", "t15", "t16"
+  "t13", "t14", "t15", "t16",
 };
 
 static void
@@ -86,7 +86,11 @@ get_varname (char *s, OrcCompiler *compiler, int var)
   if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
     sprintf(s, "ex->arrays[%d]", var);
   } else {
-    strcpy (s, varnames[var]);
+    if (var < 48) {
+      strcpy (s, varnames[var]);
+    } else {
+      sprintf(s, "t%d", var-32);
+    }
   }
 }
 
