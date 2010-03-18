@@ -128,6 +128,11 @@ main (int argc, char *argv[])
     exit (1);
   }
 
+  if (orc_target_get_by_name (target) == NULL) {
+    printf("Unknown target \"%s\"\n", target);
+    exit (1);
+  }
+
   if (output_file == NULL) {
     if (mode == MODE_IMPL) {
       output_file = "out.c";
