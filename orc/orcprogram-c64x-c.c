@@ -12,7 +12,7 @@
 
 void orc_c_init (void);
 
-void emit_loop (OrcCompiler *compiler, int prefix);
+static void emit_loop (OrcCompiler *compiler, int prefix);
 
 void
 orc_compiler_c64x_c_init (OrcCompiler *compiler)
@@ -104,7 +104,7 @@ static const char *varnames[] = {
   "t13", "t14", "t15", "t16"
 };
 
-void
+static void
 output_prototype (OrcCompiler *compiler)
 {
   OrcProgram *p = compiler->program;
@@ -459,7 +459,7 @@ orc_compiler_c64x_c_assemble (OrcCompiler *compiler)
   }
 }
 
-void
+static void
 emit_loop (OrcCompiler *compiler, int prefix)
 {
   int j;
