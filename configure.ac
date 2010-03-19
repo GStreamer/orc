@@ -85,8 +85,11 @@ then
 fi
 
 case "${host_os}" in
-  mingw*|pw32*|cygwin*)
+  nobody_is_using_this_currently)
     AC_DEFINE(HAVE_CODEMEM_MALLOC, 1, [Use malloc to allocate code for execution])
+    ;;
+  mingw*|pw32*|cygwin*)
+    AC_DEFINE(HAVE_CODEMEM_VIRTUALALLOC, 1, [Use VirtualAlloc to allocate code for execution])
     ;;
   linux*|darwin*|solaris*|netbsd*|freebsd*|openbsd*|kfreebsd*|gnu*)
     AC_DEFINE(HAVE_CODEMEM_MMAP, 1, [Use mmap to allocate code for execution])
