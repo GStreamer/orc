@@ -13,6 +13,7 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orc.c \
 	orcexecutor.c \
 	orcfunctions.c \
+	orcutils.c \
 	orcrule.c \
 	orccodemem.c \
 	orcprogram.c \
