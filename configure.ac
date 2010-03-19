@@ -88,7 +88,7 @@ case "${host_os}" in
   mingw*|pw32*|cygwin*)
     AC_DEFINE(HAVE_CODEMEM_MALLOC, 1, [Use malloc to allocate code for execution])
     ;;
-  linux*|darwin*|solaris*|netbsd*|freebsd*|openbsd*|kfreebsd*)
+  linux*|darwin*|solaris*|netbsd*|freebsd*|openbsd*|kfreebsd*|gnu*)
     AC_DEFINE(HAVE_CODEMEM_MMAP, 1, [Use mmap to allocate code for execution])
     ;;
   *)
