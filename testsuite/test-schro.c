@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <orc-test/orctest.h>
 
-#define PREFIX "/opt/arm-2008q3/bin/arm-none-linux-gnueabi-"
 
 int error = FALSE;
 
