@@ -3,7 +3,7 @@ pkgincludedir = $(includedir)/orc-@ORC_MAJORMINOR@/orc
 
 lib_LTLIBRARIES = liborc-@ORC_MAJORMINOR@.la
 
-liborc_@ORC_MAJORMINOR@_la_LIBS = $(ORC_LIBS)
+liborc_@ORC_MAJORMINOR@_la_LIBADD = $(LIBM) $(LIBRT)
 liborc_@ORC_MAJORMINOR@_la_LDFLAGS = \
 	-no-undefined -export-symbols-regex 'orc_'
 liborc_@ORC_MAJORMINOR@_la_CFLAGS = $(ORC_CFLAGS) \
