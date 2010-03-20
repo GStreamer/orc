@@ -20,7 +20,7 @@ main (int argc, char *argv[])
   int n;
   int i;
   OrcProgram **programs;
-  const char *filename = "test.orc";
+  const char *filename = NULL;
 
   orc_init ();
   orc_test_init ();
@@ -28,9 +28,15 @@ main (int argc, char *argv[])
   if (argc >= 2) {
     filename = argv[1];
   }
+  if (filename == NULL) {
+    filename = getenv ("testfile");
+  }
+  if (filename == NULL) {
+    filename = "test.orc";
+  }
   code = read_file (filename);
   if (!code) {
-    printf("compile_parse_test <file.orc>\n");
+    printf("perf_parse <file.orc>\n");
     exit(1);
   }
 

@@ -1,6 +1,9 @@
 
 DIST_SUBDIRS = orcc
 
+TESTS_ENVIRONMENT = \
+        testfile="$(srcdir)/test.orc"
+
 TESTS = \
 	test_accsadubl test-schro \
 	exec_opcodes_sys \

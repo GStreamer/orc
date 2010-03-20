@@ -131,7 +131,6 @@ doc/Makefile
 doc/version.entities
 orc/Makefile
 orc-float/Makefile
-orc-pixel/Makefile
 orc-test/Makefile
 testsuite/Makefile
 testsuite/orcc/Makefile

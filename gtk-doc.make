@@ -43,7 +43,7 @@ REPORT_FILES = \
 	$(DOC_MODULE)-undeclared.txt \
 	$(DOC_MODULE)-unused.txt
 
-CLEANFILES = $(SCANOBJ_FILES) $(REPORT_FILES) $(DOC_STAMPS)
+CLEANFILES = $(SCANOBJ_FILES) $(REPORT_FILES) $(DOC_STAMPS) xml/version.entities
 
 if ENABLE_GTK_DOC
 all-local: html-build.stamp
@@ -95,7 +95,8 @@ sgml-build.stamp: tmpl.stamp $(HFILE_GLOB) $(CFILE_GLOB) $(DOC_MODULE)-sections.
 	@-chmod -R u+w $(srcdir)
 	cd $(srcdir) && \
 	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --output-format=xml --expand-content-files="$(expand_content_files)" --main-sgml-file=$(DOC_MAIN_SGML_FILE) $(MKDB_OPTIONS)
-	cp version.entities xml
+	mkdir -p xml/
+	cp version.entities xml/
 	touch sgml-build.stamp
 
 sgml.stamp: sgml-build.stamp
