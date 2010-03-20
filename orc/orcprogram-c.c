@@ -56,6 +56,11 @@ orc_target_c_get_asm_preamble (void)
     "#define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))\n"
     "#define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))\n"
     "#define ORC_AS_FLOAT(x) (((union { int i; float f; } *)(&x))->f)\n"
+    "#ifdef __GNUC_PREREQ\n"
+    "#if __GNUC_PREREQ(4,2)\n"
+    "#pragma GCC diagnostic ignored \"-Wstrict-aliasing\"\n"
+    "#endif\n"
+    "#endif\n"
     "/* end Orc C target preamble */\n\n";
 }
 
