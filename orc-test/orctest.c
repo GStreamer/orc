@@ -65,6 +65,9 @@ orc_test_gcc_compile (OrcProgram *p)
   }
 
   result = orc_program_compile_full (p, target, flags);
+  if (ORC_COMPILE_RESULT_IS_FATAL(result)) {
+    return ORC_TEST_FAILED;
+  }
   if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
     return ORC_TEST_INDETERMINATE;
   }
@@ -281,6 +284,9 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
     flags = orc_target_get_default_flags (target);
 
     result = orc_program_compile_full (program, target, flags);
+    if (ORC_COMPILE_RESULT_IS_FATAL(result)) {
+      return ORC_TEST_FAILED;
+    }
     if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
       return ORC_TEST_INDETERMINATE;
     }

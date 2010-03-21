@@ -98,8 +98,16 @@ test_opcode_src (OrcStaticOpcode *opcode)
   int ret;
   int flags = 0;
 
+  if (opcode->flags & ORC_STATIC_OPCODE_SCALAR) {
+    return;
+  }
+
   p = orc_program_new ();
-  orc_program_add_destination (p, opcode->dest_size[0], "d1");
+  if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
+    orc_program_add_accumulator (p, opcode->dest_size[0], "d1");
+  } else {
+    orc_program_add_destination (p, opcode->dest_size[0], "d1");
+  }
   if (opcode->dest_size[1] != 0) {
     orc_program_add_destination (p, opcode->dest_size[1], "d2");
   }
@@ -124,6 +132,7 @@ test_opcode_src (OrcStaticOpcode *opcode)
 
   ret = orc_test_compare_output_full (p, flags);
   if (!ret) {
+    printf("test failed\n");
     error = TRUE;
   }
 
@@ -141,8 +150,19 @@ test_opcode_const (OrcStaticOpcode *opcode)
   if (opcode->src_size[1] == 0) {
     return;
   }
-  p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);
+
+  p = orc_program_new ();
+  if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
+    orc_program_add_accumulator (p, opcode->dest_size[0], "d1");
+  } else {
+    orc_program_add_destination (p, opcode->dest_size[0], "d1");
+  }
+  if (opcode->dest_size[1] != 0) {
+    orc_program_add_destination (p, opcode->dest_size[1], "d2");
+  }
+  orc_program_add_source (p, opcode->src_size[0], "s1");
   orc_program_add_constant (p, opcode->src_size[1], 1, "c1");
+
   if ((opcode->flags & ORC_STATIC_OPCODE_FLOAT_SRC) ||
       (opcode->flags & ORC_STATIC_OPCODE_FLOAT_DEST)) {
     flags = ORC_TEST_FLAGS_FLOAT;
@@ -155,6 +175,7 @@ test_opcode_const (OrcStaticOpcode *opcode)
 
   ret = orc_test_compare_output_full (p, flags);
   if (!ret) {
+    printf("test failed\n");
     error = TRUE;
   }
 
@@ -172,8 +193,18 @@ test_opcode_param (OrcStaticOpcode *opcode)
   if (opcode->src_size[1] == 0) {
     return;
   }
-  p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);
+  p = orc_program_new ();
+  if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
+    orc_program_add_accumulator (p, opcode->dest_size[0], "d1");
+  } else {
+    orc_program_add_destination (p, opcode->dest_size[0], "d1");
+  }
+  if (opcode->dest_size[1] != 0) {
+    orc_program_add_destination (p, opcode->dest_size[1], "d2");
+  }
+  orc_program_add_source (p, opcode->src_size[0], "s1");
   orc_program_add_parameter (p, opcode->src_size[1], "p1");
+
   if ((opcode->flags & ORC_STATIC_OPCODE_FLOAT_SRC) ||
       (opcode->flags & ORC_STATIC_OPCODE_FLOAT_DEST)) {
     flags = ORC_TEST_FLAGS_FLOAT;
@@ -186,6 +217,7 @@ test_opcode_param (OrcStaticOpcode *opcode)
 
   ret = orc_test_compare_output_full (p, flags);
   if (!ret) {
+    printf("test failed\n");
     error = TRUE;
   }
 
@@ -202,12 +234,20 @@ test_opcode_inplace (OrcStaticOpcode *opcode)
 
   if (opcode->dest_size[0] != opcode->src_size[0]) return;
 
-  if (opcode->src_size[1] == 0) {
-    p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);
-  } else {
-    p = orc_program_new_dss (opcode->dest_size[0], opcode->src_size[0],
-        opcode->src_size[1]);
+  if (opcode->flags & ORC_STATIC_OPCODE_SCALAR ||
+      opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
+    return;
   }
+
+  p = orc_program_new ();
+  orc_program_add_destination (p, opcode->dest_size[0], "d1");
+  if (opcode->dest_size[1] != 0) {
+    orc_program_add_destination (p, opcode->dest_size[1], "d2");
+  }
+  if (opcode->src_size[1] != 0) {
+    orc_program_add_source (p, opcode->src_size[0], "s2");
+  }
+
   if ((opcode->flags & ORC_STATIC_OPCODE_FLOAT_SRC) ||
       (opcode->flags & ORC_STATIC_OPCODE_FLOAT_DEST)) {
     flags = ORC_TEST_FLAGS_FLOAT;
@@ -220,6 +260,7 @@ test_opcode_inplace (OrcStaticOpcode *opcode)
 
   ret = orc_test_compare_output_full (p, flags);
   if (!ret) {
+    printf("test failed\n");
     error = TRUE;
   }
 
@@ -234,12 +275,24 @@ test_opcode_src_2d (OrcStaticOpcode *opcode)
   int ret;
   int flags = 0;
 
-  if (opcode->src_size[1] == 0) {
-    p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);
-  } else {
-    p = orc_program_new_dss (opcode->dest_size[0], opcode->src_size[0],
-        opcode->src_size[1]);
+  if (opcode->flags & ORC_STATIC_OPCODE_SCALAR) {
+    return;
   }
+
+  p = orc_program_new ();
+  if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
+    orc_program_add_accumulator (p, opcode->dest_size[0], "d1");
+  } else {
+    orc_program_add_destination (p, opcode->dest_size[0], "d1");
+  }
+  if (opcode->dest_size[1] != 0) {
+    orc_program_add_destination (p, opcode->dest_size[1], "d2");
+  }
+  orc_program_add_source (p, opcode->src_size[0], "s1");
+  if (opcode->src_size[1] != 0) {
+    orc_program_add_source (p, opcode->src_size[1], "s2");
+  }
+
   if ((opcode->flags & ORC_STATIC_OPCODE_FLOAT_SRC) ||
       (opcode->flags & ORC_STATIC_OPCODE_FLOAT_DEST)) {
     flags = ORC_TEST_FLAGS_FLOAT;
@@ -253,6 +306,7 @@ test_opcode_src_2d (OrcStaticOpcode *opcode)
 
   ret = orc_test_compare_output_full (p, flags);
   if (!ret) {
+    printf("test failed\n");
     error = TRUE;
   }
 
@@ -267,12 +321,24 @@ test_opcode_src_const_n (OrcStaticOpcode *opcode)
   int ret;
   int flags = 0;
 
-  if (opcode->src_size[1] == 0) {
-    p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);
-  } else {
-    p = orc_program_new_dss (opcode->dest_size[0], opcode->src_size[0],
-        opcode->src_size[1]);
+  if (opcode->flags & ORC_STATIC_OPCODE_SCALAR) {
+    return;
   }
+
+  p = orc_program_new ();
+  if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
+    orc_program_add_accumulator (p, opcode->dest_size[0], "d1");
+  } else {
+    orc_program_add_destination (p, opcode->dest_size[0], "d1");
+  }
+  if (opcode->dest_size[1] != 0) {
+    orc_program_add_destination (p, opcode->dest_size[1], "d2");
+  }
+  orc_program_add_source (p, opcode->src_size[0], "s1");
+  if (opcode->src_size[1] != 0) {
+    orc_program_add_source (p, opcode->src_size[1], "s2");
+  }
+
   if ((opcode->flags & ORC_STATIC_OPCODE_FLOAT_SRC) ||
       (opcode->flags & ORC_STATIC_OPCODE_FLOAT_DEST)) {
     flags = ORC_TEST_FLAGS_FLOAT;
@@ -286,6 +352,7 @@ test_opcode_src_const_n (OrcStaticOpcode *opcode)
 
   ret = orc_test_compare_output_full (p, flags);
   if (!ret) {
+    printf("test failed\n");
     error = TRUE;
   }
 
@@ -300,12 +367,24 @@ test_opcode_src_const_n_2d (OrcStaticOpcode *opcode)
   int ret;
   int flags = 0;
 
-  if (opcode->src_size[1] == 0) {
-    p = orc_program_new_ds (opcode->dest_size[0], opcode->src_size[0]);
-  } else {
-    p = orc_program_new_dss (opcode->dest_size[0], opcode->src_size[0],
-        opcode->src_size[1]);
+  if (opcode->flags & ORC_STATIC_OPCODE_SCALAR) {
+    return;
   }
+
+  p = orc_program_new ();
+  if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
+    orc_program_add_accumulator (p, opcode->dest_size[0], "d1");
+  } else {
+    orc_program_add_destination (p, opcode->dest_size[0], "d1");
+  }
+  if (opcode->dest_size[1] != 0) {
+    orc_program_add_destination (p, opcode->dest_size[1], "d2");
+  }
+  orc_program_add_source (p, opcode->src_size[0], "s1");
+  if (opcode->src_size[1] != 0) {
+    orc_program_add_source (p, opcode->src_size[1], "s2");
+  }
+
   if ((opcode->flags & ORC_STATIC_OPCODE_FLOAT_SRC) ||
       (opcode->flags & ORC_STATIC_OPCODE_FLOAT_DEST)) {
     flags = ORC_TEST_FLAGS_FLOAT;
@@ -320,6 +399,7 @@ test_opcode_src_const_n_2d (OrcStaticOpcode *opcode)
 
   ret = orc_test_compare_output_full (p, flags);
   if (!ret) {
+    printf("test failed\n");
     error = TRUE;
   }
 
