@@ -213,6 +213,11 @@ sse_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp = p->tmpreg;
 
+  if (p->loop_shift < 2) {
+    ORC_COMPILER_ERROR(p, "accsadubl SSE rule fails with loop_shift < 2");
+    p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
+  }
+
   orc_sse_emit_movdqa (p, src1, tmp);
   orc_sse_emit_psadbw (p, src2, tmp);
   orc_sse_emit_paddd (p, tmp, dest);
@@ -307,6 +312,7 @@ sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
         p->vars[insn->dest_args[0]].alloc);
   } else {
     ORC_COMPILER_ERROR(p,"rule only works with constants or params");
+    p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
 }
 
