@@ -8,6 +8,7 @@ TESTS = \
 	test_accsadubl test-schro \
 	exec_opcodes_sys \
 	exec_opcodes_float \
+	exec_parse \
 	perf_opcodes_sys perf_parse \
 	memcpy_speed
 
@@ -17,6 +18,7 @@ XFAIL_TESTS = \
 
 noinst_PROGRAMS = $(TESTS) generate_xml_table generate_xml_table2 \
 	generate_opcodes_sys compile_parse_c memcpy_speed \
+	exec_parse \
 	compile_opcodes_sys_c \
 	compile_opcodes_float_c \
 	compile_opcodes_sys compile_opcodes_float
