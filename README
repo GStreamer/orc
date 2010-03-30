@@ -47,6 +47,12 @@ Features:
    if no rules are available to convert Orc opcodes to executable code.
 
 
+More information:
+
+  Web: http://code.entropywave.com/projects/orc/
+  Download: http://code.entropywave.com/download/orc/
+
+
 Questions and Answers:
 
  - Q: Why not let gcc vectorize my code?
