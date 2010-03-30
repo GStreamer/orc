@@ -1,4 +1,20 @@
 
+0.4.4
+=====
+
+This is almost entirely a cleanup and bug fix release.
+
+ - fix register copying on x86-64
+ - better checking for partial test failures
+ - fix documention build
+ - fix build on many systems I don't personally use
+ - various fixes to build/run on Win64 (Ramiro Polla)
+ - add performance tests
+
+Next release will merge in the new pixel compositing opcodes
+and the SSE instruction scheduler.
+
+
 0.4.3
 =====
 

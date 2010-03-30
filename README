@@ -38,9 +38,10 @@ Features:
  - An application can add rules for converting existing or new opcodes
    to binary code for a specific target.
 
- - Current targets: SSE, MMX, ARM, Altivec.  (ARM is very limited.)
-   The NEON and TI c64x+ DSP targets are not open source and can be
-   licensed separately from Entropy Wave.
+ - Current targets: SSE, MMX, ARM, Altivec, and TI C64x+.  (ARM is very
+   limited and c64x only produces source code.)  The NEON target is not
+   open source and can be licensed separately from Entropy Wave.  (This
+   will change soon.)
 
  - Programs can optionally be emulated, which is useful for testing, or
    if no rules are available to convert Orc opcodes to executable code.
@@ -66,9 +67,11 @@ Questions and Answers:
 
  - Q: How big is the Orc library?
 
-   A: Compiled with only one target (SSE), the library size is about
-   95 kB uncompressed, or 32 kB compressed.  The goal is to keep the
-   uncompressed size under about 100 kB.
+   A: For embedded users, patches can be applied that disable irrelevant
+   targets.  Compiled with only one target (SSE), the library size is
+   about 95 kB uncompressed, or 32 kB compressed.  The goal is to keep
+   the uncompressed size under about 100 kB.  A typical build with all
+   targets and the full ABI is around 300 kB.
 
 
 Caveats (Known Bugs):
