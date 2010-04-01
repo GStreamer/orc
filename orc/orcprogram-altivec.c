@@ -446,13 +446,38 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
   OrcStaticOpcode *opcode;
   //OrcVariable *args[10];
   OrcRule *rule;
+  int label_outer_loop_start;
   int label_loop_start;
   int label_leave;
 
+  label_outer_loop_start = orc_compiler_label_new (compiler);
   label_loop_start = orc_compiler_label_new (compiler);
   label_leave = orc_compiler_label_new (compiler);
 
   powerpc_emit_prologue (compiler);
+
+  if (compiler->program->is_2d) {
+    powerpc_emit_lwz (compiler, POWERPC_R0, POWERPC_R3,
+        (int)ORC_STRUCT_OFFSET(OrcExecutorAlt, m));
+    powerpc_emit_srawi (compiler, POWERPC_R0, POWERPC_R0,
+        compiler->loop_shift, 1);
+    powerpc_emit_beq (compiler, label_leave);
+    powerpc_emit_stw (compiler, POWERPC_R0, POWERPC_R3,
+        (int)ORC_STRUCT_OFFSET(OrcExecutorAlt, m_index));
+  }
+
+  powerpc_load_constants (compiler);
+
+  for(k=0;k<4;k++){
+    OrcVariable *var = &compiler->vars[ORC_VAR_A1 + k];
+
+    if (compiler->vars[ORC_VAR_A1 + k].name == NULL) continue;
+
+      //powerpc_emit_VX_2(p, "vxor", 0x100004c4, reg, reg, reg);
+    powerpc_emit_vxor (compiler, var->alloc, var->alloc, var->alloc);
+  }
+
+  powerpc_emit_label (compiler, label_outer_loop_start);
 
   powerpc_emit_lwz (compiler, POWERPC_R0, POWERPC_R3,
       (int)ORC_STRUCT_OFFSET(OrcExecutor, n));
@@ -463,8 +488,6 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
 
   powerpc_emit (compiler, 0x7c0903a6);
   ORC_ASM_CODE (compiler, "  mtctr %s\n", powerpc_get_regname(POWERPC_R0));
-
-  powerpc_load_constants (compiler);
 
   powerpc_emit_label (compiler, label_loop_start);
 
@@ -545,7 +568,90 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
   }
 
   powerpc_emit_bne (compiler, label_loop_start);
+
+  if (compiler->program->is_2d) {
+    powerpc_emit_lwz (compiler, POWERPC_R0, POWERPC_R3,
+        (int)ORC_STRUCT_OFFSET(OrcExecutorAlt, m_index));
+    powerpc_emit_addi_rec (compiler, POWERPC_R0, POWERPC_R0, -1);
+    powerpc_emit_beq (compiler, label_leave);
+
+    powerpc_emit_stw (compiler, POWERPC_R0, POWERPC_R3,
+        (int)ORC_STRUCT_OFFSET(OrcExecutorAlt, m_index));
+
+    for(k=0;k<ORC_N_VARIABLES;k++){
+      if (compiler->vars[k].name == NULL) continue;
+      if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
+          compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
+        if (compiler->vars[k].ptr_register) {
+          powerpc_emit_lwz (compiler,
+              compiler->vars[k].ptr_register,
+              POWERPC_R3,
+              (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]));
+          powerpc_emit_lwz (compiler,
+              POWERPC_R0,
+              POWERPC_R3,
+              (int)ORC_STRUCT_OFFSET(OrcExecutorAlt, strides[k]));
+          powerpc_emit_add (compiler,
+              compiler->vars[k].ptr_register,
+              compiler->vars[k].ptr_register,
+	      POWERPC_R0);
+          powerpc_emit_stw (compiler,
+              compiler->vars[k].ptr_register,
+              POWERPC_R3,
+              (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]));
+        } else {
+          ORC_ASM_CODE(compiler,"ERROR\n");
+        }
+      }
+    }
+
+    powerpc_emit_b (compiler, label_outer_loop_start);
+  }
+
   powerpc_emit_label (compiler, label_leave);
+
+  for(k=0;k<4;k++){
+    OrcVariable *var = &compiler->vars[ORC_VAR_A1 + k];
+
+    if (compiler->vars[ORC_VAR_A1 + k].name == NULL) continue;
+
+    powerpc_emit_addi (compiler,
+        POWERPC_R0,
+        POWERPC_R3,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, accumulators[k]));
+
+    if (var->size == 2) {
+      powerpc_emit_vxor (compiler,
+          POWERPC_V0, POWERPC_V0, POWERPC_V0);
+      powerpc_emit_VX_2 (compiler, "vsum4shs", 0x10000648,
+          POWERPC_V0, var->alloc, POWERPC_V0);
+      powerpc_emit_vor (compiler, var->alloc, POWERPC_V0, POWERPC_V0);
+    }
+
+    ORC_ASM_CODE(compiler,"  lvsr %s, 0, %s\n", 
+        powerpc_get_regname (POWERPC_V0),
+        powerpc_get_regname (POWERPC_R0));
+    powerpc_emit_X (compiler, 0x7c00004c, powerpc_regnum(POWERPC_V0),
+        0, powerpc_regnum(POWERPC_R0));
+
+    ORC_ASM_CODE(compiler,"  vperm %s, %s, %s, %s\n", 
+        powerpc_get_regname (var->alloc),
+        powerpc_get_regname (var->alloc),
+        powerpc_get_regname (var->alloc),
+        powerpc_get_regname (POWERPC_V0));
+    powerpc_emit_VA (compiler, 4,
+        powerpc_regnum(var->alloc),
+        powerpc_regnum(var->alloc),
+        powerpc_regnum(var->alloc),
+        powerpc_regnum(POWERPC_V0), 43);
+
+    ORC_ASM_CODE(compiler,"  stvewx %s, 0, %s\n", 
+        powerpc_get_regname (var->alloc),
+        powerpc_get_regname (POWERPC_R0));
+    powerpc_emit_X (compiler, 0x7c00018e,
+        powerpc_regnum(var->alloc),
+        0, powerpc_regnum(POWERPC_R0));
+  }
 
   powerpc_emit_epilogue (compiler);
 

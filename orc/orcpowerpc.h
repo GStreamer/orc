@@ -76,8 +76,11 @@ int powerpc_regnum (int i);
 
 void powerpc_emit(OrcCompiler *compiler, unsigned int insn);
 
+void powerpc_emit_add (OrcCompiler *compiler, int regd, int rega, int regb);
+void powerpc_emit_addi_rec (OrcCompiler *compiler, int regd, int rega, int imm);
 void powerpc_emit_addi (OrcCompiler *compiler, int regd, int rega, int imm);
 void powerpc_emit_lwz (OrcCompiler *compiler, int regd, int rega, int imm);
+void powerpc_emit_stw (OrcCompiler *compiler, int regs, int rega, int offset);
 void powerpc_emit_stwu (OrcCompiler *compiler, int regs, int rega, int offset);
 
 void powerpc_emit_ret (OrcCompiler *compiler);
@@ -105,9 +108,12 @@ void powerpc_emit_VX_2 (OrcCompiler *p, const char *name, unsigned int insn,
     int d, int a, int b);
 void powerpc_emit_VX_3 (OrcCompiler *p, const char *name, unsigned int insn,
     int d, int a, int b, int c);
+void powerpc_emit_VX_3_reg (OrcCompiler *p, const char *name, unsigned int insn,
+    int d, int a, int b, int c);
 void powerpc_emit_VX_4 (OrcCompiler *p, const char *name, unsigned int insn,
     int d, int a);
 int powerpc_get_constant (OrcCompiler *p, int type, int value);
+int powerpc_get_constant_full (OrcCompiler *p, int value0, int value1, int value2, int value3);
 
 /* instructions */
 #define powerpc_emit_vandc(p,a,b,c)        powerpc_emit_VX_2 (p, "vandc", 0x10000444, a, b, c)
@@ -153,7 +159,7 @@ int powerpc_get_constant (OrcCompiler *p, int type, int value);
 #define powerpc_emit_vupkhsb(p,a,b)        powerpc_emit_VX_4 (p, "vupkhsb", 0x1000020e, a, b)
 #define powerpc_emit_vupkhsh(p,a,b)        powerpc_emit_VX_4 (p, "vupkhsh", 0x1000024e, a, b)
 
-#define powerpc_emit_vperm(p,a,b,c,d)      powerpc_emit_VX_3 (p, "vperm", 0x1000002b, a, b, c, d)
+#define powerpc_emit_vperm(p,a,b,c,d)      powerpc_emit_VX_3_reg (p, "vperm", 0x1000002b, a, b, c, d)
 
 
 #endif

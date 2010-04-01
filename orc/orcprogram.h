@@ -29,9 +29,9 @@ typedef void (*OrcExecutorFunc)(OrcExecutor *ex);
 #define ORC_N_VARIABLES 64
 #define ORC_N_ARRAYS 12
 #define ORC_N_REGISTERS 20
-#define ORC_N_FIXUPS 20
+#define ORC_N_FIXUPS 40
 #define ORC_N_CONSTANTS 20
-#define ORC_N_LABELS 20
+#define ORC_N_LABELS 40
 
 #define ORC_GP_REG_BASE 32
 #define ORC_VEC_REG_BASE 64
@@ -145,6 +145,7 @@ enum {
   ORC_CONST_SPLAT_B,
   ORC_CONST_SPLAT_W,
   ORC_CONST_SPLAT_L,
+  ORC_CONST_FULL
 };
 
 enum {

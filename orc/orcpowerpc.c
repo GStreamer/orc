@@ -65,6 +65,35 @@ powerpc_emit(OrcCompiler *compiler, unsigned int insn)
 }
 
 void
+powerpc_emit_add (OrcCompiler *compiler, int regd, int rega, int regb)
+{
+  unsigned int insn;
+
+  ORC_ASM_CODE(compiler,"  add %s, %s, %s\n",
+      powerpc_get_regname(regd),
+      powerpc_get_regname(rega),
+      powerpc_get_regname(regb));
+  insn = 0x7c000214 | (powerpc_regnum (regd)<<21) | (powerpc_regnum (rega)<<16);
+  insn |= (powerpc_regnum (regb)<<11);
+
+  powerpc_emit (compiler, insn);
+}
+
+void
+powerpc_emit_addi_rec (OrcCompiler *compiler, int regd, int rega, int imm)
+{
+  unsigned int insn;
+
+  ORC_ASM_CODE(compiler,"  addic. %s, %s, %d\n",
+      powerpc_get_regname(regd),
+      powerpc_get_regname(rega), imm);
+  insn = 0x34000000 | (powerpc_regnum (regd)<<21) | (powerpc_regnum (rega)<<16);
+  insn |= imm&0xffff;
+
+  powerpc_emit (compiler, insn);
+}
+
+void
 powerpc_emit_addi (OrcCompiler *compiler, int regd, int rega, int imm)
 {
   unsigned int insn;
@@ -88,6 +117,20 @@ powerpc_emit_lwz (OrcCompiler *compiler, int regd, int rega, int imm)
       imm, powerpc_get_regname(rega));
   insn = (32<<26) | (powerpc_regnum (regd)<<21) | (powerpc_regnum (rega)<<16);
   insn |= imm&0xffff;
+
+  powerpc_emit (compiler, insn);
+}
+
+void
+powerpc_emit_stw (OrcCompiler *compiler, int regs, int rega, int offset)
+{
+  unsigned int insn;
+
+  ORC_ASM_CODE(compiler,"  stw %s, %d(%s)\n",
+      powerpc_get_regname(regs),
+      offset, powerpc_get_regname(rega));
+  insn = 0x90000000 | (powerpc_regnum (regs)<<21) | (powerpc_regnum (rega)<<16);
+  insn |= offset&0xffff;
 
   powerpc_emit (compiler, insn);
 }
@@ -203,6 +246,21 @@ powerpc_emit_VX_2 (OrcCompiler *p, const char *name,
 }
 
 void
+powerpc_emit_VX_3_reg (OrcCompiler *p, const char *name,
+    unsigned int insn, int d, int a, int b, int c)
+{
+  ORC_ASM_CODE(p,"  %s %s, %s, %s, %s\n", name,
+      powerpc_get_regname(d),
+      powerpc_get_regname(a),
+      powerpc_get_regname(b),
+      powerpc_get_regname(c));
+  powerpc_emit_VX(p, insn,
+      powerpc_regnum(d),
+      powerpc_regnum(a),
+      powerpc_regnum(b));
+}
+
+void
 powerpc_emit_VX_3 (OrcCompiler *p, const char *name,
     unsigned int insn, int d, int a, int b, int c)
 {
@@ -236,18 +294,21 @@ powerpc_do_fixups (OrcCompiler *compiler)
   unsigned int insn;
 
   for(i=0;i<compiler->n_fixups;i++){
-    if (compiler->fixups[i].type == 0) {
-      unsigned char *label = compiler->labels[compiler->fixups[i].label];
-      unsigned char *ptr = compiler->fixups[i].ptr;
+    unsigned char *label = compiler->labels[compiler->fixups[i].label];
+    unsigned char *ptr = compiler->fixups[i].ptr;
 
-      insn = *(unsigned int *)ptr;
+    insn = *(unsigned int *)ptr;
+
+    switch (compiler->fixups[i].type) {
+    case 0:
       *(unsigned int *)ptr = (insn&0xffff0000) | ((insn + (label-ptr))&0xffff);
-    } else {
-      unsigned char *label = compiler->labels[compiler->fixups[i].label];
-      unsigned char *ptr = compiler->fixups[i].ptr;
-
-      insn = *(unsigned int *)ptr;
+      break;
+    case 1:
       *(unsigned int *)ptr = (insn&0xffff0000) | ((insn + (label-compiler->program->code))&0xffff);
+      break;
+    case 2:
+      *(unsigned int *)ptr = (insn&0xfc000000) | ((insn + (label-ptr))&0x03ffffff);
+      break;
     }
   }
 }
@@ -426,6 +487,39 @@ powerpc_get_constant (OrcCompiler *p, int type, int value)
   return reg;
 }
 
+int
+powerpc_get_constant_full (OrcCompiler *p, int value0, int value1,
+    int value2, int value3)
+{
+  int reg = p->tmpreg;
+  int i;
+
+  for(i=0;i<p->n_constants;i++){
+#if 0
+    if (p->constants[i].type == type &&
+        p->constants[i].value == value) {
+      if (p->constants[i].alloc_reg != 0) {
+        return p->constants[i].alloc_reg;
+      }
+      break;
+    }
+#endif
+  }
+  if (i == p->n_constants) {
+    p->n_constants++;
+    p->constants[i].type = ORC_CONST_FULL;
+    p->constants[i].full_value[0] = value0;
+    p->constants[i].full_value[1] = value1;
+    p->constants[i].full_value[2] = value2;
+    p->constants[i].full_value[3] = value3;
+    p->constants[i].alloc_reg = 0;
+  }
+
+  powerpc_load_constant (p, i, reg);
+
+  return reg;
+}
+
 void powerpc_emit_ret (OrcCompiler *compiler)
 {
   ORC_ASM_CODE(compiler,"  ret\n");
@@ -439,6 +533,9 @@ powerpc_add_fixup (OrcCompiler *compiler, int type, unsigned char *ptr, int labe
   compiler->fixups[compiler->n_fixups].label = label;
   compiler->fixups[compiler->n_fixups].type = type;
   compiler->n_fixups++;
+  if (compiler->n_fixups >= ORC_N_FIXUPS) {
+    ORC_ERROR("too many fixups");
+  }
 }
 
 void
@@ -452,7 +549,7 @@ void powerpc_emit_b (OrcCompiler *compiler, int label)
   ORC_ASM_CODE(compiler,"  b %d%c\n", label,
       (compiler->labels[label]!=NULL) ? 'b' : 'f');
 
-  powerpc_add_fixup (compiler, 0, compiler->codeptr, label);
+  powerpc_add_fixup (compiler, 2, compiler->codeptr, label);
   powerpc_emit (compiler, 0x48000000);
 }
 
