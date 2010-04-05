@@ -41,7 +41,6 @@
  * @short_description: Orc utility functions
  */
 
-#ifdef unused
 int
 get_file_int (const char *file, int *value)
 {
@@ -169,5 +168,4 @@ get_tag_value (char *s, const char *tag)
 
   return _strndup (colon, end-colon);
 }
-#endif
 
