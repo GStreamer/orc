@@ -32,7 +32,6 @@ void orc_compiler_assign_rules (OrcCompiler *compiler);
 void orc_compiler_global_reg_alloc (OrcCompiler *compiler);
 void orc_compiler_rewrite_vars (OrcCompiler *compiler);
 void orc_compiler_rewrite_vars2 (OrcCompiler *compiler);
-void orc_compiler_do_regs (OrcCompiler *compiler);
 int orc_compiler_dup_temporary (OrcCompiler *compiler, int var, int j);
 void orc_compiler_check_sizes (OrcCompiler *compiler);
 
@@ -204,19 +203,13 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   orc_compiler_rewrite_vars (compiler);
   if (compiler->error) goto error;
 
-  //if (compiler->target != ORC_TARGET_C) {
-    orc_compiler_global_reg_alloc (compiler);
-
-    orc_compiler_do_regs (compiler);
-  //}
+  orc_compiler_global_reg_alloc (compiler);
 
   orc_compiler_rewrite_vars2 (compiler);
   if (compiler->error) goto error;
 
   ORC_INFO("allocating code memory");
-  //if (compiler->target != ORC_TARGET_C) {
-    orc_compiler_allocate_codemem (compiler);
-  //}
+  orc_compiler_allocate_codemem (compiler);
 
   ORC_INFO("compiling for target");
   compiler->target->compile (compiler);
@@ -455,34 +448,6 @@ orc_compiler_global_reg_alloc (OrcCompiler *compiler)
         ORC_COMPILER_ERROR(compiler, "bad vartype");
         compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE;
         break;
-    }
-  }
-}
-
-void
-orc_compiler_do_regs (OrcCompiler *compiler)
-{
-  int i;
-  int k;
-  int var;
-  OrcInstruction *insn;
-  OrcStaticOpcode *opcode;
-
-  for(i=0;i<compiler->n_insns;i++){
-    insn = compiler->insns + i;
-    opcode = insn->opcode;
-
-    for(k=0;k<ORC_STATIC_OPCODE_N_SRC;k++){
-      if (opcode->src_size[k] == 0) continue;
-
-      var = insn->src_args[k];
-
-    }
-
-    for(k=0;k<ORC_STATIC_OPCODE_N_DEST;k++){
-      if (opcode->dest_size[k] == 0) continue;
-
-      var = insn->dest_args[k];
     }
   }
 }
