@@ -8,7 +8,8 @@ toolsdir=${exec_prefix}/bin
 Name: orc-@ORC_MAJORMINOR@
 Description: Library of Optimized Inner Loops Runtime Compiler
 Version: @VERSION@
-Libs: -L${libdir} -lorc-@ORC_MAJORMINOR@ @LIBM@ @LIBRT@
+Libs: -L${libdir} -lorc-@ORC_MAJORMINOR@
+Libs.private: @LIBM@ @LIBRT@
 Cflags: -I${includedir}
 
 orcc=${toolsdir}/orcc@EXEEXT@

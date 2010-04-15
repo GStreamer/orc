@@ -1,7 +1,8 @@
 
 #include <stdio.h>
-#include <stdint.h>
+#ifndef _MSC_VER
 #include <sys/time.h>
+#endif
 
 #define ORC_ENABLE_UNSTABLE_API
 
@@ -193,11 +194,15 @@ do_volume_orc (int16_t *dest, int32_t *volumes, int16_t *samp, int length)
 static uint64_t
 get_timestamp ()
 {
+#ifndef _MSC_VER
   struct timeval now;
 
   gettimeofday (&now, NULL);
 
   return now.tv_sec * 1000000LL + now.tv_usec;
+#else
+  return 0;
+#endif
 }
 
 #define TIMES 100000

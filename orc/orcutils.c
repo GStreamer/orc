@@ -31,10 +31,10 @@
 #include <orc/orcdebug.h>
 #include <orc/orcutils.h>
 
-#include <unistd.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 /**
  * SECTION:orcutils
@@ -169,5 +169,4 @@ get_tag_value (char *s, const char *tag)
 
   return _strndup (colon, end-colon);
 }
-
 

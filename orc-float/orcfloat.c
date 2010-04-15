@@ -8,7 +8,9 @@
 #include <string.h>
 #include <math.h>
 
-static OrcStaticOpcode opcodes[];
+/* This should be static, but compilers can't agree on what to use
+ * for forward declarations of static arrays. */
+OrcStaticOpcode opcodes[];
 
 void orc_float_sse_register_rules (void);
 void orc_float_neon_register_rules (void);
@@ -171,7 +173,7 @@ convfg (OrcOpcodeExecutor *ex, void *user)
 
 
 
-static OrcStaticOpcode opcodes[] = {
+OrcStaticOpcode opcodes[] = {
   { "invf", invf, NULL, 0, { 4 }, { 4 } },
   { "invsqrtf", invsqrtf, NULL, 0, { 4 }, { 4 } },
 

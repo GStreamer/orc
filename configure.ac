@@ -1,12 +1,10 @@
 AC_PREREQ([2.58])
-AC_INIT(orc,0.4.2.1)
+AC_INIT(orc,0.4.4.1)
 
 AS_NANO(ORC_CVS=no,ORC_CVS=yes)
 
 AC_CANONICAL_HOST([])
 AM_INIT_AUTOMAKE(1.6)
-
-AM_MAINTAINER_MODE
 
 ORC_MAJORMINOR=0.4
 AC_SUBST(ORC_MAJORMINOR)
@@ -87,10 +85,13 @@ then
 fi
 
 case "${host_os}" in
-  mingw*|pw32*|cygwin*)
+  nobody_is_using_this_currently)
     AC_DEFINE(HAVE_CODEMEM_MALLOC, 1, [Use malloc to allocate code for execution])
     ;;
-  linux*|darwin*|solaris*|netbsd*|freebsd*|openbsd*)
+  mingw*|pw32*|cygwin*)
+    AC_DEFINE(HAVE_CODEMEM_VIRTUALALLOC, 1, [Use VirtualAlloc to allocate code for execution])
+    ;;
+  linux*|darwin*|solaris*|netbsd*|freebsd*|openbsd*|kfreebsd*|gnu*)
     AC_DEFINE(HAVE_CODEMEM_MMAP, 1, [Use mmap to allocate code for execution])
     ;;
   *)
@@ -130,7 +131,6 @@ doc/Makefile
 doc/version.entities
 orc/Makefile
 orc-float/Makefile
-orc-pixel/Makefile
 orc-test/Makefile
 testsuite/Makefile
 testsuite/orcc/Makefile

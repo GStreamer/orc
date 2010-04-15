@@ -51,7 +51,7 @@ HTML_IMAGES=
 
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
 # e.g. content_files=running.sgml building.sgml changes-2.0.sgml
-content_files=
+content_files=building.xml concepts.xml opcode_table.xml opcodes.xml table.xml
 
 # CFLAGS and LDFLAGS for compiling gtkdoc-scangobj with your library.
 # Only needed if you are using gtkdoc-scangobj to dynamically query widget
@@ -70,5 +70,5 @@ EXTRA_DIST +=
 
 
 sync:
-	cd html && rsync -a . home.schleef.org:/srv/schleef.org/www/orc/documentation/
+	cd html && rsync -a . cooker.entropywave.com:/srv/code.entropywave.com/www/documentation/orc/
 

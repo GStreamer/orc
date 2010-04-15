@@ -121,6 +121,6 @@ BINARY_F(minf, "ORC_MIN(%s,%s)")
 BINARY_FL(cmpeqf, "(%s == %s) ? (~0) : 0")
 BINARY_FL(cmpltf, "(%s < %s) ? (~0) : 0")
 BINARY_FL(cmplef, "(%s <= %s) ? (~0) : 0")
-UNARY_FL(convfl, "rintf(%s)")
+UNARY_FL(convfl, "(int)%s")
 UNARY_LF(convlf, "%s")
 

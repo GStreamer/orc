@@ -152,7 +152,11 @@ orc_profile_get_ave_std (OrcProfile *prof, double *ave_p, double *std_p)
 static unsigned long
 oil_profile_stamp_default (void)
 {
-#if defined(HAVE_CLOCK_GETTIME) && defined(HAVE_MONOTONIC_CLOCK)
+#ifdef notused
+  unsigned long ts;
+  __asm__ __volatile__("rdtsc\n" : "=a" (ts) : : "edx");
+  return ts;
+#elif defined(HAVE_CLOCK_GETTIME) && defined(HAVE_MONOTONIC_CLOCK)
   struct timespec ts;
   clock_gettime (CLOCK_MONOTONIC, &ts);
   return 1000000000*ts.tv_sec + ts.tv_nsec;

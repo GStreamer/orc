@@ -44,7 +44,10 @@ main (int argc, char *argv[])
   targets[5] = orc_target_get_by_name("c64x");
   target_flags[5] = orc_target_get_default_flags(targets[5]);
 
-  n_targets=6;
+  targets[6] = orc_target_get_by_name("c64x-c");
+  target_flags[6] = orc_target_get_default_flags(targets[4]);
+
+  n_targets=7;
   
   printf(
 "<table frame=\"all\" id=\"table-basictypes\" xreflabel=\"Table of Opcode Rule Coverage\">\n"

@@ -5,7 +5,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <unistd.h>
 #include <sys/types.h>
 
 #include <orc/orcprogram.h>
@@ -244,7 +243,7 @@ void orc_x86_emit_mov_sse_reg_reg (OrcCompiler *compiler, int reg1, int reg2)
         orc_x86_get_regname_sse(reg2));
 
   *compiler->codeptr++ = 0x66;
-  orc_x86_emit_rex(compiler, 0, reg1, 0, reg2);
+  orc_x86_emit_rex(compiler, 0, reg2, 0, reg1);
   *compiler->codeptr++ = 0x0f;
   *compiler->codeptr++ = 0x6f;
   orc_x86_emit_modrm_reg (compiler, reg1, reg2);

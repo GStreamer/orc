@@ -4,6 +4,7 @@
 #include <orc-test/orctest.h>
 #include <orc-test/orcarray.h>
 #include <orc-test/orcrandom.h>
+#include <orc-test/orcprofile.h>
 #include <orc/orc.h>
 #include <orc/orcdebug.h>
 
@@ -12,6 +13,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+
+#ifdef _MSC_VER
+#define isnan(x) _isnan(x)
+#endif
 
 void _orc_profile_init(void);
 
@@ -60,6 +65,9 @@ orc_test_gcc_compile (OrcProgram *p)
   }
 
   result = orc_program_compile_full (p, target, flags);
+  if (ORC_COMPILE_RESULT_IS_FATAL(result)) {
+    return ORC_TEST_FAILED;
+  }
   if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
     return ORC_TEST_INDETERMINATE;
   }
@@ -367,11 +375,7 @@ print_array_val_signed (OrcArray *array, int i, int j)
       printf(" %10d", *(int32_t *)ptr);
       return *(int32_t *)ptr;
     case 8:
-#ifdef HAVE_AMD64
-      printf(" %20ld", *(int64_t *)ptr);
-#else
-      printf(" %20lld", *(int64_t *)ptr);
-#endif
+      printf(" %20lld", (long long)*(int64_t *)ptr);
       return *(int64_t *)ptr;
     default:
       return -1;
@@ -379,82 +383,48 @@ print_array_val_signed (OrcArray *array, int i, int j)
 }
 
 int
-print_array_val_unsigned (void *array, int size, int i)
+print_array_val_unsigned (OrcArray *array, int i, int j)
 {
-  switch (size) {
+  void *ptr = ORC_PTR_OFFSET (array->data,
+      i*array->element_size + j*array->stride);
+
+  switch (array->element_size) {
     case 1:
-      {
-        uint8_t *a = array;
-        printf(" %4u", a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %4u", *(uint8_t *)ptr);
+      return *(int8_t *)ptr;
     case 2:
-      {
-        uint16_t *a = array;
-        printf(" %5u", a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %5u", *(uint16_t *)ptr);
+      return *(int16_t *)ptr;
     case 4:
-      {
-        uint32_t *a = array;
-        printf(" %10u", a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %10u", *(uint32_t *)ptr);
+      return *(int32_t *)ptr;
     case 8:
-      {
-        uint64_t *a = array;
-#ifdef HAVE_AMD64
-        printf(" %20lu", a[i]);
-#else
-        printf(" %20llu", a[i]);
-#endif
-        return a[i];
-      }
-      break;
+      printf(" %20llu", (long long)*(uint64_t *)ptr);
+      return *(int64_t *)ptr;
     default:
       return -1;
   }
 }
 
 int
-print_array_val_hex (void *array, int size, int i)
+print_array_val_hex (OrcArray *array, int i, int j)
 {
-  switch (size) {
+  void *ptr = ORC_PTR_OFFSET (array->data,
+      i*array->element_size + j*array->stride);
+
+  switch (array->element_size) {
     case 1:
-      {
-        uint8_t *a = array;
-        printf(" %2x", a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %02x", *(uint8_t *)ptr);
+      return *(int8_t *)ptr;
     case 2:
-      {
-        uint16_t *a = array;
-        printf(" %4x", a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %04x", *(uint16_t *)ptr);
+      return *(int16_t *)ptr;
     case 4:
-      {
-        uint32_t *a = array;
-        printf(" %8x", a[i]);
-        return a[i];
-      }
-      break;
+      printf(" %08x", *(uint32_t *)ptr);
+      return *(int32_t *)ptr;
     case 8:
-      {
-        uint64_t *a = array;
-#ifdef HAVE_AMD64
-        printf(" %20lx", a[i]);
-#else
-        printf(" %16llx", a[i]);
-#endif
-        return a[i];
-      }
-      break;
+      printf(" %016llx", (long long)*(uint64_t *)ptr);
+      return *(int64_t *)ptr;
     default:
       return -1;
   }
@@ -515,6 +485,7 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
   int have_acc = FALSE;
   int acc_exec = 0, acc_emul = 0;
   int ret = ORC_TEST_OK;
+  int bad = 0;
 
   ORC_DEBUG ("got here");
 
@@ -526,6 +497,9 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
     flags = orc_target_get_default_flags (target);
 
     result = orc_program_compile_full (program, target, flags);
+    if (ORC_COMPILE_RESULT_IS_FATAL(result)) {
+      return ORC_TEST_FAILED;
+    }
     if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
       return ORC_TEST_INDETERMINATE;
     }
@@ -558,9 +532,9 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
       src[i-ORC_VAR_S1] = orc_array_new (n, m, program->vars[i].size);
       orc_array_set_random (src[i-ORC_VAR_S1], &rand_context);
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
-      dest_exec[i] = orc_array_new (n, m, program->vars[i].size);
+      dest_exec[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size);
       orc_array_set_pattern (dest_exec[i], 0xa5);
-      dest_emul[i] = orc_array_new (n, m, program->vars[i].size);
+      dest_emul[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size);
       orc_array_set_pattern (dest_emul[i], 0xa5);
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_PARAM) {
       orc_executor_set_param (ex, i, 2);
@@ -569,8 +543,8 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
 
   for(i=0;i<ORC_N_VARIABLES;i++){
     if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
-      orc_executor_set_array (ex, i, dest_exec[i]->data);
-      orc_executor_set_stride (ex, i, dest_exec[i]->stride);
+      orc_executor_set_array (ex, i, dest_exec[i-ORC_VAR_D1]->data);
+      orc_executor_set_stride (ex, i, dest_exec[i-ORC_VAR_D1]->stride);
       have_dest = TRUE;
     }
     if (program->vars[i].vartype == ORC_VAR_TYPE_SRC) {
@@ -606,53 +580,63 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
     }
   }
 
-  for(k=0;k<ORC_N_VARIABLES;k++){
-    if (program->vars[k].vartype == ORC_VAR_TYPE_DEST) {
-      if (!orc_array_compare (dest_exec[k], dest_emul[k], flags)) {
-        for(j=0;j<m;j++){
-          for(i=0;i<n;i++){
-            int a,b;
-            int l;
-
-            printf("%2d %2d:", i, j);
-
-            for(l=0;l<ORC_N_VARIABLES;l++){
-              if (program->vars[l].name == NULL) continue;
-              if (program->vars[l].vartype == ORC_VAR_TYPE_SRC &&
-                  program->vars[l].size > 0) {
-                if (flags & ORC_TEST_FLAGS_FLOAT) {
-                  print_array_val_float (src[l-ORC_VAR_S1], i, j);
-                } else {
-                  print_array_val_signed (src[l-ORC_VAR_S1], i, j);
-                }
-              }
-            }
-
-            printf(" ->");
-            if (flags & ORC_TEST_FLAGS_FLOAT) {
-              a = print_array_val_float (dest_emul[k], i, j);
-              b = print_array_val_float (dest_exec[k], i, j);
-            } else {
-              a = print_array_val_signed (dest_emul[k], i, j);
-              b = print_array_val_signed (dest_exec[k], i, j);
-            }
-
-            if (a != b) {
-              printf(" *");
-            }
-
-            printf("\n");
-          }
-        }
-
-        ret = ORC_TEST_FAILED;
+  for(k=ORC_VAR_D1;k<ORC_VAR_D1+4;k++){
+    if (program->vars[k].size > 0) {
+      if (!orc_array_compare (dest_exec[k-ORC_VAR_D1], dest_emul[k-ORC_VAR_D1], flags)) {
+        printf("dest array %d bad\n", k);
+        bad = TRUE;
       }
-      if (!orc_array_check_out_of_bounds (dest_exec[k])) {
+      if (!orc_array_check_out_of_bounds (dest_exec[k-ORC_VAR_D1])) {
         printf("out of bounds failure\n");
 
         ret = ORC_TEST_FAILED;
       }
     }
+  }
+  if (bad) {
+    for(j=0;j<m;j++){
+      for(i=0;i<n;i++){
+        int a,b;
+        int l;
+        int line_bad = 0;
+
+        printf("%2d %2d:", i, j);
+
+        for(l=ORC_VAR_S1;l<ORC_VAR_S1+8;l++){
+          if (program->vars[l].size > 0) {
+            if (flags & ORC_TEST_FLAGS_FLOAT) {
+              print_array_val_float (src[l-ORC_VAR_S1], i, j);
+            } else {
+              print_array_val_hex (src[l-ORC_VAR_S1], i, j);
+            }
+          }
+        }
+
+        printf(" ->");
+        for(l=ORC_VAR_D1;l<ORC_VAR_D1+4;l++){
+          if (program->vars[l].size > 0) {
+            if (flags & ORC_TEST_FLAGS_FLOAT) {
+              a = print_array_val_float (dest_emul[l-ORC_VAR_D1], i, j);
+              b = print_array_val_float (dest_exec[l-ORC_VAR_D1], i, j);
+            } else {
+              a = print_array_val_hex (dest_emul[l-ORC_VAR_D1], i, j);
+              b = print_array_val_hex (dest_exec[l-ORC_VAR_D1], i, j);
+            }
+            if (a != b) {
+              line_bad = TRUE;
+            }
+          }
+        }
+
+        if (line_bad) {
+          printf(" *");
+        }
+
+        printf("\n");
+      }
+    }
+
+    ret = ORC_TEST_FAILED;
   }
 
   if (have_acc) {
@@ -790,5 +774,110 @@ orc_test_get_program_for_opcode_param (OrcStaticOpcode *opcode)
   }
 
   return p;
+}
+
+
+void
+orc_test_performance (OrcProgram *program, int flags)
+{
+  OrcExecutor *ex;
+  int n;
+  int m;
+  OrcArray *dest_exec[4] = { NULL, NULL, NULL, NULL };
+  OrcArray *dest_emul[4] = { NULL, NULL, NULL, NULL };
+  OrcArray *src[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+  int i, j;
+  OrcCompileResult result;
+  OrcProfile prof;
+  double ave, std;
+
+  ORC_DEBUG ("got here");
+
+  if (!(flags & ORC_TEST_FLAGS_BACKUP)) {
+    OrcTarget *target;
+    unsigned int flags;
+
+    target = orc_target_get_default ();
+    flags = orc_target_get_default_flags (target);
+
+    result = orc_program_compile_full (program, target, flags);
+    if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
+      printf("compile failed\n");
+      return;
+    }
+  }
+
+  if (program->constant_n > 0) {
+    n = program->constant_n;
+  } else {
+    //n = 64 + (orc_random(&rand_context)&0xf);
+    n = 10000;
+  }
+
+  ex = orc_executor_new (program);
+  orc_executor_set_n (ex, n);
+  if (program->is_2d) {
+    if (program->constant_m > 0) {
+      m = program->constant_m;
+    } else {
+      m = 8 + (orc_random(&rand_context)&0xf);
+    }
+  } else {
+    m = 1;
+  }
+  orc_executor_set_m (ex, m);
+  ORC_DEBUG("size %d %d", ex->n, ex->params[ORC_VAR_A1]);
+
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    if (program->vars[i].name == NULL) continue;
+
+    if (program->vars[i].vartype == ORC_VAR_TYPE_SRC) {
+      src[i-ORC_VAR_S1] = orc_array_new (n, m, program->vars[i].size);
+      orc_array_set_random (src[i-ORC_VAR_S1], &rand_context);
+    } else if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
+      dest_exec[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size);
+      orc_array_set_pattern (dest_exec[i], 0xa5);
+      dest_emul[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size);
+      orc_array_set_pattern (dest_emul[i], 0xa5);
+    } else if (program->vars[i].vartype == ORC_VAR_TYPE_PARAM) {
+      orc_executor_set_param (ex, i, 2);
+    }
+  }
+
+  ORC_DEBUG ("running");
+  orc_profile_init (&prof);
+  for(i=0;i<10;i++){
+    orc_executor_set_n (ex, n);
+    orc_executor_set_m (ex, m);
+    for(j=0;j<ORC_N_VARIABLES;j++){
+      if (program->vars[j].vartype == ORC_VAR_TYPE_DEST) {
+        orc_executor_set_array (ex, j, dest_exec[j-ORC_VAR_D1]->data);
+        orc_executor_set_stride (ex, j, dest_exec[j-ORC_VAR_D1]->stride);
+      }
+      if (program->vars[j].vartype == ORC_VAR_TYPE_SRC) {
+        orc_executor_set_array (ex, j, src[j-ORC_VAR_S1]->data);
+        orc_executor_set_stride (ex, j, src[j-ORC_VAR_S1]->stride);
+      }
+    }
+    orc_profile_start (&prof);
+    orc_executor_run (ex);
+    orc_profile_stop (&prof);
+  }
+  ORC_DEBUG ("done running");
+
+  orc_profile_get_ave_std (&prof, &ave, &std);
+  printf("%g %g\n", (ave - 108)/(n*m), std/(n*m));
+
+  for(i=0;i<4;i++){
+    if (dest_exec[i]) orc_array_free (dest_exec[i]);
+    if (dest_emul[i]) orc_array_free (dest_emul[i]);
+  }
+  for(i=0;i<8;i++){
+    if (src[i]) orc_array_free (src[i]);
+  }
+
+  orc_executor_free (ex);
+
+  return;
 }
 

@@ -88,6 +88,25 @@ orc_target_get_default_flags (OrcTarget *target)
   return target->get_default_flags();
 }
 
+const char *
+orc_target_get_preamble (OrcTarget *target)
+{
+  if (target->get_asm_preamble == NULL) return "";
+
+  return target->get_asm_preamble ();
+}
+
+const char *
+orc_target_get_asm_preamble (const char *target)
+{
+  OrcTarget *t;
+
+  t = orc_target_get_by_name (target);
+  if (t == NULL) return "";
+
+  return orc_target_get_preamble (t);
+}
+
 #if 0
 int
 orc_opcode_get_list (OrcOpcode **list)
@@ -525,6 +544,20 @@ select1wb (OrcOpcodeExecutor *ex, void *user)
 }
 
 static void
+splitlw (OrcOpcodeExecutor *ex, void *user)
+{
+  ex->dest_values[0] = (ex->src_values[0] >> 16) & 0xffff;
+  ex->dest_values[1] = ex->src_values[0] & 0xffff;
+}
+
+static void
+splitwb (OrcOpcodeExecutor *ex, void *user)
+{
+  ex->dest_values[0] = (ex->src_values[0] >> 8) & 0xff;
+  ex->dest_values[1] = ex->src_values[0] & 0xff;
+}
+
+static void
 mergewl (OrcOpcodeExecutor *ex, void *user)
 {
   union {
@@ -628,7 +661,7 @@ BINARY_FL(cmplef, (a <= b) ? (~0) : 0)
 static void
 convfl (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->dest_values[0] = rintf(ORC_FLOAT_READ(&ex->src_values[0]));
+  ex->dest_values[0] = ORC_FLOAT_READ(&ex->src_values[0]);
 }
 
 static void
@@ -660,9 +693,9 @@ static OrcStaticOpcode opcodes[] = {
   { "mulhsb", mulhsb, NULL, 0, { 1 }, { 1, 1 } },
   { "mulhub", mulhub, NULL, 0, { 1 }, { 1, 1 } },
   { "orb", orb, NULL, 0, { 1 }, { 1, 1 } },
-  { "shlb", shlb, NULL, 0, { 1 }, { 1, 1 } },
-  { "shrsb", shrsb, NULL, 0, { 1 }, { 1, 1 } },
-  { "shrub", shrub, NULL, 0, { 1 }, { 1, 1 } },
+  { "shlb", shlb, NULL, ORC_STATIC_OPCODE_SCALAR, { 1 }, { 1, 1 } },
+  { "shrsb", shrsb, NULL, ORC_STATIC_OPCODE_SCALAR, { 1 }, { 1, 1 } },
+  { "shrub", shrub, NULL, ORC_STATIC_OPCODE_SCALAR, { 1 }, { 1, 1 } },
   { "signb", signb, NULL, 0, { 1 }, { 1 } },
   { "subb", subb, NULL, 0, { 1 }, { 1, 1 } },
   { "subssb", subssb, NULL, 0, { 1 }, { 1, 1 } },
@@ -689,9 +722,9 @@ static OrcStaticOpcode opcodes[] = {
   { "mulhsw", mulhsw, NULL, 0, { 2 }, { 2, 2 } },
   { "mulhuw", mulhuw, NULL, 0, { 2 }, { 2, 2 } },
   { "orw", orw, NULL, 0, { 2 }, { 2, 2 } },
-  { "shlw", shlw, NULL, 0, { 2 }, { 2, 2 } },
-  { "shrsw", shrsw, NULL, 0, { 2 }, { 2, 2 } },
-  { "shruw", shruw, NULL, 0, { 2 }, { 2, 2 } },
+  { "shlw", shlw, NULL, ORC_STATIC_OPCODE_SCALAR, { 2 }, { 2, 2 } },
+  { "shrsw", shrsw, NULL, ORC_STATIC_OPCODE_SCALAR, { 2 }, { 2, 2 } },
+  { "shruw", shruw, NULL, ORC_STATIC_OPCODE_SCALAR, { 2 }, { 2, 2 } },
   { "signw", signw, NULL, 0, { 2 }, { 2 } },
   { "subw", subw, NULL, 0, { 2 }, { 2, 2 } },
   { "subssw", subssw, NULL, 0, { 2 }, { 2, 2 } },
@@ -718,9 +751,9 @@ static OrcStaticOpcode opcodes[] = {
   { "mulhsl", mulhsl, NULL, 0, { 4 }, { 4, 4 } },
   { "mulhul", mulhul, NULL, 0, { 4 }, { 4, 4 } },
   { "orl", orl, NULL, 0, { 4 }, { 4, 4 } },
-  { "shll", shll, NULL, 0, { 4 }, { 4, 4 } },
-  { "shrsl", shrsl, NULL, 0, { 4 }, { 4, 4 } },
-  { "shrul", shrul, NULL, 0, { 4 }, { 4, 4 } },
+  { "shll", shll, NULL, ORC_STATIC_OPCODE_SCALAR, { 4 }, { 4, 4 } },
+  { "shrsl", shrsl, NULL, ORC_STATIC_OPCODE_SCALAR, { 4 }, { 4, 4 } },
+  { "shrul", shrul, NULL, ORC_STATIC_OPCODE_SCALAR, { 4 }, { 4, 4 } },
   { "signl", signl, NULL, 0, { 4 }, { 4 } },
   { "subl", subl, NULL, 0, { 4 }, { 4, 4 } },
   { "subssl", subssl, NULL, 0, { 4 }, { 4, 4 } },
@@ -776,6 +809,8 @@ static OrcStaticOpcode opcodes[] = {
   { "select1lw", select1lw, NULL, 0, { 2 }, { 4 } },
   { "mergewl", mergewl, NULL, 0, { 4 }, { 2, 2 } },
   { "mergebw", mergebw, NULL, 0, { 2 }, { 1, 1 } },
+  { "splitlw", splitlw, NULL, 0, { 2, 2 }, { 4 } },
+  { "splitwb", splitwb, NULL, 0, { 1, 1 }, { 2 } },
 
   /* float ops */
   { "addf", addf, NULL, ORC_STATIC_OPCODE_FLOAT, { 4 }, { 4, 4 } },

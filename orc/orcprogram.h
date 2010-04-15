@@ -29,9 +29,9 @@ typedef void (*OrcExecutorFunc)(OrcExecutor *ex);
 #define ORC_N_VARIABLES 64
 #define ORC_N_ARRAYS 12
 #define ORC_N_REGISTERS 20
-#define ORC_N_FIXUPS 20
+#define ORC_N_FIXUPS 40
 #define ORC_N_CONSTANTS 20
-#define ORC_N_LABELS 20
+#define ORC_N_LABELS 40
 
 #define ORC_GP_REG_BASE 32
 #define ORC_VEC_REG_BASE 64
@@ -149,6 +149,15 @@ enum {
   ORC_CONST_SPLAT_B,
   ORC_CONST_SPLAT_W,
   ORC_CONST_SPLAT_L,
+  ORC_CONST_FULL
+};
+
+enum {
+  ORC_SAMPLE_REGULAR = 0,
+  ORC_SAMPLE_TRANSPOSED,
+  ORC_SAMPLE_NEAREST,
+  ORC_SAMPLE_BILINEAR,
+  ORC_SAMPLE_FOUR_TAP
 };
 
 typedef enum {
@@ -196,6 +205,8 @@ struct _OrcVariable {
   int ptr_offset;
   int mask_alloc;
   int aligned_data;
+  int sampling_type;
+  int load_dest;
 };
 
 /**
@@ -241,6 +252,7 @@ struct _OrcOpcodeSet {
 #define ORC_STATIC_OPCODE_FLOAT_SRC (1<<1)
 #define ORC_STATIC_OPCODE_FLOAT_DEST (1<<2)
 #define ORC_STATIC_OPCODE_FLOAT (ORC_STATIC_OPCODE_FLOAT_SRC|ORC_STATIC_OPCODE_FLOAT_DEST)
+#define ORC_STATIC_OPCODE_SCALAR (1<<3)
 
 
 struct _OrcStaticOpcode {
@@ -277,6 +289,7 @@ struct _OrcConstant {
   int alloc_reg;
   unsigned int value;
   unsigned int full_value[4];
+  int use_count;
 };
 
 /**
@@ -373,6 +386,7 @@ struct _OrcCompiler {
 
   int insn_index;
   int need_mask_regs;
+  int unroll_shift;
 };
 
 #define ORC_SRC_ARG(p,i,n) ((p)->vars[(i)->src_args[(n)]].alloc)
@@ -414,6 +428,7 @@ struct _OrcExecutor {
   /* m is stored in params[ORC_VAR_A1] */
   /* m_index is stored in params[ORC_VAR_A2] */
   /* elapsed time is stored in params[ORC_VAR_A3] */
+  /* source resampling parameters are in params[ORC_VAR_C1..C8] */
 };
 
 /* the alternate view of OrcExecutor */
@@ -432,7 +447,8 @@ struct _OrcExecutorAlt {
   int m;
   int m_index;
   int time;
-  int unused2[ORC_VAR_P1-ORC_VAR_A4];
+  int unused2;
+  int src_resample[8];
   int params[ORC_VAR_T1-ORC_VAR_P1];
   int unused3[ORC_N_VARIABLES - ORC_VAR_T1];
   int accumulators[4];
@@ -458,7 +474,10 @@ struct _OrcTarget {
   OrcRuleSet rule_sets[ORC_N_RULE_SETS];
   int n_rule_sets;
 
-  void *_unused[10];
+  const char * (*get_asm_preamble)(void);
+  void (*load_constant)(OrcCompiler *compiler, int reg, int size, int value);
+
+  void *_unused[8];
 };
 
 
@@ -485,6 +504,8 @@ void orc_program_append_ds (OrcProgram *program, const char *opcode, int arg0,
     int arg1);
 void orc_program_append_ds_str (OrcProgram *p, const char *opcode,
     const char * arg0, const char * arg1);
+void orc_program_append_dds_str (OrcProgram *program, const char *name,
+    const char *arg1, const char *arg2, const char *arg3);
 
 void orc_mmx_init (void);
 void orc_sse_init (void);
@@ -493,6 +514,7 @@ void orc_powerpc_init (void);
 void orc_c_init (void);
 void orc_neon_init (void);
 void orc_c64x_init (void);
+void orc_c64x_c_init (void);
 
 OrcCompileResult orc_program_compile (OrcProgram *p);
 OrcCompileResult orc_program_compile_for_target (OrcProgram *p, OrcTarget *target);
@@ -511,6 +533,7 @@ int orc_program_add_constant (OrcProgram *program, int size, int value, const ch
 int orc_program_add_parameter (OrcProgram *program, int size, const char *name);
 int orc_program_add_accumulator (OrcProgram *program, int size, const char *name);
 void orc_program_set_type_name (OrcProgram *program, int var, const char *type_name);
+void orc_program_set_sampling_type (OrcProgram *program, int var, int sampling_type);
 
 OrcExecutor * orc_executor_new (OrcProgram *program);
 void orc_executor_free (OrcExecutor *ex);
@@ -546,9 +569,11 @@ int orc_program_allocate_register (OrcProgram *program, int is_data);
 
 void orc_compiler_allocate_codemem (OrcCompiler *compiler);
 int orc_compiler_label_new (OrcCompiler *compiler);
+int orc_compiler_get_constant (OrcCompiler *compiler, int size, int value);
 
 const char *orc_program_get_asm_code (OrcProgram *program);
 const char *orc_target_get_asm_preamble (const char *target);
+const char * orc_target_get_preamble (OrcTarget *target);
 
 void orc_compiler_append_code (OrcCompiler *p, const char *fmt, ...)
   ORC_GNU_PRINTF(2,3);

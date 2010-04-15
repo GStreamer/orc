@@ -39,8 +39,6 @@ orc_executor_run (OrcExecutor *ex)
 {
   void (*func) (OrcExecutor *);
 
-  ORC_DEBUG("run");
-
   func = ex->program->code_exec;
   if (func) {
     func (ex);

@@ -5,12 +5,19 @@
 #endif
 
 #include <orc/orconce.h>
+#include <orc/orcdebug.h>
 
 #if defined(HAVE_THREAD_PTHREAD)
 
 #include <pthread.h>
 
 static pthread_mutex_t once_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void
+_orc_once_init (void)
+{
+  
+}
 
 void
 orc_once_mutex_lock (void)
@@ -31,6 +38,12 @@ orc_once_mutex_unlock (void)
 static CRITICAL_SECTION once_mutex;
 
 void
+_orc_once_init (void)
+{
+  InitializeCriticalSection (&once_mutex);
+}
+
+void
 orc_once_mutex_lock (void)
 {
   EnterCriticalSection (&once_mutex);
@@ -43,6 +56,11 @@ orc_once_mutex_unlock (void)
 }
 
 #else
+
+void
+_orc_once_init (void)
+{
+}
 
 void
 orc_once_mutex_lock (void)

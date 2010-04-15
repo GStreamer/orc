@@ -34,14 +34,12 @@
 #include <orc/orcprogram.h>
 #include <orc/orcutils.h>
 
-#include <unistd.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <setjmp.h>
 #include <signal.h>
-#include <sys/time.h>
 #include <time.h>
 
 #if defined(__FreeBSD__) || defined(__APPLE__)
@@ -165,6 +163,19 @@ orc_mmx_getflags_cpuinfo (char *cpuinfo)
 #endif
 
 #ifdef USE_I386_CPUID
+#ifdef _MSC_VER
+static void
+get_cpuid (uint32_t op, uint32_t *a, uint32_t *b, uint32_t *c, uint32_t *d)
+{
+  int tmp[4];
+  __cpuid(tmp, op);
+  *a = tmp[0];
+  *b = tmp[1];
+  *c = tmp[2];
+  *d = tmp[3];
+}
+#endif
+
 #ifdef __i386__
 static void
 get_cpuid (uint32_t op, uint32_t *a, uint32_t *b, uint32_t *c, uint32_t *d)
@@ -356,12 +367,12 @@ orc_sse_detect_getisax (void)
   if (ui & AV_386_SSE4_2) {
      sse_flags |= ORC_TARGET_SSE_SSE4_2;
   }
-  if (ui & AV_386_SSE4A) {
+  if (ui & AV_386_AMD_SSE4A) {
      sse_flags |= ORC_TARGET_SSE_SSE4A;
   }
-  if (ui & AV_386_SSE5) {
-     sse_flags |= ORC_TARGET_SSE_SSE5;
-  }
+//  if (ui & AV_386_SSE5) {
+//     sse_flags |= ORC_TARGET_SSE_SSE5;
+//  }
 
   return sse_flags;
 }
@@ -379,16 +390,16 @@ orc_mmx_detect_getisax (void)
   }
 
   /* guesses.  if these fail to compile, please fix */
-  if (ui & AV_386_MMXEXT) {
+  if (ui & AV_386_AMD_MMX) {
      mmx_flags |= ORC_TARGET_MMX_MMXEXT;
   }
   if (ui & AV_386_SSSE3) {
      mmx_flags |= ORC_TARGET_MMX_SSSE3;
   }
-  if (ui & AV_386_3DNOW) {
+  if (ui & AV_386_AMD_3DNow) {
      mmx_flags |= ORC_TARGET_MMX_3DNOW;
   }
-  if (ui & AV_386_3DNOWEXT) {
+  if (ui & AV_386_AMD_3DNowx) {
      mmx_flags |= ORC_TARGET_MMX_3DNOWEXT;
   }
 

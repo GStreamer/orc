@@ -1,5 +1,5 @@
 #!/bin/sh
 
 autoreconf -i -f &&
-./configure --enable-maintainer-mode --disable-static --enable-gtk-doc $@
+./configure --disable-static --enable-gtk-doc $@
 
