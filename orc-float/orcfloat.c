@@ -174,28 +174,28 @@ convfg (OrcOpcodeExecutor *ex, void *user)
 
 
 OrcStaticOpcode opcodes[] = {
-  { "invf", invf, NULL, 0, { 4 }, { 4 } },
-  { "invsqrtf", invsqrtf, NULL, 0, { 4 }, { 4 } },
+  { "invf", invf, NULL, ORC_STATIC_OPCODE_FLOAT, { 4 }, { 4 } },
+  { "invsqrtf", invsqrtf, NULL, ORC_STATIC_OPCODE_FLOAT, { 4 }, { 4 } },
 
-  { "addg", addg, NULL, 0, { 8 }, { 8, 8 } },
-  { "subg", subg, NULL, 0, { 8 }, { 8, 8 } },
-  { "mulg", mulg, NULL, 0, { 8 }, { 8, 8 } },
-  { "divg", divg, NULL, 0, { 8 }, { 8, 8 } },
-  { "invg", invg, NULL, 0, { 8 }, { 8 } },
-  { "sqrtg", sqrtg, NULL, 0, { 8 }, { 8 } },
-  { "maxg", maxg, NULL, 0, { 8 }, { 8, 8 } },
-  { "ming", ming, NULL, 0, { 8 }, { 8, 8 } },
-  { "invsqrtg", invsqrtg, NULL, 0, { 8 }, { 8 } },
+  { "addg", addg, NULL, ORC_STATIC_OPCODE_FLOAT, { 8 }, { 8, 8 } },
+  { "subg", subg, NULL, ORC_STATIC_OPCODE_FLOAT, { 8 }, { 8, 8 } },
+  { "mulg", mulg, NULL, ORC_STATIC_OPCODE_FLOAT, { 8 }, { 8, 8 } },
+  { "divg", divg, NULL, ORC_STATIC_OPCODE_FLOAT, { 8 }, { 8, 8 } },
+  { "invg", invg, NULL, ORC_STATIC_OPCODE_FLOAT, { 8 }, { 8 } },
+  { "sqrtg", sqrtg, NULL, ORC_STATIC_OPCODE_FLOAT, { 8 }, { 8 } },
+  { "maxg", maxg, NULL, ORC_STATIC_OPCODE_FLOAT, { 8 }, { 8, 8 } },
+  { "ming", ming, NULL, ORC_STATIC_OPCODE_FLOAT, { 8 }, { 8, 8 } },
+  { "invsqrtg", invsqrtg, NULL, ORC_STATIC_OPCODE_FLOAT, { 8 }, { 8 } },
 
-  { "cmpeqg", cmpeqg, NULL, 0, { 8 }, { 8, 8 } },
-  { "cmpltg", cmpltg, NULL, 0, { 8 }, { 8, 8 } },
-  { "cmpleg", cmpleg, NULL, 0, { 8 }, { 8, 8 } },
+  { "cmpeqg", cmpeqg, NULL, ORC_STATIC_OPCODE_FLOAT, { 8 }, { 8, 8 } },
+  { "cmpltg", cmpltg, NULL, ORC_STATIC_OPCODE_FLOAT, { 8 }, { 8, 8 } },
+  { "cmpleg", cmpleg, NULL, ORC_STATIC_OPCODE_FLOAT, { 8 }, { 8, 8 } },
 
-  { "convgl", convgl, NULL, 0, { 4 }, { 8 } },
-  { "convlg", convlg, NULL, 0, { 8 }, { 4 } },
+  { "convgl", convgl, NULL, ORC_STATIC_OPCODE_FLOAT, { 4 }, { 8 } },
+  { "convlg", convlg, NULL, ORC_STATIC_OPCODE_FLOAT, { 8 }, { 4 } },
 
-  { "convgf", convgf, NULL, 0, { 4 }, { 8 } },
-  { "convfg", convfg, NULL, 0, { 8 }, { 4 } },
+  { "convgf", convgf, NULL, ORC_STATIC_OPCODE_FLOAT, { 4 }, { 8 } },
+  { "convfg", convfg, NULL, ORC_STATIC_OPCODE_FLOAT, { 8 }, { 4 } },
 
   { "" }
 };
