@@ -241,7 +241,7 @@ orc_test_gcc_compile_neon (OrcProgram *p)
   return ORC_TEST_OK;
 }
 
-#define C64X_PREFIX "/opt/TI/cg6x_6_1_7/bin/"
+#define C64X_PREFIX "/opt/TI/TI_CGT_C6000_6.1.12/bin/"
 
 OrcTestResult
 orc_test_gcc_compile_c64x (OrcProgram *p)
