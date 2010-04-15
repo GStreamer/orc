@@ -161,20 +161,8 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 }
 
 
-BINARY(addf,"vadd.f32",0xf2000d00)
-BINARY(subf,"vsub.f32",0xf2200d00)
-BINARY(mulf,"vmul.f32",0xf3000d10)
-BINARY_S(divf,"vdiv.f32",0xee800a00)
 UNARY(invf,"vrecpe.f32",0xf3bb0500)
-UNARY_S(sqrtf,"vsqrt.f32",0xeeb10ac0)
-BINARY(maxf,"vmax.f32",0xf2000f00)
-BINARY(minf,"vmin.f32",0xf2200f00)
 UNARY(invsqrtf,"vrsqrte.f32",0xf3bb0580)
-BINARY(cmpeqf,"vceq.f32",0xf2000e00)
-BINARY_R(cmpltf,"vclt.f32",0xf3200e00)
-BINARY_R(cmplef,"vcle.f32",0xf3000e00)
-UNARY(convfl,"vcvt.s32.f32",0xf3bb0700)
-UNARY(convlf,"vcvt.f32.s32",0xf3bb0600)
 
 BINARY(addg,"vadd.f64",0xee300b00)
 BINARY(subg,"vsub.f64",0xee300b40)
@@ -198,20 +186,8 @@ orc_float_neon_register_rules (void)
 #define REG(x) \
     orc_rule_register (rule_set, #x , orc_neon_rule_ ## x, NULL)
 
-  REG(addf);
-  REG(subf);
-  REG(mulf);
-  REG(divf);
   REG(invf);
-  REG(sqrtf);
-  REG(maxf);
-  REG(minf);
   REG(invsqrtf);
-  REG(cmpeqf);
-  REG(cmpltf);
-  REG(cmplef);
-  REG(convfl);
-  REG(convlf);
 
   REG(addg);
   REG(subg);

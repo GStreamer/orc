@@ -1141,6 +1141,20 @@ UNARY_NARROW(select0wb,"vmovn.i16",0xf3b20200, 3)
 //UNARY(mergebw,"vzip.8",0xf3b20180)
 //UNARY(mergewl,"vzip.16",0xf3b60180)
 
+BINARY(addf,"vadd.f32",0xf2000d00, 1)
+BINARY(subf,"vsub.f32",0xf2200d00, 1)
+BINARY(mulf,"vmul.f32",0xf3000d10, 1)
+//BINARY_S(divf,"vdiv.f32",0xee800a00, 1)
+//UNARY_S(sqrtf,"vsqrt.f32",0xeeb10ac0, 1)
+BINARY(maxf,"vmax.f32",0xf2000f00, 1)
+BINARY(minf,"vmin.f32",0xf2200f00, 1)
+BINARY(cmpeqf,"vceq.f32",0xf2000e00, 1)
+//BINARY_R(cmpltf,"vclt.f32",0xf3200e00, 1)
+//BINARY_R(cmplef,"vcle.f32",0xf3000e00, 1)
+UNARY(convfl,"vcvt.s32.f32",0xf3bb0700, 1)
+UNARY(convlf,"vcvt.f32.s32",0xf3bb0600, 1)
+
+
 static void
 orc_neon_rule_accw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -1412,6 +1426,19 @@ orc_compiler_neon_register_rules (OrcTarget *target)
   REG(select1lw);
   REG(mergebw);
   REG(mergewl);
+
+  REG(addf);
+  REG(subf);
+  REG(mulf);
+  //REG(divf);
+  //REG(sqrtf);
+  REG(maxf);
+  REG(minf);
+  REG(cmpeqf);
+  //REG(cmpltf);
+  //REG(cmplef);
+  REG(convfl);
+  REG(convlf);
 
   orc_rule_register (rule_set, "shlb", orc_neon_rule_shift, (void *)0);
   orc_rule_register (rule_set, "shrsb", orc_neon_rule_shift, (void *)1);
