@@ -34,13 +34,10 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orcrules-arm.c \
 	orcprogram-neon.c \
 	orcrules-neon.c \
-	orcprogram-c64x.c \
-	orcrules-c64x.c \
 	orcdebug.c \
 	orcpowerpc.c \
 	orcsse.c \
 	orcmmx.c \
-	orcc64x.c \
 	orcx86.c \
 	orcarm.c
 
@@ -69,7 +66,6 @@ pkginclude_HEADERS = \
 	orcsse.h \
 	orcmmx.h \
 	orcx86.h \
-	orcc64x.h \
 	orcpowerpc.h \
 	orcarm.h
 
