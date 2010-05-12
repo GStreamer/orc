@@ -81,6 +81,10 @@ enum {
   ORC_TARGET_ALTIVEC_ALTIVEC = (1<<0)
 };
 
+enum {
+  ORC_TARGET_NEON_CLEAN_COMPILE = (1<<0)
+};
+
 typedef enum {
   ORC_VAR_TYPE_TEMP,
   ORC_VAR_TYPE_SRC,
@@ -380,6 +384,7 @@ struct _OrcCompiler {
   int exec_reg;
   int gp_tmpreg;
 
+  int insn_index;
   int need_mask_regs;
   int unroll_shift;
 };
@@ -507,6 +512,8 @@ void orc_sse_init (void);
 void orc_arm_init (void);
 void orc_powerpc_init (void);
 void orc_c_init (void);
+void orc_neon_init (void);
+void orc_c64x_init (void);
 void orc_c64x_c_init (void);
 
 OrcCompileResult orc_program_compile (OrcProgram *p);

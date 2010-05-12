@@ -27,10 +27,19 @@ EXTRA_DIST = test.orc
 
 CLEANFILES = temp-orc-test-*
 
+TESTS += compile_opcodes_sys_neon \
+	compile_opcodes_float_neon \
+	compile_parse_neon
+noinst_PROGRAMS += compile_opcodes_sys_neon \
+	compile_opcodes_float_neon \
+	compile_parse_neon
+
 AM_CFLAGS = $(ORC_CFLAGS)
 LIBS = $(ORC_LIBS) $(top_builddir)/orc-test/liborc-test-@ORC_MAJORMINOR@.la
 
 compile_opcodes_float_c_LDADD = \
+	$(top_builddir)/orc-float/liborc-float-@ORC_MAJORMINOR@.la
+compile_opcodes_float_neon_LDADD = \
 	$(top_builddir)/orc-float/liborc-float-@ORC_MAJORMINOR@.la
 compile_opcodes_float_LDADD = \
 	$(top_builddir)/orc-float/liborc-float-@ORC_MAJORMINOR@.la
