@@ -173,6 +173,10 @@ main (int argc, char *argv[])
       fprintf(output, "#include <%s>\n", include_file);
     }
     fprintf(output, "\n");
+    for(i=0;i<n;i++){
+      output_code_header (programs[i], output);
+    }
+    fprintf(output, "\n");
     fprintf(output, "%s", orc_target_get_asm_preamble ("c"));
     fprintf(output, "\n");
     for(i=0;i<n;i++){
