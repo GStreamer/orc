@@ -255,10 +255,12 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
       get_varname(s, compiler, i);
       switch (var->vartype) {
         case ORC_VAR_TYPE_SRC:
-          ORC_ASM_CODE(compiler,"  ptr%d = %s;\n", i, s);
+          ORC_ASM_CODE(compiler,"  ptr%d = (%s *)%s;\n", i,
+              c_get_type_name (var->size), s);
           break;
         case ORC_VAR_TYPE_DEST:
-          ORC_ASM_CODE(compiler,"  ptr%d = %s;\n", i, s);
+          ORC_ASM_CODE(compiler,"  ptr%d = (%s *)%s;\n", i,
+              c_get_type_name (var->size), s);
           break;
         default:
           break;
