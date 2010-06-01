@@ -29,6 +29,8 @@ orc_program_new (void)
 {
   OrcProgram *p;
 
+  orc_init ();
+
   p = malloc(sizeof(OrcProgram));
   memset (p, 0, sizeof(OrcProgram));
 
