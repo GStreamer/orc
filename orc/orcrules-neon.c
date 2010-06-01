@@ -884,7 +884,7 @@ ShiftInfo regshift_info[] = {
 static void
 orc_neon_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int type = (int)user;
+  int type = (unsigned long)user;
   uint32_t code;
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
