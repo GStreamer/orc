@@ -11,6 +11,7 @@
 
 static const char *c_get_type_name (int size);
 static void c_get_name (char *name, OrcCompiler *p, int var);
+static void c_get_name_int (char *name, OrcCompiler *p, int var);
 
 void orc_c_init (void);
 
@@ -56,11 +57,8 @@ orc_target_c_get_asm_preamble (void)
     "#define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))\n"
     "#define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))\n"
     "#define ORC_AS_FLOAT(x) (((union { int i; float f; } *)(&x))->f)\n"
-    "#ifdef __GNUC_PREREQ\n"
-    "#if __GNUC_PREREQ(4,2)\n"
-    "#pragma GCC diagnostic ignored \"-Wstrict-aliasing\"\n"
-    "#endif\n"
-    "#endif\n"
+    "typedef union { int32_t i; float f; } orc_union32;\n"
+    "typedef union { int64_t i; double f; } orc_union64;\n"
     "/* end Orc C target preamble */\n\n";
 }
 
@@ -148,15 +146,26 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
 
   for(i=0;i<ORC_N_VARIABLES;i++){
     OrcVariable *var = compiler->vars + i;
+    char varname[20];
     if (var->name == NULL) continue;
     switch (var->vartype) {
       case ORC_VAR_TYPE_CONST:
-        if (var->value == 0x80000000) {
-          ORC_ASM_CODE(compiler,"  const %s var%d = 0x80000000;\n",
-              c_get_type_name(var->size), i);
+        if (var->size >= 4) {
+          if (var->value == 0x80000000) {
+            ORC_ASM_CODE(compiler,"  const %s var%d = { 0x80000000 };\n",
+                c_get_type_name(var->size), i);
+          } else {
+            ORC_ASM_CODE(compiler,"  const %s var%d = { %d };\n",
+                c_get_type_name(var->size), i, var->value);
+          }
         } else {
-          ORC_ASM_CODE(compiler,"  const %s var%d = %d;\n",
-              c_get_type_name(var->size), i, var->value);
+          if (var->value == 0x80000000) {
+            ORC_ASM_CODE(compiler,"  const %s var%d = 0x80000000;\n",
+                c_get_type_name(var->size), i);
+          } else {
+            ORC_ASM_CODE(compiler,"  const %s var%d = %d;\n",
+                c_get_type_name(var->size), i, var->value);
+          }
         }
         break;
       case ORC_VAR_TYPE_TEMP:
@@ -177,17 +186,30 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
             i);
         break;
       case ORC_VAR_TYPE_ACCUMULATOR:
-        ORC_ASM_CODE(compiler,"  %s var%d = 0;\n",
-            c_get_type_name (var->size),
-            i);
+        if (var->size >= 4) {
+          ORC_ASM_CODE(compiler,"  %s var%d =  { 0 };\n",
+              c_get_type_name (var->size),
+              i);
+        } else {
+          ORC_ASM_CODE(compiler,"  %s var%d = 0;\n",
+              c_get_type_name (var->size),
+              i);
+        }
         break;
       case ORC_VAR_TYPE_PARAM:
+        c_get_name (varname, compiler, i);
         if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-          ORC_ASM_CODE(compiler,"  const %s var%d = ex->params[%d];\n",
-              c_get_type_name (var->size), i, i);
+          if (var->size >= 4) {
+            ORC_ASM_CODE(compiler,"  const %s %s = *(%s *)(ex->params + %d);\n",
+                c_get_type_name (var->size), varname,
+                c_get_type_name (var->size), i);
+          } else {
+            ORC_ASM_CODE(compiler,"  const %s %s = ex->params[%d];\n",
+                c_get_type_name (var->size), varname, i);
+          }
         } else {
-          ORC_ASM_CODE(compiler,"  const %s var%d = %s;\n",
-              c_get_type_name (var->size), i, varnames[i]);
+          ORC_ASM_CODE(compiler,"  const %s %s = %s;\n",
+              c_get_type_name (var->size), varname, varnames[i]);
         }
         break;
       default:
@@ -319,25 +341,27 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
   }
 
   for(i=0;i<ORC_N_VARIABLES;i++){
+    char varname[20];
     OrcVariable *var = compiler->vars + i;
+    c_get_name_int (varname, compiler, i);
     if (var->name == NULL) continue;
     switch (var->vartype) {
       case ORC_VAR_TYPE_ACCUMULATOR:
         if (var->size == 2) {
           if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-            ORC_ASM_CODE(compiler,"  ex->accumulators[%d] = (var%d & 0xffff);\n",
-                i - ORC_VAR_A1, i);
+            ORC_ASM_CODE(compiler,"  ex->accumulators[%d] = (%s & 0xffff);\n",
+                i - ORC_VAR_A1, varname);
           } else {
-            ORC_ASM_CODE(compiler,"  *%s = (var%d & 0xffff);\n",
-                varnames[i], i);
+            ORC_ASM_CODE(compiler,"  *%s = (%s & 0xffff);\n",
+                varnames[i], varname);
           }
         } else {
           if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-            ORC_ASM_CODE(compiler,"  ex->accumulators[%d] = var%d;\n",
-                i - ORC_VAR_A1, i);
+            ORC_ASM_CODE(compiler,"  ex->accumulators[%d] = %s;\n",
+                i - ORC_VAR_A1, varname);
           } else {
-            ORC_ASM_CODE(compiler,"  *%s = var%d;\n",
-                varnames[i], i);
+            ORC_ASM_CODE(compiler,"  *%s = %s;\n",
+                varnames[i], varname);
           }
         }
         break;
@@ -375,6 +399,29 @@ c_get_name (char *name, OrcCompiler *p, int var)
 }
 
 static void
+c_get_name_int (char *name, OrcCompiler *p, int var)
+{
+  switch (p->vars[var].vartype) {
+    case ORC_VAR_TYPE_CONST:
+    case ORC_VAR_TYPE_PARAM:
+    case ORC_VAR_TYPE_TEMP:
+    case ORC_VAR_TYPE_ACCUMULATOR:
+    case ORC_VAR_TYPE_SRC:
+    case ORC_VAR_TYPE_DEST:
+      if (p->vars[var].size >= 4) {
+        sprintf(name, "var%d.i", var);
+      } else {
+        sprintf(name, "var%d", var);
+      }
+      break;
+    default:
+      ORC_COMPILER_ERROR(p, "bad vartype");
+      sprintf(name, "ERROR");
+      break;
+  }
+}
+
+static void
 c_get_name_float (char *name, OrcCompiler *p, int var)
 {
   switch (p->vars[var].vartype) {
@@ -384,7 +431,7 @@ c_get_name_float (char *name, OrcCompiler *p, int var)
     case ORC_VAR_TYPE_ACCUMULATOR:
     case ORC_VAR_TYPE_SRC:
     case ORC_VAR_TYPE_DEST:
-      sprintf(name, "ORC_AS_FLOAT(var%d)", var);
+      sprintf(name, "var%d.f", var);
       break;
     default:
       ORC_COMPILER_ERROR(p, "bad vartype");
@@ -402,9 +449,9 @@ c_get_type_name (int size)
     case 2:
       return "int16_t";
     case 4:
-      return "int32_t";
+      return "orc_union32";
     case 8:
-      return "int64_t";
+      return "orc_union64";
     default:
       return "ERROR";
   }
@@ -417,8 +464,8 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
   char dest[20], src1[20]; \
 \
-  c_get_name (dest, p, insn->dest_args[0]); \
-  c_get_name (src1, p, insn->src_args[0]); \
+  c_get_name_int (dest, p, insn->dest_args[0]); \
+  c_get_name_int (src1, p, insn->src_args[0]); \
  \
   ORC_ASM_CODE(p,"    %s = " op ";\n", dest, src1); \
 }
@@ -429,9 +476,9 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
   char dest[20], src1[20], src2[20]; \
 \
-  c_get_name (dest, p, insn->dest_args[0]); \
-  c_get_name (src1, p, insn->src_args[0]); \
-  c_get_name (src2, p, insn->src_args[1]); \
+  c_get_name_int (dest, p, insn->dest_args[0]); \
+  c_get_name_int (src1, p, insn->src_args[0]); \
+  c_get_name_int (src2, p, insn->src_args[1]); \
  \
   ORC_ASM_CODE(p,"    %s = " op ";\n", dest, src1, src2); \
 }
@@ -467,7 +514,7 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
   char dest[40], src1[40], src2[40]; \
 \
-  c_get_name (dest, p, insn->dest_args[0]); \
+  c_get_name_int (dest, p, insn->dest_args[0]); \
   c_get_name_float (src1, p, insn->src_args[0]); \
   c_get_name_float (src2, p, insn->src_args[1]); \
  \
@@ -480,7 +527,7 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
   char dest[40], src1[40]; \
 \
-  c_get_name (dest, p, insn->dest_args[0]); \
+  c_get_name_int (dest, p, insn->dest_args[0]); \
   c_get_name_float (src1, p, insn->src_args[0]); \
  \
   ORC_ASM_CODE(p,"    %s = " op ";\n", dest, src1); \
@@ -493,7 +540,7 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
   char dest[40], src1[40]; \
 \
   c_get_name_float (dest, p, insn->dest_args[0]); \
-  c_get_name (src1, p, insn->src_args[0]); \
+  c_get_name_int (src1, p, insn->src_args[0]); \
  \
   ORC_ASM_CODE(p,"    %s = " op ";\n", dest, src1); \
 }
@@ -558,8 +605,8 @@ c_rule_accw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   char dest[20], src1[20];
 
-  c_get_name (dest, p, insn->dest_args[0]);
-  c_get_name (src1, p, insn->src_args[0]);
+  c_get_name_int (dest, p, insn->dest_args[0]);
+  c_get_name_int (src1, p, insn->src_args[0]);
 
   ORC_ASM_CODE(p,"    %s = %s + %s;\n", dest, dest, src1);
 }
@@ -569,8 +616,8 @@ c_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   char dest[20], src1[20];
 
-  c_get_name (dest, p, insn->dest_args[0]);
-  c_get_name (src1, p, insn->src_args[0]);
+  c_get_name_int (dest, p, insn->dest_args[0]);
+  c_get_name_int (src1, p, insn->src_args[0]);
 
   ORC_ASM_CODE(p,"    %s = %s + %s;\n", dest, dest, src1);
 }
@@ -580,9 +627,9 @@ c_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   char dest[20], src1[20], src2[20];
 
-  c_get_name (dest, p, insn->dest_args[0]);
-  c_get_name (src1, p, insn->src_args[0]);
-  c_get_name (src2, p, insn->src_args[1]);
+  c_get_name_int (dest, p, insn->dest_args[0]);
+  c_get_name_int (src1, p, insn->src_args[0]);
+  c_get_name_int (src2, p, insn->src_args[1]);
 
   ORC_ASM_CODE(p,
       "    %s = %s + ORC_ABS((int32_t)(uint8_t)%s - (int32_t)(uint8_t)%s);\n",
@@ -594,9 +641,9 @@ c_rule_splitlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   char dest1[20], dest2[20], src[20];
 
-  c_get_name (dest1, p, insn->dest_args[0]);
-  c_get_name (dest2, p, insn->dest_args[1]);
-  c_get_name (src, p, insn->src_args[0]);
+  c_get_name_int (dest1, p, insn->dest_args[0]);
+  c_get_name_int (dest2, p, insn->dest_args[1]);
+  c_get_name_int (src, p, insn->src_args[0]);
 
   ORC_ASM_CODE(p,"    %s = (%s >> 16) & 0xffff;\n", dest1, src);
   ORC_ASM_CODE(p,"    %s = %s & 0xffff;\n", dest2, src);
@@ -607,9 +654,9 @@ c_rule_splitwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   char dest1[20], dest2[20], src[20];
 
-  c_get_name (dest1, p, insn->dest_args[0]);
-  c_get_name (dest2, p, insn->dest_args[1]);
-  c_get_name (src, p, insn->src_args[0]);
+  c_get_name_int (dest1, p, insn->dest_args[0]);
+  c_get_name_int (dest2, p, insn->dest_args[1]);
+  c_get_name_int (src, p, insn->src_args[0]);
 
   ORC_ASM_CODE(p,"    %s = (%s >> 8) & 0xff;\n", dest1, src);
   ORC_ASM_CODE(p,"    %s = %s & 0xff;\n", dest2, src);
