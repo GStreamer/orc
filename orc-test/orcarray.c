@@ -14,8 +14,6 @@
 #define EXTEND_ROWS 16
 #define EXTEND_STRIDE 256
 
-#define OOB_VALUE 0xa5
-
 #ifdef _MSC_VER
 #define isnan(x) _isnan(x)
 #endif
@@ -99,7 +97,7 @@ orc_array_check_out_of_bounds (OrcArray *array)
   
   data = array->alloc_data;
   for(i=0;i<array->stride * EXTEND_ROWS;i++){
-    if (data[i] != OOB_VALUE) {
+    if (data[i] != ORC_OOB_VALUE) {
       printf("OOB check failed at start-%d\n", array->stride * EXTEND_ROWS - i);
       return FALSE;
     }
@@ -108,7 +106,7 @@ orc_array_check_out_of_bounds (OrcArray *array)
   for(j=0;j<array->m;j++){
     data = ORC_PTR_OFFSET(array->data, array->stride * j);
     for(i=array->element_size * array->n;i<array->stride;i++){
-      if (data[i] != OOB_VALUE) {
+      if (data[i] != ORC_OOB_VALUE) {
         printf("OOB check failed on row %d, end+%d\n", j,
             i - array->element_size * array->n);
         return FALSE;
@@ -118,7 +116,7 @@ orc_array_check_out_of_bounds (OrcArray *array)
 
   data = ORC_PTR_OFFSET (array->data, array->stride * array->m);
   for(i=0;i<array->stride * EXTEND_ROWS;i++){
-    if (data[i] != OOB_VALUE) {
+    if (data[i] != ORC_OOB_VALUE) {
       printf("OOB check failed at end+%d\n", i);
       return FALSE;
     }

@@ -7,6 +7,8 @@
 #include <orc/orc.h>
 #include <orc/orcdebug.h>
 
+#define ORC_OOB_VALUE 0xa5
+
 typedef struct _OrcArray OrcArray;
 struct _OrcArray {
   void *data;

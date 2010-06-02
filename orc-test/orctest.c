@@ -533,9 +533,9 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
       orc_array_set_random (src[i-ORC_VAR_S1], &rand_context);
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
       dest_exec[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size);
-      orc_array_set_pattern (dest_exec[i], 0xa5);
+      orc_array_set_pattern (dest_exec[i], ORC_OOB_VALUE);
       dest_emul[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size);
-      orc_array_set_pattern (dest_emul[i], 0xa5);
+      orc_array_set_pattern (dest_emul[i], ORC_OOB_VALUE);
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_PARAM) {
       orc_executor_set_param (ex, i, 2);
     }
@@ -836,9 +836,9 @@ orc_test_performance (OrcProgram *program, int flags)
       orc_array_set_random (src[i-ORC_VAR_S1], &rand_context);
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
       dest_exec[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size);
-      orc_array_set_pattern (dest_exec[i], 0xa5);
+      orc_array_set_pattern (dest_exec[i], ORC_OOB_VALUE);
       dest_emul[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size);
-      orc_array_set_pattern (dest_emul[i], 0xa5);
+      orc_array_set_pattern (dest_emul[i], ORC_OOB_VALUE);
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_PARAM) {
       orc_executor_set_param (ex, i, 2);
     }
