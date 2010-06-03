@@ -90,6 +90,10 @@ orc_sse_emit_loadpq (OrcCompiler *p, int reg, int param)
 static void
 sse_rule_copyx (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
+  if (p->vars[insn->src_args[0]].alloc == p->vars[insn->dest_args[0]].alloc) {
+    return;
+  }
+
   orc_sse_emit_movdqa (p,
       p->vars[insn->src_args[0]].alloc,
       p->vars[insn->dest_args[0]].alloc);

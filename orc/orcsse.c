@@ -239,6 +239,10 @@ orc_x86_emit_mov_sse_memoffset (OrcCompiler *compiler, int size, int reg1, int o
 
 void orc_x86_emit_mov_sse_reg_reg (OrcCompiler *compiler, int reg1, int reg2)
 {
+  if (reg1 == reg2) {
+    return;
+  }
+
   ORC_ASM_CODE(compiler,"  movdqa %%%s, %%%s\n", orc_x86_get_regname_sse(reg1),
         orc_x86_get_regname_sse(reg2));
 
