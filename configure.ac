@@ -22,6 +22,7 @@ AC_LIBTOOL_WIN32_DLL
 AC_LIBTOOL_TAGS([])
 AC_PROG_LIBTOOL
 AM_PROG_AS
+AC_CONFIG_MACRO_DIR([m4])
 
 AC_CONFIG_SRCDIR([orc/orc.h])
 
@@ -107,6 +108,56 @@ case "${host_os}" in
     AC_DEFINE(HAVE_THREAD_PTHREAD, 1, [Use pthread thread code])
     ;;
 esac
+
+AC_ARG_ENABLE(backend,
+  AC_HELP_STRING([--enable-backend=[sse,mmx,neon,arm,all]], [include backend (default=all)]),
+    [], [enable_backend=all])
+case "${enable_backend}" in
+  sse)
+    ENABLE_BACKEND_SSE=yes
+    AC_DEFINE(ENABLE_BACKEND_SSE, 1, [Enable SSE backend])
+    ;;
+  mmx)
+    ENABLE_BACKEND_MMX=yes
+    AC_DEFINE(ENABLE_BACKEND_MMX, 1, [Enable MMX backend])
+    ;;
+  altivec)
+    ENABLE_BACKEND_ALTIVEC=yes
+    AC_DEFINE(ENABLE_BACKEND_ALTIVEC, 1, [Enable Altivec backend])
+    ;;
+  neon)
+    ENABLE_BACKEND_NEON=yes
+    AC_DEFINE(ENABLE_BACKEND_NEON, 1, [Enable NEON backend])
+    ;;
+  arm)
+    ENABLE_BACKEND_ARM=yes
+    AC_DEFINE(ENABLE_BACKEND_ARM, 1, [Enable Arm backend])
+    ;;
+  c64x)
+    ENABLE_BACKEND_C64X=yes
+    AC_DEFINE(ENABLE_BACKEND_C64X, 1, [Enable c64x backend])
+    ;;
+  all|auto)
+    ENABLE_BACKEND_SSE=yes
+    AC_DEFINE(ENABLE_BACKEND_SSE, 1, [Enable SSE backend])
+    ENABLE_BACKEND_MMX=yes
+    AC_DEFINE(ENABLE_BACKEND_MMX, 1, [Enable MMX backend])
+    ENABLE_BACKEND_ALTIVEC=yes
+    AC_DEFINE(ENABLE_BACKEND_ALTIVEC, 1, [Enable Altivec backend])
+    ENABLE_BACKEND_NEON=yes
+    AC_DEFINE(ENABLE_BACKEND_NEON, 1, [Enable NEON backend])
+    ENABLE_BACKEND_ARM=yes
+    AC_DEFINE(ENABLE_BACKEND_ARM, 1, [Enable Arm backend])
+    ENABLE_BACKEND_C64X=yes
+    AC_DEFINE(ENABLE_BACKEND_C64X, 1, [Enable c64x backend])
+    ;;
+esac
+AM_CONDITIONAL(ENABLE_BACKEND_SSE, test "x$ENABLE_BACKEND_SSE" = "xyes")
+AM_CONDITIONAL(ENABLE_BACKEND_MMX, test "x$ENABLE_BACKEND_MMX" = "xyes")
+AM_CONDITIONAL(ENABLE_BACKEND_ALTIVEC, test "x$ENABLE_BACKEND_ALTIVEC" = "xyes")
+AM_CONDITIONAL(ENABLE_BACKEND_NEON, test "x$ENABLE_BACKEND_NEON" = "xyes")
+AM_CONDITIONAL(ENABLE_BACKEND_ARM, test "x$ENABLE_BACKEND_ARM" = "xyes")
+AM_CONDITIONAL(ENABLE_BACKEND_C64X, test "x$ENABLE_BACKEND_C64X" = "xyes")
 
 
 AC_DEFINE(ORC_EXPORTS, 1, [Defined for compiling internal code])

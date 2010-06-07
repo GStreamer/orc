@@ -27,12 +27,14 @@ EXTRA_DIST = test.orc
 
 CLEANFILES = temp-orc-test-*
 
+if ENABLE_BACKEND_NEON
 TESTS += compile_opcodes_sys_neon \
 	compile_opcodes_float_neon \
 	compile_parse_neon
 noinst_PROGRAMS += compile_opcodes_sys_neon \
 	compile_opcodes_float_neon \
 	compile_parse_neon
+endif
 
 AM_CFLAGS = $(ORC_CFLAGS) -I/usr/local/include/liboil-0.3/
 LIBS = $(ORC_LIBS) $(top_builddir)/orc-test/liborc-test-@ORC_MAJORMINOR@.la -loil-0.3

@@ -18,28 +18,42 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orccodemem.c \
 	orcprogram.c \
 	orccompiler.c \
-	orcprogram-arm.c \
 	orcprogram-c.c \
-	orcprogram-c64x-c.c \
-	orcprogram-altivec.c \
-	orcprogram-mmx.c \
-	orcprogram-sse.c \
 	orcprogram.h \
 	orcopcodes.c \
 	orcparse.c \
 	orconce.c \
-	orcrules-altivec.c \
-	orcrules-mmx.c \
-	orcrules-sse.c \
-	orcrules-arm.c \
-	orcprogram-neon.c \
-	orcrules-neon.c \
-	orcdebug.c \
-	orcpowerpc.c \
-	orcsse.c \
-	orcmmx.c \
-	orcx86.c \
-	orcarm.c
+	orcdebug.c
+
+if ENABLE_BACKEND_SSE
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orcsse.c orcrules-sse.c orcprogram-sse.c
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orcx86.c
+endif
+if ENABLE_BACKEND_MMX
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orcmmx.c orcrules-mmx.c orcprogram-mmx.c 
+if ENABLE_BACKEND_SSE
+else
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orcx86.c
+endif
+endif
+if ENABLE_BACKEND_ALTIVEC
+liborc_@ORC_MAJORMINOR@_la_SOURCES += \
+	orcrules-altivec.c orcprogram-altivec.c orcpowerpc.c
+endif
+if ENABLE_BACKEND_NEON
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orcprogram-neon.c orcrules-neon.c
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orcarm.c
+endif
+if ENABLE_BACKEND_ARM
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orcprogram-arm.c orcrules-arm.c
+if ENABLE_BACKEND_NEON
+else
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orcarm.c
+endif
+endif
+if ENABLE_BACKEND_C64X
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orcprogram-c64x-c.c
+endif
 
 if HAVE_I386
 liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-x86.c
@@ -65,6 +79,7 @@ pkginclude_HEADERS = \
 	orconce.h \
 	orcsse.h \
 	orcmmx.h \
+	orcneon.h \
 	orcx86.h \
 	orcpowerpc.h \
 	orcarm.h

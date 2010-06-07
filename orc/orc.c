@@ -38,11 +38,23 @@ orc_init (void)
   _orc_once_init();
   orc_opcode_init();
   orc_c_init();
+#ifdef ENABLE_BACKEND_C64X
   orc_c64x_c_init();
+#endif
+#ifdef ENABLE_BACKEND_MMX
   orc_mmx_init();
+#endif
+#ifdef ENABLE_BACKEND_SSE
   orc_sse_init();
+#endif
+#ifdef ENABLE_BACKEND_ALTIVEC
   orc_powerpc_init();
+#endif
+#ifdef ENABLE_BACKEND_ARM
   orc_arm_init();
+#endif
+#ifdef ENABLE_BACKEND_NEON
   orc_neon_init();
+#endif
 }
 
