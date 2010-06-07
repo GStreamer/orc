@@ -17,7 +17,7 @@ XFAIL_TESTS = \
 	exec_opcodes_float
 
 noinst_PROGRAMS = $(TESTS) generate_xml_table generate_xml_table2 \
-	generate_opcodes_sys compile_parse_c memcpy_speed \
+	generate_opcodes_sys compile_parse compile_parse_c memcpy_speed \
 	exec_parse \
 	compile_opcodes_sys_c \
 	compile_opcodes_float_c \
@@ -34,8 +34,8 @@ noinst_PROGRAMS += compile_opcodes_sys_neon \
 	compile_opcodes_float_neon \
 	compile_parse_neon
 
-AM_CFLAGS = $(ORC_CFLAGS)
-LIBS = $(ORC_LIBS) $(top_builddir)/orc-test/liborc-test-@ORC_MAJORMINOR@.la
+AM_CFLAGS = $(ORC_CFLAGS) -I/usr/local/include/liboil-0.3/
+LIBS = $(ORC_LIBS) $(top_builddir)/orc-test/liborc-test-@ORC_MAJORMINOR@.la -loil-0.3
 
 compile_opcodes_float_c_LDADD = \
 	$(top_builddir)/orc-float/liborc-float-@ORC_MAJORMINOR@.la
