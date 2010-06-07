@@ -208,8 +208,13 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
                 c_get_type_name (var->size), varname, i);
           }
         } else {
-          ORC_ASM_CODE(compiler,"  const %s %s = %s;\n",
-              c_get_type_name (var->size), varname, varnames[i]);
+          if (var->size >= 4) {
+            ORC_ASM_CODE(compiler,"  const %s %s = { %s };\n",
+                c_get_type_name (var->size), varname, varnames[i]);
+          } else {
+            ORC_ASM_CODE(compiler,"  const %s %s = %s;\n",
+                c_get_type_name (var->size), varname, varnames[i]);
+          }
         }
         break;
       default:
