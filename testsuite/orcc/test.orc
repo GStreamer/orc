@@ -151,7 +151,7 @@ orb d1, s1, s2
 .function orc_shlb
 .dest 1 d1
 .source 1 s1
-.source 1 s2
+.param 1 s2
 
 shlb d1, s1, s2
 
@@ -159,7 +159,7 @@ shlb d1, s1, s2
 .function orc_shrsb
 .dest 1 d1
 .source 1 s1
-.source 1 s2
+.param 1 s2
 
 shrsb d1, s1, s2
 
@@ -167,7 +167,7 @@ shrsb d1, s1, s2
 .function orc_shrub
 .dest 1 d1
 .source 1 s1
-.source 1 s2
+.param 1 s2
 
 shrub d1, s1, s2
 
@@ -364,7 +364,7 @@ orw d1, s1, s2
 .function orc_shlw
 .dest 2 d1
 .source 2 s1
-.source 2 s2
+.param 2 s2
 
 shlw d1, s1, s2
 
@@ -372,7 +372,7 @@ shlw d1, s1, s2
 .function orc_shrsw
 .dest 2 d1
 .source 2 s1
-.source 2 s2
+.param 2 s2
 
 shrsw d1, s1, s2
 
@@ -380,7 +380,7 @@ shrsw d1, s1, s2
 .function orc_shruw
 .dest 2 d1
 .source 2 s1
-.source 2 s2
+.param 2 s2
 
 shruw d1, s1, s2
 
@@ -577,7 +577,7 @@ orl d1, s1, s2
 .function orc_shll
 .dest 4 d1
 .source 4 s1
-.source 4 s2
+.param 4 s2
 
 shll d1, s1, s2
 
@@ -585,7 +585,7 @@ shll d1, s1, s2
 .function orc_shrsl
 .dest 4 d1
 .source 4 s1
-.source 4 s2
+.param 4 s2
 
 shrsl d1, s1, s2
 
@@ -593,7 +593,7 @@ shrsl d1, s1, s2
 .function orc_shrul
 .dest 4 d1
 .source 4 s1
-.source 4 s2
+.param 4 s2
 
 shrul d1, s1, s2
 
