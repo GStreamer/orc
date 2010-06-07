@@ -56,6 +56,7 @@ void orc_x86_emit_cmp_imm_memoffset (OrcCompiler *compiler, int size, int value,
 void orc_x86_emit_test_imm_memoffset (OrcCompiler *compiler, int size, int value,
     int offset, int reg);
 void orc_x86_emit_emms (OrcCompiler *compiler);
+void orc_x86_emit_rep_movs (OrcCompiler *compiler, int size);
 void orc_x86_emit_ret (OrcCompiler *compiler);
 void orc_x86_emit_jle (OrcCompiler *compiler, int label);
 void orc_x86_emit_je (OrcCompiler *compiler, int label);
@@ -71,6 +72,9 @@ void orc_x86_emit_modrm_memoffset (OrcCompiler *compiler, int reg1, int offset, 
 void orc_x86_emit_modrm_reg (OrcCompiler *compiler, int reg1, int reg2);
 
 void orc_x86_do_fixups (OrcCompiler *compiler);
+
+int orc_x86_assemble_copy_check (OrcCompiler *compiler);
+void orc_x86_assemble_copy (OrcCompiler *compiler);
 
 
 #endif

@@ -552,6 +552,12 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
 {
   int align_var;
 
+  if (0 && orc_x86_assemble_copy_check (compiler)) {
+    /* The rep movs implementation isn't faster most of the time */
+    orc_x86_assemble_copy (compiler);
+    return;
+  }
+
   align_var = get_align_var (compiler);
 
   compiler->vars[align_var].is_aligned = FALSE;

@@ -698,6 +698,28 @@ void orc_x86_emit_emms (OrcCompiler *compiler)
   *compiler->codeptr++ = 0x77;
 }
 
+void orc_x86_emit_rep_movs (OrcCompiler *compiler, int size)
+{
+  switch (size) {
+    case 1:
+      ORC_ASM_CODE(compiler,"  rep movsb\n");
+      *compiler->codeptr++ = 0xf3;
+      *compiler->codeptr++ = 0xa4;
+      break;
+    case 2:
+      ORC_ASM_CODE(compiler,"  rep movsw\n");
+      *compiler->codeptr++ = 0x66;
+      *compiler->codeptr++ = 0xf3;
+      *compiler->codeptr++ = 0xa5;
+      break;
+    case 4:
+      ORC_ASM_CODE(compiler,"  rep movsl\n");
+      *compiler->codeptr++ = 0xf3;
+      *compiler->codeptr++ = 0xa5;
+      break;
+  }
+}
+
 void
 x86_add_fixup (OrcCompiler *compiler, unsigned char *ptr, int label, int type)
 {
@@ -896,5 +918,72 @@ orc_x86_emit_align (OrcCompiler *compiler)
     *compiler->codeptr++ = 0x90;
     diff--;
   }
+}
+
+/* memcpy implementation based on rep movs */
+
+int
+orc_x86_assemble_copy_check (OrcCompiler *compiler)
+{
+  if (compiler->program->n_insns == 1 &&
+      compiler->program->is_2d == FALSE &&
+      (strcmp (compiler->program->insns[0].opcode->name, "copyb") == 0 ||
+      strcmp (compiler->program->insns[0].opcode->name, "copyw") == 0 ||
+      strcmp (compiler->program->insns[0].opcode->name, "copyl") == 0)) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+void
+orc_x86_assemble_copy (OrcCompiler *compiler)
+{
+  OrcInstruction *insn;
+  int shift = 0;
+
+  insn = compiler->program->insns + 0;
+
+  if (strcmp (insn->opcode->name, "copyw") == 0) {
+    shift = 1;
+  } else if (strcmp (insn->opcode->name, "copyl") == 0) {
+    shift = 2;
+  }
+
+  compiler->used_regs[X86_EDI] = TRUE;
+  compiler->used_regs[X86_ESI] = TRUE;
+
+  orc_x86_emit_prologue (compiler);
+
+  orc_x86_emit_mov_memoffset_reg (compiler, 4,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,arrays[insn->dest_args[0]]),
+      compiler->exec_reg, X86_EDI);
+  orc_x86_emit_mov_memoffset_reg (compiler, 4,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,arrays[insn->src_args[0]]),
+      compiler->exec_reg, X86_ESI);
+  orc_x86_emit_mov_memoffset_reg (compiler, 4,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,n), compiler->exec_reg,
+      X86_ECX);
+
+  orc_x86_emit_sar_imm_reg (compiler, 4, 2 - shift, X86_ECX);
+  orc_x86_emit_rep_movs (compiler, 4);
+  if (shift == 0) {
+    orc_x86_emit_mov_memoffset_reg (compiler, 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,n), compiler->exec_reg,
+        X86_ECX);
+    orc_x86_emit_and_imm_reg (compiler, 4, 3, X86_ECX);
+    orc_x86_emit_rep_movs (compiler, 1);
+  }
+  if (shift == 1) {
+    orc_x86_emit_mov_memoffset_reg (compiler, 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,n), compiler->exec_reg,
+        X86_ECX);
+    orc_x86_emit_and_imm_reg (compiler, 4, 1, X86_ECX);
+    orc_x86_emit_rep_movs (compiler, 2);
+  }
+
+  orc_x86_emit_epilogue (compiler);
+
+  orc_x86_do_fixups (compiler);
 }
 
