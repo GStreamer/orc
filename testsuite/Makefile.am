@@ -36,8 +36,8 @@ noinst_PROGRAMS += compile_opcodes_sys_neon \
 	compile_parse_neon
 endif
 
-AM_CFLAGS = $(ORC_CFLAGS) -I/usr/local/include/liboil-0.3/
-LIBS = $(ORC_LIBS) $(top_builddir)/orc-test/liborc-test-@ORC_MAJORMINOR@.la -loil-0.3
+AM_CFLAGS = $(ORC_CFLAGS)
+LIBS = $(ORC_LIBS) $(top_builddir)/orc-test/liborc-test-@ORC_MAJORMINOR@.la
 
 compile_opcodes_float_c_LDADD = \
 	$(top_builddir)/orc-float/liborc-float-@ORC_MAJORMINOR@.la
