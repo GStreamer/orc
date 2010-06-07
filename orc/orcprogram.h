@@ -35,6 +35,7 @@ typedef void (*OrcExecutorFunc)(OrcExecutor *ex);
 
 #define ORC_GP_REG_BASE 32
 #define ORC_VEC_REG_BASE 64
+#define ORC_REG_INVALID 0
 
 #define ORC_STATIC_OPCODE_N_SRC 4
 #define ORC_STATIC_OPCODE_N_DEST 2
@@ -387,6 +388,9 @@ struct _OrcCompiler {
   int insn_index;
   int need_mask_regs;
   int unroll_shift;
+
+  int alloc_loop_counter;
+  int loop_counter;
 };
 
 #define ORC_SRC_ARG(p,i,n) ((p)->vars[(i)->src_args[(n)]].alloc)

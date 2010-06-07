@@ -450,6 +450,10 @@ orc_compiler_global_reg_alloc (OrcCompiler *compiler)
         break;
     }
   }
+
+  if (compiler->alloc_loop_counter) {
+    compiler->loop_counter = orc_compiler_allocate_register (compiler, FALSE);
+  }
 }
 
 void
