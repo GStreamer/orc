@@ -79,12 +79,14 @@ orc_target_get_default (void)
 const char *
 orc_target_get_name (OrcTarget *target)
 {
+  if (target == NULL) return NULL;
   return target->name;
 }
 
 unsigned int
 orc_target_get_default_flags (OrcTarget *target)
 {
+  if (target == NULL) return 0;
   return target->get_default_flags();
 }
 
