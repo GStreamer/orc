@@ -20,8 +20,9 @@ will likely be some major changes in ease of use from a developer's
 perspective over the next few releases.
 
 The 0.4 series of Orc releases will be API and ABI compatible, and
-will be incompatible with the 0.5 series when it comes out.  It is
-anticipated that 0.5 will follow in a few months.
+will be incompatible with the 0.5 series when it comes out.  The first
+release of the 0.5 series is anticipated to coincide with the release
+of GStreamer 1.0.
 
 
 Features:
@@ -38,10 +39,8 @@ Features:
  - An application can add rules for converting existing or new opcodes
    to binary code for a specific target.
 
- - Current targets: SSE, MMX, ARM, Altivec, and TI C64x+.  (ARM is very
-   limited and c64x only produces source code.)  The NEON target is not
-   open source and can be licensed separately from Entropy Wave.  (This
-   will change soon.)
+ - Current targets: SSE, MMX, ARM, Altivec, NEON, and TI C64x+.  (ARM
+   is very limited and c64x only produces source code.)
 
  - Programs can optionally be emulated, which is useful for testing, or
    if no rules are available to convert Orc opcodes to executable code.

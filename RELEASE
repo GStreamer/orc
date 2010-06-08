@@ -1,4 +1,22 @@
 
+0.4.5
+=====
+
+This release contains many small improvements related to
+converting GStreamer from liboil to Orc.
+
+The major addition in this release is the mainstreaming of
+the NEON backend, made possible by Nokia.
+
+There is a new experimental option to ./configure,
+--enable-backend, which allows you to choose a single code
+generation backend to include in the library.  This is mostly
+useful for embedded systems, and is not recommended in general.
+
+The upcoming release will focus on improving code generation
+for the SSE and NEON backends.
+
+
 0.4.4
 =====
 
