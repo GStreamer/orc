@@ -195,16 +195,15 @@ orc_test_gcc_compile_neon (OrcProgram *p)
       "-c %s -o %s", source_filename, obj_filename);
   ret = system (cmd);
   if (ret != 0) {
-    ORC_ERROR ("gcc failed");
-    printf("%s\n", orc_program_get_asm_code (p));
-    return ORC_TEST_FAILED;
+    ORC_ERROR ("arm gcc failed");
+    return ORC_TEST_INDETERMINATE;
   }
 
   sprintf (cmd, PREFIX "objdump -dr %s >%s", obj_filename, dis_filename);
   ret = system (cmd);
   if (ret != 0) {
     ORC_ERROR ("objdump failed");
-    return ORC_TEST_FAILED;
+    return ORC_TEST_INDETERMINATE;
   }
 
   sprintf (cmd, PREFIX "objcopy -I binary "
@@ -215,14 +214,14 @@ orc_test_gcc_compile_neon (OrcProgram *p)
   ret = system (cmd);
   if (ret != 0) {
     printf("objcopy failed\n");
-    return ORC_TEST_FAILED;
+    return ORC_TEST_INDETERMINATE;
   }
 
   sprintf (cmd, PREFIX "objdump -Dr %s >%s", obj_filename, dump_dis_filename);
   ret = system (cmd);
   if (ret != 0) {
     printf("objdump failed\n");
-    return ORC_TEST_FAILED;
+    return ORC_TEST_INDETERMINATE;
   }
 
   sprintf (cmd, "diff -u %s %s", dis_filename, dump_dis_filename);
@@ -291,14 +290,14 @@ orc_test_gcc_compile_c64x (OrcProgram *p)
   if (ret != 0) {
     ORC_ERROR ("compiler failed");
     //printf("%s\n", orc_program_get_asm_code (p));
-    return ORC_TEST_FAILED;
+    return ORC_TEST_INDETERMINATE;
   }
 
   sprintf (cmd, C64X_PREFIX "dis6x %s >%s", obj_filename, dis_filename);
   ret = system (cmd);
   if (ret != 0) {
     ORC_ERROR ("objdump failed");
-    return ORC_TEST_FAILED;
+    return ORC_TEST_INDETERMINATE;
   }
 
 #if 0
