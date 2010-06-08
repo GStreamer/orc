@@ -181,7 +181,6 @@ Makefile
 doc/Makefile
 doc/version.entities
 orc/Makefile
-orc-float/Makefile
 orc-test/Makefile
 testsuite/Makefile
 testsuite/orcc/Makefile
