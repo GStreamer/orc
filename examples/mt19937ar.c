@@ -57,12 +57,12 @@
 
 
 /* mag01[x] = x * MATRIX_A  for x=0,1 */
-static const uint32_t mag01[2]={0x0UL, MATRIX_A};
+static const orc_uint32 mag01[2]={0x0UL, MATRIX_A};
 
 void
-mt19937_ref (uint32_t *d, uint32_t *mt)
+mt19937_ref (orc_uint32 *d, orc_uint32 *mt)
 {
-  uint32_t y;
+  orc_uint32 y;
   int kk;
 
   for (kk=0;kk<N-M;kk++) {

@@ -267,85 +267,85 @@ orc_opcode_find_by_name (const char *name)
 static void
 convsbw (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->dest_values[0] = (int8_t)(ex->src_values[0]);
+  ex->dest_values[0] = (orc_int8)(ex->src_values[0]);
 }
 
 static void
 convubw (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->dest_values[0] = (uint8_t)(ex->src_values[0]);
+  ex->dest_values[0] = (orc_uint8)(ex->src_values[0]);
 }
 
 static void
 convswl (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->dest_values[0] = (int16_t)(ex->src_values[0]);
+  ex->dest_values[0] = (orc_int16)(ex->src_values[0]);
 }
 
 static void
 convuwl (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->dest_values[0] = (uint16_t)(ex->src_values[0]);
+  ex->dest_values[0] = (orc_uint16)(ex->src_values[0]);
 }
 
 static void
 convwb (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->dest_values[0] = (int16_t)(ex->src_values[0]);
+  ex->dest_values[0] = (orc_int16)(ex->src_values[0]);
 }
 
 static void
 convssswb (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->dest_values[0] = ORC_CLAMP_SB((int16_t)(ex->src_values[0]));
+  ex->dest_values[0] = ORC_CLAMP_SB((orc_int16)(ex->src_values[0]));
 }
 
 static void
 convsuswb (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->dest_values[0] = ORC_CLAMP_UB((int16_t)(ex->src_values[0]));
+  ex->dest_values[0] = ORC_CLAMP_UB((orc_int16)(ex->src_values[0]));
 }
 
 static void
 convusswb (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->dest_values[0] = MIN((int)(uint16_t)(ex->src_values[0]), ORC_SB_MAX);
+  ex->dest_values[0] = MIN((int)(orc_uint16)(ex->src_values[0]), ORC_SB_MAX);
 }
 
 static void
 convuuswb (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->dest_values[0] = MIN((int)(uint16_t)(ex->src_values[0]), ORC_UB_MAX);
+  ex->dest_values[0] = MIN((int)(orc_uint16)(ex->src_values[0]), ORC_UB_MAX);
 }
 
 static void
 convlw (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->dest_values[0] = (int32_t)(ex->src_values[0]);
+  ex->dest_values[0] = (orc_int32)(ex->src_values[0]);
 }
 
 static void
 convssslw (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->dest_values[0] = ORC_CLAMP_SW((int32_t)(ex->src_values[0]));
+  ex->dest_values[0] = ORC_CLAMP_SW((orc_int32)(ex->src_values[0]));
 }
 
 static void
 convsuslw (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->dest_values[0] = ORC_CLAMP_UW((int32_t)(ex->src_values[0]));
+  ex->dest_values[0] = ORC_CLAMP_UW((orc_int32)(ex->src_values[0]));
 }
 
 static void
 convusslw (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->dest_values[0] = ORC_CLAMP_SW((uint32_t)(ex->src_values[0]));
+  ex->dest_values[0] = ORC_CLAMP_SW((orc_uint32)(ex->src_values[0]));
 }
 
 static void
 convuuslw (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->dest_values[0] = ORC_CLAMP_UW((uint32_t)(ex->src_values[0]));
+  ex->dest_values[0] = ORC_CLAMP_UW((orc_uint32)(ex->src_values[0]));
 }
 
 #define UNARY(name,type,code) \
@@ -365,17 +365,17 @@ name (OrcOpcodeExecutor *ex, void *user) \
   ex->dest_values[0] = ( type )( code ); \
 }
 
-#define UNARY_SB(name,code) UNARY(name, int8_t, code)
-#define BINARY_SB(name,code) BINARY(name, int8_t, code)
-#define BINARY_UB(name,code) BINARY(name, uint8_t, code)
+#define UNARY_SB(name,code) UNARY(name, orc_int8, code)
+#define BINARY_SB(name,code) BINARY(name, orc_int8, code)
+#define BINARY_UB(name,code) BINARY(name, orc_uint8, code)
 
-#define UNARY_SW(name,code) UNARY(name, int16_t, code)
-#define BINARY_SW(name,code) BINARY(name, int16_t, code)
-#define BINARY_UW(name,code) BINARY(name, uint16_t, code)
+#define UNARY_SW(name,code) UNARY(name, orc_int16, code)
+#define BINARY_SW(name,code) BINARY(name, orc_int16, code)
+#define BINARY_UW(name,code) BINARY(name, orc_uint16, code)
 
-#define UNARY_SL(name,code) UNARY(name, int32_t, code)
-#define BINARY_SL(name,code) BINARY(name, int32_t, code)
-#define BINARY_UL(name,code) BINARY(name, uint32_t, code)
+#define UNARY_SL(name,code) UNARY(name, orc_int32, code)
+#define BINARY_SL(name,code) BINARY(name, orc_int32, code)
+#define BINARY_UL(name,code) BINARY(name, orc_uint32, code)
 
 UNARY_SB(absb, (a<0)?-a:a)
 BINARY_SB(addb, a + b)
@@ -435,30 +435,30 @@ BINARY_SW(xorw, a ^ b)
 
 UNARY_SL(absl, (a<0)?-a:a)
 BINARY_SL(addl, a + b)
-BINARY_SL(addssl, ORC_CLAMP_SL((int64_t)a + (int64_t)b))
-BINARY_UL(addusl, ORC_CLAMP_UL((uint64_t)(uint32_t)a + (uint64_t)(uint32_t)b))
+BINARY_SL(addssl, ORC_CLAMP_SL((orc_int64)a + (orc_int64)b))
+BINARY_UL(addusl, ORC_CLAMP_UL((orc_uint64)(orc_uint32)a + (orc_uint64)(orc_uint32)b))
 BINARY_SL(andl, a & b)
 BINARY_SL(andnl, (~a) & b)
-BINARY_SL(avgsl, ((int64_t)a + (int64_t)b + 1)>>1)
-BINARY_UL(avgul, ((uint64_t)(uint32_t)a + (uint64_t)(uint32_t)b + 1)>>1)
+BINARY_SL(avgsl, ((orc_int64)a + (orc_int64)b + 1)>>1)
+BINARY_UL(avgul, ((orc_uint64)(orc_uint32)a + (orc_uint64)(orc_uint32)b + 1)>>1)
 BINARY_SL(cmpeql, (a == b) ? (~0) : 0)
 BINARY_SL(cmpgtsl, (a > b) ? (~0) : 0)
 UNARY_SL(copyl, a)
 BINARY_SL(maxsl, (a > b) ? a : b)
-BINARY_UL(maxul, ((uint32_t)a > (uint32_t)b) ? a : b)
+BINARY_UL(maxul, ((orc_uint32)a > (orc_uint32)b) ? a : b)
 BINARY_SL(minsl, (a < b) ? a : b)
-BINARY_UL(minul, ((uint32_t)a < (uint32_t)b) ? a : b)
+BINARY_UL(minul, ((orc_uint32)a < (orc_uint32)b) ? a : b)
 BINARY_SL(mulll, (a * b) & 0xffffffff)
-BINARY_SL(mulhsl, ((int64_t)a * (int64_t)b) >> 32)
-BINARY_UL(mulhul, ((uint64_t)a * (uint64_t)b) >> 32)
+BINARY_SL(mulhsl, ((orc_int64)a * (orc_int64)b) >> 32)
+BINARY_UL(mulhul, ((orc_uint64)a * (orc_uint64)b) >> 32)
 BINARY_SL(orl, a | b)
 BINARY_SL(shll, a << b)
 BINARY_SL(shrsl, a >> b)
-BINARY_UL(shrul, ((uint32_t)a) >> b)
+BINARY_UL(shrul, ((orc_uint32)a) >> b)
 UNARY_SL(signl, ORC_CLAMP(a,-1,1))
 BINARY_SL(subl, a - b)
-BINARY_SL(subssl, ORC_CLAMP_SL((int64_t)a - (int64_t)b))
-BINARY_UL(subusl, (((uint32_t)a) < ((uint32_t)b)) ? 0 : a - b)
+BINARY_SL(subssl, ORC_CLAMP_SL((orc_int64)a - (orc_int64)b))
+BINARY_UL(subusl, (((orc_uint32)a) < ((orc_uint32)b)) ? 0 : a - b)
 BINARY_SL(xorl, a ^ b)
 
 
@@ -470,13 +470,13 @@ name (OrcOpcodeExecutor *ex, void *user) \
     ((type2)(type1)ex->src_values[1]); \
 }
 
-MUL(mulsbw, int8_t, int16_t)
-MUL(mulubw, uint8_t, uint16_t)
-MUL(mulswl, int16_t, int32_t)
-MUL(muluwl, uint16_t, uint32_t)
+MUL(mulsbw, orc_int8, orc_int16)
+MUL(mulubw, orc_uint8, orc_uint16)
+MUL(mulswl, orc_int16, orc_int32)
+MUL(muluwl, orc_uint16, orc_uint32)
 #ifdef ENABLE_INT64
-MUL(mulslq, int32_t, int64_t)
-MUL(mululq, uint32_t, uint64_t)
+MUL(mulslq, orc_int32, orc_int64)
+MUL(mululq, orc_uint32, orc_uint64)
 #endif
 
 #define ACC(name, type1) \
@@ -486,8 +486,8 @@ name (OrcOpcodeExecutor *ex, void *user) \
   ex->dest_values[0] = ((type1)ex->src_values[0]); \
 }
 
-ACC(accw, int16_t);
-ACC(accl, int32_t);
+ACC(accw, orc_int16);
+ACC(accl, orc_int32);
 
 static void
 swapw (OrcOpcodeExecutor *ex, void *user)
@@ -563,8 +563,8 @@ static void
 mergewl (OrcOpcodeExecutor *ex, void *user)
 {
   union {
-    uint16_t u16[2];
-    uint32_t u32;
+    orc_uint16 u16[2];
+    orc_uint32 u32;
   } val;
   val.u16[0] = ex->src_values[0];
   val.u16[1] = ex->src_values[1];
@@ -575,8 +575,8 @@ static void
 mergebw (OrcOpcodeExecutor *ex, void *user)
 {
   union {
-    uint8_t u8[2];
-    uint16_t u16;
+    orc_uint8 u8[2];
+    orc_uint16 u16;
   } val;
   val.u8[0] = ex->src_values[0];
   val.u8[1] = ex->src_values[1];
@@ -586,8 +586,8 @@ mergebw (OrcOpcodeExecutor *ex, void *user)
 static void
 accsadubl (OrcOpcodeExecutor *ex, void *user)
 {
-  ex->dest_values[0] = abs((int)((uint8_t)ex->src_values[0]) -
-      (int)((uint8_t)ex->src_values[1]));
+  ex->dest_values[0] = abs((int)((orc_uint8)ex->src_values[0]) -
+      (int)((orc_uint8)ex->src_values[1]));
 }
 
 /* float ops */

@@ -51,7 +51,7 @@ arm_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 void
 orc_arm_loadw (OrcCompiler *compiler, int dest, int src1, int offset)
 {
-  uint32_t code;
+  orc_uint32 code;
 
   code = 0xe1d000b0;
   code |= (src1&0xf) << 16;
@@ -68,7 +68,7 @@ orc_arm_loadw (OrcCompiler *compiler, int dest, int src1, int offset)
 void
 orc_arm_storew (OrcCompiler *compiler, int dest, int offset, int src1)
 {
-  uint32_t code;
+  orc_uint32 code;
 
   code = 0xe1c000b0;
   code |= (dest&0xf) << 16;
@@ -391,7 +391,7 @@ arm_rule_mulhsb (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 arm_rule_mulhub (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  /* BINARY_UB(mulhub, "((uint32_t)(uint8_t)%s * (uint32_t)(uint8_t)%s) >> 8") */
+  /* BINARY_UB(mulhub, "((orc_uint32)(uint8_t)%s * (orc_uint32)(uint8_t)%s) >> 8") */
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
@@ -792,7 +792,7 @@ arm_rule_mulhsw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 arm_rule_mulhuw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  /* BINARY_UW(mulhuw, "((uint32_t)((uint16_t)%s) * (uint32_t)((uint16_t)%s)) >> 16") */
+  /* BINARY_UW(mulhuw, "((orc_uint32)((uint16_t)%s) * (orc_uint32)((uint16_t)%s)) >> 16") */
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
@@ -1351,13 +1351,13 @@ arm_rule_select1wb (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 arm_rule_select0lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  /* UNARY_LW(select0lw, "(uint32_t)%s & 0xffff") */
+  /* UNARY_LW(select0lw, "(orc_uint32)%s & 0xffff") */
   /* NOP */
 }
 static void
 arm_rule_select1lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  /* UNARY_LW(select1lw, "((uint32_t)%s >> 16)&0xffff") */
+  /* UNARY_LW(select1lw, "((orc_uint32)%s >> 16)&0xffff") */
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int dest = ORC_DEST_ARG (p, insn, 0);
 

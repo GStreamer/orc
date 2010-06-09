@@ -6,11 +6,11 @@
 
 #define N 10
 
-int16_t a[N];
-int16_t b[N];
-int16_t c[N];
+orc_int16 a[N];
+orc_int16 b[N];
+orc_int16 c[N];
 
-void add_s16(int16_t *dest, int16_t *src1, int16_t *src2, int n);
+void add_s16(orc_int16 *dest, orc_int16 *src1, orc_int16 *src2, int n);
 
 
 int
@@ -39,7 +39,7 @@ main (int argc, char *argv[])
 }
 
 void
-add_s16(int16_t *dest, int16_t *src1, int16_t *src2, int n)
+add_s16(orc_int16 *dest, orc_int16 *src1, orc_int16 *src2, int n)
 {
   static OrcProgram *p = NULL;
   OrcExecutor _ex;

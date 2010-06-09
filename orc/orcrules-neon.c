@@ -208,7 +208,7 @@ orc_neon_emit_mov (OrcCompiler *compiler, int dest, int src)
 void
 orc_neon_load_halfvec_aligned (OrcCompiler *compiler, OrcVariable *var, int update)
 {
-  uint32_t code;
+  orc_uint32 code;
 
   ORC_ASM_CODE(compiler,"  vld1.32 %s[0], [%s]%s\n",
       orc_neon_reg_name (var->alloc),
@@ -225,7 +225,7 @@ orc_neon_load_halfvec_aligned (OrcCompiler *compiler, OrcVariable *var, int upda
 void
 orc_neon_load_vec_aligned (OrcCompiler *compiler, OrcVariable *var, int update)
 {
-  uint32_t code;
+  orc_uint32 code;
 
   ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]%s\n",
       orc_neon_reg_name (var->alloc),
@@ -243,7 +243,7 @@ void
 orc_neon_load_vec_unaligned (OrcCompiler *compiler, OrcVariable *var,
     int update)
 {
-  uint32_t code;
+  orc_uint32 code;
 
   ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]%s\n",
       orc_neon_reg_name (var->aligned_data + 1),
@@ -273,7 +273,7 @@ void
 orc_neon_load_halfvec_unaligned (OrcCompiler *compiler, OrcVariable *var,
     int update)
 {
-  uint32_t code;
+  orc_uint32 code;
 
   ORC_ASM_CODE(compiler,"  vld1.32 %s[1], [%s]%s\n",
       orc_neon_reg_name (var->aligned_data),
@@ -301,7 +301,7 @@ orc_neon_load_halfvec_unaligned (OrcCompiler *compiler, OrcVariable *var,
 void
 orc_neon_loadb (OrcCompiler *compiler, OrcVariable *var, int update)
 {
-  uint32_t code;
+  orc_uint32 code;
   int i;
 
   if (var->is_aligned && compiler->loop_shift == 3) {
@@ -340,7 +340,7 @@ orc_neon_loadw (OrcCompiler *compiler, OrcVariable *var, int update)
   } else if (compiler->loop_shift == 2 && var->mask_alloc) {
     orc_neon_load_vec_unaligned (compiler, var, update);
   } else {
-    uint32_t code;
+    orc_uint32 code;
     int i;
 
     if (compiler->loop_shift == 2) {
@@ -370,7 +370,7 @@ orc_neon_loadw (OrcCompiler *compiler, OrcVariable *var, int update)
 void
 orc_neon_loadl (OrcCompiler *compiler, OrcVariable *var, int update)
 {
-  uint32_t code;
+  orc_uint32 code;
   int i;
 
   if (var->is_aligned && compiler->loop_shift == 1) {
@@ -396,7 +396,7 @@ orc_neon_loadl (OrcCompiler *compiler, OrcVariable *var, int update)
 void
 orc_neon_loadq (OrcCompiler *compiler, int dest, int src1, int update, int is_aligned)
 {
-  uint32_t code;
+  orc_uint32 code;
 
   ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]%s\n",
       orc_neon_reg_name (dest),
@@ -414,7 +414,7 @@ orc_neon_loadq (OrcCompiler *compiler, int dest, int src1, int update, int is_al
 void
 orc_neon_storeb (OrcCompiler *compiler, int dest, int update, int src1, int is_aligned)
 {
-  uint32_t code;
+  orc_uint32 code;
   int i;
 
   if (is_aligned && compiler->loop_shift == 3) {
@@ -448,7 +448,7 @@ orc_neon_storeb (OrcCompiler *compiler, int dest, int update, int src1, int is_a
 void
 orc_neon_storew (OrcCompiler *compiler, int dest, int update, int src1, int is_aligned)
 {
-  uint32_t code;
+  orc_uint32 code;
   int i;
 
   if (is_aligned && compiler->loop_shift == 2) {
@@ -482,7 +482,7 @@ orc_neon_storew (OrcCompiler *compiler, int dest, int update, int src1, int is_a
 void
 orc_neon_storel (OrcCompiler *compiler, int dest, int update, int src1, int is_aligned)
 {
-  uint32_t code;
+  orc_uint32 code;
   int i;
 
   if (is_aligned && compiler->loop_shift == 2) {
@@ -516,7 +516,7 @@ orc_neon_storel (OrcCompiler *compiler, int dest, int update, int src1, int is_a
 void
 orc_neon_storeq (OrcCompiler *compiler, int dest, int update, int src1, int is_aligned)
 {
-  uint32_t code;
+  orc_uint32 code;
 
   ORC_ASM_CODE(compiler,"  vst1.64 %s, [%s]%s\n",
       orc_neon_reg_name (src1),
@@ -545,7 +545,7 @@ orc_neon_get_const_shift (unsigned int value)
 void
 orc_neon_emit_loadib (OrcCompiler *compiler, int reg, int value)
 {
-  uint32_t code;
+  orc_uint32 code;
 
   if (value == 0) {
     orc_neon_emit_binary_quad (compiler, "veor", 0xf3000110, reg, reg, reg);
@@ -568,7 +568,7 @@ orc_neon_emit_loadib (OrcCompiler *compiler, int reg, int value)
 void
 orc_neon_emit_loadiw (OrcCompiler *compiler, int reg, int value)
 {
-  uint32_t code;
+  orc_uint32 code;
   int shift;
   int neg = FALSE;
 
@@ -623,7 +623,7 @@ orc_neon_emit_loadiw (OrcCompiler *compiler, int reg, int value)
 void
 orc_neon_emit_loadil (OrcCompiler *compiler, int reg, int value)
 {
-  uint32_t code;
+  orc_uint32 code;
   int shift;
   int neg = FALSE;
 
@@ -678,7 +678,7 @@ orc_neon_emit_loadil (OrcCompiler *compiler, int reg, int value)
 void
 orc_neon_emit_loadpb (OrcCompiler *compiler, int dest, int param)
 {
-  uint32_t code;
+  orc_uint32 code;
 
   orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
       compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
@@ -696,7 +696,7 @@ orc_neon_emit_loadpb (OrcCompiler *compiler, int dest, int param)
 void
 orc_neon_emit_loadpw (OrcCompiler *compiler, int dest, int param)
 {
-  uint32_t code;
+  orc_uint32 code;
 
   orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
       compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
@@ -714,7 +714,7 @@ orc_neon_emit_loadpw (OrcCompiler *compiler, int dest, int param)
 void
 orc_neon_emit_loadpl (OrcCompiler *compiler, int dest, int param)
 {
-  uint32_t code;
+  orc_uint32 code;
 
   orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
       compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
@@ -827,7 +827,7 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
     return; \
   } \
   if (p->loop_shift <= vec_shift) { \
-    uint32_t x = code; \
+    orc_uint32 x = code; \
     ORC_ASM_CODE(p,"  " insn_name " %s, %s\n", \
         orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc), \
         orc_neon_reg_name (p->vars[insn->src_args[0]].alloc)); \
@@ -836,7 +836,7 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
         p->vars[insn->src_args[0]].alloc); \
     orc_arm_emit (p, x); \
   } else if (p->loop_shift == vec_shift + 1) { \
-    uint32_t x = code; \
+    orc_uint32 x = code; \
     ORC_ASM_CODE(p,"  " insn_name " %s, %s\n", \
         orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc), \
         orc_neon_reg_name (p->vars[insn->src_args[0]].alloc)); \
@@ -851,7 +851,7 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 
 
 typedef struct {
-  uint32_t code;
+  orc_uint32 code;
   char *name;
   int negate;
   int bits;
@@ -884,7 +884,7 @@ static void
 orc_neon_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int type = (unsigned long)user;
-  uint32_t code;
+  orc_uint32 code;
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
     int shift = p->vars[insn->src_args[1]].value;
@@ -959,7 +959,7 @@ orc_neon_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 orc_neon_rule_shrsw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  uint32_t code;
+  orc_uint32 code;
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
     code = 0xf2900010;
     ORC_ASM_CODE(p,"  vshr.s16 %s, %s, #%d\n",
@@ -993,7 +993,7 @@ orc_neon_rule_shrsw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 orc_neon_rule_shrsl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  uint32_t code;
+  orc_uint32 code;
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
     code = 0xf2900010;
     ORC_ASM_CODE(p,"  vshr.s32 %s, %s, #%d\n",
@@ -1254,7 +1254,7 @@ orc_neon_rule_mergewl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 orc_neon_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  uint32_t x;
+  orc_uint32 x;
   
   x = 0xf3800700;
   ORC_ASM_CODE(p,"  vabdl.u8 %s, %s, %s\n",

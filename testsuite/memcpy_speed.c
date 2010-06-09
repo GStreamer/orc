@@ -15,7 +15,7 @@ int
 main(int argc, char *argv[])
 {
   char *s, *d;
-  uint8_t *src, *dest;
+  orc_uint8 *src, *dest;
   OrcProfile prof;
   OrcProfile prof_libc;
   double ave, std;
@@ -32,7 +32,7 @@ main(int argc, char *argv[])
 
   s = malloc(1024*1024*64+1024);
   d = malloc(1024*1024*64+1024);
-  src = ALIGN(s,128) + 1;
+  src = ALIGN(s,128);
   dest = ALIGN(d,128);
 
   orc_profile_init (&prof);

@@ -173,16 +173,16 @@ orc_executor_emulate (OrcExecutor *ex)
 
             switch (var->size) {
               case 1:
-                opcode_ex.src_values[k] = *(int8_t *)ptr;
+                opcode_ex.src_values[k] = *(orc_int8 *)ptr;
                 break;
               case 2:
-                opcode_ex.src_values[k] = *(int16_t *)ptr;
+                opcode_ex.src_values[k] = *(orc_int16 *)ptr;
                 break;
               case 4:
-                opcode_ex.src_values[k] = *(int32_t *)ptr;
+                opcode_ex.src_values[k] = *(orc_int32 *)ptr;
                 break;
               case 8:
-                opcode_ex.src_values[k] = *(int64_t *)ptr;
+                opcode_ex.src_values[k] = *(orc_int64 *)ptr;
                 break;
               default:
                 ORC_ERROR("unhandled size %d", program->vars[insn->src_args[k]].size);
@@ -208,16 +208,16 @@ orc_executor_emulate (OrcExecutor *ex)
 
             switch (var->size) {
               case 1:
-                *(int8_t *)ptr = opcode_ex.dest_values[k];
+                *(orc_int8 *)ptr = opcode_ex.dest_values[k];
                 break;
               case 2:
-                *(int16_t *)ptr = opcode_ex.dest_values[k];
+                *(orc_int16 *)ptr = opcode_ex.dest_values[k];
                 break;
               case 4:
-                *(int32_t *)ptr = opcode_ex.dest_values[k];
+                *(orc_int32 *)ptr = opcode_ex.dest_values[k];
                 break;
               case 8:
-                *(int64_t *)ptr = opcode_ex.dest_values[k];
+                *(orc_int64 *)ptr = opcode_ex.dest_values[k];
                 break;
               default:
                 ORC_ERROR("unhandled size %d", program->vars[insn->dest_args[k]].size);

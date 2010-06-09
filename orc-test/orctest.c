@@ -342,7 +342,7 @@ void
 orc_test_random_bits (void *data, int n_bytes)
 {
 #if 1
-  uint8_t *d = data;
+  orc_uint8 *d = data;
   int i;
   for(i=0;i<n_bytes;i++){
     d[i] = rand();
@@ -365,17 +365,17 @@ print_array_val_signed (OrcArray *array, int i, int j)
 
   switch (array->element_size) {
     case 1:
-      printf(" %4d", *(int8_t *)ptr);
-      return *(int8_t *)ptr;
+      printf(" %4d", *(orc_int8 *)ptr);
+      return *(orc_int8 *)ptr;
     case 2:
-      printf(" %5d", *(int16_t *)ptr);
-      return *(int16_t *)ptr;
+      printf(" %5d", *(orc_int16 *)ptr);
+      return *(orc_int16 *)ptr;
     case 4:
-      printf(" %10d", *(int32_t *)ptr);
-      return *(int32_t *)ptr;
+      printf(" %10d", *(orc_int32 *)ptr);
+      return *(orc_int32 *)ptr;
     case 8:
-      printf(" %20lld", (long long)*(int64_t *)ptr);
-      return *(int64_t *)ptr;
+      printf(" %20lld", (long long)*(orc_int64 *)ptr);
+      return *(orc_int64 *)ptr;
     default:
       return -1;
   }
@@ -389,17 +389,17 @@ print_array_val_unsigned (OrcArray *array, int i, int j)
 
   switch (array->element_size) {
     case 1:
-      printf(" %4u", *(uint8_t *)ptr);
-      return *(int8_t *)ptr;
+      printf(" %4u", *(orc_uint8 *)ptr);
+      return *(orc_int8 *)ptr;
     case 2:
-      printf(" %5u", *(uint16_t *)ptr);
-      return *(int16_t *)ptr;
+      printf(" %5u", *(orc_uint16 *)ptr);
+      return *(orc_int16 *)ptr;
     case 4:
-      printf(" %10u", *(uint32_t *)ptr);
-      return *(int32_t *)ptr;
+      printf(" %10u", *(orc_uint32 *)ptr);
+      return *(orc_int32 *)ptr;
     case 8:
-      printf(" %20llu", (long long)*(uint64_t *)ptr);
-      return *(int64_t *)ptr;
+      printf(" %20llu", (long long)*(orc_uint64 *)ptr);
+      return *(orc_int64 *)ptr;
     default:
       return -1;
   }
@@ -413,17 +413,17 @@ print_array_val_hex (OrcArray *array, int i, int j)
 
   switch (array->element_size) {
     case 1:
-      printf(" %02x", *(uint8_t *)ptr);
-      return *(int8_t *)ptr;
+      printf(" %02x", *(orc_uint8 *)ptr);
+      return *(orc_int8 *)ptr;
     case 2:
-      printf(" %04x", *(uint16_t *)ptr);
-      return *(int16_t *)ptr;
+      printf(" %04x", *(orc_uint16 *)ptr);
+      return *(orc_int16 *)ptr;
     case 4:
-      printf(" %08x", *(uint32_t *)ptr);
-      return *(int32_t *)ptr;
+      printf(" %08x", *(orc_uint32 *)ptr);
+      return *(orc_int32 *)ptr;
     case 8:
-      printf(" %016llx", (long long)*(uint64_t *)ptr);
-      return *(int64_t *)ptr;
+      printf(" %016llx", (long long)*(orc_uint64 *)ptr);
+      return *(orc_int64 *)ptr;
     default:
       return -1;
   }
@@ -438,16 +438,16 @@ print_array_val_float (OrcArray *array, int i, int j)
   switch (array->element_size) {
     case 4:
       if (isnan(*(float *)ptr)) {
-        printf(" nan %08x", *(uint32_t *)ptr);
+        printf(" nan %08x", *(orc_uint32 *)ptr);
         /* This is to get around signaling/non-signaling nans in the output */
-        return (*(uint32_t *)ptr) & 0xffbfffff;
+        return (*(orc_uint32 *)ptr) & 0xffbfffff;
       } else {
         printf(" %12.5g", *(float *)ptr);
-        return *(int32_t *)ptr;
+        return *(orc_int32 *)ptr;
       }
     case 8:
       printf(" %12.5g", *(double *)ptr);
-      return *(int64_t *)ptr;
+      return *(orc_int64 *)ptr;
     default:
       printf(" ERROR");
       return -1;

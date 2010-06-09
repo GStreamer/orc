@@ -86,7 +86,7 @@ sse_register_rules (void)
 static void
 mulhslw (OrcOpcodeExecutor *ex, void *user)
 {
-  int32_t src, sl, sh, scale;
+  orc_int32 src, sl, sh, scale;
 
   scale = ex->src_values[0];
   src = ex->src_values[1];
@@ -94,7 +94,7 @@ mulhslw (OrcOpcodeExecutor *ex, void *user)
   sh = scale >> 16;
   sl = scale & 0xffff;
 
-  ex->dest_values[0] = (int32_t) ((src * sl) >> 16) + (src * sh);
+  ex->dest_values[0] = (orc_int32) ((src * sl) >> 16) + (src * sh);
 }
 
 static OrcStaticOpcode opcodes[] = {
@@ -112,19 +112,19 @@ register_instr (void)
 }
 
 static void
-do_volume_c (int16_t *dest, const int32_t *vols, const int16_t *samp, int len)
+do_volume_c (orc_int16 *dest, const orc_int32 *vols, const orc_int16 *samp, int len)
 {
   int i;
 
   for (i = 0; i < len; i++) {
-    int32_t t, hi, lo;
+    orc_int32 t, hi, lo;
 
     hi = vols[i] >> 16;
     lo = vols[i] & 0xffff;
 
-    t = (int32_t)(samp[i]);
+    t = (orc_int32)(samp[i]);
     t = ((t * lo) >> 16) + (t * hi);
-    dest[i] = (int16_t) ORC_CLAMP (t, -0x8000, 0x7FFF);
+    dest[i] = (orc_int16) ORC_CLAMP (t, -0x8000, 0x7FFF);
   }
 }
 
@@ -132,9 +132,9 @@ do_volume_c (int16_t *dest, const int32_t *vols, const int16_t *samp, int len)
 static void
 do_volume_backup (OrcExecutor *ex)
 {
-  int16_t *dest;
-  int32_t *vols;
-  const int16_t *samp;
+  orc_int16 *dest;
+  orc_int32 *vols;
+  const orc_int16 *samp;
   int len;
 
   dest = ex->arrays[ORC_VAR_D1];
@@ -174,7 +174,7 @@ make_volume_orc()
 }
 
 static void
-do_volume_orc (int16_t *dest, int32_t *volumes, int16_t *samp, int length)
+do_volume_orc (orc_int16 *dest, orc_int32 *volumes, orc_int16 *samp, int length)
 {
   OrcExecutor _ex;
   OrcExecutor *ex = &_ex;
@@ -191,7 +191,7 @@ do_volume_orc (int16_t *dest, int32_t *volumes, int16_t *samp, int length)
   orc_executor_run (ex);
 }
 
-static uint64_t
+static orc_uint64
 get_timestamp ()
 {
 #ifndef _MSC_VER
@@ -208,15 +208,15 @@ get_timestamp ()
 #define TIMES 100000
 #define N 1024
 
-int16_t dest[N];
-int16_t samp[N];
-int32_t vols[N];
+orc_int16 dest[N];
+orc_int16 samp[N];
+orc_int32 vols[N];
 
 int
 main (int argc, char *argv[])
 {
   int i;
-  uint64_t start, stop;
+  orc_uint64 start, stop;
 
   /* orc_init() must be called before any other Orc function */
   orc_init ();

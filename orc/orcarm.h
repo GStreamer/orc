@@ -68,7 +68,7 @@ typedef enum {
   ORC_ARM_ROR
 } OrcArmShift;
 
-void orc_arm_emit (OrcCompiler *compiler, uint32_t insn);
+void orc_arm_emit (OrcCompiler *compiler, orc_uint32 insn);
 void orc_arm_emit_bx_lr (OrcCompiler *compiler);
 const char * orc_arm_reg_name (int reg);
 const char * orc_arm_cond_name (OrcArmCond cond);
@@ -101,7 +101,7 @@ void orc_arm_add_fixup (OrcCompiler *compiler, int label, int type);
 void orc_arm_do_fixups (OrcCompiler *compiler);
 
 void orc_arm_emit_dp (OrcCompiler *p, int type, OrcArmCond cond, OrcArmDP opcode,
-    int S, int Rd, int Rn, int Rm, int shift, uint32_t val);
+    int S, int Rd, int Rn, int Rm, int shift, orc_uint32 val);
 void orc_arm_emit_par (OrcCompiler *p, int op, int mode, OrcArmCond cond,
     int Rd, int Rn, int Rm);
 void orc_arm_emit_xt (OrcCompiler *p, int op, OrcArmCond cond,

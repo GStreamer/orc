@@ -59,7 +59,7 @@ orc_arm_reg_name (int reg)
 }
 
 void
-orc_arm_emit (OrcCompiler *compiler, uint32_t insn)
+orc_arm_emit (OrcCompiler *compiler, orc_uint32 insn)
 {
   ORC_WRITE_UINT32_LE (compiler->codeptr, insn);
   compiler->codeptr+=4;
@@ -138,7 +138,7 @@ orc_arm_do_fixups (OrcCompiler *compiler)
   for(i=0;i<compiler->n_fixups;i++){
     unsigned char *label = compiler->labels[compiler->fixups[i].label];
     unsigned char *ptr = compiler->fixups[i].ptr;
-    uint32_t code;
+    orc_uint32 code;
     int diff;
 
     if (compiler->fixups[i].type == 0) {
@@ -169,7 +169,7 @@ orc_arm_emit_align (OrcCompiler *compiler, int align_shift)
 void
 orc_arm_emit_branch (OrcCompiler *compiler, int cond, int label)
 {
-  uint32_t code;
+  orc_uint32 code;
 
   code = 0x0afffffe;
   code |= (cond&0xf) << 28;
@@ -182,7 +182,7 @@ orc_arm_emit_branch (OrcCompiler *compiler, int cond, int label)
 void
 orc_arm_emit_load_imm (OrcCompiler *compiler, int dest, int imm)
 {
-  uint32_t code;
+  orc_uint32 code;
   int shift2;
   unsigned int x;
 
@@ -213,7 +213,7 @@ orc_arm_emit_load_imm (OrcCompiler *compiler, int dest, int imm)
 void
 orc_arm_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int imm)
 {
-  uint32_t code;
+  orc_uint32 code;
   int shift2;
   unsigned int x;
 
@@ -246,7 +246,7 @@ orc_arm_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int imm)
 void
 orc_arm_emit_and_imm (OrcCompiler *compiler, int dest, int src1, int value)
 {
-  uint32_t code;
+  orc_uint32 code;
 
   code = 0xe2000000;
   code |= (src1&0xf) << 16;
@@ -263,7 +263,7 @@ orc_arm_emit_and_imm (OrcCompiler *compiler, int dest, int src1, int value)
 void
 orc_arm_emit_cmp (OrcCompiler *compiler, int src1, int src2)
 {
-  uint32_t code;
+  orc_uint32 code;
 
   code = 0xe1500000;
   code |= (src1&0xf) << 16;
@@ -278,7 +278,7 @@ orc_arm_emit_cmp (OrcCompiler *compiler, int src1, int src2)
 void
 orc_arm_emit_asr_imm (OrcCompiler *compiler, int dest, int src1, int value)
 {
-  uint32_t code;
+  orc_uint32 code;
 
   if (value == 0) {
     ORC_ERROR("bad immediate value");
@@ -298,7 +298,7 @@ orc_arm_emit_asr_imm (OrcCompiler *compiler, int dest, int src1, int value)
 void
 orc_arm_emit_lsl_imm (OrcCompiler *compiler, int dest, int src1, int value)
 {
-  uint32_t code;
+  orc_uint32 code;
 
   if (value == 0) {
     ORC_ERROR("bad immediate value");
@@ -318,7 +318,7 @@ orc_arm_emit_lsl_imm (OrcCompiler *compiler, int dest, int src1, int value)
 void
 orc_arm_emit_load_reg (OrcCompiler *compiler, int dest, int src1, int offset)
 {
-  uint32_t code;
+  orc_uint32 code;
 
   code = 0xe5900000;
   code |= (src1&0xf) << 16;
@@ -334,7 +334,7 @@ orc_arm_emit_load_reg (OrcCompiler *compiler, int dest, int src1, int offset)
 void
 orc_arm_emit_store_reg (OrcCompiler *compiler, int src1, int dest, int offset)
 {
-  uint32_t code;
+  orc_uint32 code;
 
   code = 0xe5800000;
   code |= (dest&0xf) << 16;
@@ -424,13 +424,13 @@ orc_arm_emit_cmp_imm (OrcCompiler *compiler, int src1, int value)
  */
 void
 orc_arm_emit_dp (OrcCompiler *p, int type, OrcArmCond cond, OrcArmDP opcode,
-    int S, int Rd, int Rn, int Rm, int shift, uint32_t val)
+    int S, int Rd, int Rn, int Rm, int shift, orc_uint32 val)
 {
-  uint32_t code;
+  orc_uint32 code;
   int I = 0;
   int shifter_op;
   char shifter[64];
-  uint32_t imm;
+  orc_uint32 imm;
   static const char *shift_names[] = {
     "LSL", "LSR", "ASR", "ROR"
   };
@@ -450,7 +450,7 @@ orc_arm_emit_dp (OrcCompiler *p, int type, OrcArmCond cond, OrcArmDP opcode,
   switch (type) {
     case 0:
       /* #imm */
-      imm = (uint32_t) val;
+      imm = (orc_uint32) val;
       /* if imm <= 0xff we're done. It's recommanded that we choose the
        * smallest shifter value. Impossible values will overflow the shifter. */
       while (imm > 0xff && shift < 16) {
@@ -529,7 +529,7 @@ void
 orc_arm_emit_par (OrcCompiler *p, int op, int mode, OrcArmCond cond,
     int Rd, int Rn, int Rm)
 {
-  uint32_t code;
+  orc_uint32 code;
   static const int par_op[] = {
     1, 3, 5, 7, 9, 15, 11, 5, 5
   };
@@ -565,9 +565,9 @@ void
 orc_arm_emit_xt (OrcCompiler *p, int op, OrcArmCond cond,
         int Rd, int Rn, int Rm, int r8)
 {
-  uint32_t code;
+  orc_uint32 code;
   char shifter[64];
-  static const uint32_t xt_opcodes[] = {
+  static const orc_uint32 xt_opcodes[] = {
     0x06800070, 0x06a00070, 0x06b00070, 0x06c00070, 0x06e00070, 0x06f00070
   };
   static const char *xt_insn_names[] = {
@@ -604,9 +604,9 @@ void
 orc_arm_emit_pkh (OrcCompiler *p, int op, OrcArmCond cond,
     int Rd, int Rn, int Rm, int sh)
 {
-  uint32_t code;
+  orc_uint32 code;
   char shifter[64];
-  static const uint32_t pkh_opcodes[] = { 0x06800010, 0x06800050 };
+  static const orc_uint32 pkh_opcodes[] = { 0x06800010, 0x06800050 };
   static const char *pkh_insn_names[] = { "pkhbt", "pkhtb" };
 
   if (sh > 0) {
@@ -640,9 +640,9 @@ void
 orc_arm_emit_sat (OrcCompiler *p, int op, OrcArmCond cond,
         int Rd, int sat, int Rm, int sh, int asr)
 {
-  uint32_t code;
+  orc_uint32 code;
   char shifter[64];
-  static const uint32_t sat_opcodes[] = { 0x06a00010, 0x06e00010, 0, 0 };
+  static const orc_uint32 sat_opcodes[] = { 0x06a00010, 0x06e00010, 0, 0 };
   static const char *sat_insn_names[] = { "ssat", "usat", "ssat16", "usat16" };
   static const int par_mode[] = { 0, 0, 0x6a, 0x6e };
   static const int par_op[] = { 0, 0, 3, 3 };
@@ -673,8 +673,8 @@ void
 orc_arm_emit_rv (OrcCompiler *p, int op, OrcArmCond cond,
     int Rd, int Rm)
 {
-  uint32_t code;
-  static const uint32_t rv_opcodes[] = { 0x06b00030, 0x06e000b0 };
+  orc_uint32 code;
+  static const orc_uint32 rv_opcodes[] = { 0x06b00030, 0x06e000b0 };
   static const char *rv_insn_names[] = { "rev", "rev16" };
 
   code = arm_code_rv (rv_opcodes[op], cond, Rd, Rm);

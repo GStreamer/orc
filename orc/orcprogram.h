@@ -2,7 +2,6 @@
 #ifndef _ORC_PROGRAM_H_
 #define _ORC_PROGRAM_H_
 
-#include <orc/orc-stdint.h>
 #include <orc/orcutils.h>
 
 typedef struct _OrcOpcodeExecutor OrcOpcodeExecutor;

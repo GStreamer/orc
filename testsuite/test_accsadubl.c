@@ -12,10 +12,10 @@ int error = FALSE;
 
 void test_opcode (OrcStaticOpcode *opcode);
 
-uint8_t array1[100];
-uint8_t array2[100];
+orc_uint8 array1[100];
+orc_uint8 array2[100];
 
-int orc_sad_u8 (uint8_t *s1, uint8_t *s2, int n);
+int orc_sad_u8 (orc_uint8 *s1, orc_uint8 *s2, int n);
 
 int
 main (int argc, char *argv[])
@@ -45,7 +45,7 @@ for(n=0;n<20;n++){
 
 
 int
-orc_sad_u8 (uint8_t *s1, uint8_t *s2, int n)
+orc_sad_u8 (orc_uint8 *s1, orc_uint8 *s2, int n)
 {
   static OrcProgram *p = NULL;
   OrcExecutor *ex;

@@ -168,8 +168,6 @@ main (int argc, char *argv[])
     fprintf(output, "#endif\n");
     fprintf(output, "#ifndef DISABLE_ORC\n");
     fprintf(output, "#include <orc/orc.h>\n");
-    fprintf(output, "#else\n");
-    print_exec_header (output);
     fprintf(output, "#endif\n");
     if (include_file) {
       fprintf(output, "#include <%s>\n", include_file);
@@ -257,77 +255,6 @@ main (int argc, char *argv[])
 }
 
 
-static void
-print_exec_header (FILE *output)
-{
-#if 0
-  fprintf(output,
-      "typedef struct _OrcExecutor OrcExecutor;\n"
-      "typedef struct _OrcProgram OrcProgram;\n"
-      "#define ORC_N_VARIABLES 64\n"
-      "struct _OrcExecutor {\n"
-      "  OrcProgram *program;\n"
-      "  int n;\n"
-      "  int counter1;\n"
-      "  int counter2;\n"
-      "  int counter3;\n"
-      "  void *arrays[ORC_N_VARIABLES];\n"
-      "  int params[ORC_N_VARIABLES];\n"
-      "  int accumulators[4];\n"
-      "};\n"
-      "\n"
-      "enum {\n"
-      "  ORC_VAR_D1,\n"
-      "  ORC_VAR_D2,\n"
-      "  ORC_VAR_D3,\n"
-      "  ORC_VAR_D4,\n"
-      "  ORC_VAR_S1,\n"
-      "  ORC_VAR_S2,\n"
-      "  ORC_VAR_S3,\n"
-      "  ORC_VAR_S4,\n"
-      "  ORC_VAR_S5,\n"
-      "  ORC_VAR_S6,\n"
-      "  ORC_VAR_S7,\n"
-      "  ORC_VAR_S8,\n"
-      "  ORC_VAR_A1,\n"
-      "  ORC_VAR_A2,\n"
-      "  ORC_VAR_A3,\n"
-      "  ORC_VAR_A4,\n"
-      "  ORC_VAR_C1,\n"
-      "  ORC_VAR_C2,\n"
-      "  ORC_VAR_C3,\n"
-      "  ORC_VAR_C4,\n"
-      "  ORC_VAR_C5,\n"
-      "  ORC_VAR_C6,\n"
-      "  ORC_VAR_C7,\n"
-      "  ORC_VAR_C8,\n"
-      "  ORC_VAR_P1,\n"
-      "  ORC_VAR_P2,\n"
-      "  ORC_VAR_P3,\n"
-      "  ORC_VAR_P4,\n"
-      "  ORC_VAR_P5,\n"
-      "  ORC_VAR_P6,\n"
-      "  ORC_VAR_P7,\n"
-      "  ORC_VAR_P8,\n"
-      "  ORC_VAR_T1,\n"
-      "  ORC_VAR_T2,\n"
-      "  ORC_VAR_T3,\n"
-      "  ORC_VAR_T4,\n"
-      "  ORC_VAR_T5,\n"
-      "  ORC_VAR_T6,\n"
-      "  ORC_VAR_T7,\n"
-      "  ORC_VAR_T8,\n"
-      "  ORC_VAR_T9,\n"
-      "  ORC_VAR_T10,\n"
-      "  ORC_VAR_T11,\n"
-      "  ORC_VAR_T12,\n"
-      "  ORC_VAR_T13,\n"
-      "  ORC_VAR_T14,\n"
-      "  ORC_VAR_T15\n"
-      "};\n");
-#endif
-}
-
 static char *
 get_barrier (const char *s)
 {
@@ -348,39 +275,6 @@ get_barrier (const char *s)
 
   return barrier;
 }
-
-#if 0
-static void
-print_defines (FILE *output)
-{
-  fprintf(output,
-    "#define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))\n"
-    "#define ORC_ABS(a) ((a)<0 ? -(a) : (a))\n"
-    "#define ORC_MIN(a,b) ((a)<(b) ? (a) : (b))\n"
-    "#define ORC_MAX(a,b) ((a)>(b) ? (a) : (b))\n"
-    "#define ORC_SB_MAX 127\n"
-    "#define ORC_SB_MIN (-1-ORC_SB_MAX)\n"
-    "#define ORC_UB_MAX 255\n"
-    "#define ORC_UB_MIN 0\n"
-    "#define ORC_SW_MAX 32767\n"
-    "#define ORC_SW_MIN (-1-ORC_SW_MAX)\n"
-    "#define ORC_UW_MAX 65535\n"
-    "#define ORC_UW_MIN 0\n"
-    "#define ORC_SL_MAX 2147483647\n"
-    "#define ORC_SL_MIN (-1-ORC_SL_MAX)\n"
-    "#define ORC_UL_MAX 4294967295U\n"
-    "#define ORC_UL_MIN 0\n"
-    "#define ORC_CLAMP_SB(x) ORC_CLAMP(x,ORC_SB_MIN,ORC_SB_MAX)\n"
-    "#define ORC_CLAMP_UB(x) ORC_CLAMP(x,ORC_UB_MIN,ORC_UB_MAX)\n"
-    "#define ORC_CLAMP_SW(x) ORC_CLAMP(x,ORC_SW_MIN,ORC_SW_MAX)\n"
-    "#define ORC_CLAMP_UW(x) ORC_CLAMP(x,ORC_UW_MIN,ORC_UW_MAX)\n"
-    "#define ORC_CLAMP_SL(x) ORC_CLAMP(x,ORC_SL_MIN,ORC_SL_MAX)\n"
-    "#define ORC_CLAMP_UL(x) ORC_CLAMP(x,ORC_UL_MIN,ORC_UL_MAX)\n"
-    "#define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))\n"
-    "#define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))\n"
-    "#define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))\n");
-}
-#endif
 
 static char *
 read_file (const char *filename)

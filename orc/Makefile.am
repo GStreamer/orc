@@ -84,12 +84,6 @@ pkginclude_HEADERS = \
 	orcpowerpc.h \
 	orcarm.h
 
-nodist_pkginclude_HEADERS = orc-stdint.h
-
-DISTCLEANFILES = orc-stdint.h
-
-
-
 orcfunctions:
 	$(top_builddir)/tools/orcc$(EXEEXT) --implementation -o orcfunctions.c orcfunctions.orc
 	$(top_builddir)/tools/orcc$(EXEEXT) --header -o orcfunctions.h orcfunctions.orc

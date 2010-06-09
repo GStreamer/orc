@@ -28,7 +28,46 @@
 #ifndef _ORC_UTILS_H_
 #define _ORC_UTILS_H_
 
-#include <orc/orc-stdint.h>
+#ifndef _ORC_INTEGER_TYPEDEFS_
+#define _ORC_INTEGER_TYPEDEFS_
+#if defined(_x_STDC__) && __STDC__ && __STDC_VERSION__ >= 199901L
+#include <stdint.h>
+typedef int8_t orc_int8;
+typedef int16_t orc_int16;
+typedef int32_t orc_int32;
+typedef int64_t orc_int64;
+typedef uint8_t orc_uint8;
+typedef uint16_t orc_uint16;
+typedef uint32_t orc_uint32;
+typedef uint64_t orc_uint64;
+#elif defined(_MSC_VER)
+typedef signed __int8 orc_int8;
+typedef signed __int16 orc_int16;
+typedef signed __int32 orc_int32;
+typedef signed __int64 orc_int64;
+typedef unsigned __int8 orc_uint8;
+typedef unsigned __int16 orc_uint16;
+typedef unsigned __int32 orc_uint32;
+typedef unsigned __int64 orc_uint64;
+#else
+#include <limits.h>
+typedef signed char orc_int8;
+typedef short orc_int16;
+typedef int orc_int32;
+typedef unsigned char orc_uint8;
+typedef unsigned short orc_uint16;
+typedef unsigned int orc_uint32;
+#if INT_MAX == LONG_MAX
+typedef long long orc_int64;
+typedef unsigned long long orc_uint64;
+#else
+typedef long orc_int64;
+typedef unsigned long orc_uint64;
+#endif
+#endif
+typedef union { orc_int32 i; float f; } orc_union32;
+typedef union { orc_int64 i; double f; } orc_union64;
+#endif
 
 #ifndef TRUE
 #define TRUE 1
@@ -55,18 +94,18 @@ typedef unsigned int orc_bool;
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
 
 #define ORC_READ_UINT32_LE(ptr) \
-  ((uint32_t)( \
-    ((uint8_t *)(ptr))[0] | \
-    (((uint8_t *)(ptr))[1]<<8) | \
-    (((uint8_t *)(ptr))[2]<<16) | \
-    (((uint8_t *)(ptr))[3]<<24)))
+  ((orc_uint32)( \
+    ((orc_uint8 *)(ptr))[0] | \
+    (((orc_uint8 *)(ptr))[1]<<8) | \
+    (((orc_uint8 *)(ptr))[2]<<16) | \
+    (((orc_uint8 *)(ptr))[3]<<24)))
 
 #define ORC_WRITE_UINT32_LE(ptr,val) \
   do { \
-    ((uint8_t *)ptr)[0] = ((val)>>0)&0xff; \
-    ((uint8_t *)ptr)[1] = ((val)>>8)&0xff; \
-    ((uint8_t *)ptr)[2] = ((val)>>16)&0xff; \
-    ((uint8_t *)ptr)[3] = ((val)>>24)&0xff; \
+    ((orc_uint8 *)ptr)[0] = ((val)>>0)&0xff; \
+    ((orc_uint8 *)ptr)[1] = ((val)>>8)&0xff; \
+    ((orc_uint8 *)ptr)[2] = ((val)>>16)&0xff; \
+    ((orc_uint8 *)ptr)[3] = ((val)>>24)&0xff; \
   } while(0)
 
 #endif

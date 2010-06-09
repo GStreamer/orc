@@ -165,7 +165,7 @@ orc_mmx_getflags_cpuinfo (char *cpuinfo)
 #ifdef USE_I386_CPUID
 #ifdef _MSC_VER
 static void
-get_cpuid (uint32_t op, uint32_t *a, uint32_t *b, uint32_t *c, uint32_t *d)
+get_cpuid (orc_uint32 op, orc_uint32 *a, orc_uint32 *b, orc_uint32 *c, orc_uint32 *d)
 {
   int tmp[4];
   __cpuid(tmp, op);
@@ -178,7 +178,7 @@ get_cpuid (uint32_t op, uint32_t *a, uint32_t *b, uint32_t *c, uint32_t *d)
 
 #ifdef __i386__
 static void
-get_cpuid (uint32_t op, uint32_t *a, uint32_t *b, uint32_t *c, uint32_t *d)
+get_cpuid (orc_uint32 op, orc_uint32 *a, orc_uint32 *b, orc_uint32 *c, orc_uint32 *d)
 {
   __asm__ (
       "  pushl %%ebx\n"
@@ -192,7 +192,7 @@ get_cpuid (uint32_t op, uint32_t *a, uint32_t *b, uint32_t *c, uint32_t *d)
 
 #ifdef __amd64__
 static void
-get_cpuid (uint32_t op, uint32_t *a, uint32_t *b, uint32_t *c, uint32_t *d)
+get_cpuid (orc_uint32 op, orc_uint32 *a, orc_uint32 *b, orc_uint32 *c, orc_uint32 *d)
 {
   __asm__ (
       "  pushq %%rbx\n"
@@ -208,7 +208,7 @@ get_cpuid (uint32_t op, uint32_t *a, uint32_t *b, uint32_t *c, uint32_t *d)
 static void
 test_cpuid (void *ignored)
 {
-  uint32_t eax, ebx, ecx, edx;
+  orc_uint32 eax, ebx, ecx, edx;
 
   get_cpuid (0x00000000, &eax, &ebx, &ecx, &edx);
 }
@@ -217,8 +217,8 @@ test_cpuid (void *ignored)
 static unsigned int
 orc_sse_detect_cpuid (void)
 {
-  uint32_t eax, ebx, ecx, edx;
-  uint32_t level;
+  orc_uint32 eax, ebx, ecx, edx;
+  orc_uint32 level;
   char vendor[13] = { 0 };
   unsigned int sse_flags = 0;
 #if 0
@@ -233,8 +233,8 @@ orc_sse_detect_cpuid (void)
   }
 #endif
 
-  get_cpuid (0x00000000, &level, (uint32_t *)(vendor+0),
-      (uint32_t *)(vendor+8), (uint32_t *)(vendor+4));
+  get_cpuid (0x00000000, &level, (orc_uint32 *)(vendor+0),
+      (orc_uint32 *)(vendor+8), (orc_uint32 *)(vendor+4));
 
   ORC_DEBUG("cpuid %d %s", level, vendor);
 
@@ -298,13 +298,13 @@ orc_sse_detect_cpuid (void)
 static unsigned int
 orc_mmx_detect_cpuid (void)
 {
-  uint32_t eax, ebx, ecx, edx;
-  uint32_t level;
+  orc_uint32 eax, ebx, ecx, edx;
+  orc_uint32 level;
   char vendor[13] = { 0 };
   unsigned int mmx_flags = 0;
 
-  get_cpuid (0x00000000, &level, (uint32_t *)(vendor+0),
-      (uint32_t *)(vendor+8), (uint32_t *)(vendor+4));
+  get_cpuid (0x00000000, &level, (orc_uint32 *)(vendor+0),
+      (orc_uint32 *)(vendor+8), (orc_uint32 *)(vendor+4));
 
   ORC_DEBUG("cpuid %d %s", level, vendor);
 

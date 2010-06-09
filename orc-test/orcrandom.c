@@ -21,7 +21,7 @@ orc_random_init (OrcRandomContext *context, int seed)
 void
 orc_random_bits (OrcRandomContext *context, void *data, int n_bytes)
 {
-  uint8_t *d = data;
+  orc_uint8 *d = data;
   int i;
   for(i=0;i<n_bytes;i++){
     context->x = 1103515245*context->x + 12345;
