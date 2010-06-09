@@ -31,6 +31,43 @@ orc_target_c_get_asm_preamble (void)
 {
   return "\n"
     "/* begin Orc C target preamble */\n"
+    "#if defined(__STDC__) && __STDC__ && __STDC_VERSION__ >= 199901L\n"
+    "#include <stdint.h>\n"
+    "typedef int8_t orc_int8;\n"
+    "typedef int16_t orc_int16;\n"
+    "typedef int32_t orc_int32;\n"
+    "typedef int64_t orc_int64;\n"
+    "typedef uint8_t orc_uint8;\n"
+    "typedef uint16_t orc_uint16;\n"
+    "typedef uint32_t orc_uint32;\n"
+    "typedef uint64_t orc_uint64;\n"
+    "#elif defined(_MSC_VER)\n"
+    "typedef signed __int8 orc_int8;\n"
+    "typedef signed __int16 orc_int16;\n"
+    "typedef signed __int32 orc_int32;\n"
+    "typedef signed __int64 orc_int64;\n"
+    "typedef unsigned __int8 orc_uint8;\n"
+    "typedef unsigned __int16 orc_uint16;\n"
+    "typedef unsigned __int32 orc_uint32;\n"
+    "typedef unsigned __int64 orc_uint64;\n"
+    "#else\n"
+    "#include <limits.h>\n"
+    "typedef signed char orc_int8;\n"
+    "typedef short orc_int16;\n"
+    "typedef int orc_int32;\n"
+    "typedef unsigned char orc_uint8;\n"
+    "typedef unsigned short orc_uint16;\n"
+    "typedef unsigned int orc_uint32;\n"
+    "#if INT_MAX == LONG_MAX\n"
+    "typedef long long orc_int64;\n"
+    "typedef unsigned long long orc_uint64;\n"
+    "#else\n"
+    "typedef long orc_int64;\n"
+    "typedef unsigned long orc_uint64;\n"
+    "#endif\n"
+    "#endif\n"
+    "typedef union { orc_int32 i; float f; } orc_union32;\n"
+    "typedef union { orc_int64 i; double f; } orc_union64;\n"
     "#define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))\n"
     "#define ORC_ABS(a) ((a)<0 ? -(a) : (a))\n"
     "#define ORC_MIN(a,b) ((a)<(b) ? (a) : (b))\n"
@@ -56,9 +93,6 @@ orc_target_c_get_asm_preamble (void)
     "#define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))\n"
     "#define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))\n"
     "#define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))\n"
-    "#define ORC_AS_FLOAT(x) (((union { int i; float f; } *)(&x))->f)\n"
-    "typedef union { int32_t i; float f; } orc_union32;\n"
-    "typedef union { int64_t i; double f; } orc_union64;\n"
     "/* end Orc C target preamble */\n\n";
 }
 
@@ -450,9 +484,9 @@ c_get_type_name (int size)
 {
   switch (size) {
     case 1:
-      return "int8_t";
+      return "orc_int8";
     case 2:
-      return "int16_t";
+      return "orc_int16";
     case 4:
       return "orc_union32";
     case 8:
@@ -637,7 +671,7 @@ c_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
   c_get_name_int (src2, p, insn->src_args[1]);
 
   ORC_ASM_CODE(p,
-      "    %s = %s + ORC_ABS((int32_t)(uint8_t)%s - (int32_t)(uint8_t)%s);\n",
+      "    %s = %s + ORC_ABS((orc_int32)(orc_uint8)%s - (orc_int32)(orc_uint8)%s);\n",
       dest, dest, src1, src2);
 }
 

@@ -169,7 +169,6 @@ main (int argc, char *argv[])
     fprintf(output, "#ifndef DISABLE_ORC\n");
     fprintf(output, "#include <orc/orc.h>\n");
     fprintf(output, "#else\n");
-    fprintf(output, "#include <stdint.h>\n");
     print_exec_header (output);
     fprintf(output, "#endif\n");
     if (include_file) {
