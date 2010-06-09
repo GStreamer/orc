@@ -4,9 +4,9 @@
 <thead>
 <row>
 <entry>opcode</entry>
-<entry>destination</entry>
-<entry>source 1</entry>
-<entry>source 2</entry>
+<entry>destination size</entry>
+<entry>source 1 size</entry>
+<entry>source 2 size</entry>
 <entry>description</entry>
 <entry>pseudo code</entry>
 </row>
@@ -168,7 +168,7 @@
 <entry>shlb</entry>
 <entry>1</entry>
 <entry>1</entry>
-<entry>1</entry>
+<entry>1S</entry>
 <entry>shift left</entry>
 <entry>a &lt;&lt; b</entry>
 </row>
@@ -176,7 +176,7 @@
 <entry>shrsb</entry>
 <entry>1</entry>
 <entry>1</entry>
-<entry>1</entry>
+<entry>1S</entry>
 <entry>signed shift right</entry>
 <entry>a &gt;&gt; b</entry>
 </row>
@@ -184,7 +184,7 @@
 <entry>shrub</entry>
 <entry>1</entry>
 <entry>1</entry>
-<entry>1</entry>
+<entry>1S</entry>
 <entry>unsigned shift right</entry>
 <entry>a &gt;&gt; b</entry>
 </row>
@@ -384,7 +384,7 @@
 <entry>shlw</entry>
 <entry>2</entry>
 <entry>2</entry>
-<entry>2</entry>
+<entry>2S</entry>
 <entry>shift left</entry>
 <entry>a &lt;&lt; b</entry>
 </row>
@@ -392,7 +392,7 @@
 <entry>shrsw</entry>
 <entry>2</entry>
 <entry>2</entry>
-<entry>2</entry>
+<entry>2S</entry>
 <entry>signed shift right</entry>
 <entry>a &gt;&gt; b</entry>
 </row>
@@ -400,7 +400,7 @@
 <entry>shruw</entry>
 <entry>2</entry>
 <entry>2</entry>
-<entry>2</entry>
+<entry>2S</entry>
 <entry>unsigned shift right</entry>
 <entry>a &gt;&gt; b</entry>
 </row>
@@ -600,7 +600,7 @@
 <entry>shll</entry>
 <entry>4</entry>
 <entry>4</entry>
-<entry>4</entry>
+<entry>4S</entry>
 <entry>shift left</entry>
 <entry>a &lt;&lt; b</entry>
 </row>
@@ -608,7 +608,7 @@
 <entry>shrsl</entry>
 <entry>4</entry>
 <entry>4</entry>
-<entry>4</entry>
+<entry>4S</entry>
 <entry>signed shift right</entry>
 <entry>a &gt;&gt; b</entry>
 </row>
@@ -616,7 +616,7 @@
 <entry>shrul</entry>
 <entry>4</entry>
 <entry>4</entry>
-<entry>4</entry>
+<entry>4S</entry>
 <entry>unsigned shift right</entry>
 <entry>a &gt;&gt; b</entry>
 </row>
@@ -897,112 +897,112 @@
 <entry>2</entry>
 <entry>4</entry>
 <entry></entry>
-<entry></entry>
-<entry></entry>
+<entry>split first/second words</entry>
+<entry>special</entry>
 </row>
 <row>
 <entry>splitwb</entry>
 <entry>1</entry>
 <entry>2</entry>
 <entry></entry>
-<entry></entry>
-<entry></entry>
+<entry>split first/second bytes</entry>
+<entry>special</entry>
 </row>
 <row>
 <entry>addf</entry>
 <entry>4</entry>
 <entry>4</entry>
 <entry>4</entry>
-<entry></entry>
-<entry></entry>
+<entry>add</entry>
+<entry>a + b</entry>
 </row>
 <row>
 <entry>subf</entry>
 <entry>4</entry>
 <entry>4</entry>
 <entry>4</entry>
-<entry></entry>
-<entry></entry>
+<entry>subtract</entry>
+<entry>a - b</entry>
 </row>
 <row>
 <entry>mulf</entry>
 <entry>4</entry>
 <entry>4</entry>
 <entry>4</entry>
-<entry></entry>
-<entry></entry>
+<entry>multiply</entry>
+<entry>a * b</entry>
 </row>
 <row>
 <entry>divf</entry>
 <entry>4</entry>
 <entry>4</entry>
 <entry>4</entry>
-<entry></entry>
-<entry></entry>
+<entry>divide</entry>
+<entry>a / b</entry>
 </row>
 <row>
 <entry>sqrtf</entry>
 <entry>4</entry>
 <entry>4</entry>
 <entry></entry>
-<entry></entry>
-<entry></entry>
+<entry>square root</entry>
+<entry>sqrt(a)</entry>
 </row>
 <row>
 <entry>maxf</entry>
 <entry>4</entry>
 <entry>4</entry>
 <entry>4</entry>
-<entry></entry>
-<entry></entry>
+<entry>maximum</entry>
+<entry>max(a,b)</entry>
 </row>
 <row>
 <entry>minf</entry>
 <entry>4</entry>
 <entry>4</entry>
 <entry>4</entry>
-<entry></entry>
-<entry></entry>
+<entry>minimum</entry>
+<entry>min(a,b)</entry>
 </row>
 <row>
 <entry>cmpeqf</entry>
 <entry>4</entry>
 <entry>4</entry>
 <entry>4</entry>
-<entry></entry>
-<entry></entry>
+<entry>compare equal</entry>
+<entry>(a == b) ? (~0) : 0</entry>
 </row>
 <row>
 <entry>cmpltf</entry>
 <entry>4</entry>
 <entry>4</entry>
 <entry>4</entry>
-<entry></entry>
-<entry></entry>
+<entry>compare less than</entry>
+<entry>(a == b) ? (~0) : 0</entry>
 </row>
 <row>
 <entry>cmplef</entry>
 <entry>4</entry>
 <entry>4</entry>
 <entry>4</entry>
-<entry></entry>
-<entry></entry>
+<entry>compare less than or equal</entry>
+<entry>(a == b) ? (~0) : 0</entry>
 </row>
 <row>
 <entry>convfl</entry>
 <entry>4</entry>
 <entry>4</entry>
 <entry></entry>
-<entry></entry>
-<entry></entry>
+<entry>convert float point to integer</entry>
+<entry>a</entry>
 </row>
 <row>
 <entry>convlf</entry>
 <entry>4</entry>
 <entry>4</entry>
 <entry></entry>
-<entry></entry>
-<entry></entry>
+<entry>convert integer to floating point</entry>
+<entry>a</entry>
 </row>
 </tbody>
 </tgroup>

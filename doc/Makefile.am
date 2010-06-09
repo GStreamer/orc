@@ -100,3 +100,7 @@ if ENABLE_GTK_DOC
 endif
 
 -include $(top_srcdir)/git.mk
+
+update-www:
+	rsync -a html/* cooker.entropywave.com:/srv/code.entropywave.com/www/documentation/orc
+

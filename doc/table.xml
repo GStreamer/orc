@@ -1,6 +1,6 @@
 <table frame="all" id="table-basictypes" xreflabel="Table of Opcode Rule Coverage">
 <title>Table of Opcode Rule Coverage</title>
-<tgroup cols="6" align="left" colsep="1" rowsep="1">
+<tgroup cols="7" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
 <entry>opcode name</entry>
@@ -8,6 +8,7 @@
 <entry>mmx</entry>
 <entry>altivec</entry>
 <entry>arm</entry>
+<entry>neon</entry>
 <entry>c64x-c</entry>
 </row>
 </thead>
@@ -19,6 +20,7 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>addb</entry>
@@ -26,6 +28,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -35,6 +38,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>addusb</entry>
@@ -42,6 +46,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -51,6 +56,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>andnb</entry>
@@ -58,6 +64,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -67,6 +74,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>avgub</entry>
@@ -74,6 +82,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -83,6 +92,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>cmpgtsb</entry>
@@ -90,6 +100,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -99,6 +110,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>maxsb</entry>
@@ -106,6 +118,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -115,6 +128,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>minsb</entry>
@@ -122,6 +136,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -131,6 +146,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>mullb</entry>
@@ -138,6 +154,7 @@
 <entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -145,6 +162,7 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
 </row>
@@ -155,6 +173,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>no</entry>
+<entry>no</entry>
 </row>
 <row>
 <entry>orb</entry>
@@ -163,9 +182,11 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>shlb</entry>
+<entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
@@ -179,9 +200,11 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
+<entry>no</entry>
 </row>
 <row>
 <entry>shrub</entry>
+<entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
@@ -194,6 +217,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>no</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -203,6 +227,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>subssb</entry>
@@ -210,6 +235,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -218,6 +244,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -227,6 +254,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>absw</entry>
@@ -235,9 +263,11 @@
 <entry>no</entry>
 <entry>yes</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>addw</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -251,9 +281,11 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>addusw</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -267,9 +299,11 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>andnw</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -283,9 +317,11 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>avguw</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -299,9 +335,11 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>cmpgtsw</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -315,9 +353,11 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>maxsw</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -331,9 +371,11 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>minsw</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -347,9 +389,11 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>mullw</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -362,10 +406,12 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 </row>
 <row>
 <entry>mulhuw</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -379,6 +425,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>shlw</entry>
@@ -386,7 +433,8 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>yes</entry>
+<entry>no</entry>
+<entry>no</entry>
 </row>
 <row>
 <entry>shrsw</entry>
@@ -394,7 +442,8 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>yes</entry>
+<entry>no</entry>
+<entry>no</entry>
 </row>
 <row>
 <entry>shruw</entry>
@@ -402,10 +451,12 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>yes</entry>
+<entry>no</entry>
+<entry>no</entry>
 </row>
 <row>
 <entry>signw</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -419,9 +470,11 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>subssw</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -435,9 +488,11 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>xorw</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -451,6 +506,7 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>addl</entry>
@@ -458,6 +514,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -467,6 +524,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>addusl</entry>
@@ -474,6 +532,7 @@
 <entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -483,6 +542,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>andnl</entry>
@@ -490,6 +550,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -499,6 +560,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>avgul</entry>
@@ -506,6 +568,7 @@
 <entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -515,6 +578,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>cmpgtsl</entry>
@@ -522,6 +586,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -531,6 +596,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>maxsl</entry>
@@ -538,6 +604,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -547,6 +614,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>minsl</entry>
@@ -554,6 +622,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -563,6 +632,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>mulll</entry>
@@ -571,9 +641,11 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>mulhsl</entry>
+<entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
@@ -582,6 +654,7 @@
 </row>
 <row>
 <entry>mulhul</entry>
+<entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
@@ -595,6 +668,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>shll</entry>
@@ -602,7 +676,8 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>yes</entry>
+<entry>no</entry>
+<entry>no</entry>
 </row>
 <row>
 <entry>shrsl</entry>
@@ -610,7 +685,8 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>yes</entry>
+<entry>no</entry>
+<entry>no</entry>
 </row>
 <row>
 <entry>shrul</entry>
@@ -618,13 +694,15 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>yes</entry>
+<entry>no</entry>
+<entry>no</entry>
 </row>
 <row>
 <entry>signl</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
+<entry>no</entry>
 <entry>no</entry>
 <entry>yes</entry>
 </row>
@@ -635,6 +713,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>subssl</entry>
@@ -642,6 +721,7 @@
 <entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -651,6 +731,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>xorl</entry>
@@ -658,6 +739,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -667,6 +749,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>convubw</entry>
@@ -675,9 +758,11 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>convswl</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -691,9 +776,11 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>convwb</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -707,9 +794,11 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>convsuswb</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -723,11 +812,13 @@
 <entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>no</entry>
 </row>
 <row>
 <entry>convuuswb</entry>
 <entry>no</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>no</entry>
@@ -739,6 +830,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>convssslw</entry>
@@ -747,6 +839,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>convsuslw</entry>
@@ -754,10 +847,12 @@
 <entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
 <entry>convusslw</entry>
+<entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
@@ -770,6 +865,7 @@
 <entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -779,6 +875,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>mulubw</entry>
@@ -787,9 +884,11 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>mulswl</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -803,13 +902,15 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>accw</entry>
 <entry>yes</entry>
 <entry>yes</entry>
-<entry>yes</entry>
 <entry>no</entry>
+<entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -819,13 +920,15 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>accsadubl</entry>
-<entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -833,6 +936,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 </row>
@@ -843,9 +947,11 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>select0wb</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -859,6 +965,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>select0lw</entry>
@@ -866,6 +973,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -875,9 +983,11 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>mergewl</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -891,10 +1001,12 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>splitlw</entry>
 <entry>yes</entry>
+<entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
@@ -907,6 +1019,7 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
+<entry>no</entry>
 </row>
 <row>
 <entry>addf</entry>
@@ -914,6 +1027,7 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -923,6 +1037,7 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>mulf</entry>
@@ -931,10 +1046,12 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>divf</entry>
 <entry>yes</entry>
+<entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
@@ -943,6 +1060,7 @@
 <row>
 <entry>sqrtf</entry>
 <entry>yes</entry>
+<entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
@@ -955,6 +1073,7 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>minf</entry>
@@ -962,6 +1081,7 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 <row>
@@ -971,10 +1091,12 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>cmpltf</entry>
 <entry>yes</entry>
+<entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
@@ -983,6 +1105,7 @@
 <row>
 <entry>cmplef</entry>
 <entry>yes</entry>
+<entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
@@ -995,6 +1118,7 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>yes</entry>
+<entry>yes</entry>
 </row>
 <row>
 <entry>convlf</entry>
@@ -1002,6 +1126,7 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
+<entry>yes</entry>
 <entry>yes</entry>
 </row>
 </tbody>

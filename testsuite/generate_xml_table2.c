@@ -50,9 +50,9 @@ main (int argc, char *argv[])
 "<thead>\n"
 "<row>\n"
 "<entry>opcode</entry>\n"
-"<entry>destination</entry>\n"
-"<entry>source 1</entry>\n"
-"<entry>source 2</entry>\n"
+"<entry>destination size</entry>\n"
+"<entry>source 1 size</entry>\n"
+"<entry>source 2 size</entry>\n"
 "<entry>description</entry>\n"
 "<entry>pseudo code</entry>\n"
 "</row>\n"
@@ -67,7 +67,8 @@ main (int argc, char *argv[])
     printf("<entry>%d</entry>\n", opcode_set->opcodes[i].dest_size[0]);
     printf("<entry>%d</entry>\n", opcode_set->opcodes[i].src_size[0]);
     if (opcode_set->opcodes[i].src_size[1]) {
-      printf("<entry>%d</entry>\n", opcode_set->opcodes[i].src_size[1]);
+      printf("<entry>%d%s</entry>\n", opcode_set->opcodes[i].src_size[1],
+          (opcode_set->opcodes[i].flags & ORC_STATIC_OPCODE_SCALAR) ? "S" : "");
     } else {
       printf("<entry></entry>\n");
     }
@@ -203,7 +204,22 @@ struct a ops[] = {
 
   { "accw", "+= a", "accumulate" },
   { "accl", "+= a", "accumulate" },
-  { "accsadubl", "+= abs(a - b)", "accumulate absolute difference" }
+  { "accsadubl", "+= abs(a - b)", "accumulate absolute difference" },
+
+  { "splitlw" , "special", "split first/second words" },
+  { "splitwb" , "special", "split first/second bytes" },
+  { "addf", "a + b", "add" },
+  { "subf", "a - b", "subtract" },
+  { "mulf", "a * b", "multiply" },
+  { "divf", "a / b", "divide" },
+  { "sqrtf", "sqrt(a)", "square root" },
+  { "maxf", "max(a,b)", "maximum" },
+  { "minf", "min(a,b)", "minimum" },
+  { "cmpeqf", "(a == b) ? (~0) : 0", "compare equal" },
+  { "cmpltf", "(a == b) ? (~0) : 0", "compare less than" },
+  { "cmplef", "(a == b) ? (~0) : 0", "compare less than or equal" },
+  { "convfl", "a", "convert float point to integer" },
+  { "convlf", "a", "convert integer to floating point" }
 };
 
 
