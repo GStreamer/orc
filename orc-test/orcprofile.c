@@ -152,10 +152,16 @@ orc_profile_get_ave_std (OrcProfile *prof, double *ave_p, double *std_p)
 static unsigned long
 oil_profile_stamp_default (void)
 {
-#ifdef notused
+#if defined(__GNUC__) && (defined(HAVE_I386) || defined(HAVE_AMD64))
   unsigned long ts;
   __asm__ __volatile__("rdtsc\n" : "=a" (ts) : : "edx");
   return ts;
+#elif defined(_MSC_VER) && defined(HAVE_I386)
+  unsigned long ts;
+  __asm push edx
+  __asm __emit 0fh __asm __emit 031h
+  __asm mov ts, eax
+  __asm pop edx
 #elif defined(HAVE_CLOCK_GETTIME) && defined(HAVE_MONOTONIC_CLOCK)
   struct timespec ts;
   clock_gettime (CLOCK_MONOTONIC, &ts);
