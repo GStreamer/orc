@@ -174,8 +174,7 @@ High-level view of what Orc does.
 <para>
   An OrcTarget represents a particular instruction set or CPU family
   for which code can be generated.  Current targets include MMX, SSE,
-  Altivec, and ARM.  Entropy Wave also has non-open-source NEON and
-  C64x+ targets.  There is also a special target that generates C
+  Altivec, NEON, and ARM.  There is also a special target that generates C
   source code, but is not capable of producing executable code at
   runtime.  In most cases, the default target is the most appropriate
   target for the current CPU.
