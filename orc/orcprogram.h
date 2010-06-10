@@ -577,6 +577,7 @@ int orc_compiler_get_constant (OrcCompiler *compiler, int size, int value);
 const char *orc_program_get_asm_code (OrcProgram *program);
 const char *orc_target_get_asm_preamble (const char *target);
 const char * orc_target_get_preamble (OrcTarget *target);
+const char * orc_target_c_get_typedefs (void);
 
 void orc_compiler_append_code (OrcCompiler *p, const char *fmt, ...)
   ORC_GNU_PRINTF(2,3);

@@ -27,10 +27,9 @@ orc_compiler_c_init (OrcCompiler *compiler)
 }
 
 const char *
-orc_target_c_get_asm_preamble (void)
+orc_target_c_get_typedefs (void)
 {
-  return "\n"
-    "/* begin Orc C target preamble */\n"
+  return
     "#ifndef _ORC_INTEGER_TYPEDEFS_\n"
     "#define _ORC_INTEGER_TYPEDEFS_\n"
     "#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L\n"
@@ -70,7 +69,14 @@ orc_target_c_get_asm_preamble (void)
     "#endif\n"
     "typedef union { orc_int32 i; float f; } orc_union32;\n"
     "typedef union { orc_int64 i; double f; } orc_union64;\n"
-    "#endif\n"
+    "#endif\n";
+}
+
+const char *
+orc_target_c_get_asm_preamble (void)
+{
+  return "\n"
+    "/* begin Orc C target preamble */\n"
     "#define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))\n"
     "#define ORC_ABS(a) ((a)<0 ? -(a) : (a))\n"
     "#define ORC_MIN(a,b) ((a)<(b) ? (a) : (b))\n"

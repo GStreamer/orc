@@ -176,6 +176,7 @@ main (int argc, char *argv[])
       output_code_header (programs[i], output);
     }
     fprintf(output, "\n");
+    fprintf(output, "%s", orc_target_c_get_typedefs ());
     fprintf(output, "%s", orc_target_get_asm_preamble ("c"));
     fprintf(output, "\n");
     for(i=0;i<n;i++){
@@ -195,6 +196,8 @@ main (int argc, char *argv[])
     fprintf(output, "#ifdef __cplusplus\n");
     fprintf(output, "extern \"C\" {\n");
     fprintf(output, "#endif\n");
+    fprintf(output, "\n");
+    fprintf(output, "%s", orc_target_c_get_typedefs ());
     fprintf(output, "\n");
     for(i=0;i<n;i++){
       output_code_header (programs[i], output);
@@ -216,6 +219,7 @@ main (int argc, char *argv[])
       fprintf(output, "#include <%s>\n", include_file);
     }
     fprintf(output, "\n");
+    fprintf(output, "%s", orc_target_c_get_typedefs ());
     fprintf(output, "%s", orc_target_get_asm_preamble ("c"));
     fprintf(output, "\n");
     for(i=0;i<n;i++){
@@ -359,7 +363,7 @@ output_prototype (OrcProgram *p, FILE *output)
         fprintf(output, "%s * %s", var->type_name,
             varnames[ORC_VAR_D1 + i]);
       } else {
-        fprintf(output, "uint%d_t * %s", var->size*8,
+        fprintf(output, "orc_uint%d * %s", var->size*8,
             varnames[ORC_VAR_D1 + i]);
       }
       if (p->is_2d) {
@@ -376,7 +380,7 @@ output_prototype (OrcProgram *p, FILE *output)
         fprintf(output, "%s * %s", var->type_name,
             varnames[ORC_VAR_A1 + i]);
       } else {
-        fprintf(output, "uint%d_t * %s", var->size*8,
+        fprintf(output, "orc_uint%d * %s", var->size*8,
             varnames[ORC_VAR_A1 + i]);
       }
       need_comma = TRUE;
@@ -390,7 +394,7 @@ output_prototype (OrcProgram *p, FILE *output)
         fprintf(output, "const %s * %s", var->type_name,
             varnames[ORC_VAR_S1 + i]);
       } else {
-        fprintf(output, "const uint%d_t * %s", var->size*8,
+        fprintf(output, "const orc_uint%d * %s", var->size*8,
             varnames[ORC_VAR_S1 + i]);
       }
       if (p->is_2d) {
