@@ -831,8 +831,8 @@ orc_x86_do_fixups (OrcCompiler *compiler)
       unsigned char *ptr = compiler->fixups[i].ptr;
       int diff;
 
-      diff = ((int8_t)ptr[0]) + (label - ptr);
-      if (diff != (int8_t)diff) {
+      diff = ((orc_int8)ptr[0]) + (label - ptr);
+      if (diff != (orc_int8)diff) {
         ORC_COMPILER_ERROR(compiler, "short jump too long");
       }
 
