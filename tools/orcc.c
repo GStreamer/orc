@@ -17,7 +17,6 @@ void output_code_test (OrcProgram *p, FILE *output);
 void output_code_backup (OrcProgram *p, FILE *output);
 void output_code_no_orc (OrcProgram *p, FILE *output);
 void output_code_assembly (OrcProgram *p, FILE *output);
-static void print_exec_header (FILE *output);
 static char * get_barrier (const char *s);
 static const char * my_basename (const char *s);
 
