@@ -363,7 +363,8 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
       ORC_ASM_CODE(compiler,"%*s", prefix, "");
       rule->emit (compiler, rule->emit_user, insn);
     } else {
-      ORC_COMPILER_ERROR(compiler, "No rule for: %s\n", opcode->name);
+      ORC_COMPILER_ERROR(compiler, "No rule for: %s on target %s\n", opcode->name,
+          compiler->target->name);
       compiler->error = TRUE;
     }
   }

@@ -299,7 +299,8 @@ orc_compiler_assign_rules (OrcCompiler *compiler)
         compiler->target_flags);
 
     if (insn->rule == NULL || insn->rule->emit == NULL) {
-      ORC_COMPILER_ERROR(compiler, "No rule for: %s", insn->opcode->name);
+      ORC_COMPILER_ERROR(compiler, "No rule for: %s on target %s",
+          insn->opcode->name, compiler->target->name);
       compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
       return;
     }
