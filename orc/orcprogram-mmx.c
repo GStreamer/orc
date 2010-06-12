@@ -611,7 +611,7 @@ orc_mmx_emit_loop (OrcCompiler *compiler)
       if (compiler->vars[k].ptr_register) {
         orc_x86_emit_add_imm_reg (compiler, compiler->is_64bit ? 8 : 4,
             compiler->vars[k].size << compiler->loop_shift,
-            compiler->vars[k].ptr_register);
+            compiler->vars[k].ptr_register, FALSE);
       } else {
         orc_x86_emit_add_imm_memoffset (compiler, compiler->is_64bit ? 8 : 4,
             compiler->vars[k].size << compiler->loop_shift,

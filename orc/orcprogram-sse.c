@@ -675,7 +675,7 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
           (ui==ui_max-1) << (compiler->loop_shift + compiler->unroll_shift));
     }
     if (compiler->loop_counter != ORC_REG_INVALID) {
-      orc_x86_emit_add_imm_reg (compiler, 4, -1, compiler->loop_counter);
+      orc_x86_emit_add_imm_reg (compiler, 4, -1, compiler->loop_counter, TRUE);
     } else {
       orc_x86_emit_dec_memoffset (compiler, 4,
           (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2),
@@ -810,7 +810,7 @@ orc_sse_emit_loop (OrcCompiler *compiler, int offset, int update)
         if (compiler->vars[k].ptr_register) {
           orc_x86_emit_add_imm_reg (compiler, compiler->is_64bit ? 8 : 4,
               compiler->vars[k].size * update,
-              compiler->vars[k].ptr_register);
+              compiler->vars[k].ptr_register, FALSE);
         } else {
           orc_x86_emit_add_imm_memoffset (compiler, compiler->is_64bit ? 8 : 4,
               compiler->vars[k].size * update,
