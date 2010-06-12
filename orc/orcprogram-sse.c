@@ -164,8 +164,8 @@ orc_compiler_sse_init (OrcCompiler *compiler)
       break;
   }
 
-  compiler->unroll_shift = 0;
-  //compiler->alloc_loop_counter = TRUE;
+  compiler->unroll_shift = 1;
+  compiler->alloc_loop_counter = TRUE;
 
 }
 

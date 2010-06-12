@@ -451,8 +451,13 @@ orc_compiler_global_reg_alloc (OrcCompiler *compiler)
     }
   }
 
-  if (compiler->alloc_loop_counter) {
+  if (compiler->alloc_loop_counter && !compiler->error) {
     compiler->loop_counter = orc_compiler_allocate_register (compiler, FALSE);
+    /* FIXME massive hack */
+    if (compiler->loop_counter == 0) {
+      compiler->error = FALSE;
+      compiler->result = ORC_COMPILE_RESULT_OK;
+    }
   }
 }
 
