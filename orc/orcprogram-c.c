@@ -242,22 +242,11 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
       case ORC_VAR_TYPE_PARAM:
         c_get_name (varname, compiler, i);
         if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-          if (var->size >= 4) {
-            ORC_ASM_CODE(compiler,"  const %s %s = *(%s *)(ex->params + %d);\n",
-                c_get_type_name (var->size), varname,
-                c_get_type_name (var->size), i);
-          } else {
-            ORC_ASM_CODE(compiler,"  const %s %s = ex->params[%d];\n",
-                c_get_type_name (var->size), varname, i);
-          }
+          ORC_ASM_CODE(compiler,"  const int %s = ex->params[%d];\n",
+              varname, i);
         } else {
-          if (var->size >= 4) {
-            ORC_ASM_CODE(compiler,"  const %s %s = { %s };\n",
-                c_get_type_name (var->size), varname, varnames[i]);
-          } else {
-            ORC_ASM_CODE(compiler,"  const %s %s = %s;\n",
-                c_get_type_name (var->size), varname, varnames[i]);
-          }
+          ORC_ASM_CODE(compiler,"  const int %s = %s;\n",
+              varname, varnames[i]);
         }
         break;
       default:
@@ -451,7 +440,6 @@ c_get_name_int (char *name, OrcCompiler *p, int var)
 {
   switch (p->vars[var].vartype) {
     case ORC_VAR_TYPE_CONST:
-    case ORC_VAR_TYPE_PARAM:
     case ORC_VAR_TYPE_TEMP:
     case ORC_VAR_TYPE_ACCUMULATOR:
     case ORC_VAR_TYPE_SRC:
@@ -461,6 +449,9 @@ c_get_name_int (char *name, OrcCompiler *p, int var)
       } else {
         sprintf(name, "var%d", var);
       }
+      break;
+    case ORC_VAR_TYPE_PARAM:
+      sprintf(name, "var%d", var);
       break;
     default:
       ORC_COMPILER_ERROR(p, "bad vartype");
@@ -474,12 +465,14 @@ c_get_name_float (char *name, OrcCompiler *p, int var)
 {
   switch (p->vars[var].vartype) {
     case ORC_VAR_TYPE_CONST:
-    case ORC_VAR_TYPE_PARAM:
     case ORC_VAR_TYPE_TEMP:
     case ORC_VAR_TYPE_ACCUMULATOR:
     case ORC_VAR_TYPE_SRC:
     case ORC_VAR_TYPE_DEST:
       sprintf(name, "var%d.f", var);
+      break;
+    case ORC_VAR_TYPE_PARAM:
+      sprintf(name, "var%d", var);
       break;
     default:
       ORC_COMPILER_ERROR(p, "bad vartype");
