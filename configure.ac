@@ -43,6 +43,8 @@ AS_HOST_DEFINES()
 
 AC_C_BIGENDIAN
 
+AX_CREATE_STDINT_H([orc/orc-stdint.h])
+
 AC_FUNC_MMAP()
 
 AC_CHECK_HEADERS([inttypes.h])
