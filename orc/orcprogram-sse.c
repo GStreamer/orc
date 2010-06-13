@@ -51,6 +51,12 @@ static OrcTarget sse_target = {
 void
 orc_sse_init (void)
 {
+#if defined(HAVE_I386)
+  if (!(orc_sse_get_cpu_flags () & ORC_TARGET_SSE_SSE2)) {
+    sse_target.executable = FALSE;
+  }
+#endif
+
   orc_target_register (&sse_target);
 
   orc_compiler_sse_register_rules (&sse_target);
