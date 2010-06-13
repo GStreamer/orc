@@ -1,16 +1,12 @@
 
-High priority:
-
-- convert values to value pointers
-
-- make sure emulation always works
-
-- unroll emulation
 
 
-Low priority:
 
-- floating point support
+0.5
+===
 
-- int64 support
+Remove orc-stdint.h.
+
+Remove lots of stuff from the public API.
+
 
