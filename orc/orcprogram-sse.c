@@ -478,7 +478,7 @@ get_shift (int size)
 }
 
 
-void
+static void
 orc_emit_split_n_regions (OrcCompiler *compiler)
 {
   int align_var;

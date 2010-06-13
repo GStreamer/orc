@@ -197,6 +197,11 @@ mmx_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src2 = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
 
+  if (p->loop_shift < 2) {
+    ORC_COMPILER_ERROR(p, "accsadubl SSE rule fails with loop_shift < 2");
+    p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
+  }
+
   orc_mmx_emit_movq (p, src1, p->tmpreg);
   orc_mmx_emit_psadbw (p, src2, p->tmpreg);
   orc_mmx_emit_paddd (p, p->tmpreg, dest);
