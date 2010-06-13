@@ -182,7 +182,7 @@ mmx_save_accumulators (OrcCompiler *compiler)
       case ORC_VAR_TYPE_ACCUMULATOR:
         src = compiler->vars[i].alloc;
 
-        orc_mmx_emit_pshufw (compiler, 0xee, src, compiler->tmpreg);
+        orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(3,2,3,2), src, compiler->tmpreg);
 
         if (compiler->vars[i].size == 2) {
           orc_mmx_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
@@ -191,7 +191,7 @@ mmx_save_accumulators (OrcCompiler *compiler)
         }
 
         if (compiler->vars[i].size == 2) {
-          orc_mmx_emit_pshufw (compiler, 0x55, src, compiler->tmpreg);
+          orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(1,1,1,1), src, compiler->tmpreg);
 
           orc_mmx_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
         }

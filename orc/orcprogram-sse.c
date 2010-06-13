@@ -189,7 +189,7 @@ sse_save_accumulators (OrcCompiler *compiler)
       case ORC_VAR_TYPE_ACCUMULATOR:
         src = compiler->vars[i].alloc;
 
-        orc_sse_emit_pshufd (compiler, 0xee, src, compiler->tmpreg);
+        orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(3,2,3,2), src, compiler->tmpreg);
 
         if (compiler->vars[i].size == 2) {
           orc_sse_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
@@ -197,7 +197,7 @@ sse_save_accumulators (OrcCompiler *compiler)
           orc_sse_emit_660f (compiler, "paddd", 0xfe, compiler->tmpreg, src);
         }
 
-        orc_sse_emit_pshufd (compiler, 0x55, src, compiler->tmpreg);
+        orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(1,1,1,1), src, compiler->tmpreg);
 
         if (compiler->vars[i].size == 2) {
           orc_sse_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
@@ -206,7 +206,7 @@ sse_save_accumulators (OrcCompiler *compiler)
         }
 
         if (compiler->vars[i].size == 2) {
-          orc_sse_emit_pshuflw (compiler, 0x55, src, compiler->tmpreg);
+          orc_sse_emit_pshuflw (compiler, ORC_SSE_SHUF(1,1,1,1), src, compiler->tmpreg);
 
           orc_sse_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
         }
