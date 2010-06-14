@@ -246,7 +246,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
             ORC_ASM_CODE(compiler,"  const float %s = ((orc_union32 *)(ex->params+%d))->f;\n",
                 varname, i);
           } else {
-            ORC_ASM_CODE(compiler,"  const float %s = ((orc_union32 *)(ex->params+%d))->i;\n",
+            ORC_ASM_CODE(compiler,"  const int %s = ex->params[%d];\n",
                 varname, i);
           }
         } else {
