@@ -22,8 +22,17 @@ static const char * my_basename (const char *s);
 
 int verbose = 0;
 int error = 0;
+int compat;
 
 char *target = "sse";
+
+#define ORC_VERSION(a,b,c,d) ((a)*1000000 + (b)*10000 + (c)*100 + (d))
+#define REQUIRE(a,b,c,d) do { \
+  if (ORC_VERSION((a),(b),(c),(d)) > compat) { \
+    fprintf(stderr, "Feature used that is incompatible with --compat\n"); \
+    exit (1); \
+  } \
+} while (0)
 
 enum {
   MODE_IMPL,
@@ -39,17 +48,18 @@ void help (void)
   printf("  orcc [OPTION...] INPUT_FILE\n");
   printf("\n");
   printf("Help Options:\n");
-  printf("  -?, --help                      Show help options\n");
+  printf("  -?, --help              Show help options\n");
   printf("\n");
   printf("Application Options:\n");
-  printf("  -v, --verbose                   Output more information\n");
-  printf("  -o, --output FILE               Write output to FILE\n");
-  printf("  --implementation                Produce C code implementing functions\n");
-  printf("  --header                        Produce C header for functions\n");
-  printf("  --test                          Produce test code for functions\n");
-  printf("  --assembly                      Produce assembly code for functions\n");
-  printf("  --include FILE                  Generate #include <FILE> in code\n");
-  printf("  --target TARGET                 Generate assembly for TARGET\n");
+  printf("  -v, --verbose           Output more information\n");
+  printf("  -o, --output FILE       Write output to FILE\n");
+  printf("  --implementation        Produce C code implementing functions\n");
+  printf("  --header                Produce C header for functions\n");
+  printf("  --test                  Produce test code for functions\n");
+  printf("  --assembly              Produce assembly code for functions\n");
+  printf("  --include FILE          Add #include <FILE> to code\n");
+  printf("  --target TARGET         Generate assembly for TARGET\n");
+  printf("  --compat VERSION        Generate code compatible with Orc version VERSION\n");
   printf("\n");
 
   exit (0);
@@ -65,6 +75,7 @@ main (int argc, char *argv[])
   char *output_file = NULL;
   char *input_file = NULL;
   char *include_file = NULL;
+  char *compat_version = VERSION;
   FILE *output;
 
   orc_init ();
@@ -110,6 +121,13 @@ main (int argc, char *argv[])
     } else if (strcmp(argv[i], "--version") == 0) {
       printf("Orc Compiler " PACKAGE_VERSION "\n");
       exit (0);
+    } else if (strcmp(argv[i], "--compat") == 0) {
+      if (i+1 < argc) {
+        compat_version = argv[i+1];
+        i++;
+      } else {
+        help();
+      }
     } else if (strncmp(argv[i], "-", 1) == 0) {
       printf("Unknown option: %s\n", argv[i]);
       exit (1);
@@ -131,6 +149,25 @@ main (int argc, char *argv[])
   if (orc_target_get_by_name (target) == NULL) {
     printf("Unknown target \"%s\"\n", target);
     exit (1);
+  }
+
+  if (compat_version) {
+    int major, minor, micro, nano = 0;
+    int n;
+
+    n = sscanf (compat_version, "%d.%d.%d.%d", &major, &minor, &micro, &nano);
+
+    if (n < 3) {
+      printf("Unknown version \"%s\"\n", compat_version);
+      exit (1);
+    }
+
+    compat = ORC_VERSION(major,minor,micro,nano);
+    if (compat < ORC_VERSION(0,4,5,0)) {
+      printf("Compatibility version \"%s\" not supported.  Minimum 0.4.5\n",
+          compat_version);
+      exit (1);
+    }
   }
 
   if (output_file == NULL) {
@@ -409,6 +446,9 @@ output_prototype (OrcProgram *p, FILE *output)
     var = &p->vars[ORC_VAR_P1 + i];
     if (var->size) {
       if (need_comma) fprintf(output, ", ");
+      if (var->is_float_param) {
+        REQUIRE(0,4,5,1);
+      }
       fprintf(output, "%s %s",
           var->is_float_param ? "float" : "int",
           varnames[ORC_VAR_P1 + i]);
@@ -560,6 +600,9 @@ output_code (OrcProgram *p, FILE *output)
   for(i=0;i<8;i++){
     var = &p->vars[ORC_VAR_P1 + i];
     if (var->size) {
+      if (var->is_float_param) {
+        REQUIRE(0,4,5,1);
+      }
       fprintf(output, "      orc_program_add_parameter%s (p, %d, \"%s\");\n",
           var->is_float_param ? "_float" : "",
           var->size, varnames[ORC_VAR_P1 + i]);
@@ -633,6 +676,7 @@ output_code (OrcProgram *p, FILE *output)
     var = &p->vars[ORC_VAR_P1 + i];
     if (var->size) {
       if (var->is_float_param) {
+        REQUIRE(0,4,5,1);
         fprintf(output, "  {\n");
         fprintf(output, "    orc_union32 tmp;\n");
         fprintf(output, "    tmp.f = %s;\n", varnames[ORC_VAR_P1 + i]);
@@ -724,6 +768,9 @@ output_code_test (OrcProgram *p, FILE *output)
   for(i=0;i<8;i++){
     var = &p->vars[ORC_VAR_P1 + i];
     if (var->size) {
+      if (var->is_float_param) {
+        REQUIRE(0,4,5,1);
+      }
       fprintf(output, "    orc_program_add_parameter%s (p, %d, \"%s\");\n",
           var->is_float_param ? "_float" : "",
           var->size, varnames[ORC_VAR_P1 + i]);
