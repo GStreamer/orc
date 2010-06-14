@@ -539,8 +539,13 @@ orc_program_append_str (OrcProgram *program, const char *name,
     ORC_ERROR ("unknown opcode: %s", name);
   }
   insn->dest_args[0] = orc_program_find_var_by_name (program, arg1);
-  insn->src_args[0] = orc_program_find_var_by_name (program, arg2);
-  insn->src_args[1] = orc_program_find_var_by_name (program, arg3);
+  if (insn->opcode->dest_size[1] != 0) {
+    insn->dest_args[1] = orc_program_find_var_by_name (program, arg2);
+    insn->src_args[0] = orc_program_find_var_by_name (program, arg3);
+  } else {
+    insn->src_args[0] = orc_program_find_var_by_name (program, arg2);
+    insn->src_args[1] = orc_program_find_var_by_name (program, arg3);
+  }
   
   program->n_insns++;
 }
