@@ -472,25 +472,32 @@ orc_x86_emit_add_reg_memoffset (OrcCompiler *compiler, int size, int reg1,
 void
 orc_x86_emit_add_imm_reg (OrcCompiler *compiler, int size, int value, int reg, orc_bool record)
 {
+  if (!record) {
+    if (size == 4 && !compiler->is_64bit) {
+      ORC_ASM_CODE(compiler,"  lea %d(%%%s), %%%s\n", value,
+          orc_x86_get_regname(reg), orc_x86_get_regname(reg));
+      orc_x86_emit_rex(compiler, size, 0, 0, reg);
+      *compiler->codeptr++ = 0x8d;
+      orc_x86_emit_modrm_memoffset (compiler, reg, value, reg);
+      return;
+    }
+    if (size == 8 && compiler->is_64bit) {
+      ORC_ASM_CODE(compiler,"  lea %d(%%%s), %%%s\n", value,
+          orc_x86_get_regname_64(reg), orc_x86_get_regname_64(reg));
+      orc_x86_emit_rex(compiler, size, reg, 0, reg);
+      *compiler->codeptr++ = 0x8d;
+      orc_x86_emit_modrm_memoffset (compiler, reg, value, reg);
+      return;
+    }
+  }
+
   if (size == 2) {
     ORC_ASM_CODE(compiler,"  addw $%d, %%%s\n", value, orc_x86_get_regname_16(reg));
     *compiler->codeptr++ = 0x66;
   } else if (size == 4) {
-    if (record) {
-      ORC_ASM_CODE(compiler,"  addl $%d, %%%s\n", value, orc_x86_get_regname(reg));
-    } else {
-      ORC_ASM_CODE(compiler,"  leal %d(%%%s), %%%s\n", value,
-          orc_x86_get_regname(reg), orc_x86_get_regname(reg));
-    }
+    ORC_ASM_CODE(compiler,"  addl $%d, %%%s\n", value, orc_x86_get_regname(reg));
   } else {
     ORC_ASM_CODE(compiler,"  add $%d, %%%s\n", value, orc_x86_get_regname_64(reg));
-  }
-
-  if (!record) {
-    orc_x86_emit_rex(compiler, size, 0, 0, reg);
-    *compiler->codeptr++ = 0x8d;
-    orc_x86_emit_modrm_memoffset (compiler, reg, value, reg);
-    return;
   }
 
   orc_x86_emit_rex(compiler, size, 0, 0, reg);
