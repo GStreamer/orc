@@ -232,6 +232,7 @@ main (int argc, char *argv[])
     fprintf(output, "main (int argc, char *argv[])\n");
     fprintf(output, "{\n");
     fprintf(output, "  int error = FALSE;\n");
+    fprintf(output, "  int verbose = FALSE;\n");
     fprintf(output, "\n");
     fprintf(output, "  orc_test_init ();\n");
     fprintf(output, "\n");
@@ -659,7 +660,7 @@ output_code_test (OrcProgram *p, FILE *output)
   fprintf(output, "    OrcProgram *p = NULL;\n");
   fprintf(output, "    int ret;\n");
   fprintf(output, "\n");
-  fprintf(output, "    printf (\"%s:\\n\");\n", p->name);
+  fprintf(output, "    if (verbose) printf (\"%s:\\n\");\n", p->name);
   fprintf(output, "    p = orc_program_new ();\n");
   if (p->constant_n != 0) {
     fprintf(output, "      orc_program_set_constant_n (p, %d);\n",
@@ -738,7 +739,7 @@ output_code_test (OrcProgram *p, FILE *output)
   }
 
   fprintf(output, "\n");
-  fprintf(output, "    printf (\"  cycles (backup):   \");\n");
+  fprintf(output, "    if (verbose) printf (\"  cycles (backup):   \");\n");
   fprintf(output, "    orc_test_performance (p, ORC_TEST_FLAGS_BACKUP);\n");
   fprintf(output, "\n");
   fprintf(output, "    ret = orc_test_compare_output_backup (p);\n");
@@ -751,7 +752,7 @@ output_code_test (OrcProgram *p, FILE *output)
   fprintf(output, "      error = TRUE;\n");
   fprintf(output, "    }\n");
   fprintf(output, "\n");
-  fprintf(output, "    printf (\"  cycles (compiled): \");\n");
+  fprintf(output, "    if (verbose) printf (\"  cycles (compiled): \");\n");
   fprintf(output, "    orc_test_performance (p, 0);\n");
   fprintf(output, "\n");
   fprintf(output, "    orc_program_free (p);\n");
