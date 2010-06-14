@@ -51,6 +51,12 @@ static OrcTarget mmx_target = {
 void
 orc_mmx_init (void)
 {
+#if defined(HAVE_I386)
+  if (!(orc_mmx_get_cpu_flags () & ORC_TARGET_MMX_MMX)) {
+    mmx_target.executable = FALSE;
+  }
+#endif
+
   orc_target_register (&mmx_target);
 
   orc_compiler_mmx_register_rules (&mmx_target);
