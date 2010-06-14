@@ -242,10 +242,16 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
       case ORC_VAR_TYPE_PARAM:
         c_get_name (varname, compiler, i);
         if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-          ORC_ASM_CODE(compiler,"  const int %s = ex->params[%d];\n",
-              varname, i);
+          if (var->is_float_param) {
+            ORC_ASM_CODE(compiler,"  const float %s = ((orc_union32 *)(ex->params+%d))->f;\n",
+                varname, i);
+          } else {
+            ORC_ASM_CODE(compiler,"  const float %s = ((orc_union32 *)(ex->params+%d))->i;\n",
+                varname, i);
+          }
         } else {
-          ORC_ASM_CODE(compiler,"  const int %s = %s;\n",
+          ORC_ASM_CODE(compiler,"  const %s %s = %s;\n",
+              var->is_float_param ? "float" : "int",
               varname, varnames[i]);
         }
         break;

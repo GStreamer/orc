@@ -409,7 +409,9 @@ output_prototype (OrcProgram *p, FILE *output)
     var = &p->vars[ORC_VAR_P1 + i];
     if (var->size) {
       if (need_comma) fprintf(output, ", ");
-      fprintf(output, "int %s", varnames[ORC_VAR_P1 + i]);
+      fprintf(output, "%s %s",
+          var->is_float_param ? "float" : "int",
+          varnames[ORC_VAR_P1 + i]);
       need_comma = TRUE;
     }
   }
@@ -558,7 +560,8 @@ output_code (OrcProgram *p, FILE *output)
   for(i=0;i<8;i++){
     var = &p->vars[ORC_VAR_P1 + i];
     if (var->size) {
-      fprintf(output, "      orc_program_add_parameter (p, %d, \"%s\");\n",
+      fprintf(output, "      orc_program_add_parameter%s (p, %d, \"%s\");\n",
+          var->is_float_param ? "_float" : "",
           var->size, varnames[ORC_VAR_P1 + i]);
     }
   }
@@ -629,8 +632,17 @@ output_code (OrcProgram *p, FILE *output)
   for(i=0;i<8;i++){
     var = &p->vars[ORC_VAR_P1 + i];
     if (var->size) {
-      fprintf(output, "  ex->params[%s] = %s;\n",
-          enumnames[ORC_VAR_P1 + i], varnames[ORC_VAR_P1 + i]);
+      if (var->is_float_param) {
+        fprintf(output, "  {\n");
+        fprintf(output, "    orc_union32 tmp;\n");
+        fprintf(output, "    tmp.f = %s;\n", varnames[ORC_VAR_P1 + i]);
+        fprintf(output, "    ex->params[%s] = tmp.i;\n",
+            enumnames[ORC_VAR_P1 + i]);
+        fprintf(output, "  }\n");
+      } else {
+        fprintf(output, "  ex->params[%s] = %s;\n",
+            enumnames[ORC_VAR_P1 + i], varnames[ORC_VAR_P1 + i]);
+      }
     }
   }
   fprintf(output, "\n");
@@ -712,7 +724,8 @@ output_code_test (OrcProgram *p, FILE *output)
   for(i=0;i<8;i++){
     var = &p->vars[ORC_VAR_P1 + i];
     if (var->size) {
-      fprintf(output, "    orc_program_add_parameter (p, %d, \"%s\");\n",
+      fprintf(output, "    orc_program_add_parameter%s (p, %d, \"%s\");\n",
+          var->is_float_param ? "_float" : "",
           var->size, varnames[ORC_VAR_P1 + i]);
     }
   }

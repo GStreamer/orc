@@ -207,6 +207,8 @@ struct _OrcVariable {
   int aligned_data;
   int sampling_type;
   int load_dest;
+  double float_value;
+  int is_float_param;
 };
 
 /**
@@ -534,6 +536,7 @@ int orc_program_add_source (OrcProgram *program, int size, const char *name);
 int orc_program_add_destination (OrcProgram *program, int size, const char *name);
 int orc_program_add_constant (OrcProgram *program, int size, int value, const char *name);
 int orc_program_add_parameter (OrcProgram *program, int size, const char *name);
+int orc_program_add_parameter_float (OrcProgram *program, int size, const char *name);
 int orc_program_add_accumulator (OrcProgram *program, int size, const char *name);
 void orc_program_set_type_name (OrcProgram *program, int var, const char *type_name);
 void orc_program_set_sampling_type (OrcProgram *program, int var, int sampling_type);

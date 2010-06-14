@@ -374,6 +374,30 @@ orc_program_add_parameter (OrcProgram *program, int size, const char *name)
 }
 
 /**
+ * orc_program_add_parameter_float:
+ * @program: a pointer to an OrcProgram structure
+ * @size: size of data value
+ * @name: name of variable
+ *
+ * Creates a new variable representing a scalar parameter.
+ *
+ * Returns: the index of the new variable
+ */
+int
+orc_program_add_parameter_float (OrcProgram *program, int size, const char *name)
+{
+  int i = ORC_VAR_P1 + program->n_param_vars;
+
+  program->vars[i].vartype = ORC_VAR_TYPE_PARAM;
+  program->vars[i].is_float_param = TRUE;
+  program->vars[i].size = size;
+  program->vars[i].name = strdup(name);
+  program->n_param_vars++;
+
+  return i;
+}
+
+/**
  * orc_program_add_accumulator:
  * @program: a pointer to an OrcProgram structure
  * @size: size of data value
