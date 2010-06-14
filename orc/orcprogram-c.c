@@ -275,27 +275,9 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
             char s1[20], s2[20];
             get_varname(s1, compiler, i);
             get_varname_stride(s2, compiler, i);
-            switch (var->sampling_type) {
-              case ORC_SAMPLE_REGULAR:
-                ORC_ASM_CODE(compiler,
-                    "    ptr%d = ORC_PTR_OFFSET(%s, %s * j);\n",
-                    i, s1, s2);
-                break;
-              case ORC_SAMPLE_TRANSPOSED:
-                ORC_ASM_CODE(compiler,
-                    "    ptr%d = ORC_PTR_OFFSET(%s, %d * j);\n",
-                    i, s1, var->size);
-                break;
-              case ORC_SAMPLE_NEAREST:
-              case ORC_SAMPLE_BILINEAR:
-              case ORC_SAMPLE_FOUR_TAP:
-                ORC_ASM_CODE(compiler,
-                    "    ptr%d = ORC_PTR_OFFSET(%s, %s * j);\n",
-                    i, s1, s2);
-                break;
-              default:
-                ORC_COMPILER_ERROR(compiler, "eeek");
-            }
+            ORC_ASM_CODE(compiler,
+                "    ptr%d = ORC_PTR_OFFSET(%s, %s * j);\n",
+                i, s1, s2);
           }
           break;
         case ORC_VAR_TYPE_DEST:

@@ -430,7 +430,7 @@ void
 orc_program_set_sampling_type (OrcProgram *program, int var,
     int sampling_type)
 {
-  program->vars[var].sampling_type = sampling_type;
+  /* This doesn't do anything yet */
 }
 
 /**

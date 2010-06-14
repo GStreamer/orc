@@ -205,10 +205,8 @@ struct _OrcVariable {
   int ptr_offset;
   int mask_alloc;
   int aligned_data;
-  int sampling_type;
-  int load_dest;
-  double float_value;
   int is_float_param;
+  int load_dest;
 };
 
 /**
