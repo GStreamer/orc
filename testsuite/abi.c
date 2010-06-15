@@ -10,11 +10,11 @@
 
 int main (int argc, char *argv[])
 {
-  int offset;
+  long offset;
   int expected_offset;
   int error = 0;
 
-  offset = ((int) ((unsigned char *) &((OrcProgram*) 0)->code_exec));
+  offset = ((long) ((unsigned char *) &((OrcProgram*) 0)->code_exec));
 
   if (sizeof(void *) == 4) {
     expected_offset = 8360;
@@ -23,7 +23,7 @@ int main (int argc, char *argv[])
   }
 
   if (offset != expected_offset) {
-    printf("ABI bug: OrcProgram->code_exec should be at offset %d instead of %d\n",
+    printf("ABI bug: OrcProgram->code_exec should be at offset %ld instead of %d\n",
         offset, expected_offset);
     error = 1;
   }
