@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -e
+set -x
+
+topdir=`pwd`
+builddir=${topdir}/build
+installdir=${topdir}/install
+
+#rm -rf ${builddir} ${installdir}
+mkdir -p ${builddir}
+mkdir -p ${installdir}
+
+for version in 0.4.0 0.4.1 0.4.2 0.4.3 0.4.4 0.4.5
+do
+
+  test -f orc-${version}.tar.gz || \
+    wget http://code.entropywave.com/download/orc/orc-${version}.tar.gz
+
+  tar -xzf orc-${version}.tar.gz --directory ${builddir}
+
+  cd ${builddir}/orc-${version}
+  ./configure --prefix=${topdir}/install/${version}
+  make
+  make install
+  cd ${topdir}
+
+done
+
+rm -rf ${builddir}
+

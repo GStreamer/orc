@@ -1,0 +1,45 @@
+#!/bin/bash
+
+topdir=`pwd`
+installdir=${topdir}/install
+
+testfile=../test.orc
+#testfile=../floatparam.orc
+
+../../tools/orcc -o impl.c --implementation ${testfile}
+../../tools/orcc -o test.c --test ${testfile}
+
+echo "          compile     run"
+echo "        impl   test   test"
+for version in 0.4.0 0.4.1 0.4.2 0.4.3 0.4.4 0.4.5
+do
+  gcc -Wall -Werror -I${installdir}/${version}/include/orc-0.4/ -c -o impl.o impl.c &>/dev/null
+  res=$?
+  if [ "$res" = "0" ] ; then
+    result_impl="yes"
+  else
+    result_impl=" no"
+  fi
+
+  rm -f test
+  gcc -Wall -Werror -I${installdir}/${version}/include/orc-0.4/ -L${installdir}/${version}/lib -lorc-0.4 -lorc-test-0.4 -o test test.c &>/dev/null
+  res=$?
+  if [ "$res" = "0" ] ; then
+    result_test_compile="yes"
+  else
+    result_test_compile=" no"
+  fi
+
+  LD_LIBRARY_PATH=${installdir}/${version}/lib \
+  test -f ./test && ./test &>/dev/null
+  res=$?
+  if [ "$res" = "0" ] ; then
+    result_test_run="yes"
+  else
+    result_test_run=" no"
+  fi
+
+  echo "$version    $result_impl    $result_test_compile    $result_test_run"
+done
+
+
