@@ -800,7 +800,7 @@ output_code_test (OrcProgram *p, FILE *output)
 
   fprintf(output, "\n");
   fprintf(output, "    if (verbose) printf (\"  cycles (backup):   \");\n");
-  fprintf(output, "    orc_test_performance (p, ORC_TEST_FLAGS_BACKUP);\n");
+  fprintf(output, "    if (verbose) orc_test_performance (p, ORC_TEST_FLAGS_BACKUP);\n");
   fprintf(output, "\n");
   fprintf(output, "    ret = orc_test_compare_output_backup (p);\n");
   fprintf(output, "    if (!ret) {\n");
@@ -813,7 +813,7 @@ output_code_test (OrcProgram *p, FILE *output)
   fprintf(output, "    }\n");
   fprintf(output, "\n");
   fprintf(output, "    if (verbose) printf (\"  cycles (compiled): \");\n");
-  fprintf(output, "    orc_test_performance (p, 0);\n");
+  fprintf(output, "    if (verbose) orc_test_performance (p, 0);\n");
   fprintf(output, "\n");
   fprintf(output, "    orc_program_free (p);\n");
   fprintf(output, "  }\n");
