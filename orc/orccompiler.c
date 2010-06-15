@@ -35,6 +35,34 @@ void orc_compiler_rewrite_vars2 (OrcCompiler *compiler);
 int orc_compiler_dup_temporary (OrcCompiler *compiler, int var, int j);
 void orc_compiler_check_sizes (OrcCompiler *compiler);
 
+static char **_orc_compiler_flag_list;
+static int _orc_compiler_flag_backup;
+
+void
+_orc_compiler_init (void)
+{
+  const char *envvar;
+
+  envvar = getenv ("ORC_CODE");
+  if (envvar != NULL) {
+    _orc_compiler_flag_list = strsplit (envvar, ',');
+  }
+
+  _orc_compiler_flag_backup = orc_compiler_flag_check ("backup");
+}
+
+int
+orc_compiler_flag_check (const char *flag)
+{
+  int i;
+
+  if (_orc_compiler_flag_list == NULL) return FALSE;
+
+  for (i=0;_orc_compiler_flag_list[i];i++){
+    if (strcmp (_orc_compiler_flag_list[i], flag) == 0) return TRUE;
+  }
+  return FALSE;
+}
 
 int
 orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
@@ -157,6 +185,11 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   compiler->program = program;
   compiler->target = target;
   compiler->target_flags = flags;
+
+  if (program->backup_func && _orc_compiler_flag_backup) {
+    ORC_COMPILER_ERROR(compiler, "Compilation disabled");
+    goto error;
+  }
 
   {
     ORC_LOG("variables");

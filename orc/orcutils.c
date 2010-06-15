@@ -53,10 +53,10 @@ _strndup (const char *s, int n)
 }
 
 char **
-strsplit (char *s)
+strsplit (const char *s, char delimiter)
 {
   char **list = NULL;
-  char *tok;
+  const char *tok;
   int n = 0;
 
   while (*s == ' ') s++;
@@ -64,10 +64,10 @@ strsplit (char *s)
   list = malloc (1 * sizeof(char *));
   while (*s) {
     tok = s;
-    while (*s && *s != ' ') s++;
+    while (*s && *s != delimiter) s++;
 
     list[n] = _strndup (tok, s - tok);
-    while (*s && *s == ' ') s++;
+    while (*s && *s == delimiter) s++;
     list = realloc (list, (n + 2) * sizeof(char *));
     n++;
   }

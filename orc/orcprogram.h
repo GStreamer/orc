@@ -589,5 +589,11 @@ int orc_program_get_max_var_size (OrcProgram *program);
 int orc_program_get_max_array_size (OrcProgram *program);
 int orc_program_get_max_accumulator_size (OrcProgram *program);
 
+#ifdef ORC_ENABLE_UNSTABLE_API
+
+int orc_compiler_flag_check (const char *flag);
+
+#endif
+
 #endif
 

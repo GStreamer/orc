@@ -75,7 +75,7 @@ orc_sse_getflags_cpuinfo (char *cpuinfo)
     return;
   }
 
-  flags = strsplit(cpuinfo_flags);
+  flags = strsplit(cpuinfo_flags, ' ');
   for (f = flags; *f; f++) {
     if (strcmp (*f, "sse2") == 0) {
       ORC_DEBUG ("cpu flag %s", *f);
@@ -129,7 +129,7 @@ orc_mmx_getflags_cpuinfo (char *cpuinfo)
     return;
   }
 
-  flags = strsplit(cpuinfo_flags);
+  flags = strsplit(cpuinfo_flags, ' ');
   for (f = flags; *f; f++) {
     if (strcmp (*f, "mmx") == 0) {
       ORC_DEBUG ("cpu flag %s", *f);

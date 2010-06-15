@@ -16,6 +16,7 @@
 
 void _orc_debug_init(void);
 void _orc_once_init(void);
+void _orc_compiler_init(void);
 
 /**
  * orc_init:
@@ -36,6 +37,7 @@ orc_init (void)
 
   _orc_debug_init();
   _orc_once_init();
+  _orc_compiler_init();
   orc_opcode_init();
   orc_c_init();
 #ifdef ENABLE_BACKEND_C64X

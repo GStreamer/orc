@@ -47,6 +47,8 @@ static OrcTarget sse_target = {
 
 };
 
+static int _orc_compiler_flag_debug;
+
 
 void
 orc_sse_init (void)
@@ -60,6 +62,8 @@ orc_sse_init (void)
   orc_target_register (&sse_target);
 
   orc_compiler_sse_register_rules (&sse_target);
+
+  _orc_compiler_flag_debug = orc_compiler_flag_check ("debug");
 }
 
 unsigned int
@@ -70,7 +74,9 @@ orc_compiler_sse_get_default_flags (void)
 #ifdef HAVE_AMD64
   flags |= ORC_TARGET_SSE_64BIT;
 #endif
-  flags &= ~ORC_TARGET_SSE_FRAME_POINTER;
+  if (_orc_compiler_flag_debug) {
+    flags |= ORC_TARGET_SSE_FRAME_POINTER;
+  }
   
 #if defined(HAVE_AMD64) || defined(HAVE_I386)
   flags |= orc_sse_get_cpu_flags ();

@@ -70,7 +70,7 @@ orc_cpu_arm_getflags_cpuinfo (char *cpuinfo)
     return;
   }
 
-  flags = strsplit(cpuinfo_flags);
+  flags = strsplit(cpuinfo_flags, ' ');
   for (f = flags; *f; f++) {
 #if 0
     if (strcmp (*f, "edsp") == 0) {
