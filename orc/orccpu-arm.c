@@ -57,6 +57,7 @@ orc_profile_stamp_xscale(void)
 }
 #endif
 
+#ifdef unused
 static void
 orc_cpu_arm_getflags_cpuinfo (char *cpuinfo)
 {
@@ -117,10 +118,12 @@ get_proc_cpuinfo (void)
 
   return cpuinfo;
 }
+#endif
 
 void
 orc_cpu_detect_arch(void)
 {
+#ifdef unused
 #ifdef __linux__
   int arm_implementer = 0;
   char *cpuinfo;
@@ -158,6 +161,7 @@ orc_cpu_detect_arch(void)
 
   orc_cpu_arm_getflags_cpuinfo (cpuinfo);
   free (cpuinfo);
+#endif
 #endif
 }
 #endif
