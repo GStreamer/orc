@@ -1,5 +1,5 @@
 
-bin_PROGRAMS = orcc
+bin_PROGRAMS = orcc orc-bugreport
 
 AM_CFLAGS = $(ORC_CFLAGS)
 LDADD = $(ORC_LIBS) ../orc-test/liborc-test-@ORC_MAJORMINOR@.la
