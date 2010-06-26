@@ -292,6 +292,28 @@ orc_sse_detect_cpuid (void)
 #endif
   }
 
+  if (orc_compiler_flag_check ("-sse2")) {
+    sse_flags &= ~ORC_TARGET_SSE_SSE2;
+  }
+  if (orc_compiler_flag_check ("-sse3")) {
+    sse_flags &= ~ORC_TARGET_SSE_SSE3;
+  }
+  if (orc_compiler_flag_check ("-ssse3")) {
+    sse_flags &= ~ORC_TARGET_SSE_SSSE3;
+  }
+  if (orc_compiler_flag_check ("-sse41")) {
+    sse_flags &= ~ORC_TARGET_SSE_SSE4_1;
+  }
+  if (orc_compiler_flag_check ("-sse42")) {
+    sse_flags &= ~ORC_TARGET_SSE_SSE4_2;
+  }
+  if (orc_compiler_flag_check ("-sse4a")) {
+    sse_flags &= ~ORC_TARGET_SSE_SSE4A;
+  }
+  if (orc_compiler_flag_check ("-sse5")) {
+    sse_flags &= ~ORC_TARGET_SSE_SSE5;
+  }
+
   return sse_flags;
 }
 

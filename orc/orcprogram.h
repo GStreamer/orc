@@ -479,8 +479,9 @@ struct _OrcTarget {
 
   const char * (*get_asm_preamble)(void);
   void (*load_constant)(OrcCompiler *compiler, int reg, int size, int value);
+  const char * (*get_flag_name)(int shift);
 
-  void *_unused[8];
+  void *_unused[7];
 };
 
 
@@ -568,6 +569,7 @@ OrcRule * orc_target_get_rule (OrcTarget *target, OrcStaticOpcode *opcode,
 OrcTarget * orc_target_get_default (void);
 unsigned int orc_target_get_default_flags (OrcTarget *target);
 const char * orc_target_get_name (OrcTarget *target);
+const char * orc_target_get_flag_name (OrcTarget *target, int shift);
 
 int orc_program_allocate_register (OrcProgram *program, int is_data);
 

@@ -28,6 +28,7 @@ void orc_compiler_sse_register_rules (OrcTarget *target);
 void orc_compiler_rewrite_vars (OrcCompiler *compiler);
 void orc_compiler_dump (OrcCompiler *compiler);
 void sse_load_constant (OrcCompiler *compiler, int reg, int size, int value);
+static const char * sse_get_flag_name (int shift);
 
 static OrcTarget sse_target = {
   "sse",
@@ -43,8 +44,8 @@ static OrcTarget sse_target = {
   { { 0 } },
   0,
   NULL,
-  sse_load_constant
-
+  sse_load_constant,
+  sse_get_flag_name
 };
 
 static int _orc_compiler_flag_debug;
@@ -87,6 +88,21 @@ orc_compiler_sse_get_default_flags (void)
 #endif
 
   return flags;
+}
+
+static const char *
+sse_get_flag_name (int shift)
+{
+  static const char *flags[] = {
+    "sse2", "sse3", "ssse3", "sse41", "sse42", "sse4a", "sse5",
+    "frame_pointer", "short_jumps", "64bit"
+  };
+
+  if (shift >= 0 && shift < sizeof(flags)/sizeof(flags[0])) {
+    return flags[shift];
+  }
+
+  return NULL;
 }
 
 void

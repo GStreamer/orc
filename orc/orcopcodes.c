@@ -109,6 +109,14 @@ orc_target_get_asm_preamble (const char *target)
   return orc_target_get_preamble (t);
 }
 
+const char *
+orc_target_get_flag_name (OrcTarget *target, int shift)
+{
+  if (target->get_flag_name == NULL) return "";
+
+  return target->get_flag_name (shift);
+}
+
 #if 0
 int
 orc_opcode_get_list (OrcOpcode **list)
