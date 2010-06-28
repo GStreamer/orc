@@ -150,7 +150,11 @@ orc_program_compile_for_target (OrcProgram *program, OrcTarget *target)
 {
   unsigned int flags;
 
-  flags = target->get_default_flags ();
+  if (target) {
+    flags = target->get_default_flags ();
+  } else {
+    flags = 0;
+  }
 
   return orc_program_compile_full (program, target, flags);
 }
@@ -188,6 +192,13 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
 
   if (program->backup_func && _orc_compiler_flag_backup) {
     ORC_COMPILER_ERROR(compiler, "Compilation disabled");
+    compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
+    goto error;
+  }
+
+  if (target == NULL) {
+    ORC_COMPILER_ERROR(compiler, "No target given");
+    compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
     goto error;
   }
 
