@@ -665,8 +665,8 @@ BINARY_F(maxf, (a>b) ? a : b)
 BINARY_F(minf, (a<b) ? a : b)
 
 BINARY_FL(cmpeqf, (a == b) ? (~0) : 0)
-BINARY_FL(cmpltf, (a < b) ? (~0) : 0)
-BINARY_FL(cmplef, (a <= b) ? (~0) : 0)
+BINARY_FL(cmpltf, ((a < b) && (b > a)) ? (~0) : 0)
+BINARY_FL(cmplef, ((a <= b) && (b >= a)) ? (~0) : 0)
 
 static void
 convfl (OrcOpcodeExecutor *ex, void *user)
