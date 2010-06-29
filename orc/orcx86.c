@@ -907,7 +907,7 @@ orc_x86_emit_epilogue (OrcCompiler *compiler)
     for(i=15;i>=0;i--){
       if (compiler->used_regs[ORC_GP_REG_BASE+i] &&
           compiler->save_regs[ORC_GP_REG_BASE+i]) {
-        orc_x86_emit_push (compiler, 8, ORC_GP_REG_BASE+i);
+        orc_x86_emit_pop (compiler, 8, ORC_GP_REG_BASE+i);
       }
     }
   } else {
