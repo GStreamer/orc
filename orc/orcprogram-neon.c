@@ -217,7 +217,7 @@ orc_compiler_neon_init (OrcCompiler *compiler)
 }
 
 void
-orc_neon_load_constants (OrcCompiler *compiler)
+orc_neon_load_constants_outer (OrcCompiler *compiler)
 {
   int i;
   for(i=0;i<ORC_N_VARIABLES;i++){
@@ -251,12 +251,38 @@ orc_neon_load_constants (OrcCompiler *compiler)
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
+        break;
+      case ORC_VAR_TYPE_ACCUMULATOR:
+        orc_neon_emit_loadil (compiler, compiler->vars[i].alloc, 0);
+        break;
+      case ORC_VAR_TYPE_TEMP:
+        break;
+      default:
+        ORC_PROGRAM_ERROR(compiler,"bad vartype");
+        break;
+    }
+  }
+}
+
+void
+orc_neon_load_constants_inner (OrcCompiler *compiler)
+{
+  int i;
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    if (compiler->vars[i].name == NULL) continue;
+
+    switch (compiler->vars[i].vartype) {
+      case ORC_VAR_TYPE_CONST:
+        break;
+      case ORC_VAR_TYPE_PARAM:
+        break;
+      case ORC_VAR_TYPE_SRC:
+      case ORC_VAR_TYPE_DEST:
         orc_arm_emit_load_reg (compiler, 
             compiler->vars[i].ptr_register,
             compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
         break;
       case ORC_VAR_TYPE_ACCUMULATOR:
-        orc_neon_emit_loadil (compiler, compiler->vars[i].alloc, 0);
         break;
       case ORC_VAR_TYPE_TEMP:
         break;
@@ -540,6 +566,8 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
 
   orc_neon_emit_prologue (compiler);
 
+  orc_neon_load_constants_outer (compiler);
+
   if (compiler->program->is_2d) {
     if (compiler->program->constant_m > 0) {
       orc_arm_emit_load_imm (compiler, ORC_ARM_A3, compiler->program->constant_m);
@@ -601,7 +629,7 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
     orc_arm_emit_label (compiler, 7);
   }
 
-  orc_neon_load_constants (compiler);
+  orc_neon_load_constants_inner (compiler);
 
   if (compiler->loop_shift > 0) {
     int save_loop_shift = compiler->loop_shift;
@@ -702,6 +730,7 @@ orc_neon_emit_loop (OrcCompiler *compiler)
   OrcStaticOpcode *opcode;
   OrcRule *rule;
 
+  orc_compiler_append_code(compiler,"# LOOP shift %d\n", compiler->loop_shift);
   for(j=0;j<compiler->n_insns;j++){
     compiler->insn_index = j;
     insn = compiler->insns + j;
