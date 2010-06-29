@@ -58,11 +58,12 @@ orc_array_set_random (OrcArray *array, OrcRandomContext *context)
   orc_random_bits (context, array->alloc_data, array->alloc_len);
 }
 
+#define MIN_NONDENORMAL (1.1754944909521339405e-38)
 
 int
 orc_array_compare (OrcArray *array1, OrcArray *array2, int flags)
 {
-  if (flags & ORC_TEST_FLAGS_FLOAT && array1->element_size == 4) {
+  if ((flags & ORC_TEST_FLAGS_FLOAT) && array1->element_size == 4) {
     int j;
     for(j=0;j<array1->m;j++){
       float *a, *b;
@@ -72,9 +73,10 @@ orc_array_compare (OrcArray *array1, OrcArray *array2, int flags)
       b = ORC_PTR_OFFSET (array2->data, j*array2->stride);
 
       for (i=0;i<array1->n;i++){
-        if (!((isnan(a[i]) && isnan(b[i])) || a[i] == b[i])) {
-          return FALSE;
-        }
+        if (isnan(a[i]) && isnan(b[i])) continue;
+        if (a[i] == b[i]) continue;
+        if (fabs(a[i] - b[i]) < MIN_NONDENORMAL) continue;
+        return FALSE;
       }
     }
     return TRUE;

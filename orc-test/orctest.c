@@ -18,6 +18,8 @@
 #define isnan(x) _isnan(x)
 #endif
 
+#define MIN_NONDENORMAL (1.1754944909521339405e-38)
+
 void _orc_profile_init(void);
 
 OrcRandomContext rand_context;
@@ -454,6 +456,27 @@ print_array_val_float (OrcArray *array, int i, int j)
   }
 }
 
+int
+float_compare (OrcArray *array1, OrcArray *array2, int i, int j)
+{
+  void *ptr1 = ORC_PTR_OFFSET (array1->data,
+      i*array1->element_size + j*array1->stride);
+  void *ptr2 = ORC_PTR_OFFSET (array2->data,
+      i*array2->element_size + j*array2->stride);
+
+  switch (array1->element_size) {
+    case 4:
+      if (isnan(*(float *)ptr1) && isnan(*(float *)ptr2)) return TRUE;
+      if (*(float *)ptr1 == *(float *)ptr2) return TRUE;
+      if (fabs(*(float *)ptr1 - *(float *)ptr2) < MIN_NONDENORMAL) return TRUE;
+      return FALSE;
+    case 8:
+      /* FIXME */
+      return FALSE;
+  }
+  return FALSE;
+}
+
 OrcTestResult
 orc_test_compare_output (OrcProgram *program)
 {
@@ -617,12 +640,15 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
             if (flags & ORC_TEST_FLAGS_FLOAT) {
               a = print_array_val_float (dest_emul[l-ORC_VAR_D1], i, j);
               b = print_array_val_float (dest_exec[l-ORC_VAR_D1], i, j);
+              if (!float_compare (dest_emul[l-ORC_VAR_D1], dest_exec[l-ORC_VAR_D1], i, j) != 0) {
+                line_bad = TRUE;
+              }
             } else {
               a = print_array_val_hex (dest_emul[l-ORC_VAR_D1], i, j);
               b = print_array_val_hex (dest_exec[l-ORC_VAR_D1], i, j);
-            }
-            if (a != b) {
-              line_bad = TRUE;
+              if (a != b) {
+                line_bad = TRUE;
+              }
             }
           }
         }
