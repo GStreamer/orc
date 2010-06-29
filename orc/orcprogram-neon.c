@@ -27,6 +27,7 @@ void orc_compiler_neon_assemble (OrcCompiler *compiler);
 void orc_compiler_rewrite_vars (OrcCompiler *compiler);
 void orc_compiler_dump (OrcCompiler *compiler);
 void orc_neon_save_accumulators (OrcCompiler *compiler);
+void neon_add_strides (OrcCompiler *compiler);
 
 
 void
@@ -330,14 +331,14 @@ orc_neon_load_alignment_masks (OrcCompiler *compiler)
             code |= ((var->mask_alloc>>4)&0x1) << 22;
             orc_arm_emit (compiler, code);
 
-            orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, 8+b);
+            orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, 9+b);
             for(j=0;j<8;j++){
               ORC_ASM_CODE(compiler, "  .word 0x%02x%02x%02x%02x\n", j+3, j+2, j+1, j+0);
               orc_arm_emit (compiler, ((j+0)<<0) | ((j+1)<<8) | ((j+2)<<16) | ((j+3)<<24));
               ORC_ASM_CODE(compiler, "  .word 0x%02x%02x%02x%02x\n", j+7, j+6, j+5, j+4);
               orc_arm_emit (compiler, ((j+4)<<0) | ((j+5)<<8) | ((j+6)<<16) | ((j+7)<<24));
             }
-            orc_arm_emit_label (compiler, 8+b);
+            orc_arm_emit_label (compiler, 9+b);
             b++;
 
           }
@@ -539,6 +540,21 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
 
   orc_neon_emit_prologue (compiler);
 
+  if (compiler->program->is_2d) {
+    if (compiler->program->constant_m > 0) {
+      orc_arm_emit_load_imm (compiler, ORC_ARM_A3, compiler->program->constant_m);
+      orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+          (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]));
+    } else {
+      orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+          (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A1]));
+      orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+          (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]));
+    }
+
+    orc_arm_emit_label (compiler, 8);
+  }
+
   if (compiler->loop_shift > 0) {
     int align_shift = 3;
 
@@ -652,6 +668,18 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
     orc_arm_emit_label (compiler, 5);
 
     compiler->loop_shift = save_loop_shift;
+  }
+
+  if (compiler->program->is_2d) {
+    neon_add_strides (compiler);
+
+    orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A2]));
+    orc_arm_emit_sub_imm (compiler, ORC_ARM_A3, ORC_ARM_A3, 1);
+    orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]));
+    orc_arm_emit_cmp_imm (compiler, ORC_ARM_A3, 0);
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, 8);
   }
 
   orc_neon_save_accumulators (compiler);
@@ -845,6 +873,39 @@ orc_neon_save_accumulators (OrcCompiler *compiler)
 
         break;
       default:
+        break;
+    }
+  }
+}
+
+void
+neon_add_strides (OrcCompiler *compiler)
+{
+  int i;
+
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    if (compiler->vars[i].name == NULL) continue;
+    switch (compiler->vars[i].vartype) {
+      case ORC_VAR_TYPE_CONST:
+        break;
+      case ORC_VAR_TYPE_PARAM:
+        break;
+      case ORC_VAR_TYPE_SRC:
+      case ORC_VAR_TYPE_DEST:
+        orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
+        orc_arm_emit_load_reg (compiler, ORC_ARM_A2, compiler->exec_reg,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[i]));
+        orc_arm_emit_add (compiler, ORC_ARM_A3, ORC_ARM_A3, ORC_ARM_A2);
+        orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
+        break;
+      case ORC_VAR_TYPE_ACCUMULATOR:
+        break;
+      case ORC_VAR_TYPE_TEMP:
+        break;
+      default:
+        ORC_COMPILER_ERROR(compiler,"bad vartype");
         break;
     }
   }
