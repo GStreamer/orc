@@ -657,9 +657,10 @@ name (OrcOpcodeExecutor *ex, void *user) \
 }
 
 #define MIN_NONDENORMAL (1.1754944909521339405e-38)
+#define FLUSH_DENORMALS
 #ifdef FLUSH_DENORMALS
 #define ORC_DENORMAL(x) \
-  (((x) > -MIN_NONDENORMAL && (x) < MIN_NONDENORMAL) ? 0 : (x))
+  (((x) > -MIN_NONDENORMAL && (x) < MIN_NONDENORMAL) ? ((x)<0 ? (-0.0f) : (0.0f)) : (x))
 #else
 #define ORC_DENORMAL(x) (x)
 #endif
@@ -669,12 +670,19 @@ BINARY_F(subf, ORC_DENORMAL(ORC_DENORMAL(a) - ORC_DENORMAL(b)))
 BINARY_F(mulf, ORC_DENORMAL(ORC_DENORMAL(a) * ORC_DENORMAL(b)))
 BINARY_F(divf, ORC_DENORMAL(ORC_DENORMAL(a) / ORC_DENORMAL(b)))
 UNARY_F(orc_sqrtf, sqrt(ORC_DENORMAL(a)) )
+#if 1
+/* NEON style maxf/minf */
 BINARY_F(maxf, isnan(a) ? a : isnan(b) ? b : (a>b) ? ORC_DENORMAL(a) : ORC_DENORMAL(b))
 BINARY_F(minf, isnan(a) ? a : isnan(b) ? b : (a<b) ? ORC_DENORMAL(a) : ORC_DENORMAL(b))
+#else
+/* SSE style maxf/minf */
+BINARY_F(maxf, (a>b) ? ORC_DENORMAL(a) : ORC_DENORMAL(b))
+BINARY_F(minf, (a<b) ? ORC_DENORMAL(a) : ORC_DENORMAL(b))
+#endif
 
-BINARY_FL(cmpeqf, (a == b) ? (~0) : 0)
-BINARY_FL(cmpltf, ((a < b) && (b > a)) ? (~0) : 0)
-BINARY_FL(cmplef, ((a <= b) && (b >= a)) ? (~0) : 0)
+BINARY_FL(cmpeqf, (ORC_DENORMAL(a) == ORC_DENORMAL(b)) ? (~0) : 0)
+BINARY_FL(cmpltf, ((ORC_DENORMAL(a) < ORC_DENORMAL(b)) && (ORC_DENORMAL(b) > ORC_DENORMAL(a))) ? (~0) : 0)
+BINARY_FL(cmplef, ((ORC_DENORMAL(a) <= ORC_DENORMAL(b)) && (ORC_DENORMAL(b) >= ORC_DENORMAL(a))) ? (~0) : 0)
 
 static void
 convfl (OrcOpcodeExecutor *ex, void *user)
