@@ -275,3 +275,60 @@ void orc_x86_emit_mov_sse_reg (OrcCompiler *compiler, int reg1, int reg2)
   orc_x86_emit_modrm_reg (compiler, reg2, reg1);
 }
 
+void
+orc_sse_set_mxcsr (OrcCompiler *compiler)
+{
+  int value;
+
+  ORC_ASM_CODE(compiler,"  stmxcsr %d(%%%s)\n",
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A4]),
+      orc_x86_get_regname(compiler->exec_reg));
+  *compiler->codeptr++ = 0x0f;
+  *compiler->codeptr++ = 0xae;
+  orc_x86_emit_modrm_memoffset (compiler, 3,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A4]), compiler->exec_reg);
+
+  orc_x86_emit_mov_memoffset_reg (compiler, 4,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A4]),
+      compiler->exec_reg, compiler->gp_tmpreg);
+
+  orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_C1]),
+      compiler->exec_reg);
+
+  value = 0x8040;
+  ORC_ASM_CODE(compiler,"  orl $%d, %%%s\n", value,
+      orc_x86_get_regname(compiler->gp_tmpreg));
+  orc_x86_emit_rex(compiler, 4, 0, 0, compiler->gp_tmpreg);
+  *compiler->codeptr++ = 0x81;
+  orc_x86_emit_modrm_reg (compiler, compiler->gp_tmpreg, 1);
+  *compiler->codeptr++ = (value & 0xff);
+  *compiler->codeptr++ = ((value>>8) & 0xff);
+  *compiler->codeptr++ = ((value>>16) & 0xff);
+  *compiler->codeptr++ = ((value>>24) & 0xff);
+
+  orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A4]),
+      compiler->exec_reg);
+
+  ORC_ASM_CODE(compiler,"  ldmxcsr %d(%%%s)\n",
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A4]),
+      orc_x86_get_regname(compiler->exec_reg));
+  *compiler->codeptr++ = 0x0f;
+  *compiler->codeptr++ = 0xae;
+  orc_x86_emit_modrm_memoffset (compiler, 2,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A4]), compiler->exec_reg);
+}
+
+void
+orc_sse_restore_mxcsr (OrcCompiler *compiler)
+{
+  ORC_ASM_CODE(compiler,"  ldmxcsr %d(%%%s)\n",
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_C1]),
+      orc_x86_get_regname(compiler->exec_reg));
+  *compiler->codeptr++ = 0x0f;
+  *compiler->codeptr++ = 0xae;
+  orc_x86_emit_modrm_memoffset (compiler, 2,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_C1]), compiler->exec_reg);
+}
+

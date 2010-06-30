@@ -897,6 +897,7 @@ orc_x86_emit_prologue (OrcCompiler *compiler)
       orc_x86_emit_push (compiler, 4, X86_EBX);
     }
   }
+
 }
 
 void

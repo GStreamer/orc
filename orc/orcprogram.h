@@ -74,7 +74,9 @@ typedef void (*OrcExecutorFunc)(OrcExecutor *ex);
 enum {
   ORC_TARGET_C_C99 = (1<<0),
   ORC_TARGET_C_BARE = (1<<1),
-  ORC_TARGET_C_NOEXEC = (1<<2)
+  ORC_TARGET_C_NOEXEC = (1<<2),
+  ORC_TARGET_FAST_NAN = (1<<30),
+  ORC_TARGET_FAST_DENORMAL = (1<<31)
 };
 
 enum {

@@ -43,6 +43,7 @@ void orc_x86_emit_add_reg_memoffset (OrcCompiler *compiler, int size, int reg1, 
 void orc_x86_emit_and_imm_memoffset (OrcCompiler *compiler, int size, int value, int offset, int reg);
 void orc_x86_emit_add_imm_reg (OrcCompiler *compiler, int size, int value, int reg, orc_bool record);
 void orc_x86_emit_and_imm_reg (OrcCompiler *compiler, int size, int value, int reg);
+void orc_x86_emit_or_imm_reg (OrcCompiler *compiler, int size, int value, int reg);
 void orc_x86_emit_add_reg_reg (OrcCompiler *compiler, int size, int reg1, int reg2);
 void orc_x86_emit_sub_reg_reg (OrcCompiler *compiler, int size, int reg1, int reg2);
 void orc_x86_emit_imul_memoffset_reg (OrcCompiler *compiler, int size,

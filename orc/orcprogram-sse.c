@@ -593,6 +593,8 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
 
   orc_x86_emit_prologue (compiler);
 
+  orc_sse_set_mxcsr (compiler);
+
   sse_load_constants_outer (compiler);
 
   if (compiler->program->is_2d) {
@@ -746,6 +748,7 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
 
   sse_save_accumulators (compiler);
 
+  orc_sse_restore_mxcsr (compiler);
   orc_x86_emit_epilogue (compiler);
 
   orc_x86_do_fixups (compiler);

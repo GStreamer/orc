@@ -955,9 +955,53 @@ BINARY_F(addf, "addps", 0x58)
 BINARY_F(subf, "subps", 0x5c)
 BINARY_F(mulf, "mulps", 0x59)
 BINARY_F(divf, "divps", 0x5e)
-BINARY_F(maxf, "maxps", 0x5f)
-BINARY_F(minf, "minps", 0x5d)
 UNARY_F(sqrtf, "sqrtps", 0x51)
+
+static void
+sse_rule_minf (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  if (p->target_flags & ORC_TARGET_FAST_NAN) {
+    orc_sse_emit_0f (p, "minps", 0x5d,
+        p->vars[insn->src_args[1]].alloc,
+        p->vars[insn->dest_args[0]].alloc);
+  } else {
+    orc_sse_emit_movdqa (p,
+        p->vars[insn->src_args[1]].alloc,
+        p->tmpreg);
+    orc_sse_emit_0f (p, "minps", 0x5d,
+        p->vars[insn->dest_args[0]].alloc,
+        p->tmpreg);
+    orc_sse_emit_0f (p, "minps", 0x5d,
+        p->vars[insn->src_args[1]].alloc,
+        p->vars[insn->dest_args[0]].alloc);
+    orc_sse_emit_por (p,
+        p->tmpreg,
+        p->vars[insn->dest_args[0]].alloc);
+  }
+}
+
+static void
+sse_rule_maxf (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  if (p->target_flags & ORC_TARGET_FAST_NAN) {
+    orc_sse_emit_0f (p, "maxps", 0x5f,
+        p->vars[insn->src_args[1]].alloc,
+        p->vars[insn->dest_args[0]].alloc);
+  } else {
+    orc_sse_emit_movdqa (p,
+        p->vars[insn->src_args[1]].alloc,
+        p->tmpreg);
+    orc_sse_emit_0f (p, "maxps", 0x5f,
+        p->vars[insn->dest_args[0]].alloc,
+        p->tmpreg);
+    orc_sse_emit_0f (p, "maxps", 0x5f,
+        p->vars[insn->src_args[1]].alloc,
+        p->vars[insn->dest_args[0]].alloc);
+    orc_sse_emit_por (p,
+        p->tmpreg,
+        p->vars[insn->dest_args[0]].alloc);
+  }
+}
 
 static void
 sse_rule_cmpeqf (OrcCompiler *p, void *user, OrcInstruction *insn)
