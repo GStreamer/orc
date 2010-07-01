@@ -41,6 +41,9 @@
 #include <signal.h>
 #include <sys/time.h>
 #include <time.h>
+#if defined(__linux__)
+#include <linux/auxvec.h>
+#endif
 
 /***** arm *****/
 
@@ -54,6 +57,44 @@ orc_profile_stamp_xscale(void)
       "  mrc p14, 0, %0, c1, c0, 0 \n"
       : "=r" (ts));
   return ts;
+}
+#endif
+
+#if defined(__linux__)
+static unsigned long
+orc_check_neon_proc_auxv (void)
+{
+  unsigned long flags = 0;
+  unsigned long aux[2];
+  ssize_t count;
+  int fd;
+
+  fd = open("/proc/self/auxv", O_RDONLY);
+  if (fd < 0) {
+    return 0;
+  }
+
+  while (1) {
+    count = read(fd, aux, sizeof(aux));
+    if (count < sizeof(aux)) {
+      break;
+    }
+
+    if (aux[0] == AT_HWCAP) {
+      //if (aux[1] & 64) flags |= ORC_TARGET_NEON_VFP;
+      //if (aux[1] & 512) flags |= ORC_TARGET_NEON_IWMMXT;
+      if (aux[1] & 4096) flags |= ORC_TARGET_NEON_NEON;
+      ORC_INFO("arm hwcap %08x", aux[1]);
+    } if (aux[0] == AT_PLATFORM) {
+      ORC_INFO("arm platform %s", (char *)aux[1]);
+    } else if (aux[0] == AT_NULL) {
+      break;
+    }
+  }
+
+  close(fd);
+
+  return flags;
 }
 #endif
 
@@ -120,9 +161,14 @@ get_proc_cpuinfo (void)
 }
 #endif
 
-void
-orc_cpu_detect_arch(void)
+unsigned long
+orc_arm_get_cpu_flags (void)
 {
+  unsigned long neon_flags = 0;
+
+#ifdef __linux__
+  neon_flags = orc_check_neon_proc_auxv ();
+#endif
 #ifdef unused
 #ifdef __linux__
   int arm_implementer = 0;
@@ -163,6 +209,11 @@ orc_cpu_detect_arch(void)
   free (cpuinfo);
 #endif
 #endif
+  if (orc_compiler_flag_check ("-neon")) {
+    neon_flags &= ~ORC_TARGET_NEON_NEON;
+  }
+
+  return neon_flags;
 }
 #endif
 

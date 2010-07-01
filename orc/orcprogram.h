@@ -84,7 +84,8 @@ enum {
 };
 
 enum {
-  ORC_TARGET_NEON_CLEAN_COMPILE = (1<<0)
+  ORC_TARGET_NEON_CLEAN_COMPILE = (1<<0),
+  ORC_TARGET_NEON_NEON = (1<<1)
 };
 
 typedef enum {

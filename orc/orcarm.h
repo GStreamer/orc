@@ -68,6 +68,8 @@ typedef enum {
   ORC_ARM_ROR
 } OrcArmShift;
 
+unsigned long orc_arm_get_cpu_flags (void);
+
 void orc_arm_emit (OrcCompiler *compiler, orc_uint32 insn);
 void orc_arm_emit_bx_lr (OrcCompiler *compiler);
 const char * orc_arm_reg_name (int reg);

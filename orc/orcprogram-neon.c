@@ -102,6 +102,13 @@ static OrcTarget neon_target = {
 void
 orc_neon_init (void)
 {
+#if defined(HAVE_ARM)
+  if (!(orc_arm_get_cpu_flags () & ORC_TARGET_NEON_NEON)) {
+    ORC_INFO("marking neon backend non-executable");
+    neon_target.executable = FALSE;
+  }
+#endif
+
   orc_target_register (&neon_target);
 
   orc_compiler_neon_register_rules (&neon_target);
@@ -110,7 +117,7 @@ orc_neon_init (void)
 unsigned int
 orc_compiler_neon_get_default_flags (void)
 {
-  return 0;
+  return ORC_TARGET_NEON_NEON;
 }
 
 void
