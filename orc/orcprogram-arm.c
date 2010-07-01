@@ -146,12 +146,13 @@ orc_arm_load_constants (OrcCompiler *compiler)
     if (compiler->vars[i].name == NULL) continue;
     switch (compiler->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:
-        //orc_arm_emit_loadiw (compiler, compiler->vars[i].alloc,
-        //    (int)compiler->vars[i].value);
+        orc_arm_emit_load_imm (compiler, compiler->vars[i].alloc,
+            (int)compiler->vars[i].value);
         break;
       case ORC_VAR_TYPE_PARAM:
-        //orc_arm_emit_loadw (compiler, compiler->vars[i].alloc,
-        //    (int)ORC_STRUCT_OFFSET(OrcExecutor, params[i]), compiler->exec_reg);
+        orc_arm_loadw (compiler, compiler->vars[i].alloc,
+            compiler->exec_reg,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[i]));
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
@@ -180,7 +181,8 @@ orc_arm_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
     ptr_reg = var->ptr_register;
   }
   switch (var->size << compiler->loop_shift) {
-    //case 1:
+    case 1:
+      orc_arm_loadb (compiler, var->alloc, ptr_reg, 0);
       //orc_arm_emit_mov_memoffset_reg (compiler, 1, 0, ptr_reg, X86_ECX);
       //orc_arm_emit_mov_reg_arm (compiler, X86_ECX, var->alloc);
       break;
@@ -189,7 +191,8 @@ orc_arm_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
       //orc_arm_emit_mov_memoffset_reg (compiler, 2, 0, ptr_reg, X86_ECX);
       //orc_arm_emit_mov_reg_arm (compiler, X86_ECX, var->alloc);
       break;
-    //case 4:
+    case 4:
+      orc_arm_loadl (compiler, var->alloc, ptr_reg, 0);
       //orc_arm_emit_mov_memoffset_arm (compiler, 4, 0, ptr_reg, var->alloc);
       break;
     //case 8:
@@ -216,6 +219,7 @@ orc_arm_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
   }
   switch (var->size << compiler->loop_shift) {
     case 1:
+      orc_arm_storeb (compiler, ptr_reg, 0, var->alloc);
       //orc_arm_emit_mov_orc_arm_reg (compiler, var->alloc, X86_ECX);
       //orc_arm_emit_mov_reg_memoffset (compiler, 1, X86_ECX, 0, ptr_reg);
       break;
@@ -225,6 +229,7 @@ orc_arm_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
       //orc_arm_emit_mov_reg_memoffset (compiler, 2, X86_ECX, 0, ptr_reg);
       break;
     case 4:
+      orc_arm_storel (compiler, ptr_reg, 0, var->alloc);
       //orc_arm_emit_mov_orc_arm_memoffset (compiler, 4, var->alloc, 0, ptr_reg,
       //    var->is_aligned, var->is_uncached);
       break;

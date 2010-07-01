@@ -79,6 +79,74 @@ arm_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 } while (0)
 
 void
+orc_arm_loadb (OrcCompiler *compiler, int dest, int src1, int offset)
+{
+  orc_uint32 code;
+
+  code = 0xe5d00000;
+  code |= (src1&0xf) << 16;
+  code |= (dest&0xf) << 12;
+  code |= (offset&0xf0) << 4;
+  code |= offset&0x0f;
+
+  ORC_ASM_CODE(compiler,"  ldrb %s, [%s, #%d]\n",
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1), offset);
+  orc_arm_emit (compiler, code);
+}
+
+void
+orc_arm_storeb (OrcCompiler *compiler, int dest, int offset, int src1)
+{
+  orc_uint32 code;
+
+  code = 0xe5c00000;
+  code |= (dest&0xf) << 16;
+  code |= (src1&0xf) << 12;
+  code |= (offset&0xf0) << 4;
+  code |= offset&0x0f;
+
+  ORC_ASM_CODE(compiler,"  strb %s, [%s, #%d]\n",
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (dest), offset);
+  orc_arm_emit (compiler, code);
+}
+
+void
+orc_arm_loadl (OrcCompiler *compiler, int dest, int src1, int offset)
+{
+  orc_uint32 code;
+
+  code = 0xe5900000;
+  code |= (src1&0xf) << 16;
+  code |= (dest&0xf) << 12;
+  code |= (offset&0xf0) << 4;
+  code |= offset&0x0f;
+
+  ORC_ASM_CODE(compiler,"  ldr %s, [%s, #%d]\n",
+      orc_arm_reg_name (dest),
+      orc_arm_reg_name (src1), offset);
+  orc_arm_emit (compiler, code);
+}
+
+void
+orc_arm_storel (OrcCompiler *compiler, int dest, int offset, int src1)
+{
+  orc_uint32 code;
+
+  code = 0xe5800000;
+  code |= (dest&0xf) << 16;
+  code |= (src1&0xf) << 12;
+  code |= (offset&0xf0) << 4;
+  code |= offset&0x0f;
+
+  ORC_ASM_CODE(compiler,"  str %s, [%s, #%d]\n",
+      orc_arm_reg_name (src1),
+      orc_arm_reg_name (dest), offset);
+  orc_arm_emit (compiler, code);
+}
+
+void
 orc_arm_loadw (OrcCompiler *compiler, int dest, int src1, int offset)
 {
   orc_uint32 code;
