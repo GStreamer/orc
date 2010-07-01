@@ -313,7 +313,7 @@ orc_compiler_orc_arm_assemble (OrcCompiler *compiler)
   orc_arm_emit_label (compiler, 3);
 
   if (compiler->program->is_2d) {
-    neon_add_strides (compiler);
+    arm_add_strides (compiler);
 
     orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A2]));
