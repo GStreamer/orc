@@ -115,7 +115,6 @@ orc_compiler_orc_arm_init (OrcCompiler *compiler)
   for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+9;i++){
     compiler->valid_regs[i] = 1;
   }
-  compiler->valid_regs[ORC_ARM_A1] = 0;
   //compiler->valid_regs[ORC_ARM_SB] = 0;
   compiler->valid_regs[ORC_ARM_IP] = 0;
   compiler->valid_regs[ORC_ARM_SP] = 0;
@@ -129,6 +128,12 @@ orc_compiler_orc_arm_init (OrcCompiler *compiler)
     compiler->alloc_regs[i] = 0;
     compiler->used_regs[i] = 0;
   }
+  compiler->exec_reg = ORC_ARM_A1;
+  compiler->valid_regs[compiler->exec_reg] = 0;
+  compiler->gp_tmpreg = ORC_ARM_A2;
+  compiler->valid_regs[compiler->gp_tmpreg] = 0;
+  compiler->tmpreg = ORC_ARM_A3;
+  compiler->valid_regs[compiler->tmpreg] = 0;
 
   compiler->loop_shift = 0;
 }

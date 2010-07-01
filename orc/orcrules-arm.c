@@ -35,18 +35,48 @@ arm_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 }
 
 /* multiplies */
-#define orc_arm_smulxy(cond,x,y,Rd,Rm,Rs) (0x01600080|((cond)<<28)|((Rd)<<16)|((Rs)<<8)|((y)<<6)|((x)<<5)|(Rm))
-#define orc_arm_emit_smulbb(p,cond,Rd,Rm,Rs) orc_arm_emit (p, orc_arm_smulxy (cond,0,0,Rd,Rm,Rs))
-#define orc_arm_emit_smulbt(p,cond,Rd,Rm,Rs) orc_arm_emit (p, orc_arm_smulxy (cond,0,1,Rd,Rm,Rs))
-#define orc_arm_emit_smultb(p,cond,Rd,Rm,Rs) orc_arm_emit (p, orc_arm_smulxy (cond,1,0,Rd,Rm,Rs))
-#define orc_arm_emit_smultt(p,cond,Rd,Rm,Rs) orc_arm_emit (p, orc_arm_smulxy (cond,1,1,Rd,Rm,Rs))
+#define orc_arm_smulxy(cond,x,y,Rd,Rm,Rs) (0x01600080|((cond)<<28)|(((Rd)&15)<<16)|(((Rs)&15)<<8)|((y)<<6)|((x)<<5)|((Rm)&15))
+#define orc_arm_emit_smulbb(p,cond,Rd,Rm,Rs) do { \
+  ORC_ASM_CODE (p, "smulbb %s, %s, %s\n", orc_arm_reg_name (Rd), \
+      orc_arm_reg_name (Rm), orc_arm_reg_name(Rs)); \
+  orc_arm_emit (p, orc_arm_smulxy (cond,0,0,Rd,Rm,Rs)); \
+} while (0)
+#define orc_arm_emit_smulbt(p,cond,Rd,Rm,Rs) do { \
+  ORC_ASM_CODE (p, "smulbt %s, %s, %s\n", orc_arm_reg_name (Rd), \
+      orc_arm_reg_name (Rm), orc_arm_reg_name(Rs)); \
+  orc_arm_emit (p, orc_arm_smulxy (cond,0,1,Rd,Rm,Rs)); \
+} while (0)
+#define orc_arm_emit_smultb(p,cond,Rd,Rm,Rs) do { \
+  ORC_ASM_CODE (p, "smultb %s, %s, %s\n", orc_arm_reg_name (Rd), \
+      orc_arm_reg_name (Rm), orc_arm_reg_name(Rs)); \
+  orc_arm_emit (p, orc_arm_smulxy (cond,1,0,Rd,Rm,Rs)); \
+} while (0)
+#define orc_arm_emit_smultt(p,cond,Rd,Rm,Rs) do { \
+  ORC_ASM_CODE (p, "smultt %s, %s, %s\n", orc_arm_reg_name (Rd), \
+      orc_arm_reg_name (Rm), orc_arm_reg_name(Rs)); \
+  orc_arm_emit (p, orc_arm_smulxy (cond,1,1,Rd,Rm,Rs)); \
+} while (0)
 
-#define orc_arm_mul(cond,S,Rd,Rm,Rs) (0x00000090|((cond)<<28)|((S)<<20)|((Rd)<<16)|((Rs)<<8)|(Rm))
-#define orc_arm_emit_mul(p,cond,S,Rd,Rm,Rs) orc_arm_emit (p, orc_arm_mul (cond,S,Rd,Rm,Rs))
+#define orc_arm_mul(cond,S,Rd,Rm,Rs) (0x00000090|((cond)<<28)|((S)<<20)|(((Rd)&15)<<16)|(((Rs)&15)<<8)|((Rm)&15))
+#define orc_arm_emit_mul(p,cond,S,Rd,Rm,Rs) do { \
+  ORC_ASM_CODE (p, "mul %s, %s, %s\n", orc_arm_reg_name (Rd), \
+      orc_arm_reg_name (Rm), orc_arm_reg_name(Rs)); \
+  orc_arm_emit (p, orc_arm_mul (cond,S,Rd,Rm,Rs)); \
+} while (0)
 
-#define orc_arm_mull(op,cond,S,RdH,RdL,Rm,Rs) (op|((cond)<<28)|((S)<<20)|((RdH)<<16)|((RdL)<<12)|((Rs)<<8)|(Rm))
-#define orc_arm_emit_smull(p,cond,S,RdL,RdH,Rm,Rs) orc_arm_emit(p,orc_arm_mull (0x00c00090,cond,S,RdH,RdL,Rm,Rs))
-#define orc_arm_emit_umull(p,cond,S,RdL,RdH,Rm,Rs) orc_arm_emit(p,orc_arm_mull (0x00800090,cond,S,RdH,RdL,Rm,Rs))
+#define orc_arm_mull(op,cond,S,RdH,RdL,Rm,Rs) (op|((cond)<<28)|((S)<<20)|(((RdH)&15)<<16)|(((RdL)&15)<<12)|(((Rs)&15)<<8)|((Rm)&15))
+#define orc_arm_emit_smull(p,cond,S,RdL,RdH,Rm,Rs) do { \
+  ORC_ASM_CODE (p, "mull %s, %s, %s, %s\n", orc_arm_reg_name (RdH), \
+      orc_arm_reg_name (RdL), \
+      orc_arm_reg_name (Rm), orc_arm_reg_name(Rs)); \
+  orc_arm_emit(p,orc_arm_mull (0x00c00090,cond,S,RdH,RdL,Rm,Rs)); \
+} while (0)
+#define orc_arm_emit_umull(p,cond,S,RdL,RdH,Rm,Rs) do { \
+  ORC_ASM_CODE (p, "umull %s, %s, %s, %s\n", orc_arm_reg_name (RdH), \
+      orc_arm_reg_name (RdL), \
+      orc_arm_reg_name (Rm), orc_arm_reg_name(Rs)); \
+  orc_arm_emit(p,orc_arm_mull (0x00800090,cond,S,RdH,RdL,Rm,Rs)); \
+} while (0)
 
 void
 orc_arm_loadw (OrcCompiler *compiler, int dest, int src1, int offset)
@@ -517,7 +547,7 @@ arm_rule_shrsX (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int dest = ORC_DEST_ARG (p, insn, 0);
   int mask = p->tmpreg;
-  int tmp = ORC_ARM_IP;
+  int tmp = ORC_ARM_V8;
   int src2type = ORC_SRC_TYPE (p, insn, 1);
   int size = ORC_PTR_TO_INT(user);
   int loop = 4 / size; /* number of items in one register */

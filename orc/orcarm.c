@@ -389,19 +389,19 @@ orc_arm_emit_cmp_imm (OrcCompiler *compiler, int src1, int value)
 /*    1
  *  1 0 9 8 7 6 5 4 3 2 1 0
  * +-+-+-+-+-+-+-+-+-+-+-+-+
- * |    Si   | St  |0| Rm  |
+ * |    Si   | St|0|   Rm  |
  * +-+-+-+-+-+-+-+-+-+-+-+-+
  */
-#define arm_so_rsi(Si,St,Rm)   ((((Si)&31)<<7)|(((St)&7)<<5)|((Rm)&7))
+#define arm_so_rsi(Si,St,Rm)   ((((Si)&31)<<7)|(((St)&3)<<5)|((Rm)&15))
 #define arm_so_rrx(Rm)         arm_so_rsi(0,ORC_ARM_ROR,Rm)
 #define arm_so_r(Rm)           ((Rm)&15)
 /*    1
  *  1 0 9 8 7 6 5 4 3 2 1 0
  * +-+-+-+-+-+-+-+-+-+-+-+-+
- * |  Rs   |0| St  |1| Rm  |
+ * |  Rs   |0| St|1|   Rm  |
  * +-+-+-+-+-+-+-+-+-+-+-+-+
  */
-#define arm_so_rsr(Rs,St,Rm)   (0x008|(((Rs)&15)<<8)|(((St)&7)<<5)|((Rm)&7))
+#define arm_so_rsr(Rs,St,Rm)   (0x010|(((Rs)&15)<<8)|(((St)&3)<<5)|((Rm)&15))
 
 /* data processing instructions */
 /*    3   2 2 2 2 2     2 2 1     1 1     1   1
@@ -523,7 +523,7 @@ orc_arm_emit_dp (OrcCompiler *p, int type, OrcArmCond cond, OrcArmDP opcode,
  * | cond  |      mode     |   Rn  |  Rd   |0 0 0 0|  op   |  Rm   |
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
-#define arm_code_par(cond,mode,Rn,Rd,op,Rm) (((cond)<<28)|((mode)<<20)|((Rn)<<16)|((Rd)<<12)|((op)<<4)|(Rm))
+#define arm_code_par(cond,mode,Rn,Rd,op,Rm) (((cond)<<28)|((mode)<<20)|(((Rn)&0xf)<<16)|(((Rd)&0xf)<<12)|((op)<<4)|((Rm)&0xf)|0xf00)
 
 void
 orc_arm_emit_par (OrcCompiler *p, int op, int mode, OrcArmCond cond,
@@ -559,7 +559,7 @@ orc_arm_emit_par (OrcCompiler *p, int op, int mode, OrcArmCond cond,
  * | cond  |0 1 1 0 0 0 0 0|   Rn  |  Rd   |rot|0 0|0 1 1 1|  Rm   |
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
-#define arm_code_xt(op,cond,Rn,Rd,r8,Rm) (op|((cond)<<28)|((Rn)<<16)|((Rd)<<12)|(((r8)&0x18)<<7)|(Rm))
+#define arm_code_xt(op,cond,Rn,Rd,r8,Rm) (op|((cond)<<28)|(((Rn)&0xf)<<16)|(((Rd)&0xf)<<12)|((((r8)&0xf)&0x18)<<7)|((Rm)&0xf))
 
 void
 orc_arm_emit_xt (OrcCompiler *p, int op, OrcArmCond cond,
@@ -599,7 +599,7 @@ orc_arm_emit_xt (OrcCompiler *p, int op, OrcArmCond cond,
   orc_arm_emit (p, code);
 }
 
-#define arm_code_pkh(op,cond,Rn,Rd,sh,Rm) (op|((cond)<<28)|((Rn)<<16)|((Rd)<<12)|((sh)<<7)|(Rm))
+#define arm_code_pkh(op,cond,Rn,Rd,sh,Rm) (op|((cond)<<28)|(((Rn)&0xf)<<16)|(((Rd)&0xf)<<12)|((sh)<<7)|((Rm)&0xf))
 void
 orc_arm_emit_pkh (OrcCompiler *p, int op, OrcArmCond cond,
     int Rd, int Rn, int Rm, int sh)
@@ -657,7 +657,11 @@ orc_arm_emit_sat (OrcCompiler *p, int op, OrcArmCond cond,
   if (op < 2) {
     code = arm_code_sat (sat_opcodes[op], cond, sat, Rd, sh, asr, Rm);
   } else {
-    code = arm_code_par (cond, par_mode[op], sat, Rd, par_op[op], Rm);
+    if (op == 3) {
+      code = arm_code_par (cond, par_mode[op], sat, Rd, par_op[op], Rm);
+    } else {
+      code = arm_code_par (cond, par_mode[op], sat - 1, Rd, par_op[op], Rm);
+    }
   }
   ORC_ASM_CODE(p,"  %s%s %s, #%d, %s%s\n",
       sat_insn_names[op], orc_arm_cond_name(cond),
@@ -674,7 +678,7 @@ orc_arm_emit_rv (OrcCompiler *p, int op, OrcArmCond cond,
     int Rd, int Rm)
 {
   orc_uint32 code;
-  static const orc_uint32 rv_opcodes[] = { 0x06b00030, 0x06e000b0 };
+  static const orc_uint32 rv_opcodes[] = { 0x06b00030, 0x06bf0fb0 };
   static const char *rv_insn_names[] = { "rev", "rev16" };
 
   code = arm_code_rv (rv_opcodes[op], cond, Rd, Rm);

@@ -174,7 +174,7 @@ orc_test_gcc_compile_neon (OrcProgram *p)
   sprintf(dump_filename, "%s-dump.bin", base);
   sprintf(dump_dis_filename, "%s-dump.dis", base);
 
-  target = orc_target_get_by_name ("neon");
+  target = orc_target_get_by_name ("arm");
   flags = orc_target_get_default_flags (target);
   flags |= ORC_TARGET_NEON_CLEAN_COMPILE;
 
