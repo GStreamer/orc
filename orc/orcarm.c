@@ -544,6 +544,14 @@ orc_arm_emit_par (OrcCompiler *p, int op, int mode, OrcArmCond cond,
   };
 
   code = arm_code_par (cond, par_mode[mode], Rn, Rd, par_op[op], Rm);
+  if (op == 7) {
+    int tmp;
+    /* gas does something screwy here */
+    code &= ~0xf00;
+    tmp = Rn;
+    Rn = Rm;
+    Rm = tmp;
+  }
   ORC_ASM_CODE(p,"  %s%s%s %s, %s, %s\n",
       par_mode_names[mode], par_op_names[op], orc_arm_cond_name(cond),
       orc_arm_reg_name (Rd),
@@ -678,7 +686,7 @@ orc_arm_emit_rv (OrcCompiler *p, int op, OrcArmCond cond,
     int Rd, int Rm)
 {
   orc_uint32 code;
-  static const orc_uint32 rv_opcodes[] = { 0x06b00030, 0x06bf0fb0 };
+  static const orc_uint32 rv_opcodes[] = { 0x06bf0f30, 0x06bf0fb0 };
   static const char *rv_insn_names[] = { "rev", "rev16" };
 
   code = arm_code_rv (rv_opcodes[op], cond, Rd, Rm);

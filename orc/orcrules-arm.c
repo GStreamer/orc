@@ -64,18 +64,18 @@ arm_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
   orc_arm_emit (p, orc_arm_mul (cond,S,Rd,Rm,Rs)); \
 } while (0)
 
-#define orc_arm_mull(op,cond,S,RdH,RdL,Rm,Rs) (op|((cond)<<28)|((S)<<20)|(((RdH)&15)<<16)|(((RdL)&15)<<12)|(((Rs)&15)<<8)|((Rm)&15))
-#define orc_arm_emit_smull(p,cond,S,RdL,RdH,Rm,Rs) do { \
-  ORC_ASM_CODE (p, "mull %s, %s, %s, %s\n", orc_arm_reg_name (RdH), \
-      orc_arm_reg_name (RdL), \
-      orc_arm_reg_name (Rm), orc_arm_reg_name(Rs)); \
-  orc_arm_emit(p,orc_arm_mull (0x00c00090,cond,S,RdH,RdL,Rm,Rs)); \
+#define orc_arm_mull(op,cond,S,RdL,RdH,Rn,Rm) (op|((cond)<<28)|((S)<<20)|(((Rn)&15)<<16)|(((RdL)&15)<<12)|(((RdH)&15)<<8)|((Rm)&15))
+#define orc_arm_emit_smull(p,cond,S,RdL,RdH,Rn,Rm) do { \
+  ORC_ASM_CODE (p, "smull %s, %s, %s, %s\n", orc_arm_reg_name (RdL), \
+      orc_arm_reg_name (RdH), \
+      orc_arm_reg_name (Rn), orc_arm_reg_name(Rm)); \
+  orc_arm_emit(p,orc_arm_mull (0x00c00090,cond,S,RdL,Rm,RdH,Rn)); \
 } while (0)
-#define orc_arm_emit_umull(p,cond,S,RdL,RdH,Rm,Rs) do { \
-  ORC_ASM_CODE (p, "umull %s, %s, %s, %s\n", orc_arm_reg_name (RdH), \
-      orc_arm_reg_name (RdL), \
-      orc_arm_reg_name (Rm), orc_arm_reg_name(Rs)); \
-  orc_arm_emit(p,orc_arm_mull (0x00800090,cond,S,RdH,RdL,Rm,Rs)); \
+#define orc_arm_emit_umull(p,cond,S,RdL,RdH,Rn,Rm) do { \
+  ORC_ASM_CODE (p, "umull %s, %s, %s, %s\n", orc_arm_reg_name (RdL), \
+      orc_arm_reg_name (RdH), \
+      orc_arm_reg_name (Rn), orc_arm_reg_name(Rm)); \
+  orc_arm_emit(p,orc_arm_mull (0x00800090,cond,S,RdL,RdH,Rn,Rm)); \
 } while (0)
 
 void
