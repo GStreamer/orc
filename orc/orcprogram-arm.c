@@ -381,7 +381,7 @@ orc_arm_emit_loop (OrcCompiler *compiler)
       int dest = ORC_DEST_ARG (compiler, insn, 0);
 
       if (dest != src) {
-        orc_arm_emit_mov_r (compiler, ORC_ARM_COND_AL, 0, src, dest);
+        orc_arm_emit_mov_r (compiler, ORC_ARM_COND_AL, 0, dest, src);
       }
       rule->emit (compiler, rule->emit_user, insn);
     } else {

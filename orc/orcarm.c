@@ -350,6 +350,7 @@ orc_arm_emit_store_reg (OrcCompiler *compiler, int src1, int dest, int offset)
 void
 orc_arm_emit_mov (OrcCompiler *compiler, int dest, int src)
 {
+  if (dest == src) return;
   orc_arm_emit_mov_r(compiler, ORC_ARM_COND_AL, 0, dest, src);
 }
 
