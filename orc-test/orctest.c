@@ -891,7 +891,7 @@ orc_test_performance (OrcProgram *program, int flags)
   ORC_DEBUG ("done running");
 
   orc_profile_get_ave_std (&prof, &ave, &std);
-  printf("%g %g\n", (ave - 108)/(n*m), std/(n*m));
+  printf("%g %g\n", ave/(n*m), std/(n*m));
 
   for(i=0;i<4;i++){
     if (dest_exec[i]) orc_array_free (dest_exec[i]);
