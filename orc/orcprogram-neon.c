@@ -175,16 +175,16 @@ orc_compiler_neon_init (OrcCompiler *compiler)
 
   switch (orc_program_get_max_array_size (compiler->program)) {
     case 1:
-      loop_shift = 3;
+      loop_shift = 4;
       break;
     case 2:
-      loop_shift = 2;
+      loop_shift = 3;
       break;
     case 4:
-      loop_shift = 1;
+      loop_shift = 2;
       break;
     case 8:
-      loop_shift = 0;
+      loop_shift = 1;
       break;
     default:
       ORC_ERROR("unhandled max var size %d",
