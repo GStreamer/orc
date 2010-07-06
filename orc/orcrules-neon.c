@@ -449,11 +449,11 @@ orc_neon_storeb (OrcCompiler *compiler, int dest, int update, int src1, int is_a
   int i;
 
   if (is_aligned && compiler->loop_shift == 3) {
-    ORC_ASM_CODE(compiler,"  vst1.64 %s, [%s]%s\n",
+    ORC_ASM_CODE(compiler,"  vst1.8 %s, [%s@64]%s\n",
         orc_neon_reg_name (src1),
         orc_arm_reg_name (dest),
         update ? "!" : "");
-    code = 0xf40007cd;
+    code = 0xf400071d;
     code |= (dest&0xf) << 16;
     code |= (src1&0xf) << 12;
     code |= ((src1>>4)&0x1) << 22;
@@ -483,11 +483,11 @@ orc_neon_storew (OrcCompiler *compiler, int dest, int update, int src1, int is_a
   int i;
 
   if (is_aligned && compiler->loop_shift == 2) {
-    ORC_ASM_CODE(compiler,"  vst1.64 %s, [%s]%s\n",
+    ORC_ASM_CODE(compiler,"  vst1.16 %s, [%s@64]%s\n",
         orc_neon_reg_name (src1),
         orc_arm_reg_name (dest),
         update ? "!" : "");
-    code = 0xf40007cd;
+    code = 0xf400075d;
     code |= (dest&0xf) << 16;
     code |= (src1&0xf) << 12;
     code |= ((src1>>4)&0x1) << 22;
@@ -517,11 +517,11 @@ orc_neon_storel (OrcCompiler *compiler, int dest, int update, int src1, int is_a
   int i;
 
   if (is_aligned && compiler->loop_shift == 2) {
-    ORC_ASM_CODE(compiler,"  vst1.64 %s, [%s]%s\n",
+    ORC_ASM_CODE(compiler,"  vst1.32 %s, [%s@64]%s\n",
         orc_neon_reg_name (src1),
         orc_arm_reg_name (dest),
         update ? "!" : "");
-    code = 0xf40007cd;
+    code = 0xf400079d;
     code |= (dest&0xf) << 16;
     code |= (src1&0xf) << 12;
     code |= ((src1>>4)&0x1) << 22;
