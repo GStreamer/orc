@@ -593,7 +593,7 @@ orc_neon_storel (OrcCompiler *compiler, int dest, int update, int src1, int is_a
   orc_uint32 code;
   int i;
 
-  if (is_aligned && compiler->loop_shift == 3) {
+  if (is_aligned && compiler->loop_shift == 2) {
     ORC_ASM_CODE(compiler,"  vst1.32 { %s, %s }, [%s,:128]%s\n",
         orc_neon_reg_name (src1),
         orc_neon_reg_name (src1 + 1),
@@ -605,7 +605,7 @@ orc_neon_storel (OrcCompiler *compiler, int dest, int update, int src1, int is_a
     code |= ((src1>>4)&0x1) << 22;
     code |= (!update) << 1;
     orc_arm_emit (compiler, code);
-  } else if (is_aligned && compiler->loop_shift == 2) {
+  } else if (is_aligned && compiler->loop_shift == 1) {
     ORC_ASM_CODE(compiler,"  vst1.32 %s, [%s,:64]%s\n",
         orc_neon_reg_name (src1),
         orc_arm_reg_name (dest),
