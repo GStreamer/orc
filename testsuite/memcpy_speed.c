@@ -25,6 +25,7 @@ main(int argc, char *argv[])
   double null;
   int i,j;
   double cpufreq;
+  int unalign;
   //const uint8_t zero = 0;
 
   orc_init ();
@@ -32,9 +33,15 @@ main(int argc, char *argv[])
   //cpufreq = 2333e6;
   cpufreq = 1;
 
+  if (argc > 1) {
+    unalign = strtoul (argv[1], NULL, 0);
+  } else {
+    unalign = 0;
+  }
+
   s = malloc(1024*1024*64+1024);
   d = malloc(1024*1024*64+1024);
-  src = ORC_PTR_OFFSET(ALIGN(s,128),0);
+  src = ORC_PTR_OFFSET(ALIGN(s,128),unalign);
   dest = ALIGN(d,128);
 
   orc_profile_init (&prof);
@@ -43,10 +50,11 @@ main(int argc, char *argv[])
     orc_profile_stop(&prof);
   }
   orc_profile_get_ave_std (&prof, &null, &std);
-
-  for(i=0;i<200;i++){
+  
+  for(i=0;i<160;i++){
     double x = i*0.1 + 6.0;
     int size = pow(2.0, x);
+
 
     orc_profile_init (&prof);
     for(j=0;j<10;j++){
@@ -65,14 +73,14 @@ main(int argc, char *argv[])
     orc_profile_get_ave_std (&prof, &ave, &std);
     orc_profile_get_ave_std (&prof_libc, &ave_libc, &std_libc);
 
-    ave -= null + 60;
-    ave_libc -= null + 35;
+    ave -= null + 65 + 20;
+    ave_libc -= null + 40;
 
     //printf("%d: %10.4g %10.4g %10.4g %10.4g (libc %10.4g)\n", i, ave, std,
     //    ave/(1<<i), cpufreq/(ave/(1<<i)),
     //    cpufreq/(ave_libc/(1<<i)));
     printf("%g %10.4g %10.4g\n", x,
-        cpufreq/(ave/(size)), cpufreq/(ave_libc/(size)));
+        cpufreq/(ave/size), cpufreq/(ave_libc/size));
     //printf("%g %10.4g %10.4g\n", x,
     //    32*(ave/(size)), 32*(ave_libc/(size)));
     fflush (stdout);
