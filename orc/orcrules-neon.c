@@ -245,6 +245,18 @@ orc_neon_load_vec_unaligned (OrcCompiler *compiler, OrcVariable *var,
 {
   orc_uint32 code;
 
+  ORC_ASM_CODE(compiler,"  vld1.8 %s, [%s]%s\n",
+      orc_neon_reg_name (var->alloc),
+      orc_arm_reg_name (var->ptr_register),
+      update ? "!" : "");
+  code = 0xf420070d;
+  code |= (var->ptr_register&0xf) << 16;
+  code |= ((var->alloc)&0xf) << 12;
+  code |= (((var->alloc)>>4)&0x1) << 22;
+  code |= (!update) << 1;
+  orc_arm_emit (compiler, code);
+#if 0
+  /* used with need_mask_regs */
   ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]%s\n",
       orc_neon_reg_name (var->aligned_data + 1),
       orc_arm_reg_name (var->ptr_register),
@@ -267,6 +279,7 @@ orc_neon_load_vec_unaligned (OrcCompiler *compiler, OrcVariable *var,
 //orc_neon_emit_mov (compiler, var->alloc, var->mask_alloc);
 
   orc_neon_emit_mov (compiler, var->aligned_data, var->aligned_data + 1);
+#endif
 }
 
 void
@@ -275,6 +288,23 @@ orc_neon_load_halfvec_unaligned (OrcCompiler *compiler, OrcVariable *var,
 {
   orc_uint32 code;
 
+  ORC_ASM_CODE(compiler,"  vld1.8 %s, [%s]\n",
+      orc_neon_reg_name (var->alloc),
+      orc_arm_reg_name (var->ptr_register));
+  code = 0xf420070d;
+  code |= (var->ptr_register&0xf) << 16;
+  code |= ((var->alloc)&0xf) << 12;
+  code |= (((var->alloc)>>4)&0x1) << 22;
+  //code |= (!update) << 1;
+  code |= (1) << 1;
+  orc_arm_emit (compiler, code);
+
+  if (update) {
+    orc_arm_emit_add_imm (compiler, var->ptr_register,
+        var->ptr_register, 4);
+  }
+#if 0
+  /* used with need_mask_regs */
   ORC_ASM_CODE(compiler,"  vld1.32 %s[1], [%s]%s\n",
       orc_neon_reg_name (var->aligned_data),
       orc_arm_reg_name (var->ptr_register),
@@ -296,6 +326,7 @@ orc_neon_load_halfvec_unaligned (OrcCompiler *compiler, OrcVariable *var,
 
   orc_neon_emit_unary (compiler, "vrev64.i32", 0xf3b80000,
       var->aligned_data, var->aligned_data);
+#endif
 }
 
 void

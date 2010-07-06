@@ -220,7 +220,9 @@ orc_compiler_neon_init (OrcCompiler *compiler)
     compiler->loop_shift = loop_shift;
   }
 
-  compiler->need_mask_regs = TRUE;
+  if (0) {
+    compiler->need_mask_regs = TRUE;
+  }
 }
 
 void
@@ -670,7 +672,11 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
   orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, 3);
 
-  orc_neon_load_alignment_masks (compiler);
+  if (0) {
+    /* Disable alignment masks for now.  It can easily take all available
+       registers. */
+    orc_neon_load_alignment_masks (compiler);
+  }
 
   orc_arm_emit_label (compiler, 2);
   orc_neon_emit_loop (compiler);
@@ -678,7 +684,9 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
   orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, 2);
 
-  orc_neon_restore_unalignment (compiler);
+  if (0) {
+    orc_neon_restore_unalignment (compiler);
+  }
 
   orc_arm_emit_label (compiler, 3);
 
