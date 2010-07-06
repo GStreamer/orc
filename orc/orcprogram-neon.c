@@ -220,6 +220,7 @@ orc_compiler_neon_init (OrcCompiler *compiler)
     compiler->loop_shift = loop_shift;
   }
 
+  compiler->unroll_shift = 1;
   if (0) {
     compiler->need_mask_regs = TRUE;
   }
@@ -566,6 +567,7 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   int align_var;
   int align_shift;
   int var_size_shift;
+  int i;
   
   align_var = get_align_var (compiler);
   var_size_shift = get_shift (compiler->vars[align_var].size);
@@ -679,8 +681,10 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   }
 
   orc_arm_emit_label (compiler, 2);
-  orc_neon_emit_loop (compiler);
   orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1);
+  for(i=0;i<(1<<compiler->unroll_shift);i++){
+    orc_neon_emit_loop (compiler);
+  }
   orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
   orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, 2);
 
@@ -693,6 +697,7 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
 
   if (compiler->loop_shift > 0) {
     int save_loop_shift = compiler->loop_shift;
+
     compiler->loop_shift = 0;
 
     compiler->vars[align_var].is_aligned = FALSE;
