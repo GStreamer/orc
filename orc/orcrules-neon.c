@@ -213,6 +213,30 @@ orc_neon_emit_mov_quad (OrcCompiler *compiler, int dest, int src)
 }
 
 void
+orc_neon_preload (OrcCompiler *compiler, OrcVariable *var, int write,
+    int offset)
+{
+  orc_uint32 code;
+
+  /* Don't use multiprocessing extensions */
+  write = FALSE;
+
+  ORC_ASM_CODE(compiler,"  pld%s [%s, #%d]\n",
+      write ? "w" : "",
+      orc_arm_reg_name (var->ptr_register), offset);
+  code = 0xf510f000;
+  if (!write) code |= (1<<22);
+  code |= (var->ptr_register&0xf) << 16;
+  if (offset < 0) {
+    code |= ((-offset)&0xfff) << 0;
+  } else {
+    code |= (offset&0xfff) << 0;
+    code |= (1<<23);
+  }
+  orc_arm_emit (compiler, code);
+}
+
+void
 orc_neon_load_halfvec_aligned (OrcCompiler *compiler, OrcVariable *var, int update)
 {
   orc_uint32 code;
@@ -606,7 +630,7 @@ orc_neon_storel (OrcCompiler *compiler, int dest, int update, int src1, int is_a
         orc_neon_reg_name (src1 + 1),
         orc_arm_reg_name (dest),
         update ? "!" : "");
-    code = 0xf4000a9d;
+    code = 0xf4000aad;
     code |= (dest&0xf) << 16;
     code |= (src1&0xf) << 12;
     code |= ((src1>>4)&0x1) << 22;

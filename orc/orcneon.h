@@ -28,6 +28,8 @@ void orc_neon_emit_loadil (OrcCompiler *p, int reg, int value);
 void orc_neon_emit_loadpb (OrcCompiler *p, int reg, int param);
 void orc_neon_emit_loadpw (OrcCompiler *p, int reg, int param);
 void orc_neon_emit_loadpl (OrcCompiler *p, int reg, int param);
+void orc_neon_preload (OrcCompiler *compiler, OrcVariable *var, int write,
+    int offset);
 
 
 #endif

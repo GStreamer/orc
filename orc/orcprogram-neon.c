@@ -501,6 +501,8 @@ orc_neon_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
     default:
       ORC_ERROR("bad size");
   }
+  
+  orc_neon_preload (compiler, var, FALSE, 256);
 }
 
 void
@@ -530,6 +532,7 @@ orc_neon_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
     default:
       ORC_ERROR("bad size");
   }
+  //orc_neon_preload (compiler, var, TRUE, -32);
 }
 
 static int
