@@ -569,7 +569,7 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   
   align_var = get_align_var (compiler);
   var_size_shift = get_shift (compiler->vars[align_var].size);
-  align_shift = var_size_shift + compiler->loop_shift;
+  align_shift = 4;
 
   compiler->vars[align_var].is_aligned = FALSE;
 
@@ -593,12 +593,8 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   }
 
   if (compiler->loop_shift > 0) {
-    int align_shift = 3;
-
     orc_arm_emit_load_imm (compiler, ORC_ARM_IP, 1<<align_shift);
 
-    orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
     orc_arm_emit_load_reg (compiler, ORC_ARM_A2, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,arrays[align_var]));
     orc_arm_emit_sub (compiler, ORC_ARM_IP, ORC_ARM_IP, ORC_ARM_A2);
@@ -608,6 +604,8 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
       orc_arm_emit_asr_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, var_size_shift);
     }
 
+    orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
     orc_arm_emit_cmp (compiler, ORC_ARM_A3, ORC_ARM_IP);
     orc_arm_emit_branch (compiler, ORC_ARM_COND_LE, 6);
 
@@ -615,11 +613,13 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1));
     orc_arm_emit_sub (compiler, ORC_ARM_A2, ORC_ARM_A3, ORC_ARM_IP);
 
-    orc_arm_emit_asr_imm (compiler, ORC_ARM_A3, ORC_ARM_A2, compiler->loop_shift);
+    orc_arm_emit_asr_imm (compiler, ORC_ARM_A3, ORC_ARM_A2,
+        compiler->loop_shift + compiler->unroll_shift);
     orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
 
-    orc_arm_emit_and_imm (compiler, ORC_ARM_A3, ORC_ARM_A2, (1<<compiler->loop_shift)-1);
+    orc_arm_emit_and_imm (compiler, ORC_ARM_A3, ORC_ARM_A2,
+        (1<<(compiler->loop_shift + compiler->unroll_shift))-1);
     orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3));
 

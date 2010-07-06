@@ -206,6 +206,13 @@ orc_neon_emit_mov (OrcCompiler *compiler, int dest, int src)
 }
 
 void
+orc_neon_emit_mov_quad (OrcCompiler *compiler, int dest, int src)
+{
+  orc_neon_emit_binary_quad (compiler, "vorr", 0xf2200110,
+      dest, src, src);
+}
+
+void
 orc_neon_load_halfvec_aligned (OrcCompiler *compiler, OrcVariable *var, int update)
 {
   orc_uint32 code;
@@ -406,7 +413,7 @@ void
 orc_neon_loadw (OrcCompiler *compiler, OrcVariable *var, int update)
 {
   if (var->is_aligned && compiler->loop_shift == 3) {
-    orc_neon_load_vec_aligned (compiler, var, update);
+    orc_neon_load_twovec_aligned (compiler, var, update);
   } else if (var->is_aligned && compiler->loop_shift == 2) {
     orc_neon_load_vec_aligned (compiler, var, update);
   } else if (var->is_aligned && compiler->loop_shift == 1) {
@@ -947,23 +954,15 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
     return; \
   } \
   if (p->loop_shift <= vec_shift) { \
-    orc_uint32 x = code; \
-    ORC_ASM_CODE(p,"  " insn_name " %s, %s\n", \
-        orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc), \
-        orc_neon_reg_name (p->vars[insn->src_args[0]].alloc)); \
-    x = NEON_BINARY(code, p->vars[insn->dest_args[0]].alloc, \
+    orc_neon_emit_binary (p, "vorr", 0xf2200110, \
+        p->vars[insn->dest_args[0]].alloc, \
         p->vars[insn->src_args[0]].alloc, \
         p->vars[insn->src_args[0]].alloc); \
-    orc_arm_emit (p, x); \
   } else if (p->loop_shift == vec_shift + 1) { \
-    orc_uint32 x = code; \
-    ORC_ASM_CODE(p,"  " insn_name " %s, %s\n", \
-        orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc), \
-        orc_neon_reg_name (p->vars[insn->src_args[0]].alloc)); \
-    x = NEON_BINARY(code, p->vars[insn->dest_args[0]].alloc, \
+    orc_neon_emit_binary_quad (p, "vorr", 0xf2200110, \
+        p->vars[insn->dest_args[0]].alloc, \
         p->vars[insn->src_args[0]].alloc, \
         p->vars[insn->src_args[0]].alloc); \
-    orc_arm_emit (p, x); \
   } else { \
     ORC_COMPILER_ERROR(p, "shift too large"); \
   } \
@@ -1149,11 +1148,20 @@ orc_neon_rule_shrsl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 orc_neon_rule_andn (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
+  int max_shift = (long)user;
+
   /* this is special because the operand order is reversed */
-  orc_neon_emit_binary (p, "vbic", 0xf2100110,
-      p->vars[insn->dest_args[0]].alloc,
-      p->vars[insn->src_args[1]].alloc,
-      p->vars[insn->src_args[0]].alloc);
+  if (p->loop_shift <= max_shift) { \
+    orc_neon_emit_binary (p, "vbic", 0xf2100110,
+        p->vars[insn->dest_args[0]].alloc,
+        p->vars[insn->src_args[1]].alloc,
+        p->vars[insn->src_args[0]].alloc);
+  } else {
+    orc_neon_emit_binary_quad (p, "vbic", 0xf2100110,
+        p->vars[insn->dest_args[0]].alloc,
+        p->vars[insn->src_args[1]].alloc,
+        p->vars[insn->src_args[0]].alloc);
+  }
 }
 
 
@@ -1329,9 +1337,15 @@ orc_neon_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 orc_neon_rule_select1wb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  orc_neon_emit_unary (p, "vrev16.i8", 0xf3b00100,
-      p->vars[insn->dest_args[0]].alloc,
-      p->vars[insn->src_args[0]].alloc);
+  if (p->loop_shift <= 2) {
+    orc_neon_emit_unary (p, "vrev16.i8", 0xf3b00100,
+        p->vars[insn->dest_args[0]].alloc,
+        p->vars[insn->src_args[0]].alloc);
+  } else {
+    orc_neon_emit_unary_quad (p, "vrev16.i8", 0xf3b00100,
+        p->vars[insn->dest_args[0]].alloc,
+        p->vars[insn->src_args[0]].alloc);
+  }
   orc_neon_emit_unary_narrow (p, "vmovn.i16", 0xf3b20200,
       p->vars[insn->dest_args[0]].alloc,
       p->vars[insn->dest_args[0]].alloc);
@@ -1340,9 +1354,15 @@ orc_neon_rule_select1wb (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 orc_neon_rule_select1lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  orc_neon_emit_unary (p, "vrev32.i16", 0xf3b40080,
-      p->vars[insn->dest_args[0]].alloc,
-      p->vars[insn->src_args[0]].alloc);
+  if (p->loop_shift <= 1) {
+    orc_neon_emit_unary (p, "vrev32.i16", 0xf3b40080,
+        p->vars[insn->dest_args[0]].alloc,
+        p->vars[insn->src_args[0]].alloc);
+  } else {
+    orc_neon_emit_unary_quad (p, "vrev32.i16", 0xf3b40080,
+        p->vars[insn->dest_args[0]].alloc,
+        p->vars[insn->src_args[0]].alloc);
+  }
   orc_neon_emit_unary_narrow (p, "vmovn.i32", 0xf3b60200,
       p->vars[insn->dest_args[0]].alloc,
       p->vars[insn->dest_args[0]].alloc);
@@ -1351,40 +1371,70 @@ orc_neon_rule_select1lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 orc_neon_rule_mergebw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
-    orc_neon_emit_mov (p, p->vars[insn->dest_args[0]].alloc,
-        p->vars[insn->src_args[0]].alloc);
-  }
+  if (p->loop_shift <= 2) {
+    if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
+      orc_neon_emit_mov (p, p->vars[insn->dest_args[0]].alloc,
+          p->vars[insn->src_args[0]].alloc);
+    }
 
-  if (p->vars[insn->src_args[1]].last_use != p->insn_index) {
-    orc_neon_emit_mov (p, p->tmpreg, p->vars[insn->src_args[1]].alloc);
-    orc_neon_emit_unary (p, "vzip.8", 0xf3b20180,
+    if (p->vars[insn->src_args[1]].last_use != p->insn_index) {
+      orc_neon_emit_mov (p, p->tmpreg, p->vars[insn->src_args[1]].alloc);
+      orc_neon_emit_unary (p, "vzip.8", 0xf3b20180,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg);
+    } else {
+      orc_neon_emit_unary (p, "vzip.8", 0xf3b20180,
+          p->vars[insn->dest_args[0]].alloc,
+          p->vars[insn->src_args[1]].alloc);
+    }
+  } else {
+    if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
+      orc_neon_emit_mov_quad (p, p->vars[insn->dest_args[0]].alloc,
+          p->vars[insn->src_args[0]].alloc);
+    }
+
+    orc_neon_emit_mov_quad (p, p->tmpreg, p->vars[insn->src_args[1]].alloc);
+    orc_neon_emit_unary_quad (p, "vzip.8", 0xf3b20180,
         p->vars[insn->dest_args[0]].alloc,
         p->tmpreg);
-  } else {
-    orc_neon_emit_unary (p, "vzip.8", 0xf3b20180,
-        p->vars[insn->dest_args[0]].alloc,
-        p->vars[insn->src_args[1]].alloc);
   }
 }
 
 static void
 orc_neon_rule_mergewl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
-    orc_neon_emit_mov (p, p->vars[insn->dest_args[0]].alloc,
-        p->vars[insn->src_args[0]].alloc);
-  }
+  if (p->loop_shift <= 1) {
+    if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
+      orc_neon_emit_mov (p, p->vars[insn->dest_args[0]].alloc,
+          p->vars[insn->src_args[0]].alloc);
+    }
 
-  if (p->vars[insn->src_args[1]].last_use != p->insn_index) {
-    orc_neon_emit_mov (p, p->tmpreg, p->vars[insn->src_args[1]].alloc);
-    orc_neon_emit_unary (p, "vzip.16", 0xf3b60180,
-        p->vars[insn->dest_args[0]].alloc,
-        p->tmpreg);
+    if (p->vars[insn->src_args[1]].last_use != p->insn_index) {
+      orc_neon_emit_mov (p, p->tmpreg, p->vars[insn->src_args[1]].alloc);
+      orc_neon_emit_unary (p, "vzip.16", 0xf3b60180,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg);
+    } else {
+      orc_neon_emit_unary (p, "vzip.16", 0xf3b60180,
+          p->vars[insn->dest_args[0]].alloc,
+          p->vars[insn->src_args[1]].alloc);
+    }
   } else {
-    orc_neon_emit_unary (p, "vzip.16", 0xf3b60180,
-        p->vars[insn->dest_args[0]].alloc,
-        p->vars[insn->src_args[1]].alloc);
+    if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
+      orc_neon_emit_mov_quad (p, p->vars[insn->dest_args[0]].alloc,
+          p->vars[insn->src_args[0]].alloc);
+    }
+
+    if (p->vars[insn->src_args[1]].last_use != p->insn_index) {
+      orc_neon_emit_mov_quad (p, p->tmpreg, p->vars[insn->src_args[1]].alloc);
+      orc_neon_emit_unary_quad (p, "vzip.16", 0xf3b60180,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg);
+    } else {
+      orc_neon_emit_unary_quad (p, "vzip.16", 0xf3b60180,
+          p->vars[insn->dest_args[0]].alloc,
+          p->vars[insn->src_args[1]].alloc);
+    }
   }
 }
 
@@ -1444,15 +1494,29 @@ orc_neon_rule_signw (OrcCompiler *p, void *user, OrcInstruction *insn)
   /* slow */
 
   orc_neon_emit_loadiw (p, p->tmpreg, 1);
-  orc_neon_emit_binary (p, "vmin.s16", 0xf2100610,
-      p->vars[insn->dest_args[0]].alloc,
-      p->tmpreg,
-      p->vars[insn->src_args[0]].alloc);
+  if (p->loop_shift < 3) {
+    orc_neon_emit_binary (p, "vmin.s16", 0xf2100610,
+        p->vars[insn->dest_args[0]].alloc,
+        p->tmpreg,
+        p->vars[insn->src_args[0]].alloc);
+  } else {
+    orc_neon_emit_binary_quad (p, "vmin.s16", 0xf2100610,
+        p->vars[insn->dest_args[0]].alloc,
+        p->tmpreg,
+        p->vars[insn->src_args[0]].alloc);
+  }
   orc_neon_emit_loadiw (p, p->tmpreg, -1);
-  orc_neon_emit_binary (p, "vmax.s16", 0xf2100600,
-      p->vars[insn->dest_args[0]].alloc,
-      p->tmpreg,
-      p->vars[insn->dest_args[0]].alloc);
+  if (p->loop_shift < 3) {
+    orc_neon_emit_binary (p, "vmax.s16", 0xf2100600,
+        p->vars[insn->dest_args[0]].alloc,
+        p->tmpreg,
+        p->vars[insn->dest_args[0]].alloc);
+  } else {
+    orc_neon_emit_binary_quad (p, "vmax.s16", 0xf2100600,
+        p->vars[insn->dest_args[0]].alloc,
+        p->tmpreg,
+        p->vars[insn->dest_args[0]].alloc);
+  }
 }
 
 static void
@@ -1471,6 +1535,20 @@ orc_neon_rule_mulhuw (OrcCompiler *p, void *user, OrcInstruction *insn)
       p->vars[insn->dest_args[0]].alloc,
       p->tmpreg, 0);
   orc_arm_emit (p, code);
+
+  if (p->loop_shift == 3) {
+    orc_neon_emit_binary_long (p, "vmull.u16",0xf3900c00,
+        p->tmpreg,
+        p->vars[insn->src_args[0]].alloc + 1,
+        p->vars[insn->src_args[1]].alloc + 1);
+    ORC_ASM_CODE(p,"  vshrn.i32 %s, %s, #%d\n",
+        orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc + 1),
+        orc_neon_reg_name_quad (p->tmpreg), 16);
+    code = NEON_BINARY (0xf2900810,
+        p->vars[insn->dest_args[0]].alloc + 1,
+        p->tmpreg, 0);
+    orc_arm_emit (p, code);
+  }
 }
 
 void
@@ -1613,8 +1691,8 @@ orc_compiler_neon_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "shrsl", orc_neon_rule_shift, (void *)7);
   orc_rule_register (rule_set, "shrul", orc_neon_rule_shift, (void *)8);
 
-  orc_rule_register (rule_set, "andnb", orc_neon_rule_andn, NULL);
-  orc_rule_register (rule_set, "andnw", orc_neon_rule_andn, NULL);
-  orc_rule_register (rule_set, "andnl", orc_neon_rule_andn, NULL);
+  orc_rule_register (rule_set, "andnb", orc_neon_rule_andn, (void *)3);
+  orc_rule_register (rule_set, "andnw", orc_neon_rule_andn, (void *)2);
+  orc_rule_register (rule_set, "andnl", orc_neon_rule_andn, (void *)1);
 }
 
