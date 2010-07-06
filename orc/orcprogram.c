@@ -339,7 +339,16 @@ orc_program_add_destination (OrcProgram *program, int size, const char *name)
 int
 orc_program_add_constant (OrcProgram *program, int size, int value, const char *name)
 {
-  int i = ORC_VAR_C1 + program->n_const_vars;
+  int i;
+  
+  for(i=0;i<program->n_const_vars;i++){
+    if (program->vars[i].value == value) {
+      ORC_DEBUG("reusing constant %d", value);
+      return i;
+    }
+  }
+  
+  i = ORC_VAR_C1 + program->n_const_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_CONST;
   program->vars[i].size = size;
