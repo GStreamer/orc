@@ -317,10 +317,9 @@ orc_compiler_orc_arm_assemble (OrcCompiler *compiler)
 
     orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A2]));
-    orc_arm_emit_sub_imm (compiler, ORC_ARM_A3, ORC_ARM_A3, 1);
+    orc_arm_emit_sub_imm (compiler, ORC_ARM_A3, ORC_ARM_A3, 1, TRUE);
     orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]));
-    orc_arm_emit_cmp_imm (compiler, ORC_ARM_A3, 0);
     orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, 8);
   }
 

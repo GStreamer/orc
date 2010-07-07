@@ -80,7 +80,7 @@ void orc_arm_emit_add (OrcCompiler *compiler, int dest, int src1, int src2);
 void orc_arm_emit_sub (OrcCompiler *compiler, int dest, int src1, int src2);
 void orc_arm_emit_add_imm (OrcCompiler *compiler, int dest, int src1, int value);
 void orc_arm_emit_and_imm (OrcCompiler *compiler, int dest, int src1, int value);
-void orc_arm_emit_sub_imm (OrcCompiler *compiler, int dest, int src1, int value);
+void orc_arm_emit_sub_imm (OrcCompiler *compiler, int dest, int src1, int value, int record);
 void orc_arm_emit_asr_imm (OrcCompiler *compiler, int dest, int src1, int value);
 void orc_arm_emit_lsl_imm (OrcCompiler *compiler, int dest, int src1, int value);
 void orc_arm_emit_cmp_imm (OrcCompiler *compiler, int src1, int value);

@@ -361,9 +361,10 @@ orc_arm_emit_sub (OrcCompiler *compiler, int dest, int src1, int src2)
 }
 
 void
-orc_arm_emit_sub_imm (OrcCompiler *compiler, int dest, int src1, int value)
+orc_arm_emit_sub_imm (OrcCompiler *compiler, int dest, int src1, int value,
+    int record)
 {
-  orc_arm_emit_sub_i (compiler, ORC_ARM_COND_AL, 0, dest, src1, value);
+  orc_arm_emit_sub_i (compiler, ORC_ARM_COND_AL, record, dest, src1, value);
 }
 
 void
