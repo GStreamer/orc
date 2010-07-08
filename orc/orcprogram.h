@@ -393,6 +393,7 @@ struct _OrcCompiler {
 
   int alloc_loop_counter;
   int loop_counter;
+  int size_region;
 };
 
 #define ORC_SRC_ARG(p,i,n) ((p)->vars[(i)->src_args[(n)]].alloc)
