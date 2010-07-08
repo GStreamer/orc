@@ -595,6 +595,8 @@ get_align_var (OrcCompiler *compiler)
 enum {
   LABEL_ONE_REGION = 1,
   LABEL_ONE_REGION_AFTER,
+  LABEL_REGION0_LOOP,
+  LABEL_REGION0_SKIP,
   LABEL_REGION1_LOOP,
   LABEL_REGION1_SKIP,
   LABEL_REGION2_LOOP_SMALL,
@@ -641,6 +643,42 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
     }
 
     orc_arm_emit_label (compiler, LABEL_OUTER_LOOP);
+  }
+
+#define ORC_NEON_ALIGNED_DEST_CUTOFF 64
+
+  if (compiler->loop_shift > 0) {
+    orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
+    orc_arm_emit_cmp_imm (compiler, ORC_ARM_A3, ORC_NEON_ALIGNED_DEST_CUTOFF);
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_GT, LABEL_REGION0_SKIP);
+
+    orc_arm_emit_asr_imm (compiler, ORC_ARM_A2, ORC_ARM_A3,
+        compiler->loop_shift);
+    orc_arm_emit_store_reg (compiler, ORC_ARM_A2, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
+
+    orc_arm_emit_and_imm (compiler, ORC_ARM_A3, ORC_ARM_A3,
+        (1<<compiler->loop_shift)-1);
+    orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3));
+
+    orc_neon_load_constants_inner (compiler);
+    orc_arm_emit_load_reg (compiler, ORC_ARM_IP, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
+    orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, LABEL_REGION2_SKIP);
+
+    compiler->size_region = 0;
+    orc_arm_emit_label (compiler, LABEL_REGION0_LOOP);
+    orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
+    orc_neon_emit_loop (compiler, -1);
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION0_LOOP);
+    
+
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, LABEL_REGION2_SKIP);
+
+    orc_arm_emit_label (compiler, LABEL_REGION0_SKIP);
   }
 
   if (compiler->loop_shift > 0) {
@@ -702,8 +740,8 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
     orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, LABEL_REGION1_SKIP);
 
     orc_arm_emit_label (compiler, LABEL_REGION1_LOOP);
-    orc_neon_emit_loop (compiler, 0);
     orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
+    orc_neon_emit_loop (compiler, -1);
     orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION1_LOOP);
     orc_arm_emit_label (compiler, LABEL_REGION1_SKIP);
 
@@ -789,8 +827,8 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
     orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, LABEL_REGION3_SKIP);
 
     orc_arm_emit_label (compiler, LABEL_REGION3_LOOP);
-    orc_neon_emit_loop (compiler, 0);
     orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
+    orc_neon_emit_loop (compiler, -1);
     orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION3_LOOP);
     orc_arm_emit_label (compiler, LABEL_REGION3_SKIP);
 
