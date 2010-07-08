@@ -361,6 +361,47 @@ orc_neon_load_halfvec_unaligned (OrcCompiler *compiler, OrcVariable *var,
 }
 
 void
+orc_neon_load_fourvec_aligned (OrcCompiler *compiler, OrcVariable *var, int update)
+{
+  orc_uint32 code;
+
+  ORC_ASM_CODE(compiler,"  vld1.64 { %s, %s, %s, %s }, [%s,:256]%s\n",
+      orc_neon_reg_name (var->alloc),
+      orc_neon_reg_name (var->alloc + 1),
+      orc_neon_reg_name (var->alloc + 2),
+      orc_neon_reg_name (var->alloc + 3),
+      orc_arm_reg_name (var->ptr_register),
+      update ? "!" : "");
+  code = 0xf42002dd;
+  code |= (var->ptr_register&0xf) << 16;
+  code |= (var->alloc&0xf) << 12;
+  code |= ((var->alloc>>4)&0x1) << 22;
+  code |= (!update) << 1;
+  orc_arm_emit (compiler, code);
+}
+
+void
+orc_neon_load_fourvec_unaligned (OrcCompiler *compiler, OrcVariable *var,
+    int update)
+{
+  orc_uint32 code;
+
+  ORC_ASM_CODE(compiler,"  vld1.8 { %s, %s, %s, %s }, [%s]%s\n",
+      orc_neon_reg_name (var->alloc),
+      orc_neon_reg_name (var->alloc + 1),
+      orc_neon_reg_name (var->alloc + 2),
+      orc_neon_reg_name (var->alloc + 3),
+      orc_arm_reg_name (var->ptr_register),
+      update ? "!" : "");
+  code = 0xf420020d;
+  code |= (var->ptr_register&0xf) << 16;
+  code |= ((var->alloc)&0xf) << 12;
+  code |= (((var->alloc)>>4)&0x1) << 22;
+  code |= (!update) << 1;
+  orc_arm_emit (compiler, code);
+}
+
+void
 orc_neon_load_twovec_aligned (OrcCompiler *compiler, OrcVariable *var, int update)
 {
   orc_uint32 code;
@@ -403,12 +444,16 @@ orc_neon_loadb (OrcCompiler *compiler, OrcVariable *var, int update)
   orc_uint32 code;
   int i;
 
-  if (var->is_aligned && compiler->loop_shift == 4) {
+  if (var->is_aligned && compiler->loop_shift == 5) {
+    orc_neon_load_fourvec_aligned (compiler, var, update);
+  } else if (var->is_aligned && compiler->loop_shift == 4) {
     orc_neon_load_twovec_aligned (compiler, var, update);
   } else if (var->is_aligned && compiler->loop_shift == 3) {
     orc_neon_load_vec_aligned (compiler, var, update);
   } else if (var->is_aligned && compiler->loop_shift == 2) {
     orc_neon_load_halfvec_aligned (compiler, var, update);
+  } else if (compiler->loop_shift == 5) {
+    orc_neon_load_fourvec_unaligned (compiler, var, update);
   } else if (compiler->loop_shift == 4) {
     orc_neon_load_twovec_unaligned (compiler, var, update);
   } else if (compiler->loop_shift == 3) {
@@ -532,7 +577,21 @@ orc_neon_storeb (OrcCompiler *compiler, int dest, int update, int src1, int is_a
   orc_uint32 code;
   int i;
 
-  if (is_aligned && compiler->loop_shift == 4) {
+  if (is_aligned && compiler->loop_shift == 5) {
+    ORC_ASM_CODE(compiler,"  vst1.8 { %s, %s, %s, %s }, [%s,:256]%s\n",
+        orc_neon_reg_name (src1),
+        orc_neon_reg_name (src1+1),
+        orc_neon_reg_name (src1+2),
+        orc_neon_reg_name (src1+3),
+        orc_arm_reg_name (dest),
+        update ? "!" : "");
+    code = 0xf400023d;
+    code |= (dest&0xf) << 16;
+    code |= (src1&0xf) << 12;
+    code |= ((src1>>4)&0x1) << 22;
+    code |= (!update) << 1;
+    orc_arm_emit (compiler, code);
+  } else if (is_aligned && compiler->loop_shift == 4) {
     ORC_ASM_CODE(compiler,"  vst1.8 { %s, %s }, [%s,:128]%s\n",
         orc_neon_reg_name (src1),
         orc_neon_reg_name (src1+1),
