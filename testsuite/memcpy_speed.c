@@ -13,6 +13,21 @@
 
 #define ALIGN(ptr,n) ((void *)((unsigned long)(ptr) & (~(unsigned long)(n-1))))
 
+int hot_src = TRUE;
+int hot_dest = TRUE;
+int flush_cache = FALSE;
+
+
+void
+touch (unsigned char *ptr, int n)
+{
+  static int sum;
+  int i;
+  for(i=0;i<n;i++){
+    sum += ptr[i];
+  }
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -55,12 +70,30 @@ main(int argc, char *argv[])
     double x = i*0.1 + 6.0;
     int size = pow(2.0, x);
 
+    if (flush_cache) {
+      touch (src, (1<<18));
+    }
+    if (hot_src) {
+      touch (src, size);
+    }
+    if (hot_dest) {
+      touch (dest, size);
+    }
 
     orc_profile_init (&prof);
     for(j=0;j<10;j++){
       orc_profile_start(&prof);
       orc_memcpy (dest, src, size);
       orc_profile_stop(&prof);
+      if (flush_cache) {
+        touch (src, (1<<18));
+      }
+      if (hot_src) {
+        touch (src, size);
+      }
+      if (hot_dest) {
+        touch (dest, size);
+      }
     }
 
     orc_profile_init (&prof_libc);
@@ -68,6 +101,15 @@ main(int argc, char *argv[])
       orc_profile_start(&prof_libc);
       memcpy (dest, src, size);
       orc_profile_stop(&prof_libc);
+      if (flush_cache) {
+        touch (src, (1<<18));
+      }
+      if (hot_src) {
+        touch (src, size);
+      }
+      if (hot_dest) {
+        touch (dest, size);
+      }
     }
 
     orc_profile_get_ave_std (&prof, &ave, &std);
