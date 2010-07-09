@@ -40,7 +40,6 @@ static CRITICAL_SECTION once_mutex;
 void
 _orc_once_init (void)
 {
-  InitializeCriticalSection (&once_mutex);
 }
 
 void
@@ -53,6 +52,15 @@ void
 orc_once_mutex_unlock (void)
 {
   LeaveCriticalSection (&once_mutex);
+}
+
+int
+DllMain (HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+{
+  if (dwReason == DLL_PROCESS_ATTACH) {
+    InitializeCriticalSection (&once_mutex);
+  }
+  return 1;
 }
 
 #else
