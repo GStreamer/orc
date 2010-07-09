@@ -41,6 +41,7 @@ main(int argc, char *argv[])
   int i,j;
   double cpufreq;
   int unalign;
+  OrcProgram *p;
   //const uint8_t zero = 0;
 
   orc_init ();
@@ -66,6 +67,21 @@ main(int argc, char *argv[])
   }
   orc_profile_get_ave_std (&prof, &null, &std);
   
+  {
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_memcpy");
+    //orc_program_set_name (p, "orc_memset");
+    orc_program_add_destination (p, 1, "d1");
+    orc_program_add_source (p, 1, "s1");
+    //orc_program_add_parameter (p, 1, "p1");
+
+    orc_program_append (p, "copyb", ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+  }
+
   for(i=0;i<160;i++){
     double x = i*0.1 + 6.0;
     int size = pow(2.0, x);
@@ -82,8 +98,19 @@ main(int argc, char *argv[])
 
     orc_profile_init (&prof);
     for(j=0;j<10;j++){
+      OrcExecutor _ex, *ex = &_ex;
+      void (*func) (OrcExecutor *);
+
       orc_profile_start(&prof);
-      orc_memcpy (dest, src, size);
+      //orc_memcpy (dest, src, size);
+      ex->program = p;
+      ex->n = size;
+      ex->arrays[ORC_VAR_D1] = dest;
+      ex->arrays[ORC_VAR_S1] = (void *)src;
+
+      func = p->code_exec;
+      func (ex);
+
       orc_profile_stop(&prof);
       if (flush_cache) {
         touch (src, (1<<18));
