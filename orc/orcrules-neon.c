@@ -411,7 +411,7 @@ orc_neon_load_twovec_aligned (OrcCompiler *compiler, OrcVariable *var, int updat
       orc_neon_reg_name (var->alloc + 1),
       orc_arm_reg_name (var->ptr_register),
       update ? "!" : "");
-  code = 0xf4200acd;
+  code = 0xf4200aed;
   code |= (var->ptr_register&0xf) << 16;
   code |= (var->alloc&0xf) << 12;
   code |= ((var->alloc>>4)&0x1) << 22;
