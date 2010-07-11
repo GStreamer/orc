@@ -54,6 +54,11 @@ static int _orc_compiler_flag_debug;
 void
 orc_sse_init (void)
 {
+#if defined(HAVE_AMD64) || defined(HAVE_I386)
+  /* initializes cache information */
+  orc_sse_get_cpu_flags ();
+#endif
+
 #if defined(HAVE_I386)
   if (!(orc_sse_get_cpu_flags () & ORC_TARGET_SSE_SSE2)) {
     sse_target.executable = FALSE;

@@ -595,9 +595,15 @@ int orc_program_get_max_var_size (OrcProgram *program);
 int orc_program_get_max_array_size (OrcProgram *program);
 int orc_program_get_max_accumulator_size (OrcProgram *program);
 
+void orc_get_data_cache_sizes (int *level1, int *level2, int *level3);
+
 #ifdef ORC_ENABLE_UNSTABLE_API
 
 int orc_compiler_flag_check (const char *flag);
+
+extern int _orc_data_cache_size_level1;
+extern int _orc_data_cache_size_level2;
+extern int _orc_data_cache_size_level3;
 
 #endif
 

@@ -42,6 +42,8 @@ main(int argc, char *argv[])
   double cpufreq;
   int unalign;
   OrcProgram *p;
+  int level1, level2, level3;
+  int max;
   //const uint8_t zero = 0;
 
   orc_init ();
@@ -82,7 +84,16 @@ main(int argc, char *argv[])
     result = orc_program_compile (p);
   }
 
-  for(i=0;i<160;i++){
+  orc_get_data_cache_sizes (&level1, &level2, &level3);
+  if (level3 > 0) {
+    max = (log(level3)/M_LN2 - 6.0) * 10 + 20;
+  } else if (level3 > 0) {
+    max = (log(level2)/M_LN2 - 6.0) * 10 + 20;
+  } else {
+    max = 200;
+  }
+
+  for(i=0;i<max;i++){
     double x = i*0.1 + 6.0;
     int size = pow(2.0, x);
 

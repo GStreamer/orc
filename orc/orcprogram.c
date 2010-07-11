@@ -700,3 +700,22 @@ orc_program_get_max_accumulator_size (OrcProgram *program)
   return max;
 }
 
+int _orc_data_cache_size_level1;
+int _orc_data_cache_size_level2;
+int _orc_data_cache_size_level3;
+
+void
+orc_get_data_cache_sizes (int *level1, int *level2, int *level3)
+{
+  if (level1) {
+    *level1 = _orc_data_cache_size_level1;
+  }
+  if (level2) {
+    *level2 = _orc_data_cache_size_level2;
+  }
+  if (level3) {
+    *level3 = _orc_data_cache_size_level3;
+  }
+
+}
+

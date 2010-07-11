@@ -59,6 +59,14 @@ main (int argc, char *argv[])
 
   printf("Orc " VERSION " - integrated testing tool\n");
 
+  {
+    int level1, level2, level3;
+    orc_get_data_cache_sizes(&level1, &level2, &level3);
+    printf("L1 cache: %d\n", level1);
+    printf("L2 cache: %d\n", level2);
+    printf("L3 cache: %d\n", level3);
+  }
+
   if (filename) {
     int n;
     int ret;
