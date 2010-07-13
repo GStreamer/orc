@@ -23,8 +23,6 @@ EXTRA_DIST = test.orc
 CLEANFILES = temp-orc-test-*
 
 if ENABLE_BACKEND_NEON
-TESTS += compile_opcodes_sys_neon \
-	compile_parse_neon
 noinst_PROGRAMS += compile_opcodes_sys_neon \
 	compile_parse_neon
 endif
