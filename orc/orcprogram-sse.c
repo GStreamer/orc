@@ -48,7 +48,6 @@ static OrcTarget sse_target = {
   sse_get_flag_name
 };
 
-static int _orc_compiler_flag_debug;
 
 
 void
@@ -68,8 +67,6 @@ orc_sse_init (void)
   orc_target_register (&sse_target);
 
   orc_compiler_sse_register_rules (&sse_target);
-
-  _orc_compiler_flag_debug = orc_compiler_flag_check ("debug");
 }
 
 unsigned int

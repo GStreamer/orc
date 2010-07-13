@@ -44,7 +44,9 @@ orc_compiler_allocate_codemem (OrcCompiler *compiler)
       ORC_COMPILER_ERROR (compiler, "failed to create temp file");
       return;
     }
-    unlink (filename);
+    if (!_orc_compiler_flag_debug) {
+      unlink (filename);
+    }
     free (filename);
   }
 

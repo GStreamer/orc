@@ -605,6 +605,9 @@ extern int _orc_data_cache_size_level1;
 extern int _orc_data_cache_size_level2;
 extern int _orc_data_cache_size_level3;
 
+extern int _orc_compiler_flag_backup;
+extern int _orc_compiler_flag_debug;
+
 #endif
 
 #endif

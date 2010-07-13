@@ -36,7 +36,8 @@ int orc_compiler_dup_temporary (OrcCompiler *compiler, int var, int j);
 void orc_compiler_check_sizes (OrcCompiler *compiler);
 
 static char **_orc_compiler_flag_list;
-static int _orc_compiler_flag_backup;
+int _orc_compiler_flag_backup;
+int _orc_compiler_flag_debug;
 
 void
 _orc_compiler_init (void)
@@ -49,6 +50,7 @@ _orc_compiler_init (void)
   }
 
   _orc_compiler_flag_backup = orc_compiler_flag_check ("backup");
+  _orc_compiler_flag_debug = orc_compiler_flag_check ("debug");
 }
 
 int
