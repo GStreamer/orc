@@ -39,8 +39,8 @@ Features:
  - An application can add rules for converting existing or new opcodes
    to binary code for a specific target.
 
- - Current targets: SSE, MMX, ARM, Altivec, NEON, and TI C64x+.  (ARM
-   is very limited and c64x only produces source code.)
+ - Current targets: SSE, MMX, ARM, Altivec, NEON, and TI C64x+.
+   (The c64x target only produces source code.)
 
  - Programs can optionally be emulated, which is useful for testing, or
    if no rules are available to convert Orc opcodes to executable code.
@@ -72,11 +72,12 @@ Questions and Answers:
 
  - Q: How big is the Orc library?
 
-   A: For embedded users, patches can be applied that disable irrelevant
-   targets.  Compiled with only one target (SSE), the library size is
-   about 95 kB uncompressed, or 32 kB compressed.  The goal is to keep
-   the uncompressed size under about 100 kB.  A typical build with all
-   targets and the full ABI is around 300 kB.
+   A: For embedded users, the --enable-backend configure option can
+   be used to disable irrelvant targets.  Compiled with only one target
+   (SSE), the library size is about 150 kB uncompressed, or 48 kB
+   compressed.  The goal was to keep the uncompressed size under
+   about 100 kB (but that failed!).  A typical build with all targets
+   and the full ABI is around 350 kB.
 
 
 Caveats (Known Bugs):

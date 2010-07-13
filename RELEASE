@@ -1,4 +1,46 @@
 
+0.4.6
+=====
+
+Changes:
+
+ - Various fixes to make Orc more portable
+ - Major performance improvements to NEON backend
+ - Minor performance improvements to SSE backend
+ - Major improvements to ARM backend, now passes regression
+   tests.
+
+The defaults for floating point operations have been changed
+somewhat: NANs are handled more like the IEEE 754 standard,
+and denormals in operations are treated as zeros.  The NAN
+changes causes certain SSE operations to be slightly slower,
+but produce less surprising results.  Treating denormals as
+zero has effects ranging from "slightly faster" to "now possible".
+
+New tool: orc-bugreport.  Mainly this is to provide a limited
+testing tool in the field, especially for embedded targets
+which would not have access to the testsuite that is not
+installed.
+
+The environment variable ORC_CODE can now be used to adjust
+some code generation.  See orc-bugreport --help for details.
+
+orcc has a new option to generate code that is compatible
+with older versions of Orc.  For example, if your software
+package only uses 0.4.5 features, you can use --compat 0.4.5
+to generate code that run on 0.4.5, otherwise it may generate
+code that requires 0.4.6.  Useful for generating source code
+for distribution.
+
+New NEON detection relies on Linux 2.6.29 or later.
+
+Plans for 0.4.7: (not that past predictions have been at all
+accurate) New opcodes for FIR filtering, scaling and compositing
+of images and video.  Instruction scheduler, helpful for non-OOO
+CPUs.  Minor SSE/NEON improvements.  Orcc generation of inline
+macros.
+
+
 0.4.5
 =====
 

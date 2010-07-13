@@ -1,5 +1,26 @@
 
 
+sse: Handle cache information and small n
+
+neon: constant n
+
+aligned source checks
+
+new opcodes:
+  - sampling: video scaling, fir filtering, fir filtering with
+    downsampling, upsampling/downsampling
+  - composite opcodes
+
+float parameters
+
+compiler: inline orc calls
+
+compiler: initialization function
+
+instruction scheduler
+
+improve emulation
+
 
 
 0.5
