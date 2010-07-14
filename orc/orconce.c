@@ -54,13 +54,13 @@ orc_once_mutex_unlock (void)
   LeaveCriticalSection (&once_mutex);
 }
 
-int
+BOOL WINAPI
 DllMain (HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
   if (dwReason == DLL_PROCESS_ATTACH) {
     InitializeCriticalSection (&once_mutex);
   }
-  return 1;
+  return TRUE;
 }
 
 #else
