@@ -88,6 +88,10 @@ enum {
   ORC_TARGET_NEON_NEON = (1<<1)
 };
 
+enum {
+  ORC_TARGET_ARM_ARMV6 = (1<<0)
+};
+
 typedef enum {
   ORC_VAR_TYPE_TEMP,
   ORC_VAR_TYPE_SRC,
