@@ -90,7 +90,7 @@ main(int argc, char *argv[])
   } else if (level3 > 0) {
     max = (log(level2)/M_LN2 - 6.0) * 10 + 20;
   } else {
-    max = 200;
+    max = 140;
   }
 
   for(i=0;i<max;i++){
