@@ -31,33 +31,40 @@ orc_compiler_allocate_codemem (OrcCompiler *compiler)
 {
   int fd;
   int n;
+  static char *tmpdir = NULL;
+  char *filename;
 
-  {
-    char *filename;
-
-    filename = malloc (strlen ("/tmp/orcexec..") +
-        strlen (compiler->program->name) + 6 + 1);
-    sprintf(filename, "/tmp/orcexec.%s.XXXXXX", compiler->program->name);
-    fd = mkstemp (filename);
-    if (fd == -1) {
-      /* FIXME oh crap */
-      ORC_COMPILER_ERROR (compiler, "failed to create temp file");
-      return;
+  if (tmpdir == NULL) {
+    tmpdir = getenv ("TMPDIR");
+    if (tmpdir == NULL) {
+      tmpdir = "/tmp";
     }
-    if (!_orc_compiler_flag_debug) {
-      unlink (filename);
-    }
-    free (filename);
   }
+
+  filename = malloc (strlen ("/orcexec..") +
+      strlen (tmpdir) + strlen (compiler->program->name) + 6 + 1);
+  sprintf(filename, "%s/orcexec.%s.XXXXXX", tmpdir, compiler->program->name);
+  fd = mkstemp (filename);
+  if (fd == -1) {
+    /* FIXME oh crap */
+    ORC_COMPILER_ERROR (compiler, "failed to create temp file");
+    return;
+  }
+  if (!_orc_compiler_flag_debug) {
+    unlink (filename);
+  }
+  free (filename);
 
   n = ftruncate (fd, SIZE);
 
-  compiler->program->code = mmap (NULL, SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+  compiler->program->code = mmap (NULL, SIZE, PROT_READ|PROT_WRITE,
+      MAP_SHARED, fd, 0);
   if (compiler->program->code == MAP_FAILED) {
     ORC_COMPILER_ERROR(compiler, "failed to create write map");
     return;
   }
-  compiler->program->code_exec = mmap (NULL, SIZE, PROT_READ|PROT_EXEC, MAP_SHARED, fd, 0);
+  compiler->program->code_exec = mmap (NULL, SIZE, PROT_READ|PROT_EXEC,
+      MAP_SHARED, fd, 0);
   if (compiler->program->code_exec == MAP_FAILED) {
     ORC_COMPILER_ERROR(compiler, "failed to create exec map");
     return;
