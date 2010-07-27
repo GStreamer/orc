@@ -6,9 +6,12 @@
 #endif
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
-#else
-/* begin Orc C target preamble */
-#if defined(__STDC__) && __STDC__ && __STDC_VERSION__ >= 199901L
+#endif
+#include <math.h>
+
+#ifndef _ORC_INTEGER_TYPEDEFS_
+#define _ORC_INTEGER_TYPEDEFS_
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #include <stdint.h>
 typedef int8_t orc_int8;
 typedef int16_t orc_int16;
@@ -45,6 +48,13 @@ typedef unsigned long orc_uint64;
 #endif
 typedef union { orc_int32 i; float f; } orc_union32;
 typedef union { orc_int64 i; double f; } orc_union64;
+#endif
+
+void orc_memcpy (void * d1, const void * s1, int n);
+void orc_memset (void * d1, int p1, int n);
+
+
+/* begin Orc C target preamble */
 #define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
 #define ORC_ABS(a) ((a)<0 ? -(a) : (a))
 #define ORC_MIN(a,b) ((a)<(b) ? (a) : (b))
@@ -70,11 +80,11 @@ typedef union { orc_int64 i; double f; } orc_union64;
 #define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
+#define ORC_MIN_NORMAL (1.1754944909521339405e-38)
+#define ORC_DENORMAL(x) (((x) > -ORC_MIN_NORMAL && (x) < ORC_MIN_NORMAL) ? ((x)<0 ? (-0.0f) : (0.0f)) : (x))
+#define ORC_MINF(a,b) (isnan(a) ? a : isnan(b) ? b : ((a)<(b)) ? (a) : (b))
+#define ORC_MAXF(a,b) (isnan(a) ? a : isnan(b) ? b : ((a)>(b)) ? (a) : (b))
 /* end Orc C target preamble */
-#endif
-
-void orc_memcpy (void * d1, const void * s1, int n);
-void orc_memset (void * d1, int p1, int n);
 
 
 
@@ -172,7 +182,7 @@ orc_memset (void * d1, int p1, int n){
   int i;
   orc_int8 var0;
   orc_int8 * ptr0;
-  const orc_int8 var24 = p1;
+  const int var24 = p1;
 
   ptr0 = (orc_int8 *)d1;
 
@@ -193,7 +203,7 @@ _backup_orc_memset (OrcExecutor *ex)
   int n = ex->n;
   orc_int8 var0;
   orc_int8 * ptr0;
-  const orc_int8 var24 = ex->params[24];
+  const int var24 = ex->params[24];
 
   ptr0 = (orc_int8 *)ex->arrays[0];
 
