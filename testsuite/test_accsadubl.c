@@ -26,18 +26,23 @@ main (int argc, char *argv[])
 
   orc_init();
 
-for(n=0;n<20;n++){
-  sum = 0;
-  for(i=0;i<n;i++){
-    array1[i] = rand();
-    array2[i] = rand();
-    printf("%d: %d %d -> %d\n", i, array1[i], array2[i],
-        abs(array1[i] - array2[i]));
-    sum += abs(array1[i] - array2[i]);
-  }
+  for(n=0;n<20;n++){
+    sum = 0;
+    for(i=0;i<n;i++){
+      array1[i] = rand();
+      array2[i] = rand();
+      sum += abs(array1[i] - array2[i]);
+    }
+    if (sum != orc_sad_u8 (array1, array2, n)) {
+      for(i=0;i<n;i++){
+        printf("%d: %d %d -> %d\n", i, array1[i], array2[i],
+            abs(array1[i] - array2[i]));
+      }
 
-  printf("sum %d %d\n", sum, orc_sad_u8 (array1, array2, n));
-}
+      printf("sum %d %d\n", sum, orc_sad_u8 (array1, array2, n));
+      error = TRUE;
+    }
+  }
 
   if (error) return 1;
   return 0;
