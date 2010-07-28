@@ -569,6 +569,18 @@ orc_emit_split_n_regions (OrcCompiler *compiler)
   orc_x86_emit_label (compiler, 7);
 }
 
+static int
+orc_program_has_float (OrcCompiler *compiler)
+{
+  int j;
+  for(j=0;j<compiler->n_insns;j++){
+    OrcInstruction *insn = compiler->insns + j;
+    OrcStaticOpcode *opcode = insn->opcode;
+    if (opcode->flags & ORC_STATIC_OPCODE_FLOAT) return TRUE;
+  }
+  return FALSE;
+}
+
 #define LABEL_REGION1_SKIP 1
 #define LABEL_INNER_LOOP_START 2
 #define LABEL_REGION2_SKIP 3
@@ -581,6 +593,7 @@ orc_emit_split_n_regions (OrcCompiler *compiler)
 void
 orc_compiler_sse_assemble (OrcCompiler *compiler)
 {
+  int set_mxcsr = FALSE;
   int align_var;
 
   if (0 && orc_x86_assemble_copy_check (compiler)) {
@@ -595,7 +608,10 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
 
   orc_x86_emit_prologue (compiler);
 
-  orc_sse_set_mxcsr (compiler);
+  if (orc_program_has_float (compiler)) {
+    set_mxcsr = TRUE;
+    orc_sse_set_mxcsr (compiler);
+  }
 
   sse_load_constants_outer (compiler);
 
@@ -750,7 +766,9 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
 
   sse_save_accumulators (compiler);
 
-  orc_sse_restore_mxcsr (compiler);
+  if (set_mxcsr) {
+    orc_sse_restore_mxcsr (compiler);
+  }
   orc_x86_emit_epilogue (compiler);
 
   orc_x86_do_fixups (compiler);
