@@ -30,18 +30,32 @@ struct _OrcParser {
 
   OrcOpcodeSet *opcode_set;
   OrcProgram *program;
+  OrcProgram *error_program;
 
   OrcProgram **programs;
   int n_programs;
   int n_programs_alloc;
+
+  char *log;
+  int log_size;
+  int log_alloc;
 };
 
 static void orc_parse_get_line (OrcParser *parser);
 static OrcStaticOpcode * get_opcode (OrcParser *parser, const char *opcode);
+static void orc_parse_log (OrcParser *parser, const char *format, ...);
+static int opcode_n_args (OrcStaticOpcode *opcode);
+static void orc_parse_sanity_check (OrcParser *parser, OrcProgram *program);
 
 
 int
 orc_parse (const char *code, OrcProgram ***programs)
+{
+  return orc_parse_full (code, programs, NULL);
+}
+
+int
+orc_parse_full (const char *code, OrcProgram ***programs, char **log)
 {
   OrcParser _parser;
   OrcParser *parser = &_parser;
@@ -50,9 +64,12 @@ orc_parse (const char *code, OrcProgram ***programs)
 
   parser->code = code;
   parser->code_length = strlen (code);
-  parser->line_number = -1;
+  parser->line_number = 0;
   parser->p = code;
   parser->opcode_set = orc_opcode_set_get ("sys");
+  parser->log = malloc(100);
+  parser->log_alloc = 100;
+  parser->log_size = 0;
 
   while (parser->p[0] != 0) {
     char *p;
@@ -105,6 +122,9 @@ orc_parse (const char *code, OrcProgram ***programs)
 
     if (token[0][0] == '.') {
       if (strcmp (token[0], ".function") == 0) {
+        if (parser->program) {
+          orc_parse_sanity_check (parser, parser->program);
+        }
         parser->program = orc_program_new ();
         orc_program_set_name (parser->program, token[1]);
         if (parser->n_programs == parser->n_programs_alloc) {
@@ -163,7 +183,8 @@ orc_parse (const char *code, OrcProgram ***programs)
         int size = strtol (token[1], NULL, 0);
         orc_program_add_parameter_float (parser->program, size, token[2]);
       } else {
-        ORC_ERROR("ERROR: unknown directive: %s", token[0]);
+        orc_parse_log (parser, "error: line %d: unknown directive: %s\n",
+            parser->line_number, token[0]);
       }
     } else {
       OrcStaticOpcode *o;
@@ -171,6 +192,14 @@ orc_parse (const char *code, OrcProgram ***programs)
       o = get_opcode (parser, token[0]);
 
       if (o) {
+        int n_args = opcode_n_args (o);
+
+        if (n_tokens != 1 + n_args) {
+          orc_parse_log (parser, "error: line %d: too %s arguments for %s (expected %d)\n",
+              parser->line_number, (n_tokens < 1+n_args) ? "few" : "many",
+              token[0], n_args);
+        }
+
         if (n_tokens == 4) {
           char *end;
           int imm = strtol (token[3], &end, 0);
@@ -190,14 +219,24 @@ orc_parse (const char *code, OrcProgram ***programs)
               token[1], token[2]);
         }
       } else {
-        printf("ERROR: unknown token[0]: %s\n", token[0]);
+        orc_parse_log (parser, "error: line %d: unknown opcode: %s\n",
+            parser->line_number,
+            token[0]);
       }
     }
   }
 
+  if (parser->program) {
+    orc_parse_sanity_check (parser, parser->program);
+  }
 
   if (parser->line) free (parser->line);
 
+  if (log) {
+    *log = parser->log;
+  } else {
+    free (parser->log);
+  }
   *programs = parser->programs;
   return parser->n_programs;
 }
@@ -214,6 +253,62 @@ get_opcode (OrcParser *parser, const char *opcode)
   }
 
   return NULL;
+}
+
+static int
+opcode_n_args (OrcStaticOpcode *opcode)
+{
+  int i;
+  int n = 0;
+  for(i=0;i<ORC_STATIC_OPCODE_N_DEST;i++){
+    if (opcode->dest_size[i] != 0) n++;
+  }
+  for(i=0;i<ORC_STATIC_OPCODE_N_SRC;i++){
+    if (opcode->src_size[i] != 0) n++;
+  }
+  return n;
+}
+
+static void
+orc_parse_log_valist (OrcParser *parser, const char *format, va_list args)
+{
+  char s[100];
+  int len;
+  
+  if (parser->error_program != parser->program) {
+    sprintf(s, "In function %s:\n", parser->program->name);
+    len = strlen(s);
+
+    if (parser->log_size + len > parser->log_alloc) {
+      parser->log_alloc += 100;
+      parser->log = realloc (parser->log, parser->log_alloc);
+    }
+
+    strcpy (parser->log + parser->log_size, s);
+    parser->log_size += len;
+    parser->error_program = parser->program;
+  }
+
+  vsprintf(s, format, args);
+  len = strlen(s);
+
+  if (parser->log_size + len > parser->log_alloc) {
+    parser->log_alloc += 100;
+    parser->log = realloc (parser->log, parser->log_alloc);
+  }
+
+  strcpy (parser->log + parser->log_size, s);
+  parser->log_size += len;
+}
+
+static void
+orc_parse_log (OrcParser *parser, const char *format, ...)
+{
+  va_list var_args;
+
+  va_start (var_args, format);
+  orc_parse_log_valist (parser, format, var_args);
+  va_end (var_args);
 }
 
 static void
@@ -244,4 +339,54 @@ orc_parse_get_line (OrcParser *parser)
   parser->line_number++;
 }
 
+
+static void
+orc_parse_sanity_check (OrcParser *parser, OrcProgram *program)
+{
+  int i;
+  int j;
+
+  for(i=0;i<=ORC_VAR_T15;i++) {
+    if (program->vars[i].size == 0) continue;
+    for(j=i+1;j<=ORC_VAR_T15;j++) {
+      if (program->vars[j].size == 0) continue;
+
+      if (strcmp (program->vars[i].name, program->vars[j].name) == 0) {
+        orc_parse_log (parser, "error: duplicate variable name: %s\n",
+            program->vars[i].name);
+      }
+    }
+  }
+
+  for(i=0;i<program->n_insns;i++){
+    OrcInstruction *insn = program->insns + i;
+    OrcStaticOpcode *opcode = insn->opcode;
+
+    for(j=0;j<ORC_STATIC_OPCODE_N_DEST;j++){
+      if (opcode->dest_size[j] == 0) continue;
+      if (program->vars[insn->dest_args[j]].used &&
+          program->vars[insn->dest_args[j]].vartype == ORC_VAR_TYPE_DEST) {
+        orc_parse_log (parser, "error: destination \"%s\" written multiple times\n",
+            program->vars[insn->dest_args[j]].name);
+      }
+      program->vars[insn->dest_args[j]].used = TRUE;
+    }
+
+    for(j=0;j<ORC_STATIC_OPCODE_N_SRC;j++){
+      if (opcode->src_size[j] == 0) continue;
+      if (program->vars[insn->src_args[j]].used &&
+          program->vars[insn->src_args[j]].vartype == ORC_VAR_TYPE_SRC) {
+        orc_parse_log (parser, "error: source \"%s\" read multiple times\n",
+            program->vars[insn->src_args[j]].name);
+      }
+      if (!program->vars[insn->src_args[j]].used &&
+          program->vars[insn->src_args[j]].vartype == ORC_VAR_TYPE_TEMP) {
+        orc_parse_log (parser, "error: variable \"%s\" used before being written\n",
+            program->vars[insn->src_args[j]].name);
+      }
+    }
+
+  }
+
+}
 

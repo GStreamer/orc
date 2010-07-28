@@ -77,6 +77,7 @@ main (int argc, char *argv[])
   char *include_file = NULL;
   char *compat_version = VERSION;
   FILE *output;
+  char *log = NULL;
 
   orc_init ();
   orc_test_init ();
@@ -171,12 +172,19 @@ main (int argc, char *argv[])
   }
 
   if (output_file == NULL) {
-    if (mode == MODE_IMPL) {
-      output_file = "out.c";
-    } else if (mode == MODE_HEADER) {
-      output_file = "out.h";
-    } else if (mode == MODE_TEST) {
-      output_file = "out_test.c";
+    switch (mode) {
+      case MODE_IMPL:
+        output_file = "out.c";
+        break;
+      case MODE_HEADER:
+        output_file = "out.h";
+        break;
+      case MODE_TEST:
+        output_file = "out_test.c";
+        break;
+      case MODE_ASSEMBLY:
+        output_file = "out.s";
+        break;
     }
   }
 
@@ -186,7 +194,8 @@ main (int argc, char *argv[])
     exit(1);
   }
 
-  n = orc_parse (code, &programs);
+  n = orc_parse_full (code, &programs, &log);
+  printf("%s", log);
 
   output = fopen (output_file, "w");
   if (!output) {

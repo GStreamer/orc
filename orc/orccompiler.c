@@ -259,7 +259,7 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   orc_compiler_allocate_codemem (compiler);
   if (compiler->error) goto error;
 
-  ORC_INFO("compiling for target");
+  ORC_INFO("compiling for target \"%s\"", compiler->target->name);
   compiler->target->compile (compiler);
   if (compiler->error) goto error;
 
