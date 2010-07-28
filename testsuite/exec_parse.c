@@ -11,6 +11,7 @@ void output_code (OrcProgram *p, FILE *output);
 void output_code_header (OrcProgram *p, FILE *output);
 void output_code_test (OrcProgram *p, FILE *output);
 
+int verbose = FALSE;
 int error = FALSE;
 
 int
@@ -43,7 +44,7 @@ main (int argc, char *argv[])
   n = orc_parse (code, &programs);
 
   for(i=0;i<n;i++){
-    printf("%s\n", programs[i]->name);
+    if (verbose) printf("%s\n", programs[i]->name);
     orc_test_compare_output_full (programs[i], 0);
   }
 

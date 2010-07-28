@@ -8,6 +8,7 @@
 
 
 int error = FALSE;
+int verbose = FALSE;
 
 void test_opcode_src (OrcStaticOpcode *opcode);
 void test_opcode_const (OrcStaticOpcode *opcode);
@@ -29,7 +30,7 @@ main (int argc, char *argv[])
   opcode_set = orc_opcode_set_get ("sys");
 
   for(i=0;i<opcode_set->n_opcodes;i++){
-    printf("/* %s src %d,%d,%d,%d */\n",
+    if (verbose) printf("%s src %d,%d,%d,%d\n",
         opcode_set->opcodes[i].name,
         opcode_set->opcodes[i].dest_size[0],
         opcode_set->opcodes[i].dest_size[1],
@@ -38,7 +39,7 @@ main (int argc, char *argv[])
     test_opcode_src (opcode_set->opcodes + i);
   }
   for(i=0;i<opcode_set->n_opcodes;i++){
-    printf("/* %s const %d,%d,%d */\n",
+    if (verbose) printf("%s const %d,%d,%d\n",
         opcode_set->opcodes[i].name,
         opcode_set->opcodes[i].dest_size[0],
         opcode_set->opcodes[i].src_size[0],
@@ -46,7 +47,7 @@ main (int argc, char *argv[])
     test_opcode_const (opcode_set->opcodes + i);
   }
   for(i=0;i<opcode_set->n_opcodes;i++){
-    printf("/* %s param %d,%d,%d */\n",
+    if (verbose) printf("%s param %d,%d,%d\n",
         opcode_set->opcodes[i].name,
         opcode_set->opcodes[i].dest_size[0],
         opcode_set->opcodes[i].src_size[0],
@@ -54,7 +55,7 @@ main (int argc, char *argv[])
     test_opcode_param (opcode_set->opcodes + i);
   }
   for(i=0;i<opcode_set->n_opcodes;i++){
-    printf("/* %s inplace %d,%d,%d */\n",
+    if (verbose) printf("%s inplace %d,%d,%d\n",
         opcode_set->opcodes[i].name,
         opcode_set->opcodes[i].dest_size[0],
         opcode_set->opcodes[i].src_size[0],
@@ -62,7 +63,7 @@ main (int argc, char *argv[])
     test_opcode_inplace (opcode_set->opcodes + i);
   }
   for(i=0;i<opcode_set->n_opcodes;i++){
-    printf("/* %s src 2d %d,%d,%d */\n",
+    if (verbose) printf("%s src 2d %d,%d,%d\n",
         opcode_set->opcodes[i].name,
         opcode_set->opcodes[i].dest_size[0],
         opcode_set->opcodes[i].src_size[0],
@@ -70,7 +71,7 @@ main (int argc, char *argv[])
     test_opcode_src_2d (opcode_set->opcodes + i);
   }
   for(i=0;i<opcode_set->n_opcodes;i++){
-    printf("/* %s src const n %d,%d,%d */\n",
+    if (verbose) printf("%s src const n %d,%d,%d\n",
         opcode_set->opcodes[i].name,
         opcode_set->opcodes[i].dest_size[0],
         opcode_set->opcodes[i].src_size[0],
@@ -78,7 +79,7 @@ main (int argc, char *argv[])
     test_opcode_src_const_n (opcode_set->opcodes + i);
   }
   for(i=0;i<opcode_set->n_opcodes;i++){
-    printf("/* %s src const n 2d %d,%d,%d */\n",
+    if (verbose) printf("%s src const n 2d %d,%d,%d\n",
         opcode_set->opcodes[i].name,
         opcode_set->opcodes[i].dest_size[0],
         opcode_set->opcodes[i].src_size[0],
