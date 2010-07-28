@@ -20,6 +20,8 @@ typedef struct _OrcFixup OrcFixup;
 typedef struct _OrcTarget OrcTarget;
 
 typedef void (*OrcOpcodeEmulateFunc)(OrcOpcodeExecutor *ex, void *user);
+typedef void (*OrcOpcodeEmulateNFunc)(OrcOpcodeExecutor *ex, int n);
+typedef void (*OrcOpcodeEmulate16Func)(OrcOpcodeExecutor *ex);
 typedef void (*OrcRuleEmitFunc)(OrcCompiler *p, void *user, OrcInstruction *insn);
 typedef void (*OrcExecutorFunc)(OrcExecutor *ex);
 
@@ -75,6 +77,7 @@ enum {
   ORC_TARGET_C_C99 = (1<<0),
   ORC_TARGET_C_BARE = (1<<1),
   ORC_TARGET_C_NOEXEC = (1<<2),
+  ORC_TARGET_C_OPCODE = (1<<3),
   ORC_TARGET_FAST_NAN = (1<<30),
   ORC_TARGET_FAST_DENORMAL = (1<<31)
 };
@@ -269,6 +272,7 @@ struct _OrcStaticOpcode {
   unsigned int flags;
   int dest_size[ORC_STATIC_OPCODE_N_DEST];
   int src_size[ORC_STATIC_OPCODE_N_SRC];
+  OrcOpcodeEmulateNFunc emulateN;
 };
 
 /**
@@ -416,6 +420,11 @@ struct _OrcOpcodeExecutor {
   /*< private >*/
   int src_values[ORC_STATIC_OPCODE_N_SRC];
   int dest_values[ORC_STATIC_OPCODE_N_DEST];
+
+  OrcOpcodeEmulateNFunc emulateN;
+
+  void *src_ptrs[ORC_STATIC_OPCODE_N_SRC];
+  void *dest_ptrs[ORC_STATIC_OPCODE_N_DEST];
 };
 
 /**

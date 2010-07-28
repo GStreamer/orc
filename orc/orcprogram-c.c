@@ -102,6 +102,10 @@ orc_target_c_get_asm_preamble (void)
     "#define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))\n"
     "#define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))\n"
     "#define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))\n"
+    "#define ORC_MIN_NORMAL (1.1754944909521339405e-38)\n"
+    "#define ORC_DENORMAL(x) (((x) > -ORC_MIN_NORMAL && (x) < ORC_MIN_NORMAL) ? ((x)<0 ? (-0.0f) : (0.0f)) : (x))\n"
+    "#define ORC_MINF(a,b) (isnan(a) ? a : isnan(b) ? b : ((a)<(b)) ? (a) : (b))\n"
+    "#define ORC_MAXF(a,b) (isnan(a) ? a : isnan(b) ? b : ((a)>(b)) ? (a) : (b))\n"
     "/* end Orc C target preamble */\n\n";
 }
 
@@ -129,24 +133,30 @@ static const char *varnames[] = {
 static void
 get_varname (char *s, OrcCompiler *compiler, int var)
 {
-  if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-    sprintf(s, "ex->arrays[%d]", var);
-  } else {
+  if (compiler->target_flags & ORC_TARGET_C_NOEXEC) {
     if (var < 48) {
       strcpy (s, varnames[var]);
     } else {
       sprintf(s, "t%d", var-32);
     }
+  } else if (compiler->target_flags & ORC_TARGET_C_OPCODE) {
+    if (var < ORC_VAR_S1) {
+      sprintf(s, "ex->dest_ptrs[%d]", var-ORC_VAR_D1);
+    } else {
+      sprintf(s, "ex->src_ptrs[%d]", var-ORC_VAR_S1);
+    }
+  } else {
+    sprintf(s, "ex->arrays[%d]", var);
   }
 }
 
 static void
 get_varname_stride (char *s, OrcCompiler *compiler, int var)
 {
-  if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-    sprintf(s, "ex->params[%d]", var);
-  } else {
+  if (compiler->target_flags & ORC_TARGET_C_NOEXEC) {
     sprintf(s, "%s_stride", varnames[var]);
+  } else {
+    sprintf(s, "ex->params[%d]", var);
   }
 }
 
@@ -171,7 +181,8 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     ORC_ASM_CODE(compiler,"  int j;\n");
   }
   if (compiler->program->constant_n == 0) {
-    if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
+    if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC) &&
+        !(compiler->target_flags & ORC_TARGET_C_OPCODE)) {
       ORC_ASM_CODE(compiler,"  int n = ex->n;\n");
     }
   } else {
@@ -241,7 +252,19 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
         break;
       case ORC_VAR_TYPE_PARAM:
         c_get_name (varname, compiler, i);
-        if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
+        if (compiler->target_flags & ORC_TARGET_C_NOEXEC) {
+          ORC_ASM_CODE(compiler,"  const %s %s = %s;\n",
+              var->is_float_param ? "float" : "int",
+              varname, varnames[i]);
+        } else if (compiler->target_flags & ORC_TARGET_C_OPCODE) {
+          if (var->is_float_param) {
+            ORC_ASM_CODE(compiler,"  const float %s = ((orc_union32 *)(ex->src_ptrs[%d]))->f;\n",
+                varname, i - ORC_VAR_P1 + compiler->program->n_src_vars);
+          } else {
+            ORC_ASM_CODE(compiler,"  const int %s = ((orc_union32 *)(ex->src_ptrs[%d]))->i;\n",
+                varname, i - ORC_VAR_P1 + compiler->program->n_src_vars);
+          }
+        } else {
           if (var->is_float_param) {
             ORC_ASM_CODE(compiler,"  const float %s = ((orc_union32 *)(ex->params+%d))->f;\n",
                 varname, i);
@@ -249,10 +272,6 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
             ORC_ASM_CODE(compiler,"  const int %s = ex->params[%d];\n",
                 varname, i);
           }
-        } else {
-          ORC_ASM_CODE(compiler,"  const %s %s = %s;\n",
-              var->is_float_param ? "float" : "int",
-              varname, varnames[i]);
         }
         break;
       default:
@@ -374,20 +393,27 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     switch (var->vartype) {
       case ORC_VAR_TYPE_ACCUMULATOR:
         if (var->size == 2) {
-          if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-            ORC_ASM_CODE(compiler,"  ex->accumulators[%d] = (%s & 0xffff);\n",
-                i - ORC_VAR_A1, varname);
-          } else {
+          if (compiler->target_flags & ORC_TARGET_C_NOEXEC) {
             ORC_ASM_CODE(compiler,"  *%s = (%s & 0xffff);\n",
                 varnames[i], varname);
+          } else if (compiler->target_flags & ORC_TARGET_C_OPCODE) {
+            ORC_ASM_CODE(compiler,"  ((orc_union32 *)ex->dest_ptrs[%d])->i = "
+                "(%s + ((orc_union32 *)ex->dest_ptrs[%d])->i) & 0xffff;\n",
+                i - ORC_VAR_A1, varname, i - ORC_VAR_A1);
+          } else {
+            ORC_ASM_CODE(compiler,"  ex->accumulators[%d] = (%s & 0xffff);\n",
+                i - ORC_VAR_A1, varname);
           }
         } else {
-          if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-            ORC_ASM_CODE(compiler,"  ex->accumulators[%d] = %s;\n",
-                i - ORC_VAR_A1, varname);
-          } else {
+          if (compiler->target_flags & ORC_TARGET_C_NOEXEC) {
             ORC_ASM_CODE(compiler,"  *%s = %s;\n",
                 varnames[i], varname);
+          } else if (compiler->target_flags & ORC_TARGET_C_OPCODE) {
+            ORC_ASM_CODE(compiler,"  ((orc_union32 *)ex->dest_ptrs[%d])->i += %s;\n",
+                i - ORC_VAR_A1, varname);
+          } else {
+            ORC_ASM_CODE(compiler,"  ex->accumulators[%d] = %s;\n",
+                i - ORC_VAR_A1, varname);
           }
         }
         break;

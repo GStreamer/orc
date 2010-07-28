@@ -11,6 +11,7 @@ liborc_@ORC_MAJORMINOR@_la_CFLAGS = $(ORC_CFLAGS) \
 
 liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orc.c \
+	orcemulateopcodes.c \
 	orcexecutor.c \
 	orcfunctions.c \
 	orcutils.c \
@@ -88,8 +89,13 @@ nodist_pkginclude_HEADERS = orc-stdint.h
 
 DISTCLEANFILES = orc-stdint.h
 
+noinst_PROGRAMS = generate-emulation
 
-orcfunctions:
+generate_emulation_LDADD = $(ORC_LIBS)
+generate_emulation_CFLAGS = $(ORC_CFLAGS)
+
+update:
 	$(top_builddir)/tools/orcc$(EXEEXT) --implementation -o orcfunctions.c orcfunctions.orc
 	$(top_builddir)/tools/orcc$(EXEEXT) --header -o orcfunctions.h orcfunctions.orc
-
+	./generate-emulation$(EXEEXT) -o orcemulateopcodes.c
+	
