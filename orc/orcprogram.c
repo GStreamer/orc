@@ -341,13 +341,6 @@ orc_program_add_constant (OrcProgram *program, int size, int value, const char *
 {
   int i;
   
-  for(i=0;i<program->n_const_vars;i++){
-    if (program->vars[i].value == value) {
-      ORC_DEBUG("reusing constant %d", value);
-      return i;
-    }
-  }
-  
   i = ORC_VAR_C1 + program->n_const_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_CONST;
