@@ -211,7 +211,7 @@ test_opcode_param (OrcStaticOpcode *opcode)
     flags = ORC_TEST_FLAGS_FLOAT;
   }
 
-  sprintf(s, "test_c_%s", opcode->name);
+  sprintf(s, "test_p_%s", opcode->name);
   orc_program_set_name (p, s);
 
   orc_program_append_str (p, opcode->name, "d1", "s1", "p1");
