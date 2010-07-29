@@ -7,7 +7,6 @@
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
 #endif
-#include <math.h>
 
 #ifndef _ORC_INTEGER_TYPEDEFS_
 #define _ORC_INTEGER_TYPEDEFS_

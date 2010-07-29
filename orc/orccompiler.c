@@ -30,9 +30,11 @@
 
 void orc_compiler_assign_rules (OrcCompiler *compiler);
 void orc_compiler_global_reg_alloc (OrcCompiler *compiler);
+void orc_compiler_rewrite_insns (OrcCompiler *compiler);
 void orc_compiler_rewrite_vars (OrcCompiler *compiler);
 void orc_compiler_rewrite_vars2 (OrcCompiler *compiler);
 int orc_compiler_dup_temporary (OrcCompiler *compiler, int var, int j);
+int orc_compiler_new_temporary (OrcCompiler *compiler, int size);
 void orc_compiler_check_sizes (OrcCompiler *compiler);
 
 static char **_orc_compiler_flag_list;
@@ -244,6 +246,9 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   orc_compiler_check_sizes (compiler);
   if (compiler->error) goto error;
 
+  orc_compiler_rewrite_insns (compiler);
+  if (compiler->error) goto error;
+
   orc_compiler_assign_rules (compiler);
   if (compiler->error) goto error;
 
@@ -332,6 +337,84 @@ orc_compiler_check_sizes (OrcCompiler *compiler)
 
       }
     }
+  }
+}
+
+void
+orc_compiler_rewrite_insns (OrcCompiler *compiler)
+{
+  int i;
+  int j;
+  OrcStaticOpcode *opcode;
+  OrcProgram *program = compiler->program;
+
+  compiler->n_insns = 0;
+  for(j=0;j<program->n_insns;j++){
+    OrcInstruction insn;
+    OrcInstruction *xinsn;
+
+    memcpy (&insn, program->insns + j, sizeof(OrcInstruction));
+    opcode = insn.opcode;
+
+    if (!(opcode->flags & ORC_STATIC_OPCODE_LOAD)) {
+      for(i=0;i<ORC_STATIC_OPCODE_N_SRC;i++){
+        OrcVariable *var;
+
+        if (opcode->src_size[i] == 0) continue;
+
+        var = compiler->vars + insn.src_args[i];
+        if (var->vartype == ORC_VAR_TYPE_SRC ||
+            var->vartype == ORC_VAR_TYPE_DEST) {
+          OrcInstruction *cinsn;
+          
+          cinsn = compiler->insns + compiler->n_insns;
+          compiler->n_insns++;
+
+          if (var->size == 1) {
+            cinsn->opcode = orc_opcode_find_by_name ("loadb");
+          } else if (var->size == 2) {
+            cinsn->opcode = orc_opcode_find_by_name ("loadw");
+          } else {
+            cinsn->opcode = orc_opcode_find_by_name ("loadl");
+          }
+          cinsn->dest_args[0] = orc_compiler_new_temporary (compiler, var->size);
+          cinsn->src_args[0] = insn.src_args[i];
+          insn.src_args[i] = cinsn->dest_args[0];
+        }
+      }
+    }
+
+    xinsn = compiler->insns + compiler->n_insns;
+    memcpy (xinsn, &insn, sizeof(OrcInstruction));
+    compiler->n_insns++;
+
+    if (!(opcode->flags & ORC_STATIC_OPCODE_STORE)) {
+      for(i=0;i<ORC_STATIC_OPCODE_N_DEST;i++){
+        OrcVariable *var;
+
+        if (opcode->dest_size[i] == 0) continue;
+
+        var = compiler->vars + insn.dest_args[i];
+        if (var->vartype == ORC_VAR_TYPE_DEST) {
+          OrcInstruction *cinsn;
+          
+          cinsn = compiler->insns + compiler->n_insns;
+          compiler->n_insns++;
+
+          if (var->size == 1) {
+            cinsn->opcode = orc_opcode_find_by_name ("storeb");
+          } else if (var->size == 2) {
+            cinsn->opcode = orc_opcode_find_by_name ("storew");
+          } else {
+            cinsn->opcode = orc_opcode_find_by_name ("storel");
+          }
+          cinsn->src_args[0] = orc_compiler_new_temporary (compiler, var->size);
+          cinsn->dest_args[0] = xinsn->dest_args[i];
+          xinsn->dest_args[i] = cinsn->src_args[0];
+        }
+      }
+    }
+
   }
 }
 
@@ -580,6 +663,20 @@ orc_compiler_dup_temporary (OrcCompiler *compiler, int var, int j)
   compiler->vars[i].size = compiler->vars[var].size;
   compiler->vars[i].name = malloc (strlen(compiler->vars[var].name) + 10);
   sprintf(compiler->vars[i].name, "%s.dup%d", compiler->vars[var].name, j);
+  compiler->n_dup_vars++;
+
+  return i;
+}
+
+int
+orc_compiler_new_temporary (OrcCompiler *compiler, int size)
+{
+  int i = ORC_VAR_T1 + compiler->n_temp_vars + compiler->n_dup_vars;
+
+  compiler->vars[i].vartype = ORC_VAR_TYPE_TEMP;
+  compiler->vars[i].size = size;
+  compiler->vars[i].name = malloc (10);
+  sprintf(compiler->vars[i].name, "tmp%d", i);
   compiler->n_dup_vars++;
 
   return i;

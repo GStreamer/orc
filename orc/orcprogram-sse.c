@@ -657,23 +657,24 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
     int n_left = compiler->program->constant_n;
     int save_loop_shift;
     int loop_shift;
-    int offset = 0;
+
+    compiler->offset = 0;
 
     save_loop_shift = compiler->loop_shift;
     while (n_left >= (1<<compiler->loop_shift)) {
       ORC_ASM_CODE(compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
-      orc_sse_emit_loop (compiler, offset, 0);
+      orc_sse_emit_loop (compiler, compiler->offset, 0);
 
       n_left -= 1<<compiler->loop_shift;
-      offset += 1<<compiler->loop_shift;
+      compiler->offset += 1<<compiler->loop_shift;
     }
     for(loop_shift = compiler->loop_shift-1; loop_shift>=0; loop_shift--) {
       if (n_left >= (1<<loop_shift)) {
         compiler->loop_shift = loop_shift;
         ORC_ASM_CODE(compiler, "# LOOP SHIFT %d\n", loop_shift);
-        orc_sse_emit_loop (compiler, offset, 0);
+        orc_sse_emit_loop (compiler, compiler->offset, 0);
         n_left -= 1<<loop_shift;
-        offset += 1<<loop_shift;
+        compiler->offset += 1<<loop_shift;
       }
     }
     compiler->loop_shift = save_loop_shift;
@@ -719,9 +720,11 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
     orc_x86_emit_label (compiler, LABEL_INNER_LOOP_START);
     ui_max = 1<<compiler->unroll_shift;
     for(ui=0;ui<ui_max;ui++) {
-      orc_sse_emit_loop (compiler, ui<<compiler->loop_shift,
+      compiler->offset = ui<<compiler->loop_shift;
+      orc_sse_emit_loop (compiler, compiler->offset,
           (ui==ui_max-1) << (compiler->loop_shift + compiler->unroll_shift));
     }
+    compiler->offset = 0;
     if (compiler->loop_counter != ORC_REG_INVALID) {
       orc_x86_emit_add_imm_reg (compiler, 4, -1, compiler->loop_counter, TRUE);
     } else {
@@ -801,27 +804,6 @@ orc_sse_emit_loop (OrcCompiler *compiler, int offset, int update)
     ORC_ASM_CODE(compiler,"\n");
 #endif
 
-    for(k=0;k<ORC_STATIC_OPCODE_N_SRC;k++){
-      OrcVariable *var = compiler->vars + insn->src_args[k];
-
-      if (opcode->src_size[k] == 0) continue;
-
-      switch (var->vartype) {
-        case ORC_VAR_TYPE_SRC:
-        case ORC_VAR_TYPE_DEST:
-          orc_sse_emit_load_src (compiler, var, offset*var->size);
-          break;
-        case ORC_VAR_TYPE_CONST:
-          break;
-        case ORC_VAR_TYPE_PARAM:
-          break;
-        case ORC_VAR_TYPE_TEMP:
-          break;
-        default:
-          break;
-      }
-    }
-
     rule = insn->rule;
     if (rule && rule->emit) {
       if (!(insn->opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) &&
@@ -834,22 +816,6 @@ orc_sse_emit_loop (OrcCompiler *compiler, int offset, int update)
       rule->emit (compiler, rule->emit_user, insn);
     } else {
       ORC_COMPILER_ERROR(compiler,"No rule for: %s", opcode->name);
-    }
-
-    for(k=0;k<ORC_STATIC_OPCODE_N_DEST;k++){
-      OrcVariable *var = compiler->vars + insn->dest_args[k];
-
-      if (opcode->dest_size[k] == 0) continue;
-
-      switch (var->vartype) {
-        case ORC_VAR_TYPE_DEST:
-          orc_sse_emit_store_dest (compiler, var, offset*var->size);
-          break;
-        case ORC_VAR_TYPE_TEMP:
-          break;
-        default:
-          break;
-      }
     }
   }
 

@@ -88,6 +88,105 @@ orc_sse_emit_loadpq (OrcCompiler *p, int reg, int param)
 }
 
 static void
+sse_rule_loadX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  OrcVariable *src = compiler->vars + insn->src_args[0];
+  OrcVariable *dest = compiler->vars + insn->dest_args[0];
+  int ptr_reg;
+  int offset = 0;
+
+  offset = compiler->offset * src->size;
+  if (src->ptr_register == 0) {
+    int i = insn->src_args[0];
+    orc_x86_emit_mov_memoffset_reg (compiler, compiler->is_64bit ? 8 : 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]),
+        compiler->exec_reg, compiler->gp_tmpreg);
+    ptr_reg = compiler->gp_tmpreg;
+  } else {
+    ptr_reg = src->ptr_register;
+  } 
+  switch (src->size << compiler->loop_shift) {
+    case 1:
+      orc_x86_emit_mov_memoffset_reg (compiler, 1, offset, ptr_reg,
+          compiler->gp_tmpreg);
+      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, dest->alloc);
+      break;
+    case 2:
+      orc_x86_emit_mov_memoffset_reg (compiler, 2, offset, ptr_reg,
+          compiler->gp_tmpreg);
+      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, dest->alloc);
+      break;
+    case 4:
+      orc_x86_emit_mov_memoffset_sse (compiler, 4, offset, ptr_reg,
+          dest->alloc, src->is_aligned);
+      break;
+    case 8:
+      orc_x86_emit_mov_memoffset_sse (compiler, 8, offset, ptr_reg,
+          dest->alloc, src->is_aligned);
+      break;
+    case 16:
+      orc_x86_emit_mov_memoffset_sse (compiler, 16, offset, ptr_reg,
+          dest->alloc, src->is_aligned);
+      break;
+    default:
+      ORC_COMPILER_ERROR(compiler,"bad load size %d",
+          src->size << compiler->loop_shift);
+      break;
+  }
+}
+
+static void
+sse_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  OrcVariable *src = compiler->vars + insn->src_args[0];
+  OrcVariable *dest = compiler->vars + insn->dest_args[0];
+  int offset;
+  int ptr_reg;
+
+  offset = compiler->offset * dest->size;
+  if (dest->ptr_register == 0) {
+    orc_x86_emit_mov_memoffset_reg (compiler, compiler->is_64bit ? 8 : 4,
+        dest->ptr_offset, compiler->exec_reg, compiler->gp_tmpreg);
+    ptr_reg = compiler->gp_tmpreg; 
+  } else {
+    ptr_reg = dest->ptr_register;
+  } 
+  switch (dest->size << compiler->loop_shift) {
+    case 1:
+      /* FIXME we might be using ecx twice here */
+      if (ptr_reg == compiler->gp_tmpreg) {
+        ORC_COMPILER_ERROR(compiler,"unimplemented");
+      }
+      orc_x86_emit_mov_sse_reg (compiler, src->alloc, compiler->gp_tmpreg);
+      orc_x86_emit_mov_reg_memoffset (compiler, 1, compiler->gp_tmpreg, offset, ptr_reg);
+      break;
+    case 2:
+      /* FIXME we might be using ecx twice here */
+      if (ptr_reg == compiler->gp_tmpreg) {
+        ORC_COMPILER_ERROR(compiler,"unimplemented");
+      } 
+      orc_x86_emit_mov_sse_reg (compiler, src->alloc, compiler->gp_tmpreg);
+      orc_x86_emit_mov_reg_memoffset (compiler, 2, compiler->gp_tmpreg, offset, ptr_reg);
+      break;
+    case 4:
+      orc_x86_emit_mov_sse_memoffset (compiler, 4, src->alloc, offset, ptr_reg,
+          dest->is_aligned, dest->is_uncached);
+      break;
+    case 8:
+      orc_x86_emit_mov_sse_memoffset (compiler, 8, src->alloc, offset, ptr_reg,
+          dest->is_aligned, dest->is_uncached);
+      break;
+    case 16:
+      orc_x86_emit_mov_sse_memoffset (compiler, 16, src->alloc, offset, ptr_reg,
+          dest->is_aligned, dest->is_uncached);
+      break;
+    default:
+      ORC_COMPILER_ERROR(compiler,"bad size");
+      break;
+  }
+}
+
+static void
 sse_rule_copyx (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   if (p->vars[insn->src_args[0]].alloc == p->vars[insn->dest_args[0]].alloc) {
@@ -1057,6 +1156,14 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   /* SSE 2 */
   rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target,
       ORC_TARGET_SSE_SSE2);
+
+  orc_rule_register (rule_set, "loadb", sse_rule_loadX, NULL);
+  orc_rule_register (rule_set, "loadw", sse_rule_loadX, NULL);
+  orc_rule_register (rule_set, "loadl", sse_rule_loadX, NULL);
+
+  orc_rule_register (rule_set, "storeb", sse_rule_storeX, NULL);
+  orc_rule_register (rule_set, "storew", sse_rule_storeX, NULL);
+  orc_rule_register (rule_set, "storel", sse_rule_storeX, NULL);
 
   REG(addb);
   REG(addssb);

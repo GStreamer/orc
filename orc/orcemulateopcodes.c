@@ -340,6 +340,29 @@ emulate_copyb (OrcOpcodeExecutor *ex, int n)
 }
 
 void
+emulate_loadb (OrcOpcodeExecutor *ex, int n)
+{
+  int i;
+  orc_int8 var0;
+  orc_int8 * ptr0;
+  orc_int8 var4;
+  const orc_int8 * ptr4;
+
+  ptr0 = (orc_int8 *)ex->dest_ptrs[0];
+  ptr4 = (orc_int8 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    var4 = *ptr4;
+    ptr4++;
+    /* 0: loadb */
+    var0 = var4;
+    *ptr0 = var0;
+    ptr0++;
+  }
+
+}
+
+void
 emulate_maxsb (OrcOpcodeExecutor *ex, int n)
 {
   int i;
@@ -652,6 +675,29 @@ emulate_signb (OrcOpcodeExecutor *ex, int n)
     ptr4++;
     /* 0: signb */
     var0 = ORC_CLAMP(var4,-1,1);
+    *ptr0 = var0;
+    ptr0++;
+  }
+
+}
+
+void
+emulate_storeb (OrcOpcodeExecutor *ex, int n)
+{
+  int i;
+  orc_int8 var0;
+  orc_int8 * ptr0;
+  orc_int8 var4;
+  const orc_int8 * ptr4;
+
+  ptr0 = (orc_int8 *)ex->dest_ptrs[0];
+  ptr4 = (orc_int8 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    var4 = *ptr4;
+    ptr4++;
+    /* 0: storeb */
+    var0 = var4;
     *ptr0 = var0;
     ptr0++;
   }
@@ -1069,6 +1115,29 @@ emulate_copyw (OrcOpcodeExecutor *ex, int n)
 }
 
 void
+emulate_loadw (OrcOpcodeExecutor *ex, int n)
+{
+  int i;
+  orc_int16 var0;
+  orc_int16 * ptr0;
+  orc_int16 var4;
+  const orc_int16 * ptr4;
+
+  ptr0 = (orc_int16 *)ex->dest_ptrs[0];
+  ptr4 = (orc_int16 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    var4 = *ptr4;
+    ptr4++;
+    /* 0: loadw */
+    var0 = var4;
+    *ptr0 = var0;
+    ptr0++;
+  }
+
+}
+
+void
 emulate_maxsw (OrcOpcodeExecutor *ex, int n)
 {
   int i;
@@ -1381,6 +1450,29 @@ emulate_signw (OrcOpcodeExecutor *ex, int n)
     ptr4++;
     /* 0: signw */
     var0 = ORC_CLAMP(var4,-1,1);
+    *ptr0 = var0;
+    ptr0++;
+  }
+
+}
+
+void
+emulate_storew (OrcOpcodeExecutor *ex, int n)
+{
+  int i;
+  orc_int16 var0;
+  orc_int16 * ptr0;
+  orc_int16 var4;
+  const orc_int16 * ptr4;
+
+  ptr0 = (orc_int16 *)ex->dest_ptrs[0];
+  ptr4 = (orc_int16 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    var4 = *ptr4;
+    ptr4++;
+    /* 0: storew */
+    var0 = var4;
     *ptr0 = var0;
     ptr0++;
   }
@@ -1798,6 +1890,29 @@ emulate_copyl (OrcOpcodeExecutor *ex, int n)
 }
 
 void
+emulate_loadl (OrcOpcodeExecutor *ex, int n)
+{
+  int i;
+  orc_union32 var0;
+  orc_union32 * ptr0;
+  orc_union32 var4;
+  const orc_union32 * ptr4;
+
+  ptr0 = (orc_union32 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union32 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    var4 = *ptr4;
+    ptr4++;
+    /* 0: loadl */
+    var0.i = var4.i;
+    *ptr0 = var0;
+    ptr0++;
+  }
+
+}
+
+void
 emulate_maxsl (OrcOpcodeExecutor *ex, int n)
 {
   int i;
@@ -2110,6 +2225,29 @@ emulate_signl (OrcOpcodeExecutor *ex, int n)
     ptr4++;
     /* 0: signl */
     var0.i = ORC_CLAMP(var4.i,-1,1);
+    *ptr0 = var0;
+    ptr0++;
+  }
+
+}
+
+void
+emulate_storel (OrcOpcodeExecutor *ex, int n)
+{
+  int i;
+  orc_union32 var0;
+  orc_union32 * ptr0;
+  orc_union32 var4;
+  const orc_union32 * ptr4;
+
+  ptr0 = (orc_union32 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union32 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    var4 = *ptr4;
+    ptr4++;
+    /* 0: storel */
+    var0.i = var4.i;
     *ptr0 = var0;
     ptr0++;
   }

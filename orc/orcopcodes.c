@@ -396,6 +396,7 @@ BINARY_UB(avgub, (a + b + 1)>>1)
 BINARY_SB(cmpeqb, (a == b) ? (~0) : 0)
 BINARY_SB(cmpgtsb, (a > b) ? (~0) : 0)
 UNARY_SB(copyb, a)
+UNARY_SB(loadb, a)
 BINARY_SB(maxsb, (a > b) ? a : b)
 BINARY_UB(maxub, (a > b) ? a : b)
 BINARY_SB(minsb, (a < b) ? a : b)
@@ -408,6 +409,7 @@ BINARY_SB(shlb, a << b)
 BINARY_SB(shrsb, a >> b)
 BINARY_UB(shrub, (a) >> b)
 UNARY_SB(signb, ORC_CLAMP(a,-1,1))
+UNARY_SB(storeb, a)
 BINARY_SB(subb, a - b)
 BINARY_SB(subssb, ORC_CLAMP_SB(a - b))
 BINARY_UB(subusb, ORC_CLAMP_UB(a - b))
@@ -424,6 +426,7 @@ BINARY_UW(avguw, (a + b + 1)>>1)
 BINARY_SW(cmpeqw, (a == b) ? (~0) : 0)
 BINARY_SW(cmpgtsw, (a > b) ? (~0) : 0)
 UNARY_SW(copyw, a)
+UNARY_SW(loadw, a)
 BINARY_SW(maxsw, (a > b) ? a : b)
 BINARY_UW(maxuw, (a > b) ? a : b)
 BINARY_SW(minsw, (a < b) ? a : b)
@@ -436,6 +439,7 @@ BINARY_SW(shlw, a << b)
 BINARY_SW(shrsw, a >> b)
 BINARY_UW(shruw, a >> b)
 UNARY_SW(signw, ORC_CLAMP(a,-1,1))
+UNARY_SW(storew, a)
 BINARY_SW(subw, a - b)
 BINARY_SW(subssw, ORC_CLAMP_SW(a - b))
 BINARY_UW(subusw, ORC_CLAMP_UW(a - b))
@@ -452,6 +456,7 @@ BINARY_UL(avgul, ((orc_uint64)(orc_uint32)a + (orc_uint64)(orc_uint32)b + 1)>>1)
 BINARY_SL(cmpeql, (a == b) ? (~0) : 0)
 BINARY_SL(cmpgtsl, (a > b) ? (~0) : 0)
 UNARY_SL(copyl, a)
+UNARY_SL(loadl, a)
 BINARY_SL(maxsl, (a > b) ? a : b)
 BINARY_UL(maxul, ((orc_uint32)a > (orc_uint32)b) ? a : b)
 BINARY_SL(minsl, (a < b) ? a : b)
@@ -464,6 +469,7 @@ BINARY_SL(shll, a << b)
 BINARY_SL(shrsl, a >> b)
 BINARY_UL(shrul, ((orc_uint32)a) >> b)
 UNARY_SL(signl, ORC_CLAMP(a,-1,1))
+UNARY_SL(storel, a)
 BINARY_SL(subl, a - b)
 BINARY_SL(subssl, ORC_CLAMP_SL((orc_int64)a - (orc_int64)b))
 BINARY_UL(subusl, (((orc_uint32)a) < ((orc_uint32)b)) ? 0 : a - b)
@@ -712,6 +718,7 @@ static OrcStaticOpcode opcodes[] = {
   { "cmpeqb", cmpeqb, NULL, 0, { 1 }, { 1, 1 }, emulate_cmpeqb },
   { "cmpgtsb", cmpgtsb, NULL, 0, { 1 }, { 1, 1 }, emulate_cmpgtsb },
   { "copyb", copyb, NULL, 0, { 1 }, { 1 }, emulate_copyb },
+  { "loadb", loadb, NULL, ORC_STATIC_OPCODE_LOAD, { 1 }, { 1 }, emulate_loadb },
   { "maxsb", maxsb, NULL, 0, { 1 }, { 1, 1 }, emulate_maxsb },
   { "maxub", maxub, NULL, 0, { 1 }, { 1, 1 }, emulate_maxub },
   { "minsb", minsb, NULL, 0, { 1 }, { 1, 1 }, emulate_minsb },
@@ -724,6 +731,7 @@ static OrcStaticOpcode opcodes[] = {
   { "shrsb", shrsb, NULL, ORC_STATIC_OPCODE_SCALAR, { 1 }, { 1, 1 }, emulate_shrsb },
   { "shrub", shrub, NULL, ORC_STATIC_OPCODE_SCALAR, { 1 }, { 1, 1 }, emulate_shrub },
   { "signb", signb, NULL, 0, { 1 }, { 1 }, emulate_signb },
+  { "storeb", storeb, NULL, ORC_STATIC_OPCODE_STORE, { 1 }, { 1 }, emulate_storeb },
   { "subb", subb, NULL, 0, { 1 }, { 1, 1 }, emulate_subb },
   { "subssb", subssb, NULL, 0, { 1 }, { 1, 1 }, emulate_subssb },
   { "subusb", subusb, NULL, 0, { 1 }, { 1, 1 }, emulate_subusb },
@@ -741,6 +749,7 @@ static OrcStaticOpcode opcodes[] = {
   { "cmpeqw", cmpeqw, NULL, 0, { 2 }, { 2, 2 }, emulate_cmpeqw },
   { "cmpgtsw", cmpgtsw, NULL, 0, { 2 }, { 2, 2 }, emulate_cmpgtsw },
   { "copyw", copyw, NULL, 0, { 2 }, { 2 }, emulate_copyw },
+  { "loadw", loadw, NULL, ORC_STATIC_OPCODE_LOAD, { 2 }, { 2 }, emulate_loadw },
   { "maxsw", maxsw, NULL, 0, { 2 }, { 2, 2 }, emulate_maxsw },
   { "maxuw", maxuw, NULL, 0, { 2 }, { 2, 2 }, emulate_maxuw },
   { "minsw", minsw, NULL, 0, { 2 }, { 2, 2 }, emulate_minsw },
@@ -753,6 +762,7 @@ static OrcStaticOpcode opcodes[] = {
   { "shrsw", shrsw, NULL, ORC_STATIC_OPCODE_SCALAR, { 2 }, { 2, 2 }, emulate_shrsw },
   { "shruw", shruw, NULL, ORC_STATIC_OPCODE_SCALAR, { 2 }, { 2, 2 }, emulate_shruw },
   { "signw", signw, NULL, 0, { 2 }, { 2 }, emulate_signw },
+  { "storew", storew, NULL, ORC_STATIC_OPCODE_STORE, { 2 }, { 2 }, emulate_storew },
   { "subw", subw, NULL, 0, { 2 }, { 2, 2 }, emulate_subw },
   { "subssw", subssw, NULL, 0, { 2 }, { 2, 2 }, emulate_subssw },
   { "subusw", subusw, NULL, 0, { 2 }, { 2, 2 }, emulate_subusw },
@@ -770,6 +780,7 @@ static OrcStaticOpcode opcodes[] = {
   { "cmpeql", cmpeql, NULL, 0, { 4 }, { 4, 4 }, emulate_cmpeql },
   { "cmpgtsl", cmpgtsl, NULL, 0, { 4 }, { 4, 4 }, emulate_cmpgtsl },
   { "copyl", copyl, NULL, 0, { 4 }, { 4 }, emulate_copyl },
+  { "loadl", loadl, NULL, ORC_STATIC_OPCODE_LOAD, { 4 }, { 4 }, emulate_loadl },
   { "maxsl", maxsl, NULL, 0, { 4 }, { 4, 4 }, emulate_maxsl },
   { "maxul", maxul, NULL, 0, { 4 }, { 4, 4 }, emulate_maxul },
   { "minsl", minsl, NULL, 0, { 4 }, { 4, 4 }, emulate_minsl },
@@ -782,6 +793,7 @@ static OrcStaticOpcode opcodes[] = {
   { "shrsl", shrsl, NULL, ORC_STATIC_OPCODE_SCALAR, { 4 }, { 4, 4 }, emulate_shrsl },
   { "shrul", shrul, NULL, ORC_STATIC_OPCODE_SCALAR, { 4 }, { 4, 4 }, emulate_shrul },
   { "signl", signl, NULL, 0, { 4 }, { 4 }, emulate_signl },
+  { "storel", storel, NULL, ORC_STATIC_OPCODE_STORE, { 4 }, { 4 }, emulate_storel },
   { "subl", subl, NULL, 0, { 4 }, { 4, 4 }, emulate_subl },
   { "subssl", subssl, NULL, 0, { 4 }, { 4, 4 }, emulate_subssl },
   { "subusl", subusl, NULL, 0, { 4 }, { 4, 4 }, emulate_subusl },
