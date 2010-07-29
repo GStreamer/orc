@@ -265,6 +265,7 @@ struct _OrcOpcodeSet {
 #define ORC_STATIC_OPCODE_SCALAR (1<<3)
 #define ORC_STATIC_OPCODE_LOAD (1<<4)
 #define ORC_STATIC_OPCODE_STORE (1<<5)
+#define ORC_STATIC_OPCODE_INVARIANT (1<<6)
 
 
 struct _OrcStaticOpcode {

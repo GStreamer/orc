@@ -397,6 +397,7 @@ BINARY_SB(cmpeqb, (a == b) ? (~0) : 0)
 BINARY_SB(cmpgtsb, (a > b) ? (~0) : 0)
 UNARY_SB(copyb, a)
 UNARY_SB(loadb, a)
+UNARY_SB(loadpb, a)
 BINARY_SB(maxsb, (a > b) ? a : b)
 BINARY_UB(maxub, (a > b) ? a : b)
 BINARY_SB(minsb, (a < b) ? a : b)
@@ -427,6 +428,7 @@ BINARY_SW(cmpeqw, (a == b) ? (~0) : 0)
 BINARY_SW(cmpgtsw, (a > b) ? (~0) : 0)
 UNARY_SW(copyw, a)
 UNARY_SW(loadw, a)
+UNARY_SW(loadpw, a)
 BINARY_SW(maxsw, (a > b) ? a : b)
 BINARY_UW(maxuw, (a > b) ? a : b)
 BINARY_SW(minsw, (a < b) ? a : b)
@@ -457,6 +459,7 @@ BINARY_SL(cmpeql, (a == b) ? (~0) : 0)
 BINARY_SL(cmpgtsl, (a > b) ? (~0) : 0)
 UNARY_SL(copyl, a)
 UNARY_SL(loadl, a)
+UNARY_SL(loadpl, a)
 BINARY_SL(maxsl, (a > b) ? a : b)
 BINARY_UL(maxul, ((orc_uint32)a > (orc_uint32)b) ? a : b)
 BINARY_SL(minsl, (a < b) ? a : b)
@@ -719,6 +722,7 @@ static OrcStaticOpcode opcodes[] = {
   { "cmpgtsb", cmpgtsb, NULL, 0, { 1 }, { 1, 1 }, emulate_cmpgtsb },
   { "copyb", copyb, NULL, 0, { 1 }, { 1 }, emulate_copyb },
   { "loadb", loadb, NULL, ORC_STATIC_OPCODE_LOAD, { 1 }, { 1 }, emulate_loadb },
+  { "loadpb", loadpb, NULL, ORC_STATIC_OPCODE_LOAD|ORC_STATIC_OPCODE_SCALAR|ORC_STATIC_OPCODE_INVARIANT, { 1 }, { 1 }, emulate_loadpb },
   { "maxsb", maxsb, NULL, 0, { 1 }, { 1, 1 }, emulate_maxsb },
   { "maxub", maxub, NULL, 0, { 1 }, { 1, 1 }, emulate_maxub },
   { "minsb", minsb, NULL, 0, { 1 }, { 1, 1 }, emulate_minsb },
@@ -750,6 +754,7 @@ static OrcStaticOpcode opcodes[] = {
   { "cmpgtsw", cmpgtsw, NULL, 0, { 2 }, { 2, 2 }, emulate_cmpgtsw },
   { "copyw", copyw, NULL, 0, { 2 }, { 2 }, emulate_copyw },
   { "loadw", loadw, NULL, ORC_STATIC_OPCODE_LOAD, { 2 }, { 2 }, emulate_loadw },
+  { "loadpw", loadpw, NULL, ORC_STATIC_OPCODE_LOAD|ORC_STATIC_OPCODE_SCALAR|ORC_STATIC_OPCODE_INVARIANT, { 2 }, { 2 }, emulate_loadpw },
   { "maxsw", maxsw, NULL, 0, { 2 }, { 2, 2 }, emulate_maxsw },
   { "maxuw", maxuw, NULL, 0, { 2 }, { 2, 2 }, emulate_maxuw },
   { "minsw", minsw, NULL, 0, { 2 }, { 2, 2 }, emulate_minsw },
@@ -781,6 +786,7 @@ static OrcStaticOpcode opcodes[] = {
   { "cmpgtsl", cmpgtsl, NULL, 0, { 4 }, { 4, 4 }, emulate_cmpgtsl },
   { "copyl", copyl, NULL, 0, { 4 }, { 4 }, emulate_copyl },
   { "loadl", loadl, NULL, ORC_STATIC_OPCODE_LOAD, { 4 }, { 4 }, emulate_loadl },
+  { "loadpl", loadpl, NULL, ORC_STATIC_OPCODE_LOAD|ORC_STATIC_OPCODE_SCALAR|ORC_STATIC_OPCODE_INVARIANT, { 4 }, { 4 }, emulate_loadpl },
   { "maxsl", maxsl, NULL, 0, { 4 }, { 4, 4 }, emulate_maxsl },
   { "maxul", maxul, NULL, 0, { 4 }, { 4, 4 }, emulate_maxul },
   { "minsl", minsl, NULL, 0, { 4 }, { 4, 4 }, emulate_minsl },

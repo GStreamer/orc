@@ -15,76 +15,60 @@
 
 /* sse rules */
 
-void
-orc_sse_emit_loadil (OrcCompiler *p, int reg, int value)
+static void
+sse_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
-  if (value == 0) {
-    orc_sse_emit_pxor(p, reg, reg);
-  } else {
-    orc_x86_emit_mov_imm_reg (p, 4, value, p->gp_tmpreg);
-    orc_x86_emit_mov_reg_sse (p, p->gp_tmpreg, reg);
-    orc_sse_emit_pshufd (p, 0, reg, reg);
+  OrcVariable *src = compiler->vars + insn->src_args[0];
+  OrcVariable *dest = compiler->vars + insn->dest_args[0];
+  int reg;
+
+  if (src->vartype == ORC_VAR_TYPE_PARAM) {
+    reg = dest->alloc;
+
+    switch (src->size) {
+      case 1:
+        orc_x86_emit_mov_memoffset_sse (compiler, 4,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[0]]),
+            compiler->exec_reg, reg, FALSE);
+        orc_sse_emit_punpcklbw (compiler, reg, reg);
+        orc_sse_emit_pshuflw (compiler, 0, reg, reg);
+        break;
+      case 2:
+        orc_x86_emit_mov_memoffset_sse (compiler, 4,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[0]]),
+            compiler->exec_reg, reg, FALSE);
+        orc_sse_emit_pshuflw (compiler, 0, reg, reg);
+        break;
+      case 4:
+        orc_x86_emit_mov_memoffset_sse (compiler, 4,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[0]]),
+            compiler->exec_reg, reg, FALSE);
+        break;
+    }
+    orc_sse_emit_pshufd (compiler, 0, reg, reg);
+  } else if (src->vartype == ORC_VAR_TYPE_CONST) {
+    int value = src->value;
+
+    reg = dest->alloc;
+
+    if (src->size == 1) {
+      value &= 0xff;
+      value |= (value<<8);
+      value |= (value<<16);
+    }
+    if (src->size == 2) {
+      value &= 0xffff;
+      value |= (value<<16);
+    }
+
+    if (value == 0) {
+      orc_sse_emit_pxor(compiler, reg, reg);
+    } else {
+      orc_x86_emit_mov_imm_reg (compiler, 4, value, compiler->gp_tmpreg);
+      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, reg);
+      orc_sse_emit_pshufd (compiler, 0, reg, reg);
+    }
   }
-}
-
-void
-orc_sse_emit_loadib (OrcCompiler *p, int reg, int value)
-{
-  value &= 0xff;
-  value |= (value<<8);
-  value |= (value<<16);
-  orc_sse_emit_loadil (p, reg, value);
-}
-
-void
-orc_sse_emit_loadiw (OrcCompiler *p, int reg, int value)
-{
-  value &= 0xffff;
-  value |= (value<<16);
-  orc_sse_emit_loadil (p, reg, value);
-}
-
-void
-orc_sse_emit_loadpb (OrcCompiler *p, int reg, int param)
-{
-  orc_x86_emit_mov_memoffset_sse (p, 4,
-      (int)ORC_STRUCT_OFFSET(OrcExecutor, params[param]),
-      p->exec_reg, reg, FALSE);
-
-  orc_sse_emit_punpcklbw (p, reg, reg);
-  orc_sse_emit_pshuflw (p, 0, reg, reg);
-  orc_sse_emit_pshufd (p, 0, reg, reg);
-}
-
-void
-orc_sse_emit_loadpw (OrcCompiler *p, int reg, int param)
-{
-  orc_x86_emit_mov_memoffset_sse (p, 4,
-      (int)ORC_STRUCT_OFFSET(OrcExecutor, params[param]),
-      p->exec_reg, reg, FALSE);
-
-  orc_sse_emit_pshuflw (p, 0, reg, reg);
-  orc_sse_emit_pshufd (p, 0, reg, reg);
-}
-
-void
-orc_sse_emit_loadpl (OrcCompiler *p, int reg, int param)
-{
-  orc_x86_emit_mov_memoffset_sse (p, 4,
-      (int)ORC_STRUCT_OFFSET(OrcExecutor, params[param]),
-      p->exec_reg, reg, FALSE);
-
-  orc_sse_emit_pshufd (p, 0, reg, reg);
-}
-
-void
-orc_sse_emit_loadpq (OrcCompiler *p, int reg, int param)
-{
-  orc_x86_emit_mov_memoffset_sse (p, 8,
-      (int)ORC_STRUCT_OFFSET(OrcExecutor, params[param]),
-      p->exec_reg, reg, FALSE);
-
-  orc_sse_emit_pshufd (p, 0, reg, reg);
 }
 
 static void
@@ -1160,6 +1144,9 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "loadb", sse_rule_loadX, NULL);
   orc_rule_register (rule_set, "loadw", sse_rule_loadX, NULL);
   orc_rule_register (rule_set, "loadl", sse_rule_loadX, NULL);
+  orc_rule_register (rule_set, "loadpb", sse_rule_loadpX, NULL);
+  orc_rule_register (rule_set, "loadpw", sse_rule_loadpX, NULL);
+  orc_rule_register (rule_set, "loadpl", sse_rule_loadpX, NULL);
 
   orc_rule_register (rule_set, "storeb", sse_rule_storeX, NULL);
   orc_rule_register (rule_set, "storew", sse_rule_storeX, NULL);

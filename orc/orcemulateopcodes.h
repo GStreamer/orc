@@ -1,3 +1,6 @@
+void emulate_loadpb (OrcOpcodeExecutor *ex, int n);
+void emulate_loadpw (OrcOpcodeExecutor *ex, int n);
+void emulate_loadpl (OrcOpcodeExecutor *ex, int n);
 void emulate_absb (OrcOpcodeExecutor *ex, int n);
 void emulate_n16_absb (OrcOpcodeExecutor *ex);
 void emulate_addb (OrcOpcodeExecutor *ex, int n);

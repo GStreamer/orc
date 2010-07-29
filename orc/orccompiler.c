@@ -380,6 +380,23 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
           cinsn->dest_args[0] = orc_compiler_new_temporary (compiler, var->size);
           cinsn->src_args[0] = insn.src_args[i];
           insn.src_args[i] = cinsn->dest_args[0];
+        } else if (var->vartype == ORC_VAR_TYPE_CONST ||
+            var->vartype == ORC_VAR_TYPE_PARAM) {
+          OrcInstruction *cinsn;
+
+          cinsn = compiler->insns + compiler->n_insns;
+          compiler->n_insns++;
+
+          if (var->size == 1) {
+            cinsn->opcode = orc_opcode_find_by_name ("loadpb");
+          } else if (var->size == 2) {
+            cinsn->opcode = orc_opcode_find_by_name ("loadpw");
+          } else {
+            cinsn->opcode = orc_opcode_find_by_name ("loadpl");
+          }
+          cinsn->dest_args[0] = orc_compiler_new_temporary (compiler, var->size);
+          cinsn->src_args[0] = insn.src_args[i];
+          insn.src_args[i] = cinsn->dest_args[0];
         }
       }
     }

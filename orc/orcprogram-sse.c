@@ -259,13 +259,21 @@ void
 sse_load_constant (OrcCompiler *compiler, int reg, int size, int value)
 {
   if (size == 1) {
-    orc_sse_emit_loadib (compiler, reg, value);
-  } else if (size == 2) {
-    orc_sse_emit_loadiw (compiler, reg, value);
-  } else if (size == 4) {
-    orc_sse_emit_loadil (compiler, reg, value);
+    value &= 0xff;
+    value |= (value << 8);
+    value |= (value << 16);
+  }
+  if (size == 2) {
+    value &= 0xffff;
+    value |= (value << 16);
+  }
+
+  if (value == 0) {
+    orc_sse_emit_pxor(compiler, reg, reg);
   } else {
-    ORC_COMPILER_ERROR(compiler, "unimplemented");
+    orc_x86_emit_mov_imm_reg (compiler, 4, value, compiler->gp_tmpreg);
+    orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, reg);
+    orc_sse_emit_pshufd (compiler, 0, reg, reg);
   }
 
 }
@@ -278,31 +286,8 @@ sse_load_constants_outer (OrcCompiler *compiler)
     if (compiler->vars[i].name == NULL) continue;
     switch (compiler->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:
-        if (compiler->vars[i].size == 1) {
-          orc_sse_emit_loadib (compiler, compiler->vars[i].alloc,
-              (int)compiler->vars[i].value);
-        } else if (compiler->vars[i].size == 2) {
-          orc_sse_emit_loadiw (compiler, compiler->vars[i].alloc,
-              (int)compiler->vars[i].value);
-        } else if (compiler->vars[i].size == 4) {
-          orc_sse_emit_loadil (compiler, compiler->vars[i].alloc,
-              (int)compiler->vars[i].value);
-        } else {
-          ORC_COMPILER_ERROR(compiler, "unimplemented");
-        }
         break;
       case ORC_VAR_TYPE_PARAM:
-        if (compiler->vars[i].size == 1) {
-          orc_sse_emit_loadpb (compiler, compiler->vars[i].alloc, i);
-        } else if (compiler->vars[i].size == 2) {
-          orc_sse_emit_loadpw (compiler, compiler->vars[i].alloc, i);
-        } else if (compiler->vars[i].size == 4) {
-          orc_sse_emit_loadpl (compiler, compiler->vars[i].alloc, i);
-        } else if (compiler->vars[i].size == 8) {
-          orc_sse_emit_loadpq (compiler, compiler->vars[i].alloc, i);
-        } else {
-          ORC_COMPILER_ERROR(compiler, "unimplemented");
-        }
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
@@ -381,94 +366,6 @@ sse_add_strides (OrcCompiler *compiler)
         ORC_COMPILER_ERROR(compiler,"bad vartype");
         break;
     }
-  }
-}
-
-void
-orc_sse_emit_load_src (OrcCompiler *compiler, OrcVariable *var, int offset)
-{
-  int ptr_reg;
-  if (var->ptr_register == 0) {
-    int i;
-    i = var - compiler->vars;
-    orc_x86_emit_mov_memoffset_reg (compiler, compiler->is_64bit ? 8 : 4,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]),
-        compiler->exec_reg, compiler->gp_tmpreg);
-    ptr_reg = compiler->gp_tmpreg;
-  } else {
-    ptr_reg = var->ptr_register;
-  }
-  switch (var->size << compiler->loop_shift) {
-    case 1:
-      orc_x86_emit_mov_memoffset_reg (compiler, 1, offset, ptr_reg, compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, var->alloc);
-      break;
-    case 2:
-      orc_x86_emit_mov_memoffset_reg (compiler, 2, offset, ptr_reg, compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, var->alloc);
-      break;
-    case 4:
-      orc_x86_emit_mov_memoffset_sse (compiler, 4, offset, ptr_reg, var->alloc,
-          var->is_aligned);
-      break;
-    case 8:
-      orc_x86_emit_mov_memoffset_sse (compiler, 8, offset, ptr_reg, var->alloc,
-          var->is_aligned);
-      break;
-    case 16:
-      orc_x86_emit_mov_memoffset_sse (compiler, 16, offset, ptr_reg, var->alloc,
-          var->is_aligned);
-      break;
-    default:
-      ORC_COMPILER_ERROR(compiler,"bad load size %d",
-          var->size << compiler->loop_shift);
-      break;
-  }
-}
-
-void
-orc_sse_emit_store_dest (OrcCompiler *compiler, OrcVariable *var, int offset)
-{
-  int ptr_reg;
-  if (var->ptr_register == 0) {
-    orc_x86_emit_mov_memoffset_reg (compiler, compiler->is_64bit ? 8 : 4,
-        var->ptr_offset, compiler->exec_reg, compiler->gp_tmpreg);
-    ptr_reg = compiler->gp_tmpreg;
-  } else {
-    ptr_reg = var->ptr_register;
-  }
-  switch (var->size << compiler->loop_shift) {
-    case 1:
-      /* FIXME we might be using ecx twice here */
-      if (ptr_reg == compiler->gp_tmpreg) {
-        ORC_COMPILER_ERROR(compiler,"unimplemented");
-      }
-      orc_x86_emit_mov_sse_reg (compiler, var->alloc, compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_memoffset (compiler, 1, compiler->gp_tmpreg, offset, ptr_reg);
-      break;
-    case 2:
-      /* FIXME we might be using ecx twice here */
-      if (ptr_reg == compiler->gp_tmpreg) {
-        ORC_COMPILER_ERROR(compiler,"unimplemented");
-      }
-      orc_x86_emit_mov_sse_reg (compiler, var->alloc, compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_memoffset (compiler, 2, compiler->gp_tmpreg, offset, ptr_reg);
-      break;
-    case 4:
-      orc_x86_emit_mov_sse_memoffset (compiler, 4, var->alloc, offset, ptr_reg,
-          var->is_aligned, var->is_uncached);
-      break;
-    case 8:
-      orc_x86_emit_mov_sse_memoffset (compiler, 8, var->alloc, offset, ptr_reg,
-          var->is_aligned, var->is_uncached);
-      break;
-    case 16:
-      orc_x86_emit_mov_sse_memoffset (compiler, 16, var->alloc, offset, ptr_reg,
-          var->is_aligned, var->is_uncached);
-      break;
-    default:
-      ORC_COMPILER_ERROR(compiler,"bad size");
-      break;
   }
 }
 
