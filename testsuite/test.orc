@@ -1581,4 +1581,83 @@ accsadubl a1, s1, s2
 accsadubl a1, s1, s2
 
 
+.function convert_rgb_to_gray
+.dest 1 d1
+.source 4 s1
+.temp 1 l_t1
+.temp 2 l_t2
+.temp 2 l_gray2
+
+# Red * ((0.299) * (1<<16) + 0.5)
+select0lw l_t2, s1
+select0wb l_t1, l_t2
+convubw l_gray2, l_t1
+swapw l_gray2, l_gray2
+mulhuw l_gray2, l_gray2, 19595
+       
+# Green * ((0.587) * (1<<16) + 0.5)
+select0lw l_t2, s1
+select1wb l_t1, l_t2
+convubw l_t2, l_t1
+swapw l_t2, l_t2
+mulhuw l_t2, l_t2, 38470
+addusw l_gray2, l_gray2, l_t2
+
+# Blue * ((0.114) * (1<<16) + 0.5)
+select1lw l_t2, s1
+select0wb l_t1, l_t2
+convubw l_t2, l_t1
+swapw l_t2, l_t2
+mulhuw l_t2, l_t2, 7471
+addusw l_gray2, l_gray2, l_t2
+
+# Add 1/2 => (1 << (8 - 1))
+addusw l_gray2, l_gray2, 128
+select1wb d1, l_gray2
+
+
+
+.function canny_calc_delta_x
+.dest 4 d1 gint32
+.source 4 s1 guint8
+.source 4 s2 guint8
+.temp 2 t1
+.temp 2 t2
+.temp 1 t3
+.temp 2 t4
+.temp 1 t5
+.temp 2 t6
+.temp 4 t7
+
+select0lw t2, s1
+select1wb t3, t2
+select0lw t4, s2
+select1wb t5, t4
+convubw t4, t3
+convubw t6, t5
+subw t1, t4, t6
+convswl t7, t1
+mulll d1, t7, t7
+
+select1lw t2, s1
+select0wb t3, t2
+select1lw t4, s2
+select0wb t5, t4
+convubw t4, t3
+convubw t6, t5
+subw t1, t4, t6
+convswl t7, t1
+mulll t7, t7, t7
+addl d1, t7
+
+select1lw t2, s1
+select1wb t3, t2
+select1lw t4, s2
+select1wb t5, t4
+convubw t4, t3
+convubw t6, t5
+subw t1, t4, t6
+convswl t7, t1
+mulll t7, t7, t7
+addl d1, t7
 
