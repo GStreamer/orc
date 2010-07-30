@@ -724,6 +724,44 @@ sse_rule_mergewl (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+sse_rule_swapw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = p->tmpreg;
+
+  if (src != dest) {
+    orc_sse_emit_movdqa (p, src, dest);
+  }
+  orc_sse_emit_movdqa (p, src, tmp);
+  orc_sse_emit_psllw (p, 8, tmp);
+  orc_sse_emit_psrlw (p, 8, dest);
+  orc_sse_emit_por (p, tmp, dest);
+}
+
+static void
+sse_rule_swapl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = p->tmpreg;
+
+  if (src != dest) {
+    orc_sse_emit_movdqa (p, src, dest);
+  }
+  orc_sse_emit_movdqa (p, src, tmp);
+  orc_sse_emit_pslld (p, 16, tmp);
+  orc_sse_emit_psrld (p, 16, dest);
+  orc_sse_emit_por (p, tmp, dest);
+  orc_sse_emit_movdqa (p, dest, tmp);
+  orc_sse_emit_psllw (p, 8, tmp);
+  orc_sse_emit_psrlw (p, 8, dest);
+  orc_sse_emit_por (p, tmp, dest);
+}
+
+#define LOAD_MASK_IS_SLOW
+#ifndef LOAD_MASK_IS_SLOW
+static void
 sse_emit_load_mask (OrcCompiler *p, unsigned int mask1, unsigned int mask2)
 {
   int tmp = p->tmpreg;
@@ -741,7 +779,39 @@ sse_emit_load_mask (OrcCompiler *p, unsigned int mask1, unsigned int mask2)
 }
 
 static void
-sse_rule_select0lw_sse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
+sse_rule_swapw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = p->tmpreg;
+
+  sse_emit_load_mask (p, 0x02030001, 0x0c080400);
+
+  if (src != dest) {
+    orc_sse_emit_movdqa (p, src, dest);
+  }
+  orc_sse_emit_pshufb (p, tmp, dest);
+}
+
+static void
+sse_rule_swapl_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = p->tmpreg;
+
+  /* FIXME slow */
+
+  sse_emit_load_mask (p, 0x00010203, 0x0c080400);
+
+  if (src != dest) {
+    orc_sse_emit_movdqa (p, src, dest);
+  }
+  orc_sse_emit_pshufb (p, tmp, dest);
+}
+
+static void
+sse_rule_select0lw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[0]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
@@ -759,7 +829,7 @@ sse_rule_select0lw_sse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
-sse_rule_select1lw_sse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
+sse_rule_select1lw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[0]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
@@ -777,7 +847,7 @@ sse_rule_select1lw_sse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
-sse_rule_select0wb_sse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
+sse_rule_select0wb_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[0]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
@@ -795,7 +865,7 @@ sse_rule_select0wb_sse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
-sse_rule_select1wb_sse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
+sse_rule_select1wb_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[0]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
@@ -811,42 +881,9 @@ sse_rule_select1wb_sse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   orc_sse_emit_pshufb (p, tmp, dest);
 }
+#endif
 
 /* slow rules */
-
-static void
-sse_rule_swapw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = p->tmpreg;
-
-  /* FIXME slow */
-
-  sse_emit_load_mask (p, 0x02030001, 0x0c080400);
-
-  if (src != dest) {
-    orc_sse_emit_movdqa (p, src, dest);
-  }
-  orc_sse_emit_pshufb (p, tmp, dest);
-}
-
-static void
-sse_rule_swapl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = p->tmpreg;
-
-  /* FIXME slow */
-
-  sse_emit_load_mask (p, 0x00010203, 0x0c080400);
-
-  if (src != dest) {
-    orc_sse_emit_movdqa (p, src, dest);
-  }
-  orc_sse_emit_pshufb (p, tmp, dest);
-}
 
 static void
 sse_rule_maxuw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -1259,6 +1296,10 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "convlw", sse_rule_convlw, NULL);
   orc_rule_register (rule_set, "signw", sse_rule_signw_slow, NULL);
   orc_rule_register (rule_set, "absw", sse_rule_absw_slow, NULL);
+  orc_rule_register (rule_set, "swapw", sse_rule_swapw, NULL);
+  orc_rule_register (rule_set, "swapl", sse_rule_swapl, NULL);
+  orc_rule_register (rule_set, "splitlw", sse_rule_splitlw, NULL);
+  orc_rule_register (rule_set, "splitwb", sse_rule_splitwb, NULL);
 
   /* SSE 3 -- no rules */
 
@@ -1272,14 +1313,14 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   REG(absb);
   REG(absw);
   REG(absl);
-  orc_rule_register (rule_set, "swapw", sse_rule_swapw_slow, NULL);
-  orc_rule_register (rule_set, "swapl", sse_rule_swapl_slow, NULL);
-  orc_rule_register (rule_set, "select0lw", sse_rule_select0lw_sse3, NULL);
-  orc_rule_register (rule_set, "select1lw", sse_rule_select1lw_sse3, NULL);
-  orc_rule_register (rule_set, "select0wb", sse_rule_select0wb_sse3, NULL);
-  orc_rule_register (rule_set, "select1wb", sse_rule_select1wb_sse3, NULL);
-  orc_rule_register (rule_set, "splitlw", sse_rule_splitlw, NULL);
-  orc_rule_register (rule_set, "splitwb", sse_rule_splitwb, NULL);
+#ifndef LOAD_MASK_IS_SLOW
+  orc_rule_register (rule_set, "swapw", sse_rule_swapw_ssse3, NULL);
+  orc_rule_register (rule_set, "swapl", sse_rule_swapl_ssse3, NULL);
+  orc_rule_register (rule_set, "select0lw", sse_rule_select0lw_ssse3, NULL);
+  orc_rule_register (rule_set, "select1lw", sse_rule_select1lw_ssse3, NULL);
+  orc_rule_register (rule_set, "select0wb", sse_rule_select0wb_ssse3, NULL);
+  orc_rule_register (rule_set, "select1wb", sse_rule_select1wb_ssse3, NULL);
+#endif
 
   /* SSE 4.1 */
   rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target,
