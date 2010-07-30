@@ -355,6 +355,23 @@ sse_rule_signw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+sse_rule_absb_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = p->tmpreg;
+
+  if (src != dest) {
+    orc_sse_emit_movdqa (p, src, dest);
+  }
+
+  orc_sse_emit_pxor (p, tmp, tmp);
+  orc_sse_emit_pcmpgtb (p, src, tmp);
+  orc_sse_emit_pxor (p, tmp, dest);
+  orc_sse_emit_psubb (p, tmp, dest);
+}
+
+static void
 sse_rule_absw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[0]].alloc;
@@ -371,6 +388,26 @@ sse_rule_absw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_psraw (p, 15, tmp);
   orc_sse_emit_pxor (p, tmp, dest);
   orc_sse_emit_psubw (p, tmp, dest);
+
+}
+
+static void
+sse_rule_absl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = p->tmpreg;
+
+  if (src == dest) {
+    orc_sse_emit_movdqa (p, src, tmp);
+  } else {
+    orc_sse_emit_movdqa (p, src, tmp);
+    orc_sse_emit_movdqa (p, tmp, dest);
+  }
+
+  orc_sse_emit_psrad (p, 31, tmp);
+  orc_sse_emit_pxor (p, tmp, dest);
+  orc_sse_emit_psubd (p, tmp, dest);
 
 }
 
@@ -1051,6 +1088,40 @@ sse_rule_minul_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_pxor(p, tmp, dest);
 }
 
+static void
+sse_rule_avgsl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[1]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = p->tmpreg;
+
+  /* (a+b+1) >> 1 = (a|b) - ((a^b)>>1) */
+
+  orc_sse_emit_movdqa (p, dest, tmp);
+  orc_sse_emit_pxor(p, src, tmp);
+  orc_sse_emit_psrad(p, 1, tmp);
+
+  orc_sse_emit_por(p, src, dest);
+  orc_sse_emit_psubd(p, tmp, dest);
+}
+
+static void
+sse_rule_avgul (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[1]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = p->tmpreg;
+
+  /* (a+b+1) >> 1 = (a|b) - ((a^b)>>1) */
+
+  orc_sse_emit_movdqa (p, dest, tmp);
+  orc_sse_emit_pxor(p, src, tmp);
+  orc_sse_emit_psrld(p, 1, tmp);
+
+  orc_sse_emit_por(p, src, dest);
+  orc_sse_emit_psubd(p, tmp, dest);
+}
+
 /* float ops */
 
 #define UNARY_F(opcode,insn_name,code) \
@@ -1295,11 +1366,15 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "minul", sse_rule_minul_slow, NULL);
   orc_rule_register (rule_set, "convlw", sse_rule_convlw, NULL);
   orc_rule_register (rule_set, "signw", sse_rule_signw_slow, NULL);
+  orc_rule_register (rule_set, "absb", sse_rule_absb_slow, NULL);
   orc_rule_register (rule_set, "absw", sse_rule_absw_slow, NULL);
+  orc_rule_register (rule_set, "absl", sse_rule_absl_slow, NULL);
   orc_rule_register (rule_set, "swapw", sse_rule_swapw, NULL);
   orc_rule_register (rule_set, "swapl", sse_rule_swapl, NULL);
   orc_rule_register (rule_set, "splitlw", sse_rule_splitlw, NULL);
   orc_rule_register (rule_set, "splitwb", sse_rule_splitwb, NULL);
+  orc_rule_register (rule_set, "avgsl", sse_rule_avgsl, NULL);
+  orc_rule_register (rule_set, "avgul", sse_rule_avgul, NULL);
 
   /* SSE 3 -- no rules */
 
