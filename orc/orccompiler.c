@@ -566,14 +566,8 @@ orc_compiler_global_reg_alloc (OrcCompiler *compiler)
     if (var->name == NULL) continue;
     switch (var->vartype) {
       case ORC_VAR_TYPE_CONST:
-        var->first_use = -1;
-        var->last_use = -1;
-        var->alloc = orc_compiler_allocate_register (compiler, TRUE);
         break;
       case ORC_VAR_TYPE_PARAM:
-        var->first_use = -1;
-        var->last_use = -1;
-        var->alloc = orc_compiler_allocate_register (compiler, TRUE);
         break;
       case ORC_VAR_TYPE_SRC:
         var->ptr_register = orc_compiler_allocate_register (compiler, FALSE);
