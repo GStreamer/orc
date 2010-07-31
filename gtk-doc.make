@@ -111,7 +111,7 @@ sgml-build.stamp: tmpl.stamp $(DOC_MODULE)-sections.txt $(srcdir)/tmpl/*.sgml $(
 	@-chmod -R u+w $(srcdir)
 	@cd $(srcdir) && \
 	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --output-format=xml --expand-content-files="$(expand_content_files)" --main-sgml-file=$(DOC_MAIN_SGML_FILE) $(MKDB_OPTIONS)
-	@cp version.entities xml/
+	@cp version.entities $(srcdir)/xml/
 	@touch sgml-build.stamp
 
 sgml.stamp: sgml-build.stamp

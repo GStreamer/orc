@@ -73,6 +73,7 @@ pkginclude_HEADERS = \
 	orc.h \
 	orcdebug.h \
 	orcprogram.h \
+	orcemulateopcodes.h \
 	orcfunctions.h \
 	orcutils.h \
 	orcparse.h \
