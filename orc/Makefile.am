@@ -94,8 +94,9 @@ noinst_PROGRAMS = generate-emulation
 
 generate_emulation_LDADD = $(ORC_LIBS)
 generate_emulation_CFLAGS = $(ORC_CFLAGS)
+generate_emulation_DEPENDENCIES = $(builddir)/liborc-0.4.la
 
-update:
+update: generate-emulation
 	$(top_builddir)/tools/orcc$(EXEEXT) --implementation -o orcfunctions.c orcfunctions.orc
 	$(top_builddir)/tools/orcc$(EXEEXT) --header -o orcfunctions.h orcfunctions.orc
 	./generate-emulation$(EXEEXT) -o orcemulateopcodes.c
