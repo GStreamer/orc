@@ -1,6 +1,7 @@
 *.o
 *.la
 *.lo
+orc-*.tar.gz
 orc.pc
 orc-0.4.pc
 orc-uninstalled.pc
@@ -56,6 +57,8 @@ orc-stdint.h
 /m4/ltversion.m4
 /m4/lt~obsolete.m4
 
+/orc/generate-emulation
+
 /testsuite/abi
 /testsuite/compile_opcodes_sys
 /testsuite/compile_opcodes_sys_c
@@ -73,5 +76,9 @@ orc-stdint.h
 /testsuite/perf_parse
 /testsuite/test-schro
 /testsuite/test_accsadubl
-/tools/orcc
+/testsuite/orcc/orc_test.c
+/testsuite/orcc/testorc.c
+/testsuite/orcc/testorc.h
 
+/tools/orcc
+/tools/orc-bugreport
