@@ -212,10 +212,11 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
     ORC_LOG("variables");
     for(i=0;i<ORC_N_VARIABLES;i++){
       if (program->vars[i].size > 0) {
-        ORC_LOG("%d: %s %d %d", i,
+        ORC_LOG("%d: %s size %d type %d alloc %d", i,
             program->vars[i].name,
             program->vars[i].size,
-            program->vars[i].vartype);
+            program->vars[i].vartype,
+            program->vars[i].alloc);
       }
     }
     ORC_LOG("instructions");
@@ -259,6 +260,32 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   orc_compiler_global_reg_alloc (compiler);
 
   orc_compiler_rewrite_vars2 (compiler);
+#if 0
+  {
+    ORC_ERROR("variables");
+    for(i=0;i<ORC_N_VARIABLES;i++){
+      if (compiler->vars[i].size > 0) {
+        ORC_ERROR("%d: %s size %d type %d alloc %d [%d,%d]", i,
+            compiler->vars[i].name,
+            compiler->vars[i].size,
+            compiler->vars[i].vartype,
+            compiler->vars[i].alloc,
+            compiler->vars[i].first_use,
+            compiler->vars[i].last_use);
+      }
+    }
+    ORC_ERROR("instructions");
+    for(i=0;i<compiler->n_insns;i++){
+      ORC_ERROR("%d: %s %d %d %d %d", i,
+          compiler->insns[i].opcode->name,
+          compiler->insns[i].dest_args[0],
+          compiler->insns[i].dest_args[1],
+          compiler->insns[i].src_args[0],
+          compiler->insns[i].src_args[1]);
+    }
+  }
+#endif
+
   if (compiler->error) goto error;
 
   ORC_INFO("allocating code memory");
@@ -467,6 +494,10 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
   int var;
   int actual_var;
 
+  for(j=0;j<ORC_N_VARIABLES;j++){
+    if (compiler->vars[j].alloc) continue;
+    compiler->vars[j].last_use = -1;
+  }
   for(j=0;j<compiler->n_insns;j++){
     insn = compiler->insns + j;
     opcode = insn->opcode;
@@ -478,6 +509,12 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
       var = insn->src_args[k];
       if (compiler->vars[var].vartype == ORC_VAR_TYPE_DEST) {
         compiler->vars[var].load_dest = TRUE;
+      }
+      if (compiler->vars[var].vartype == ORC_VAR_TYPE_SRC ||
+          compiler->vars[var].vartype == ORC_VAR_TYPE_DEST ||
+          compiler->vars[var].vartype == ORC_VAR_TYPE_CONST ||
+          compiler->vars[var].vartype == ORC_VAR_TYPE_PARAM) {
+        continue;
       }
 
       actual_var = var;
@@ -502,6 +539,9 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
 
       var = insn->dest_args[k];
 
+      if (compiler->vars[var].vartype == ORC_VAR_TYPE_DEST) {
+        continue;
+      }
       if (compiler->vars[var].vartype == ORC_VAR_TYPE_SRC) {
         ORC_COMPILER_ERROR(compiler,"using src var as dest");
         compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE;
@@ -562,7 +602,6 @@ orc_compiler_global_reg_alloc (OrcCompiler *compiler)
   int i;
   OrcVariable *var;
 
-
   for(i=0;i<ORC_N_VARIABLES;i++){
     var = compiler->vars + i;
     if (var->name == NULL) continue;
@@ -598,6 +637,20 @@ orc_compiler_global_reg_alloc (OrcCompiler *compiler)
     if (compiler->error) break;
   }
 
+  for(i=0;i<compiler->n_insns;i++){
+    OrcInstruction *insn = compiler->insns + i;
+    OrcStaticOpcode *opcode = insn->opcode;
+
+    if (opcode->flags & ORC_STATIC_OPCODE_INVARIANT) {
+      var = compiler->vars + insn->dest_args[0];
+
+      var->first_use = -1;
+      var->last_use = -1;
+      var->alloc = orc_compiler_allocate_register (compiler, TRUE);
+      compiler->insn_flags[i] |= ORC_INSN_FLAG_INVARIANT;
+    }
+  }
+
   if (compiler->alloc_loop_counter && !compiler->error) {
     compiler->loop_counter = orc_compiler_allocate_register (compiler, FALSE);
     /* FIXME massive hack */
@@ -622,6 +675,8 @@ orc_compiler_rewrite_vars2 (OrcCompiler *compiler)
      *  - src1 must be last_use
      *  - only one dest
      */
+    if (compiler->insn_flags[j] & ORC_INSN_FLAG_INVARIANT) continue;
+
     if (!(compiler->insns[j].opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR)
         && compiler->insns[j].opcode->dest_size[1] == 0) {
       int src1 = compiler->insns[j].src_args[0];
@@ -651,6 +706,7 @@ orc_compiler_rewrite_vars2 (OrcCompiler *compiler)
 
     for(i=0;i<ORC_N_VARIABLES;i++){
       if (compiler->vars[i].name == NULL) continue;
+      if (compiler->vars[i].last_use == -1) continue;
       if (compiler->vars[i].first_use == j) {
         if (compiler->vars[i].alloc) continue;
         k = orc_compiler_allocate_register (compiler, TRUE);

@@ -363,6 +363,7 @@ struct _OrcCompiler {
 
   OrcInstruction insns[ORC_N_INSNS];
   int n_insns;
+  int insn_flags[ORC_N_INSNS];
 
   OrcVariable vars[ORC_N_VARIABLES];
   int n_temp_vars;
@@ -409,6 +410,8 @@ struct _OrcCompiler {
 
   int offset;
 };
+
+#define ORC_INSN_FLAG_INVARIANT 1
 
 #define ORC_SRC_ARG(p,i,n) ((p)->vars[(i)->src_args[(n)]].alloc)
 #define ORC_DEST_ARG(p,i,n) ((p)->vars[(i)->dest_args[(n)]].alloc)

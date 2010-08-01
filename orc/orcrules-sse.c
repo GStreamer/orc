@@ -25,25 +25,14 @@ sse_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   if (src->vartype == ORC_VAR_TYPE_PARAM) {
     reg = dest->alloc;
 
-    switch (src->size) {
-      case 1:
-        orc_x86_emit_mov_memoffset_sse (compiler, 4,
-            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[0]]),
-            compiler->exec_reg, reg, FALSE);
-        orc_sse_emit_punpcklbw (compiler, reg, reg);
-        orc_sse_emit_pshuflw (compiler, 0, reg, reg);
-        break;
-      case 2:
-        orc_x86_emit_mov_memoffset_sse (compiler, 4,
-            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[0]]),
-            compiler->exec_reg, reg, FALSE);
-        orc_sse_emit_pshuflw (compiler, 0, reg, reg);
-        break;
-      case 4:
-        orc_x86_emit_mov_memoffset_sse (compiler, 4,
-            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[0]]),
-            compiler->exec_reg, reg, FALSE);
-        break;
+    orc_x86_emit_mov_memoffset_sse (compiler, 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[0]]),
+        compiler->exec_reg, reg, FALSE);
+    if (src->size == 1) {
+      orc_sse_emit_punpcklbw (compiler, reg, reg);
+    }
+    if (src->size <= 2) {
+      orc_sse_emit_pshuflw (compiler, 0, reg, reg);
     }
     orc_sse_emit_pshufd (compiler, 0, reg, reg);
   } else if (src->vartype == ORC_VAR_TYPE_CONST) {
@@ -299,14 +288,32 @@ sse_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src2 = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp = p->tmpreg;
+  int tmp2 = X86_XMM7;
 
-  if (p->loop_shift < 2) {
-    ORC_COMPILER_ERROR(p, "accsadubl SSE rule fails with loop_shift < 2");
-    p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
+  if (p->loop_shift == 0) {
+    orc_sse_emit_movdqa (p, src1, tmp);
+    orc_sse_emit_pslldq (p, 15, tmp);
+    orc_sse_emit_movdqa (p, src2, tmp2);
+    orc_sse_emit_pslldq (p, 15, tmp2);
+    orc_sse_emit_psadbw (p, tmp2, tmp);
+  } else if (p->loop_shift == 1) {
+    orc_sse_emit_movdqa (p, src1, tmp);
+    orc_sse_emit_pslldq (p, 14, tmp);
+    orc_sse_emit_movdqa (p, src2, tmp2);
+    orc_sse_emit_pslldq (p, 14, tmp2);
+    orc_sse_emit_psadbw (p, tmp2, tmp);
+  } else if (p->loop_shift == 2) {
+    orc_sse_emit_movdqa (p, src1, tmp);
+    orc_sse_emit_psadbw (p, src2, tmp);
+    orc_sse_emit_pslldq (p, 12, tmp);
+  } else if (p->loop_shift == 3) {
+    orc_sse_emit_movdqa (p, src1, tmp);
+    orc_sse_emit_psadbw (p, src2, tmp);
+    orc_sse_emit_pslldq (p, 8, tmp);
+  } else {
+    orc_sse_emit_movdqa (p, src1, tmp);
+    orc_sse_emit_psadbw (p, src2, tmp);
   }
-
-  orc_sse_emit_movdqa (p, src1, tmp);
-  orc_sse_emit_psadbw (p, src2, tmp);
   orc_sse_emit_paddd (p, tmp, dest);
 }
 

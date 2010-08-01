@@ -23,6 +23,7 @@ void orc_compiler_sse_init (OrcCompiler *compiler);
 unsigned int orc_compiler_sse_get_default_flags (void);
 void orc_compiler_sse_assemble (OrcCompiler *compiler);
 void orc_compiler_sse_register_rules (OrcTarget *target);
+void orc_sse_emit_invariants (OrcCompiler *compiler);
 
 
 void orc_compiler_rewrite_vars (OrcCompiler *compiler);
@@ -303,6 +304,9 @@ sse_load_constants_outer (OrcCompiler *compiler)
         break;
     }
   }
+
+  orc_sse_emit_invariants (compiler);
+
 }
 
 void
@@ -322,8 +326,6 @@ sse_load_constants_inner (OrcCompiler *compiler)
           orc_x86_emit_mov_memoffset_reg (compiler, compiler->is_64bit ? 8 : 4,
               (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]), compiler->exec_reg,
               compiler->vars[i].ptr_register);
-        } else {
-          ORC_COMPILER_ERROR(compiler,"unimplemented");
         }
         break;
       case ORC_VAR_TYPE_ACCUMULATOR:
@@ -687,23 +689,13 @@ orc_sse_emit_loop (OrcCompiler *compiler, int offset, int update)
     insn = compiler->insns + j;
     opcode = insn->opcode;
 
-    ORC_ASM_CODE(compiler,"# %d: %s\n", j, insn->opcode->name);
+    if (compiler->insn_flags[j] & ORC_INSN_FLAG_INVARIANT) continue;
 
-#if 0
-    /* set up args */
-    for(k=0;k<opcode->n_src + opcode->n_dest;k++){
-      args[k] = compiler->vars + insn->args[k];
-      ORC_ASM_CODE(compiler," %d", args[k]->alloc);
-      if (args[k]->is_chained) {
-        ORC_ASM_CODE(compiler," (chained)");
-      }
-    }
-    ORC_ASM_CODE(compiler,"\n");
-#endif
+    ORC_ASM_CODE(compiler,"# %d: %s\n", j, insn->opcode->name);
 
     rule = insn->rule;
     if (rule && rule->emit) {
-      if (!(insn->opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) &&
+      if (!(insn->opcode->flags & (ORC_STATIC_OPCODE_ACCUMULATOR|ORC_STATIC_OPCODE_LOAD|ORC_STATIC_OPCODE_STORE)) &&
           compiler->vars[insn->dest_args[0]].alloc !=
           compiler->vars[insn->src_args[0]].alloc) {
         orc_x86_emit_mov_sse_reg_reg (compiler,
@@ -732,6 +724,31 @@ orc_sse_emit_loop (OrcCompiler *compiler, int offset, int update)
               compiler->exec_reg);
         }
       }
+    }
+  }
+}
+
+void
+orc_sse_emit_invariants (OrcCompiler *compiler)
+{
+  int j;
+  OrcInstruction *insn;
+  OrcStaticOpcode *opcode;
+  OrcRule *rule;
+
+  for(j=0;j<compiler->n_insns;j++){
+    insn = compiler->insns + j;
+    opcode = insn->opcode;
+
+    if (!(compiler->insn_flags[j] & ORC_INSN_FLAG_INVARIANT)) continue;
+
+    ORC_ASM_CODE(compiler,"# %d: %s\n", j, insn->opcode->name);
+
+    rule = insn->rule;
+    if (rule && rule->emit) {
+      rule->emit (compiler, rule->emit_user, insn);
+    } else {
+      ORC_COMPILER_ERROR(compiler,"No rule for: %s", opcode->name);
     }
   }
 }

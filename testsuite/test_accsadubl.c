@@ -70,7 +70,7 @@ orc_sad_u8 (orc_uint8 *s1, orc_uint8 *s2, int n)
       return 0;
     }
 
-    printf("%s\n", orc_program_get_asm_code (p));
+    //printf("%s\n", orc_program_get_asm_code (p));
   }
 
   ex = orc_executor_new (p);
