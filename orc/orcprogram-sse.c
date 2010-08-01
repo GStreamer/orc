@@ -196,7 +196,7 @@ orc_compiler_sse_init (OrcCompiler *compiler)
 
   compiler->unroll_shift = 1;
   compiler->alloc_loop_counter = TRUE;
-
+  compiler->allow_gp_on_stack = TRUE;
 }
 
 void

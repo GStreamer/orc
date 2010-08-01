@@ -403,6 +403,7 @@ struct _OrcCompiler {
   int unroll_shift;
 
   int alloc_loop_counter;
+  int allow_gp_on_stack;
   int loop_counter;
   int size_region;
 
