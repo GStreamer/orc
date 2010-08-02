@@ -39,7 +39,11 @@ test_opcode_src (OrcStaticOpcode *opcode)
   int flags = 0;
 
   p = orc_program_new ();
-  orc_program_add_destination (p, opcode->dest_size[0], "d1");
+  if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
+    orc_program_add_accumulator (p, opcode->dest_size[0], "d1");
+  } else {
+    orc_program_add_destination (p, opcode->dest_size[0], "d1");
+  }
   if (opcode->dest_size[1] != 0) {
     orc_program_add_destination (p, opcode->dest_size[1], "d2");
   }
