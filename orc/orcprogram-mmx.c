@@ -199,10 +199,26 @@ orc_compiler_mmx_init (OrcCompiler *compiler)
   }
   compiler->valid_regs[compiler->exec_reg] = 0;
 
-#ifndef MMX
-  compiler->loop_shift = 5 - orc_program_get_max_var_size (compiler->program);
-#else
-  compiler->loop_shift = 4 - orc_program_get_max_var_size (compiler->program);
+  switch (orc_program_get_max_var_size (compiler->program)) {
+    case 1:
+      compiler->loop_shift = 4;
+      break;
+    case 2:
+      compiler->loop_shift = 3;
+      break;
+    case 4:
+      compiler->loop_shift = 2;
+      break;
+    case 8:
+      compiler->loop_shift = 1;
+      break;
+    default:
+      ORC_ERROR("unhandled max var size %d",
+          orc_program_get_max_var_size (compiler->program));
+      break;
+  }
+#ifdef MMX
+  compiler->loop_shift--;
 #endif
 
   compiler->unroll_shift = 1;
@@ -239,7 +255,7 @@ mmx_save_accumulators (OrcCompiler *compiler)
 #ifndef MMX
         orc_mmx_emit_pshufd (compiler, ORC_MMX_SHUF(1,1,1,1), src, compiler->tmpreg);
 
-        if (compiler->vars[i].size == 2) { /* moo */
+        if (compiler->vars[i].size == 2) {
           orc_mmx_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
         } else {
           orc_mmx_emit_660f (compiler, "paddd", 0xfe, compiler->tmpreg, src);
@@ -295,9 +311,9 @@ mmx_load_constant (OrcCompiler *compiler, int reg, int size, int value)
     orc_x86_emit_mov_imm_reg (compiler, 4, value, compiler->gp_tmpreg);
     orc_x86_emit_mov_reg_mmx (compiler, compiler->gp_tmpreg, reg);
 #ifndef MMX
-    orc_mmx_emit_pshufd (compiler, 0, reg, reg);
+    orc_mmx_emit_pshufd (compiler, ORC_MMX_SHUF(0,0,0,0), reg, reg);
 #else
-    orc_mmx_emit_pshufw (compiler, 0, reg, reg);
+    orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(1,0,1,0), reg, reg);
 #endif
   }
 
@@ -702,6 +718,8 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
   if (set_mxcsr) {
     orc_mmx_restore_mxcsr (compiler);
   }
+#else
+  orc_x86_emit_emms (compiler);
 #endif
   orc_x86_emit_epilogue (compiler);
 

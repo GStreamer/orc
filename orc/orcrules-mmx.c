@@ -32,15 +32,17 @@ mmx_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     if (src->size == 1) {
       orc_mmx_emit_punpcklbw (compiler, reg, reg);
     }
-    if (src->size <= 2) {
-#ifdef MMX
-      orc_mmx_emit_pshufw (compiler, 0, reg, reg);
-#else
-      orc_mmx_emit_pshuflw (compiler, 0, reg, reg);
-#endif
-    }
 #ifndef MMX
+    if (src->size <= 2) {
+      orc_mmx_emit_pshuflw (compiler, 0, reg, reg);
+    }
     orc_mmx_emit_pshufd (compiler, 0, reg, reg);
+#else
+    if (src->size <= 2) {
+      orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(0,0,0,0), reg, reg);
+    } else {
+      orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(1,0,1,0), reg, reg);
+    }
 #endif
   } else if (src->vartype == ORC_VAR_TYPE_CONST) {
     int value = src->value;
@@ -64,6 +66,8 @@ mmx_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
       orc_x86_emit_mov_reg_mmx (compiler, compiler->gp_tmpreg, reg);
 #ifndef MMX
       orc_mmx_emit_pshufd (compiler, 0, reg, reg);
+#else
+      orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(1,0,1,0), reg, reg);
 #endif
     }
   }
@@ -1263,8 +1267,13 @@ orc_compiler_mmx_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, #x , mmx_rule_ ## x, NULL)
 
   /* SSE 2 */
+#ifndef MMX
   rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target,
       ORC_TARGET_MMX_MMXEXT);
+#else
+  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target,
+      ORC_TARGET_MMX_MMX);
+#endif
 
   orc_rule_register (rule_set, "loadb", mmx_rule_loadX, NULL);
   orc_rule_register (rule_set, "loadw", mmx_rule_loadX, NULL);
