@@ -92,7 +92,7 @@ case "${host_os}" in
   mingw*|pw32*|cygwin*)
     AC_DEFINE(HAVE_CODEMEM_VIRTUALALLOC, 1, [Use VirtualAlloc to allocate code for execution])
     ;;
-  linux*|darwin*|solaris*|netbsd*|freebsd*|openbsd*|kfreebsd*|gnu*)
+  linux*|darwin*|solaris*|netbsd*|freebsd*|openbsd*|kfreebsd*|dragonflybsd*|gnu*)
     AC_DEFINE(HAVE_CODEMEM_MMAP, 1, [Use mmap to allocate code for execution])
     ;;
   *)
