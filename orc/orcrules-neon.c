@@ -1872,6 +1872,58 @@ orc_neon_rule_mulhuw (OrcCompiler *p, void *user, OrcInstruction *insn)
   }
 }
 
+static void
+orc_neon_rule_splitlw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int dest0 = p->vars[insn->dest_args[0]].alloc;
+  int dest1 = p->vars[insn->dest_args[1]].alloc;
+  int src = p->vars[insn->src_args[0]].alloc;
+
+  if (p->loop_shift < 2) {
+    if (src != dest0) {
+      orc_neon_emit_mov (p, dest0, src);
+    }
+    if (src != dest1) {
+      orc_neon_emit_mov (p, dest1, src);
+    }
+    orc_neon_emit_unary (p, "vuzp.16", 0xf3b60100, dest1, dest0);
+  } else {
+    if (src != dest0) {
+      orc_neon_emit_mov_quad (p, dest0, src);
+    }
+    if (src != dest1) {
+      orc_neon_emit_mov_quad (p, dest1, src);
+    }
+    orc_neon_emit_unary_quad (p, "vuzp.16", 0xf3b60140, dest1, dest0);
+  }
+}
+
+static void
+orc_neon_rule_splitwb (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int dest0 = p->vars[insn->dest_args[0]].alloc;
+  int dest1 = p->vars[insn->dest_args[1]].alloc;
+  int src = p->vars[insn->src_args[0]].alloc;
+
+  if (p->loop_shift < 2) {
+    if (src != dest0) {
+      orc_neon_emit_mov (p, dest0, src);
+    }
+    if (src != dest1) {
+      orc_neon_emit_mov (p, dest1, src);
+    }
+    orc_neon_emit_unary (p, "vuzp.8", 0xf3b20100, dest1, dest0);
+  } else {
+    if (src != dest0) {
+      orc_neon_emit_mov_quad (p, dest0, src);
+    }
+    if (src != dest1) {
+      orc_neon_emit_mov_quad (p, dest1, src);
+    }
+    orc_neon_emit_unary_quad (p, "vuzp.8", 0xf3b20140, dest1, dest0);
+  }
+}
+
 void
 orc_compiler_neon_register_rules (OrcTarget *target)
 {
@@ -1988,6 +2040,8 @@ orc_compiler_neon_register_rules (OrcTarget *target)
   REG(select1lw);
   REG(mergebw);
   REG(mergewl);
+  REG(splitlw);
+  REG(splitwb);
 
   REG(addf);
   REG(subf);
