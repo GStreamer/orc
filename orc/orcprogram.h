@@ -33,6 +33,7 @@ typedef void (*OrcExecutorFunc)(OrcExecutor *ex);
 #define ORC_N_FIXUPS 40
 #define ORC_N_CONSTANTS 20
 #define ORC_N_LABELS 40
+#define ORC_N_COMPILER_VARIABLES (ORC_N_VARIABLES+32)
 
 #define ORC_GP_REG_BASE 32
 #define ORC_VEC_REG_BASE 64
@@ -365,7 +366,7 @@ struct _OrcCompiler {
   int n_insns;
   int insn_flags[ORC_N_INSNS];
 
-  OrcVariable vars[ORC_N_VARIABLES];
+  OrcVariable vars[ORC_N_COMPILER_VARIABLES];
   int n_temp_vars;
   int n_dup_vars;
 
