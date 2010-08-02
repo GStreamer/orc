@@ -11,6 +11,7 @@
 #include <orc/orcdebug.h>
 #include <orc/orcsse.h>
 
+#undef MMX
 #define SIZE 65536
 
 /* sse rules */
@@ -32,9 +33,15 @@ sse_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
       orc_sse_emit_punpcklbw (compiler, reg, reg);
     }
     if (src->size <= 2) {
+#ifdef MMX
+      orc_mmx_emit_pshufw (compiler, 0, reg, reg);
+#else
       orc_sse_emit_pshuflw (compiler, 0, reg, reg);
+#endif
     }
+#ifndef MMX
     orc_sse_emit_pshufd (compiler, 0, reg, reg);
+#endif
   } else if (src->vartype == ORC_VAR_TYPE_CONST) {
     int value = src->value;
 
@@ -55,7 +62,9 @@ sse_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     } else {
       orc_x86_emit_mov_imm_reg (compiler, 4, value, compiler->gp_tmpreg);
       orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, reg);
+#ifndef MMX
       orc_sse_emit_pshufd (compiler, 0, reg, reg);
+#endif
     }
   }
 }
@@ -275,9 +284,11 @@ sse_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src = p->vars[insn->src_args[0]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
 
+#ifndef MMX
   if (p->loop_shift == 0) {
     orc_sse_emit_pslldq (p, 12, src);
   }
+#endif
   orc_sse_emit_paddd (p, src, dest);
 }
 
@@ -288,6 +299,7 @@ sse_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src2 = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp = p->tmpreg;
+#ifndef MMX
   int tmp2 = X86_XMM7;
 
   if (p->loop_shift == 0) {
@@ -314,6 +326,10 @@ sse_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_sse_emit_movdqa (p, src1, tmp);
     orc_sse_emit_psadbw (p, src2, tmp);
   }
+#else
+  orc_sse_emit_movdqa (p, src1, tmp);
+  orc_sse_emit_psadbw (p, src2, tmp);
+#endif
   orc_sse_emit_paddd (p, tmp, dest);
 }
 
@@ -344,20 +360,15 @@ sse_rule_signw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src = p->vars[insn->src_args[0]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp = p->tmpreg;
-  int gptmp = p->gp_tmpreg;
 
   if (src != dest) {
     orc_sse_emit_movdqa (p, src, dest);
   }
 
-  orc_x86_emit_mov_imm_reg (p, 4, 0x00010001, gptmp);
-  orc_x86_emit_mov_reg_sse (p, gptmp, tmp);
-  orc_sse_emit_pshufd (p, 0, tmp, tmp);
+  tmp = orc_compiler_get_constant (p, 2, 0x0001);
   orc_sse_emit_pminsw (p, tmp, dest);
 
-  orc_x86_emit_mov_imm_reg (p, 4, 0xffffffff, gptmp);
-  orc_x86_emit_mov_reg_sse (p, gptmp, tmp);
-  orc_sse_emit_pshufd (p, 0, tmp, tmp);
+  tmp = orc_compiler_get_constant (p, 2, 0xffff);
   orc_sse_emit_pmaxsw (p, tmp, dest);
 }
 
@@ -935,11 +946,8 @@ sse_rule_maxuw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp = p->tmpreg;
-  int gptmp = p->gp_tmpreg;
 
-  orc_x86_emit_mov_imm_reg (p, 4, 0x80008000, gptmp);
-  orc_x86_emit_mov_reg_sse (p, gptmp, tmp);
-  orc_sse_emit_pshufd (p, 0, tmp, tmp);
+  tmp = orc_compiler_get_constant (p, 2, 0x8000);
   orc_sse_emit_pxor(p, tmp, src);
   orc_sse_emit_pxor(p, tmp, dest);
   orc_sse_emit_pmaxsw (p, src, dest);
@@ -1129,6 +1137,7 @@ sse_rule_avgul (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_psubd(p, tmp, dest);
 }
 
+#ifndef MMX
 /* float ops */
 
 #define UNARY_F(opcode,insn_name,code) \
@@ -1243,6 +1252,7 @@ sse_rule_convlf (OrcCompiler *p, void *user, OrcInstruction *insn)
       p->vars[insn->src_args[0]].alloc,
       p->vars[insn->dest_args[0]].alloc);
 }
+#endif
 
 void
 orc_compiler_sse_register_rules (OrcTarget *target)
@@ -1347,6 +1357,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "accl", sse_rule_accl, NULL);
   orc_rule_register (rule_set, "accsadubl", sse_rule_accsadubl, NULL);
 
+#ifndef MMX
   orc_rule_register (rule_set, "addf", sse_rule_addf, NULL);
   orc_rule_register (rule_set, "subf", sse_rule_subf, NULL);
   orc_rule_register (rule_set, "mulf", sse_rule_mulf, NULL);
@@ -1359,6 +1370,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "cmplef", sse_rule_cmplef, NULL);
   orc_rule_register (rule_set, "convfl", sse_rule_convfl, NULL);
   orc_rule_register (rule_set, "convlf", sse_rule_convlf, NULL);
+#endif
 
   /* slow rules */
   orc_rule_register (rule_set, "maxuw", sse_rule_maxuw_slow, NULL);

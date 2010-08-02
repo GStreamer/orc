@@ -13,6 +13,7 @@
 #include <orc/orcutils.h>
 #include <orc/orcdebug.h>
 
+#undef MMX
 #define SIZE 65536
 
 #define ORC_SSE_ALIGNED_DEST_CUTOFF 64
@@ -60,9 +61,15 @@ orc_sse_init (void)
 #endif
 
 #if defined(HAVE_I386)
+#ifndef MMX
   if (!(orc_sse_get_cpu_flags () & ORC_TARGET_SSE_SSE2)) {
     sse_target.executable = FALSE;
   }
+#else
+  if (!(orc_mmx_get_cpu_flags () & ORC_TARGET_MMX_MMX)) {
+    mmx_target.executable = FALSE;
+  }
+#endif
 #endif
 
   orc_target_register (&sse_target);
@@ -85,9 +92,14 @@ orc_compiler_sse_get_default_flags (void)
 #if defined(HAVE_AMD64) || defined(HAVE_I386)
   flags |= orc_sse_get_cpu_flags ();
 #else
+#ifndef MMX
   flags |= ORC_TARGET_SSE_SSE2;
   flags |= ORC_TARGET_SSE_SSE3;
   flags |= ORC_TARGET_SSE_SSSE3;
+#else
+  flags |= ORC_TARGET_MMX_MMX;
+  flags |= ORC_TARGET_MMX_3DNOW;
+#endif
 #endif
 
   return flags;
@@ -97,8 +109,13 @@ static const char *
 sse_get_flag_name (int shift)
 {
   static const char *flags[] = {
+#ifndef MMX
     "sse2", "sse3", "ssse3", "sse41", "sse42", "sse4a", "sse5",
     "frame_pointer", "short_jumps", "64bit"
+#else
+    "mmx", "mmxext", "3dnow", "3dnowext", "ssse3", "sse41", "",
+    "frame_pointer", "short_jumps", "64bit"
+#endif
   };
 
   if (shift >= 0 && shift < sizeof(flags)/sizeof(flags[0])) {
@@ -130,9 +147,15 @@ orc_compiler_sse_init (OrcCompiler *compiler)
     }
     compiler->valid_regs[X86_EDI] = 0;
     compiler->valid_regs[X86_ESP] = 0;
+#ifndef MMX
     for(i=X86_XMM0;i<X86_XMM0+16;i++){
       compiler->valid_regs[i] = 1;
     }
+#else
+    for(i=X86_XMM0;i<X86_XMM0+8;i++){
+      compiler->valid_regs[i] = 1;
+    }
+#endif
     compiler->save_regs[X86_EBX] = 1;
     compiler->save_regs[X86_EBP] = 1;
     compiler->save_regs[X86_R12] = 1;
@@ -176,24 +199,11 @@ orc_compiler_sse_init (OrcCompiler *compiler)
   }
   compiler->valid_regs[compiler->exec_reg] = 0;
 
-  switch (orc_program_get_max_var_size (compiler->program)) {
-    case 1:
-      compiler->loop_shift = 4;
-      break;
-    case 2:
-      compiler->loop_shift = 3;
-      break;
-    case 4:
-      compiler->loop_shift = 2;
-      break;
-    case 8:
-      compiler->loop_shift = 1;
-      break;
-    default:
-      ORC_ERROR("unhandled max var size %d",
-          orc_program_get_max_var_size (compiler->program));
-      break;
-  }
+#ifndef MMX
+  compiler->loop_shift = 5 - orc_program_get_max_var_size (compiler->program);
+#else
+  compiler->loop_shift = 4 - orc_program_get_max_var_size (compiler->program);
+#endif
 
   compiler->unroll_shift = 1;
   compiler->alloc_loop_counter = TRUE;
@@ -214,7 +224,11 @@ sse_save_accumulators (OrcCompiler *compiler)
       case ORC_VAR_TYPE_ACCUMULATOR:
         src = compiler->vars[i].alloc;
 
+#ifndef MMX
         orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(3,2,3,2), src, compiler->tmpreg);
+#else
+        orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(3,2,3,2), src, compiler->tmpreg);
+#endif
 
         if (compiler->vars[i].size == 2) {
           orc_sse_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
@@ -222,6 +236,7 @@ sse_save_accumulators (OrcCompiler *compiler)
           orc_sse_emit_660f (compiler, "paddd", 0xfe, compiler->tmpreg, src);
         }
 
+#ifndef MMX
         orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(1,1,1,1), src, compiler->tmpreg);
 
         if (compiler->vars[i].size == 2) {
@@ -229,9 +244,14 @@ sse_save_accumulators (OrcCompiler *compiler)
         } else {
           orc_sse_emit_660f (compiler, "paddd", 0xfe, compiler->tmpreg, src);
         }
+#endif
 
         if (compiler->vars[i].size == 2) {
+#ifndef MMX
           orc_sse_emit_pshuflw (compiler, ORC_SSE_SHUF(1,1,1,1), src, compiler->tmpreg);
+#else
+          orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(1,1,1,1), src, compiler->tmpreg);
+#endif
 
           orc_sse_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
         }
@@ -274,7 +294,11 @@ sse_load_constant (OrcCompiler *compiler, int reg, int size, int value)
   } else {
     orc_x86_emit_mov_imm_reg (compiler, 4, value, compiler->gp_tmpreg);
     orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, reg);
+#ifndef MMX
     orc_sse_emit_pshufd (compiler, 0, reg, reg);
+#else
+    orc_mmx_emit_pshufw (compiler, 0, reg, reg);
+#endif
   }
 
 }
@@ -468,6 +492,7 @@ orc_emit_split_n_regions (OrcCompiler *compiler)
   orc_x86_emit_label (compiler, 7);
 }
 
+#ifndef MMX
 static int
 orc_program_has_float (OrcCompiler *compiler)
 {
@@ -479,6 +504,7 @@ orc_program_has_float (OrcCompiler *compiler)
   }
   return FALSE;
 }
+#endif
 
 #define LABEL_REGION1_SKIP 1
 #define LABEL_INNER_LOOP_START 2
@@ -492,7 +518,9 @@ orc_program_has_float (OrcCompiler *compiler)
 void
 orc_compiler_sse_assemble (OrcCompiler *compiler)
 {
+#ifndef MMX
   int set_mxcsr = FALSE;
+#endif
   int align_var;
 
   if (0 && orc_x86_assemble_copy_check (compiler)) {
@@ -507,10 +535,12 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
 
   orc_x86_emit_prologue (compiler);
 
+#ifndef MMX
   if (orc_program_has_float (compiler)) {
     set_mxcsr = TRUE;
     orc_sse_set_mxcsr (compiler);
   }
+#endif
 
   sse_load_constants_outer (compiler);
 
@@ -668,9 +698,11 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
 
   sse_save_accumulators (compiler);
 
+#ifndef MMX
   if (set_mxcsr) {
     orc_sse_restore_mxcsr (compiler);
   }
+#endif
   orc_x86_emit_epilogue (compiler);
 
   orc_x86_do_fixups (compiler);
