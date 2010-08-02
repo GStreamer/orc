@@ -188,7 +188,7 @@ unsigned int orc_sse_get_cpu_flags (void);
 #define orc_sse_emit_pmovzxwq(p,a,b)   orc_sse_emit_660f (p, "pmovzxwq", 0x3834, a, b)
 #define orc_sse_emit_pmovzxdq(p,a,b)   orc_sse_emit_660f (p, "pmovzxdq", 0x3835, a, b)
 
-#define orc_sse_emit_pmulld(p,a,b)     orc_sse_emit_660f (p, "pmuldq", 0x3840, a, b)
+#define orc_sse_emit_pmulld(p,a,b)     orc_sse_emit_660f (p, "pmulld", 0x3840, a, b)
 #define orc_sse_emit_phminposuw(p,a,b) orc_sse_emit_660f (p, "phminposuw", 0x3841, a, b)
 
 #define orc_sse_emit_pminsb(p,a,b)     orc_sse_emit_660f (p, "pminsb", 0x3838, a, b)
