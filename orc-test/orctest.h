@@ -30,6 +30,8 @@ OrcProgram *orc_test_get_program_for_opcode_const (OrcStaticOpcode *opcode);
 OrcProgram *orc_test_get_program_for_opcode_param (OrcStaticOpcode *opcode);
 
 void orc_test_performance (OrcProgram *program, int flags);
+double orc_test_performance_full (OrcProgram *program, int flags,
+    const char *target);
 
 ORC_END_DECLS
 

@@ -23,7 +23,7 @@ main (int argc, char *argv[])
   opcode_set = orc_opcode_set_get ("sys");
 
   for(i=0;i<opcode_set->n_opcodes;i++){
-    printf("opcode_%-20s ", opcode_set->opcodes[i].name);
+    //printf("opcode_%-20s ", opcode_set->opcodes[i].name);
     test_opcode_src (opcode_set->opcodes + i);
   }
 
@@ -37,6 +37,7 @@ test_opcode_src (OrcStaticOpcode *opcode)
   OrcProgram *p;
   char s[40];
   int flags = 0;
+  double perf_mmx, perf_sse;
 
   p = orc_program_new ();
   if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
@@ -70,7 +71,10 @@ test_opcode_src (OrcStaticOpcode *opcode)
     orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
   }
 
-  printf("%g\n", orc_test_performance_full (p, flags, NULL));
+  perf_mmx = orc_test_performance_full (p, flags, "mmx");
+  perf_sse = orc_test_performance_full (p, flags, "sse");
+
+  printf("%g %g\n", perf_mmx, perf_sse);
 
   orc_program_free (p);
 }

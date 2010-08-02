@@ -43,8 +43,11 @@ main (int argc, char *argv[])
   n = orc_parse (code, &programs);
 
   for(i=0;i<n;i++){
-    printf("%-30s %g\n", programs[i]->name,
-        orc_test_performance_full (programs[i], 0, NULL));
+    double perf_mmx;
+    double perf_sse;
+    perf_mmx = orc_test_performance_full (programs[i], 0, "mmx");
+    perf_sse = orc_test_performance_full (programs[i], 0, "sse");
+    printf("%g %g\n", perf_mmx, perf_sse);
   }
 
   if (error) return 1;

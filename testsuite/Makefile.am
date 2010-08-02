@@ -9,6 +9,7 @@ TESTS = \
 	exec_opcodes_sys \
 	exec_parse \
 	perf_opcodes_sys perf_parse \
+	perf_opcodes_sys_compare perf_parse_compare \
 	memcpy_speed \
 	abi
 

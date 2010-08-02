@@ -801,9 +801,15 @@ orc_test_get_program_for_opcode_param (OrcStaticOpcode *opcode)
   return p;
 }
 
-
 void
 orc_test_performance (OrcProgram *program, int flags)
+{
+  orc_test_performance_full (program, flags, NULL);
+}
+
+double
+orc_test_performance_full (OrcProgram *program, int flags,
+    const char *target_name)
 {
   OrcExecutor *ex;
   int n;
@@ -815,20 +821,21 @@ orc_test_performance (OrcProgram *program, int flags)
   OrcCompileResult result;
   OrcProfile prof;
   double ave, std;
+  OrcTarget *target;
 
   ORC_DEBUG ("got here");
 
+  target = orc_target_get_by_name (target_name);
+
   if (!(flags & ORC_TEST_FLAGS_BACKUP)) {
-    OrcTarget *target;
     unsigned int flags;
 
-    target = orc_target_get_default ();
     flags = orc_target_get_default_flags (target);
 
     result = orc_program_compile_full (program, target, flags);
     if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
-      printf("compile failed\n");
-      return;
+      //printf("compile failed\n");
+      return 0;
     }
   }
 
@@ -891,7 +898,7 @@ orc_test_performance (OrcProgram *program, int flags)
   ORC_DEBUG ("done running");
 
   orc_profile_get_ave_std (&prof, &ave, &std);
-  printf("%g %g\n", ave/(n*m), std/(n*m));
+  //printf("%g %g\n", ave/(n*m), std/(n*m));
 
   for(i=0;i<4;i++){
     if (dest_exec[i]) orc_array_free (dest_exec[i]);
@@ -903,6 +910,6 @@ orc_test_performance (OrcProgram *program, int flags)
 
   orc_executor_free (ex);
 
-  return;
+  return ave/(n*m);
 }
 
