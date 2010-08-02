@@ -1,0 +1,9 @@
+#!/bin/sh
+
+PATTERNS="-e s/sse_/mmx_/g -e s/SSE_/MMX_/g -e s/_sse/_mmx/ \
+  -e s/orcsse/orcmmx/ -e s/_SSE2/_MMXEXT/ -e s/emit_movdqa/emit_movq/ \
+  -e s/_XMM/_MM/g -e s/\"sse\"/\"mmx\"/"
+  
+
+sed $PATTERNS -e "s/undef.MMX/define MMX 1/" orcrules-sse.c >orcrules-mmx.c
+sed $PATTERNS -e "s/undef.MMX/define MMX 1/" orcprogram-sse.c >orcprogram-mmx.c

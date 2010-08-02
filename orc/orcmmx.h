@@ -10,6 +10,7 @@ typedef enum {
   ORC_TARGET_MMX_3DNOW = (1<<2),
   ORC_TARGET_MMX_3DNOWEXT = (1<<3),
   ORC_TARGET_MMX_SSSE3 = (1<<4),
+  ORC_TARGET_MMX_SSE4_1 = (1<<5),
   ORC_TARGET_MMX_FRAME_POINTER = (1<<7),
   ORC_TARGET_MMX_SHORT_JUMPS = (1<<8),
   ORC_TARGET_MMX_64BIT = (1<<9)
@@ -158,6 +159,42 @@ unsigned int orc_mmx_get_cpu_flags (void);
 #define orc_mmx_emit_pabsb(p,a,b)      orc_mmx_emit_660f (p, "pabsb", 0x381c, a, b)
 #define orc_mmx_emit_pabsw(p,a,b)      orc_mmx_emit_660f (p, "pabsw", 0x381d, a, b)
 #define orc_mmx_emit_pabsd(p,a,b)      orc_mmx_emit_660f (p, "pabsd", 0x381e, a, b)
+
+/* MMX SSE4.1 instructions */
+#define orc_mmx_emit_pmovsxbw(p,a,b)   orc_mmx_emit_660f (p, "pmovsxbw", 0x3820, a, b)
+#define orc_mmx_emit_pmovsxbd(p,a,b)   orc_mmx_emit_660f (p, "pmovsxbd", 0x3821, a, b)
+#define orc_mmx_emit_pmovsxbq(p,a,b)   orc_mmx_emit_660f (p, "pmovsxbq", 0x3822, a, b)
+#define orc_mmx_emit_pmovsxwd(p,a,b)   orc_mmx_emit_660f (p, "pmovsxwd", 0x3823, a, b)
+#define orc_mmx_emit_pmovsxwq(p,a,b)   orc_mmx_emit_660f (p, "pmovsxwq", 0x3824, a, b)
+#define orc_mmx_emit_pmovsxdq(p,a,b)   orc_mmx_emit_660f (p, "pmovsxdq", 0x3825, a, b)
+
+#define orc_mmx_emit_pmuldq(p,a,b)     orc_mmx_emit_660f (p, "pmuldq", 0x3828, a, b)
+#define orc_mmx_emit_pcmpeqq(p,a,b)    orc_mmx_emit_660f (p, "pcmpeqq", 0x3829, a, b)
+
+#define orc_mmx_emit_packusdw(p,a,b)   orc_mmx_emit_660f (p, "packuswd", 0x382b, a, b)
+
+#define orc_mmx_emit_pmovzxbw(p,a,b)   orc_mmx_emit_660f (p, "pmovzxbw", 0x3830, a, b)
+#define orc_mmx_emit_pmovzxbd(p,a,b)   orc_mmx_emit_660f (p, "pmovzxbd", 0x3831, a, b)
+#define orc_mmx_emit_pmovzxbq(p,a,b)   orc_mmx_emit_660f (p, "pmovzxbq", 0x3832, a, b)
+#define orc_mmx_emit_pmovzxwd(p,a,b)   orc_mmx_emit_660f (p, "pmovzxwd", 0x3833, a, b)
+#define orc_mmx_emit_pmovzxwq(p,a,b)   orc_mmx_emit_660f (p, "pmovzxwq", 0x3834, a, b)
+#define orc_mmx_emit_pmovzxdq(p,a,b)   orc_mmx_emit_660f (p, "pmovzxdq", 0x3835, a, b)
+
+#define orc_mmx_emit_pmulld(p,a,b)     orc_mmx_emit_660f (p, "pmuldq", 0x3840, a, b)
+#define orc_mmx_emit_phminposuw(p,a,b) orc_mmx_emit_660f (p, "phminposuw", 0x3841, a, b)
+
+#define orc_mmx_emit_pminsb(p,a,b)     orc_mmx_emit_660f (p, "pminsb", 0x3838, a, b)
+#define orc_mmx_emit_pminsd(p,a,b)     orc_mmx_emit_660f (p, "pminsd", 0x3839, a, b)
+#define orc_mmx_emit_pminuw(p,a,b)     orc_mmx_emit_660f (p, "pminuw", 0x383a, a, b)
+#define orc_mmx_emit_pminud(p,a,b)     orc_mmx_emit_660f (p, "pminud", 0x383b, a, b)
+#define orc_mmx_emit_pmaxsb(p,a,b)     orc_mmx_emit_660f (p, "pmaxsb", 0x383c, a, b)
+#define orc_mmx_emit_pmaxsd(p,a,b)     orc_mmx_emit_660f (p, "pmaxsd", 0x383d, a, b)
+#define orc_mmx_emit_pmaxuw(p,a,b)     orc_mmx_emit_660f (p, "pmaxuw", 0x383e, a, b)
+#define orc_mmx_emit_pmaxud(p,a,b)     orc_mmx_emit_660f (p, "pmaxud", 0x383f, a, b)
+
+/* SSE4.2 instructions */
+#define orc_mmx_emit_pcmpgtq(p,a,b)    orc_mmx_emit_660f (p, "pcmpgtq", 0x3837, a, b)
+
 
 #endif
 
