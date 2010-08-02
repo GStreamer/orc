@@ -2798,7 +2798,7 @@ emulate_mulhul (OrcOpcodeExecutor *ex, int n)
     /* 1: loadl */
     var33.i = var5.i;
     /* 2: mulhul */
-    var34.i = ((orc_uint64)var32.i * (orc_uint64)var33.i) >> 32;
+    var34.i = ((orc_uint64)(orc_uint32)var32.i * (orc_uint64)(orc_uint32)var33.i) >> 32;
     /* 3: storel */
     var0.i = var34.i;
     *ptr0 = var0;
