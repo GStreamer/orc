@@ -94,6 +94,7 @@ orc_compiler_powerpc_init (OrcCompiler *compiler)
   compiler->valid_regs[POWERPC_R13] = 0; /* reserved */
 
   compiler->tmpreg = POWERPC_V0;
+  compiler->gp_tmpreg = POWERPC_R0;
   compiler->valid_regs[compiler->tmpreg] = 0;
 
   for(i=14;i<32;i++){
@@ -106,6 +107,7 @@ orc_compiler_powerpc_init (OrcCompiler *compiler)
   compiler->loop_shift = 0;
 }
 
+#if 0
 static void
 powerpc_load_constant (OrcCompiler *p, int i, int reg)
 {
@@ -436,6 +438,36 @@ powerpc_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
       ORC_ASM_CODE(compiler,"ERROR\n");
   }
 }
+#endif
+
+void
+powerpc_load_inner_constants (OrcCompiler *compiler)
+{
+  OrcVariable *var;
+  int i;
+
+  for(i=0;i<ORC_N_VARIABLES;i++){
+    var = compiler->vars + i;
+
+    if (compiler->vars[i].name == NULL) continue;
+    switch (compiler->vars[i].vartype) {
+      case ORC_VAR_TYPE_SRC:
+      case ORC_VAR_TYPE_DEST:
+        if (compiler->vars[i].ptr_register) {
+          powerpc_emit_lwz (compiler,
+              compiler->vars[i].ptr_register,
+              POWERPC_R3,
+              (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
+        } else {
+          /* FIXME */
+          ORC_ASM_CODE(compiler,"ERROR");
+        }
+        break;
+      default:
+        break;
+    }
+  }
+}
 
 void
 orc_compiler_powerpc_assemble (OrcCompiler *compiler)
@@ -466,7 +498,8 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
         (int)ORC_STRUCT_OFFSET(OrcExecutorAlt, m_index));
   }
 
-  powerpc_load_constants (compiler);
+  //powerpc_load_constants (compiler);
+  powerpc_load_inner_constants (compiler);
 
   for(k=0;k<4;k++){
     OrcVariable *var = &compiler->vars[ORC_VAR_A1 + k];
@@ -517,7 +550,7 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
       switch (var->vartype) {
         case ORC_VAR_TYPE_SRC:
         case ORC_VAR_TYPE_DEST:
-          powerpc_emit_load_src (compiler, var);
+          //powerpc_emit_load_src (compiler, var);
           break;
         case ORC_VAR_TYPE_CONST:
           break;
@@ -542,7 +575,7 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
 
       switch (var->vartype) {
         case ORC_VAR_TYPE_DEST:
-          powerpc_emit_store_dest (compiler, var);
+          //powerpc_emit_store_dest (compiler, var);
           break;
         case ORC_VAR_TYPE_TEMP:
           break;
