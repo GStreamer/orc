@@ -306,22 +306,12 @@ sse_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
 #ifndef MMX
   int tmp2 = X86_XMM7;
 
-  if (p->loop_shift == 0) {
+  if (p->loop_shift <= 2) {
     orc_sse_emit_movdqa (p, src1, tmp);
-    orc_sse_emit_pslldq (p, 15, tmp);
+    orc_sse_emit_pslldq (p, 16 - (1<<p->loop_shift), tmp);
     orc_sse_emit_movdqa (p, src2, tmp2);
-    orc_sse_emit_pslldq (p, 15, tmp2);
+    orc_sse_emit_pslldq (p, 16 - (1<<p->loop_shift), tmp2);
     orc_sse_emit_psadbw (p, tmp2, tmp);
-  } else if (p->loop_shift == 1) {
-    orc_sse_emit_movdqa (p, src1, tmp);
-    orc_sse_emit_pslldq (p, 14, tmp);
-    orc_sse_emit_movdqa (p, src2, tmp2);
-    orc_sse_emit_pslldq (p, 14, tmp2);
-    orc_sse_emit_psadbw (p, tmp2, tmp);
-  } else if (p->loop_shift == 2) {
-    orc_sse_emit_movdqa (p, src1, tmp);
-    orc_sse_emit_psadbw (p, src2, tmp);
-    orc_sse_emit_pslldq (p, 12, tmp);
   } else if (p->loop_shift == 3) {
     orc_sse_emit_movdqa (p, src1, tmp);
     orc_sse_emit_psadbw (p, src2, tmp);
