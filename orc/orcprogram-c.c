@@ -226,14 +226,12 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
         ORC_ASM_CODE(compiler,"  %s var%d;\n", c_get_type_name(var->size), i);
         break;
       case ORC_VAR_TYPE_SRC:
-        //ORC_ASM_CODE(compiler,"  %s var%d;\n", c_get_type_name(var->size), i);
         ORC_ASM_CODE(compiler,"  const %s *%s ptr%d;\n",
             c_get_type_name (var->size),
             (compiler->target_flags & ORC_TARGET_C_C99) ? "restrict " : "",
             i);
         break;
       case ORC_VAR_TYPE_DEST:
-        //ORC_ASM_CODE(compiler,"  %s var%d;\n", c_get_type_name(var->size), i);
         ORC_ASM_CODE(compiler,"  %s *%s ptr%d;\n",
             c_get_type_name (var->size),
             (compiler->target_flags & ORC_TARGET_C_C99) ? "restrict " : "",
@@ -371,19 +369,14 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
       compiler->error = TRUE;
     }
   }
-#if 0
-  /* Store to destination arrays */
+  /* update pointers */
   for(i=0;i<ORC_N_VARIABLES;i++){
     OrcVariable *var = compiler->vars + i;
-    char s[20];
     if (var->name == NULL) continue;
-    c_get_name(s, compiler, i);
-    if (var->vartype == ORC_VAR_TYPE_DEST) {
-      ORC_ASM_CODE (compiler, "%*s    *ptr%d = %s;\n", prefix, "", i, s);
+    if (var->vartype == ORC_VAR_TYPE_DEST || var->vartype == ORC_VAR_TYPE_SRC) {
       ORC_ASM_CODE (compiler, "%*s    ptr%d++;\n", prefix, "", i);
     }
   }
-#endif
   ORC_ASM_CODE(compiler,"%*s  }\n", prefix, "");
   if (compiler->program->is_2d) {
     ORC_ASM_CODE(compiler,"  }\n");
@@ -665,9 +658,6 @@ c_rule_loadX (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   ORC_ASM_CODE(p,"    var%d = *ptr%d;\n", insn->dest_args[0],
       insn->src_args[0]);
-  if (p->vars[insn->src_args[0]].vartype != ORC_VAR_TYPE_DEST) {
-    ORC_ASM_CODE(p,"    ptr%d++;\n", insn->src_args[0]);
-  }
 }
 
 static void
@@ -675,7 +665,6 @@ c_rule_storeX (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   ORC_ASM_CODE(p,"    *ptr%d = var%d;\n", insn->dest_args[0],
       insn->src_args[0]);
-  ORC_ASM_CODE(p,"    ptr%d++;\n", insn->dest_args[0]);
 }
 
 static void

@@ -103,12 +103,12 @@ orc_memcpy (void * d1, const void * s1, int n){
   for (i = 0; i < n; i++) {
     /* 0: loadb */
     var32 = *ptr4;
-    ptr4++;
     /* 1: copyb */
     var33 = var32;
     /* 2: storeb */
     *ptr0 = var33;
     ptr0++;
+    ptr4++;
   }
 
 }
@@ -130,12 +130,12 @@ _backup_orc_memcpy (OrcExecutor *ex)
   for (i = 0; i < n; i++) {
     /* 0: loadb */
     var32 = *ptr4;
-    ptr4++;
     /* 1: copyb */
     var33 = var32;
     /* 2: storeb */
     *ptr0 = var33;
     ptr0++;
+    ptr4++;
   }
 
 }
