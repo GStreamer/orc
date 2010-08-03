@@ -89,11 +89,12 @@ enum {
 
 enum {
   ORC_TARGET_NEON_CLEAN_COMPILE = (1<<0),
-  ORC_TARGET_NEON_NEON = (1<<1)
+  ORC_TARGET_NEON_NEON = (1<<1),
+  ORC_TARGET_NEON_EDSP = (1<<2)
 };
 
 enum {
-  ORC_TARGET_ARM_ARMV6 = (1<<0)
+  ORC_TARGET_ARM_EDSP = (1<<2)
 };
 
 typedef enum {
