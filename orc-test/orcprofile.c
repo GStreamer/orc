@@ -39,6 +39,9 @@
 #include <string.h>
 #include <math.h>
 
+/* not used because it requires a kernel patch */
+#undef USE_CORTEX_A8_COUNTER
+
 /**
  * SECTION:orcprofile
  * @title:OrcProfile
@@ -56,6 +59,18 @@
 void
 orc_profile_init (OrcProfile *prof)
 {
+#if defined(__GNUC__) && defined(HAVE_ARM) && defined(USE_CORTEX_A8_COUNTER)
+  unsigned int flags;
+
+  __asm__ volatile ("mrc p15, 0, %0, c9, c12, 0" : "=r" (flags)); 
+  flags |= 1;
+  __asm__ volatile ("mcr p15, 0, %0, c9, c12, 0" :: "r" (flags)); 
+
+  __asm__ volatile ("mcr p15, 0, %0, c9, c12, 2" :: "r"(1<<31)); 
+  __asm__ __volatile__("  mcr p15, 0, %0, c9, c13, 0" :: "r" (0));
+
+  __asm__ volatile ("mcr p15, 0, %0, c9, c12, 1" :: "r"(1<<31)); 
+#endif
   memset(prof, 0, sizeof(OrcProfile));
 
   prof->min = -1;
@@ -155,6 +170,11 @@ oil_profile_stamp_default (void)
 #if defined(__GNUC__) && (defined(HAVE_I386) || defined(HAVE_AMD64))
   unsigned long ts;
   __asm__ __volatile__("rdtsc\n" : "=a" (ts) : : "edx");
+  return ts;
+#elif defined(__GNUC__) && defined(HAVE_ARM) && defined(USE_CORTEX_A8_COUNTER)
+  unsigned int ts;
+  //__asm__ __volatile__("  mrc p14, 0, %0, c1, c0, 0 \n" : "=r" (ts));
+  __asm__ __volatile__("  mrc p15, 0, %0, c9, c13, 0 \n" : "=r" (ts));
   return ts;
 #elif defined(_MSC_VER) && defined(HAVE_I386)
   unsigned long ts;
