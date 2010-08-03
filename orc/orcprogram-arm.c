@@ -97,6 +97,10 @@ static OrcTarget orc_arm_target = {
 void
 orc_arm_init (void)
 {
+#if defined(HAVE_ARM)
+  orc_arm_get_cpu_flags ();
+#endif
+
   orc_target_register (&orc_arm_target);
 
   orc_compiler_orc_arm_register_rules (&orc_arm_target);
@@ -105,7 +109,11 @@ orc_arm_init (void)
 unsigned int
 orc_compiler_orc_arm_get_default_flags (void)
 {
-  return 0;
+#if defined(HAVE_ARM)
+  return orc_arm_get_cpu_flags ();
+#else
+  return ORC_TARGET_ARM_EDSP;
+#endif
 }
 
 void
@@ -147,8 +155,8 @@ orc_arm_load_constants_outer (OrcCompiler *compiler)
     if (compiler->vars[i].name == NULL) continue;
     switch (compiler->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:
-        orc_arm_emit_load_imm (compiler, compiler->vars[i].alloc,
-            (int)compiler->vars[i].value);
+        //orc_arm_emit_load_imm (compiler, compiler->vars[i].alloc,
+        //    (int)compiler->vars[i].value);
         break;
       case ORC_VAR_TYPE_PARAM:
         ORC_PROGRAM_ERROR(compiler,"unimplemented");
@@ -163,6 +171,23 @@ orc_arm_load_constants_outer (OrcCompiler *compiler)
         break;
       default:
         break;
+    }
+  }
+
+  for(i=0;i<compiler->n_insns;i++){
+    OrcInstruction *insn = compiler->insns + i;
+    OrcStaticOpcode *opcode = insn->opcode;
+    OrcRule *rule;
+
+    if (!(compiler->insn_flags[i] & ORC_INSN_FLAG_INVARIANT)) continue;
+
+    ORC_ASM_CODE(compiler,"# %d: %s\n", i, insn->opcode->name);
+
+    rule = insn->rule;
+    if (rule && rule->emit) {
+      rule->emit (compiler, rule->emit_user, insn);
+    } else {
+      ORC_COMPILER_ERROR(compiler,"No rule for: %s", opcode->name);
     }
   }
 }
@@ -189,6 +214,7 @@ orc_arm_load_constants_inner (OrcCompiler *compiler)
   }
 }
 
+#if 0
 void
 orc_arm_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
 {
@@ -268,6 +294,7 @@ orc_arm_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
       ORC_COMPILER_ERROR(compiler, "bad size %d", var->size << compiler->loop_shift);
   }
 }
+#endif
 
 void
 orc_compiler_orc_arm_assemble (OrcCompiler *compiler)
@@ -341,6 +368,8 @@ orc_arm_emit_loop (OrcCompiler *compiler)
     insn = compiler->insns + j;
     opcode = insn->opcode;
 
+    if (compiler->insn_flags[j] & ORC_INSN_FLAG_INVARIANT) continue;
+
     orc_compiler_append_code(compiler,"# %d: %s", j, insn->opcode->name);
 
     /* set up args */
@@ -361,7 +390,7 @@ orc_arm_emit_loop (OrcCompiler *compiler)
       switch (compiler->vars[insn->src_args[k]].vartype) {
         case ORC_VAR_TYPE_SRC:
         case ORC_VAR_TYPE_DEST:
-          orc_arm_emit_load_src (compiler, &compiler->vars[insn->src_args[k]]);
+          //orc_arm_emit_load_src (compiler, &compiler->vars[insn->src_args[k]]);
           break;
         case ORC_VAR_TYPE_CONST:
           break;
@@ -392,7 +421,7 @@ orc_arm_emit_loop (OrcCompiler *compiler)
 
       switch (compiler->vars[insn->dest_args[k]].vartype) {
         case ORC_VAR_TYPE_DEST:
-          orc_arm_emit_store_dest (compiler, &compiler->vars[insn->dest_args[k]]);
+          //orc_arm_emit_store_dest (compiler, &compiler->vars[insn->dest_args[k]]);
           break;
         case ORC_VAR_TYPE_TEMP:
           break;

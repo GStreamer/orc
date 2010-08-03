@@ -78,6 +78,87 @@ arm_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
   orc_arm_emit(p,orc_arm_mull (0x00800090,cond,S,RdL,RdH,Rn,Rm)); \
 } while (0)
 
+static void
+arm_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  if (compiler->vars[insn->src_args[0]].vartype == ORC_VAR_TYPE_CONST) {
+    orc_arm_emit_load_imm (compiler, compiler->vars[insn->dest_args[0]].alloc,
+        (int)compiler->vars[insn->src_args[0]].value);
+  } else {
+    orc_arm_loadw (compiler, compiler->vars[insn->dest_args[0]].alloc,
+        compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[0]]));
+  }
+}
+
+static void
+arm_rule_loadX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  int src = compiler->vars[insn->src_args[0]].ptr_register;
+  int dest = compiler->vars[insn->dest_args[0]].alloc;
+  int size;
+  orc_uint32 code;
+  int offset = 0;
+
+  size = (compiler->vars[insn->src_args[0]].size << compiler->loop_shift);
+
+  if (size == 4) {
+    code = 0xe5900000;
+    ORC_ASM_CODE(compiler,"  ldr %s, [%s, #%d]\n",
+        orc_arm_reg_name (dest),
+        orc_arm_reg_name (src), offset);
+  } else if (size == 2) {
+    code = 0xe1d000b0;
+    ORC_ASM_CODE(compiler,"  ldrh %s, [%s, #%d]\n",
+        orc_arm_reg_name (dest),
+        orc_arm_reg_name (src), offset);
+  } else {
+    code = 0xe5d00000;
+    ORC_ASM_CODE(compiler,"  ldrb %s, [%s, #%d]\n",
+        orc_arm_reg_name (dest),
+        orc_arm_reg_name (src), offset);
+  }
+  code |= (src&0xf) << 16;
+  code |= (dest&0xf) << 12;
+  code |= (offset&0xf0) << 4;
+  code |= offset&0x0f;
+  orc_arm_emit (compiler, code);
+}
+
+static void
+arm_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  int src = compiler->vars[insn->src_args[0]].alloc;
+  int dest = compiler->vars[insn->dest_args[0]].ptr_register;
+  int size;
+  orc_uint32 code;
+  int offset = 0;
+
+  size = (compiler->vars[insn->src_args[0]].size << compiler->loop_shift);
+
+  if (size == 4) {
+    code = 0xe5800000;
+    ORC_ASM_CODE(compiler,"  str %s, [%s, #%d]\n",
+        orc_arm_reg_name (src),
+        orc_arm_reg_name (dest), offset);
+  } else if (size == 2) {
+    code = 0xe1c000b0;
+    ORC_ASM_CODE(compiler,"  strh %s, [%s, #%d]\n",
+        orc_arm_reg_name (src),
+        orc_arm_reg_name (dest), offset);
+  } else {
+    code = 0xe5c00000;
+    ORC_ASM_CODE(compiler,"  strb %s, [%s, #%d]\n",
+        orc_arm_reg_name (src),
+        orc_arm_reg_name (dest), offset);
+  }
+  code |= (dest&0xf) << 16;
+  code |= (src&0xf) << 12;
+  code |= (offset&0xf0) << 4;
+  code |= offset&0x0f;
+  orc_arm_emit (compiler, code);
+}
+
 void
 orc_arm_loadb (OrcCompiler *compiler, int dest, int src1, int offset)
 {
@@ -1499,6 +1580,16 @@ orc_compiler_orc_arm_register_rules (OrcTarget *target)
 
   rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target, 0);
 
+  orc_rule_register (rule_set, "loadpb", arm_rule_loadpX, NULL);
+  orc_rule_register (rule_set, "loadpw", arm_rule_loadpX, NULL);
+  orc_rule_register (rule_set, "loadpl", arm_rule_loadpX, NULL);
+  orc_rule_register (rule_set, "loadb", arm_rule_loadX, NULL);
+  orc_rule_register (rule_set, "loadw", arm_rule_loadX, NULL);
+  orc_rule_register (rule_set, "loadl", arm_rule_loadX, NULL);
+  orc_rule_register (rule_set, "storeb", arm_rule_storeX, NULL);
+  orc_rule_register (rule_set, "storew", arm_rule_storeX, NULL);
+  orc_rule_register (rule_set, "storel", arm_rule_storeX, NULL);
+
   orc_rule_register (rule_set, "andb", arm_rule_andX, NULL);
   orc_rule_register (rule_set, "andnb", arm_rule_andnX, NULL);
   orc_rule_register (rule_set, "avgsb", arm_rule_avgX, (void *)3);
@@ -1550,7 +1641,7 @@ orc_compiler_orc_arm_register_rules (OrcTarget *target)
   FAIL orc_rule_register (rule_set, "muluwl", arm_rule_muluwl, NULL);
 
   rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target,
-      ORC_TARGET_ARM_ARMV6);
+      ORC_TARGET_ARM_EDSP);
 
   FAIL orc_rule_register (rule_set, "absb", arm_rule_absX, (void *)0);
   orc_rule_register (rule_set, "addb", arm_rule_addb, NULL);
