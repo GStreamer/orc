@@ -120,12 +120,18 @@ main (int argc, char *argv[])
     if (opcode->dest_size[1]) {
       orc_program_add_destination (program, opcode->dest_size[1], "d2");
     }
-    orc_program_add_source (program, opcode->src_size[0], "s1");
     if (opcode->src_size[1]) {
+      orc_program_add_source (program, opcode->src_size[0], "s1");
       if (opcode->flags & ORC_STATIC_OPCODE_SCALAR) {
         orc_program_add_parameter (program, opcode->src_size[1], "s2");
       } else {
         orc_program_add_source (program, opcode->src_size[1], "s2");
+      }
+    } else {
+      if (opcode->flags & ORC_STATIC_OPCODE_SCALAR) {
+        orc_program_add_parameter (program, opcode->src_size[0], "s1");
+      } else {
+        orc_program_add_source (program, opcode->src_size[0], "s1");
       }
     }
     if (opcode->src_size[1]) {
