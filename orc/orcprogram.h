@@ -21,7 +21,7 @@ typedef struct _OrcTarget OrcTarget;
 typedef struct _OrcCode OrcCode;
 
 typedef void (*OrcOpcodeEmulateFunc)(OrcOpcodeExecutor *ex, void *user);
-typedef void (*OrcOpcodeEmulateNFunc)(OrcOpcodeExecutor *ex, int n);
+typedef void (*OrcOpcodeEmulateNFunc)(OrcOpcodeExecutor *ex, int index, int n);
 typedef void (*OrcOpcodeEmulate16Func)(OrcOpcodeExecutor *ex);
 typedef void (*OrcRuleEmitFunc)(OrcCompiler *p, void *user, OrcInstruction *insn);
 typedef void (*OrcExecutorFunc)(OrcExecutor *ex);

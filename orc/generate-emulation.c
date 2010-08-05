@@ -283,9 +283,9 @@ output_code_emulate (OrcProgram *p, FILE *output)
 
   fprintf(output, "void\n");
   if (p->constant_n) {
-    fprintf(output, "%s (OrcOpcodeExecutor *ex)\n", p->name);
+    fprintf(output, "%s (OrcOpcodeExecutor *ex, int offset)\n", p->name);
   } else {
-    fprintf(output, "%s (OrcOpcodeExecutor *ex, int n)\n", p->name);
+    fprintf(output, "%s (OrcOpcodeExecutor *ex, int offset, int n)\n", p->name);
   }
   fprintf(output, "{\n");
   {

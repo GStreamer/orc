@@ -163,11 +163,11 @@ orc_executor_emulate (OrcExecutor *ex)
   int j;
   int k;
   int m, m_index;
-  OrcProgram *program = ex->program;
+  OrcCode *code = ex->program->orccode;
   OrcInstruction *insn;
   OrcStaticOpcode *opcode;
   OrcOpcodeExecutor *opcode_ex;
-  void *tmpspace[ORC_VAR_T15+1] = { 0 };
+  void *tmpspace[ORC_N_COMPILER_VARIABLES] = { 0 };
 
   ex->accumulators[0] = 0;
   ex->accumulators[1] = 0;
@@ -178,37 +178,40 @@ orc_executor_emulate (OrcExecutor *ex)
 
   memset (&opcode_ex, 0, sizeof(opcode_ex));
 
-  if (program->is_2d) {
+  if (code->is_2d) {
     m = ORC_EXECUTOR_M(ex);
   } else {
     m = 1;
   }
 
-  for(i=0;i<ORC_VAR_T15+1;i++){
-    OrcVariable *var = program->vars + i;
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
+    OrcVariable *var = code->vars + i;
 
     if (var->size) {
       tmpspace[i] = malloc(4 * 16);
     }
   }
 
-  opcode_ex = malloc(sizeof(OrcOpcodeExecutor)*program->n_insns);
+  opcode_ex = malloc(sizeof(OrcOpcodeExecutor)*code->n_insns);
 
-  for(j=0;j<program->n_insns;j++){
-    insn = program->insns + j;
+  for(j=0;j<code->n_insns;j++){
+    insn = code->insns + j;
     opcode = insn->opcode;
 
     opcode_ex[j].emulateN = opcode->emulateN;
     for(k=0;k<ORC_STATIC_OPCODE_N_SRC;k++) {
-      OrcVariable *var = program->vars + insn->src_args[k];
+      OrcVariable *var = code->vars + insn->src_args[k];
+      if (opcode->src_size[k] == 0) continue;
 
       if (var->vartype == ORC_VAR_TYPE_CONST) {
         opcode_ex[j].src_ptrs[k] = tmpspace[insn->src_args[k]];
-        load_constant (tmpspace[insn->src_args[k]], opcode->src_size[k],
+        /* FIXME hack */
+        load_constant (tmpspace[insn->src_args[k]], 4,
             var->value);
       } else if (var->vartype == ORC_VAR_TYPE_PARAM) {
         opcode_ex[j].src_ptrs[k] = tmpspace[insn->src_args[k]];
-        load_constant (tmpspace[insn->src_args[k]], opcode->src_size[k],
+        /* FIXME hack */
+        load_constant (tmpspace[insn->src_args[k]], 4,
             ex->params[insn->src_args[k]]);
       } else if (var->vartype == ORC_VAR_TYPE_TEMP) {
         opcode_ex[j].src_ptrs[k] = tmpspace[insn->src_args[k]];
@@ -219,9 +222,11 @@ orc_executor_emulate (OrcExecutor *ex)
       }
     }
     for(k=0;k<ORC_STATIC_OPCODE_N_DEST;k++) {
-      OrcVariable *var = program->vars + insn->dest_args[k];
+      OrcVariable *var = code->vars + insn->dest_args[k];
+      if (opcode->dest_size[k] == 0) continue;
 
       if (var->vartype == ORC_VAR_TYPE_TEMP) {
+        ORC_DEBUG("dest vartype tmp %d", insn->dest_args[k]);
         opcode_ex[j].dest_ptrs[k] = tmpspace[insn->dest_args[k]];
       } else if (var->vartype == ORC_VAR_TYPE_ACCUMULATOR) {
         opcode_ex[j].dest_ptrs[k] =
@@ -230,49 +235,52 @@ orc_executor_emulate (OrcExecutor *ex)
         opcode_ex[j].dest_ptrs[k] = ex->arrays[insn->dest_args[k]];
       }
     }
+    ORC_DEBUG("opcode %s %p %p %p", opcode->name,
+        opcode_ex[j].dest_ptrs[0], opcode_ex[j].src_ptrs[0],
+        opcode_ex[j].src_ptrs[1]);
   }
   
   ORC_DEBUG("src ptr %p stride %d", ex->arrays[ORC_VAR_S1], ex->params[ORC_VAR_S1]);
   for(m_index=0;m_index<m;m_index++){
     ORC_DEBUG("m_index %d m %d", m_index, m);
 
-    for(i=0;i<ex->n;i+=16){
-      for(j=0;j<program->n_insns;j++){
-        insn = program->insns + j;
-        opcode = insn->opcode;
+    for(j=0;j<code->n_insns;j++){
+      insn = code->insns + j;
+      opcode = insn->opcode;
 
-        for(k=0;k<ORC_STATIC_OPCODE_N_SRC;k++) {
-          OrcVariable *var = program->vars + insn->src_args[k];
+      for(k=0;k<ORC_STATIC_OPCODE_N_SRC;k++) {
+        OrcVariable *var = code->vars + insn->src_args[k];
 
-          if (var->vartype == ORC_VAR_TYPE_SRC) {
-            opcode_ex[j].src_ptrs[k] =
-              ORC_PTR_OFFSET(ex->arrays[insn->src_args[k]],
-                  var->size*i + ex->params[insn->src_args[k]]*m_index);
-          } else if (var->vartype == ORC_VAR_TYPE_DEST) {
-            opcode_ex[j].src_ptrs[k] =
-              ORC_PTR_OFFSET(ex->arrays[insn->src_args[k]],
-                  var->size*i + ex->params[insn->src_args[k]]*m_index);
-          }
-        }
-        for(k=0;k<ORC_STATIC_OPCODE_N_DEST;k++) {
-          OrcVariable *var = program->vars + insn->dest_args[k];
-
-          if (var->vartype == ORC_VAR_TYPE_DEST) {
-            opcode_ex[j].dest_ptrs[k] =
-              ORC_PTR_OFFSET(ex->arrays[insn->dest_args[k]],
-                  var->size*i + ex->params[insn->dest_args[k]]*m_index);
-          }
+        if (var->vartype == ORC_VAR_TYPE_SRC) {
+          opcode_ex[j].src_ptrs[k] =
+            ORC_PTR_OFFSET(ex->arrays[insn->src_args[k]],
+                ex->params[insn->src_args[k]]*m_index);
+        } else if (var->vartype == ORC_VAR_TYPE_DEST) {
+          opcode_ex[j].src_ptrs[k] =
+            ORC_PTR_OFFSET(ex->arrays[insn->src_args[k]],
+                ex->params[insn->src_args[k]]*m_index);
         }
       }
+      for(k=0;k<ORC_STATIC_OPCODE_N_DEST;k++) {
+        OrcVariable *var = code->vars + insn->dest_args[k];
 
-      for(j=0;j<program->n_insns;j++){
-        insn = program->insns + j;
+        if (var->vartype == ORC_VAR_TYPE_DEST) {
+          opcode_ex[j].dest_ptrs[k] =
+            ORC_PTR_OFFSET(ex->arrays[insn->dest_args[k]],
+                ex->params[insn->dest_args[k]]*m_index);
+        }
+      }
+    }
+
+    for(i=0;i<ex->n;i+=16){
+      for(j=0;j<code->n_insns;j++){
+        insn = code->insns + j;
         opcode = insn->opcode;
 
         if (ex->n - i >= 16) {
-          opcode_ex[j].emulateN (opcode_ex + j, 16);
+          opcode_ex[j].emulateN (opcode_ex + j, i, 16);
         } else {
-          opcode_ex[j].emulateN (opcode_ex + j, ex->n - i);
+          opcode_ex[j].emulateN (opcode_ex + j, i, ex->n - i);
         }
       }
     }
