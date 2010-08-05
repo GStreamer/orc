@@ -442,7 +442,7 @@ get_shift (int size)
 
 
 static void
-orc_emit_split_n_regions (OrcCompiler *compiler)
+orc_emit_split_3_regions (OrcCompiler *compiler)
 {
   int align_var;
   int align_shift;
@@ -506,6 +506,35 @@ orc_emit_split_n_regions (OrcCompiler *compiler)
       (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3), compiler->exec_reg);
 
   orc_x86_emit_label (compiler, 7);
+}
+
+static void
+orc_emit_split_2_regions (OrcCompiler *compiler)
+{
+  int align_var;
+  int align_shift;
+  int var_size_shift;
+
+  align_var = get_align_var (compiler);
+  var_size_shift = get_shift (compiler->vars[align_var].size);
+  align_shift = var_size_shift + compiler->loop_shift;
+
+  /* Calculate n2 */
+  orc_x86_emit_mov_memoffset_reg (compiler, 4,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,n), compiler->exec_reg,
+      compiler->gp_tmpreg);
+  orc_x86_emit_mov_reg_reg (compiler, 4, compiler->gp_tmpreg, X86_EAX);
+  orc_x86_emit_sar_imm_reg (compiler, 4,
+      compiler->loop_shift + compiler->unroll_shift,
+      compiler->gp_tmpreg);
+  orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2), compiler->exec_reg);
+
+  /* Calculate n3 */
+  orc_x86_emit_and_imm_reg (compiler, 4,
+      (1<<(compiler->loop_shift + compiler->unroll_shift))-1, X86_EAX);
+  orc_x86_emit_mov_reg_memoffset (compiler, 4, X86_EAX,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3), compiler->exec_reg);
 }
 
 #ifndef MMX
@@ -585,12 +614,17 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
       compiler->program->constant_n <= ORC_SSE_ALIGNED_DEST_CUTOFF) {
     /* don't need to load n */
   } else if (compiler->loop_shift > 0) {
-    /* split n into three regions, with center region being aligned */
-    orc_emit_split_n_regions (compiler);
+    if (!compiler->has_iterator_opcode) {
+      /* split n into three regions, with center region being aligned */
+      orc_emit_split_3_regions (compiler);
+    } else {
+      orc_emit_split_2_regions (compiler);
+    }
   } else {
     /* loop shift is 0, no need to split */
     orc_x86_emit_mov_memoffset_reg (compiler, 4,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor,n), compiler->exec_reg, compiler->gp_tmpreg);
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,n), compiler->exec_reg,
+        compiler->gp_tmpreg);
     orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2), compiler->exec_reg);
   }
@@ -623,10 +657,21 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
       }
     }
     compiler->loop_shift = save_loop_shift;
+
   } else {
     int ui, ui_max;
+    int emit_region1 = TRUE;
+    int emit_region3 = TRUE;
 
-    if (compiler->loop_shift > 0) {
+    if (compiler->has_iterator_opcode) {
+      emit_region1 = FALSE;
+    }
+    if (compiler->loop_shift == 0) {
+      emit_region1 = FALSE;
+      emit_region3 = FALSE;
+    }
+
+    if (emit_region1) {
       int save_loop_shift;
       int l;
 
@@ -680,7 +725,7 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
     orc_x86_emit_jne (compiler, LABEL_INNER_LOOP_START);
     orc_x86_emit_label (compiler, LABEL_REGION2_SKIP);
 
-    if (compiler->loop_shift > 0) {
+    if (emit_region3) {
       int save_loop_shift;
       int l;
 

@@ -122,6 +122,131 @@ sse_rule_loadX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 }
 
 static void
+sse_rule_loadoffX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  OrcVariable *src = compiler->vars + insn->src_args[0];
+  OrcVariable *dest = compiler->vars + insn->dest_args[0];
+  int ptr_reg;
+  int offset = 0;
+
+  if (compiler->vars[insn->src_args[1]].vartype != ORC_VAR_TYPE_CONST) {
+    ORC_COMPILER_ERROR(compiler, "Rule only works with consts");
+    return;
+  }
+
+  offset = (compiler->offset + compiler->vars[insn->src_args[1]].value) *
+    src->size;
+  if (src->ptr_register == 0) {
+    int i = insn->src_args[0];
+    orc_x86_emit_mov_memoffset_reg (compiler, compiler->is_64bit ? 8 : 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]),
+        compiler->exec_reg, compiler->gp_tmpreg);
+    ptr_reg = compiler->gp_tmpreg;
+  } else {
+    ptr_reg = src->ptr_register;
+  } 
+  switch (src->size << compiler->loop_shift) {
+    case 1:
+      orc_x86_emit_mov_memoffset_reg (compiler, 1, offset, ptr_reg,
+          compiler->gp_tmpreg);
+      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, dest->alloc);
+      break;
+    case 2:
+      orc_x86_emit_mov_memoffset_reg (compiler, 2, offset, ptr_reg,
+          compiler->gp_tmpreg);
+      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, dest->alloc);
+      break;
+    case 4:
+      orc_x86_emit_mov_memoffset_sse (compiler, 4, offset, ptr_reg,
+          dest->alloc, src->is_aligned);
+      break;
+    case 8:
+      orc_x86_emit_mov_memoffset_sse (compiler, 8, offset, ptr_reg,
+          dest->alloc, src->is_aligned);
+      break;
+    case 16:
+      orc_x86_emit_mov_memoffset_sse (compiler, 16, offset, ptr_reg,
+          dest->alloc, src->is_aligned);
+      break;
+    default:
+      ORC_COMPILER_ERROR(compiler,"bad load size %d",
+          src->size << compiler->loop_shift);
+      break;
+  }
+}
+
+static void
+sse_rule_loadupdb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  OrcVariable *src = compiler->vars + insn->src_args[0];
+  OrcVariable *dest = compiler->vars + insn->dest_args[0];
+  int ptr_reg;
+  int offset = 0;
+
+  offset = compiler->offset * src->size;
+  if (src->ptr_register == 0) {
+    int i = insn->src_args[0];
+    orc_x86_emit_mov_memoffset_reg (compiler, compiler->is_64bit ? 8 : 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]),
+        compiler->exec_reg, compiler->gp_tmpreg);
+    ptr_reg = compiler->gp_tmpreg;
+  } else {
+    ptr_reg = src->ptr_register;
+  } 
+  switch (src->size << compiler->loop_shift) {
+    case 1:
+    case 2:
+      orc_x86_emit_mov_memoffset_reg (compiler, 1, offset, ptr_reg,
+          compiler->gp_tmpreg);
+      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, dest->alloc);
+      break;
+    case 4:
+      orc_x86_emit_mov_memoffset_reg (compiler, 2, offset, ptr_reg,
+          compiler->gp_tmpreg);
+      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, dest->alloc);
+      break;
+    case 8:
+      orc_x86_emit_mov_memoffset_sse (compiler, 4, offset, ptr_reg,
+          dest->alloc, src->is_aligned);
+      break;
+    case 16:
+      orc_x86_emit_mov_memoffset_sse (compiler, 8, offset, ptr_reg,
+          dest->alloc, src->is_aligned);
+      break;
+    case 32:
+      orc_x86_emit_mov_memoffset_sse (compiler, 16, offset, ptr_reg,
+          dest->alloc, src->is_aligned);
+      break;
+    default:
+      ORC_COMPILER_ERROR(compiler,"bad load size %d",
+          src->size << compiler->loop_shift);
+      break;
+  }
+  switch (src->size) {
+    case 1:
+      orc_sse_emit_punpcklbw (compiler, dest->alloc, dest->alloc);
+      break;
+    case 2:
+      orc_sse_emit_punpcklwd (compiler, dest->alloc, dest->alloc);
+      break;
+    case 4:
+      orc_sse_emit_punpckldq (compiler, dest->alloc, dest->alloc);
+      break;
+  }
+  /* FIXME hack */
+  if (src->ptr_register) {
+    orc_x86_emit_add_imm_reg (compiler, compiler->is_64bit ? 8 : 4,
+        -(src->size << compiler->loop_shift)>>1,
+        src->ptr_register, FALSE);
+  } else {
+    orc_x86_emit_add_imm_memoffset (compiler, compiler->is_64bit ? 8 : 4,
+        -(src->size << compiler->loop_shift)>>1,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[insn->src_args[0]]),
+        compiler->exec_reg);
+  }
+}
+
+static void
 sse_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
   OrcVariable *src = compiler->vars + insn->src_args[0];
@@ -1267,6 +1392,10 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "loadb", sse_rule_loadX, NULL);
   orc_rule_register (rule_set, "loadw", sse_rule_loadX, NULL);
   orc_rule_register (rule_set, "loadl", sse_rule_loadX, NULL);
+  orc_rule_register (rule_set, "loadoffb", sse_rule_loadoffX, NULL);
+  orc_rule_register (rule_set, "loadoffw", sse_rule_loadoffX, NULL);
+  orc_rule_register (rule_set, "loadoffl", sse_rule_loadoffX, NULL);
+  orc_rule_register (rule_set, "loadupdb", sse_rule_loadupdb, NULL);
   orc_rule_register (rule_set, "loadpb", sse_rule_loadpX, NULL);
   orc_rule_register (rule_set, "loadpw", sse_rule_loadpX, NULL);
   orc_rule_register (rule_set, "loadpl", sse_rule_loadpX, NULL);
