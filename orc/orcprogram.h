@@ -18,6 +18,7 @@ typedef struct _OrcRuleSet OrcRuleSet;
 typedef struct _OrcConstant OrcConstant;
 typedef struct _OrcFixup OrcFixup;
 typedef struct _OrcTarget OrcTarget;
+typedef struct _OrcCode OrcCode;
 
 typedef void (*OrcOpcodeEmulateFunc)(OrcOpcodeExecutor *ex, void *user);
 typedef void (*OrcOpcodeEmulateNFunc)(OrcOpcodeExecutor *ex, int n);
@@ -349,6 +350,8 @@ struct _OrcProgram {
   int is_2d;
   int constant_n;
   int constant_m;
+
+  OrcCode *orccode;
 };
 
 /**
@@ -489,6 +492,25 @@ struct _OrcExecutorAlt {
 #define ORC_EXECUTOR_M_INDEX(ex) ((ex)->params[ORC_VAR_A2])
 #define ORC_EXECUTOR_TIME(ex) ((ex)->params[ORC_VAR_A3])
 
+struct _OrcCode {
+  /*< private >*/
+  OrcCompileResult result;
+  char *name;
+
+  /* for execution */
+  OrcExecutorFunc exec;
+  unsigned char *code;
+  int code_size;
+
+  /* for emulation */
+  int n_insns;
+  OrcInstruction *insns;
+  OrcVariable *vars;
+  int is_2d;
+  int constant_n;
+  int constant_m;
+};
+
 /**
  * OrcTarget:
  *
@@ -620,6 +642,10 @@ int orc_program_get_max_array_size (OrcProgram *program);
 int orc_program_get_max_accumulator_size (OrcProgram *program);
 
 void orc_get_data_cache_sizes (int *level1, int *level2, int *level3);
+
+OrcCode * orc_code_new (void);
+void orc_code_free (OrcCode *code);
+
 
 #ifdef ORC_ENABLE_UNSTABLE_API
 

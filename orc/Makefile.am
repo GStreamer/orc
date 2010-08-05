@@ -24,7 +24,8 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orcopcodes.c \
 	orcparse.c \
 	orconce.c \
-	orcdebug.c
+	orcdebug.c \
+	orccode.c
 
 if ENABLE_BACKEND_SSE
 liborc_@ORC_MAJORMINOR@_la_SOURCES += orcsse.c orcrules-sse.c orcprogram-sse.c

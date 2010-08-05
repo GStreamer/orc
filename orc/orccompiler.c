@@ -296,6 +296,23 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   compiler->target->compile (compiler);
   if (compiler->error) goto error;
 
+  program->orccode = orc_code_new ();
+  program->orccode->exec = program->code_exec;
+  program->orccode->code = program->code;
+  program->orccode->code_size = compiler->codeptr - program->code;
+  program->orccode->is_2d = program->is_2d;
+  program->orccode->constant_n = program->constant_n;
+  program->orccode->constant_m = program->constant_m;
+
+  program->orccode->n_insns = compiler->n_insns;
+  program->orccode->insns = malloc(sizeof(OrcInstruction) * compiler->n_insns);
+  memcpy (program->orccode->insns, compiler->insns,
+      sizeof(OrcInstruction) * compiler->n_insns);
+
+  program->orccode->vars = malloc (sizeof(OrcVariable) * ORC_N_COMPILER_VARIABLES);
+  memcpy (program->orccode->vars, compiler->vars,
+      sizeof(OrcVariable) * ORC_N_COMPILER_VARIABLES);
+
   program->asm_code = compiler->asm_code;
   program->code_size = compiler->codeptr - program->code;
 
