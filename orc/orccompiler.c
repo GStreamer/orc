@@ -236,6 +236,8 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
 
   memcpy (compiler->vars, program->vars,
       ORC_N_VARIABLES * sizeof(OrcVariable));
+  memset (compiler->vars + ORC_N_VARIABLES, 0,
+      (ORC_N_COMPILER_VARIABLES - ORC_N_VARIABLES) * sizeof(OrcVariable));
   compiler->n_temp_vars = program->n_temp_vars;
   compiler->n_dup_vars = 0;
 
@@ -294,7 +296,10 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
 
   ORC_INFO("compiling for target \"%s\"", compiler->target->name);
   compiler->target->compile (compiler);
-  if (compiler->error) goto error;
+  if (compiler->error) {
+    compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
+    goto error;
+  }
 
   program->orccode = orc_code_new ();
   program->orccode->exec = program->code_exec;
@@ -414,6 +419,7 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
           OrcInstruction *cinsn;
           
           cinsn = compiler->insns + compiler->n_insns;
+          compiler->insn_flags[compiler->n_insns] |= ORC_INSN_FLAG_ADDED;
           compiler->n_insns++;
 
           if (var->size == 1) {
@@ -431,6 +437,7 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
           OrcInstruction *cinsn;
 
           cinsn = compiler->insns + compiler->n_insns;
+          compiler->insn_flags[compiler->n_insns] |= ORC_INSN_FLAG_ADDED;
           compiler->n_insns++;
 
           if (var->size == 1) {
@@ -462,6 +469,7 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
           OrcInstruction *cinsn;
           
           cinsn = compiler->insns + compiler->n_insns;
+          compiler->insn_flags[compiler->n_insns] |= ORC_INSN_FLAG_ADDED;
           compiler->n_insns++;
 
           if (var->size == 1) {
@@ -665,6 +673,10 @@ orc_compiler_global_reg_alloc (OrcCompiler *compiler)
       var->last_use = -1;
       var->alloc = orc_compiler_allocate_register (compiler, TRUE);
       compiler->insn_flags[i] |= ORC_INSN_FLAG_INVARIANT;
+    }
+
+    if (opcode->flags & ORC_STATIC_OPCODE_ITERATOR) {
+      compiler->has_iterator_opcode = TRUE;
     }
   }
 

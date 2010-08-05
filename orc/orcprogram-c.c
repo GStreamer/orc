@@ -176,6 +176,11 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     ORC_ASM_CODE(compiler,"{\n");
   }
 
+#if 0
+  if (!(compiler->target_flags & ORC_TARGET_C_OPCODE)) {
+    ORC_ASM_CODE(compiler,"%*s  int offset = 0;\n", prefix, "");
+  }
+#endif
   ORC_ASM_CODE(compiler,"%*s  int i;\n", prefix, "");
   if (compiler->program->is_2d) {
     ORC_ASM_CODE(compiler,"  int j;\n");
@@ -223,7 +228,9 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
         }
         break;
       case ORC_VAR_TYPE_TEMP:
-        ORC_ASM_CODE(compiler,"  %s var%d;\n", c_get_type_name(var->size), i);
+        if (!(var->last_use == -1 && var->first_use == 0)) {
+          ORC_ASM_CODE(compiler,"  %s var%d;\n", c_get_type_name(var->size), i);
+        }
         break;
       case ORC_VAR_TYPE_SRC:
         ORC_ASM_CODE(compiler,"  const %s *%s ptr%d;\n",
@@ -369,6 +376,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
       compiler->error = TRUE;
     }
   }
+#if 0
   /* update pointers */
   for(i=0;i<ORC_N_VARIABLES;i++){
     OrcVariable *var = compiler->vars + i;
@@ -377,6 +385,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
       ORC_ASM_CODE (compiler, "%*s    ptr%d++;\n", prefix, "", i);
     }
   }
+#endif
   ORC_ASM_CODE(compiler,"%*s  }\n", prefix, "");
   if (compiler->program->is_2d) {
     ORC_ASM_CODE(compiler,"  }\n");
@@ -656,15 +665,47 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 static void
 c_rule_loadX (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"    var%d = *ptr%d;\n", insn->dest_args[0],
+  if (p->insn_flags[insn-p->insns] & ORC_INSN_FLAG_ADDED) {
+    ORC_ASM_CODE(p,"    var%d = ptr%d[i];\n", insn->dest_args[0],
+        insn->src_args[0]);
+  } else {
+    ORC_ASM_CODE(p,"    var%d = ptr%d[offset + i];\n", insn->dest_args[0],
+        insn->src_args[0]);
+  }
+}
+
+static void
+c_rule_loadoffX (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  ORC_ASM_CODE(p,"    var%d = ptr%d[offset + i+var%d];\n", insn->dest_args[0],
+      insn->src_args[0], insn->src_args[1]);
+}
+
+static void
+c_rule_loadupdb (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  ORC_ASM_CODE(p,"    var%d = ptr%d[(offset + i)>>1];\n", insn->dest_args[0],
+      insn->src_args[0]);
+}
+
+static void
+c_rule_loadupib (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  ORC_ASM_CODE(p,"    var%d = ((offset + i)&1) ? (ptr%d[(offset + i)>>1] + ptr%d[((offset + i)>>1)+1] + 1)>>1 : ptr%d[(offset + i)>>1];\n",
+      insn->dest_args[0], insn->src_args[0], insn->src_args[0],
       insn->src_args[0]);
 }
 
 static void
 c_rule_storeX (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"    *ptr%d = var%d;\n", insn->dest_args[0],
-      insn->src_args[0]);
+  if (p->insn_flags[insn-p->insns] & ORC_INSN_FLAG_ADDED) {
+    ORC_ASM_CODE(p,"    ptr%d[i] = var%d;\n", insn->dest_args[0],
+        insn->src_args[0]);
+  } else {
+    ORC_ASM_CODE(p,"    ptr%d[offset + i] = var%d;\n", insn->dest_args[0],
+        insn->src_args[0]);
+  }
 }
 
 static void
@@ -783,6 +824,11 @@ orc_c_init (void)
   orc_rule_register (rule_set, "loadb", c_rule_loadX, NULL);
   orc_rule_register (rule_set, "loadw", c_rule_loadX, NULL);
   orc_rule_register (rule_set, "loadl", c_rule_loadX, NULL);
+  orc_rule_register (rule_set, "loadoffb", c_rule_loadoffX, NULL);
+  orc_rule_register (rule_set, "loadoffw", c_rule_loadoffX, NULL);
+  orc_rule_register (rule_set, "loadoffl", c_rule_loadoffX, NULL);
+  orc_rule_register (rule_set, "loadupdb", c_rule_loadupdb, NULL);
+  orc_rule_register (rule_set, "loadupib", c_rule_loadupib, NULL);
   orc_rule_register (rule_set, "storeb", c_rule_storeX, NULL);
   orc_rule_register (rule_set, "storew", c_rule_storeX, NULL);
   orc_rule_register (rule_set, "storel", c_rule_storeX, NULL);

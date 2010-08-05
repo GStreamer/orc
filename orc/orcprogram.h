@@ -269,6 +269,7 @@ struct _OrcOpcodeSet {
 #define ORC_STATIC_OPCODE_LOAD (1<<4)
 #define ORC_STATIC_OPCODE_STORE (1<<5)
 #define ORC_STATIC_OPCODE_INVARIANT (1<<6)
+#define ORC_STATIC_OPCODE_ITERATOR (1<<7)
 
 
 struct _OrcStaticOpcode {
@@ -412,11 +413,13 @@ struct _OrcCompiler {
   int allow_gp_on_stack;
   int loop_counter;
   int size_region;
+  int has_iterator_opcode;
 
   int offset;
 };
 
-#define ORC_INSN_FLAG_INVARIANT 1
+#define ORC_INSN_FLAG_INVARIANT (1<<0)
+#define ORC_INSN_FLAG_ADDED (1<<1)
 
 #define ORC_SRC_ARG(p,i,n) ((p)->vars[(i)->src_args[(n)]].alloc)
 #define ORC_DEST_ARG(p,i,n) ((p)->vars[(i)->dest_args[(n)]].alloc)
