@@ -1628,6 +1628,7 @@ select1wb d1, l_gray2
 .temp 1 t5
 .temp 2 t6
 .temp 4 t7
+.temp 4 td1
 
 select0lw t2, s1
 select1wb t3, t2
@@ -1637,7 +1638,7 @@ convubw t4, t3
 convubw t6, t5
 subw t1, t4, t6
 convswl t7, t1
-mulll d1, t7, t7
+mulll td1, t7, t7
 
 select1lw t2, s1
 select0wb t3, t2
@@ -1648,7 +1649,7 @@ convubw t6, t5
 subw t1, t4, t6
 convswl t7, t1
 mulll t7, t7, t7
-addl d1, t7
+addl td1, td1, t7
 
 select1lw t2, s1
 select1wb t3, t2
@@ -1659,5 +1660,27 @@ convubw t6, t5
 subw t1, t4, t6
 convswl t7, t1
 mulll t7, t7, t7
-addl d1, t7
+addl d1, td1, t7
+
+
+.function i420_to_ayuv
+.dest 4 d1
+.src 1 y
+.src 1 u
+.src 1 v
+.param 1 a
+.temp 1 tu
+.temp 1 tv
+.temp 1 ty
+.temp 2 t1
+.temp 2 t2
+
+loadupdb tu, u
+loadupdb tu, v
+loadb ty, y
+mergebw t1, a, ty
+mergebw t2, u, v
+mergewl d1, t1, t2
+
+
 
