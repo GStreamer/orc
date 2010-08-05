@@ -125,6 +125,7 @@ unsigned int orc_sse_get_cpu_flags (void);
 #define orc_sse_emit_pavgb(p,a,b)      orc_sse_emit_660f (p, "pavgb", 0xe0, a, b)
 #define orc_sse_emit_pavgw(p,a,b)      orc_sse_emit_660f (p, "pavgw", 0xe3, a, b)
 
+#define orc_sse_emit_pmulhuw(p,a,b)     orc_sse_emit_660f (p, "pmulhuw", 0xe4, a, b)
 #define orc_sse_emit_pmulhw(p,a,b)     orc_sse_emit_660f (p, "pmulhw", 0xe5, a, b)
 
 #define orc_sse_emit_psubsb(p,a,b)     orc_sse_emit_660f (p, "psubsb", 0xe8, a, b)
