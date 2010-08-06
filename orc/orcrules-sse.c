@@ -1588,6 +1588,7 @@ sse_rule_addssl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp = p->tmpreg;
+#if 0
   int tmp2 = X86_XMM7;
   int tmp3 = X86_XMM6;
 
@@ -1617,7 +1618,48 @@ sse_rule_addssl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_movdqa (p, tmp3, dest);
 
   orc_sse_emit_por (p, tmp2, dest);
+#endif
 
+  int s = X86_XMM7;
+  int t = X86_XMM6;
+
+  /*
+     From Tim Terriberry: (slightly faster than above)
+
+     m=0xFFFFFFFF;
+     s=_a;
+     t=_a;
+     s^=_b;
+     _a+=_b;
+     t^=_a;
+     t^=m;
+     m>>=1;
+     s|=t;
+     t=_b;
+     s>>=31;
+     t>>=31;
+     _a&=s;
+     t^=m;
+     s=~s&t;
+     _a|=s; 
+  */
+
+  orc_sse_emit_movdqa (p, dest, s);
+  orc_sse_emit_movdqa (p, dest, t);
+  orc_sse_emit_pxor (p, src, s);
+  orc_sse_emit_paddd (p, src, dest);
+  orc_sse_emit_pxor (p, dest, t);
+  tmp = orc_compiler_get_constant (p, 4, 0xffffffff);
+  orc_sse_emit_pxor (p, tmp, t);
+  orc_sse_emit_por (p, t, s);
+  orc_sse_emit_movdqa (p, src, t);
+  orc_sse_emit_psrad (p, 31, s);
+  orc_sse_emit_psrad (p, 31, t);
+  orc_sse_emit_pand (p, s, dest);
+  tmp = orc_compiler_get_constant (p, 4, 0x7fffffff);
+  orc_sse_emit_pxor (p, tmp, t);
+  orc_sse_emit_pandn (p, t, s);
+  orc_sse_emit_por (p, s, dest);
 }
 
 static void
