@@ -101,4 +101,5 @@ update: generate-emulation
 	$(top_builddir)/tools/orcc$(EXEEXT) --implementation -o orcfunctions.c orcfunctions.orc
 	$(top_builddir)/tools/orcc$(EXEEXT) --header -o orcfunctions.h orcfunctions.orc
 	./generate-emulation$(EXEEXT) -o orcemulateopcodes.c
+	./generate-emulation$(EXEEXT) --header -o orcemulateopcodes.h
 	
