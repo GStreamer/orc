@@ -274,8 +274,6 @@ struct _OrcOpcodeSet {
 
 struct _OrcStaticOpcode {
   char name[16];
-  OrcOpcodeEmulateFunc emulate;
-  void *emulate_user;
   unsigned int flags;
   int dest_size[ORC_STATIC_OPCODE_N_DEST];
   int src_size[ORC_STATIC_OPCODE_N_SRC];

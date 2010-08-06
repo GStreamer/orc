@@ -27,12 +27,11 @@ main (int argc, char *argv[])
   opcode_set = orc_opcode_set_get ("sys");
 
   for(i=0;i<opcode_set->n_opcodes;i++){
-    if (verbose) printf("/* %s %d,%d,%d %p */\n",
+    if (verbose) printf("/* %s %d,%d,%d */\n",
         opcode_set->opcodes[i].name,
         opcode_set->opcodes[i].dest_size[0],
         opcode_set->opcodes[i].src_size[0],
-        opcode_set->opcodes[i].src_size[1],
-        opcode_set->opcodes[i].emulate);
+        opcode_set->opcodes[i].src_size[1]);
     test_opcode (opcode_set->opcodes + i);
   }
 

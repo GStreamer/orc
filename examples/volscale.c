@@ -84,21 +84,34 @@ sse_register_rules (void)
 
 /* calculate the high 32 bits of a 32x16 signed multiply */
 static void
-mulhslw (OrcOpcodeExecutor *ex, void *user)
+emulate_mulhslw (OrcOpcodeExecutor *ex, int offset, int n)
 {
-  orc_int32 src, sl, sh, scale;
+  int i;
+  orc_union32 * ptr0;
+  const orc_union32 * ptr4;
+  const orc_int16 * ptr5;
+  orc_union32 var32;
+  orc_int16 var33;
+  orc_union32 var34;
 
-  scale = ex->src_values[0];
-  src = ex->src_values[1];
+  ptr0 = (orc_union32 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union32 *)ex->src_ptrs[0];
+  ptr5 = (orc_int16 *)ex->src_ptrs[1];
 
-  sh = scale >> 16;
-  sl = scale & 0xffff;
-
-  ex->dest_values[0] = (orc_int32) ((src * sl) >> 16) + (src * sh);
+  for (i = 0; i < n; i++) {
+    /* 0: loadb */
+    var32 = ptr4[i];
+    /* 1: loadb */
+    var33 = ptr5[i];
+    /* 2: mulsbw */
+    var34.i = (var32.i * var33)>>16;
+    /* 3: storew */
+    ptr0[i] = var34;
+  }
 }
 
 static OrcStaticOpcode opcodes[] = {
-  { "mulhslw", mulhslw, NULL, 0, { 4 }, { 4, 2 } },
+  { "mulhslw", 0, { 4 }, { 4, 2 }, emulate_mulhslw },
 
   { "" }
 };
