@@ -413,7 +413,7 @@ emulate_loadupib (OrcOpcodeExecutor *ex, int offset, int n)
 
   for (i = 0; i < n; i++) {
     /* 0: loadupib */
-    var32 = ((offset + i)&1) ? (ptr4[(offset + i)>>1] + ptr4[((offset + i)>>1)+1] + 1)>>1 : ptr4[(offset + i)>>1];
+    var32 = ((offset + i)&1) ? ((orc_uint8)ptr4[(offset + i)>>1] + (orc_uint8)ptr4[((offset + i)>>1)+1] + 1)>>1 : ptr4[(offset + i)>>1];
     /* 1: storeb */
     ptr0[i] = var32;
   }

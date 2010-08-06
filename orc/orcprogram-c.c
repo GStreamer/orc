@@ -691,7 +691,7 @@ c_rule_loadupdb (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 c_rule_loadupib (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"    var%d = ((offset + i)&1) ? (ptr%d[(offset + i)>>1] + ptr%d[((offset + i)>>1)+1] + 1)>>1 : ptr%d[(offset + i)>>1];\n",
+  ORC_ASM_CODE(p,"    var%d = ((offset + i)&1) ? ((orc_uint8)ptr%d[(offset + i)>>1] + (orc_uint8)ptr%d[((offset + i)>>1)+1] + 1)>>1 : ptr%d[(offset + i)>>1];\n",
       insn->dest_args[0], insn->src_args[0], insn->src_args[0],
       insn->src_args[0]);
 }
