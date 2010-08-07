@@ -47,6 +47,8 @@ typedef void (*OrcExecutorFunc)(OrcExecutor *ex);
 #define ORC_N_TARGETS 10
 #define ORC_N_RULE_SETS 10
 
+#define ORC_MAX_VAR_SIZE 8
+
 #define ORC_STRUCT_OFFSET(struct_type, member)    \
       ((long) ((unsigned int *) &((struct_type*) 0)->member))
 
@@ -292,7 +294,11 @@ struct _OrcInstruction {
   int src_args[ORC_STATIC_OPCODE_N_SRC];
 
   OrcRule *rule;
+  unsigned int flags;
 };
+
+#define ORC_INSTRUCTION_FLAG_X2 (1<<0)
+#define ORC_INSTRUCTION_FLAG_X4 (1<<1)
 
 /**
  * OrcConstant:
@@ -327,7 +333,13 @@ struct _OrcFixup {
  */
 struct _OrcProgram {
   /*< private >*/
-  OrcInstruction insns[ORC_N_INSNS];
+  struct {
+    OrcStaticOpcode *opcode;
+    int dest_args[ORC_STATIC_OPCODE_N_DEST];
+    int src_args[ORC_STATIC_OPCODE_N_SRC];
+
+    OrcRule *rule;
+  } _unused[ORC_N_INSNS]; /* needed for ABI compatibility */
   int n_insns;
 
   OrcVariable vars[ORC_N_VARIABLES];
@@ -344,6 +356,8 @@ struct _OrcProgram {
   unsigned char *code;
   void *code_exec;
   int code_size;
+
+  OrcInstruction insns[ORC_N_INSNS];
 
   void *backup_func;
   int is_2d;
@@ -440,6 +454,7 @@ struct _OrcOpcodeExecutor {
 
   void *src_ptrs[ORC_STATIC_OPCODE_N_SRC];
   void *dest_ptrs[ORC_STATIC_OPCODE_N_DEST];
+  int shift;
 };
 
 /**
@@ -555,6 +570,9 @@ void orc_program_set_constant_m (OrcProgram *program, int m);
 void orc_program_append (OrcProgram *p, const char *opcode, int arg0, int arg1, int arg2);
 void orc_program_append_str (OrcProgram *p, const char *opcode,
     const char * arg0, const char * arg1, const char * arg2);
+void orc_program_append_str_2 (OrcProgram *program, const char *name,
+    unsigned int flags, const char *arg1, const char *arg2, const char *arg3,
+    const char *arg4);
 void orc_program_append_ds (OrcProgram *program, const char *opcode, int arg0,
     int arg1);
 void orc_program_append_ds_str (OrcProgram *p, const char *opcode,

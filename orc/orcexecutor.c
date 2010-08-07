@@ -14,6 +14,7 @@
  * @short_description: Running Orc programs
  */
 
+#define CHUNK_SIZE 16
 
 OrcExecutor *
 orc_executor_new (OrcProgram *program)
@@ -127,7 +128,7 @@ load_constant (void *data, int size, int value)
       {
         int l;
         orc_int8 *d = data;
-        for(l=0;l<16;l++) {
+        for(l=0;l<CHUNK_SIZE;l++) {
           d[l] = value;
         }
       }
@@ -136,7 +137,7 @@ load_constant (void *data, int size, int value)
       {
         int l;
         orc_int16 *d = data;
-        for(l=0;l<16;l++) {
+        for(l=0;l<CHUNK_SIZE;l++) {
           d[l] = value;
         }
       }
@@ -145,7 +146,16 @@ load_constant (void *data, int size, int value)
       {
         int l;
         orc_int32 *d = data;
-        for(l=0;l<16;l++) {
+        for(l=0;l<CHUNK_SIZE;l++) {
+          d[l] = value;
+        }
+      }
+      break;
+    case 8:
+      {
+        int l;
+        orc_int64 *d = data;
+        for(l=0;l<CHUNK_SIZE;l++) {
           d[l] = value;
         }
       }
@@ -155,6 +165,7 @@ load_constant (void *data, int size, int value)
   }
 
 }
+
 
 void
 orc_executor_emulate (OrcExecutor *ex)
@@ -188,7 +199,7 @@ orc_executor_emulate (OrcExecutor *ex)
     OrcVariable *var = code->vars + i;
 
     if (var->size) {
-      tmpspace[i] = malloc(4 * 16);
+      tmpspace[i] = malloc(ORC_MAX_VAR_SIZE * CHUNK_SIZE);
     }
   }
 
@@ -199,6 +210,13 @@ orc_executor_emulate (OrcExecutor *ex)
     opcode = insn->opcode;
 
     opcode_ex[j].emulateN = opcode->emulateN;
+    opcode_ex[j].shift = 0;
+    if (insn->flags & ORC_INSTRUCTION_FLAG_X2) {
+      opcode_ex[j].shift = 1;
+    } else if (insn->flags & ORC_INSTRUCTION_FLAG_X4) {
+      opcode_ex[j].shift = 2;
+    }
+
     for(k=0;k<ORC_STATIC_OPCODE_N_SRC;k++) {
       OrcVariable *var = code->vars + insn->src_args[k];
       if (opcode->src_size[k] == 0) continue;
@@ -272,15 +290,12 @@ orc_executor_emulate (OrcExecutor *ex)
       }
     }
 
-    for(i=0;i<ex->n;i+=16){
+    for(i=0;i<ex->n;i+=CHUNK_SIZE){
       for(j=0;j<code->n_insns;j++){
-        insn = code->insns + j;
-        opcode = insn->opcode;
-
-        if (ex->n - i >= 16) {
-          opcode_ex[j].emulateN (opcode_ex + j, i, 16);
+        if (ex->n - i >= CHUNK_SIZE) {
+          opcode_ex[j].emulateN (opcode_ex + j, i, CHUNK_SIZE << opcode_ex[j].shift);
         } else {
-          opcode_ex[j].emulateN (opcode_ex + j, i, ex->n - i);
+          opcode_ex[j].emulateN (opcode_ex + j, i, (ex->n - i) << opcode_ex[j].shift);
         }
       }
     }

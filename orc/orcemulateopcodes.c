@@ -2509,6 +2509,65 @@ emulate_xorl (OrcOpcodeExecutor *ex, int offset, int n)
 }
 
 void
+emulate_loadq (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ptr0;
+  const orc_union64 * ptr4;
+  orc_union64 var32;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[offset + i];
+    /* 1: storeq */
+    ptr0[i] = var32;
+  }
+
+}
+
+void
+emulate_loadpq (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ptr0;
+  const int var24 = ((orc_union32 *)(ex->src_ptrs[0]))->i;
+  orc_union64 var32;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadpq */
+    var32.i = var24;
+    /* 1: storeq */
+    ptr0[i] = var32;
+  }
+
+}
+
+void
+emulate_storeq (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ptr0;
+  const orc_union64 * ptr4;
+  orc_union64 var32;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: storeq */
+    ptr0[offset + i] = var32;
+  }
+
+}
+
+void
 emulate_convsbw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
@@ -2595,6 +2654,52 @@ emulate_convuwl (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: convuwl */
     var33.i = (orc_uint16)var32;
     /* 2: storel */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_convslq (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ptr0;
+  const orc_union32 * ptr4;
+  orc_union32 var32;
+  orc_union64 var33;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union32 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var32 = ptr4[i];
+    /* 1: convslq */
+    var33.i = var32.i;
+    /* 2: storeq */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_convulq (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ptr0;
+  const orc_union32 * ptr4;
+  orc_union32 var32;
+  orc_union64 var33;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union32 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var32 = ptr4[i];
+    /* 1: convulq */
+    var33.i = (orc_uint32)var32.i;
+    /* 2: storeq */
     ptr0[i] = var33;
   }
 
@@ -2825,6 +2930,121 @@ emulate_convuuslw (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: convuuslw */
     var33 = ORC_CLAMP_UW((orc_uint32)var32.i);
     /* 2: storew */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_convql (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union32 * ptr0;
+  const orc_union64 * ptr4;
+  orc_union64 var32;
+  orc_union32 var33;
+
+  ptr0 = (orc_union32 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: convql */
+    var33.i = var32.i;
+    /* 2: storel */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_convsssql (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union32 * ptr0;
+  const orc_union64 * ptr4;
+  orc_union64 var32;
+  orc_union32 var33;
+
+  ptr0 = (orc_union32 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: convsssql */
+    var33.i = ORC_CLAMP_SL(var32.i);
+    /* 2: storel */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_convsusql (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union32 * ptr0;
+  const orc_union64 * ptr4;
+  orc_union64 var32;
+  orc_union32 var33;
+
+  ptr0 = (orc_union32 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: convsusql */
+    var33.i = ORC_CLAMP_UL(var32.i);
+    /* 2: storel */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_convussql (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union32 * ptr0;
+  const orc_union64 * ptr4;
+  orc_union64 var32;
+  orc_union32 var33;
+
+  ptr0 = (orc_union32 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: convussql */
+    var33.i = ORC_CLAMP_SL((orc_uint64)var32.i);
+    /* 2: storel */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_convuusql (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union32 * ptr0;
+  const orc_union64 * ptr4;
+  orc_union64 var32;
+  orc_union32 var33;
+
+  ptr0 = (orc_union32 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: convuusql */
+    var33.i = ORC_CLAMP_UL((orc_uint64)var32.i);
+    /* 2: storel */
     ptr0[i] = var33;
   }
 

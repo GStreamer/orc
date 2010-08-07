@@ -613,18 +613,24 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 #define BINARY_UW(a,b) BINARY(a,b)
 #define BINARY_SL(a,b) BINARY(a,b)
 #define BINARY_UL(a,b) BINARY(a,b)
+#define BINARY_SQ(a,b) BINARY(a,b)
+#define BINARY_UQ(a,b) BINARY(a,b)
 #define UNARY_SB(a,b) UNARY(a,b)
 #define UNARY_UB(a,b) UNARY(a,b)
 #define UNARY_SW(a,b) UNARY(a,b)
 #define UNARY_UW(a,b) UNARY(a,b)
 #define UNARY_SL(a,b) UNARY(a,b)
 #define UNARY_UL(a,b) UNARY(a,b)
+#define UNARY_SQ(a,b) UNARY(a,b)
+#define UNARY_UQ(a,b) UNARY(a,b)
 #define BINARY_BW(a,b) BINARY(a,b)
 #define BINARY_WL(a,b) BINARY(a,b)
 #define BINARY_LW(a,b) BINARY(a,b)
 #define BINARY_WB(a,b) BINARY(a,b)
 #define UNARY_BW(a,b) UNARY(a,b)
 #define UNARY_WL(a,b) UNARY(a,b)
+#define UNARY_LQ(a,b) UNARY(a,b)
+#define UNARY_QL(a,b) UNARY(a,b)
 #define UNARY_LW(a,b) UNARY(a,b)
 #define UNARY_WB(a,b) UNARY(a,b)
 
@@ -642,6 +648,8 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 #undef BINARY_UW
 #undef BINARY_SL
 #undef BINARY_UL
+#undef BINARY_SQ
+#undef BINARY_UQ
 #undef BINARY_F
 #undef UNARY_SB
 #undef UNARY_UB
@@ -649,6 +657,8 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 #undef UNARY_UW
 #undef UNARY_SL
 #undef UNARY_UL
+#undef UNARY_SQ
+#undef UNARY_UQ
 #undef UNARY_F
 #undef BINARY_BW
 #undef BINARY_WL
@@ -656,6 +666,8 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 #undef BINARY_WB
 #undef UNARY_BW
 #undef UNARY_WL
+#undef UNARY_LQ
+#undef UNARY_QL
 #undef UNARY_LW
 #undef UNARY_WB
 #undef UNARY_FL
@@ -798,6 +810,8 @@ orc_c_init (void)
 #define BINARY_UW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define BINARY_SL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define BINARY_UL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define BINARY_SQ(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define BINARY_UQ(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define BINARY_F(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define UNARY_SB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define UNARY_UB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
@@ -805,6 +819,8 @@ orc_c_init (void)
 #define UNARY_UW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define UNARY_SL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define UNARY_UL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define UNARY_SQ(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define UNARY_UQ(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define UNARY_F(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define BINARY_BW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define BINARY_WL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
@@ -812,6 +828,8 @@ orc_c_init (void)
 #define BINARY_WB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define UNARY_BW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define UNARY_WL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define UNARY_LQ(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define UNARY_QL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define UNARY_LW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define UNARY_WB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 
@@ -824,6 +842,7 @@ orc_c_init (void)
   orc_rule_register (rule_set, "loadb", c_rule_loadX, NULL);
   orc_rule_register (rule_set, "loadw", c_rule_loadX, NULL);
   orc_rule_register (rule_set, "loadl", c_rule_loadX, NULL);
+  orc_rule_register (rule_set, "loadq", c_rule_loadX, NULL);
   orc_rule_register (rule_set, "loadoffb", c_rule_loadoffX, NULL);
   orc_rule_register (rule_set, "loadoffw", c_rule_loadoffX, NULL);
   orc_rule_register (rule_set, "loadoffl", c_rule_loadoffX, NULL);
@@ -832,6 +851,7 @@ orc_c_init (void)
   orc_rule_register (rule_set, "storeb", c_rule_storeX, NULL);
   orc_rule_register (rule_set, "storew", c_rule_storeX, NULL);
   orc_rule_register (rule_set, "storel", c_rule_storeX, NULL);
+  orc_rule_register (rule_set, "storeq", c_rule_storeX, NULL);
 
   orc_rule_register (rule_set, "accw", c_rule_accw, NULL);
   orc_rule_register (rule_set, "accl", c_rule_accl, NULL);

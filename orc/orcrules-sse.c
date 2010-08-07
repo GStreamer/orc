@@ -864,6 +864,46 @@ sse_rule_convsuslw (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
 
   orc_sse_emit_packusdw (p, src, dest);
+  orc_sse_emit_pslldq (p, 32, dest);
+  orc_sse_emit_psrldq (p, 32, dest);
+}
+
+static void
+sse_rule_convslq (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = p->tmpreg;
+
+  if (src != dest) {
+    orc_sse_emit_movdqa (p, src, dest);
+  }
+  orc_sse_emit_movdqa (p, src, tmp);
+  orc_sse_emit_psrad (p, 31, tmp);
+  orc_sse_emit_punpckldq (p, tmp, dest);
+}
+
+static void
+sse_rule_convulq (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp;
+
+  if (src != dest) {
+    orc_sse_emit_movdqa (p, src, dest);
+  }
+  tmp = orc_compiler_get_constant (p, 4, 0);
+  orc_sse_emit_punpckldq (p, tmp, dest);
+}
+
+static void
+sse_rule_convql (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+
+  orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,2,0), src, dest);
 }
 
 static void
@@ -1909,6 +1949,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "loadb", sse_rule_loadX, NULL);
   orc_rule_register (rule_set, "loadw", sse_rule_loadX, NULL);
   orc_rule_register (rule_set, "loadl", sse_rule_loadX, NULL);
+  orc_rule_register (rule_set, "loadq", sse_rule_loadX, NULL);
   orc_rule_register (rule_set, "loadoffb", sse_rule_loadoffX, NULL);
   orc_rule_register (rule_set, "loadoffw", sse_rule_loadoffX, NULL);
   orc_rule_register (rule_set, "loadoffl", sse_rule_loadoffX, NULL);
@@ -1917,10 +1958,12 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "loadpb", sse_rule_loadpX, NULL);
   orc_rule_register (rule_set, "loadpw", sse_rule_loadpX, NULL);
   orc_rule_register (rule_set, "loadpl", sse_rule_loadpX, NULL);
+  orc_rule_register (rule_set, "loadpq", sse_rule_loadpX, NULL);
 
   orc_rule_register (rule_set, "storeb", sse_rule_storeX, NULL);
   orc_rule_register (rule_set, "storew", sse_rule_storeX, NULL);
   orc_rule_register (rule_set, "storel", sse_rule_storeX, NULL);
+  orc_rule_register (rule_set, "storeq", sse_rule_storeX, NULL);
 
   REG(addb);
   REG(addssb);
@@ -1994,6 +2037,11 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "convswl", sse_rule_convswl, NULL);
   orc_rule_register (rule_set, "convuwl", sse_rule_convuwl, NULL);
   orc_rule_register (rule_set, "convssslw", sse_rule_convssslw, NULL);
+
+  orc_rule_register (rule_set, "convql", sse_rule_convql, NULL);
+  orc_rule_register (rule_set, "convslq", sse_rule_convslq, NULL);
+  orc_rule_register (rule_set, "convulq", sse_rule_convulq, NULL);
+  //orc_rule_register (rule_set, "convsssql", sse_rule_convsssql, NULL);
 
   orc_rule_register (rule_set, "mulsbw", sse_rule_mulsbw, NULL);
   orc_rule_register (rule_set, "mulubw", sse_rule_mulubw, NULL);

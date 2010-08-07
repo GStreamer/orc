@@ -355,25 +355,34 @@ orc_compiler_check_sizes (OrcCompiler *compiler)
   for(i=0;i<compiler->n_insns;i++) {
     OrcInstruction *insn = compiler->insns + i;
     OrcStaticOpcode *opcode = insn->opcode;
+    int multiplier = 1;
+
+    if (insn->flags & ORC_INSTRUCTION_FLAG_X2) {
+      multiplier = 2;
+    } else if (insn->flags & ORC_INSTRUCTION_FLAG_X4) {
+      multiplier = 4;
+    }
 
     for(j=0;j<ORC_STATIC_OPCODE_N_DEST;j++){
       if (opcode->dest_size[j] == 0) continue;
-      if (opcode->dest_size[j] != compiler->vars[insn->dest_args[j]].size) {
+      if (multiplier * opcode->dest_size[j] !=
+          compiler->vars[insn->dest_args[j]].size) {
         ORC_COMPILER_ERROR(compiler, "size mismatch, opcode %s dest[%d] is %d should be %d",
             opcode->name, j, compiler->vars[insn->dest_args[j]].size,
-            opcode->dest_size[j]);
+            multiplier * opcode->dest_size[j]);
         compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE;
         return;
       }
     }
     for(j=0;j<ORC_STATIC_OPCODE_N_SRC;j++){
       if (opcode->src_size[j] == 0) continue;
-      if (opcode->src_size[j] != compiler->vars[insn->src_args[j]].size &&
+      if (multiplier * opcode->src_size[j] !=
+          compiler->vars[insn->src_args[j]].size &&
           compiler->vars[insn->src_args[j]].vartype != ORC_VAR_TYPE_PARAM &&
           compiler->vars[insn->src_args[j]].vartype != ORC_VAR_TYPE_CONST) {
         ORC_COMPILER_ERROR(compiler, "size mismatch, opcode %s src[%d] is %d should be %d",
             opcode->name, j, compiler->vars[insn->src_args[j]].size,
-            opcode->src_size[j]);
+            multiplier * opcode->src_size[j]);
         compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE;
         return;
       }
@@ -387,6 +396,57 @@ orc_compiler_check_sizes (OrcCompiler *compiler)
 
       }
     }
+  }
+}
+
+static OrcStaticOpcode *
+get_load_opcode_for_size (int size)
+{
+  switch (size) {
+    case 1:
+      return orc_opcode_find_by_name ("loadb");
+    case 2:
+      return orc_opcode_find_by_name ("loadw");
+    case 4:
+      return orc_opcode_find_by_name ("loadl");
+    case 8:
+      return orc_opcode_find_by_name ("loadq");
+    default:
+      ORC_ASSERT(0);
+  }
+}
+
+static OrcStaticOpcode *
+get_loadp_opcode_for_size (int size)
+{
+  switch (size) {
+    case 1:
+      return orc_opcode_find_by_name ("loadpb");
+    case 2:
+      return orc_opcode_find_by_name ("loadpw");
+    case 4:
+      return orc_opcode_find_by_name ("loadpl");
+    case 8:
+      return orc_opcode_find_by_name ("loadpq");
+    default:
+      ORC_ASSERT(0);
+  }
+}
+
+static OrcStaticOpcode *
+get_store_opcode_for_size (int size)
+{
+  switch (size) {
+    case 1:
+      return orc_opcode_find_by_name ("storeb");
+    case 2:
+      return orc_opcode_find_by_name ("storew");
+    case 4:
+      return orc_opcode_find_by_name ("storel");
+    case 8:
+      return orc_opcode_find_by_name ("storeq");
+    default:
+      ORC_ASSERT(0);
   }
 }
 
@@ -422,13 +482,7 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
           compiler->insn_flags[compiler->n_insns] |= ORC_INSN_FLAG_ADDED;
           compiler->n_insns++;
 
-          if (var->size == 1) {
-            cinsn->opcode = orc_opcode_find_by_name ("loadb");
-          } else if (var->size == 2) {
-            cinsn->opcode = orc_opcode_find_by_name ("loadw");
-          } else {
-            cinsn->opcode = orc_opcode_find_by_name ("loadl");
-          }
+          cinsn->opcode = get_load_opcode_for_size (var->size);
           cinsn->dest_args[0] = orc_compiler_new_temporary (compiler, var->size);
           cinsn->src_args[0] = insn.src_args[i];
           insn.src_args[i] = cinsn->dest_args[0];
@@ -440,13 +494,7 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
           compiler->insn_flags[compiler->n_insns] |= ORC_INSN_FLAG_ADDED;
           compiler->n_insns++;
 
-          if (var->size == 1) {
-            cinsn->opcode = orc_opcode_find_by_name ("loadpb");
-          } else if (var->size == 2) {
-            cinsn->opcode = orc_opcode_find_by_name ("loadpw");
-          } else {
-            cinsn->opcode = orc_opcode_find_by_name ("loadpl");
-          }
+          cinsn->opcode = get_loadp_opcode_for_size (var->size);
           cinsn->dest_args[0] = orc_compiler_new_temporary (compiler, var->size);
           cinsn->src_args[0] = insn.src_args[i];
           insn.src_args[i] = cinsn->dest_args[0];
@@ -472,13 +520,7 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
           compiler->insn_flags[compiler->n_insns] |= ORC_INSN_FLAG_ADDED;
           compiler->n_insns++;
 
-          if (var->size == 1) {
-            cinsn->opcode = orc_opcode_find_by_name ("storeb");
-          } else if (var->size == 2) {
-            cinsn->opcode = orc_opcode_find_by_name ("storew");
-          } else {
-            cinsn->opcode = orc_opcode_find_by_name ("storel");
-          }
+          cinsn->opcode = get_store_opcode_for_size (var->size);
           cinsn->src_args[0] = orc_compiler_new_temporary (compiler, var->size);
           cinsn->dest_args[0] = xinsn->dest_args[i];
           xinsn->dest_args[i] = cinsn->src_args[0];

@@ -274,6 +274,12 @@ orc_opcode_find_by_name (const char *name)
   return NULL;
 }
 
+void
+emulate_null (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  /* This is a placeholder for adding new opcodes */
+}
+
 #include "orc/orcemulateopcodes.h"
 
 static OrcStaticOpcode opcodes[] = {
@@ -379,14 +385,16 @@ static OrcStaticOpcode opcodes[] = {
   { "subusl", 0, { 4 }, { 4, 4 }, emulate_subusl },
   { "xorl", 0, { 4 }, { 4, 4 }, emulate_xorl },
 
+  { "loadq", ORC_STATIC_OPCODE_LOAD, { 8 }, { 8 }, emulate_loadq },
+  { "loadpq", ORC_STATIC_OPCODE_LOAD|ORC_STATIC_OPCODE_SCALAR|ORC_STATIC_OPCODE_INVARIANT, { 8 }, { 8 }, emulate_loadpq },
+  { "storeq", ORC_STATIC_OPCODE_STORE, { 8 }, { 8 }, emulate_storeq },
+
   { "convsbw", 0, { 2 }, { 1 }, emulate_convsbw },
   { "convubw", 0, { 2 }, { 1 }, emulate_convubw },
   { "convswl", 0, { 4 }, { 2 }, emulate_convswl },
   { "convuwl", 0, { 4 }, { 2 }, emulate_convuwl },
-#ifdef ENABLE_64BIT
   { "convslq", 0, { 8 }, { 4 }, emulate_convslq },
   { "convulq", 0, { 8 }, { 4 }, emulate_convulq },
-#endif
 
   { "convwb", 0, { 1 }, { 2 }, emulate_convwb },
   { "convssswb", 0, { 1 }, { 2 }, emulate_convssswb },
@@ -400,11 +408,11 @@ static OrcStaticOpcode opcodes[] = {
   { "convusslw", 0, { 2 }, { 4 }, emulate_convusslw },
   { "convuuslw", 0, { 2 }, { 4 }, emulate_convuuslw },
 
-#ifdef ENABLE_64BIT
   { "convql", 0, { 4 }, { 8 }, emulate_convql },
-  { "convssql", 0, { 4 }, { 8 }, emulate_convssql },
-  { "convusql", 0, { 4 }, { 8 }, emulate_convusql },
-#endif
+  { "convsssql", 0, { 4 }, { 8 }, emulate_convsssql },
+  { "convsusql", 0, { 4 }, { 8 }, emulate_convsusql },
+  { "convussql", 0, { 4 }, { 8 }, emulate_convussql },
+  { "convuusql", 0, { 4 }, { 8 }, emulate_convuusql },
 
   { "mulsbw", 0, { 2 }, { 1, 1 }, emulate_mulsbw },
   { "mulubw", 0, { 2 }, { 1, 1 }, emulate_mulubw },
