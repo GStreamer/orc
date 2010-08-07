@@ -802,6 +802,22 @@ sse_rule_convwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+sse_rule_convhwb (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+
+  /* FIXME slow */
+
+  if (dest != src) {
+    orc_sse_emit_movdqa (p, src, dest);
+  }
+
+  orc_sse_emit_psrlw (p, 8, dest);
+  orc_sse_emit_packuswb (p, dest, dest);
+}
+
+static void
 sse_rule_convswl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[0]].alloc;
@@ -844,6 +860,22 @@ sse_rule_convlw (OrcCompiler *p, void *user, OrcInstruction *insn)
   }
 
   orc_sse_emit_pslld (p, 16, dest);
+  orc_sse_emit_psrad (p, 16, dest);
+  orc_sse_emit_packssdw (p, dest, dest);
+}
+
+static void
+sse_rule_convhlw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+
+  /* FIXME slow */
+
+  if (dest != src) {
+    orc_sse_emit_movdqa (p, src, dest);
+  }
+
   orc_sse_emit_psrad (p, 16, dest);
   orc_sse_emit_packssdw (p, dest, dest);
 }
@@ -904,6 +936,62 @@ sse_rule_convql (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
 
   orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,2,0), src, dest);
+}
+
+static void
+sse_rule_splatw0q (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src != dest) {
+    orc_sse_emit_movdqa (p, src, dest);
+  }
+  orc_sse_emit_pshuflw (p, ORC_SSE_SHUF(0,0,0,0), dest, dest);
+  orc_sse_emit_pshufhw (p, ORC_SSE_SHUF(0,0,0,0), dest, dest);
+}
+
+static void
+sse_rule_splatbw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src != dest) {
+    orc_sse_emit_movdqa (p, src, dest);
+  }
+  orc_sse_emit_punpcklbw (p, dest, dest);
+}
+
+static void
+sse_rule_splatbl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src != dest) {
+    orc_sse_emit_movdqa (p, src, dest);
+  }
+  orc_sse_emit_punpcklbw (p, dest, dest);
+  orc_sse_emit_punpcklwd (p, dest, dest);
+}
+
+static void
+sse_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp;
+
+  if (src != dest) {
+    orc_sse_emit_movdqa (p, src, dest);
+  }
+  tmp = orc_compiler_get_constant (p, 2, 0x0080);
+  orc_sse_emit_paddw (p, tmp, dest);
+  orc_sse_emit_movdqa (p, dest, tmp);
+  orc_sse_emit_psrlw (p, 8, tmp);
+  orc_sse_emit_paddw (p, tmp, dest);
+  orc_sse_emit_psrlw (p, 8, dest);
 }
 
 static void
@@ -2102,6 +2190,12 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "subssl", sse_rule_subssl_slow, NULL);
   orc_rule_register (rule_set, "addusl", sse_rule_addusl_slow, NULL);
   orc_rule_register (rule_set, "subusl", sse_rule_subusl_slow, NULL);
+  orc_rule_register (rule_set, "convhwb", sse_rule_convhwb, NULL);
+  orc_rule_register (rule_set, "convhlw", sse_rule_convhlw, NULL);
+  orc_rule_register (rule_set, "splatw0q", sse_rule_splatw0q, NULL);
+  orc_rule_register (rule_set, "splatbw", sse_rule_splatbw, NULL);
+  orc_rule_register (rule_set, "splatbl", sse_rule_splatbl, NULL);
+  orc_rule_register (rule_set, "div255w", sse_rule_div255w, NULL);
 
   /* SSE 3 -- no rules */
 

@@ -110,6 +110,20 @@ orc_sse_emit_pshufd (OrcCompiler *p, int shuf, int src, int dest)
 }
 
 void
+orc_sse_emit_pshufhw (OrcCompiler *p, int shuf, int src, int dest)
+{
+  ORC_ASM_CODE(p,"  pshufhw $0x%04x, %%%s, %%%s\n", shuf,
+      orc_x86_get_regname_sse(src),
+      orc_x86_get_regname_sse(dest));
+  *p->codeptr++ = 0xf3;
+  orc_x86_emit_rex (p, 0, dest, 0, src);
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x70;
+  orc_x86_emit_modrm_reg (p, src, dest);
+  *p->codeptr++ = shuf;
+}
+
+void
 orc_sse_emit_pshuflw (OrcCompiler *p, int shuf, int src, int dest)
 {
   ORC_ASM_CODE(p,"  pshuflw $0x%04x, %%%s, %%%s\n", shuf,

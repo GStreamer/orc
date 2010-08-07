@@ -1189,6 +1189,29 @@ emulate_copyw (OrcOpcodeExecutor *ex, int offset, int n)
 }
 
 void
+emulate_div255w (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_int16 * ptr0;
+  const orc_int16 * ptr4;
+  orc_int16 var32;
+  orc_int16 var33;
+
+  ptr0 = (orc_int16 *)ex->dest_ptrs[0];
+  ptr4 = (orc_int16 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadw */
+    var32 = ptr4[i];
+    /* 1: div255w */
+    var33 = ((uint16_t)(((orc_uint16)(var32+128)) + (((orc_uint16)(var32+128))>>8)))>>8;
+    /* 2: storew */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
 emulate_loadw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
@@ -2568,6 +2591,29 @@ emulate_storeq (OrcOpcodeExecutor *ex, int offset, int n)
 }
 
 void
+emulate_splatw0q (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ptr0;
+  const orc_union64 * ptr4;
+  orc_union64 var32;
+  orc_union64 var33;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: splatw0q */
+    var33.i = ((orc_uint64)(var32.i&0xffff) << 48) | ((orc_uint64)(var32.i&0xffff)<<32) | ((var32.i&0xffff) << 16) | (var32.i&0xffff);
+    /* 2: storeq */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
 emulate_convsbw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
@@ -2608,6 +2654,52 @@ emulate_convubw (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: convubw */
     var33 = (orc_uint8)var32;
     /* 2: storew */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_splatbw (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_int16 * ptr0;
+  const orc_int8 * ptr4;
+  orc_int8 var32;
+  orc_int16 var33;
+
+  ptr0 = (orc_int16 *)ex->dest_ptrs[0];
+  ptr4 = (orc_int8 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadb */
+    var32 = ptr4[i];
+    /* 1: splatbw */
+    var33 = ((var32&0xff) << 8) | (var32&0xff);
+    /* 2: storew */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_splatbl (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union32 * ptr0;
+  const orc_int8 * ptr4;
+  orc_int8 var32;
+  orc_union32 var33;
+
+  ptr0 = (orc_union32 *)ex->dest_ptrs[0];
+  ptr4 = (orc_int8 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadb */
+    var32 = ptr4[i];
+    /* 1: splatbl */
+    var33.i = ((var32&0xff) << 24) | ((var32&0xff)<<16) | ((var32&0xff) << 8) | (var32&0xff);
+    /* 2: storel */
     ptr0[i] = var33;
   }
 
@@ -2729,6 +2821,29 @@ emulate_convwb (OrcOpcodeExecutor *ex, int offset, int n)
 }
 
 void
+emulate_convhwb (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_int8 * ptr0;
+  const orc_int16 * ptr4;
+  orc_int16 var32;
+  orc_int8 var33;
+
+  ptr0 = (orc_int8 *)ex->dest_ptrs[0];
+  ptr4 = (orc_int16 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadw */
+    var32 = ptr4[i];
+    /* 1: convhwb */
+    var33 = ((orc_uint16)var32)>>8;
+    /* 2: storeb */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
 emulate_convssswb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
@@ -2837,6 +2952,29 @@ emulate_convlw (OrcOpcodeExecutor *ex, int offset, int n)
     var32 = ptr4[i];
     /* 1: convlw */
     var33 = var32.i;
+    /* 2: storew */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_convhlw (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_int16 * ptr0;
+  const orc_union32 * ptr4;
+  orc_union32 var32;
+  orc_int16 var33;
+
+  ptr0 = (orc_int16 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union32 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var32 = ptr4[i];
+    /* 1: convhlw */
+    var33 = ((orc_uint32)var32.i)>>16;
     /* 2: storew */
     ptr0[i] = var33;
   }
