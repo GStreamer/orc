@@ -896,8 +896,6 @@ sse_rule_convsuslw (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
 
   orc_sse_emit_packusdw (p, src, dest);
-  orc_sse_emit_pslldq (p, 32, dest);
-  orc_sse_emit_psrldq (p, 32, dest);
 }
 
 static void
