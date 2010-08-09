@@ -494,6 +494,53 @@ orc_program_append (OrcProgram *program, const char *name, int arg0,
 }
 
 /**
+ * orc_program_append_ds_2:
+ * @program: a pointer to an OrcProgram structure
+ * @name: name of instruction
+ * @arg0: index of first variable
+ * @arg1: index of second variable
+ * @arg2: index of third variable
+ * @arg3: index of fourth variable
+ *
+ * Appends an instruction to the program, with arguments @arg0,
+ * @arg1, @arg2, and @arg3.
+ */
+void
+orc_program_append_2 (OrcProgram *program, const char *name, unsigned int flags,
+    int arg0, int arg1, int arg2, int arg3)
+{
+  OrcInstruction *insn;
+  int args[4];
+  int i;
+
+  insn = program->insns + program->n_insns;
+
+  insn->opcode = orc_opcode_find_by_name (name);
+  if (!insn->opcode) {
+    ORC_ERROR ("unknown opcode: %s", name);
+  }
+  insn->flags = flags;
+  args[0] = arg0;
+  args[1] = arg1;
+  args[2] = arg2;
+  args[3] = arg3;
+  insn->flags = flags;
+  i = 0;
+  insn->dest_args[0] = args[i++];
+  if (insn->opcode->dest_size[1] != 0) {
+    insn->dest_args[1] = args[i++];
+  }
+  if (insn->opcode->src_size[0] != 0) {
+    insn->src_args[0] = args[i++];
+  }
+  if (insn->opcode->src_size[1] != 0) {
+    insn->src_args[1] = args[i++];
+  }
+  
+  program->n_insns++;
+}
+
+/**
  * orc_program_find_var_by_name:
  * @program: a pointer to an OrcProgram structure
  * @name: name of instruction

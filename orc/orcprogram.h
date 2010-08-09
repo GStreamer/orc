@@ -568,6 +568,8 @@ void orc_program_set_constant_n (OrcProgram *program, int n);
 void orc_program_set_constant_m (OrcProgram *program, int m);
 
 void orc_program_append (OrcProgram *p, const char *opcode, int arg0, int arg1, int arg2);
+void orc_program_append_2 (OrcProgram *program, const char *name,
+    unsigned int flags, int arg0, int arg1, int arg2, int arg3);
 void orc_program_append_str (OrcProgram *p, const char *opcode,
     const char * arg0, const char * arg1, const char * arg2);
 void orc_program_append_str_2 (OrcProgram *program, const char *name,

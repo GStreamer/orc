@@ -659,14 +659,31 @@ output_code (OrcProgram *p, FILE *output)
 
   for(i=0;i<p->n_insns;i++){
     OrcInstruction *insn = p->insns + i;
-    if (p->vars[insn->src_args[1]].size != 0) {
-      fprintf(output, "      orc_program_append (p, \"%s\", %s, %s, %s);\n",
-          insn->opcode->name, enumnames[insn->dest_args[0]],
-          enumnames[insn->src_args[0]], enumnames[insn->src_args[1]]);
+
+    if (compat < ORC_VERSION(0,4,6,1)) {
+      if (insn->flags) {
+        REQUIRE(0,4,6,1);
+      }
+
+      if (p->vars[insn->src_args[1]].size != 0) {
+        fprintf(output, "      orc_program_append (p, \"%s\", %s, %s, %s);\n",
+            insn->opcode->name, enumnames[insn->dest_args[0]],
+            enumnames[insn->src_args[0]], enumnames[insn->src_args[1]]);
+      } else {
+        fprintf(output, "      orc_program_append_ds (p, \"%s\", %s, %s);\n",
+            insn->opcode->name, enumnames[insn->dest_args[0]],
+            enumnames[insn->src_args[0]]);
+      }
     } else {
-      fprintf(output, "      orc_program_append_ds (p, \"%s\", %s, %s);\n",
-          insn->opcode->name, enumnames[insn->dest_args[0]],
-          enumnames[insn->src_args[0]]);
+      if (p->vars[insn->src_args[1]].size != 0) {
+        fprintf(output, "      orc_program_append_2 (p, \"%s\", %d, %s, %s, %s, -1);\n",
+            insn->opcode->name, insn->flags, enumnames[insn->dest_args[0]],
+            enumnames[insn->src_args[0]], enumnames[insn->src_args[1]]);
+      } else {
+        fprintf(output, "      orc_program_append_2 (p, \"%s\", %d, %s, %s, -1, -1);\n",
+            insn->opcode->name, insn->flags, enumnames[insn->dest_args[0]],
+            enumnames[insn->src_args[0]]);
+      }
     }
   }
 
