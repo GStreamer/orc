@@ -2606,7 +2606,7 @@ emulate_splatw0q (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadq */
     var32 = ptr4[i];
     /* 1: splatw0q */
-    var33.i = ((orc_uint64)(var32.i&0xffff) << 48) | ((orc_uint64)(var32.i&0xffff)<<32) | ((var32.i&0xffff) << 16) | (var32.i&0xffff);
+    var33.i = ((((orc_uint64)var32.i)>>48) << 48) | ((((orc_uint64)var32.i)>>48)<<32) | ((((orc_uint64)var32.i)>>48) << 16) | ((((orc_uint64)var32.i)>>48));
     /* 2: storeq */
     ptr0[i] = var33;
   }

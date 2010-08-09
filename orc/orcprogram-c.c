@@ -817,7 +817,10 @@ c_rule_splatw0q (OrcCompiler *p, void *user, OrcInstruction *insn)
   c_get_name_int (src, p, insn->src_args[0]);
 
   ORC_ASM_CODE(p,
-      "    %s = ((orc_uint64)(%s&0xffff) << 48) | ((orc_uint64)(%s&0xffff)<<32) | ((%s&0xffff) << 16) | (%s&0xffff);\n",
+      "    %s = ((((orc_uint64)%s)>>48) << 48) | "
+      "((((orc_uint64)%s)>>48)<<32) | "
+      "((((orc_uint64)%s)>>48) << 16) | "
+      "((((orc_uint64)%s)>>48));\n",
       dest, src, src, src, src);
 }
 

@@ -945,8 +945,8 @@ sse_rule_splatw0q (OrcCompiler *p, void *user, OrcInstruction *insn)
   if (src != dest) {
     orc_sse_emit_movdqa (p, src, dest);
   }
-  orc_sse_emit_pshuflw (p, ORC_SSE_SHUF(0,0,0,0), dest, dest);
-  orc_sse_emit_pshufhw (p, ORC_SSE_SHUF(0,0,0,0), dest, dest);
+  orc_sse_emit_pshuflw (p, ORC_SSE_SHUF(3,3,3,3), dest, dest);
+  orc_sse_emit_pshufhw (p, ORC_SSE_SHUF(3,3,3,3), dest, dest);
 }
 
 static void
