@@ -784,7 +784,7 @@ orc_sse_emit_loop (OrcCompiler *compiler, int offset, int update)
     insn = compiler->insns + j;
     opcode = insn->opcode;
 
-    if (compiler->insn_flags[j] & ORC_INSN_FLAG_INVARIANT) continue;
+    if (insn->flags & ORC_INSN_FLAG_INVARIANT) continue;
 
     ORC_ASM_CODE(compiler,"# %d: %s\n", j, insn->opcode->name);
 
@@ -835,7 +835,7 @@ orc_sse_emit_invariants (OrcCompiler *compiler)
     insn = compiler->insns + j;
     opcode = insn->opcode;
 
-    if (!(compiler->insn_flags[j] & ORC_INSN_FLAG_INVARIANT)) continue;
+    if (!(insn->flags & ORC_INSN_FLAG_INVARIANT)) continue;
 
     ORC_ASM_CODE(compiler,"# %d: %s\n", j, insn->opcode->name);
 

@@ -257,7 +257,7 @@ orc_neon_load_constants_outer (OrcCompiler *compiler)
     OrcStaticOpcode *opcode = insn->opcode;
     OrcRule *rule;
 
-    if (!(compiler->insn_flags[i] & ORC_INSN_FLAG_INVARIANT)) continue;
+    if (!(insn->flags & ORC_INSN_FLAG_INVARIANT)) continue;
 
     ORC_ASM_CODE(compiler,"# %d: %s\n", i, insn->opcode->name);
 
@@ -699,7 +699,7 @@ orc_neon_emit_loop (OrcCompiler *compiler, int unroll_index)
     insn = compiler->insns + j;
     opcode = insn->opcode;
 
-    if (compiler->insn_flags[j] & ORC_INSN_FLAG_INVARIANT) continue;
+    if (insn->flags & ORC_INSN_FLAG_INVARIANT) continue;
 
     orc_compiler_append_code(compiler,"# %d: %s", j, insn->opcode->name);
 

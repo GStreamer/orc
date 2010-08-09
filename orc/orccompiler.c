@@ -479,9 +479,9 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
           OrcInstruction *cinsn;
           
           cinsn = compiler->insns + compiler->n_insns;
-          compiler->insn_flags[compiler->n_insns] |= ORC_INSN_FLAG_ADDED;
           compiler->n_insns++;
 
+          cinsn->flags |= ORC_INSN_FLAG_ADDED;
           cinsn->opcode = get_load_opcode_for_size (var->size);
           cinsn->dest_args[0] = orc_compiler_new_temporary (compiler, var->size);
           cinsn->src_args[0] = insn.src_args[i];
@@ -491,9 +491,9 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
           OrcInstruction *cinsn;
 
           cinsn = compiler->insns + compiler->n_insns;
-          compiler->insn_flags[compiler->n_insns] |= ORC_INSN_FLAG_ADDED;
           compiler->n_insns++;
 
+          cinsn->flags |= ORC_INSN_FLAG_ADDED;
           cinsn->opcode = get_loadp_opcode_for_size (var->size);
           cinsn->dest_args[0] = orc_compiler_new_temporary (compiler, var->size);
           cinsn->src_args[0] = insn.src_args[i];
@@ -517,9 +517,9 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
           OrcInstruction *cinsn;
           
           cinsn = compiler->insns + compiler->n_insns;
-          compiler->insn_flags[compiler->n_insns] |= ORC_INSN_FLAG_ADDED;
           compiler->n_insns++;
 
+          cinsn->flags |= ORC_INSN_FLAG_ADDED;
           cinsn->opcode = get_store_opcode_for_size (var->size);
           cinsn->src_args[0] = orc_compiler_new_temporary (compiler, var->size);
           cinsn->dest_args[0] = xinsn->dest_args[i];
@@ -714,7 +714,7 @@ orc_compiler_global_reg_alloc (OrcCompiler *compiler)
       var->first_use = -1;
       var->last_use = -1;
       var->alloc = orc_compiler_allocate_register (compiler, TRUE);
-      compiler->insn_flags[i] |= ORC_INSN_FLAG_INVARIANT;
+      insn->flags |= ORC_INSN_FLAG_INVARIANT;
     }
 
     if (opcode->flags & ORC_STATIC_OPCODE_ITERATOR) {
@@ -746,7 +746,7 @@ orc_compiler_rewrite_vars2 (OrcCompiler *compiler)
      *  - src1 must be last_use
      *  - only one dest
      */
-    if (compiler->insn_flags[j] & ORC_INSN_FLAG_INVARIANT) continue;
+    if (compiler->insns[j].flags & ORC_INSN_FLAG_INVARIANT) continue;
 
     if (!(compiler->insns[j].opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR)
         && compiler->insns[j].opcode->dest_size[1] == 0) {

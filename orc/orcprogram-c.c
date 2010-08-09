@@ -677,11 +677,12 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 static void
 c_rule_loadX (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  if (p->insn_flags[insn-p->insns] & ORC_INSN_FLAG_ADDED) {
-    ORC_ASM_CODE(p,"    var%d = ptr%d[i];\n", insn->dest_args[0],
+  if (p->target_flags & ORC_TARGET_C_OPCODE &&
+      !(insn->flags & ORC_INSN_FLAG_ADDED)) {
+    ORC_ASM_CODE(p,"    var%d = ptr%d[offset + i];\n", insn->dest_args[0],
         insn->src_args[0]);
   } else {
-    ORC_ASM_CODE(p,"    var%d = ptr%d[offset + i];\n", insn->dest_args[0],
+    ORC_ASM_CODE(p,"    var%d = ptr%d[i];\n", insn->dest_args[0],
         insn->src_args[0]);
   }
 }
@@ -711,11 +712,12 @@ c_rule_loadupib (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 c_rule_storeX (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  if (p->insn_flags[insn-p->insns] & ORC_INSN_FLAG_ADDED) {
-    ORC_ASM_CODE(p,"    ptr%d[i] = var%d;\n", insn->dest_args[0],
+  if (p->target_flags & ORC_TARGET_C_OPCODE &&
+      !(insn->flags & ORC_INSN_FLAG_ADDED)) {
+    ORC_ASM_CODE(p,"    ptr%d[offset + i] = var%d;\n", insn->dest_args[0],
         insn->src_args[0]);
   } else {
-    ORC_ASM_CODE(p,"    ptr%d[offset + i] = var%d;\n", insn->dest_args[0],
+    ORC_ASM_CODE(p,"    ptr%d[i] = var%d;\n", insn->dest_args[0],
         insn->src_args[0]);
   }
 }
