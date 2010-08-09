@@ -1665,9 +1665,9 @@ addl d1, td1, t7
 
 .function i420_to_ayuv
 .dest 4 d1
-.src 1 y
-.src 1 u
-.src 1 v
+.source 1 y
+.source 1 u
+.source 1 v
 .param 1 a
 .temp 1 tu
 .temp 1 tv
@@ -1676,11 +1676,25 @@ addl d1, td1, t7
 .temp 2 t2
 
 loadupdb tu, u
-loadupdb tu, v
+loadupdb tv, v
 loadb ty, y
 mergebw t1, a, ty
-mergebw t2, u, v
+mergebw t2, tu, tv
 mergewl d1, t1, t2
 
+
+
+.function test_4x
+.dest 4 d1
+.source 4 s1
+.source 4 s2
+.temp 4 t1
+.temp 4 t2
+.temp 4 t3
+
+loadl t1, s1
+loadl t2, s2
+x4 addusb t3, t1, t2
+storel d1, t3
 
 
