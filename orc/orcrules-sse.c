@@ -992,6 +992,117 @@ sse_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_psrlw (p, 8, dest);
 }
 
+#if 1
+static void
+sse_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  /* About 5.9 cycles per array member on ginger */
+  int src = p->vars[insn->src_args[1]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int divisor = p->tmpreg;
+  int rem = X86_XMM7;
+  int tmp2 = X86_XMM6;
+  int tmp3 = X86_XMM5;
+  int tmp4 = X86_XMM4;
+  int i;
+
+  orc_sse_emit_movdqa (p, src, divisor);
+  orc_sse_emit_psllw (p, 8, divisor);
+
+  orc_sse_emit_movdqa (p, dest, tmp4);
+  orc_sse_emit_psrlw (p, 1, divisor);
+  orc_sse_emit_psrlw (p, 1, tmp4);
+  orc_sse_emit_pcmpgtw (p, divisor, tmp4);
+  orc_sse_emit_psrlw (p, 8, tmp4);
+
+  orc_sse_emit_movdqa (p, dest, rem);
+    orc_sse_emit_psrlw (p, 1, divisor);
+    orc_sse_emit_psrlw (p, 1, rem);
+  orc_sse_emit_movdqa (p, rem, tmp2);
+  orc_sse_emit_pcmpgtw (p, divisor, tmp2);
+    orc_sse_emit_psllw (p, 1, divisor);
+    orc_sse_emit_movdqa (p, dest, rem);
+  orc_sse_emit_movdqa (p, divisor, tmp3);
+  orc_sse_emit_pand (p, tmp2, tmp3);
+  orc_sse_emit_psubw (p, tmp3, rem);
+  orc_sse_emit_psrlw (p, 15, tmp2);
+  orc_sse_emit_psllw (p, 7, tmp2);
+  orc_sse_emit_movdqa (p, tmp4, dest);
+  orc_sse_emit_por (p, tmp2, dest);
+
+  orc_x86_emit_mov_imm_reg (p, 4, 0x00010001, p->gp_tmpreg);
+  orc_x86_emit_mov_reg_sse (p, p->gp_tmpreg, tmp4);
+  orc_sse_emit_pshufd (p, 0, tmp4, tmp4);
+  orc_sse_emit_paddw (p, tmp4, rem);
+
+  for(i=6;i>=0;i--){
+    orc_sse_emit_psrlw (p, 1, divisor);
+    orc_sse_emit_movdqa (p, rem, tmp2);
+    orc_sse_emit_pcmpgtw (p, divisor, tmp2);
+    orc_sse_emit_movdqa (p, divisor, tmp3);
+    orc_sse_emit_pand (p, tmp2, tmp3);
+    orc_sse_emit_psubw (p, tmp3, rem);
+    orc_sse_emit_psrlw (p, 15, tmp2);
+    orc_sse_emit_psllw (p, i, tmp2);
+    orc_sse_emit_por (p, tmp2, dest);
+  }
+}
+#else
+static void
+sse_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  /* About 40.7 cycles per array member on ginger.  I.e., really slow */
+  int i;
+  int regsize = p->is_64bit ? 8 : 4;
+
+  orc_x86_emit_add_imm_reg (p, regsize, -32 - 2*regsize, X86_ESP, FALSE);
+  orc_x86_emit_mov_sse_memoffset (p, 16, p->vars[insn->src_args[0]].alloc,
+      0, X86_ESP, FALSE, FALSE);
+  orc_x86_emit_mov_sse_memoffset (p, 16, p->vars[insn->src_args[1]].alloc,
+      16, X86_ESP, FALSE, FALSE);
+  orc_x86_emit_mov_reg_memoffset (p, 4, X86_EAX, 32, X86_ESP);
+  orc_x86_emit_mov_reg_memoffset (p, 4, X86_EDX, 32 + regsize, X86_ESP);
+
+  for(i=0;i<(1<<p->loop_shift);i++) {
+    int label = p->label_index++;
+
+    orc_x86_emit_mov_memoffset_reg (p, 2, 16 + 2*i, X86_ESP, X86_ECX);
+    orc_x86_emit_mov_imm_reg (p, 4, 0, X86_EDX);
+    orc_x86_emit_mov_imm_reg (p, 2, 0x00ff, X86_EAX);
+    orc_x86_emit_and_imm_reg (p, 2, 0x00ff, X86_ECX);
+    orc_x86_emit_je (p, label);
+    orc_x86_emit_mov_memoffset_reg (p, 2, 2*i, X86_ESP, X86_EAX);
+
+    ORC_ASM_CODE(p,"  div %%cx\n");
+    *p->codeptr++ = 0x66;
+    *p->codeptr++ = 0xf7;
+    orc_x86_emit_modrm_reg (p, X86_ECX, 6);
+
+    ORC_ASM_CODE(p,"  testw $0xff00, %%ax\n");
+    *p->codeptr++ = 0x66;
+    *p->codeptr++ = 0xa9;
+    //*p->codeptr++ = 0xf7;
+    //orc_x86_emit_modrm_reg (p, X86_EAX, 0);
+    *p->codeptr++ = 0x00;
+    *p->codeptr++ = 0xff;
+    orc_x86_emit_je (p, label);
+
+    orc_x86_emit_mov_imm_reg (p, 2, 0x00ff, X86_EAX);
+
+    orc_x86_emit_label (p, label);
+
+    orc_x86_emit_mov_reg_memoffset (p, 2, X86_EAX, 2*i, X86_ESP);
+  }
+
+  orc_x86_emit_mov_memoffset_sse (p, 16, 0, X86_ESP,
+      p->vars[insn->dest_args[0]].alloc, FALSE);
+  orc_x86_emit_mov_memoffset_reg (p, 4, 32, X86_ESP, X86_EAX);
+  orc_x86_emit_mov_memoffset_reg (p, 4, 32 + regsize, X86_ESP, X86_EDX);
+
+  orc_x86_emit_add_imm_reg (p, regsize, 32 + 2*regsize, X86_ESP, FALSE);
+}
+#endif
+
 static void
 sse_rule_mulsbw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -2194,6 +2305,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "splatbw", sse_rule_splatbw, NULL);
   orc_rule_register (rule_set, "splatbl", sse_rule_splatbl, NULL);
   orc_rule_register (rule_set, "div255w", sse_rule_div255w, NULL);
+  orc_rule_register (rule_set, "divluw", sse_rule_divluw, NULL);
 
   /* SSE 3 -- no rules */
 

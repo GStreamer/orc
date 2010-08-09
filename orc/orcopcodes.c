@@ -332,6 +332,7 @@ static OrcStaticOpcode opcodes[] = {
   { "cmpgtsw", 0, { 2 }, { 2, 2 }, emulate_cmpgtsw },
   { "copyw", 0, { 2 }, { 2 }, emulate_copyw },
   { "div255w", 0, { 2 }, { 2 }, emulate_div255w },
+  { "divluw", 0, { 2 }, { 2, 2 }, emulate_divluw },
   { "loadw", ORC_STATIC_OPCODE_LOAD, { 2 }, { 2 }, emulate_loadw },
   { "loadoffw", ORC_STATIC_OPCODE_LOAD|ORC_STATIC_OPCODE_SCALAR, { 2 }, { 2, 4 }, emulate_loadoffw },
   { "loadpw", ORC_STATIC_OPCODE_LOAD|ORC_STATIC_OPCODE_SCALAR|ORC_STATIC_OPCODE_INVARIANT, { 2 }, { 2 }, emulate_loadpw },

@@ -49,6 +49,7 @@ void emulate_cmpeqw (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_cmpgtsw (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_copyw (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_div255w (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_divluw (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_loadw (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_loadoffw (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_loadpw (OrcOpcodeExecutor *ex, int i, int n);

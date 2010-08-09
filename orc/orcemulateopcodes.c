@@ -1212,6 +1212,34 @@ emulate_div255w (OrcOpcodeExecutor *ex, int offset, int n)
 }
 
 void
+emulate_divluw (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_int16 * ptr0;
+  const orc_int16 * ptr4;
+  const orc_int16 * ptr5;
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+
+  ptr0 = (orc_int16 *)ex->dest_ptrs[0];
+  ptr4 = (orc_int16 *)ex->src_ptrs[0];
+  ptr5 = (orc_int16 *)ex->src_ptrs[1];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadw */
+    var32 = ptr4[i];
+    /* 1: loadw */
+    var33 = ptr5[i];
+    /* 2: divluw */
+    var34 = ((var33&0xff) == 0) ? 255 : ORC_CLAMP_UB(((uint16_t)var32)/((uint16_t)var33&0xff));
+    /* 3: storew */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
 emulate_loadw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;

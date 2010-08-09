@@ -837,6 +837,20 @@ c_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
       dest, src, src);
 }
 
+static void
+c_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[20], src1[20], src2[20];
+
+  c_get_name_int (dest, p, insn->dest_args[0]);
+  c_get_name_int (src1, p, insn->src_args[0]);
+  c_get_name_int (src2, p, insn->src_args[1]);
+
+  ORC_ASM_CODE(p,
+      "    %s = ((%s&0xff) == 0) ? 255 : ORC_CLAMP_UB(((uint16_t)%s)/((uint16_t)%s&0xff));\n",
+      dest, src2, src1, src2);
+}
+
 static OrcTarget c_target = {
   "c",
   FALSE,
@@ -917,5 +931,6 @@ orc_c_init (void)
   orc_rule_register (rule_set, "splatbl", c_rule_splatbl, NULL);
   orc_rule_register (rule_set, "splatw0q", c_rule_splatw0q, NULL);
   orc_rule_register (rule_set, "div255w", c_rule_div255w, NULL);
+  orc_rule_register (rule_set, "divluw", c_rule_divluw, NULL);
 }
 
