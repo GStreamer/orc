@@ -245,7 +245,7 @@ main (int argc, char *argv[])
     fprintf(output, "extern \"C\" {\n");
     fprintf(output, "#endif\n");
     fprintf(output, "\n");
-    fprintf(output, "#define ORC_INLINE\n");
+    fprintf(output, "//#define ORC_INLINE\n");
     fprintf(output, "#ifndef ORC_INLINE\n");
     fprintf(output, "\n");
     fprintf(output, "%s", orc_target_c_get_typedefs ());

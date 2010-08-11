@@ -222,7 +222,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
             i);
         break;
       case ORC_VAR_TYPE_ACCUMULATOR:
-        if (var->size >= 4) {
+        if (var->size >= 2) {
           ORC_ASM_CODE(compiler,"  %s var%d =  { 0 };\n",
               c_get_type_name (var->size),
               i);
@@ -251,7 +251,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
       switch (var->vartype) {
         case ORC_VAR_TYPE_SRC:
           {
-            char s1[20], s2[20];
+            char s1[40], s2[40];
             get_varname(s1, compiler, i);
             get_varname_stride(s2, compiler, i);
             ORC_ASM_CODE(compiler,
@@ -261,7 +261,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
           break;
         case ORC_VAR_TYPE_DEST:
           {
-            char s1[20], s2[20];
+            char s1[40], s2[40];
             get_varname(s1, compiler, i),
             get_varname_stride(s2, compiler, i),
             ORC_ASM_CODE(compiler,
@@ -276,7 +276,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
   } else {
     for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
       OrcVariable *var = compiler->vars + i;
-      char s[20];
+      char s[40];
       if (var->name == NULL) continue;
       get_varname(s, compiler, i);
       switch (var->vartype) {
@@ -335,7 +335,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
   }
 
   for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
-    char varname[20];
+    char varname[40];
     OrcVariable *var = compiler->vars + i;
     if (var->name == NULL) continue;
     c_get_name_int (varname, compiler, NULL, i);
@@ -384,7 +384,29 @@ static void
 c_get_name_int (char *name, OrcCompiler *p, OrcInstruction *insn, int var)
 {
   if (p->vars[var].vartype == ORC_VAR_TYPE_PARAM) {
-    sprintf(name, "var%d", var);
+    if (p->target_flags & ORC_TARGET_C_NOEXEC) {
+      sprintf(name,"%s", varnames[var]);
+    } else if (p->target_flags & ORC_TARGET_C_OPCODE) {
+      if (p->vars[var].is_float_param) {
+        sprintf(name,"((orc_union32 *)(ex->src_ptrs[%d]))->f",
+            var - ORC_VAR_P1 + p->program->n_src_vars);
+      } else {
+        sprintf(name,"((orc_union32 *)(ex->src_ptrs[%d]))->i",
+            var - ORC_VAR_P1 + p->program->n_src_vars);
+      }
+    } else {
+      if (p->vars[var].is_float_param) {
+        sprintf(name,"((orc_union32 *)(ex->params+%d))->f", var);
+      } else {
+        sprintf(name,"ex->params[%d]", var);
+      }
+    }
+  } else if (p->vars[var].vartype == ORC_VAR_TYPE_CONST) {
+    if (p->vars[var].value == 0x80000000) {
+      sprintf(name,"0x80000000");
+    } else {
+      sprintf(name, "%d", p->vars[var].value);
+    }
   } else {
     if (insn && (insn->flags & ORC_INSTRUCTION_FLAG_X2)) {
       sprintf(name, "var%d.x2[%d]", var, p->unroll_index);
@@ -449,7 +471,7 @@ c_get_type_name (int size)
 static void \
 c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  char dest[20], src1[20]; \
+  char dest[40], src1[40]; \
 \
   c_get_name_int (dest, p, insn, insn->dest_args[0]); \
   c_get_name_int (src1, p, insn, insn->src_args[0]); \
@@ -461,7 +483,7 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 static void \
 c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  char dest[20], src1[20], src2[20]; \
+  char dest[40], src1[40], src2[40]; \
 \
   c_get_name_int (dest, p, insn, insn->dest_args[0]); \
   c_get_name_int (src1, p, insn, insn->src_args[0]); \
@@ -602,8 +624,8 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 static void
 c_rule_loadpX (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  char dest[20];
-  char src[20];
+  char dest[40];
+  char src[40];
   OrcVariable *var;
 
   c_get_name_int (dest, p, insn, insn->dest_args[0]);
@@ -611,6 +633,8 @@ c_rule_loadpX (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   var = &p->vars[insn->src_args[0]];
 
+  ORC_ASM_CODE(p,"    %s = %s;\n", dest, src);
+#if 0
   if (var->vartype == ORC_VAR_TYPE_CONST) {
     if (var->value == 0x80000000) {
       ORC_ASM_CODE(p,"    %s = 0x80000000;\n", dest);
@@ -639,6 +663,7 @@ c_rule_loadpX (OrcCompiler *p, void *user, OrcInstruction *insn)
       }
     }
   }
+#endif
 }
 
 static void
@@ -657,13 +682,17 @@ c_rule_loadX (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 c_rule_loadoffX (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
+  char src[40];
+
+  c_get_name_int (src, p, insn, insn->src_args[1]);
+
   if (p->target_flags & ORC_TARGET_C_OPCODE &&
       !(insn->flags & ORC_INSN_FLAG_ADDED)) {
-    ORC_ASM_CODE(p,"    var%d = ptr%d[offset + i+var%d];\n", insn->dest_args[0],
-        insn->src_args[0], insn->src_args[1]);
+    ORC_ASM_CODE(p,"    var%d = ptr%d[offset + i + %s];\n", insn->dest_args[0],
+        insn->src_args[0], src);
   } else {
-    ORC_ASM_CODE(p,"    var%d = ptr%d[i+var%d];\n", insn->dest_args[0],
-        insn->src_args[0], insn->src_args[1]);
+    ORC_ASM_CODE(p,"    var%d = ptr%d[i + %s];\n", insn->dest_args[0],
+        insn->src_args[0], src);
   }
 }
 
@@ -711,7 +740,7 @@ c_rule_storeX (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 c_rule_accw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  char dest[20], src1[20];
+  char dest[40], src1[40];
 
   c_get_name_int (dest, p, insn, insn->dest_args[0]);
   c_get_name_int (src1, p, insn, insn->src_args[0]);
@@ -722,7 +751,7 @@ c_rule_accw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 c_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  char dest[20], src1[20];
+  char dest[40], src1[40];
 
   c_get_name_int (dest, p, insn, insn->dest_args[0]);
   c_get_name_int (src1, p, insn, insn->src_args[0]);
@@ -733,7 +762,7 @@ c_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 c_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  char dest[20], src1[20], src2[20];
+  char dest[40], src1[40], src2[40];
 
   c_get_name_int (dest, p, insn, insn->dest_args[0]);
   c_get_name_int (src1, p, insn, insn->src_args[0]);
@@ -747,7 +776,7 @@ c_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 c_rule_splitlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  char dest1[20], dest2[20], src[20];
+  char dest1[40], dest2[40], src[40];
 
   c_get_name_int (dest1, p, insn, insn->dest_args[0]);
   c_get_name_int (dest2, p, insn, insn->dest_args[1]);
@@ -760,7 +789,7 @@ c_rule_splitlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 c_rule_splitwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  char dest1[20], dest2[20], src[20];
+  char dest1[40], dest2[40], src[40];
 
   c_get_name_int (dest1, p, insn, insn->dest_args[0]);
   c_get_name_int (dest2, p, insn, insn->dest_args[1]);
@@ -773,7 +802,7 @@ c_rule_splitwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 c_rule_splatbw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  char dest[20], src[20];
+  char dest[40], src[40];
 
   c_get_name_int (dest, p, insn, insn->dest_args[0]);
   c_get_name_int (src, p, insn, insn->src_args[0]);
@@ -784,7 +813,7 @@ c_rule_splatbw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 c_rule_splatbl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  char dest[20], src[20];
+  char dest[40], src[40];
 
   c_get_name_int (dest, p, insn, insn->dest_args[0]);
   c_get_name_int (src, p, insn, insn->src_args[0]);
@@ -797,7 +826,7 @@ c_rule_splatbl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 c_rule_splatw0q (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  char dest[20], src[20];
+  char dest[40], src[40];
 
   c_get_name_int (dest, p, insn, insn->dest_args[0]);
   c_get_name_int (src, p, insn, insn->src_args[0]);
@@ -813,7 +842,7 @@ c_rule_splatw0q (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 c_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  char dest[20], src[20];
+  char dest[40], src[40];
 
   c_get_name_int (dest, p, insn, insn->dest_args[0]);
   c_get_name_int (src, p, insn, insn->src_args[0]);
@@ -826,7 +855,7 @@ c_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 c_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  char dest[20], src1[20], src2[20];
+  char dest[40], src1[40], src2[40];
 
   c_get_name_int (dest, p, insn, insn->dest_args[0]);
   c_get_name_int (src1, p, insn, insn->src_args[0]);
