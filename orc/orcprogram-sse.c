@@ -182,9 +182,6 @@ orc_compiler_sse_init (OrcCompiler *compiler)
     compiler->used_regs[i] = 0;
   }
 
-  compiler->tmpreg = X86_XMM0;
-  compiler->valid_regs[compiler->tmpreg] = 0;
-
   compiler->gp_tmpreg = X86_ECX;
   compiler->valid_regs[compiler->gp_tmpreg] = 0;
 
@@ -231,6 +228,7 @@ sse_save_accumulators (OrcCompiler *compiler)
 {
   int i;
   int src;
+  int tmp;
 
   for(i=0;i<ORC_N_VARIABLES;i++){
     OrcVariable *var = compiler->vars + i;
@@ -239,37 +237,38 @@ sse_save_accumulators (OrcCompiler *compiler)
     switch (compiler->vars[i].vartype) {
       case ORC_VAR_TYPE_ACCUMULATOR:
         src = compiler->vars[i].alloc;
+        tmp = orc_compiler_get_temp_reg (compiler);
 
 #ifndef MMX
-        orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(3,2,3,2), src, compiler->tmpreg);
+        orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(3,2,3,2), src, tmp);
 #else
-        orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(3,2,3,2), src, compiler->tmpreg);
+        orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(3,2,3,2), src, tmp);
 #endif
 
         if (compiler->vars[i].size == 2) {
-          orc_sse_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
+          orc_sse_emit_660f (compiler, "paddw", 0xfd, tmp, src);
         } else {
-          orc_sse_emit_660f (compiler, "paddd", 0xfe, compiler->tmpreg, src);
+          orc_sse_emit_660f (compiler, "paddd", 0xfe, tmp, src);
         }
 
 #ifndef MMX
-        orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(1,1,1,1), src, compiler->tmpreg);
+        orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(1,1,1,1), src, tmp);
 
         if (compiler->vars[i].size == 2) {
-          orc_sse_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
+          orc_sse_emit_660f (compiler, "paddw", 0xfd, tmp, src);
         } else {
-          orc_sse_emit_660f (compiler, "paddd", 0xfe, compiler->tmpreg, src);
+          orc_sse_emit_660f (compiler, "paddd", 0xfe, tmp, src);
         }
 #endif
 
         if (compiler->vars[i].size == 2) {
 #ifndef MMX
-          orc_sse_emit_pshuflw (compiler, ORC_SSE_SHUF(1,1,1,1), src, compiler->tmpreg);
+          orc_sse_emit_pshuflw (compiler, ORC_SSE_SHUF(1,1,1,1), src, tmp);
 #else
-          orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(1,1,1,1), src, compiler->tmpreg);
+          orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(1,1,1,1), src, tmp);
 #endif
 
-          orc_sse_emit_660f (compiler, "paddw", 0xfd, compiler->tmpreg, src);
+          orc_sse_emit_660f (compiler, "paddw", 0xfd, tmp, src);
         }
 
         if (compiler->vars[i].size == 2) {

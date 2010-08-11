@@ -108,7 +108,7 @@ orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
     }
   }
 
-  if (!compiler->allow_gp_on_stack) {
+  if (data_reg || !compiler->allow_gp_on_stack) {
     ORC_COMPILER_ERROR (compiler, "register overflow for %s reg",
         data_reg ? "vector" : "gp");
     compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
@@ -586,6 +586,9 @@ orc_compiler_get_temp_reg (OrcCompiler *compiler)
       return j;
     }
   }
+
+  ORC_COMPILER_ERROR(compiler,"no temporary register available");
+  compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
 
   return 0;
 }
