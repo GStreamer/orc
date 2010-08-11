@@ -17,6 +17,7 @@ void output_code_test (OrcProgram *p, FILE *output);
 void output_code_backup (OrcProgram *p, FILE *output);
 void output_code_no_orc (OrcProgram *p, FILE *output);
 void output_code_assembly (OrcProgram *p, FILE *output);
+void output_code_execute (OrcProgram *p, FILE *output, int is_inline);
 static char * get_barrier (const char *s);
 static const char * my_basename (const char *s);
 
@@ -244,11 +245,22 @@ main (int argc, char *argv[])
     fprintf(output, "extern \"C\" {\n");
     fprintf(output, "#endif\n");
     fprintf(output, "\n");
+    fprintf(output, "#define ORC_INLINE\n");
+    fprintf(output, "#ifndef ORC_INLINE\n");
+    fprintf(output, "\n");
     fprintf(output, "%s", orc_target_c_get_typedefs ());
     fprintf(output, "\n");
     for(i=0;i<n;i++){
       output_code_header (programs[i], output);
     }
+    fprintf(output, "#else\n");
+    fprintf(output, "\n");
+    fprintf(output, "#include <orc/orc.h>\n");
+    fprintf(output, "\n");
+    for(i=0;i<n;i++){
+      output_code_execute (programs[i], output, TRUE);
+    }
+    fprintf(output, "#endif\n");
     fprintf(output, "\n");
     fprintf(output, "#ifdef __cplusplus\n");
     fprintf(output, "}\n");
@@ -567,16 +579,28 @@ output_code_no_orc (OrcProgram *p, FILE *output)
 void
 output_code (OrcProgram *p, FILE *output)
 {
-  OrcVariable *var;
-  int i;
-
   fprintf(output, "\n");
   fprintf(output, "/* %s */\n", p->name);
   fprintf(output, "#ifdef DISABLE_ORC\n");
   output_code_no_orc (p, output);
   fprintf(output, "#else\n");
   output_code_backup (p, output);
-  fprintf(output, "void\n");
+  output_code_execute (p, output, FALSE);
+  fprintf(output, "#endif\n");
+  fprintf(output, "\n");
+}
+
+void
+output_code_execute (OrcProgram *p, FILE *output, int is_inline)
+{
+  OrcVariable *var;
+  int i;
+
+  if (is_inline) {
+    fprintf(output, "static inline void\n");
+  } else {
+    fprintf(output, "void\n");
+  }
   output_prototype (p, output);
   fprintf(output, "\n");
   fprintf(output, "{\n");
@@ -603,8 +627,10 @@ output_code (OrcProgram *p, FILE *output)
     }
   }
   fprintf(output, "      orc_program_set_name (p, \"%s\");\n", p->name);
-  fprintf(output, "      orc_program_set_backup_function (p, _backup_%s);\n",
-      p->name);
+  if (!is_inline) {
+    fprintf(output, "      orc_program_set_backup_function (p, _backup_%s);\n",
+        p->name);
+  }
   for(i=0;i<4;i++){
     var = &p->vars[ORC_VAR_D1 + i];
     if (var->size) {
@@ -758,8 +784,6 @@ output_code (OrcProgram *p, FILE *output)
     }
   }
   fprintf(output, "}\n");
-  fprintf(output, "#endif\n");
-  fprintf(output, "\n");
 
 }
 
