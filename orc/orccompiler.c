@@ -551,6 +551,45 @@ orc_compiler_assign_rules (OrcCompiler *compiler)
   }
 }
 
+int
+orc_compiler_get_temp_reg (OrcCompiler *compiler)
+{
+  int j;
+
+  for(j=0;j<ORC_N_REGS;j++){
+    compiler->alloc_regs[j] = 0;
+  }
+  for(j=0;j<ORC_N_COMPILER_VARIABLES;j++){
+    if (!compiler->vars[j].alloc) continue;
+
+    ORC_DEBUG("var %d: %d  %d %d", j, compiler->vars[j].alloc,
+        compiler->vars[j].first_use,
+        compiler->vars[j].last_use);
+
+    if (compiler->vars[j].first_use == -1) {
+      compiler->alloc_regs[compiler->vars[j].alloc] = 1;
+    } else if (compiler->vars[j].first_use <= compiler->insn_index &&
+        compiler->vars[j].last_use >= compiler->insn_index) {
+      compiler->alloc_regs[compiler->vars[j].alloc] = 1;
+    }
+  }
+
+  ORC_DEBUG("at insn %d", compiler->insn_index);
+  for(j=0;j<8;j++){
+    ORC_DEBUG("xmm%d: %d %d", j, compiler->valid_regs[ORC_VEC_REG_BASE + j],
+        compiler->alloc_regs[ORC_VEC_REG_BASE + j]);
+  }
+
+  for(j=compiler->min_temp_reg;j<ORC_VEC_REG_BASE+16;j++){
+    if (compiler->valid_regs[j] && !compiler->alloc_regs[j]) {
+      compiler->min_temp_reg = j+1;
+      return j;
+    }
+  }
+
+  return 0;
+}
+
 void
 orc_compiler_rewrite_vars (OrcCompiler *compiler)
 {
@@ -877,6 +916,7 @@ int
 orc_compiler_get_constant (OrcCompiler *compiler, int size, int value)
 {
   int i;
+  int tmp;
 
   if (size < 4) {
     if (size < 2) {
@@ -904,7 +944,8 @@ orc_compiler_get_constant (OrcCompiler *compiler, int size, int value)
   if (compiler->constants[i].alloc_reg != 0) {;
     return compiler->constants[i].alloc_reg;
   }
-  orc_compiler_load_constant (compiler, compiler->tmpreg, size, value);
-  return compiler->tmpreg;
+  tmp = orc_compiler_get_temp_reg (compiler);
+  orc_compiler_load_constant (compiler, tmp, size, value);
+  return tmp;
 }
 

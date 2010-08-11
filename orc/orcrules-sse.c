@@ -482,7 +482,7 @@ sse_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp = p->tmpreg;
 #ifndef MMX
-  int tmp2 = X86_XMM7;
+  int tmp2 = orc_compiler_get_temp_reg (p);
 
   if (p->loop_shift <= 2) {
     orc_sse_emit_movdqa (p, src1, tmp);
@@ -515,12 +515,11 @@ sse_rule_signX_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
   int type = ORC_PTR_TO_INT(user);
   int tmpc;
 
+  tmpc = orc_compiler_get_constant (p, 1<<type, 1);
   if (src == dest) {
-    tmpc = orc_compiler_get_constant (p, 1<<type, 1);
     orc_sse_emit_660f (p, names[type], codes[type], src, tmpc);
     orc_sse_emit_movdqa (p, tmpc, dest);
   } else {
-    tmpc = orc_compiler_get_constant (p, 1<<type, 1);
     orc_sse_emit_movdqa (p, tmpc, dest);
     orc_sse_emit_660f (p, names[type], codes[type], src, dest);
   }
@@ -975,11 +974,11 @@ sse_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
   /* About 5.6 cycles per array member on ginger */
   int src = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
-  int a = X86_XMM7;
-  int j = X86_XMM6;
-  int j2 = X86_XMM5;
-  int l = X86_XMM4;
-  int divisor = X86_XMM3;
+  int a = orc_compiler_get_temp_reg (p);
+  int j = orc_compiler_get_temp_reg (p);
+  int j2 = orc_compiler_get_temp_reg (p);
+  int l = orc_compiler_get_temp_reg (p);
+  int divisor = orc_compiler_get_temp_reg (p);
   int tmp;
   int i;
 
@@ -1025,10 +1024,10 @@ sse_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
   /* About 8.4 cycles per array member on ginger */
   int src = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
-  int b = X86_XMM7;
-  int a = X86_XMM6;
-  int k = X86_XMM5;
-  int j = X86_XMM4;
+  int b = orc_compiler_get_temp_reg (p);
+  int a = orc_compiler_get_temp_reg (p);
+  int k = orc_compiler_get_temp_reg (p);
+  int j = orc_compiler_get_temp_reg (p);
   int tmp;
   int i;
 
@@ -1146,7 +1145,7 @@ sse_rule_mullb (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp = p->tmpreg;
-  int tmp2 = X86_XMM7;
+  int tmp2 = orc_compiler_get_temp_reg (p);
 
   orc_sse_emit_movdqa (p, dest, tmp);
 
@@ -1169,7 +1168,7 @@ sse_rule_mulhsb (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp = p->tmpreg;
-  int tmp2 = X86_XMM7;
+  int tmp2 = orc_compiler_get_temp_reg (p);
 
   orc_sse_emit_movdqa (p, src, tmp);
   orc_sse_emit_movdqa (p, dest, tmp2);
@@ -1197,7 +1196,7 @@ sse_rule_mulhub (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp = p->tmpreg;
-  int tmp2 = X86_XMM7;
+  int tmp2 = orc_compiler_get_temp_reg (p);
 
   orc_sse_emit_movdqa (p, src, tmp);
   orc_sse_emit_movdqa (p, dest, tmp2);
@@ -1512,7 +1511,7 @@ sse_emit_load_mask (OrcCompiler *p, unsigned int mask1, unsigned int mask2)
 {
   int tmp = p->tmpreg;
   int gptmp = p->gp_tmpreg;
-  int tmp2 = X86_XMM7;
+  int tmp2 = orc_compiler_get_temp_reg (p);
 
   orc_x86_emit_mov_imm_reg (p, 4, mask1, gptmp);
   orc_x86_emit_mov_reg_sse (p, gptmp, tmp);
@@ -1835,8 +1834,8 @@ sse_rule_addssl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp = p->tmpreg;
 #if 0
-  int tmp2 = X86_XMM7;
-  int tmp3 = X86_XMM6;
+  int tmp2 = orc_compiler_get_temp_reg (p);
+  int tmp3 = orc_compiler_get_temp_reg (p);
 
   orc_sse_emit_movdqa (p, src, tmp);
   orc_sse_emit_pand (p, dest, tmp);
@@ -1866,8 +1865,8 @@ sse_rule_addssl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_por (p, tmp2, dest);
 #endif
 
-  int s = X86_XMM7;
-  int t = X86_XMM6;
+  int s = orc_compiler_get_temp_reg (p);
+  int t = orc_compiler_get_temp_reg (p);
 
   /*
      From Tim Terriberry: (slightly faster than above)
@@ -1914,8 +1913,8 @@ sse_rule_subssl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp = p->tmpreg;
-  int tmp2 = X86_XMM7;
-  int tmp3 = X86_XMM6;
+  int tmp2 = orc_compiler_get_temp_reg (p);
+  int tmp3 = orc_compiler_get_temp_reg (p);
 
   tmp = orc_compiler_get_constant (p, 4, 0xffffffff);
   orc_sse_emit_pxor (p, src, tmp);
@@ -1953,7 +1952,7 @@ sse_rule_addusl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp = p->tmpreg;
-  int tmp2 = X86_XMM7;
+  int tmp2 = orc_compiler_get_temp_reg (p);
 
 #if 0
   /* an alternate version.  slower. */
@@ -2000,7 +1999,7 @@ sse_rule_subusl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp = p->tmpreg;
-  int tmp2 = X86_XMM7;
+  int tmp2 = orc_compiler_get_temp_reg (p);
 
   orc_sse_emit_movdqa (p, src, tmp2);
   orc_sse_emit_psrld (p, 1, tmp2);

@@ -826,9 +826,13 @@ orc_sse_emit_loop (OrcCompiler *compiler, int offset, int update)
     insn = compiler->insns + j;
     opcode = insn->opcode;
 
+    compiler->insn_index = j;
+
     if (insn->flags & ORC_INSN_FLAG_INVARIANT) continue;
 
     ORC_ASM_CODE(compiler,"# %d: %s\n", j, insn->opcode->name);
+
+    compiler->min_temp_reg = ORC_VEC_REG_BASE;
 
     rule = insn->rule;
     if (rule && rule->emit) {
