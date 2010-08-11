@@ -648,7 +648,10 @@ int orc_program_allocate_register (OrcProgram *program, int is_data);
 void orc_compiler_allocate_codemem (OrcCompiler *compiler);
 int orc_compiler_label_new (OrcCompiler *compiler);
 int orc_compiler_get_constant (OrcCompiler *compiler, int size, int value);
+int orc_compiler_get_temp_constant (OrcCompiler *compiler, int size, int value);
 int orc_compiler_get_temp_reg (OrcCompiler *compiler);
+int orc_compiler_get_constant_reg (OrcCompiler *compiler);
+
 
 const char *orc_program_get_asm_code (OrcProgram *program);
 const char *orc_target_get_asm_preamble (const char *target);

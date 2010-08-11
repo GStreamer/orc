@@ -46,6 +46,8 @@ sse_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 #endif
   } else if (src->vartype == ORC_VAR_TYPE_CONST) {
     sse_load_constant (compiler, dest->alloc, src->size, src->value);
+  } else {
+    ORC_ASSERT(0);
   }
 }
 
@@ -515,7 +517,7 @@ sse_rule_signX_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
   int type = ORC_PTR_TO_INT(user);
   int tmpc;
 
-  tmpc = orc_compiler_get_constant (p, 1<<type, 1);
+  tmpc = orc_compiler_get_temp_constant (p, 1<<type, 1);
   if (src == dest) {
     orc_sse_emit_660f (p, names[type], codes[type], src, tmpc);
     orc_sse_emit_movdqa (p, tmpc, dest);
@@ -960,7 +962,7 @@ sse_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
   if (src != dest) {
     orc_sse_emit_movdqa (p, src, dest);
   }
-  tmp = orc_compiler_get_constant (p, 2, 0x0080);
+  tmp = orc_compiler_get_temp_constant (p, 2, 0x0080);
   orc_sse_emit_paddw (p, tmp, dest);
   orc_sse_emit_movdqa (p, dest, tmp);
   orc_sse_emit_psrlw (p, 8, tmp);
@@ -1755,11 +1757,12 @@ sse_rule_maxul_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  int tmp = orc_compiler_get_temp_reg (p);
+  int tmpc;
 
-  tmp = orc_compiler_get_constant (p, 4, 0x80000000);
-  orc_sse_emit_pxor(p, tmp, src);
-  orc_sse_emit_pxor(p, tmp, dest);
+  tmpc = orc_compiler_get_constant (p, 4, 0x80000000);
+  orc_sse_emit_pxor(p, tmpc, src);
+  orc_sse_emit_pxor(p, tmpc, dest);
 
   orc_sse_emit_movdqa (p, dest, tmp);
   orc_sse_emit_pcmpgtd (p, src, tmp);
@@ -1767,9 +1770,8 @@ sse_rule_maxul_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_pandn (p, src, tmp);
   orc_sse_emit_por (p, tmp, dest);
 
-  tmp = orc_compiler_get_constant (p, 4, 0x80000000);
-  orc_sse_emit_pxor(p, tmp, src);
-  orc_sse_emit_pxor(p, tmp, dest);
+  orc_sse_emit_pxor(p, tmpc, src);
+  orc_sse_emit_pxor(p, tmpc, dest);
 }
 
 static void
@@ -1777,11 +1779,12 @@ sse_rule_minul_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  int tmp = orc_compiler_get_temp_reg (p);
+  int tmpc;
 
-  tmp = orc_compiler_get_constant (p, 4, 0x80000000);
-  orc_sse_emit_pxor(p, tmp, src);
-  orc_sse_emit_pxor(p, tmp, dest);
+  tmpc = orc_compiler_get_constant (p, 4, 0x80000000);
+  orc_sse_emit_pxor(p, tmpc, src);
+  orc_sse_emit_pxor(p, tmpc, dest);
 
   orc_sse_emit_movdqa (p, src, tmp);
   orc_sse_emit_pcmpgtd (p, dest, tmp);
@@ -1789,9 +1792,8 @@ sse_rule_minul_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_pandn (p, src, tmp);
   orc_sse_emit_por (p, tmp, dest);
 
-  tmp = orc_compiler_get_constant (p, 4, 0x80000000);
-  orc_sse_emit_pxor(p, tmp, src);
-  orc_sse_emit_pxor(p, tmp, dest);
+  orc_sse_emit_pxor(p, tmpc, src);
+  orc_sse_emit_pxor(p, tmpc, dest);
 }
 
 static void
@@ -1917,7 +1919,7 @@ sse_rule_subssl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   int tmp2 = orc_compiler_get_temp_reg (p);
   int tmp3 = orc_compiler_get_temp_reg (p);
 
-  tmp = orc_compiler_get_constant (p, 4, 0xffffffff);
+  tmp = orc_compiler_get_temp_constant (p, 4, 0xffffffff);
   orc_sse_emit_pxor (p, src, tmp);
   orc_sse_emit_movdqa (p, tmp, tmp2);
   orc_sse_emit_por (p, dest, tmp);

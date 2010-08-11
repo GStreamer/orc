@@ -306,17 +306,20 @@ sse_load_constant (OrcCompiler *compiler, int reg, int size, int value)
     value |= (value << 16);
   }
 
+  ORC_ASM_CODE(compiler, "# loading constant %d 0x%08x\n", value, value);
   if (value == 0) {
     orc_sse_emit_pxor(compiler, reg, reg);
     return;
   }
   if (value == 0xffffffff) {
     orc_sse_emit_pcmpeqb (compiler, reg, reg);
+    return;
   }
   if (compiler->target_flags & ORC_TARGET_SSE_SSSE3) {
     if (value == 0x01010101) {
       orc_sse_emit_pcmpeqb (compiler, reg, reg);
       orc_sse_emit_pabsb (compiler, reg, reg);
+      return;
     }
   }
 
@@ -375,7 +378,7 @@ sse_load_constants_outer (OrcCompiler *compiler)
       case ORC_VAR_TYPE_DEST:
         break;
       case ORC_VAR_TYPE_ACCUMULATOR:
-        orc_sse_emit_660f (compiler, "pxor", 0xef,
+        orc_sse_emit_pxor (compiler,
             compiler->vars[i].alloc, compiler->vars[i].alloc);
         break;
       case ORC_VAR_TYPE_TEMP:
@@ -388,6 +391,18 @@ sse_load_constants_outer (OrcCompiler *compiler)
 
   orc_sse_emit_invariants (compiler);
 
+  /* FIXME move to a better place */
+  for(i=0;i<compiler->n_constants;i++){
+    compiler->constants[i].alloc_reg =
+      orc_compiler_get_constant_reg (compiler);
+  }
+
+  for(i=0;i<compiler->n_constants;i++){
+    if (compiler->constants[i].alloc_reg) {
+      sse_load_constant (compiler, compiler->constants[i].alloc_reg,
+          4, compiler->constants[i].value);
+    }
+  }
 }
 
 void
@@ -618,6 +633,15 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
   align_var = get_align_var (compiler);
 
   compiler->vars[align_var].is_aligned = FALSE;
+
+  {
+    orc_sse_emit_loop (compiler, 0, 0);
+
+    compiler->codeptr = compiler->program->code;
+    free (compiler->asm_code);
+    compiler->asm_code = NULL;
+    compiler->asm_code_len = 0;
+  }
 
   orc_x86_emit_prologue (compiler);
 

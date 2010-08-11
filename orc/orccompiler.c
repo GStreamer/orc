@@ -581,6 +581,11 @@ orc_compiler_get_temp_reg (OrcCompiler *compiler)
       compiler->alloc_regs[compiler->vars[j].alloc] = 1;
     }
   }
+  for(j=0;j<compiler->n_constants;j++){
+    if (compiler->constants[j].alloc_reg) {
+      compiler->alloc_regs[compiler->constants[j].alloc_reg] = 1;
+    }
+  }
 
   ORC_DEBUG("at insn %d", compiler->insn_index);
   for(j=0;j<8;j++){
@@ -924,6 +929,16 @@ orc_compiler_load_constant (OrcCompiler *compiler, int reg, int size,
 }
 
 int
+orc_compiler_get_temp_constant (OrcCompiler *compiler, int size, int value)
+{
+  int tmp;
+
+  tmp = orc_compiler_get_temp_reg (compiler);
+  orc_compiler_load_constant (compiler, tmp, size, value);
+  return tmp;
+}
+
+int
 orc_compiler_get_constant (OrcCompiler *compiler, int size, int value)
 {
   int i;
@@ -958,5 +973,46 @@ orc_compiler_get_constant (OrcCompiler *compiler, int size, int value)
   tmp = orc_compiler_get_temp_reg (compiler);
   orc_compiler_load_constant (compiler, tmp, size, value);
   return tmp;
+}
+
+int
+orc_compiler_get_constant_reg (OrcCompiler *compiler)
+{
+  int j;
+
+  for(j=0;j<ORC_N_REGS;j++){
+    compiler->alloc_regs[j] = 0;
+  }
+  for(j=0;j<ORC_N_COMPILER_VARIABLES;j++){
+    if (!compiler->vars[j].alloc) continue;
+
+    ORC_DEBUG("var %d: %d  %d %d", j, compiler->vars[j].alloc,
+        compiler->vars[j].first_use,
+        compiler->vars[j].last_use);
+
+    if (compiler->vars[j].first_use == -1) {
+      compiler->alloc_regs[compiler->vars[j].alloc] = 1;
+    } else if (compiler->vars[j].last_use != -1) {
+      compiler->alloc_regs[compiler->vars[j].alloc] = 1;
+    }
+  }
+  for(j=0;j<compiler->n_constants;j++){
+    if (compiler->constants[j].alloc_reg) {
+      compiler->alloc_regs[compiler->constants[j].alloc_reg] = 1;
+    }
+  }
+
+  for(j=0;j<8;j++){
+    ORC_DEBUG("xmm%d: %d %d", j, compiler->valid_regs[ORC_VEC_REG_BASE + j],
+        compiler->alloc_regs[ORC_VEC_REG_BASE + j]);
+  }
+
+  for(j=compiler->min_temp_reg;j<ORC_VEC_REG_BASE+16;j++){
+    if (compiler->valid_regs[j] && !compiler->alloc_regs[j]) {
+      return j;
+    }
+  }
+
+  return 0;
 }
 
