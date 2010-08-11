@@ -1688,13 +1688,530 @@ mergewl d1, t1, t2
 .dest 4 d1
 .source 4 s1
 .source 4 s2
-.temp 4 t1
-.temp 4 t2
+
+x4 addusb d1, s1, s2
+
+
+.function test_4x_2
+.dest 4 d1
+.source 4 s1
+.param 4 p1
+
+x4 addusb d1, s1, s2
+
+
+
+
+
+
+
+.function orc_splat_u16
+.dest 2 d1 uint16_t
+.param 2 p1
+
+copyw d1, p1
+
+
+.function orc_splat_u32
+.dest 4 d1 uint32_t
+.param 4 p1
+
+copyl d1, p1
+
+
+.function orc_splat_u16_2d
+.dest 2 d1 uint16_t
+.param 2 p1
+.flags 2d
+
+copyw d1, p1
+
+
+.function orc_splat_u32_2d
+.dest 4 d1 uint32_t
+.param 4 p1
+.flags 2d
+
+copyl d1, p1
+
+
+.function orc_copy_u16_2d
+.dest 2 d1
+.source 2 s1
+.flags 2d
+
+copyw d1, s1
+
+
+.function orc_copy_u32_2d
+.dest 4 d1
+.source 4 s1
+.flags 2d
+
+copyl d1, s1
+
+
+.function orc_composite_add_8888_8888_2d
+.flags 2d
+.dest 4 d1
+.source 4 s1
+
+x4 addusb d1, d1, s1
+
+
+.function orc_composite_add_8_8_line
+.dest 1 d1
+.source 1 s1
+
+addusb d1, d1, s1
+
+
+.function orc_composite_add_n_8_8_line
+.dest 1 d1
+.source 1 s1
+.param 2 p1
+.temp 2 t1
+.temp 1 t2
+
+#compina t1, p1, s1
+convubw t1, s1
+mullw t1, t1, p1
+div255w t1, t1
+convwb t2, t1
+addusb d1, d1, t2
+
+
+.function orc_code_combine_add_u
+.dest 4 d1
+.source 4 s1
+.source 4 s2
+.temp 8 t1
+.temp 8 t2
 .temp 4 t3
 
-loadl t1, s1
-loadl t2, s2
-x4 addusb t3, t1, t2
-storel d1, t3
+x4 convubw t1, s1
+x4 convubw t2, s2
+splatw0q t2, t2
+x4 mullw t1, t1, t2
+x4 div255w t1, t1
+x4 convwb t3, t1
+x4 addusb d1, d1, t3
 
+
+.function orc_code_combine_add_u_n
+.dest 4 d1
+.source 4 s1
+
+x4 addusb d1, d1, s1
+
+
+.function orc_code_combine_over_u
+.dest 4 d1
+.source 4 s1
+.source 4 s2
+.temp 8 t1
+.temp 8 t2
+.temp 4 t3
+.temp 4 d
+.temp 8 d_wide
+
+#compin t1, s1, s2
+#compover d1, d1, t1
+x4 convubw t1, s1
+x4 convubw t2, s2
+splatw0q t2, t2
+x4 mullw t1, t1, t2
+x4 div255w t1, t1
+x4 convwb t3, t1
+# ((d) + (s) - ORC_MULDIV_255((d),(m)))
+loadl d, d1
+x4 convubw d_wide, d
+x4 xorw t1, t1, 0x00ff
+splatw0q t2, t1
+x4 mullw t1, d_wide, t2
+x4 div255w t1, t1
+x4 convwb d, t1
+x4 addusb d1, d, t3
+
+
+.function orc_code_combine_over_u_n
+.dest 4 d1
+.source 4 s1
+.temp 8 t1
+.temp 8 t2
+.temp 4 d
+.temp 4 s
+.temp 8 d_wide
+
+loadl s, s1
+x4 convubw t1, s
+loadl d, d1
+x4 convubw d_wide, d
+x4 xorw t1, t1, 0x00ff
+splatw0q t2, t1
+x4 mullw t1, d_wide, t2
+x4 div255w t1, t1
+x4 convwb d, t1
+x4 addusb d1, d, s
+
+
+.function orc_code_combine_in_u
+.dest 4 d1
+.source 4 s1
+.source 4 s2
+.temp 8 d_wide
+.temp 8 s_wide
+.temp 8 m_wide
+.temp 8 t1
+.temp 8 t2
+
+x4 convubw t1, s1
+x4 convubw t2, s2
+splatw0q t2, t2
+x4 mullw t1, t1, t2
+x4 div255w t1, t1
+# ORC_MULDIV_255((s),(m)), m is from dest
+x4 convubw d_wide, d1
+splatw0q t2, d_wide
+x4 mullw t1, t1, t2
+x4 div255w t1, t1
+x4 convwb d1, t1
+
+
+
+.function orc_code_combine_in_u_n
+.dest 4 d1
+.source 4 s1
+.temp 8 d_wide
+.temp 8 s_wide
+.temp 8 m_wide
+.temp 8 t1
+.temp 8 t2
+
+x4 convubw t1, s1
+# ORC_MULDIV_255((s),(m)), m is from dest
+x4 convubw d_wide, d1
+splatw0q t2, d_wide
+x4 mullw t1, t1, t2
+x4 div255w t1, t1
+x4 convwb d1, t1
+
+
+.function orc_code_combine_out_u
+.dest 4 d1
+.source 4 s1
+.source 4 s2
+.temp 8 d_wide
+.temp 8 s_wide
+.temp 8 m_wide
+.temp 8 t1
+.temp 8 t2
+
+x4 convubw t1, s1
+x4 convubw t2, s2
+splatw0q t2, t2
+x4 mullw t1, t1, t2
+x4 div255w t1, t1
+# ORC_MULDIV_255((s),(m)), m is from dest
+x4 convubw d_wide, d1
+splatw0q t2, d_wide
+x4 xorw t2, t2, 0x00ff
+x4 mullw t1, t1, t2
+x4 div255w t1, t1
+x4 convwb d1, t1
+
+
+
+.function orc_code_combine_out_u_n
+.dest 4 d1
+.source 4 s1
+.temp 8 d_wide
+.temp 8 s_wide
+.temp 8 m_wide
+.temp 8 t1
+.temp 8 t2
+
+x4 convubw t1, s1
+# ORC_MULDIV_255((s),(m)), m is from dest
+x4 convubw d_wide, d1
+splatw0q t2, d_wide
+x4 xorw t2, t2, 0x00ff
+x4 mullw t1, t1, t2
+x4 div255w t1, t1
+x4 convwb d1, t1
+
+
+# atop: (ORC_DIVIDE_255((s)*(da))+ORC_DIVIDE_255((d)*(255-(sa))))
+
+.function orc_code_combine_atop_u
+.dest 4 d1
+.source 4 s1
+.source 4 s2
+.temp 8 d_wide
+.temp 8 s_wide
+.temp 8 m_wide
+.temp 8 t1
+.temp 8 t2
+.temp 8 t3
+.temp 4 t4
+.temp 4 t5
+
+x4 convubw t1, s1
+x4 convubw t2, s2
+splatw0q t2, t2
+x4 mullw t1, t1, t2
+x4 div255w t1, t1
+
+x4 convubw d_wide, d1
+splatw0q t2, d_wide
+x4 mullw t3, t1, t2
+x4 div255w t3, t3
+x4 convwb t4, t3
+
+x4 convubw d_wide, d1
+splatw0q t2, t1
+x4 xorw t2, t2, 0x00ff
+x4 mullw t1, d_wide, t2
+x4 div255w t1, t1
+x4 convwb t5, t1
+
+x4 addusb d1, t4, t5
+
+
+.function orc_code_combine_atop_u_n
+.dest 4 d1
+.source 4 s1
+.temp 8 d_wide
+.temp 8 s_wide
+.temp 8 m_wide
+.temp 8 t1
+.temp 8 t2
+.temp 8 t3
+.temp 4 t4
+.temp 4 t5
+
+x4 convubw t1, s1
+
+x4 convubw d_wide, d1
+splatw0q t2, d_wide
+x4 mullw t3, t1, t2
+x4 div255w t3, t3
+x4 convwb t4, t3
+
+x4 convubw d_wide, d1
+splatw0q t2, t1
+x4 xorw t2, t2, 0x00ff
+x4 mullw t1, d_wide, t2
+x4 div255w t1, t1
+x4 convwb t5, t1
+
+x4 addusb d1, t4, t5
+
+
+
+.function orc_code_combine_xor_u
+.dest 4 d1
+.source 4 s1
+.source 4 s2
+.temp 8 d_wide
+.temp 8 s_wide
+.temp 8 m_wide
+.temp 8 t1
+.temp 8 t2
+.temp 8 t3
+.temp 4 t4
+.temp 4 t5
+
+x4 convubw t1, s1
+x4 convubw t2, s2
+splatw0q t2, t2
+x4 mullw t1, t1, t2
+x4 div255w t1, t1
+
+x4 convubw d_wide, d1
+splatw0q t2, d_wide
+x4 xorw t2, t2, 0x00ff
+x4 mullw t3, t1, t2
+x4 div255w t3, t3
+x4 convwb t4, t3
+
+x4 convubw d_wide, d1
+splatw0q t2, t1
+x4 xorw t2, t2, 0x00ff
+x4 mullw t1, d_wide, t2
+x4 div255w t1, t1
+x4 convwb t5, t1
+
+x4 addusb d1, t4, t5
+
+
+.function orc_code_combine_xor_u_n
+.dest 4 d1
+.source 4 s1
+.temp 8 d_wide
+.temp 8 s_wide
+.temp 8 m_wide
+.temp 8 t1
+.temp 8 t2
+.temp 8 t3
+.temp 4 t4
+.temp 4 t5
+
+x4 convubw t1, s1
+x4 convubw d_wide, d1
+splatw0q t2, d_wide
+x4 xorw t2, t2, 0x00ff
+x4 mullw t3, t1, t2
+x4 div255w t3, t3
+x4 convwb t4, t3
+
+x4 convubw d_wide, d1
+splatw0q t2, t1
+x4 xorw t2, t2, 0x00ff
+x4 mullw t1, d_wide, t2
+x4 div255w t1, t1
+x4 convwb t5, t1
+
+x4 addusb d1, t4, t5
+
+
+
+.function orc_code_combine_add_ca
+.dest 4 d1
+.source 4 s1
+.source 4 s2
+.temp 8 t1
+.temp 8 t2
+.temp 4 t3
+
+x4 convubw t1, s1
+x4 convubw t2, s2
+#splatw0q t2, t2
+x4 mullw t1, t1, t2
+x4 div255w t1, t1
+x4 convwb t3, t1
+x4 addusb d1, d1, t3
+
+
+.function orc_code_combine_add_ca_n
+.dest 4 d1
+.source 4 s1
+
+x4 addusb d1, d1, s1
+
+
+.function orc_code_combine_over_ca
+.dest 4 d1
+.source 4 s1
+.source 4 s2
+.temp 8 t1
+.temp 8 t2
+.temp 4 d
+.temp 8 d_wide
+.temp 8 m_wide
+.temp 8 s_wide
+.temp 8 xa
+.temp 4 s
+
+x4 convubw s_wide, s1
+x4 convubw m_wide, s2
+splatw0q xa, s_wide
+x4 mullw s_wide, s_wide, m_wide
+x4 div255w s_wide, s_wide
+x4 convwb s, s_wide
+x4 mullw m_wide, m_wide, xa
+x4 div255w m_wide, m_wide
+loadl d, d1
+x4 convubw d_wide, d
+x4 xorw m_wide, m_wide, 0x00ff
+x4 mullw t1, d_wide, m_wide
+x4 div255w t1, t1
+x4 convwb d, t1
+x4 addusb d1, d, s
+
+
+
+.function orc_code_combine_over_ca_n
+.dest 4 d1
+.source 4 s1
+.temp 8 t1
+.temp 8 t2
+.temp 4 d
+.temp 8 d_wide
+.temp 8 m_wide
+.temp 8 s_wide
+.temp 8 xa
+.temp 4 s
+
+x4 convubw s_wide, s1
+splatw0q xa, s_wide
+x4 convwb s, s_wide
+x4 copyw m_wide, xa
+loadl d, d1
+x4 convubw d_wide, d
+x4 xorw m_wide, m_wide, 0x00ff
+x4 mullw t1, d_wide, m_wide
+x4 div255w t1, t1
+x4 convwb d, t1
+x4 addusb d1, d, s
+
+
+
+.function orc_composite_over_8888_8_8888_line
+.dest 4 d1
+.source 4 s1
+.source 1 s2
+.temp 8 t1
+.temp 8 t2
+.temp 4 t3
+.temp 4 d
+.temp 4 mask
+.temp 8 d_wide
+
+x4 convubw t1, s1
+splatbl mask, s2
+x4 convubw t2, mask
+x4 mullw t1, t1, t2
+x4 div255w t1, t1
+x4 convwb t3, t1
+loadl d, d1
+x4 convubw d_wide, d
+x4 xorw t1, t1, 0x00ff
+splatw0q t2, t1
+x4 mullw t1, d_wide, t2
+x4 div255w t1, t1
+x4 convwb d, t1
+x4 addusb d1, d, t3
+
+
+
+.function orc_composite_over_n_8888_8888_ca_2d
+#.flags 2d
+.dest 4 d1
+.source 4 s1
+.param 4 p1
+.temp 8 t1
+.temp 8 t2
+.temp 4 d
+.temp 8 d_wide
+.temp 8 m_wide
+.temp 8 s_wide
+.temp 8 xa
+.temp 4 s
+
+x4 convubw s_wide, p1
+x4 convubw m_wide, s1
+splatw0q xa, s_wide
+x4 mullw s_wide, s_wide, m_wide
+x4 div255w s_wide, s_wide
+x4 convwb s, s_wide
+x4 mullw m_wide, m_wide, xa
+x4 div255w m_wide, m_wide
+loadl d, d1
+x4 convubw d_wide, d
+x4 xorw m_wide, m_wide, 0x00ff
+x4 mullw t1, d_wide, m_wide
+x4 div255w t1, t1
+x4 convwb d, t1
+x4 addusb d1, d, s
 
