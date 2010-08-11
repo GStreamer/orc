@@ -187,7 +187,7 @@ orc_target_get_rule (OrcTarget *target, OrcStaticOpcode *opcode,
     if (j < 0 || j >= opcode_sets[k].n_opcodes) continue;
     if (opcode_sets[k].opcodes + j != opcode) continue;
 
-    for(i=0;i<target->n_rule_sets;i++){
+    for(i=target->n_rule_sets-1;i>=0;i--){
       if (target->rule_sets[i].opcode_major != opcode_sets[k].opcode_major) continue;
       if (target->rule_sets[i].required_target_flags & (~target_flags)) continue;
 
