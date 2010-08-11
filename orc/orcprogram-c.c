@@ -690,23 +690,42 @@ c_rule_loadX (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 c_rule_loadoffX (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"    var%d = ptr%d[offset + i+var%d];\n", insn->dest_args[0],
-      insn->src_args[0], insn->src_args[1]);
+  if (p->target_flags & ORC_TARGET_C_OPCODE &&
+      !(insn->flags & ORC_INSN_FLAG_ADDED)) {
+    ORC_ASM_CODE(p,"    var%d = ptr%d[offset + i+var%d];\n", insn->dest_args[0],
+        insn->src_args[0], insn->src_args[1]);
+  } else {
+    ORC_ASM_CODE(p,"    var%d = ptr%d[i+var%d];\n", insn->dest_args[0],
+        insn->src_args[0], insn->src_args[1]);
+  }
 }
 
 static void
 c_rule_loadupdb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"    var%d = ptr%d[(offset + i)>>1];\n", insn->dest_args[0],
-      insn->src_args[0]);
+  if (p->target_flags & ORC_TARGET_C_OPCODE &&
+      !(insn->flags & ORC_INSN_FLAG_ADDED)) {
+    ORC_ASM_CODE(p,"    var%d = ptr%d[(offset + i)>>1];\n", insn->dest_args[0],
+        insn->src_args[0]);
+  } else {
+    ORC_ASM_CODE(p,"    var%d = ptr%d[i>>1];\n", insn->dest_args[0],
+        insn->src_args[0]);
+  }
 }
 
 static void
 c_rule_loadupib (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  ORC_ASM_CODE(p,"    var%d = ((offset + i)&1) ? ((orc_uint8)ptr%d[(offset + i)>>1] + (orc_uint8)ptr%d[((offset + i)>>1)+1] + 1)>>1 : ptr%d[(offset + i)>>1];\n",
-      insn->dest_args[0], insn->src_args[0], insn->src_args[0],
-      insn->src_args[0]);
+  if (p->target_flags & ORC_TARGET_C_OPCODE &&
+      !(insn->flags & ORC_INSN_FLAG_ADDED)) {
+    ORC_ASM_CODE(p,"    var%d = ((offset + i)&1) ? ((orc_uint8)ptr%d[(offset + i)>>1] + (orc_uint8)ptr%d[((offset + i)>>1)+1] + 1)>>1 : ptr%d[(offset + i)>>1];\n",
+        insn->dest_args[0], insn->src_args[0], insn->src_args[0],
+        insn->src_args[0]);
+  } else {
+    ORC_ASM_CODE(p,"    var%d = (i&1) ? ((orc_uint8)ptr%d[i>>1] + (orc_uint8)ptr%d[(i>>1)+1] + 1)>>1 : ptr%d[i>>1];\n",
+        insn->dest_args[0], insn->src_args[0], insn->src_args[0],
+        insn->src_args[0]);
+  }
 }
 
 static void
