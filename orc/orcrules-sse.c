@@ -22,6 +22,7 @@ sse_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   OrcVariable *src = compiler->vars + insn->src_args[0];
   OrcVariable *dest = compiler->vars + insn->dest_args[0];
   int reg;
+  int size = ORC_PTR_TO_INT(user);
 
   if (src->vartype == ORC_VAR_TYPE_PARAM) {
     reg = dest->alloc;
@@ -29,23 +30,23 @@ sse_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     orc_x86_emit_mov_memoffset_sse (compiler, 4,
         (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[0]]),
         compiler->exec_reg, reg, FALSE);
-    if (src->size == 1) {
+    if (size == 1) {
       orc_sse_emit_punpcklbw (compiler, reg, reg);
     }
 #ifndef MMX
-    if (src->size <= 2) {
+    if (size <= 2) {
       orc_sse_emit_pshuflw (compiler, 0, reg, reg);
     }
     orc_sse_emit_pshufd (compiler, 0, reg, reg);
 #else
-    if (src->size <= 2) {
+    if (size <= 2) {
       orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(0,0,0,0), reg, reg);
     } else {
       orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(1,0,1,0), reg, reg);
     }
 #endif
   } else if (src->vartype == ORC_VAR_TYPE_CONST) {
-    sse_load_constant (compiler, dest->alloc, src->size, src->value);
+    sse_load_constant (compiler, dest->alloc, size, src->value);
   } else {
     ORC_ASSERT(0);
   }
@@ -957,13 +958,14 @@ sse_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[0]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  int tmp = orc_compiler_get_temp_reg (p);
+  int tmpc;
 
   if (src != dest) {
     orc_sse_emit_movdqa (p, src, dest);
   }
-  tmp = orc_compiler_get_temp_constant (p, 2, 0x0080);
-  orc_sse_emit_paddw (p, tmp, dest);
+  tmpc = orc_compiler_get_constant (p, 2, 0x0080);
+  orc_sse_emit_paddw (p, tmpc, dest);
   orc_sse_emit_movdqa (p, dest, tmp);
   orc_sse_emit_psrlw (p, 8, tmp);
   orc_sse_emit_paddw (p, tmp, dest);
@@ -2163,10 +2165,10 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "loadoffl", sse_rule_loadoffX, NULL);
   orc_rule_register (rule_set, "loadupdb", sse_rule_loadupdb, NULL);
   orc_rule_register (rule_set, "loadupib", sse_rule_loadupib, NULL);
-  orc_rule_register (rule_set, "loadpb", sse_rule_loadpX, NULL);
-  orc_rule_register (rule_set, "loadpw", sse_rule_loadpX, NULL);
-  orc_rule_register (rule_set, "loadpl", sse_rule_loadpX, NULL);
-  orc_rule_register (rule_set, "loadpq", sse_rule_loadpX, NULL);
+  orc_rule_register (rule_set, "loadpb", sse_rule_loadpX, (void *)1);
+  orc_rule_register (rule_set, "loadpw", sse_rule_loadpX, (void *)2);
+  orc_rule_register (rule_set, "loadpl", sse_rule_loadpX, (void *)4);
+  orc_rule_register (rule_set, "loadpq", sse_rule_loadpX, (void *)8);
 
   orc_rule_register (rule_set, "storeb", sse_rule_storeX, NULL);
   orc_rule_register (rule_set, "storew", sse_rule_storeX, NULL);

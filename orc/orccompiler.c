@@ -492,7 +492,9 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
           cinsn = compiler->insns + compiler->n_insns;
           compiler->n_insns++;
 
+          cinsn->flags = insn.flags;
           cinsn->flags |= ORC_INSN_FLAG_ADDED;
+          cinsn->flags &= ~(ORC_INSTRUCTION_FLAG_X2|ORC_INSTRUCTION_FLAG_X4);
           cinsn->opcode = get_load_opcode_for_size (var->size);
           cinsn->dest_args[0] = orc_compiler_new_temporary (compiler, var->size);
           cinsn->src_args[0] = insn.src_args[i];
@@ -504,9 +506,10 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
           cinsn = compiler->insns + compiler->n_insns;
           compiler->n_insns++;
 
+          cinsn->flags = insn.flags;
           cinsn->flags |= ORC_INSN_FLAG_ADDED;
-          cinsn->opcode = get_loadp_opcode_for_size (var->size);
-          cinsn->dest_args[0] = orc_compiler_new_temporary (compiler, var->size);
+          cinsn->opcode = get_loadp_opcode_for_size (opcode->src_size[i]);
+          cinsn->dest_args[0] = orc_compiler_new_temporary (compiler, opcode->src_size[i]);
           cinsn->src_args[0] = insn.src_args[i];
           insn.src_args[i] = cinsn->dest_args[0];
         }
@@ -530,7 +533,9 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
           cinsn = compiler->insns + compiler->n_insns;
           compiler->n_insns++;
 
+          cinsn->flags = xinsn->flags;
           cinsn->flags |= ORC_INSN_FLAG_ADDED;
+          cinsn->flags &= ~(ORC_INSTRUCTION_FLAG_X2|ORC_INSTRUCTION_FLAG_X4);
           cinsn->opcode = get_store_opcode_for_size (var->size);
           cinsn->src_args[0] = orc_compiler_new_temporary (compiler, var->size);
           cinsn->dest_args[0] = xinsn->dest_args[i];
