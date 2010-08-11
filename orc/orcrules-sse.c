@@ -532,7 +532,7 @@ sse_rule_signw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[0]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  int tmp;
 
   if (src != dest) {
     orc_sse_emit_movdqa (p, src, dest);
@@ -974,7 +974,7 @@ sse_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  /* About 5.6 cycles per array member on ginger */
+  /* About 5.2 cycles per array member on ginger */
   int src = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
   int a = orc_compiler_get_temp_reg (p);
@@ -989,7 +989,7 @@ sse_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_psllw (p, 8, divisor);
   orc_sse_emit_psrlw (p, 1, divisor);
 
-  orc_sse_emit_pxor (p, a, a);
+  sse_load_constant (p, a, 2, 0x00ff);
   tmp = orc_compiler_get_constant (p, 2, 0x8000);
   orc_sse_emit_movdqa (p, tmp, j);
   orc_sse_emit_psrlw (p, 8, j);
@@ -1006,7 +1006,7 @@ sse_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_sse_emit_psrlw (p, 1, divisor);
 
      orc_sse_emit_pand (p, j, j2);
-     orc_sse_emit_por (p, j2, a);
+     orc_sse_emit_pxor (p, j2, a);
      orc_sse_emit_psrlw (p, 1, j);
   }
   
@@ -1014,10 +1014,8 @@ sse_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_pxor (p, tmp, l);
   orc_sse_emit_pcmpgtw (p, dest, l);
   orc_sse_emit_pand (p, j, l);
-  orc_sse_emit_por (p, l, a);
+  orc_sse_emit_pxor (p, l, a);
 
-  tmp = orc_compiler_get_constant (p, 2, 0x00ff);
-  orc_sse_emit_pxor (p, tmp, a);
   orc_sse_emit_movdqa (p, a, dest);
 }
 #else
