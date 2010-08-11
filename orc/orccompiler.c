@@ -587,7 +587,8 @@ orc_compiler_get_temp_reg (OrcCompiler *compiler)
     }
   }
 
-  ORC_DEBUG("at insn %d", compiler->insn_index);
+  ORC_DEBUG("at insn %d %s", compiler->insn_index,
+      compiler->insns[compiler->insn_index].opcode->name);
   for(j=0;j<8;j++){
     ORC_DEBUG("xmm%d: %d %d", j, compiler->valid_regs[ORC_VEC_REG_BASE + j],
         compiler->alloc_regs[ORC_VEC_REG_BASE + j]);
@@ -596,6 +597,7 @@ orc_compiler_get_temp_reg (OrcCompiler *compiler)
   for(j=compiler->min_temp_reg;j<ORC_VEC_REG_BASE+16;j++){
     if (compiler->valid_regs[j] && !compiler->alloc_regs[j]) {
       compiler->min_temp_reg = j+1;
+      if (compiler->max_used_temp_reg < j) compiler->max_used_temp_reg = j;
       return j;
     }
   }
@@ -1001,13 +1003,16 @@ orc_compiler_get_constant_reg (OrcCompiler *compiler)
       compiler->alloc_regs[compiler->constants[j].alloc_reg] = 1;
     }
   }
+  for(j=ORC_VEC_REG_BASE;j<=compiler->max_used_temp_reg;j++) {
+    compiler->alloc_regs[j] = 1;
+  }
 
   for(j=0;j<8;j++){
     ORC_DEBUG("xmm%d: %d %d", j, compiler->valid_regs[ORC_VEC_REG_BASE + j],
         compiler->alloc_regs[ORC_VEC_REG_BASE + j]);
   }
 
-  for(j=compiler->min_temp_reg;j<ORC_VEC_REG_BASE+16;j++){
+  for(j=compiler->max_used_temp_reg;j<ORC_VEC_REG_BASE+16;j++){
     if (compiler->valid_regs[j] && !compiler->alloc_regs[j]) {
       return j;
     }
