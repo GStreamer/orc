@@ -111,7 +111,7 @@ case "${host_os}" in
 esac
 
 AC_ARG_ENABLE(backend,
-  AC_HELP_STRING([--enable-backend=[sse,mmx,neon,arm,all]], [include backend (default=all)]),
+  AC_HELP_STRING([--enable-backend],[sse,mmx,neon,arm,all (default all)]),
     [], [enable_backend=all])
 case "${enable_backend}" in
   sse)
