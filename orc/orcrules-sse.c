@@ -996,58 +996,91 @@ sse_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  /* About 5.9 cycles per array member on ginger */
+  /* About 5.6 cycles per array member on ginger */
   int src = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
-  int divisor = p->tmpreg;
-  int rem = X86_XMM7;
-  int tmp2 = X86_XMM6;
-  int tmp3 = X86_XMM5;
-  int tmp4 = X86_XMM4;
+  int a = X86_XMM7;
+  int j = X86_XMM6;
+  int j2 = X86_XMM5;
+  int l = X86_XMM4;
+  int divisor = X86_XMM3;
+  int tmp;
   int i;
 
   orc_sse_emit_movdqa (p, src, divisor);
   orc_sse_emit_psllw (p, 8, divisor);
-
-  orc_sse_emit_movdqa (p, dest, tmp4);
   orc_sse_emit_psrlw (p, 1, divisor);
-  orc_sse_emit_psrlw (p, 1, tmp4);
-  orc_sse_emit_pcmpgtw (p, divisor, tmp4);
-  orc_sse_emit_psrlw (p, 8, tmp4);
 
-  orc_sse_emit_movdqa (p, dest, rem);
+  orc_sse_emit_pxor (p, a, a);
+  tmp = orc_compiler_get_constant (p, 2, 0x8000);
+  orc_sse_emit_movdqa (p, tmp, j);
+  orc_sse_emit_psrlw (p, 8, j);
+
+  orc_sse_emit_pxor (p, tmp, dest);
+
+  for(i=0;i<7;i++){
+    orc_sse_emit_movdqa (p, divisor, l);
+    orc_sse_emit_pxor (p, tmp, l);
+    orc_sse_emit_pcmpgtw (p, dest, l);
+    orc_sse_emit_movdqa (p, l, j2);
+    orc_sse_emit_pandn (p, divisor, l);
+    orc_sse_emit_psubw (p, l, dest);
     orc_sse_emit_psrlw (p, 1, divisor);
-    orc_sse_emit_psrlw (p, 1, rem);
-  orc_sse_emit_movdqa (p, rem, tmp2);
-  orc_sse_emit_pcmpgtw (p, divisor, tmp2);
-    orc_sse_emit_psllw (p, 1, divisor);
-    orc_sse_emit_movdqa (p, dest, rem);
-  orc_sse_emit_movdqa (p, divisor, tmp3);
-  orc_sse_emit_pand (p, tmp2, tmp3);
-  orc_sse_emit_psubw (p, tmp3, rem);
-  orc_sse_emit_psrlw (p, 15, tmp2);
-  orc_sse_emit_psllw (p, 7, tmp2);
-  orc_sse_emit_movdqa (p, tmp4, dest);
-  orc_sse_emit_por (p, tmp2, dest);
 
-  orc_x86_emit_mov_imm_reg (p, 4, 0x00010001, p->gp_tmpreg);
-  orc_x86_emit_mov_reg_sse (p, p->gp_tmpreg, tmp4);
-  orc_sse_emit_pshufd (p, 0, tmp4, tmp4);
-  orc_sse_emit_paddw (p, tmp4, rem);
-
-  for(i=6;i>=0;i--){
-    orc_sse_emit_psrlw (p, 1, divisor);
-    orc_sse_emit_movdqa (p, rem, tmp2);
-    orc_sse_emit_pcmpgtw (p, divisor, tmp2);
-    orc_sse_emit_movdqa (p, divisor, tmp3);
-    orc_sse_emit_pand (p, tmp2, tmp3);
-    orc_sse_emit_psubw (p, tmp3, rem);
-    orc_sse_emit_psrlw (p, 15, tmp2);
-    orc_sse_emit_psllw (p, i, tmp2);
-    orc_sse_emit_por (p, tmp2, dest);
+     orc_sse_emit_pand (p, j, j2);
+     orc_sse_emit_por (p, j2, a);
+     orc_sse_emit_psrlw (p, 1, j);
   }
+  
+  orc_sse_emit_movdqa (p, divisor, l);
+  orc_sse_emit_pxor (p, tmp, l);
+  orc_sse_emit_pcmpgtw (p, dest, l);
+  orc_sse_emit_pand (p, j, l);
+  orc_sse_emit_por (p, l, a);
+
+  tmp = orc_compiler_get_constant (p, 2, 0x00ff);
+  orc_sse_emit_pxor (p, tmp, a);
+  orc_sse_emit_movdqa (p, a, dest);
 }
 #else
+static void
+sse_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  /* About 8.4 cycles per array member on ginger */
+  int src = p->vars[insn->src_args[1]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int b = X86_XMM7;
+  int a = X86_XMM6;
+  int k = X86_XMM5;
+  int j = X86_XMM4;
+  int tmp;
+  int i;
+
+  orc_sse_emit_movdqa (p, dest, b);
+  tmp = orc_compiler_get_constant (p, 2, 0x00ff);
+  orc_sse_emit_pand (p, tmp, src);
+
+  tmp = orc_compiler_get_constant (p, 2, 0x8000);
+  orc_sse_emit_pxor (p, tmp, b);
+
+  orc_sse_emit_pxor (p, a, a);
+  orc_sse_emit_movdqa (p, tmp, j);
+  orc_sse_emit_psrlw (p, 8, j);
+
+  for(i=0;i<8;i++){
+    orc_sse_emit_por (p, j, a);
+    orc_sse_emit_movdqa (p, a, k);
+    orc_sse_emit_pmullw (p, src, k);
+    orc_sse_emit_pxor (p, tmp, k);
+    orc_sse_emit_pcmpgtw (p, b, k);
+    orc_sse_emit_pand (p, j, k);
+    orc_sse_emit_pxor (p, k, a);
+    orc_sse_emit_psrlw (p, 1, j);
+  }
+
+  orc_sse_emit_movdqa (p, a, dest);
+}
+
 static void
 sse_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
