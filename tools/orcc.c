@@ -260,6 +260,7 @@ main (int argc, char *argv[])
     fprintf(output, "#include <orc/orc.h>\n");
     fprintf(output, "#include <orc-test/orctest.h>\n");
     fprintf(output, "#include <stdio.h>\n");
+    fprintf(output, "#include <string.h>\n");
     fprintf(output, "#include <stdlib.h>\n");
     fprintf(output, "#include <math.h>\n");
     if (include_file) {
