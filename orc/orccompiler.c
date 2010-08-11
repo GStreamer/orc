@@ -496,22 +496,34 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
           cinsn->flags |= ORC_INSN_FLAG_ADDED;
           cinsn->flags &= ~(ORC_INSTRUCTION_FLAG_X2|ORC_INSTRUCTION_FLAG_X4);
           cinsn->opcode = get_load_opcode_for_size (var->size);
-          cinsn->dest_args[0] = orc_compiler_new_temporary (compiler, var->size);
+          cinsn->dest_args[0] = orc_compiler_new_temporary (compiler,
+              var->size);
           cinsn->src_args[0] = insn.src_args[i];
           insn.src_args[i] = cinsn->dest_args[0];
         } else if (var->vartype == ORC_VAR_TYPE_CONST ||
             var->vartype == ORC_VAR_TYPE_PARAM) {
           OrcInstruction *cinsn;
+          int multiplier;
 
           cinsn = compiler->insns + compiler->n_insns;
           compiler->n_insns++;
 
+          multiplier = 1;
+          if (insn.flags & ORC_INSTRUCTION_FLAG_X2) {
+            multiplier = 2;
+          }
+          if (insn.flags & ORC_INSTRUCTION_FLAG_X4) {
+            multiplier = 4;
+          }
+
           cinsn->flags = insn.flags;
           cinsn->flags |= ORC_INSN_FLAG_ADDED;
           cinsn->opcode = get_loadp_opcode_for_size (opcode->src_size[i]);
-          cinsn->dest_args[0] = orc_compiler_new_temporary (compiler, opcode->src_size[i]);
+          cinsn->dest_args[0] = orc_compiler_new_temporary (compiler,
+              opcode->src_size[i] * multiplier);
           cinsn->src_args[0] = insn.src_args[i];
           insn.src_args[i] = cinsn->dest_args[0];
+
         }
       }
     }

@@ -65,8 +65,9 @@ typedef long orc_int64;
 typedef unsigned long orc_uint64;
 #endif
 #endif
-typedef union { orc_int32 i; float f; } orc_union32;
-typedef union { orc_int64 i; double f; } orc_union64;
+typedef union { orc_int16 i; orc_int8 x2[2]; } orc_union16;
+typedef union { orc_int32 i; float f; orc_int16 x2[2]; orc_int8 x4[4]; } orc_union32;
+typedef union { orc_int64 i; double f; orc_int32 x2[2]; orc_int16 x4[4]; } orc_union64;
 #endif
 
 #ifndef TRUE

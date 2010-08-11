@@ -421,6 +421,7 @@ struct _OrcCompiler {
   int gp_tmpreg;
 
   int insn_index;
+  int unroll_index;
   int need_mask_regs;
   int unroll_shift;
 
