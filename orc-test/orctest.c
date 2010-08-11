@@ -511,7 +511,7 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
 
   ORC_DEBUG ("got here");
 
-  if (!(flags & ORC_TEST_FLAGS_BACKUP)) {
+  {
     OrcTarget *target;
     unsigned int flags;
 
@@ -575,7 +575,11 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
     }
   }
   ORC_DEBUG ("running");
-  orc_executor_run (ex);
+  if (flags & ORC_TEST_FLAGS_BACKUP) {
+    orc_executor_run_backup (ex);
+  } else {
+    orc_executor_run (ex);
+  }
   ORC_DEBUG ("done running");
   for(i=0;i<ORC_N_VARIABLES;i++){
     if (program->vars[i].vartype == ORC_VAR_TYPE_ACCUMULATOR) {

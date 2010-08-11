@@ -627,6 +627,7 @@ void orc_executor_set_n (OrcExecutor *ex, int n);
 void orc_executor_set_m (OrcExecutor *ex, int m);
 void orc_executor_emulate (OrcExecutor *ex);
 void orc_executor_run (OrcExecutor *ex);
+void orc_executor_run_backup (OrcExecutor *ex);
 
 OrcOpcodeSet *orc_opcode_set_get (const char *name);
 OrcOpcodeSet *orc_opcode_set_get_nth (int opcode_major);

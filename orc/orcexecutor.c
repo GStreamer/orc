@@ -50,6 +50,20 @@ orc_executor_run (OrcExecutor *ex)
 }
 
 void
+orc_executor_run_backup (OrcExecutor *ex)
+{
+  void (*func) (OrcExecutor *);
+
+  func = ex->program->backup_func;
+  if (func) {
+    func (ex);
+    //ORC_ERROR("counters %d %d %d", ex->counter1, ex->counter2, ex->counter3);
+  } else {
+    orc_executor_emulate (ex);
+  }
+}
+
+void
 orc_executor_set_program (OrcExecutor *ex, OrcProgram *program)
 {
   ex->program = program;
