@@ -422,6 +422,7 @@ get_load_opcode_for_size (int size)
     default:
       ORC_ASSERT(0);
   }
+  return NULL;
 }
 
 static OrcStaticOpcode *
@@ -439,6 +440,7 @@ get_loadp_opcode_for_size (int size)
     default:
       ORC_ASSERT(0);
   }
+  return NULL;
 }
 
 static OrcStaticOpcode *
@@ -456,6 +458,7 @@ get_store_opcode_for_size (int size)
     default:
       ORC_ASSERT(0);
   }
+  return NULL;
 }
 
 void
