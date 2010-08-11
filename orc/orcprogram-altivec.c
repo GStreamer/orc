@@ -240,7 +240,7 @@ powerpc_load_constants (OrcCompiler *compiler)
   int j;
   int greg = POWERPC_R0;
 
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     var = compiler->vars + i;
 
     if (compiler->vars[i].name == NULL) continue;
@@ -446,7 +446,7 @@ powerpc_load_inner_constants (OrcCompiler *compiler)
   OrcVariable *var;
   int i;
 
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     var = compiler->vars + i;
 
     if (compiler->vars[i].name == NULL) continue;
@@ -585,7 +585,7 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
     }
   }
 
-  for(k=0;k<ORC_N_VARIABLES;k++){
+  for(k=0;k<ORC_N_COMPILER_VARIABLES;k++){
     if (compiler->vars[k].name == NULL) continue;
     if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
         compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
@@ -611,7 +611,7 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
     powerpc_emit_stw (compiler, POWERPC_R0, POWERPC_R3,
         (int)ORC_STRUCT_OFFSET(OrcExecutorAlt, m_index));
 
-    for(k=0;k<ORC_N_VARIABLES;k++){
+    for(k=0;k<ORC_N_COMPILER_VARIABLES;k++){
       if (compiler->vars[k].name == NULL) continue;
       if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
           compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {

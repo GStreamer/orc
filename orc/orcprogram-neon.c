@@ -230,7 +230,7 @@ void
 orc_neon_load_constants_outer (OrcCompiler *compiler)
 {
   int i;
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     if (compiler->vars[i].name == NULL) continue;
 
     switch (compiler->vars[i].vartype) {
@@ -274,7 +274,7 @@ void
 orc_neon_load_constants_inner (OrcCompiler *compiler)
 {
   int i;
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     if (compiler->vars[i].name == NULL) continue;
 
     switch (compiler->vars[i].vartype) {
@@ -799,7 +799,7 @@ orc_neon_save_accumulators (OrcCompiler *compiler)
   int src;
   unsigned int code;
 
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     OrcVariable *var = compiler->vars + i;
 
     if (compiler->vars[i].name == NULL) continue;
@@ -877,7 +877,7 @@ neon_add_strides (OrcCompiler *compiler)
 {
   int i;
 
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     if (compiler->vars[i].name == NULL) continue;
     switch (compiler->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:

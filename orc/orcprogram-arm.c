@@ -151,7 +151,7 @@ void
 orc_arm_load_constants_outer (OrcCompiler *compiler)
 {
   int i;
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     if (compiler->vars[i].name == NULL) continue;
     switch (compiler->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:
@@ -196,7 +196,7 @@ void
 orc_arm_load_constants_inner (OrcCompiler *compiler)
 {
   int i;
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     if (compiler->vars[i].name == NULL) continue;
     switch (compiler->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:
@@ -431,7 +431,7 @@ orc_arm_emit_loop (OrcCompiler *compiler)
     }
   }
 
-  for(k=0;k<ORC_N_VARIABLES;k++){
+  for(k=0;k<ORC_N_COMPILER_VARIABLES;k++){
     if (compiler->vars[k].name == NULL) continue;
     if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
         compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
@@ -455,7 +455,7 @@ arm_add_strides (OrcCompiler *compiler)
 {
   int i;
 
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     if (compiler->vars[i].name == NULL) continue;
     switch (compiler->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:

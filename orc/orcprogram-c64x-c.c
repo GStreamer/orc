@@ -256,7 +256,7 @@ orc_compiler_c64x_c_assemble (OrcCompiler *compiler)
     ORC_ASM_CODE(compiler,"  int j;\n");
   }
 
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     OrcVariable *var = compiler->vars + i;
     if (var->name == NULL) continue;
     switch (var->vartype) {
@@ -330,7 +330,7 @@ orc_compiler_c64x_c_assemble (OrcCompiler *compiler)
     }
     prefix = 2;
 
-    for(i=0;i<ORC_N_VARIABLES;i++){
+    for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
       OrcVariable *var = compiler->vars + i;
       if (var->name == NULL) continue;
       switch (var->vartype) {
@@ -357,7 +357,7 @@ orc_compiler_c64x_c_assemble (OrcCompiler *compiler)
       }
     }
   } else {
-    for(i=0;i<ORC_N_VARIABLES;i++){
+    for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
       OrcVariable *var = compiler->vars + i;
       if (var->name == NULL) continue;
       switch (var->vartype) {
@@ -425,7 +425,7 @@ orc_compiler_c64x_c_assemble (OrcCompiler *compiler)
     ORC_ASM_CODE(compiler,"  }\n");
   }
 
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     OrcVariable *var = compiler->vars + i;
     if (var->name == NULL) continue;
     switch (var->vartype) {
@@ -486,7 +486,7 @@ emit_loop (OrcCompiler *compiler, int prefix)
     }
   }
   ORC_ASM_CODE(compiler,"\n");
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     OrcVariable *var = compiler->vars + i;
     if (var->name == NULL) continue;
     switch (var->vartype) {

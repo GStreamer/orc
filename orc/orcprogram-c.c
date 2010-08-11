@@ -203,7 +203,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     }
   }
 
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     OrcVariable *var = compiler->vars + i;
     char varname[20];
     if (var->name == NULL) continue;
@@ -290,7 +290,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     ORC_ASM_CODE(compiler,"  for (j = 0; j < m; j++) {\n");
     prefix = 2;
 
-    for(i=0;i<ORC_N_VARIABLES;i++){
+    for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
       OrcVariable *var = compiler->vars + i;
       if (var->name == NULL) continue;
       switch (var->vartype) {
@@ -319,7 +319,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
       }
     }
   } else {
-    for(i=0;i<ORC_N_VARIABLES;i++){
+    for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
       OrcVariable *var = compiler->vars + i;
       char s[20];
       if (var->name == NULL) continue;
@@ -344,7 +344,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
 
 #if 0
   /* Load from source (and maybe destination) arrays */
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     OrcVariable *var = compiler->vars + i;
     char s[20];
     if (var->name == NULL) continue;
@@ -378,7 +378,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
   }
 #if 0
   /* update pointers */
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     OrcVariable *var = compiler->vars + i;
     if (var->name == NULL) continue;
     if (var->vartype == ORC_VAR_TYPE_DEST || var->vartype == ORC_VAR_TYPE_SRC) {
@@ -391,7 +391,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     ORC_ASM_CODE(compiler,"  }\n");
   }
 
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     char varname[20];
     OrcVariable *var = compiler->vars + i;
     c_get_name_int (varname, compiler, i);

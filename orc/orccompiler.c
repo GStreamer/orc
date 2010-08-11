@@ -621,7 +621,7 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
   int var;
   int actual_var;
 
-  for(j=0;j<ORC_N_VARIABLES;j++){
+  for(j=0;j<ORC_N_COMPILER_VARIABLES;j++){
     if (compiler->vars[j].alloc) continue;
     compiler->vars[j].last_use = -1;
   }
@@ -729,7 +729,7 @@ orc_compiler_global_reg_alloc (OrcCompiler *compiler)
   int i;
   OrcVariable *var;
 
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     var = compiler->vars + i;
     if (var->name == NULL) continue;
     switch (var->vartype) {
@@ -835,7 +835,7 @@ orc_compiler_rewrite_vars2 (OrcCompiler *compiler)
       }
     }
 
-    for(i=0;i<ORC_N_VARIABLES;i++){
+    for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
       if (compiler->vars[i].name == NULL) continue;
       if (compiler->vars[i].last_use == -1) continue;
       if (compiler->vars[i].first_use == j) {
@@ -844,7 +844,7 @@ orc_compiler_rewrite_vars2 (OrcCompiler *compiler)
         compiler->vars[i].alloc = k;
       }
     }
-    for(i=0;i<ORC_N_VARIABLES;i++){
+    for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
       if (compiler->vars[i].name == NULL) continue;
       if (compiler->vars[i].last_use == j) {
         compiler->alloc_regs[compiler->vars[i].alloc]--;
