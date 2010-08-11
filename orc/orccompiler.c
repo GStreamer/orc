@@ -394,15 +394,15 @@ orc_compiler_check_sizes (OrcCompiler *compiler)
         compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE;
         return;
       }
-      if (opcode->flags & ORC_STATIC_OPCODE_SCALAR &&
-          opcode->flags & ORC_STATIC_OPCODE_LOAD &&
-          compiler->vars[insn->src_args[j]].vartype != ORC_VAR_TYPE_PARAM &&
-          compiler->vars[insn->src_args[j]].vartype != ORC_VAR_TYPE_CONST) {
-        ORC_COMPILER_ERROR(compiler, "opcode %s requires const or param source",
-            opcode->name);
-        compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE;
-        return;
-      }
+    }
+    if (opcode->flags & ORC_STATIC_OPCODE_SCALAR &&
+        opcode->src_size[1] == 0 &&
+        compiler->vars[insn->src_args[0]].vartype != ORC_VAR_TYPE_PARAM &&
+        compiler->vars[insn->src_args[0]].vartype != ORC_VAR_TYPE_CONST) {
+      ORC_COMPILER_ERROR(compiler, "opcode %s requires const or param source",
+          opcode->name);
+      compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE;
+      return;
     }
   }
 }
