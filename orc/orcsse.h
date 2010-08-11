@@ -71,6 +71,9 @@ void orc_sse_emit_shiftimm (OrcCompiler *p, const char *insn_name,
 void orc_sse_set_mxcsr (OrcCompiler *compiler);
 void orc_sse_restore_mxcsr (OrcCompiler *compiler);
 
+void sse_load_constant (OrcCompiler *compiler, int reg, int size, int value);
+
+
 unsigned int orc_sse_get_cpu_flags (void);
 
 /* SSE instructions */

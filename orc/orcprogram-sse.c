@@ -295,6 +295,8 @@ sse_save_accumulators (OrcCompiler *compiler)
 void
 sse_load_constant (OrcCompiler *compiler, int reg, int size, int value)
 {
+  int i;
+
   if (size == 1) {
     value &= 0xff;
     value |= (value << 8);
@@ -307,16 +309,56 @@ sse_load_constant (OrcCompiler *compiler, int reg, int size, int value)
 
   if (value == 0) {
     orc_sse_emit_pxor(compiler, reg, reg);
-  } else {
-    orc_x86_emit_mov_imm_reg (compiler, 4, value, compiler->gp_tmpreg);
-    orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, reg);
-#ifndef MMX
-    orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(0,0,0,0), reg, reg);
-#else
-    orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(1,0,1,0), reg, reg);
-#endif
+    return;
+  }
+  if (value == 0xffffffff) {
+    orc_sse_emit_pcmpeqb (compiler, reg, reg);
+  }
+  if (compiler->target_flags & ORC_TARGET_SSE_SSSE3) {
+    if (value == 0x01010101) {
+      orc_sse_emit_pcmpeqb (compiler, reg, reg);
+      orc_sse_emit_pabsb (compiler, reg, reg);
+    }
   }
 
+  for(i=1;i<32;i++){
+    orc_uint32 v;
+    v = (0xffffffff<<i);
+    if (value == v) {
+      orc_sse_emit_pcmpeqb (compiler, reg, reg);
+      orc_sse_emit_pslld (compiler, i, reg);
+      return;
+    }
+    v = (0xffffffff>>i);
+    if (value == v) {
+      orc_sse_emit_pcmpeqb (compiler, reg, reg);
+      orc_sse_emit_psrld (compiler, i, reg);
+      return;
+    }
+  }
+  for(i=1;i<16;i++){
+    orc_uint32 v;
+    v = (0xffff & (0xffff<<i)) | (0xffff0000 & (0xffff0000<<i));
+    if (value == v) {
+      orc_sse_emit_pcmpeqb (compiler, reg, reg);
+      orc_sse_emit_psllw (compiler, i, reg);
+      return;
+    }
+    v = (0xffff & (0xffff>>i)) | (0xffff0000 & (0xffff0000>>i));
+    if (value == v) {
+      orc_sse_emit_pcmpeqb (compiler, reg, reg);
+      orc_sse_emit_psrlw (compiler, i, reg);
+      return;
+    }
+  }
+
+  orc_x86_emit_mov_imm_reg (compiler, 4, value, compiler->gp_tmpreg);
+  orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, reg);
+#ifndef MMX
+  orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(0,0,0,0), reg, reg);
+#else
+  orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(1,0,1,0), reg, reg);
+#endif
 }
 
 void

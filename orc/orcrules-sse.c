@@ -45,31 +45,7 @@ sse_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     }
 #endif
   } else if (src->vartype == ORC_VAR_TYPE_CONST) {
-    int value = src->value;
-
-    reg = dest->alloc;
-
-    if (src->size == 1) {
-      value &= 0xff;
-      value |= (value<<8);
-      value |= (value<<16);
-    }
-    if (src->size == 2) {
-      value &= 0xffff;
-      value |= (value<<16);
-    }
-
-    if (value == 0) {
-      orc_sse_emit_pxor(compiler, reg, reg);
-    } else {
-      orc_x86_emit_mov_imm_reg (compiler, 4, value, compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, reg);
-#ifndef MMX
-      orc_sse_emit_pshufd (compiler, 0, reg, reg);
-#else
-      orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(1,0,1,0), reg, reg);
-#endif
-    }
+    sse_load_constant (compiler, dest->alloc, src->size, src->value);
   }
 }
 
