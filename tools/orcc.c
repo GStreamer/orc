@@ -280,30 +280,25 @@ main (int argc, char *argv[])
     fprintf(output, "extern \"C\" {\n");
     fprintf(output, "#endif\n");
     fprintf(output, "\n");
-    if (use_inline) {
-      fprintf(output, "#define ORC_INLINE\n");
-    } else {
-      fprintf(output, "/* #define ORC_INLINE */\n");
-    }
-    fprintf(output, "#ifndef ORC_INLINE\n");
-    fprintf(output, "\n");
-    fprintf(output, "%s", orc_target_c_get_typedefs ());
-    fprintf(output, "\n");
     if (init_function) {
       fprintf(output, "void %s (void);\n", init_function);
       fprintf(output, "\n");
     }
-    for(i=0;i<n;i++){
-      output_code_header (programs[i], output);
-    }
-    fprintf(output, "#else\n");
     fprintf(output, "\n");
-    fprintf(output, "#include <orc/orc.h>\n");
-    fprintf(output, "\n");
-    for(i=0;i<n;i++){
-      output_code_execute (programs[i], output, TRUE);
+    if (!use_inline) {
+      fprintf(output, "\n");
+      fprintf(output, "%s", orc_target_c_get_typedefs ());
+      for(i=0;i<n;i++){
+        output_code_header (programs[i], output);
+      }
+    } else {
+      fprintf(output, "\n");
+      fprintf(output, "#include <orc/orc.h>\n");
+      fprintf(output, "\n");
+      for(i=0;i<n;i++){
+        output_code_execute (programs[i], output, TRUE);
+      }
     }
-    fprintf(output, "#endif\n");
     fprintf(output, "\n");
     fprintf(output, "#ifdef __cplusplus\n");
     fprintf(output, "}\n");
@@ -643,7 +638,11 @@ output_code_execute (OrcProgram *p, FILE *output, int is_inline)
     if (is_inline) {
       fprintf(output, "extern OrcProgram *_orc_program_%s;\n", p->name);
     } else {
-      fprintf(output, "static OrcProgram *_orc_program_%s;\n", p->name);
+      if (use_inline) {
+        fprintf(output, "OrcProgram *_orc_program_%s;\n", p->name);
+      } else {
+        fprintf(output, "static OrcProgram *_orc_program_%s;\n", p->name);
+      }
     }
   }
   if (is_inline) {
