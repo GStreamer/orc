@@ -1065,8 +1065,12 @@ sse_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
   /* About 40.7 cycles per array member on ginger.  I.e., really slow */
   int i;
   int regsize = p->is_64bit ? 8 : 4;
+  int stackframe;
 
-  orc_x86_emit_add_imm_reg (p, regsize, -32 - 2*regsize, X86_ESP, FALSE);
+  stackframe = 32 + 2*regsize;
+  stackframe = (stackframe + 0xf) & (~0xf);
+
+  orc_x86_emit_add_imm_reg (p, regsize, -stackframe, X86_ESP, FALSE);
   orc_x86_emit_mov_sse_memoffset (p, 16, p->vars[insn->src_args[0]].alloc,
       0, X86_ESP, FALSE, FALSE);
   orc_x86_emit_mov_sse_memoffset (p, 16, p->vars[insn->src_args[1]].alloc,
@@ -1110,7 +1114,7 @@ sse_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_x86_emit_mov_memoffset_reg (p, 4, 32, X86_ESP, X86_EAX);
   orc_x86_emit_mov_memoffset_reg (p, 4, 32 + regsize, X86_ESP, X86_EDX);
 
-  orc_x86_emit_add_imm_reg (p, regsize, 32 + 2*regsize, X86_ESP, FALSE);
+  orc_x86_emit_add_imm_reg (p, regsize, stackframe, X86_ESP, FALSE);
 }
 #endif
 
@@ -1251,8 +1255,12 @@ static void
 sse_rule_mulll_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int i;
+  int stackframe;
 
-  orc_x86_emit_add_imm_reg (p, p->is_64bit ? 8 : 4, -32, X86_ESP,
+  stackframe = 32;
+  stackframe = (stackframe + 0xf) & (~0xf);
+
+  orc_x86_emit_add_imm_reg (p, p->is_64bit ? 8 : 4, -stackframe, X86_ESP,
       FALSE);
   orc_x86_emit_mov_sse_memoffset (p, 16, p->vars[insn->src_args[0]].alloc,
       0, X86_ESP, FALSE, FALSE);
@@ -1268,7 +1276,7 @@ sse_rule_mulll_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_x86_emit_mov_memoffset_sse (p, 16, 0, X86_ESP,
       p->vars[insn->dest_args[0]].alloc, FALSE);
 
-  orc_x86_emit_add_imm_reg (p, p->is_64bit ? 8 : 4, 32, X86_ESP,
+  orc_x86_emit_add_imm_reg (p, p->is_64bit ? 8 : 4, stackframe, X86_ESP,
       FALSE);
 }
 
@@ -1277,8 +1285,12 @@ sse_rule_mulhsl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int i;
   int regsize = p->is_64bit ? 8 : 4;
+  int stackframe;
 
-  orc_x86_emit_add_imm_reg (p, regsize, -32 - 2*regsize, X86_ESP, FALSE);
+  stackframe = 32 + 2*regsize;
+  stackframe = (stackframe + 0xf) & (~0xf);
+
+  orc_x86_emit_add_imm_reg (p, regsize, -stackframe, X86_ESP, FALSE);
   orc_x86_emit_mov_sse_memoffset (p, 16, p->vars[insn->src_args[0]].alloc,
       0, X86_ESP, FALSE, FALSE);
   orc_x86_emit_mov_sse_memoffset (p, 16, p->vars[insn->src_args[1]].alloc,
@@ -1301,7 +1313,7 @@ sse_rule_mulhsl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_x86_emit_mov_memoffset_reg (p, 4, 32, X86_ESP, X86_EAX);
   orc_x86_emit_mov_memoffset_reg (p, 4, 32 + regsize, X86_ESP, X86_EDX);
 
-  orc_x86_emit_add_imm_reg (p, regsize, 32 + 2*regsize, X86_ESP, FALSE);
+  orc_x86_emit_add_imm_reg (p, regsize, stackframe, X86_ESP, FALSE);
 }
 
 static void
@@ -1309,8 +1321,12 @@ sse_rule_mulhul_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int i;
   int regsize = p->is_64bit ? 8 : 4;
+  int stackframe;
 
-  orc_x86_emit_add_imm_reg (p, regsize, -32 - 2*regsize, X86_ESP, FALSE);
+  stackframe = 32 + 2*regsize;
+  stackframe = (stackframe + 0xf) & (~0xf);
+
+  orc_x86_emit_add_imm_reg (p, regsize, -stackframe, X86_ESP, FALSE);
   orc_x86_emit_mov_sse_memoffset (p, 16, p->vars[insn->src_args[0]].alloc,
       0, X86_ESP, FALSE, FALSE);
   orc_x86_emit_mov_sse_memoffset (p, 16, p->vars[insn->src_args[1]].alloc,
@@ -1333,7 +1349,7 @@ sse_rule_mulhul_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_x86_emit_mov_memoffset_reg (p, 4, 32, X86_ESP, X86_EAX);
   orc_x86_emit_mov_memoffset_reg (p, 4, 32 + regsize, X86_ESP, X86_EDX);
 
-  orc_x86_emit_add_imm_reg (p, regsize, 32 + 2*regsize, X86_ESP, FALSE);
+  orc_x86_emit_add_imm_reg (p, regsize, stackframe, X86_ESP, FALSE);
 }
 
 static void
