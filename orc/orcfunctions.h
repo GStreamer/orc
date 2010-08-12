@@ -9,8 +9,7 @@
 extern "C" {
 #endif
 
-//#define ORC_INLINE
-#ifndef ORC_INLINE
+
 
 #ifndef _ORC_INTEGER_TYPEDEFS_
 #define _ORC_INTEGER_TYPEDEFS_
@@ -53,82 +52,8 @@ typedef union { orc_int16 i; orc_int8 x2[2]; } orc_union16;
 typedef union { orc_int32 i; float f; orc_int16 x2[2]; orc_int8 x4[4]; } orc_union32;
 typedef union { orc_int64 i; double f; orc_int32 x2[2]; orc_int16 x4[4]; } orc_union64;
 #endif
-
 void orc_memcpy (void * d1, const void * s1, int n);
 void orc_memset (void * d1, int p1, int n);
-#else
-
-#include <orc/orc.h>
-
-static inline void
-orc_memcpy (void * d1, const void * s1, int n)
-{
-  OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
-  static OrcProgram *p = 0;
-  void (*func) (OrcExecutor *);
-
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcCompileResult result;
-
-      p = orc_program_new ();
-      orc_program_set_name (p, "orc_memcpy");
-      orc_program_add_destination (p, 1, "d1");
-      orc_program_add_source (p, 1, "s1");
-
-      orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1, -1);
-
-      result = orc_program_compile (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
-  }
-  ex->program = p;
-
-  ex->n = n;
-  ex->arrays[ORC_VAR_D1] = d1;
-  ex->arrays[ORC_VAR_S1] = (void *)s1;
-
-  func = p->code_exec;
-  func (ex);
-}
-static inline void
-orc_memset (void * d1, int p1, int n)
-{
-  OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
-  static OrcProgram *p = 0;
-  void (*func) (OrcExecutor *);
-
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcCompileResult result;
-
-      p = orc_program_new ();
-      orc_program_set_name (p, "orc_memset");
-      orc_program_add_destination (p, 1, "d1");
-      orc_program_add_parameter (p, 1, "p1");
-
-      orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1, -1);
-
-      result = orc_program_compile (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
-  }
-  ex->program = p;
-
-  ex->n = n;
-  ex->arrays[ORC_VAR_D1] = d1;
-  ex->params[ORC_VAR_P1] = p1;
-
-  func = p->code_exec;
-  func (ex);
-}
-#endif
 
 #ifdef __cplusplus
 }
