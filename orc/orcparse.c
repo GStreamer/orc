@@ -59,6 +59,7 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
 {
   OrcParser _parser;
   OrcParser *parser = &_parser;
+  char *init_function = NULL;
 
   memset (parser, 0, sizeof(*parser));
 
@@ -135,6 +136,14 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
         parser->programs[parser->n_programs] = parser->program;
         parser->n_programs++;
         parser->creg_index = 1;
+      } else if (strcmp (token[0], ".init") == 0) {
+        if (init_function) free (init_function);
+        if (n_tokens < 2) {
+          orc_parse_log (parser, "error: line %d: .init without function name\n",
+              parser->line_number);
+        } else {
+          init_function = strdup (token[1]);
+        }
       } else if (strcmp (token[0], ".flags") == 0) {
         int i;
         for(i=1;i<n_tokens;i++){
@@ -247,6 +256,7 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
   } else {
     free (parser->log);
   }
+  parser->programs[0]->init_function = init_function;
   *programs = parser->programs;
   return parser->n_programs;
 }
@@ -398,5 +408,11 @@ orc_parse_sanity_check (OrcParser *parser, OrcProgram *program)
 
   }
 
+}
+
+const char *
+orc_parse_get_init_function (OrcProgram *program)
+{
+  return program->init_function;
 }
 

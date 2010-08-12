@@ -31,7 +31,7 @@ OrcProgram **programs;
 
 int use_inline = FALSE;
 
-char *init_function = NULL;
+const char *init_function = NULL;
 
 char *target = "sse";
 
@@ -219,6 +219,10 @@ main (int argc, char *argv[])
   n = orc_parse_full (code, &programs, &log);
   n_programs = n;
   printf("%s", log);
+
+  if (init_function == NULL) {
+    init_function = orc_parse_get_init_function (programs[0]);
+  }
 
   output = fopen (output_file, "w");
   if (!output) {

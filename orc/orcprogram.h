@@ -369,6 +369,9 @@ struct _OrcProgram {
   int constant_m;
 
   OrcCode *orccode;
+
+  /* Hide this here.  Belongs in a Parser object */
+  char *init_function;
 };
 
 /**
