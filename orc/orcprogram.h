@@ -31,7 +31,7 @@ typedef void (*OrcExecutorFunc)(OrcExecutor *ex);
 #define ORC_N_VARIABLES 64
 #define ORC_N_ARRAYS 12
 #define ORC_N_REGISTERS 20
-#define ORC_N_FIXUPS 40
+#define ORC_N_FIXUPS 100
 #define ORC_N_CONSTANTS 20
 #define ORC_N_LABELS 40
 #define ORC_N_COMPILER_VARIABLES (ORC_N_VARIABLES+32)

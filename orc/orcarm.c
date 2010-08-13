@@ -117,6 +117,8 @@ orc_arm_emit_pop (OrcCompiler *compiler, int regs)
 void
 orc_arm_emit_label (OrcCompiler *compiler, int label)
 {
+  ORC_ASSERT (label < ORC_N_LABELS);
+
   ORC_ASM_CODE(compiler,".L%d:\n", label);
 
   compiler->labels[label] = compiler->codeptr;
@@ -125,6 +127,8 @@ orc_arm_emit_label (OrcCompiler *compiler, int label)
 void
 orc_arm_add_fixup (OrcCompiler *compiler, int label, int type)
 {
+  ORC_ASSERT (compiler->n_fixups < ORC_N_FIXUPS);
+
   compiler->fixups[compiler->n_fixups].ptr = compiler->codeptr;
   compiler->fixups[compiler->n_fixups].label = label;
   compiler->fixups[compiler->n_fixups].type = type;
@@ -143,11 +147,23 @@ orc_arm_do_fixups (OrcCompiler *compiler)
 
     if (compiler->fixups[i].type == 0) {
       code = ORC_READ_UINT32_LE (ptr);
-      diff = ORC_READ_UINT32_LE (ptr) + ((label - ptr) >> 2);
+      diff = code;
+      diff = (diff << 8) >> 8;
+      diff += ((label - ptr) >> 2);
+      if (diff != (diff << 8)>>8) {
+        ORC_COMPILER_ERROR(compiler, "fixup out of range");
+      }
       ORC_WRITE_UINT32_LE(ptr, (code&0xff000000) | (diff&0x00ffffff));
     } else {
       code = ORC_READ_UINT32_LE (ptr);
-      diff = (code&0xff) + ((label - ptr) >> 2);
+      diff = code;
+      /* We store the offset in the code as signed, but the CPU considers
+       * it unsigned */
+      diff = (diff << 24) >> 24;
+      diff += ((label - ptr) >> 2);
+      if (diff != (diff & 0xff)) {
+        ORC_COMPILER_ERROR(compiler, "fixup out of range (%d > 255)", diff);
+      }
       ORC_WRITE_UINT32_LE(ptr, (code&0xffffff00) | (diff&0x000000ff));
     }
   }
@@ -160,10 +176,16 @@ orc_arm_emit_align (OrcCompiler *compiler, int align_shift)
 
   diff = (compiler->program->code - compiler->codeptr)&((1<<align_shift) - 1);
   while (diff) {
-    ORC_ASM_CODE(compiler,"  nop\n");
-    orc_arm_emit (compiler, 0xe1a00000);
+    orc_arm_emit_nop (compiler);
     diff-=4;
   }
+}
+
+void
+orc_arm_emit_nop (OrcCompiler *compiler)
+{
+  ORC_ASM_CODE(compiler,"  nop\n");
+  orc_arm_emit (compiler, 0xe1a00000);
 }
 
 void
@@ -704,5 +726,16 @@ orc_arm_flush_cache (OrcCompiler *compiler)
 #ifdef HAVE_ARM
   __clear_cache (compiler->program->code, compiler->codeptr);
 #endif
+}
+
+void
+orc_arm_emit_data (OrcCompiler *compiler, orc_uint32 data)
+{
+  if (compiler->target_flags & ORC_TARGET_NEON_CLEAN_COMPILE) {
+    orc_arm_emit_nop (compiler);
+  } else {
+    ORC_ASM_CODE(compiler,"  .word 0x%08x\n", data);
+    orc_arm_emit (compiler, data);
+  }
 }
 

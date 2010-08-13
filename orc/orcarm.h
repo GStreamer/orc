@@ -92,6 +92,7 @@ void orc_arm_emit_label (OrcCompiler *compiler, int label);
 void orc_arm_emit_push (OrcCompiler *compiler, int regs);
 void orc_arm_emit_pop (OrcCompiler *compiler, int regs);
 void orc_arm_emit_branch (OrcCompiler *compiler, int cond, int label);
+void orc_arm_emit_data (OrcCompiler *compiler, orc_uint32 data);
 
 void orc_arm_loadb (OrcCompiler *compiler, int dest, int src1, int offset);
 void orc_arm_storeb (OrcCompiler *compiler, int dest, int offset, int src1);
@@ -118,6 +119,7 @@ void orc_arm_emit_sat (OrcCompiler *p, int op, OrcArmCond cond,
     int Rd, int sat, int Rm, int sh, int asr);
 void orc_arm_emit_rv (OrcCompiler *p, int op, OrcArmCond cond,
     int Rd, int Rm);
+void orc_arm_emit_nop (OrcCompiler *compiler);
 
 void orc_arm_flush_cache (OrcCompiler *compiler);
 
