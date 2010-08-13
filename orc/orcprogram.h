@@ -437,6 +437,8 @@ struct _OrcCompiler {
   int offset;
   int min_temp_reg;
   int max_used_temp_reg;
+
+  int insn_shift; /* used when emitting rules */
 };
 
 #define ORC_SRC_ARG(p,i,n) ((p)->vars[(i)->src_args[(n)]].alloc)

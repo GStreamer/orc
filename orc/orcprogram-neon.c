@@ -220,7 +220,13 @@ orc_compiler_neon_init (OrcCompiler *compiler)
     compiler->loop_shift = loop_shift;
   }
 
-  compiler->unroll_shift = 1;
+  /* Unrolling isn't helpful until neon gets an instruction
+   * scheduler.  This decreases the raw amount of code generated
+   * while still keeping the feature active. */
+  if (compiler->n_insns < 5) {
+    compiler->unroll_shift = 0;
+  }
+
   if (0) {
     compiler->need_mask_regs = TRUE;
   }
@@ -260,6 +266,14 @@ orc_neon_load_constants_outer (OrcCompiler *compiler)
     if (!(insn->flags & ORC_INSN_FLAG_INVARIANT)) continue;
 
     ORC_ASM_CODE(compiler,"# %d: %s\n", i, insn->opcode->name);
+
+    compiler->insn_shift = compiler->loop_shift;
+    if (insn->flags & ORC_INSTRUCTION_FLAG_X2) {
+      compiler->insn_shift += 1;
+    }
+    if (insn->flags & ORC_INSTRUCTION_FLAG_X4) {
+      compiler->insn_shift += 2;
+    }
 
     rule = insn->rule;
     if (rule && rule->emit) {
@@ -484,7 +498,7 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
 
 #define ORC_NEON_ALIGNED_DEST_CUTOFF 64
 
-  if (compiler->loop_shift > 0) {
+  if (compiler->loop_shift > 0 && compiler->n_insns < 5) {
     orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
     orc_arm_emit_cmp_imm (compiler, ORC_ARM_A3, ORC_NEON_ALIGNED_DEST_CUTOFF);
@@ -677,7 +691,13 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
 
   orc_neon_emit_epilogue (compiler);
 
-  orc_arm_emit_align (compiler, 3);
+  orc_arm_emit_align (compiler, 4);
+
+  orc_arm_emit_label (compiler, 20);
+  orc_arm_emit_data (compiler, 0x07060706);
+  orc_arm_emit_data (compiler, 0x07060706);
+  orc_arm_emit_data (compiler, 0x0f0e0f0e);
+  orc_arm_emit_data (compiler, 0x0f0e0f0e);
 
   orc_arm_do_fixups (compiler);
 
@@ -734,6 +754,14 @@ orc_neon_emit_loop (OrcCompiler *compiler, int unroll_index)
       }
     }
 
+    compiler->insn_shift = compiler->loop_shift;
+    if (insn->flags & ORC_INSTRUCTION_FLAG_X2) {
+      compiler->insn_shift += 1;
+    }
+    if (insn->flags & ORC_INSTRUCTION_FLAG_X4) {
+      compiler->insn_shift += 2;
+    }
+
     rule = insn->rule;
     if (rule && rule->emit) {
 #if 0
@@ -763,8 +791,8 @@ orc_neon_emit_loop (OrcCompiler *compiler, int unroll_index)
     }
   }
 
-#if 0
-  for(k=0;k<compiler->n_vars;k++){
+  for(k=0;k<ORC_N_COMPILER_VARIABLES;k++){
+    if (compiler->vars[k].name == NULL) continue;
     if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
         compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
       if (compiler->vars[k].ptr_register) {
@@ -780,7 +808,6 @@ orc_neon_emit_loop (OrcCompiler *compiler, int unroll_index)
       }
     }
   }
-#endif
 }
 
 #define NEON_BINARY(code,a,b,c) \
