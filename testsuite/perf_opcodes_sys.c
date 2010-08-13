@@ -47,12 +47,18 @@ test_opcode_src (OrcStaticOpcode *opcode)
   if (opcode->dest_size[1] != 0) {
     orc_program_add_destination (p, opcode->dest_size[1], "d2");
   }
-  orc_program_add_source (p, opcode->src_size[0], "s1");
   if (opcode->src_size[1] != 0) {
+    orc_program_add_source (p, opcode->src_size[0], "s1");
     if (opcode->flags & ORC_STATIC_OPCODE_SCALAR) {
       orc_program_add_constant (p, opcode->src_size[1], 1, "s2");
     } else {
       orc_program_add_source (p, opcode->src_size[1], "s2");
+    }
+  } else {
+    if (opcode->flags & ORC_STATIC_OPCODE_SCALAR) {
+      orc_program_add_constant (p, opcode->src_size[0], 1, "s1");
+    } else {
+      orc_program_add_source (p, opcode->src_size[0], "s1");
     }
   }
 
