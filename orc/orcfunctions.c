@@ -156,7 +156,7 @@ orc_memcpy (void * d1, const void * s1, int n)
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 1, "s1");
 
-      orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1, -1);
+      orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1, ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -239,7 +239,7 @@ orc_memset (void * d1, int p1, int n)
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_parameter (p, 1, "p1");
 
-      orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1, -1);
+      orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1, ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }

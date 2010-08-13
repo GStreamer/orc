@@ -438,6 +438,97 @@ emulate_loadpb (OrcOpcodeExecutor *ex, int offset, int n)
 }
 
 void
+emulate_ldresnearb (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_int8 * ptr0;
+  const orc_int8 * ptr4;
+  orc_int8 var32;
+
+  ptr0 = (orc_int8 *)ex->dest_ptrs[0];
+  ptr4 = (orc_int8 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: ldresnearb */
+    var32 = ptr4[(((orc_union32 *)(ex->src_ptrs[1]))->i + (offset + i)*((orc_union32 *)(ex->src_ptrs[2]))->i)>>16];
+    /* 1: storeb */
+    ptr0[i] = var32;
+  }
+
+}
+
+void
+emulate_ldresnearl (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union32 * ptr0;
+  const orc_union32 * ptr4;
+  orc_union32 var32;
+
+  ptr0 = (orc_union32 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union32 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: ldresnearl */
+    var32 = ptr4[(((orc_union32 *)(ex->src_ptrs[1]))->i + (offset + i)*((orc_union32 *)(ex->src_ptrs[2]))->i)>>16];
+    /* 1: storel */
+    ptr0[i] = var32;
+  }
+
+}
+
+void
+emulate_ldreslinb (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_int8 * ptr0;
+  const orc_int8 * ptr4;
+  orc_int8 var32;
+
+  ptr0 = (orc_int8 *)ex->dest_ptrs[0];
+  ptr4 = (orc_int8 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: ldreslinb */
+    {
+    int tmp = ((orc_union32 *)(ex->src_ptrs[1]))->i + (offset + i) * ((orc_union32 *)(ex->src_ptrs[2]))->i;
+    var32 = ((orc_uint8)ptr4[tmp>>16] * (256-((tmp>>8)&0xff)) + (orc_uint8)ptr4[(tmp>>16)+1] * ((tmp>>8)&0xff))>>8;
+    }
+    /* 1: storeb */
+    ptr0[i] = var32;
+  }
+
+}
+
+void
+emulate_ldreslinl (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union32 * ptr0;
+  const orc_union32 * ptr4;
+  orc_union32 var32;
+
+  ptr0 = (orc_union32 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union32 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: ldreslinl */
+    {
+    int tmp = ((orc_union32 *)(ex->src_ptrs[1]))->i + (offset + i) * ((orc_union32 *)(ex->src_ptrs[2]))->i;
+    orc_union32 a = ptr4[tmp>>16];
+    orc_union32 b = ptr4[(tmp>>16)+1];
+    var32.x4[0] = a.x4[0] * (256-((tmp>>8)&0xff)) + b.x4[0] * ((tmp>>8)&0xff);
+    var32.x4[1] = a.x4[1] * (256-((tmp>>8)&0xff)) + b.x4[1] * ((tmp>>8)&0xff);
+    var32.x4[2] = a.x4[2] * (256-((tmp>>8)&0xff)) + b.x4[2] * ((tmp>>8)&0xff);
+    var32.x4[3] = a.x4[3] * (256-((tmp>>8)&0xff)) + b.x4[3] * ((tmp>>8)&0xff);
+    }
+    /* 1: storel */
+    ptr0[i] = var32;
+  }
+
+}
+
+void
 emulate_maxsb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;

@@ -725,6 +725,73 @@ c_rule_loadupib (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+c_rule_ldresnearX (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char src1[40];
+  char src2[40];
+
+  c_get_name_int (src1, p, insn, insn->src_args[1]);
+  c_get_name_int (src2, p, insn, insn->src_args[2]);
+
+  if (p->target_flags & ORC_TARGET_C_OPCODE &&
+      !(insn->flags & ORC_INSN_FLAG_ADDED)) {
+    ORC_ASM_CODE(p,"    var%d = ptr%d[(%s + (offset + i)*%s)>>16];\n",
+        insn->dest_args[0], insn->src_args[0], src1, src2);
+  } else {
+    ORC_ASM_CODE(p,"    var%d = ptr%d[(%s + i*%s)>>16];\n",
+        insn->dest_args[0], insn->src_args[0], src1, src2);
+  }
+}
+
+static void
+c_rule_ldreslinb (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char src1[40];
+  char src2[40];
+
+  c_get_name_int (src1, p, insn, insn->src_args[1]);
+  c_get_name_int (src2, p, insn, insn->src_args[2]);
+
+  ORC_ASM_CODE(p,"    {\n");
+  if (p->target_flags & ORC_TARGET_C_OPCODE &&
+      !(insn->flags & ORC_INSN_FLAG_ADDED)) {
+    ORC_ASM_CODE(p,"    int tmp = %s + (offset + i) * %s;\n", src1, src2);
+  } else {
+    ORC_ASM_CODE(p,"    int tmp = %s + i * %s;\n", src1, src2);
+  }
+  ORC_ASM_CODE(p,"    var%d = ((orc_uint8)ptr%d[tmp>>16] * (256-((tmp>>8)&0xff)) + (orc_uint8)ptr%d[(tmp>>16)+1] * ((tmp>>8)&0xff))>>8;\n",
+      insn->dest_args[0], insn->src_args[0], insn->src_args[0]);
+  ORC_ASM_CODE(p,"    }\n");
+}
+
+static void
+c_rule_ldreslinl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int i;
+  char src1[40];
+  char src2[40];
+
+  c_get_name_int (src1, p, insn, insn->src_args[1]);
+  c_get_name_int (src2, p, insn, insn->src_args[2]);
+
+
+  ORC_ASM_CODE(p,"    {\n");
+  if (p->target_flags & ORC_TARGET_C_OPCODE &&
+      !(insn->flags & ORC_INSN_FLAG_ADDED)) {
+    ORC_ASM_CODE(p,"    int tmp = %s + (offset + i) * %s;\n", src1, src2);
+  } else {
+    ORC_ASM_CODE(p,"    int tmp = %s + i * %s;\n", src1, src2);
+  }
+  ORC_ASM_CODE(p,"    orc_union32 a = ptr%d[tmp>>16];\n", insn->src_args[0]);
+  ORC_ASM_CODE(p,"    orc_union32 b = ptr%d[(tmp>>16)+1];\n", insn->src_args[0]);
+  for (i=0;i<4;i++){
+    ORC_ASM_CODE(p,"    var%d.x4[%d] = a.x4[%d] * (256-((tmp>>8)&0xff)) + b.x4[%d] * ((tmp>>8)&0xff);\n",
+        insn->dest_args[0], i, i, i);
+  }
+  ORC_ASM_CODE(p,"    }\n");
+}
+
+static void
 c_rule_storeX (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   if (p->target_flags & ORC_TARGET_C_OPCODE &&
@@ -936,6 +1003,10 @@ orc_c_init (void)
   orc_rule_register (rule_set, "loadoffl", c_rule_loadoffX, NULL);
   orc_rule_register (rule_set, "loadupdb", c_rule_loadupdb, NULL);
   orc_rule_register (rule_set, "loadupib", c_rule_loadupib, NULL);
+  orc_rule_register (rule_set, "ldresnearb", c_rule_ldresnearX, NULL);
+  orc_rule_register (rule_set, "ldresnearl", c_rule_ldresnearX, NULL);
+  orc_rule_register (rule_set, "ldreslinb", c_rule_ldreslinb, NULL);
+  orc_rule_register (rule_set, "ldreslinl", c_rule_ldreslinl, NULL);
   orc_rule_register (rule_set, "storeb", c_rule_storeX, NULL);
   orc_rule_register (rule_set, "storew", c_rule_storeX, NULL);
   orc_rule_register (rule_set, "storel", c_rule_storeX, NULL);
