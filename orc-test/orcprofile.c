@@ -40,7 +40,7 @@
 #include <math.h>
 
 /* not used because it requires a kernel patch */
-#undef USE_CORTEX_A8_COUNTER
+/* #undef USE_CORTEX_A8_COUNTER */
 
 /**
  * SECTION:orcprofile
