@@ -847,7 +847,7 @@ orc_test_performance_full (OrcProgram *program, int flags,
     n = program->constant_n;
   } else {
     //n = 64 + (orc_random(&rand_context)&0xf);
-    n = 10000;
+    n = 1000;
   }
 
   ex = orc_executor_new (program);
