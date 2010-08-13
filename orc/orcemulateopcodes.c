@@ -2603,7 +2603,7 @@ emulate_storeq (OrcOpcodeExecutor *ex, int offset, int n)
 }
 
 void
-emulate_splatw0q (OrcOpcodeExecutor *ex, int offset, int n)
+emulate_splatw3q (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
   orc_union64 * ptr0;
@@ -2617,7 +2617,7 @@ emulate_splatw0q (OrcOpcodeExecutor *ex, int offset, int n)
   for (i = 0; i < n; i++) {
     /* 0: loadq */
     var32 = ptr4[i];
-    /* 1: splatw0q */
+    /* 1: splatw3q */
     var33.i = ((((orc_uint64)var32.i)>>48) << 48) | ((((orc_uint64)var32.i)>>48)<<32) | ((((orc_uint64)var32.i)>>48) << 16) | ((((orc_uint64)var32.i)>>48));
     /* 2: storeq */
     ptr0[i] = var33;

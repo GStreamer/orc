@@ -916,7 +916,7 @@ sse_rule_convql (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
-sse_rule_splatw0q (OrcCompiler *p, void *user, OrcInstruction *insn)
+sse_rule_splatw3q (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[0]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
@@ -2330,7 +2330,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "subusl", sse_rule_subusl_slow, NULL);
   orc_rule_register (rule_set, "convhwb", sse_rule_convhwb, NULL);
   orc_rule_register (rule_set, "convhlw", sse_rule_convhlw, NULL);
-  orc_rule_register (rule_set, "splatw0q", sse_rule_splatw0q, NULL);
+  orc_rule_register (rule_set, "splatw3q", sse_rule_splatw3q, NULL);
   orc_rule_register (rule_set, "splatbw", sse_rule_splatbw, NULL);
   orc_rule_register (rule_set, "splatbl", sse_rule_splatbl, NULL);
   orc_rule_register (rule_set, "div255w", sse_rule_div255w, NULL);

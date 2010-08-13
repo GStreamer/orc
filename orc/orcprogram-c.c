@@ -824,7 +824,7 @@ c_rule_splatbl (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
-c_rule_splatw0q (OrcCompiler *p, void *user, OrcInstruction *insn)
+c_rule_splatw3q (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   char dest[40], src[40];
 
@@ -948,7 +948,7 @@ orc_c_init (void)
   orc_rule_register (rule_set, "splitwb", c_rule_splitwb, NULL);
   orc_rule_register (rule_set, "splatbw", c_rule_splatbw, NULL);
   orc_rule_register (rule_set, "splatbl", c_rule_splatbl, NULL);
-  orc_rule_register (rule_set, "splatw0q", c_rule_splatw0q, NULL);
+  orc_rule_register (rule_set, "splatw3q", c_rule_splatw3q, NULL);
   orc_rule_register (rule_set, "div255w", c_rule_div255w, NULL);
   orc_rule_register (rule_set, "divluw", c_rule_divluw, NULL);
 }

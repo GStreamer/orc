@@ -1791,7 +1791,7 @@ addusb d1, d1, t2
 
 x4 convubw t1, s1
 x4 convubw t2, s2
-splatw0q t2, t2
+splatw3q t2, t2
 x4 mullw t1, t1, t2
 x4 div255w t1, t1
 x4 convwb t3, t1
@@ -1819,7 +1819,7 @@ x4 addusb d1, d1, s1
 #compover d1, d1, t1
 x4 convubw t1, s1
 x4 convubw t2, s2
-splatw0q t2, t2
+splatw3q t2, t2
 x4 mullw t1, t1, t2
 x4 div255w t1, t1
 x4 convwb t3, t1
@@ -1827,7 +1827,7 @@ x4 convwb t3, t1
 loadl d, d1
 x4 convubw d_wide, d
 x4 xorw t1, t1, 0x00ff
-splatw0q t2, t1
+splatw3q t2, t1
 x4 mullw t1, d_wide, t2
 x4 div255w t1, t1
 x4 convwb d, t1
@@ -1848,7 +1848,7 @@ x4 convubw t1, s
 loadl d, d1
 x4 convubw d_wide, d
 x4 xorw t1, t1, 0x00ff
-splatw0q t2, t1
+splatw3q t2, t1
 x4 mullw t1, d_wide, t2
 x4 div255w t1, t1
 x4 convwb d, t1
@@ -1867,12 +1867,12 @@ x4 addusb d1, d, s
 
 x4 convubw t1, s1
 x4 convubw t2, s2
-splatw0q t2, t2
+splatw3q t2, t2
 x4 mullw t1, t1, t2
 x4 div255w t1, t1
 # ORC_MULDIV_255((s),(m)), m is from dest
 x4 convubw d_wide, d1
-splatw0q t2, d_wide
+splatw3q t2, d_wide
 x4 mullw t1, t1, t2
 x4 div255w t1, t1
 x4 convwb d1, t1
@@ -1891,7 +1891,7 @@ x4 convwb d1, t1
 x4 convubw t1, s1
 # ORC_MULDIV_255((s),(m)), m is from dest
 x4 convubw d_wide, d1
-splatw0q t2, d_wide
+splatw3q t2, d_wide
 x4 mullw t1, t1, t2
 x4 div255w t1, t1
 x4 convwb d1, t1
@@ -1909,12 +1909,12 @@ x4 convwb d1, t1
 
 x4 convubw t1, s1
 x4 convubw t2, s2
-splatw0q t2, t2
+splatw3q t2, t2
 x4 mullw t1, t1, t2
 x4 div255w t1, t1
 # ORC_MULDIV_255((s),(m)), m is from dest
 x4 convubw d_wide, d1
-splatw0q t2, d_wide
+splatw3q t2, d_wide
 x4 xorw t2, t2, 0x00ff
 x4 mullw t1, t1, t2
 x4 div255w t1, t1
@@ -1934,7 +1934,7 @@ x4 convwb d1, t1
 x4 convubw t1, s1
 # ORC_MULDIV_255((s),(m)), m is from dest
 x4 convubw d_wide, d1
-splatw0q t2, d_wide
+splatw3q t2, d_wide
 x4 xorw t2, t2, 0x00ff
 x4 mullw t1, t1, t2
 x4 div255w t1, t1
@@ -1958,18 +1958,18 @@ x4 convwb d1, t1
 
 x4 convubw t1, s1
 x4 convubw t2, s2
-splatw0q t2, t2
+splatw3q t2, t2
 x4 mullw t1, t1, t2
 x4 div255w t1, t1
 
 x4 convubw d_wide, d1
-splatw0q t2, d_wide
+splatw3q t2, d_wide
 x4 mullw t3, t1, t2
 x4 div255w t3, t3
 x4 convwb t4, t3
 
 x4 convubw d_wide, d1
-splatw0q t2, t1
+splatw3q t2, t1
 x4 xorw t2, t2, 0x00ff
 x4 mullw t1, d_wide, t2
 x4 div255w t1, t1
@@ -1993,13 +1993,13 @@ x4 addusb d1, t4, t5
 x4 convubw t1, s1
 
 x4 convubw d_wide, d1
-splatw0q t2, d_wide
+splatw3q t2, d_wide
 x4 mullw t3, t1, t2
 x4 div255w t3, t3
 x4 convwb t4, t3
 
 x4 convubw d_wide, d1
-splatw0q t2, t1
+splatw3q t2, t1
 x4 xorw t2, t2, 0x00ff
 x4 mullw t1, d_wide, t2
 x4 div255w t1, t1
@@ -2024,19 +2024,19 @@ x4 addusb d1, t4, t5
 
 x4 convubw t1, s1
 x4 convubw t2, s2
-splatw0q t2, t2
+splatw3q t2, t2
 x4 mullw t1, t1, t2
 x4 div255w t1, t1
 
 x4 convubw d_wide, d1
-splatw0q t2, d_wide
+splatw3q t2, d_wide
 x4 xorw t2, t2, 0x00ff
 x4 mullw t3, t1, t2
 x4 div255w t3, t3
 x4 convwb t4, t3
 
 x4 convubw d_wide, d1
-splatw0q t2, t1
+splatw3q t2, t1
 x4 xorw t2, t2, 0x00ff
 x4 mullw t1, d_wide, t2
 x4 div255w t1, t1
@@ -2059,14 +2059,14 @@ x4 addusb d1, t4, t5
 
 x4 convubw t1, s1
 x4 convubw d_wide, d1
-splatw0q t2, d_wide
+splatw3q t2, d_wide
 x4 xorw t2, t2, 0x00ff
 x4 mullw t3, t1, t2
 x4 div255w t3, t3
 x4 convwb t4, t3
 
 x4 convubw d_wide, d1
-splatw0q t2, t1
+splatw3q t2, t1
 x4 xorw t2, t2, 0x00ff
 x4 mullw t1, d_wide, t2
 x4 div255w t1, t1
@@ -2086,7 +2086,7 @@ x4 addusb d1, t4, t5
 
 x4 convubw t1, s1
 x4 convubw t2, s2
-#splatw0q t2, t2
+#splatw3q t2, t2
 x4 mullw t1, t1, t2
 x4 div255w t1, t1
 x4 convwb t3, t1
@@ -2115,7 +2115,7 @@ x4 addusb d1, d1, s1
 
 x4 convubw s_wide, s1
 x4 convubw m_wide, s2
-splatw0q xa, s_wide
+splatw3q xa, s_wide
 x4 mullw s_wide, s_wide, m_wide
 x4 div255w s_wide, s_wide
 x4 convwb s, s_wide
@@ -2144,7 +2144,7 @@ x4 addusb d1, d, s
 .temp 4 s
 
 x4 convubw s_wide, s1
-splatw0q xa, s_wide
+splatw3q xa, s_wide
 x4 convwb s, s_wide
 x4 copyw m_wide, xa
 loadl d, d1
@@ -2177,7 +2177,7 @@ x4 convwb t3, t1
 loadl d, d1
 x4 convubw d_wide, d
 x4 xorw t1, t1, 0x00ff
-splatw0q t2, t1
+splatw3q t2, t1
 x4 mullw t1, d_wide, t2
 x4 div255w t1, t1
 x4 convwb d, t1
@@ -2201,7 +2201,7 @@ x4 addusb d1, d, t3
 
 x4 convubw s_wide, p1
 x4 convubw m_wide, s1
-splatw0q xa, s_wide
+splatw3q xa, s_wide
 x4 mullw s_wide, s_wide, m_wide
 x4 div255w s_wide, s_wide
 x4 convwb s, s_wide

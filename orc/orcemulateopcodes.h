@@ -104,7 +104,7 @@ void emulate_xorl (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_loadq (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_loadpq (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_storeq (OrcOpcodeExecutor *ex, int i, int n);
-void emulate_splatw0q (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_splatw3q (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_convsbw (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_convubw (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_splatbw (OrcOpcodeExecutor *ex, int i, int n);

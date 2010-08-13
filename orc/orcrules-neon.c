@@ -1977,7 +1977,7 @@ orc_neon_rule_splatbl (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
-orc_neon_rule_splatw0q (OrcCompiler *p, void *user, OrcInstruction *insn)
+orc_neon_rule_splatw3q (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   orc_uint32 code;
   int offset = 0;
@@ -2583,7 +2583,7 @@ orc_compiler_neon_register_rules (OrcTarget *target)
 
   REG(splatbw);
   REG(splatbl);
-  REG(splatw0q);
+  REG(splatw3q);
   REG(div255w);
 
   orc_rule_register (rule_set, "loadpb", neon_rule_loadpX, (void *)1);
