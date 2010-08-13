@@ -219,7 +219,10 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
               token[offset], n_args);
         }
 
-        if (n_tokens - offset == 4) {
+        if (n_tokens - offset == 5) {
+          orc_program_append_str_2 (parser->program, token[offset], flags,
+              token[offset+1], token[offset+2], token[offset+3], token[offset+4]);
+        } else if (n_tokens - offset == 4) {
           char *end;
           int imm = strtol (token[offset + 3], &end, 0);
           if (end != token[offset + 3]) {

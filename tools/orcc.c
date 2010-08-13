@@ -838,6 +838,11 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
       }
     } else {
       if (p->vars[insn->src_args[1]].size != 0) {
+        fprintf(output, "      orc_program_append_2 (p, \"%s\", %d, %s, %s, %s, %s);\n",
+            insn->opcode->name, insn->flags, enumnames[insn->dest_args[0]],
+            enumnames[insn->src_args[0]], enumnames[insn->src_args[1]],
+            enumnames[insn->src_args[2]]);
+      } else if (p->vars[insn->src_args[1]].size != 0) {
         fprintf(output, "      orc_program_append_2 (p, \"%s\", %d, %s, %s, %s, -1);\n",
             insn->opcode->name, insn->flags, enumnames[insn->dest_args[0]],
             enumnames[insn->src_args[0]], enumnames[insn->src_args[1]]);

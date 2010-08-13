@@ -125,43 +125,58 @@ main (int argc, char *argv[])
       char s[40];
       OrcProgram *program;
       OrcStaticOpcode *opcode = opcode_set->opcodes + i;
+      int args[4] = { -1, -1, -1, -1 };
+      int n_args = 0;
 
       program = orc_program_new ();
 
       sprintf(s, "emulate_%s", opcode->name);
       orc_program_set_name (program, s);
 
-      if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
-        orc_program_add_accumulator (program, opcode->dest_size[0], "d1");
-      } else {
-        orc_program_add_destination (program, opcode->dest_size[0], "d1");
+      if (opcode->dest_size[0] != 0) {
+        if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
+          args[n_args++] =
+            orc_program_add_accumulator (program, opcode->dest_size[0], "d1");
+        } else {
+          args[n_args++] =
+            orc_program_add_destination (program, opcode->dest_size[0], "d1");
+        }
       }
-      if (opcode->dest_size[1]) {
-        orc_program_add_destination (program, opcode->dest_size[1], "d2");
+      if (opcode->dest_size[1] != 0) {
+        args[n_args++] =
+          orc_program_add_destination (program, opcode->dest_size[1], "d2");
       }
-      if (opcode->src_size[1]) {
-        orc_program_add_source (program, opcode->src_size[0], "s1");
+      if (opcode->src_size[0] != 0) {
+        if (opcode->src_size[1] == 0 &&
+            opcode->flags & ORC_STATIC_OPCODE_SCALAR) {
+          args[n_args++] =
+            orc_program_add_parameter (program, opcode->src_size[0], "s1");
+        } else {
+          args[n_args++] =
+            orc_program_add_source (program, opcode->src_size[0], "s1");
+        }
+      }
+      if (opcode->src_size[1] != 0) {
         if (opcode->flags & ORC_STATIC_OPCODE_SCALAR) {
-          orc_program_add_parameter (program, opcode->src_size[1], "s2");
+          args[n_args++] =
+            orc_program_add_parameter (program, opcode->src_size[1], "s2");
         } else {
-          orc_program_add_source (program, opcode->src_size[1], "s2");
+          args[n_args++] =
+            orc_program_add_source (program, opcode->src_size[1], "s2");
         }
-      } else {
+      }
+      if (opcode->src_size[2] != 0) {
         if (opcode->flags & ORC_STATIC_OPCODE_SCALAR) {
-          orc_program_add_parameter (program, opcode->src_size[0], "s1");
+          args[n_args++] =
+            orc_program_add_parameter (program, opcode->src_size[2], "s3");
         } else {
-          orc_program_add_source (program, opcode->src_size[0], "s1");
+          args[n_args++] =
+            orc_program_add_source (program, opcode->src_size[2], "s3");
         }
       }
-      if (opcode->src_size[1]) {
-        orc_program_append_str (program, opcode->name, "d1", "s1", "s2");
-      } else {
-        if (opcode->dest_size[1]) {
-          orc_program_append_dds_str (program, opcode->name, "d1", "d2", "s1");
-        } else {
-          orc_program_append_ds_str (program, opcode->name, "d1", "s1");
-        }
-      }
+
+      orc_program_append_2 (program, opcode->name, 0, args[0], args[1],
+          args[2], args[3]);
 
       output_code_emulate (program, output);
     }
