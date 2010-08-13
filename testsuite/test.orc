@@ -1697,12 +1697,7 @@ x4 addusb d1, s1, s2
 .source 4 s1
 .param 4 p1
 
-x4 addusb d1, s1, s2
-
-
-
-
-
+x4 addusb d1, s1, p1
 
 
 .function orc_splat_u16
@@ -2214,4 +2209,22 @@ x4 mullw t1, d_wide, m_wide
 x4 div255w t1, t1
 x4 convwb d, t1
 x4 addusb d1, d, s
+
+
+.function cogorc_resample_horiz_1tap
+.dest 1 d1
+.source 1 s1
+.param 2 p1
+.param 2 p2
+
+ldresnearb d1, s1, p1, p2
+
+
+.function cogorc_resample_horiz_2tap
+.dest 1 d1
+.source 1 s1
+.param 4 p1
+.param 4 p2
+
+ldreslinb d1, s1, p1, p2
 
