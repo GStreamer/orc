@@ -218,7 +218,12 @@ orc_compiler_sse_init (OrcCompiler *compiler)
   compiler->loop_shift--;
 #endif
 
-  compiler->unroll_shift = 1;
+  /* This limit is arbitrary, but some large functions run slightly
+     slower when unrolled (ginger Core2 6,15,6), and only some small
+     functions run faster when unrolled.  Most are the same speed. */
+  if (compiler->n_insns <= 10) {
+    compiler->unroll_shift = 1;
+  }
   compiler->alloc_loop_counter = TRUE;
   compiler->allow_gp_on_stack = TRUE;
 }
