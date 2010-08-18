@@ -661,6 +661,8 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
     free (compiler->asm_code);
     compiler->asm_code = NULL;
     compiler->asm_code_len = 0;
+    memset (compiler->labels, 0, sizeof (compiler->labels));
+    compiler->n_fixups = 0;
   }
 
   orc_x86_emit_prologue (compiler);
