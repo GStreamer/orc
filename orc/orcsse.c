@@ -138,6 +138,44 @@ orc_sse_emit_pshuflw (OrcCompiler *p, int shuf, int src, int dest)
 }
 
 void
+orc_sse_emit_palignr (OrcCompiler *p, int align, int src, int dest)
+{
+  ORC_ASM_CODE(p,"  palignr $%d, %%%s, %%%s\n", align,
+      orc_x86_get_regname_sse(src),
+      orc_x86_get_regname_sse(dest));
+  *p->codeptr++ = 0x66;
+  orc_x86_emit_rex (p, 0, dest, 0, src);
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x3a;
+  *p->codeptr++ = 0x0f;
+  orc_x86_emit_modrm_reg (p, src, dest);
+  *p->codeptr++ = align;
+}
+
+void
+orc_sse_emit_pinsrw_memoffset (OrcCompiler *p, int imm, int offset,
+    int src, int dest)
+{
+  ORC_ASM_CODE(p,"  pinsrw $%d, %d(%%%s), %%%s\n", imm, offset,
+      orc_x86_get_regname(src),
+      orc_x86_get_regname_sse(dest));
+  *p->codeptr++ = 0x66;
+  orc_x86_emit_rex (p, 0, dest, 0, src);
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0xc4;
+  orc_x86_emit_modrm_memoffset (p, dest, offset, src);
+  *p->codeptr++ = imm;
+
+}
+
+void
+orc_sse_emit_pextrw_memoffset (OrcCompiler *p, int imm, int src,
+    int offset, int dest)
+{
+
+}
+
+void
 orc_sse_emit_shiftimm (OrcCompiler *p, const char *insn_name, int code,
     int modrm_code, int shift, int reg)
 {

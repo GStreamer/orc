@@ -65,6 +65,9 @@ void orc_sse_emit_0f (OrcCompiler *p, const char *insn_name, int code,
 void orc_sse_emit_pshufd (OrcCompiler *p, int shuf, int src, int dest);
 void orc_sse_emit_pshuflw (OrcCompiler *p, int shuf, int src, int dest);
 void orc_sse_emit_pshufhw (OrcCompiler *p, int shuf, int src, int dest);
+void orc_sse_emit_palignr (OrcCompiler *p, int align, int src, int dest);
+void orc_sse_emit_pinsrw_memoffset (OrcCompiler *p, int imm, int offset, int src, int dest);
+void orc_sse_emit_pextrw_memoffset (OrcCompiler *p, int imm, int src, int offset, int dest);
 void orc_sse_emit_shiftimm (OrcCompiler *p, const char *insn_name,
     int code, int modrm_code, int shift, int reg);
 
@@ -107,12 +110,12 @@ unsigned int orc_sse_get_cpu_flags (void);
 #define orc_sse_emit_psrldq(p,a,b)     orc_sse_emit_shiftimm (p, "psrldq", 0x73, 3, a, b)
 #define orc_sse_emit_pslldq(p,a,b)     orc_sse_emit_shiftimm (p, "pslldq", 0x73, 7, a, b)
 
+#define orc_sse_emit_psrlq_reg(p,a,b)      orc_sse_emit_660f (p, "psrlq", 0xd3, a, b)
+
 #define orc_sse_emit_pcmpeqb(p,a,b)    orc_sse_emit_660f (p, "pcmpeqb", 0x74, a, b)
 #define orc_sse_emit_pcmpeqw(p,a,b)    orc_sse_emit_660f (p, "pcmpeqw", 0x75, a, b)
 #define orc_sse_emit_pcmpeqd(p,a,b)    orc_sse_emit_660f (p, "pcmpeqd", 0x76, a, b)
 
-#define orc_sse_emit_pinsrw(p,a,b)     orc_sse_emit_660f (p, "pinsrw", 0xc4, a, b)
-#define orc_sse_emit_pextrw(p,a,b)     orc_sse_emit_660f (p, "pextrw", 0xc5, a, b)
 
 #define orc_sse_emit_paddq(p,a,b)      orc_sse_emit_660f (p, "paddq", 0xd4, a, b)
 #define orc_sse_emit_pmullw(p,a,b)     orc_sse_emit_660f (p, "pmullw", 0xd5, a, b)
@@ -172,6 +175,7 @@ unsigned int orc_sse_get_cpu_flags (void);
 #define orc_sse_emit_pabsb(p,a,b)      orc_sse_emit_660f (p, "pabsb", 0x381c, a, b)
 #define orc_sse_emit_pabsw(p,a,b)      orc_sse_emit_660f (p, "pabsw", 0x381d, a, b)
 #define orc_sse_emit_pabsd(p,a,b)      orc_sse_emit_660f (p, "pabsd", 0x381e, a, b)
+
 
 /* SSE4.1 instructions */
 #define orc_sse_emit_pmovsxbw(p,a,b)   orc_sse_emit_660f (p, "pmovsxbw", 0x3820, a, b)
