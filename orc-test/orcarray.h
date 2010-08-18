@@ -20,7 +20,7 @@ struct _OrcArray {
   int alloc_len;
 };
 
-OrcArray *orc_array_new (int n, int m, int element_size);
+OrcArray *orc_array_new (int n, int m, int element_size, int misalignment);
 void orc_array_free (OrcArray *array);
 
 void orc_array_set_pattern (OrcArray *array, int value);

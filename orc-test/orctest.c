@@ -508,6 +508,7 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
   int acc_exec = 0, acc_emul = 0;
   int ret = ORC_TEST_OK;
   int bad = 0;
+  int misalignment;
 
   ORC_DEBUG ("got here");
 
@@ -547,17 +548,23 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
   orc_executor_set_m (ex, m);
   ORC_DEBUG("size %d %d", ex->n, ex->params[ORC_VAR_A1]);
 
+  misalignment = 0;
   for(i=0;i<ORC_N_VARIABLES;i++){
     if (program->vars[i].name == NULL) continue;
 
     if (program->vars[i].vartype == ORC_VAR_TYPE_SRC) {
-      src[i-ORC_VAR_S1] = orc_array_new (n, m, program->vars[i].size);
+      src[i-ORC_VAR_S1] = orc_array_new (n, m, program->vars[i].size,
+          misalignment);
       orc_array_set_random (src[i-ORC_VAR_S1], &rand_context);
+      misalignment++;
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
-      dest_exec[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size);
+      dest_exec[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size,
+          misalignment);
       orc_array_set_pattern (dest_exec[i], ORC_OOB_VALUE);
-      dest_emul[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size);
+      dest_emul[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size,
+          misalignment);
       orc_array_set_pattern (dest_emul[i], ORC_OOB_VALUE);
+      misalignment++;
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_PARAM) {
       orc_executor_set_param (ex, i, 2);
     }
@@ -826,6 +833,7 @@ orc_test_performance_full (OrcProgram *program, int flags,
   OrcProfile prof;
   double ave, std;
   OrcTarget *target;
+  int misalignment;
 
   ORC_DEBUG ("got here");
 
@@ -864,17 +872,23 @@ orc_test_performance_full (OrcProgram *program, int flags,
   orc_executor_set_m (ex, m);
   ORC_DEBUG("size %d %d", ex->n, ex->params[ORC_VAR_A1]);
 
+  misalignment = 0;
   for(i=0;i<ORC_N_VARIABLES;i++){
     if (program->vars[i].name == NULL) continue;
 
     if (program->vars[i].vartype == ORC_VAR_TYPE_SRC) {
-      src[i-ORC_VAR_S1] = orc_array_new (n, m, program->vars[i].size);
+      src[i-ORC_VAR_S1] = orc_array_new (n, m, program->vars[i].size,
+          misalignment);
       orc_array_set_random (src[i-ORC_VAR_S1], &rand_context);
+      misalignment++;
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
-      dest_exec[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size);
+      dest_exec[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size,
+          misalignment);
       orc_array_set_pattern (dest_exec[i], ORC_OOB_VALUE);
-      dest_emul[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size);
+      dest_emul[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size,
+          misalignment);
       orc_array_set_pattern (dest_emul[i], ORC_OOB_VALUE);
+      misalignment++;
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_PARAM) {
       orc_executor_set_param (ex, i, 2);
     }

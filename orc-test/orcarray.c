@@ -18,10 +18,15 @@
 #define isnan(x) _isnan(x)
 #endif
 
+#define ALIGNMENT 64
+#define MISALIGNMENT 0
+
 OrcArray *
-orc_array_new (int n, int m, int element_size)
+orc_array_new (int n, int m, int element_size, int misalignment)
 {
   OrcArray *ar;
+  void *data;
+  int ret;
 
   ar = malloc (sizeof(OrcArray));
   memset (ar, 0, sizeof(OrcArray));
@@ -31,10 +36,14 @@ orc_array_new (int n, int m, int element_size)
   ar->element_size = element_size;
 
   ar->stride = (n*element_size + EXTEND_STRIDE);
-  ar->alloc_len = ar->stride * (m+2*EXTEND_ROWS);
-  ar->alloc_data = malloc (ar->alloc_len);
+  ar->stride = (ar->stride + (ALIGNMENT-1)) & (~(ALIGNMENT-1));
+  ar->alloc_len = ar->stride * (m+2*EXTEND_ROWS) + (ALIGNMENT * element_size);
 
-  ar->data = ORC_PTR_OFFSET (ar->alloc_data, ar->stride * EXTEND_ROWS);
+  ret = posix_memalign (&data, ALIGNMENT, ar->alloc_len);
+  ar->alloc_data = data;
+
+  ar->data = ORC_PTR_OFFSET (ar->alloc_data,
+      ar->stride * EXTEND_ROWS + element_size * misalignment);
   
   return ar;
 }
