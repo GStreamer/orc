@@ -834,7 +834,7 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
     }
   }
 
-  if (compiler->program->is_2d) {
+  if (compiler->program->is_2d && compiler->program->constant_m != 1) {
     sse_add_strides (compiler);
 
     orc_x86_emit_add_imm_memoffset (compiler, 4, -1,
