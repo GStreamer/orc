@@ -77,9 +77,13 @@ sse_rule_loadX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
       orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, dest->alloc);
       break;
     case 2:
+      orc_sse_emit_pxor (compiler, dest->alloc, dest->alloc);
+      orc_sse_emit_pinsrw_memoffset (compiler, 0, offset, ptr_reg, dest->alloc);
+#if 0
       orc_x86_emit_mov_memoffset_reg (compiler, 2, offset, ptr_reg,
           compiler->gp_tmpreg);
       orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, dest->alloc);
+#endif
       break;
     case 4:
       orc_x86_emit_mov_memoffset_sse (compiler, 4, offset, ptr_reg,
@@ -131,9 +135,13 @@ sse_rule_loadoffX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
       orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, dest->alloc);
       break;
     case 2:
+      orc_sse_emit_pxor (compiler, dest->alloc, dest->alloc);
+      orc_sse_emit_pinsrw_memoffset (compiler, 0, offset, ptr_reg, dest->alloc);
+#if 0
       orc_x86_emit_mov_memoffset_reg (compiler, 2, offset, ptr_reg,
           compiler->gp_tmpreg);
       orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, dest->alloc);
+#endif
       break;
     case 4:
       orc_x86_emit_mov_memoffset_sse (compiler, 4, offset, ptr_reg,
