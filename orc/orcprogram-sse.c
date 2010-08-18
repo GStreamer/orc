@@ -224,6 +224,13 @@ orc_compiler_sse_init (OrcCompiler *compiler)
   if (compiler->n_insns <= 10) {
     compiler->unroll_shift = 1;
   }
+  if (!compiler->long_jumps) {
+    compiler->unroll_shift = 0;
+  }
+  if (compiler->loop_shift == 0) {
+    /* FIXME something is broken with loop_shift=0, unroll_shift=1 */
+    compiler->unroll_shift = 0;
+  }
   compiler->alloc_loop_counter = TRUE;
   compiler->allow_gp_on_stack = TRUE;
 }

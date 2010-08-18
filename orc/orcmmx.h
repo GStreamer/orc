@@ -54,9 +54,16 @@ void orc_mmx_emit_f30f (OrcCompiler *p, const char *insn_name, int code,
 void orc_mmx_emit_0f (OrcCompiler *p, const char *insn_name, int code,
     int src, int dest);
 void orc_mmx_emit_pshufw (OrcCompiler *p, int shuf, int src, int dest);
+void orc_mmx_emit_palignr (OrcCompiler *p, int align, int src, int dest);
+void orc_mmx_emit_pinsrw_memoffset (OrcCompiler *p, int imm, int offset,
+    int src, int dest);
+void orc_mmx_emit_pextrw_memoffset (OrcCompiler *p, int imm, int src,
+    int offset, int dest);
 void orc_mmx_emit_shiftimm (OrcCompiler *p, const char *insn_name,
     int code, int modrm_code, int shift, int reg);
 unsigned int orc_mmx_get_cpu_flags (void);
+
+void mmx_load_constant (OrcCompiler *compiler, int reg, int size, int value);
 
 /* MMX instructions */
 #define orc_mmx_emit_punpcklbw(p,a,b)  orc_mmx_emit_660f (p, "punpcklbw", 0x60, a, b)

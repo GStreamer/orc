@@ -172,7 +172,16 @@ void
 orc_sse_emit_pextrw_memoffset (OrcCompiler *p, int imm, int src,
     int offset, int dest)
 {
-
+  ORC_ASM_CODE(p,"  pextrw $%d, %%%s, %d(%%%s)\n", imm,
+      orc_x86_get_regname_sse(src),
+      offset, orc_x86_get_regname(dest));
+  *p->codeptr++ = 0x66;
+  orc_x86_emit_rex (p, 0, src, 0, dest);
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0x3a;
+  *p->codeptr++ = 0x15;
+  orc_x86_emit_modrm_memoffset (p, src, offset, dest);
+  *p->codeptr++ = imm;
 }
 
 void

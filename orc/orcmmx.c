@@ -108,6 +108,35 @@ orc_mmx_emit_pshufw (OrcCompiler *p, int shuf, int src, int dest)
 }
 
 void
+orc_mmx_emit_pinsrw_memoffset (OrcCompiler *p, int imm, int offset,
+    int src, int dest)
+{
+  ORC_ASM_CODE(p,"  pinsrw $%d, %d(%%%s), %%%s\n", imm, offset,
+      orc_x86_get_regname(src),
+      orc_x86_get_regname_mmx(dest));
+  orc_x86_emit_rex (p, 0, dest, 0, src);
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0xc4;
+  orc_x86_emit_modrm_memoffset (p, dest, offset, src);
+  *p->codeptr++ = imm;
+
+}
+
+void
+orc_mmx_emit_pextrw_memoffset (OrcCompiler *p, int imm, int src,
+    int offset, int dest)
+{
+  ORC_ASM_CODE(p,"  pextrw $%d, %%%s, %d(%%%s)\n", imm,
+      orc_x86_get_regname(src),
+      offset, orc_x86_get_regname_mmx(dest));
+  orc_x86_emit_rex (p, 0, src, 0, dest);
+  *p->codeptr++ = 0x0f;
+  *p->codeptr++ = 0xc4;
+  orc_x86_emit_modrm_memoffset (p, src, offset, dest);
+  *p->codeptr++ = imm;
+}
+
+void
 orc_mmx_emit_shiftimm (OrcCompiler *p, const char *insn_name, int code,
     int modrm_code, int shift, int reg)
 {

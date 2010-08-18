@@ -79,11 +79,6 @@ sse_rule_loadX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     case 2:
       orc_sse_emit_pxor (compiler, dest->alloc, dest->alloc);
       orc_sse_emit_pinsrw_memoffset (compiler, 0, offset, ptr_reg, dest->alloc);
-#if 0
-      orc_x86_emit_mov_memoffset_reg (compiler, 2, offset, ptr_reg,
-          compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, dest->alloc);
-#endif
       break;
     case 4:
       orc_x86_emit_mov_memoffset_sse (compiler, 4, offset, ptr_reg,
@@ -137,11 +132,6 @@ sse_rule_loadoffX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     case 2:
       orc_sse_emit_pxor (compiler, dest->alloc, dest->alloc);
       orc_sse_emit_pinsrw_memoffset (compiler, 0, offset, ptr_reg, dest->alloc);
-#if 0
-      orc_x86_emit_mov_memoffset_reg (compiler, 2, offset, ptr_reg,
-          compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, dest->alloc);
-#endif
       break;
     case 4:
       orc_x86_emit_mov_memoffset_sse (compiler, 4, offset, ptr_reg,
@@ -184,20 +174,13 @@ sse_rule_loadupib (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   switch (src->size << compiler->loop_shift) {
     case 1:
     case 2:
-      orc_x86_emit_mov_memoffset_reg (compiler, 1, offset, ptr_reg,
-          compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, dest->alloc);
-      orc_x86_emit_mov_memoffset_reg (compiler, 1, offset + 1, ptr_reg,
-          compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, tmp);
+      orc_sse_emit_pinsrw_memoffset (compiler, 0, offset, ptr_reg, dest->alloc);
+      orc_sse_emit_movdqa (compiler, dest->alloc, tmp);
+      orc_sse_emit_psrlw (compiler, 8, tmp);
       break;
     case 4:
-      orc_x86_emit_mov_memoffset_reg (compiler, 2, offset, ptr_reg,
-          compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, dest->alloc);
-      orc_x86_emit_mov_memoffset_reg (compiler, 2, offset + 1, ptr_reg,
-          compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, tmp);
+      orc_sse_emit_pinsrw_memoffset (compiler, 0, offset, ptr_reg, dest->alloc);
+      orc_sse_emit_pinsrw_memoffset (compiler, 0, offset + 1, ptr_reg, tmp);
       break;
     case 8:
       orc_x86_emit_mov_memoffset_sse (compiler, 4, offset, ptr_reg,
@@ -265,9 +248,7 @@ sse_rule_loadupdb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
       orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, dest->alloc);
       break;
     case 4:
-      orc_x86_emit_mov_memoffset_reg (compiler, 2, offset, ptr_reg,
-          compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, dest->alloc);
+      orc_sse_emit_pinsrw_memoffset (compiler, 0, offset, ptr_reg, dest->alloc);
       break;
     case 8:
       orc_x86_emit_mov_memoffset_sse (compiler, 4, offset, ptr_reg,
@@ -333,15 +314,22 @@ sse_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
         ORC_COMPILER_ERROR(compiler,"unimplemented");
       }
       orc_x86_emit_mov_sse_reg (compiler, src->alloc, compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_memoffset (compiler, 1, compiler->gp_tmpreg, offset, ptr_reg);
+      orc_x86_emit_mov_reg_memoffset (compiler, 1, compiler->gp_tmpreg,
+          offset, ptr_reg);
       break;
     case 2:
-      /* FIXME we might be using ecx twice here */
-      if (ptr_reg == compiler->gp_tmpreg) {
-        ORC_COMPILER_ERROR(compiler,"unimplemented");
-      } 
-      orc_x86_emit_mov_sse_reg (compiler, src->alloc, compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_memoffset (compiler, 2, compiler->gp_tmpreg, offset, ptr_reg);
+      if (compiler->target_flags & ORC_TARGET_SSE_SSE4_1) {
+        orc_sse_emit_pextrw_memoffset (compiler, 0, src->alloc, offset,
+            ptr_reg);
+      } else {
+        /* FIXME we might be using ecx twice here */
+        if (ptr_reg == compiler->gp_tmpreg) {
+          ORC_COMPILER_ERROR(compiler,"unimplemented");
+        } 
+        orc_x86_emit_mov_sse_reg (compiler, src->alloc, compiler->gp_tmpreg);
+        orc_x86_emit_mov_reg_memoffset (compiler, 2, compiler->gp_tmpreg,
+            offset, ptr_reg);
+      }
       break;
     case 4:
       orc_x86_emit_mov_sse_memoffset (compiler, 4, src->alloc, offset, ptr_reg,
@@ -492,9 +480,9 @@ sse_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src2 = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp = orc_compiler_get_temp_reg (p);
-#ifndef MMX
   int tmp2 = orc_compiler_get_temp_reg (p);
 
+#ifndef MMX
   if (p->loop_shift <= 2) {
     orc_sse_emit_movdqa (p, src1, tmp);
     orc_sse_emit_pslldq (p, 16 - (1<<p->loop_shift), tmp);
@@ -510,8 +498,16 @@ sse_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_sse_emit_psadbw (p, src2, tmp);
   }
 #else
-  orc_sse_emit_movdqa (p, src1, tmp);
-  orc_sse_emit_psadbw (p, src2, tmp);
+  if (p->loop_shift <= 2) {
+    orc_sse_emit_movdqa (p, src1, tmp);
+    orc_sse_emit_psllq (p, 8*(8 - (1<<p->loop_shift)), tmp);
+    orc_sse_emit_movdqa (p, src2, tmp2);
+    orc_sse_emit_psllq (p, 8*(8 - (1<<p->loop_shift)), tmp2);
+    orc_sse_emit_psadbw (p, tmp2, tmp);
+  } else {
+    orc_sse_emit_movdqa (p, src1, tmp);
+    orc_sse_emit_psadbw (p, src2, tmp);
+  }
 #endif
   orc_sse_emit_paddd (p, tmp, dest);
 }
@@ -863,7 +859,11 @@ sse_rule_convql (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src = p->vars[insn->src_args[0]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
 
+#ifndef MMX
   orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,2,0), src, dest);
+#else
+  orc_sse_emit_movdqa (p, src, dest);
+#endif
 }
 
 static void
@@ -871,8 +871,12 @@ sse_rule_splatw3q (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int dest = p->vars[insn->dest_args[0]].alloc;
 
+#ifndef MMX
   orc_sse_emit_pshuflw (p, ORC_SSE_SHUF(3,3,3,3), dest, dest);
   orc_sse_emit_pshufhw (p, ORC_SSE_SHUF(3,3,3,3), dest, dest);
+#else
+  orc_mmx_emit_pshufw (p, ORC_SSE_SHUF(3,3,3,3), dest, dest);
+#endif
 }
 
 static void
