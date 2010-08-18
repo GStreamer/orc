@@ -475,8 +475,23 @@ sse_add_strides (OrcCompiler *compiler)
 static int
 get_align_var (OrcCompiler *compiler)
 {
-  if (compiler->vars[ORC_VAR_D1].size) return ORC_VAR_D1;
-  if (compiler->vars[ORC_VAR_S1].size) return ORC_VAR_S1;
+  int i;
+  for(i=ORC_VAR_D1;i<=ORC_VAR_S8;i++){
+    if (compiler->vars[i].size == 0) continue;
+    if ((compiler->vars[i].size << compiler->loop_shift) >= 16) {
+      return i;
+    }
+  }
+  for(i=ORC_VAR_D1;i<=ORC_VAR_S8;i++){
+    if (compiler->vars[i].size == 0) continue;
+    if ((compiler->vars[i].size << compiler->loop_shift) >= 8) {
+      return i;
+    }
+  }
+  for(i=ORC_VAR_D1;i<=ORC_VAR_S8;i++){
+    if (compiler->vars[i].size == 0) continue;
+    return i;
+  }
 
   ORC_COMPILER_ERROR(compiler, "could not find alignment variable");
 
