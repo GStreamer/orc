@@ -1005,8 +1005,8 @@ output_code_test (OrcProgram *p, FILE *output)
   fprintf(output, "    }\n");
   fprintf(output, "\n");
   fprintf(output, "    if (benchmark) {\n");
-  fprintf(output, "      printf (\"    cycles (backup)  :   \");\n");
-  fprintf(output, "      orc_test_performance (p, ORC_TEST_FLAGS_BACKUP);\n");
+  fprintf(output, "      printf (\"    cycles (backup)  :   %%g\\n\",\n");
+  fprintf(output, "          orc_test_performance_full (p, ORC_TEST_FLAGS_BACKUP, NULL));\n");
   fprintf(output, "    }\n");
   fprintf(output, "\n");
   fprintf(output, "    ret = orc_test_compare_output (p);\n");
@@ -1019,8 +1019,8 @@ output_code_test (OrcProgram *p, FILE *output)
   fprintf(output, "    }\n");
   fprintf(output, "\n");
   fprintf(output, "    if (benchmark) {\n");
-  fprintf(output, "      printf (\"    cycles (compiled):   \");\n");
-  fprintf(output, "      orc_test_performance (p, 0);\n");
+  fprintf(output, "      printf (\"    cycles (compiled):   %%g\\n\",\n");
+  fprintf(output, "          orc_test_performance_full (p, 0, NULL));\n");
   fprintf(output, "    }\n");
   fprintf(output, "\n");
   fprintf(output, "    orc_program_free (p);\n");

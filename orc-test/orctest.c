@@ -951,14 +951,19 @@ orc_test_performance_full (OrcProgram *program, int flags,
         orc_executor_set_stride (ex, j, src[j-ORC_VAR_S1]->stride);
       }
     }
-    orc_profile_start (&prof);
-    orc_executor_run (ex);
-    orc_profile_stop (&prof);
+    if (flags & ORC_TEST_FLAGS_BACKUP) {
+      orc_profile_start (&prof);
+      orc_executor_run_backup (ex);
+      orc_profile_stop (&prof);
+    } else {
+      orc_profile_start (&prof);
+      orc_executor_run (ex);
+      orc_profile_stop (&prof);
+    }
   }
   ORC_DEBUG ("done running");
 
   orc_profile_get_ave_std (&prof, &ave, &std);
-  //printf("%g %g\n", ave/(n*m), std/(n*m));
 
   for(i=0;i<4;i++){
     if (dest_exec[i]) orc_array_free (dest_exec[i]);
