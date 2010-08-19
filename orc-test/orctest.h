@@ -15,6 +15,7 @@ typedef enum {
 
 #define ORC_TEST_FLAGS_BACKUP (1<<0)
 #define ORC_TEST_FLAGS_FLOAT (1<<1)
+#define ORC_TEST_FLAGS_EMULATE (1<<2)
 
 void orc_test_init (void);
 OrcTestResult orc_test_gcc_compile (OrcProgram *p);

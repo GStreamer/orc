@@ -997,6 +997,13 @@ output_code_test (OrcProgram *p, FILE *output)
   }
 
   fprintf(output, "\n");
+  if (compat >= ORC_VERSION(0,4,7,1)) {
+    fprintf(output, "    if (benchmark) {\n");
+    fprintf(output, "      printf (\"    cycles (emulate) :   %%g\\n\",\n");
+    fprintf(output, "          orc_test_performance_full (p, ORC_TEST_FLAGS_EMULATE, NULL));\n");
+    fprintf(output, "    }\n");
+    fprintf(output, "\n");
+  }
   fprintf(output, "    ret = orc_test_compare_output_backup (p);\n");
   fprintf(output, "    if (!ret) {\n");
   fprintf(output, "      error = TRUE;\n");

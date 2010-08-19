@@ -955,6 +955,10 @@ orc_test_performance_full (OrcProgram *program, int flags,
       orc_profile_start (&prof);
       orc_executor_run_backup (ex);
       orc_profile_stop (&prof);
+    } else if (flags & ORC_TEST_FLAGS_EMULATE) {
+      orc_profile_start (&prof);
+      orc_executor_emulate (ex);
+      orc_profile_stop (&prof);
     } else {
       orc_profile_start (&prof);
       orc_executor_run (ex);
