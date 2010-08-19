@@ -106,6 +106,13 @@ orc_target_c_get_asm_preamble (void)
     "#define ORC_DENORMAL(x) (((x) > -ORC_MIN_NORMAL && (x) < ORC_MIN_NORMAL) ? ((x)<0 ? (-0.0f) : (0.0f)) : (x))\n"
     "#define ORC_MINF(a,b) (isnan(a) ? a : isnan(b) ? b : ((a)<(b)) ? (a) : (b))\n"
     "#define ORC_MAXF(a,b) (isnan(a) ? a : isnan(b) ? b : ((a)>(b)) ? (a) : (b))\n"
+    "#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L\n"
+    "#define ORC_RESTRICT restrict\n"
+    "#elif defined(__GNUC__) && __GNUC__ >= 4\n"
+    "#define ORC_RESTRICT __restrict__\n"
+    "#else\n"
+    "#define ORC_RESTRICT\n"
+    "#endif\n"
     "/* end Orc C target preamble */\n\n";
 }
 
@@ -210,15 +217,13 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
         }
         break;
       case ORC_VAR_TYPE_SRC:
-        ORC_ASM_CODE(compiler,"  const %s *%s ptr%d;\n",
+        ORC_ASM_CODE(compiler,"  const %s * ORC_RESTRICT ptr%d;\n",
             c_get_type_name (var->size),
-            (compiler->target_flags & ORC_TARGET_C_C99) ? "restrict " : "",
             i);
         break;
       case ORC_VAR_TYPE_DEST:
-        ORC_ASM_CODE(compiler,"  %s *%s ptr%d;\n",
+        ORC_ASM_CODE(compiler,"  %s * ORC_RESTRICT ptr%d;\n",
             c_get_type_name (var->size),
-            (compiler->target_flags & ORC_TARGET_C_C99) ? "restrict " : "",
             i);
         break;
       case ORC_VAR_TYPE_ACCUMULATOR:
