@@ -1,5 +1,5 @@
 AC_PREREQ([2.58])
-AC_INIT(orc,0.4.6.1)
+AC_INIT(orc,0.4.7)
 dnl don't forget to update libversion
 
 AS_NANO(ORC_CVS=no,ORC_CVS=yes)
@@ -17,7 +17,7 @@ dnl - library source changed -> increment REVISION
 dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
-ORC_LIBVERSION="2:0:2"
+ORC_LIBVERSION="7:0:7"
 AC_SUBST(ORC_LIBVERSION)
 AC_LIBTOOL_WIN32_DLL
 AC_LIBTOOL_TAGS([])

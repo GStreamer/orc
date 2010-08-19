@@ -1,4 +1,51 @@
 
+0.4.7
+=====
+
+Changes:
+
+ - Lots of specialized new opcodes and opcode prefixes.
+ - Important fixes for ARM backend
+ - Improved emulation of programs (much faster)
+ - Implemented fallback rules for almost all opcodes for
+   SSE and NEON backends
+ - Performance improvements for SSE and NEON backends.
+ - Many fixes to make larger programs compile properly.
+ - 64-bit data types are now fully implemented, although
+   there are few operations on them.
+
+Loads and stores are now handled by separate opcodes (loadb,
+storeb, etc).  For compatibility, these are automatically
+included where necessary.  This allowed new specialized
+loading opcodes, for example, resampling a source array
+for use in scaling images.
+
+Opcodes may now be prefixed by "x2" or "x4", indicating that
+a operation should be done on 2 or 4 parts of a proportionally
+larger value.  For example, "x4 addusb" performs 4 saturated
+unsigned additions on each of the four bytes of 32-bit
+quantities.  This is useful in pixel operations.
+
+The MMX backend is now (semi-) automatically generated from
+the SSE backend.
+
+The orcc tool has a new option "--inline", which creates inline
+versions of the Orc stub functions.  The orcc tool also recognizes
+a new directive '.init', which instructs the compiler to generate
+an initialization function, which when called at application init
+time, compiles all the generated functions.  This allows the
+generated stub functions to avoid checking if the function has
+already been compiled.  The use of these two features can
+dramatically decrease the cost of calling Orc functions.
+
+Known Bugs: Orc generates code that crashes on 64-bit OS/X.
+
+Plans for 0.4.8: (was 2.5 for 4 this time around, not too bad!)
+Document all the new features in 0.4.7.  Instruction scheduler.
+Code and API cleanup.
+
+
+
 0.4.6
 =====
 
