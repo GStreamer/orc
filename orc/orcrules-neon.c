@@ -2412,8 +2412,8 @@ orc_neon_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
   int tmp = p->tmpreg;
 
   if (p->insn_shift < 3) {
-    ORC_ASM_CODE(p,"  vrshrn.u16 %s, %s, #%d\n", orc_neon_reg_name_quad(tmp),
-        orc_neon_reg_name(src), 8);
+    ORC_ASM_CODE(p,"  vrshrn.u16 %s, %s, #%d\n", orc_neon_reg_name(tmp),
+        orc_neon_reg_name_quad(src), 8);
     orc_arm_emit (p, NEON_BINARY (0xf2880850, tmp, 0, src));
     orc_neon_emit_unary_long (p, "vmovl.u8",0xf3880a10, tmp, tmp);
     orc_neon_emit_binary (p, "vadd.i16", 0xf2100800, tmp, tmp, src);
@@ -2422,8 +2422,8 @@ orc_neon_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_arm_emit (p, NEON_BINARY (0xf2880850, dest, 0, tmp));
     orc_neon_emit_unary_long (p, "vmovl.u8",0xf3880a10, dest, dest);
   } else {
-    ORC_ASM_CODE(p,"  vrshrn.u16 %s, %s, #%d\n", orc_neon_reg_name_quad(tmp),
-        orc_neon_reg_name(src), 8);
+    ORC_ASM_CODE(p,"  vrshrn.u16 %s, %s, #%d\n", orc_neon_reg_name(tmp),
+        orc_neon_reg_name_quad(src), 8);
     orc_arm_emit (p, NEON_BINARY (0xf2880850, tmp, 0, src));
     orc_neon_emit_unary_long (p, "vmovl.u8",0xf3880a10, tmp, tmp);
     orc_neon_emit_binary_quad (p, "vadd.i16", 0xf2100800, tmp, tmp, src);
