@@ -50,9 +50,11 @@ How to build Orc and applications using it.
   </para>
 
   <para>
-    Future releases will have configure options that allow Orc
-    to be compiled in a minimal configuration for embedded systems.
-    This functionality is not yet available for general use.
+    By default, code generators for all targets are built into the
+    library.  Embedded system developers may wish to use the
+    --enable-backed option, which will disable all other code
+    generators, saving about 200 kB in binary size.  Outside of
+    embedded systems, using --enable-backend is not recommended.
   </para>
 
 </refsect1>

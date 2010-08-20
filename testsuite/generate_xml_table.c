@@ -89,18 +89,25 @@ test_opcode (OrcStaticOpcode *opcode, OrcTarget *target,
   OrcCompileResult ret;
 
   p = orc_test_get_program_for_opcode (opcode);
-  if (!p) return "fail";
+  if (p) {
+    ret = orc_program_compile_full (p, target, target_flags);
+    orc_program_free (p);
 
-  ret = orc_program_compile_full (p, target, target_flags);
-  orc_program_free (p);
+    if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(ret)) {
+      return "yes";
+    }
+  }
 
-  if (ORC_COMPILE_RESULT_IS_FATAL(ret)) {
-    //return "fail";
-    return "no";
+  p = orc_test_get_program_for_opcode_const (opcode);
+  if (p) {
+    ret = orc_program_compile_full (p, target, target_flags);
+    orc_program_free (p);
+
+    if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(ret)) {
+      return "yes";
+    }
   }
-  if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(ret)) {
-    return "yes";
-  }
+
   return "no";
 }
 

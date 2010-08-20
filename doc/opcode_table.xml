@@ -101,6 +101,78 @@
 <entry>a</entry>
 </row>
 <row>
+<entry>loadb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry></entry>
+<entry>load from memory</entry>
+<entry>array[i]</entry>
+</row>
+<row>
+<entry>loadoffb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>4S</entry>
+<entry>load from memory with offset</entry>
+<entry>array[i+offset]</entry>
+</row>
+<row>
+<entry>loadupdb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry></entry>
+<entry>load upsampled duplicate</entry>
+<entry>array[i>>1]</entry>
+</row>
+<row>
+<entry>loadupib</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry></entry>
+<entry>load upsampled interpolate</entry>
+<entry>(array[i>>1] + array[(i+1)>>1] + 1)>>1</entry>
+</row>
+<row>
+<entry>loadpb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry></entry>
+<entry>load parameter or constant</entry>
+<entry>scalar</entry>
+</row>
+<row>
+<entry>ldresnearb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>4S</entry>
+<entry>load, nearest neighbor resampled</entry>
+<entry>array[(b+c*i)>>8]</entry>
+</row>
+<row>
+<entry>ldresnearl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4S</entry>
+<entry>load, nearest neighbor resampled</entry>
+<entry>array[(b+c*i)>>8]</entry>
+</row>
+<row>
+<entry>ldreslinb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry>4S</entry>
+<entry>load, bilinear resampled</entry>
+<entry>special</entry>
+</row>
+<row>
+<entry>ldreslinl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4S</entry>
+<entry>load, bilinear resampled</entry>
+<entry>special</entry>
+</row>
+<row>
 <entry>maxsb</entry>
 <entry>1</entry>
 <entry>1</entry>
@@ -195,6 +267,14 @@
 <entry></entry>
 <entry>sign</entry>
 <entry>sign(a)</entry>
+</row>
+<row>
+<entry>storeb</entry>
+<entry>1</entry>
+<entry>1</entry>
+<entry></entry>
+<entry>store to memory</entry>
+<entry>special</entry>
 </row>
 <row>
 <entry>subb</entry>
@@ -317,6 +397,46 @@
 <entry>a</entry>
 </row>
 <row>
+<entry>div255w</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry></entry>
+<entry>divide by 255</entry>
+<entry>a/255</entry>
+</row>
+<row>
+<entry>divluw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>saturated unsigned divide 16-bit by 8-bit</entry>
+<entry>clamp(a/(b &amp; 255),0,255)</entry>
+</row>
+<row>
+<entry>loadw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry></entry>
+<entry>load from memory</entry>
+<entry>array[i]</entry>
+</row>
+<row>
+<entry>loadoffw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry>4S</entry>
+<entry>load from memory with offset</entry>
+<entry>array[i+offset]</entry>
+</row>
+<row>
+<entry>loadpw</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry></entry>
+<entry>load parameter or constant</entry>
+<entry>scalar</entry>
+</row>
+<row>
 <entry>maxsw</entry>
 <entry>2</entry>
 <entry>2</entry>
@@ -411,6 +531,14 @@
 <entry></entry>
 <entry>sign</entry>
 <entry>sign(a)</entry>
+</row>
+<row>
+<entry>storew</entry>
+<entry>2</entry>
+<entry>2</entry>
+<entry></entry>
+<entry>store to memory</entry>
+<entry>special</entry>
 </row>
 <row>
 <entry>subw</entry>
@@ -533,6 +661,30 @@
 <entry>a</entry>
 </row>
 <row>
+<entry>loadl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry></entry>
+<entry>load from memory</entry>
+<entry>array[i]</entry>
+</row>
+<row>
+<entry>loadoffl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4S</entry>
+<entry>load from memory with offset</entry>
+<entry>array[i+offset]</entry>
+</row>
+<row>
+<entry>loadpl</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry></entry>
+<entry>load parameter or constant</entry>
+<entry>scalar</entry>
+</row>
+<row>
 <entry>maxsl</entry>
 <entry>4</entry>
 <entry>4</entry>
@@ -629,6 +781,14 @@
 <entry>sign(a)</entry>
 </row>
 <row>
+<entry>storel</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry></entry>
+<entry>store to memory</entry>
+<entry>special</entry>
+</row>
+<row>
 <entry>subl</entry>
 <entry>4</entry>
 <entry>4</entry>
@@ -661,6 +821,38 @@
 <entry>a ^ b</entry>
 </row>
 <row>
+<entry>loadq</entry>
+<entry>8</entry>
+<entry>8</entry>
+<entry></entry>
+<entry>load from memory</entry>
+<entry>array[i]</entry>
+</row>
+<row>
+<entry>loadpq</entry>
+<entry>8</entry>
+<entry>8</entry>
+<entry></entry>
+<entry>load parameter or constant</entry>
+<entry>scalar</entry>
+</row>
+<row>
+<entry>storeq</entry>
+<entry>8</entry>
+<entry>8</entry>
+<entry></entry>
+<entry>store to memory</entry>
+<entry>special</entry>
+</row>
+<row>
+<entry>splatw3q</entry>
+<entry>8</entry>
+<entry>8</entry>
+<entry></entry>
+<entry>duplicates high 16-bits to lower 48 bits</entry>
+<entry>special</entry>
+</row>
+<row>
 <entry>convsbw</entry>
 <entry>2</entry>
 <entry>1</entry>
@@ -675,6 +867,22 @@
 <entry></entry>
 <entry>convert unsigned</entry>
 <entry>a</entry>
+</row>
+<row>
+<entry>splatbw</entry>
+<entry>2</entry>
+<entry>1</entry>
+<entry></entry>
+<entry>duplicates 8 bits to both halfs of 16 bits</entry>
+<entry>special</entry>
+</row>
+<row>
+<entry>splatbl</entry>
+<entry>4</entry>
+<entry>1</entry>
+<entry></entry>
+<entry>duplicates 8 bits to all parts of 32 bits</entry>
+<entry>special</entry>
 </row>
 <row>
 <entry>convswl</entry>
@@ -693,12 +901,36 @@
 <entry>a</entry>
 </row>
 <row>
+<entry>convslq</entry>
+<entry>8</entry>
+<entry>4</entry>
+<entry></entry>
+<entry>signed convert</entry>
+<entry>a</entry>
+</row>
+<row>
+<entry>convulq</entry>
+<entry>8</entry>
+<entry>4</entry>
+<entry></entry>
+<entry>unsigned convert</entry>
+<entry>a</entry>
+</row>
+<row>
 <entry>convwb</entry>
 <entry>1</entry>
 <entry>2</entry>
 <entry></entry>
 <entry>convert</entry>
 <entry>a</entry>
+</row>
+<row>
+<entry>convhwb</entry>
+<entry>1</entry>
+<entry>2</entry>
+<entry></entry>
+<entry>shift and convert</entry>
+<entry>a>>8</entry>
 </row>
 <row>
 <entry>convssswb</entry>
@@ -741,6 +973,14 @@
 <entry>a</entry>
 </row>
 <row>
+<entry>convhlw</entry>
+<entry>2</entry>
+<entry>4</entry>
+<entry></entry>
+<entry>shift and convert</entry>
+<entry>a>>16</entry>
+</row>
+<row>
 <entry>convssslw</entry>
 <entry>2</entry>
 <entry>4</entry>
@@ -768,6 +1008,46 @@
 <entry>convuuslw</entry>
 <entry>2</entry>
 <entry>4</entry>
+<entry></entry>
+<entry>convert unsigned to signed with saturation</entry>
+<entry>clamp(a)</entry>
+</row>
+<row>
+<entry>convql</entry>
+<entry>4</entry>
+<entry>8</entry>
+<entry></entry>
+<entry></entry>
+<entry></entry>
+</row>
+<row>
+<entry>convsssql</entry>
+<entry>4</entry>
+<entry>8</entry>
+<entry></entry>
+<entry>convert signed to unsigned with saturation</entry>
+<entry>clamp(a)</entry>
+</row>
+<row>
+<entry>convsusql</entry>
+<entry>4</entry>
+<entry>8</entry>
+<entry></entry>
+<entry>convert signed to signed with saturation</entry>
+<entry>clamp(a)</entry>
+</row>
+<row>
+<entry>convussql</entry>
+<entry>4</entry>
+<entry>8</entry>
+<entry></entry>
+<entry>convert unsigned to unsigned with saturation</entry>
+<entry>clamp(a)</entry>
+</row>
+<row>
+<entry>convuusql</entry>
+<entry>4</entry>
+<entry>8</entry>
 <entry></entry>
 <entry>convert unsigned to signed with saturation</entry>
 <entry>clamp(a)</entry>

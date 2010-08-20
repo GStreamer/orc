@@ -1,34 +1,25 @@
-
-
 #include <stdio.h>
-
-#include <orc/orcprogram.h>
+#include "example1orc.h"
 
 #define N 10
 
-orc_int16 a[N];
-orc_int16 b[N];
-orc_int16 c[N];
-
-void add_s16(orc_int16 *dest, orc_int16 *src1, orc_int16 *src2, int n);
-
+short a[N];
+short b[N];
+short c[N];
 
 int
 main (int argc, char *argv[])
 {
   int i;
 
-  /* orc_init() must be called before any other Orc function */
-  orc_init ();
-
   /* Create some data in the source arrays */
   for(i=0;i<N;i++){
-    a[i] = i;
-    b[i] = 100;
+    a[i] = 100*i;
+    b[i] = 32000;
   }
 
   /* Call a function that uses Orc */
-  add_s16 (c, a, b, N);
+  audio_add_s16 (c, a, b, N);
 
   /* Print the results */
   for(i=0;i<N;i++){
@@ -36,40 +27,5 @@ main (int argc, char *argv[])
   }
 
   return 0;
-}
-
-void
-add_s16(orc_int16 *dest, orc_int16 *src1, orc_int16 *src2, int n)
-{
-  static OrcProgram *p = NULL;
-  OrcExecutor _ex;
-  OrcExecutor *ex = &_ex;
-
-  if (p == NULL) {
-    /* First time through, create the program */
-
-    /* Create a new program with two sources and one destination.
-     * Size of the members of each array is 2.  */
-    p = orc_program_new_dss (2, 2, 2);
-
-    /* Append an instruction to add the 2-byte values s1 and s2 (which
-     * are the source arrays created above), and place the result in
-     * the destination array d1, which was also create above.  */
-    orc_program_append_str (p, "addw", "d1", "s1", "s2");
-
-    /* Compile the program.  Ignore the very important result. */
-    orc_program_compile (p);
-  }
-
-  /* Set the values on the executor structure */
-  orc_executor_set_program (ex, p);
-  orc_executor_set_n (ex, n);
-  orc_executor_set_array_str (ex, "s1", src1);
-  orc_executor_set_array_str (ex, "s2", src2);
-  orc_executor_set_array_str (ex, "d1", dest);
-
-  /* Run the program.  This calls the code that was generated above,
-   * or, if the compilation failed, will emulate the program. */
-  orc_executor_run (ex);
 }
 
