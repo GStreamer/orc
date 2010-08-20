@@ -571,7 +571,11 @@ output_code_backup (OrcProgram *p, FILE *output)
 {
 
   fprintf(output, "static void\n");
-  fprintf(output, "_backup_%s (OrcExecutor *ex)\n", p->name);
+  if (compat < ORC_VERSION(0,4,7,1)) {
+    fprintf(output, "_backup_%s (OrcExecutor * ex)\n", p->name);
+  } else {
+    fprintf(output, "_backup_%s (OrcExecutor * ORC_RESTRICT ex)\n", p->name);
+  }
   fprintf(output, "{\n");
   {
     OrcCompileResult result;
