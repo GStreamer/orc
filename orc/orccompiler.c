@@ -337,6 +337,7 @@ error:
   if (result == 0) {
     result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
+  program->code_exec = program->backup_func;
   if (compiler->asm_code) free (compiler->asm_code);
   for (i=0;i<compiler->n_dup_vars;i++){
     free(compiler->vars[ORC_VAR_T1 + compiler->n_temp_vars + i].name);
