@@ -156,7 +156,8 @@ enum {
   ORC_VAR_T12,
   ORC_VAR_T13,
   ORC_VAR_T14,
-  ORC_VAR_T15
+  ORC_VAR_T15,
+  ORC_VAR_T16
 };
 
 enum {
