@@ -19,7 +19,7 @@ orc_compiler_c_init (OrcCompiler *compiler)
 {
   int i;
 
-  for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+16;i++){
+  for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+32;i++){
     compiler->valid_regs[i] = 1;
   }
   compiler->loop_shift = 0;
