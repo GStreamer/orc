@@ -17,7 +17,8 @@ noinst_PROGRAMS = $(TESTS) generate_xml_table generate_xml_table2 \
 	perf_opcodes_sys_compare perf_parse_compare \
 	exec_parse \
 	compile_opcodes_sys_c \
-	compile_opcodes_sys
+	compile_opcodes_sys \
+	show_parse
 
 EXTRA_DIST = test.orc
 
