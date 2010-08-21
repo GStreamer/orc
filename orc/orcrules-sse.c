@@ -1220,6 +1220,23 @@ sse_rule_mulll_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+sse_rule_mulhsl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[1]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = orc_compiler_get_temp_reg (p);
+  int tmp2 = orc_compiler_get_temp_reg (p);
+
+  orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,3,0,1), dest, tmp);
+  orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,3,0,1), src, tmp2);
+  orc_sse_emit_pmuldq (p, src, dest);
+  orc_sse_emit_pmuldq (p, tmp, tmp2);
+  orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,3,1), dest, dest);
+  orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,3,1), tmp2, tmp2);
+  orc_sse_emit_punpckldq (p, tmp2, dest);
+}
+
+static void
 sse_rule_mulhsl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int i;
@@ -1256,39 +1273,20 @@ sse_rule_mulhsl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
-sse_rule_mulhul_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
+sse_rule_mulhul (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int i;
-  int regsize = p->is_64bit ? 8 : 4;
-  int stackframe;
+  int src = p->vars[insn->src_args[1]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = orc_compiler_get_temp_reg (p);
+  int tmp2 = orc_compiler_get_temp_reg (p);
 
-  stackframe = 32 + 2*regsize;
-  stackframe = (stackframe + 0xf) & (~0xf);
-
-  orc_x86_emit_add_imm_reg (p, regsize, -stackframe, X86_ESP, FALSE);
-  orc_x86_emit_mov_sse_memoffset (p, 16, p->vars[insn->src_args[0]].alloc,
-      0, X86_ESP, FALSE, FALSE);
-  orc_x86_emit_mov_sse_memoffset (p, 16, p->vars[insn->src_args[1]].alloc,
-      16, X86_ESP, FALSE, FALSE);
-  orc_x86_emit_mov_reg_memoffset (p, 4, X86_EAX, 32, X86_ESP);
-  orc_x86_emit_mov_reg_memoffset (p, 4, X86_EDX, 32 + regsize, X86_ESP);
-
-  for(i=0;i<(1<<p->loop_shift);i++) {
-    orc_x86_emit_mov_memoffset_reg (p, 4, 4*i, X86_ESP, X86_EAX);
-    ORC_ASM_CODE(p,"  mull %d(%%%s)\n", 16+4*i,
-        orc_x86_get_regname_ptr(p, X86_ESP));
-    orc_x86_emit_rex(p, 4, 0, 0, X86_ESP);
-    *p->codeptr++ = 0xf7;
-    orc_x86_emit_modrm_memoffset (p, 4, 16+4*i, X86_ESP);
-    orc_x86_emit_mov_reg_memoffset (p, 4, X86_EDX, 4*i, X86_ESP);
-  }
-
-  orc_x86_emit_mov_memoffset_sse (p, 16, 0, X86_ESP,
-      p->vars[insn->dest_args[0]].alloc, FALSE);
-  orc_x86_emit_mov_memoffset_reg (p, 4, 32, X86_ESP, X86_EAX);
-  orc_x86_emit_mov_memoffset_reg (p, 4, 32 + regsize, X86_ESP, X86_EDX);
-
-  orc_x86_emit_add_imm_reg (p, regsize, stackframe, X86_ESP, FALSE);
+  orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,3,0,1), dest, tmp);
+  orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,3,0,1), src, tmp2);
+  orc_sse_emit_pmuludq (p, src, dest);
+  orc_sse_emit_pmuludq (p, tmp, tmp2);
+  orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,3,1), dest, dest);
+  orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,3,1), tmp2, tmp2);
+  orc_sse_emit_punpckldq (p, tmp2, dest);
 }
 
 static void
@@ -2204,7 +2202,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "shrub", sse_rule_shrub, NULL);
   orc_rule_register (rule_set, "mulll", sse_rule_mulll_slow, NULL);
   orc_rule_register (rule_set, "mulhsl", sse_rule_mulhsl_slow, NULL);
-  orc_rule_register (rule_set, "mulhul", sse_rule_mulhul_slow, NULL);
+  orc_rule_register (rule_set, "mulhul", sse_rule_mulhul, NULL);
   orc_rule_register (rule_set, "mullb", sse_rule_mullb, NULL);
   orc_rule_register (rule_set, "mulhsb", sse_rule_mulhsb, NULL);
   orc_rule_register (rule_set, "mulhub", sse_rule_mulhub, NULL);
@@ -2255,6 +2253,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   REG(minul);
   REG(mulll);
   orc_rule_register (rule_set, "convsuslw", sse_rule_convsuslw, NULL);
+  orc_rule_register (rule_set, "mulhsl", sse_rule_mulhsl, NULL);
 
   /* SSE 4.2 -- no rules */
 
