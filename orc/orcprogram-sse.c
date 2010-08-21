@@ -672,6 +672,8 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
     compiler->n_fixups = 0;
   }
 
+  if (compiler->error) return;
+
   orc_x86_emit_prologue (compiler);
 
 #ifndef MMX
