@@ -28,6 +28,7 @@ enum {
 };
 
 int format = FORMAT_SIGNED;
+int array_n = 10;
 
 int
 main (int argc, char *argv[])
@@ -50,6 +51,11 @@ main (int argc, char *argv[])
       format = FORMAT_UNSIGNED;
     } else if (strcmp("-f", argv[i]) == 0) {
       format = FORMAT_FLOAT;
+    } else if (strcmp("-n", argv[i]) == 0) {
+      if (i + 1 < argc) {
+        array_n = strtol (argv[i+1], NULL, 0);
+        i++;
+      }
     } else {
       filename = argv[i];
     }
@@ -252,7 +258,7 @@ show (OrcProgram *program)
   if (program->constant_n > 0) {
     n = program->constant_n;
   } else {
-    n = 10;
+    n = array_n;
   }
 
   ex = orc_executor_new (program);
