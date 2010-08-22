@@ -67,6 +67,95 @@ orc_array_set_random (OrcArray *array, OrcRandomContext *context)
   orc_random_bits (context, array->alloc_data, array->alloc_len);
 }
 
+#define CREATE_FLOAT(sign,exp,mant) (((sign)<<31)|((exp)<<23)|((mant)<<0))
+
+static const orc_uint32 special_floats[] = {
+  CREATE_FLOAT(0,0,0), /* 0 */
+  CREATE_FLOAT(1,0,0), /* -0 */
+  CREATE_FLOAT(0,126,0), /* 0.5 */
+  CREATE_FLOAT(0,127,0), /* 1 */
+  CREATE_FLOAT(0,128,0), /* 2 */
+  CREATE_FLOAT(1,126,0), /* -0.5 */
+  CREATE_FLOAT(1,127,0), /* -1 */
+  CREATE_FLOAT(1,128,0), /* -2 */
+  CREATE_FLOAT(0,255,0), /* infinity */
+  CREATE_FLOAT(1,255,0), /* -infinity */
+  CREATE_FLOAT(0,255,1), /* nan */
+  CREATE_FLOAT(1,255,1), /* -nan */
+  CREATE_FLOAT(0,0,1), /* denormal */
+  CREATE_FLOAT(1,0,1), /* -denormal */
+  CREATE_FLOAT(0,127+31,0), /* MAX_INT+1 */
+  CREATE_FLOAT(0,127+30,0x7fffff), /* largest float < MAX_INT */
+  CREATE_FLOAT(0,127+23,0x7fffff), /* largest non-integer float */
+  CREATE_FLOAT(1,127+31,0), /* MIN_INT */
+  CREATE_FLOAT(1,127+31,1), /* MIN_INT-1 */
+  CREATE_FLOAT(1,127+30,0x7fffff), /* largest float >= MIN_INT */
+  CREATE_FLOAT(1,127+23,0x7fffff), /* (negative) largest non-integer float */
+  CREATE_FLOAT(0,127+14,(32767-16384)<<(23-14)), /* 32767 */
+  CREATE_FLOAT(0,127+15,(0)<<(23-15)), /* 32768 */
+  CREATE_FLOAT(0,127+15,(1)<<(23-15)), /* -32769 */
+  CREATE_FLOAT(1,127+14,(32767-16384)<<(23-14)), /* -32767 */
+  CREATE_FLOAT(1,127+15,(0)<<(23-15)), /* -32768 */
+  CREATE_FLOAT(1,127+15,(1)<<(23-15)), /* -32769 */
+  CREATE_FLOAT(0,127+4,(27-16)<<(23-4)), /* 27 */
+  CREATE_FLOAT(0,127+4,(28-16)<<(23-4)), /* 28 */
+  CREATE_FLOAT(0,127+4,(29-16)<<(23-4)), /* 29 */
+  CREATE_FLOAT(0,127+4,(30-16)<<(23-4)), /* 30 */
+  CREATE_FLOAT(0,127+4,(31-16)<<(23-4)), /* 31 */
+};
+
+void
+orc_array_set_pattern_2 (OrcArray *array, OrcRandomContext *context,
+    int type)
+{
+  int i,j;
+
+  switch (type) {
+    case ORC_PATTERN_RANDOM:
+      orc_random_bits (context, array->alloc_data, array->alloc_len);
+      break;
+    case ORC_PATTERN_FLOAT_SMALL:
+      {
+        if (array->element_size != 4) return;
+        for(j=0;j<array->m;j++){
+          orc_union32 *data;
+          int exp;
+
+          data = ORC_PTR_OFFSET(array->data, array->stride * j);
+
+          for(i=0;i<array->n;i++){
+            data[i].i = orc_random (context);
+            exp = (data[i].i & 0x7f80000) >> 23;
+            exp &= 0xf;
+            exp += 122;
+            data[i].i &= ~0x7f800000;
+            data[i].i |= (exp&0xff) << 23;
+          }
+        }
+      }
+      break;
+    case ORC_PATTERN_FLOAT_SPECIAL:
+      {
+        if (array->element_size != 4) return;
+        for(j=0;j<array->m;j++){
+          orc_union32 *data;
+          int x;
+
+          data = ORC_PTR_OFFSET(array->data, array->stride * j);
+
+          for(i=0;i<array->n;i++){
+            x = i&0x1f;
+            data[i].i = special_floats[x];
+          }
+        }
+      }
+      break;
+      break;
+    default:
+      break;
+  }
+}
+
 #define MIN_NONDENORMAL (1.1754944909521339405e-38)
 
 int

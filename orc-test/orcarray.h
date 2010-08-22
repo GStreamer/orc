@@ -20,11 +20,20 @@ struct _OrcArray {
   int alloc_len;
 };
 
+enum {
+  ORC_PATTERN_RANDOM = 0,
+  ORC_PATTERN_FLOAT_SMALL,
+  ORC_PATTERN_FLOAT_SPECIAL,
+};
+
 OrcArray *orc_array_new (int n, int m, int element_size, int misalignment);
 void orc_array_free (OrcArray *array);
 
 void orc_array_set_pattern (OrcArray *array, int value);
 void orc_array_set_random (OrcArray *array, OrcRandomContext *context);
+void orc_array_set_pattern_2 (OrcArray *array, OrcRandomContext *context,
+    int type);
+
 
 int orc_array_compare (OrcArray *array1, OrcArray *array2, int flags);
 int orc_array_check_out_of_bounds (OrcArray *array);
