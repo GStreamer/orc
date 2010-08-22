@@ -424,7 +424,7 @@ orc_x86_emit_add_imm_memoffset (OrcCompiler *compiler, int size, int value,
     ORC_ASM_CODE(compiler,"  addl $%d, %d(%%%s)\n", value, offset,
         orc_x86_get_regname_ptr(compiler, reg));
   } else {
-    ORC_ASM_CODE(compiler,"  add $%d, %d(%%%s)\n", value, offset,
+    ORC_ASM_CODE(compiler,"  addq $%d, %d(%%%s)\n", value, offset,
         orc_x86_get_regname_ptr(compiler, reg));
   }
 
@@ -438,7 +438,7 @@ orc_x86_emit_add_imm_memoffset (OrcCompiler *compiler, int size, int value,
     orc_x86_emit_modrm_memoffset (compiler, 0, offset, reg);
     *compiler->codeptr++ = (value & 0xff);
     *compiler->codeptr++ = ((value>>8) & 0xff);
-    if (size == 4) {
+    if (size == 4 || size == 8) {
       *compiler->codeptr++ = ((value>>16) & 0xff);
       *compiler->codeptr++ = ((value>>24) & 0xff);
     }
@@ -497,7 +497,7 @@ orc_x86_emit_add_imm_reg (OrcCompiler *compiler, int size, int value, int reg, o
   } else if (size == 4) {
     ORC_ASM_CODE(compiler,"  addl $%d, %%%s\n", value, orc_x86_get_regname(reg));
   } else {
-    ORC_ASM_CODE(compiler,"  add $%d, %%%s\n", value, orc_x86_get_regname_64(reg));
+    ORC_ASM_CODE(compiler,"  addq $%d, %%%s\n", value, orc_x86_get_regname_64(reg));
   }
 
   orc_x86_emit_rex(compiler, size, 0, 0, reg);
@@ -510,7 +510,7 @@ orc_x86_emit_add_imm_reg (OrcCompiler *compiler, int size, int value, int reg, o
     orc_x86_emit_modrm_reg (compiler, reg, 0);
     *compiler->codeptr++ = (value & 0xff);
     *compiler->codeptr++ = ((value>>8) & 0xff);
-    if (size == 4) {
+    if (size == 4 || size == 8) {
       *compiler->codeptr++ = ((value>>16) & 0xff);
       *compiler->codeptr++ = ((value>>24) & 0xff);
     }

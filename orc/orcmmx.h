@@ -178,7 +178,7 @@ void mmx_load_constant (OrcCompiler *compiler, int reg, int size, int value);
 #define orc_mmx_emit_pmuldq(p,a,b)     orc_mmx_emit_660f (p, "pmuldq", 0x3828, a, b)
 #define orc_mmx_emit_pcmpeqq(p,a,b)    orc_mmx_emit_660f (p, "pcmpeqq", 0x3829, a, b)
 
-#define orc_mmx_emit_packusdw(p,a,b)   orc_mmx_emit_660f (p, "packuswd", 0x382b, a, b)
+#define orc_mmx_emit_packusdw(p,a,b)   orc_mmx_emit_660f (p, "packusdw", 0x382b, a, b)
 
 #define orc_mmx_emit_pmovzxbw(p,a,b)   orc_mmx_emit_660f (p, "pmovzxbw", 0x3830, a, b)
 #define orc_mmx_emit_pmovzxbd(p,a,b)   orc_mmx_emit_660f (p, "pmovzxbd", 0x3831, a, b)

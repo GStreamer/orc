@@ -157,7 +157,7 @@ orc_sse_emit_pinsrw_memoffset (OrcCompiler *p, int imm, int offset,
     int src, int dest)
 {
   ORC_ASM_CODE(p,"  pinsrw $%d, %d(%%%s), %%%s\n", imm, offset,
-      orc_x86_get_regname(src),
+      orc_x86_get_regname_ptr (p, src),
       orc_x86_get_regname_sse(dest));
   *p->codeptr++ = 0x66;
   orc_x86_emit_rex (p, 0, dest, 0, src);
@@ -174,7 +174,7 @@ orc_sse_emit_pextrw_memoffset (OrcCompiler *p, int imm, int src,
 {
   ORC_ASM_CODE(p,"  pextrw $%d, %%%s, %d(%%%s)\n", imm,
       orc_x86_get_regname_sse(src),
-      offset, orc_x86_get_regname(dest));
+      offset, orc_x86_get_regname_ptr (p, dest));
   *p->codeptr++ = 0x66;
   orc_x86_emit_rex (p, 0, src, 0, dest);
   *p->codeptr++ = 0x0f;
