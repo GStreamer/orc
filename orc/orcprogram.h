@@ -19,7 +19,6 @@ typedef struct _OrcConstant OrcConstant;
 typedef struct _OrcFixup OrcFixup;
 typedef struct _OrcTarget OrcTarget;
 typedef struct _OrcCode OrcCode;
-typedef struct _OrcCodeChunk OrcCodeChunk;
 
 typedef void (*OrcOpcodeEmulateFunc)(OrcOpcodeExecutor *ex, void *user);
 typedef void (*OrcOpcodeEmulateNFunc)(OrcOpcodeExecutor *ex, int index, int n);
@@ -535,17 +534,6 @@ struct _OrcCode {
   int is_2d;
   int constant_n;
   int constant_m;
-};
-
-struct _OrcCodeChunk {
-  /*< private >*/
-  struct _OrcCodeChunk *next;
-  struct _OrcCodeRegion *region;
-
-  int offset;
-  int size;
-  orc_uint8 *write_ptr;
-  orc_uint8 *exec_ptr;
 };
 
 /**
