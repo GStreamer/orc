@@ -24,10 +24,72 @@
 
 #define SIZE 65536
 
+typedef struct _OrcCodeRegion OrcCodeRegion;
+struct _OrcCodeRegion {
+  orc_uint8 *write_ptr;
+  orc_uint8 *exec_ptr;
+  int size;
+
+  OrcCodeChunk *used_chunks;
+  OrcCodeChunk *free_chunks;
+};
+
+void orc_code_region_allocate_codemem (OrcCodeRegion *region);
+
+OrcCodeRegion *orc_code_regions;
+int n_orc_code_regions;
+
+
+OrcCodeRegion *
+orc_code_region_new (void)
+{
+  OrcCodeRegion *region;
+  OrcCodeChunk *chunk;
+
+  region = malloc(sizeof(OrcCodeRegion));
+  memset (region, 0, sizeof(OrcCodeRegion));
+
+  orc_code_region_allocate_codemem (region);
+
+  chunk = malloc(sizeof(OrcCodeChunk));
+  memset (chunk, 0, sizeof(OrcCodeChunk));
+
+  chunk->offset = 0;
+  chunk->region = region;
+  chunk->write_ptr = ORC_PTR_OFFSET (region->write_ptr, chunk->offset);
+  chunk->exec_ptr = ORC_PTR_OFFSET (region->exec_ptr, chunk->offset);
+  chunk->size = region->size;
+
+  region->free_chunks = chunk;
+
+  return region;
+}
+
+void
+orc_compiler_allocate_codemem (OrcCompiler *compiler)
+{
+  OrcCodeRegion *region;
+  OrcCodeChunk *chunk;
+
+  region = orc_code_region_new ();
+
+  chunk = region->free_chunks;
+  region->free_chunks = NULL;
+  region->used_chunks = chunk;
+
+  compiler->program->code = chunk->write_ptr;
+  compiler->program->code_exec = chunk->exec_ptr;
+  compiler->program->code_size = chunk->size;
+  compiler->codeptr = chunk->write_ptr;
+
+}
+
+
+
 
 #ifdef HAVE_CODEMEM_MMAP
 void
-orc_compiler_allocate_codemem (OrcCompiler *compiler)
+orc_code_region_allocate_codemem (OrcCodeRegion *region)
 {
   int fd;
   int n;
@@ -41,13 +103,18 @@ orc_compiler_allocate_codemem (OrcCompiler *compiler)
     }
   }
 
+#if 0
   filename = malloc (strlen ("/orcexec..") +
       strlen (tmpdir) + strlen (compiler->program->name) + 6 + 1);
   sprintf(filename, "%s/orcexec.%s.XXXXXX", tmpdir, compiler->program->name);
+#endif
+  filename = malloc (strlen ("/orcexec..") +
+      strlen (tmpdir) + 6 + 1);
+  sprintf(filename, "%s/orcexec.XXXXXX", tmpdir);
   fd = mkstemp (filename);
   if (fd == -1) {
     /* FIXME oh crap */
-    ORC_COMPILER_ERROR (compiler, "failed to create temp file");
+    ORC_ERROR ("failed to create temp file");
     return;
   }
   if (!_orc_compiler_flag_debug) {
@@ -57,45 +124,41 @@ orc_compiler_allocate_codemem (OrcCompiler *compiler)
 
   n = ftruncate (fd, SIZE);
 
-  compiler->program->code = mmap (NULL, SIZE, PROT_READ|PROT_WRITE,
+  region->write_ptr = mmap (NULL, SIZE, PROT_READ|PROT_WRITE,
       MAP_SHARED, fd, 0);
-  if (compiler->program->code == MAP_FAILED) {
-    ORC_COMPILER_ERROR(compiler, "failed to create write map");
+  if (region->write_ptr == MAP_FAILED) {
+    ORC_ERROR("failed to create write map");
     return;
   }
-  compiler->program->code_exec = mmap (NULL, SIZE, PROT_READ|PROT_EXEC,
+  region->exec_ptr = mmap (NULL, SIZE, PROT_READ|PROT_EXEC,
       MAP_SHARED, fd, 0);
-  if (compiler->program->code_exec == MAP_FAILED) {
-    ORC_COMPILER_ERROR(compiler, "failed to create exec map");
+  if (region->exec_ptr == MAP_FAILED) {
+    ORC_ERROR("failed to create exec map");
     return;
   }
+  region->size = SIZE;
 
   close (fd);
-
-  compiler->program->code_size = SIZE;
-  compiler->codeptr = compiler->program->code;
 }
 #endif
 
 #ifdef HAVE_CODEMEM_VIRTUALALLOC
 void
-orc_compiler_allocate_codemem (OrcCompiler *compiler)
+orc_code_region_allocate_codemem (OrcCodeRegion *region)
 {
-  compiler->program->code = VirtualAlloc(NULL, SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-  compiler->program->code_exec = compiler->program->code;
-  compiler->program->code_size = SIZE;
-  compiler->codeptr = compiler->program->code;
+  region->write_ptr = VirtualAlloc(NULL, SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+  region->exec_ptr = region->write_ptr;
+  region->size = SIZE;
 }
 #endif
 
 #ifdef HAVE_CODEMEM_MALLOC
 void
-orc_compiler_allocate_codemem (OrcCompiler *compiler)
+orc_code_region_allocate_codemem (OrcCodeRegion *region)
 {
-  compiler->program->code = malloc(SIZE);
-  compiler->program->code_exec = compiler->program->code;
-  compiler->program->code_size = SIZE;
-  compiler->codeptr = compiler->program->code;
+  region->write_ptr = malloc(SIZE);
+  region->exec_ptr = region->write_ptr;
+  region->size = SIZE;
 }
 #endif
 
