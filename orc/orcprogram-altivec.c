@@ -61,7 +61,14 @@ static OrcTarget altivec_target = {
   ORC_VEC_REG_BASE,
   orc_compiler_powerpc_get_default_flags,
   orc_compiler_powerpc_init,
-  orc_compiler_powerpc_assemble
+  orc_compiler_powerpc_assemble,
+  { { 0 } },
+  0,
+  NULL,
+  NULL,
+  NULL,
+  orc_powerpc_flush_cache
+
 };
 
 void
@@ -689,7 +696,5 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
   powerpc_emit_epilogue (compiler);
 
   powerpc_do_fixups (compiler);
-
-  powerpc_flush (compiler);
 }
 

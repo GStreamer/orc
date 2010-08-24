@@ -91,7 +91,13 @@ static OrcTarget orc_arm_target = {
   ORC_GP_REG_BASE,
   orc_compiler_orc_arm_get_default_flags,
   orc_compiler_orc_arm_init,
-  orc_compiler_orc_arm_assemble
+  orc_compiler_orc_arm_assemble,
+  { { 0 } },
+  0,
+  NULL,
+  NULL,
+  NULL,
+  orc_arm_flush_cache
 };
 
 void

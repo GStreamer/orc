@@ -19,6 +19,7 @@ typedef struct _OrcConstant OrcConstant;
 typedef struct _OrcFixup OrcFixup;
 typedef struct _OrcTarget OrcTarget;
 typedef struct _OrcCode OrcCode;
+typedef struct _OrcCodeChunk OrcCodeChunk;
 
 typedef void (*OrcOpcodeEmulateFunc)(OrcOpcodeExecutor *ex, void *user);
 typedef void (*OrcOpcodeEmulateNFunc)(OrcOpcodeExecutor *ex, int index, int n);
@@ -358,9 +359,9 @@ struct _OrcProgram {
   char *name;
   char *asm_code;
 
-  unsigned char *code;
+  unsigned char *_unused2;
+  /* The offset of code_exec in this structure is part of the ABI */
   void *code_exec;
-  int code_size;
 
   OrcInstruction insns[ORC_N_INSNS];
 
@@ -394,6 +395,7 @@ struct _OrcCompiler {
   int n_temp_vars;
   int n_dup_vars;
 
+  unsigned char *code;
   unsigned char *codeptr;
   
   OrcConstant constants[ORC_N_CONSTANTS];
@@ -517,6 +519,14 @@ struct _OrcExecutorAlt {
 #define ORC_EXECUTOR_M_INDEX(ex) ((ex)->params[ORC_VAR_A2])
 #define ORC_EXECUTOR_TIME(ex) ((ex)->params[ORC_VAR_A3])
 
+typedef struct _OrcCodeVariable OrcCodeVariable;
+struct _OrcCodeVariable {
+  /*< private >*/
+  int vartype;
+  int size;
+  int value;
+};
+
 struct _OrcCode {
   /*< private >*/
   OrcCompileResult result;
@@ -526,11 +536,12 @@ struct _OrcCode {
   OrcExecutorFunc exec;
   unsigned char *code;
   int code_size;
+  void *chunk;
 
   /* for emulation */
   int n_insns;
   OrcInstruction *insns;
-  OrcVariable *vars;
+  OrcCodeVariable *vars;
   int is_2d;
   int constant_n;
   int constant_m;
@@ -555,8 +566,9 @@ struct _OrcTarget {
   const char * (*get_asm_preamble)(void);
   void (*load_constant)(OrcCompiler *compiler, int reg, int size, int value);
   const char * (*get_flag_name)(int shift);
+  void (*flush_cache) (OrcCode *code);
 
-  void *_unused[7];
+  void *_unused[6];
 };
 
 
@@ -654,13 +666,15 @@ const char * orc_target_get_flag_name (OrcTarget *target, int shift);
 
 int orc_program_allocate_register (OrcProgram *program, int is_data);
 
-void orc_compiler_allocate_codemem (OrcCompiler *compiler);
+void orc_code_allocate_codemem (OrcCode *code, int size);
 int orc_compiler_label_new (OrcCompiler *compiler);
 int orc_compiler_get_constant (OrcCompiler *compiler, int size, int value);
 int orc_compiler_get_temp_constant (OrcCompiler *compiler, int size, int value);
 int orc_compiler_get_temp_reg (OrcCompiler *compiler);
 int orc_compiler_get_constant_reg (OrcCompiler *compiler);
 
+void orc_program_reset (OrcProgram *program);
+OrcCode *orc_program_take_code (OrcProgram *program);
 
 const char *orc_program_get_asm_code (OrcProgram *program);
 const char *orc_target_get_asm_preamble (const char *target);
@@ -692,6 +706,8 @@ extern int _orc_data_cache_size_level3;
 
 extern int _orc_compiler_flag_backup;
 extern int _orc_compiler_flag_debug;
+
+void orc_code_chunk_free (OrcCodeChunk *chunk);
 
 #endif
 

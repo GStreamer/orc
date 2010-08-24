@@ -9,6 +9,10 @@
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
 
+#ifdef HAVE_VALGRIND_VALGRIND_H
+#include <valgrind/valgrind.h>
+#endif
+
 /**
  * SECTION:orccompiler
  * @title: OrcCompiler
@@ -187,9 +191,9 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   memset (compiler, 0, sizeof(OrcCompiler));
 
   if (program->backup_func) {
-    program->code = program->backup_func;
+    program->code_exec = program->backup_func;
   } else {
-    program->code = (void *)orc_executor_emulate;
+    program->code_exec = (void *)orc_executor_emulate;
   }
 
   compiler->program = program;
@@ -253,15 +257,13 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   orc_compiler_rewrite_insns (compiler);
   if (compiler->error) goto error;
 
-  orc_compiler_assign_rules (compiler);
-  if (compiler->error) goto error;
-
   orc_compiler_rewrite_vars (compiler);
   if (compiler->error) goto error;
 
   orc_compiler_global_reg_alloc (compiler);
 
   orc_compiler_rewrite_vars2 (compiler);
+
 #if 0
   {
     ORC_ERROR("variables");
@@ -290,21 +292,8 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
 
   if (compiler->error) goto error;
 
-  ORC_INFO("allocating code memory");
-  orc_compiler_allocate_codemem (compiler);
-  if (compiler->error) goto error;
-
-  ORC_INFO("compiling for target \"%s\"", compiler->target->name);
-  compiler->target->compile (compiler);
-  if (compiler->error) {
-    compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
-    goto error;
-  }
-
   program->orccode = orc_code_new ();
-  program->orccode->exec = program->code_exec;
-  program->orccode->code = program->code;
-  program->orccode->code_size = compiler->codeptr - program->code;
+
   program->orccode->is_2d = program->is_2d;
   program->orccode->constant_n = program->constant_n;
   program->orccode->constant_m = program->constant_m;
@@ -314,17 +303,56 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   memcpy (program->orccode->insns, compiler->insns,
       sizeof(OrcInstruction) * compiler->n_insns);
 
-  program->orccode->vars = malloc (sizeof(OrcVariable) * ORC_N_COMPILER_VARIABLES);
-  memcpy (program->orccode->vars, compiler->vars,
-      sizeof(OrcVariable) * ORC_N_COMPILER_VARIABLES);
+  program->orccode->vars = malloc (sizeof(OrcCodeVariable) * ORC_N_COMPILER_VARIABLES);
+  memset (program->orccode->vars, 0,
+      sizeof(OrcCodeVariable) * ORC_N_COMPILER_VARIABLES);
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
+    program->orccode->vars[i].vartype = compiler->vars[i].vartype;
+    program->orccode->vars[i].size = compiler->vars[i].size;
+    program->orccode->vars[i].value = compiler->vars[i].value;
+  }
+
+  orc_compiler_assign_rules (compiler);
+  if (compiler->error) goto error;
+
+  ORC_INFO("allocating code memory");
+  compiler->code = malloc(65536);
+  compiler->codeptr = compiler->code;
+
+  if (compiler->error) goto error;
+
+  ORC_INFO("compiling for target \"%s\"", compiler->target->name);
+  compiler->target->compile (compiler);
+  if (compiler->error) {
+    compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
+    goto error;
+  }
+
+  orc_code_allocate_codemem (program->orccode, program->orccode->code_size);
+  program->orccode->code_size = compiler->codeptr - compiler->code;
+
+  memcpy (program->orccode->code, compiler->code, program->orccode->code_size);
+
+#ifdef VALGRIND_DISCARD_TRANSLATIONS
+  VALGRIND_DISCARD_TRANSLATIONS (program->orccode->exec,
+      program->orccode->code_size);
+#endif
+
+  if (compiler->target->flush_cache) {
+    compiler->target->flush_cache (program->orccode);
+  }
+
+  program->code_exec = program->orccode->exec;
 
   program->asm_code = compiler->asm_code;
-  program->code_size = compiler->codeptr - program->code;
 
   result = compiler->result;
   for (i=0;i<compiler->n_dup_vars;i++){
     free(compiler->vars[ORC_VAR_T1 + compiler->n_temp_vars + i].name);
+    compiler->vars[ORC_VAR_T1 + compiler->n_temp_vars + i].name = NULL;
   }
+  free (compiler->code);
+  compiler->code = NULL;
   free (compiler);
   ORC_INFO("finished compiling (success)");
 
@@ -337,11 +365,16 @@ error:
   if (result == 0) {
     result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
-  program->code_exec = program->backup_func;
-  if (compiler->asm_code) free (compiler->asm_code);
+  if (compiler->asm_code) {
+    free (compiler->asm_code);
+    compiler->asm_code = NULL;
+  }
   for (i=0;i<compiler->n_dup_vars;i++){
     free(compiler->vars[ORC_VAR_T1 + compiler->n_temp_vars + i].name);
+    compiler->vars[ORC_VAR_T1 + compiler->n_temp_vars + i].name = NULL;
   }
+  free (compiler->code);
+  compiler->code = NULL;
   free (compiler);
   ORC_INFO("finished compiling (fail)");
   return result;

@@ -81,7 +81,7 @@ orc_test_gcc_compile (OrcProgram *p)
   fclose (file);
 
   file = fopen (dump_filename, "w");
-  ret = fwrite(p->code, p->code_size, 1, file);
+  ret = fwrite(p->orccode->code, p->orccode->code_size, 1, file);
   fclose (file);
 
 #if defined(HAVE_POWERPC)
@@ -190,7 +190,7 @@ orc_test_gcc_compile_neon (OrcProgram *p)
   fclose (file);
 
   file = fopen (dump_filename, "w");
-  ret = fwrite(p->code, p->code_size, 1, file);
+  ret = fwrite(p->orccode->code, p->orccode->code_size, 1, file);
   fclose (file);
 
   sprintf (cmd, PREFIX "gcc -march=armv6t2 -mcpu=cortex-a8 -mfpu=neon -Wall "
@@ -283,7 +283,7 @@ orc_test_gcc_compile_c64x (OrcProgram *p)
   fclose (file);
 
   file = fopen (dump_filename, "w");
-  ret = fwrite(p->code, p->code_size, 1, file);
+  ret = fwrite(p->orccode->code, p->orccode->code_size, 1, file);
   fclose (file);
 
   sprintf (cmd, C64X_PREFIX "cl6x -mv=6400+ "
@@ -521,10 +521,12 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
 
     result = orc_program_compile_full (program, target, flags);
     if (ORC_COMPILE_RESULT_IS_FATAL(result)) {
-      return ORC_TEST_FAILED;
+      ret = ORC_TEST_FAILED;
+      goto out;
     }
     if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
-      return ORC_TEST_INDETERMINATE;
+      ret = ORC_TEST_INDETERMINATE;
+      goto out;
     }
   }
 
@@ -715,6 +717,9 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
   }
 
   orc_executor_free (ex);
+
+out:
+  orc_program_reset (program);
 
   return ret;
 }
@@ -907,6 +912,7 @@ orc_test_performance_full (OrcProgram *program, int flags,
     result = orc_program_compile_full (program, target, flags);
     if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
       //printf("compile failed\n");
+      orc_program_reset (program);
       return 0;
     }
   }
@@ -996,6 +1002,7 @@ orc_test_performance_full (OrcProgram *program, int flags,
   }
 
   orc_executor_free (ex);
+  orc_program_reset (program);
 
   return ave/(n*m);
 }

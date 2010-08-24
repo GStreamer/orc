@@ -96,7 +96,12 @@ static OrcTarget neon_target = {
   ORC_VEC_REG_BASE,
   orc_compiler_neon_get_default_flags,
   orc_compiler_neon_init,
-  orc_compiler_neon_assemble
+  orc_compiler_neon_assemble,
+  { { 0 } }, 0,
+  NULL,
+  NULL,
+  NULL,
+  orc_arm_flush_cache
 };
 
 void
@@ -700,8 +705,6 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   orc_arm_emit_data (compiler, 0x0f0e0f0e);
 
   orc_arm_do_fixups (compiler);
-
-  orc_arm_flush_cache (compiler);
 }
 
 void

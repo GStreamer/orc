@@ -90,7 +90,7 @@ void powerpc_emit_bne (OrcCompiler *compiler, int label);
 void powerpc_emit_label (OrcCompiler *compiler, int label);
 void powerpc_add_fixup (OrcCompiler *compiler, int type, unsigned char *ptr, int label);
 void powerpc_do_fixups (OrcCompiler *compiler);
-void powerpc_flush (OrcCompiler *compiler);
+void orc_powerpc_flush_cache (OrcCode *code);
 
 void powerpc_emit_srawi (OrcCompiler *compiler, int regd, int rega, int shift,
     int record);

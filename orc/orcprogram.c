@@ -147,13 +147,18 @@ orc_program_free (OrcProgram *program)
 {
   int i;
   for(i=0;i<ORC_N_VARIABLES;i++){
-    if (program->vars[i].name) free (program->vars[i].name);
+    if (program->vars[i].name) {
+      free (program->vars[i].name);
+      program->vars[i].name = NULL;
+    }
   }
   if (program->asm_code) {
     free (program->asm_code);
+    program->asm_code = NULL;
   }
   if (program->name) {
     free (program->name);
+    program->name = NULL;
   }
   free (program);
 }
@@ -813,5 +818,26 @@ orc_get_data_cache_sizes (int *level1, int *level2, int *level3)
     *level3 = _orc_data_cache_size_level3;
   }
 
+}
+
+void
+orc_program_reset (OrcProgram *program)
+{
+  if (program->orccode) {
+    orc_code_free (program->orccode);
+    program->orccode = NULL;
+  }
+  if (program->asm_code) {
+    free(program->asm_code);
+    program->asm_code = NULL;
+  }
+}
+
+OrcCode *
+orc_program_take_code (OrcProgram *program)
+{
+  OrcCode *code = program->orccode;
+  program->orccode = NULL;
+  return code;
 }
 

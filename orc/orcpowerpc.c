@@ -304,7 +304,7 @@ powerpc_do_fixups (OrcCompiler *compiler)
       *(unsigned int *)ptr = (insn&0xffff0000) | ((insn + (label-ptr))&0xffff);
       break;
     case 1:
-      *(unsigned int *)ptr = (insn&0xffff0000) | ((insn + (label-compiler->program->code))&0xffff);
+      *(unsigned int *)ptr = (insn&0xffff0000) | ((insn + (label-compiler->code))&0xffff);
       break;
     case 2:
       *(unsigned int *)ptr = (insn&0xfc000000) | ((insn + (label-ptr))&0x03ffffff);
@@ -314,21 +314,21 @@ powerpc_do_fixups (OrcCompiler *compiler)
 }
 
 void
-powerpc_flush (OrcCompiler *compiler)
+orc_powerpc_flush_cache (OrcCode *code)
 {
 #ifdef HAVE_POWERPC
   unsigned char *ptr;
   int cache_line_size = 32;
   int i;
-  int size = compiler->codeptr - compiler->program->code;
+  int size = code->code_size;
 
-  ptr = compiler->program->code;
+  ptr = code->code;
   for (i=0;i<size;i+=cache_line_size) {
     __asm__ __volatile__ ("dcbst %0,%1" :: "r" (ptr), "r" (i));
   }
   __asm__ __volatile ("sync");
 
-  ptr = compiler->program->code_exec;
+  ptr = code->exec;
   for (i=0;i<size;i+=cache_line_size) {
     __asm__ __volatile__ ("icbi %0,%1" :: "r" (ptr), "r" (i));
   }
@@ -420,7 +420,7 @@ powerpc_load_constant (OrcCompiler *p, int i, int reg)
 
   powerpc_emit_b (p, label_skip);
 
-  while ((p->codeptr - p->program->code) & 0xf) {
+  while ((p->codeptr - p->code) & 0xf) {
     ORC_ASM_CODE(p,"  .long 0x00000000\n");
     powerpc_emit (p, 0x00000000);
   }

@@ -121,7 +121,7 @@ void orc_arm_emit_rv (OrcCompiler *p, int op, OrcArmCond cond,
     int Rd, int Rm);
 void orc_arm_emit_nop (OrcCompiler *compiler);
 
-void orc_arm_flush_cache (OrcCompiler *compiler);
+void orc_arm_flush_cache (OrcCode *code);
 
 /* ALL cpus */
 /* data procesing instructions */

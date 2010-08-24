@@ -174,7 +174,7 @@ orc_arm_emit_align (OrcCompiler *compiler, int align_shift)
 {
   int diff;
 
-  diff = (compiler->program->code - compiler->codeptr)&((1<<align_shift) - 1);
+  diff = (compiler->code - compiler->codeptr)&((1<<align_shift) - 1);
   while (diff) {
     orc_arm_emit_nop (compiler);
     diff-=4;
@@ -721,10 +721,10 @@ orc_arm_emit_rv (OrcCompiler *p, int op, OrcArmCond cond,
 }
 
 void
-orc_arm_flush_cache (OrcCompiler *compiler)
+orc_arm_flush_cache (OrcCode *code)
 {
 #ifdef HAVE_ARM
-  __clear_cache (compiler->program->code, compiler->codeptr);
+  __clear_cache (code->code, code->code + code->code_size);
 #endif
 }
 

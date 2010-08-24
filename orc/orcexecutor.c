@@ -210,7 +210,7 @@ orc_executor_emulate (OrcExecutor *ex)
   }
 
   for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
-    OrcVariable *var = code->vars + i;
+    OrcCodeVariable *var = code->vars + i;
 
     if (var->size) {
       tmpspace[i] = malloc(ORC_MAX_VAR_SIZE * CHUNK_SIZE);
@@ -232,7 +232,7 @@ orc_executor_emulate (OrcExecutor *ex)
     }
 
     for(k=0;k<ORC_STATIC_OPCODE_N_SRC;k++) {
-      OrcVariable *var = code->vars + insn->src_args[k];
+      OrcCodeVariable *var = code->vars + insn->src_args[k];
       if (opcode->src_size[k] == 0) continue;
 
       if (var->vartype == ORC_VAR_TYPE_CONST) {
@@ -254,7 +254,7 @@ orc_executor_emulate (OrcExecutor *ex)
       }
     }
     for(k=0;k<ORC_STATIC_OPCODE_N_DEST;k++) {
-      OrcVariable *var = code->vars + insn->dest_args[k];
+      OrcCodeVariable *var = code->vars + insn->dest_args[k];
       if (opcode->dest_size[k] == 0) continue;
 
       if (var->vartype == ORC_VAR_TYPE_TEMP) {
@@ -281,7 +281,8 @@ orc_executor_emulate (OrcExecutor *ex)
       opcode = insn->opcode;
 
       for(k=0;k<ORC_STATIC_OPCODE_N_SRC;k++) {
-        OrcVariable *var = code->vars + insn->src_args[k];
+        OrcCodeVariable *var = code->vars + insn->src_args[k];
+        if (opcode->src_size[k] == 0) continue;
 
         if (var->vartype == ORC_VAR_TYPE_SRC) {
           opcode_ex[j].src_ptrs[k] =
@@ -294,7 +295,8 @@ orc_executor_emulate (OrcExecutor *ex)
         }
       }
       for(k=0;k<ORC_STATIC_OPCODE_N_DEST;k++) {
-        OrcVariable *var = code->vars + insn->dest_args[k];
+        OrcCodeVariable *var = code->vars + insn->dest_args[k];
+        if (opcode->dest_size[k] == 0) continue;
 
         if (var->vartype == ORC_VAR_TYPE_DEST) {
           opcode_ex[j].dest_ptrs[k] =

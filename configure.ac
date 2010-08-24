@@ -81,6 +81,8 @@ if test "$orc_cv_monotonic_clock" = "yes"; then
   AC_DEFINE(HAVE_MONOTONIC_CLOCK,1,[Defined if we have a monotonic clock])
 fi
 
+AC_CHECK_HEADERS([valgrind/valgrind.h])
+
 AS_COMPILER_FLAG(-Wall, ORC_CFLAGS="$ORC_CFLAGS -Wall")
 if test "x$ORC_CVS" = "xyes"
 then

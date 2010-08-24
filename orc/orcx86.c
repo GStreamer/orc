@@ -998,7 +998,7 @@ orc_x86_emit_align (OrcCompiler *compiler)
   int diff;
   int align_shift = 4;
 
-  diff = (compiler->program->code - compiler->codeptr)&((1<<align_shift) - 1);
+  diff = (compiler->code - compiler->codeptr)&((1<<align_shift) - 1);
   while (diff) {
     ORC_ASM_CODE(compiler,"  nop\n");
     *compiler->codeptr++ = 0x90;

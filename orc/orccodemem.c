@@ -25,7 +25,6 @@
 #define SIZE 65536
 
 typedef struct _OrcCodeRegion OrcCodeRegion;
-typedef struct _OrcCodeChunk OrcCodeChunk;
 
 struct _OrcCodeRegion {
   orc_uint8 *write_ptr;
@@ -148,29 +147,44 @@ orc_code_region_get_free_chunk (int size)
 }
 
 void
-orc_compiler_allocate_codemem (OrcCompiler *compiler)
+orc_code_allocate_codemem (OrcCode *code, int size)
 {
   OrcCodeRegion *region;
   OrcCodeChunk *chunk;
-  int size = 4096;
+  int aligned_size = (size + 15) & (~15);
 
-  chunk = orc_code_region_get_free_chunk (size);
+  chunk = orc_code_region_get_free_chunk (aligned_size);
   region = chunk->region;
 
-  if (chunk->size > size) {
-    orc_code_chunk_split (chunk, size);
+  if (chunk->size > aligned_size) {
+    orc_code_chunk_split (chunk, aligned_size);
   }
 
   chunk->used = TRUE;
 
-  compiler->program->code = ORC_PTR_OFFSET(region->write_ptr, chunk->offset);
-  compiler->program->code_exec = ORC_PTR_OFFSET(region->exec_ptr, chunk->offset);
-  compiler->program->code_size = chunk->size;
-  compiler->codeptr = ORC_PTR_OFFSET(region->write_ptr, chunk->offset);
+  code->chunk = chunk;
+  code->code = ORC_PTR_OFFSET(region->write_ptr, chunk->offset);
+  code->exec = ORC_PTR_OFFSET(region->exec_ptr, chunk->offset);
+  code->code_size = size;
+  //compiler->codeptr = ORC_PTR_OFFSET(region->write_ptr, chunk->offset);
 }
 
+void
+orc_code_chunk_free (OrcCodeChunk *chunk)
+{
+  if (_orc_compiler_flag_debug) {
+    /* If debug is turned on, don't free code */
+    return;
+  }
 
-
+  chunk->used = FALSE;
+  if (chunk->next && !chunk->next->used) {
+    orc_code_chunk_merge (chunk);
+  }
+  if (chunk->prev && !chunk->prev->used) {
+    orc_code_chunk_merge (chunk->prev);
+  }
+}
 
 #ifdef HAVE_CODEMEM_MMAP
 void

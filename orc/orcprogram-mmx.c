@@ -47,7 +47,8 @@ static OrcTarget mmx_target = {
   0,
   NULL,
   mmx_load_constant,
-  mmx_get_flag_name
+  mmx_get_flag_name,
+  NULL
 };
 
 
@@ -664,7 +665,7 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
   {
     orc_mmx_emit_loop (compiler, 0, 0);
 
-    compiler->codeptr = compiler->program->code;
+    compiler->codeptr = compiler->code;
     free (compiler->asm_code);
     compiler->asm_code = NULL;
     compiler->asm_code_len = 0;
