@@ -43,7 +43,7 @@ main (int argc, char *argv[])
   n = orc_parse (code, &programs);
 
   for(i=0;i<n;i++){
-    OrcCompileResult ret;
+    OrcTestResult ret;
 
     printf("%s:\n", programs[i]->name);
     ret = orc_test_gcc_compile_neon (programs[i]);
