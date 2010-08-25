@@ -101,6 +101,14 @@ orc_executor_set_param (OrcExecutor *ex, int var, int value)
 }
 
 void
+orc_executor_set_param_float (OrcExecutor *ex, int var, float value)
+{
+  orc_union32 u;
+  u.f = value;
+  ex->params[var] = u.i;
+}
+
+void
 orc_executor_set_param_str (OrcExecutor *ex, const char *name, int value)
 {
   int var;

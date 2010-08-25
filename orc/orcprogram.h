@@ -640,6 +640,7 @@ void orc_executor_set_stride (OrcExecutor *ex, int var, int stride);
 void orc_executor_set_array_str (OrcExecutor *ex, const char *name, void *ptr);
 void orc_executor_set_param (OrcExecutor *ex, int var, int value);
 void orc_executor_set_param_str (OrcExecutor *ex, const char *name, int value);
+void orc_executor_set_param_float (OrcExecutor *ex, int var, float value);
 int orc_executor_get_accumulator (OrcExecutor *ex, int var);
 int orc_executor_get_accumulator_str (OrcExecutor *ex, const char *name);
 void orc_executor_set_n (OrcExecutor *ex, int n);

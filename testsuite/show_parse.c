@@ -285,7 +285,11 @@ show (OrcProgram *program)
       dest[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size, 0);
       orc_array_set_pattern (dest[i], ORC_OOB_VALUE);
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_PARAM) {
-      orc_executor_set_param (ex, i, 2);
+      if (program->vars[i].is_float_param) {
+        orc_executor_set_param_float (ex, i, 2.0);
+      } else {
+        orc_executor_set_param (ex, i, 2);
+      }
     }
   }
 

@@ -568,7 +568,11 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
       orc_array_set_pattern (dest_emul[i], ORC_OOB_VALUE);
       misalignment++;
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_PARAM) {
-      orc_executor_set_param (ex, i, 2);
+      if (program->vars[i].is_float_param) {
+        orc_executor_set_param_float (ex, i, 2.0);
+      } else {
+        orc_executor_set_param (ex, i, 2);
+      }
     }
   }
 
