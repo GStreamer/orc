@@ -31,6 +31,8 @@ AC_CONFIG_SRCDIR([orc/orc.h])
 ACLOCAL_AMFLAGS="-I m4 $ACLOCAL_AMFLAGS"
 AC_SUBST(ACLOCAL_AMFLAGS)
 
+AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
+
 ##################################################
 # Check for gtk-doc.
 ##################################################

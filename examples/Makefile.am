@@ -1,5 +1,13 @@
 
-orcbin_PROGRAMS = example1 example2 example3 mt19937ar
+orcbin_PROGRAMS = mt19937ar
+if CROSS_COMPILING
+else
+orcbin_PROGRAMS += example1 example2 example3 mt19937ar
+
+BUILT_SOURCES = example1orc.c example1orc.h \
+	example2orc.c example2orc.h \
+	example3orc.c example3orc.h
+endif
 
 if ENABLE_BACKEND_MMX
 orcbin_PROGRAMS += volscale
@@ -9,10 +17,6 @@ AM_LDFLAGS = $(ORC_LIBS)
 AM_CFLAGS = $(ORC_CFLAGS)
 
 EXTRA_DIST = example1orc.orc example2orc.orc example3orc.orc
-
-BUILT_SOURCES = example1orc.c example1orc.h \
-	example2orc.c example2orc.h \
-	example3orc.c example3orc.h
 
 CLEANFILES = example1orc.c example1orc.h \
 	example2orc.c example2orc.h \
