@@ -24,6 +24,7 @@ enum {
   ORC_PATTERN_RANDOM = 0,
   ORC_PATTERN_FLOAT_SMALL,
   ORC_PATTERN_FLOAT_SPECIAL,
+  ORC_PATTERN_FLOAT_DENORMAL
 };
 
 OrcArray *orc_array_new (int n, int m, int element_size, int misalignment);

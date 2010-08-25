@@ -150,6 +150,20 @@ orc_array_set_pattern_2 (OrcArray *array, OrcRandomContext *context,
         }
       }
       break;
+    case ORC_PATTERN_FLOAT_DENORMAL:
+      {
+        if (array->element_size != 4) return;
+        for(j=0;j<array->m;j++){
+          orc_union32 *data;
+
+          data = ORC_PTR_OFFSET(array->data, array->stride * j);
+
+          for(i=0;i<array->n;i++){
+            data[i].i = orc_random (context);
+            data[i].i &= ~0x7f800000;
+          }
+        }
+      }
       break;
     default:
       break;
