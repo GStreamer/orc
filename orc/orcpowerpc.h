@@ -96,14 +96,21 @@ void powerpc_emit_srawi (OrcCompiler *compiler, int regd, int rega, int shift,
     int record);
 void powerpc_emit_655510 (OrcCompiler *compiler, int major, int d, int a,
     int b, int minor);
+void powerpc_emit_D (OrcCompiler *compiler, const char *name,
+    unsigned int insn, int regd, int rega, int imm);
 void powerpc_emit_X (OrcCompiler *compiler, unsigned int insn, int d, int a,
     int b);
-void powerpc_emit_VA (OrcCompiler *compiler, int major, int d, int a, int b,
-    int c, int minor);
-void powerpc_emit_VA_2 (OrcCompiler *compiler, const char *name, int major, int d,
-    int a, int b, int c, int minor);
+void powerpc_emit_VA (OrcCompiler *compiler, const char *name, unsigned int insn, int d, int a, int b,
+    int c);
+void powerpc_emit_VA_acb (OrcCompiler *compiler, const char *name, unsigned int insn, int d, int a, int b,
+    int c);
 void powerpc_emit_VX (OrcCompiler *compiler, unsigned int insn, int d, int a,
     int b);
+void powerpc_emit_VX_b (OrcCompiler *p, const char *name, unsigned int insn, int a);
+void powerpc_emit_VX_db (OrcCompiler *p, const char *name, unsigned int insn, int d, int b);
+void powerpc_emit_VX_dbi (OrcCompiler *p, const char *name, unsigned int insn, int d, int b, int imm);
+void powerpc_emit_VXR (OrcCompiler *compiler, const char *name,
+    unsigned int insn, int d, int a, int b, int record);
 void powerpc_emit_VX_2 (OrcCompiler *p, const char *name, unsigned int insn,
     int d, int a, int b);
 void powerpc_emit_VX_3 (OrcCompiler *p, const char *name, unsigned int insn,
@@ -154,12 +161,12 @@ int powerpc_get_constant_full (OrcCompiler *p, int value0, int value1, int value
 #define powerpc_emit_vminsw(p,a,b,c)       powerpc_emit_VX_2 (p, "vminsw", 0x10000382, a, b, c)
 
 #define powerpc_emit_vsldoi(p,a,b,c,d)     powerpc_emit_VX_3 (p, "vsldoi", 0x1000002c | (d<<6), a, b, c, d)
-#define powerpc_emit_vmladduhm(p,a,b,c,d)  powerpc_emit_VA_2 (p, "vmladduhm", 4, a, b, c, d, 34)
+#define powerpc_emit_vmladduhm(p,a,b,c,d)  powerpc_emit_VA (p, "vmladduhm", 0x10000022, a, b, c, d)
 
 #define powerpc_emit_vupkhsb(p,a,b)        powerpc_emit_VX_4 (p, "vupkhsb", 0x1000020e, a, b)
 #define powerpc_emit_vupkhsh(p,a,b)        powerpc_emit_VX_4 (p, "vupkhsh", 0x1000024e, a, b)
 
-#define powerpc_emit_vperm(p,a,b,c,d)      powerpc_emit_VX_3_reg (p, "vperm", 0x1000002b, a, b, c, d)
+#define powerpc_emit_vperm(p,a,b,c,d)      powerpc_emit_VA (p, "vperm", 0x1000002b, a, b, c, d)
 
 
 #endif

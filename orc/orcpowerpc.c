@@ -178,6 +178,19 @@ powerpc_emit_655510 (OrcCompiler *compiler, int major, int d, int a, int b,
 }
 
 void
+powerpc_emit_D (OrcCompiler *compiler, const char *name,
+    unsigned int insn, int regd, int rega, int imm)
+{
+  ORC_ASM_CODE(compiler,"  %s %s, %s, %d\n", name,
+      powerpc_get_regname(regd),
+      powerpc_get_regname(rega), imm);
+  insn |= (powerpc_regnum (regd)<<21) | (powerpc_regnum (rega)<<16);
+  insn |= imm&0xffff;
+
+  powerpc_emit (compiler, insn);
+}
+
+void
 powerpc_emit_X (OrcCompiler *compiler, unsigned int insn, int d, int a, int b)
 {
 #if 0
@@ -195,31 +208,48 @@ powerpc_emit_X (OrcCompiler *compiler, unsigned int insn, int d, int a, int b)
 }
 
 void
-powerpc_emit_VA (OrcCompiler *compiler, int major, int d, int a, int b,
-    int c, int minor)
+powerpc_emit_VA (OrcCompiler *compiler, const char *name, unsigned int insn,
+    int d, int a, int b, int c)
 {
-  unsigned int insn;
+  ORC_ASM_CODE(compiler,"  %s %s, %s, %s, %s\n", name,
+      powerpc_get_regname(d),
+      powerpc_get_regname(a),
+      powerpc_get_regname(b),
+      powerpc_get_regname(c));
 
-  insn = (major<<26) | (d<<21) | (a<<16);
-  insn |= (b<<11) | (c<<6) | (minor<<0);
+  insn |= ((d&0x1f)<<21) | ((a&0x1f)<<16) | ((b&0x1f)<<11) | ((c&0x1f)<<6);
 
   powerpc_emit (compiler, insn);
 }
 
 void
-powerpc_emit_VA_2 (OrcCompiler *p, const char *name, int major, int d, int a, int b,
-    int c, int minor)
+powerpc_emit_VA_acb (OrcCompiler *compiler, const char *name, unsigned int insn,
+    int d, int a, int b, int c)
 {
-  ORC_ASM_CODE(p,"  %s %s, %s, %s, %s\n", name,
+  ORC_ASM_CODE(compiler,"  %s %s, %s, %s, %s\n", name,
       powerpc_get_regname(d),
       powerpc_get_regname(a),
-      powerpc_get_regname(b),
-      powerpc_get_regname(c));
-  powerpc_emit_VA(p, major,
-      powerpc_regnum(d),
-      powerpc_regnum(a),
-      powerpc_regnum(b),
-      powerpc_regnum(c), minor);
+      powerpc_get_regname(c),
+      powerpc_get_regname(b));
+
+  insn |= ((d&0x1f)<<21) | ((a&0x1f)<<16) | ((b&0x1f)<<11) | ((c&0x1f)<<6);
+
+  powerpc_emit (compiler, insn);
+}
+
+void
+powerpc_emit_VXR (OrcCompiler *compiler, const char *name, unsigned int insn,
+    int d, int a, int b, int record)
+{
+  ORC_ASM_CODE(compiler,"  %s %s, %s, %s\n", name,
+      powerpc_get_regname(d),
+      powerpc_get_regname(a),
+      powerpc_get_regname(b));
+
+  insn |= ((d&0x1f)<<21) | ((a&0x1f)<<16) | ((b&0x1f)<<11);
+  insn |= ((record&0x1)<<10);
+
+  powerpc_emit (compiler, insn);
 }
 
 void
@@ -243,6 +273,34 @@ powerpc_emit_VX_2 (OrcCompiler *p, const char *name,
       powerpc_regnum(d),
       powerpc_regnum(a),
       powerpc_regnum(b));
+}
+
+void
+powerpc_emit_VX_b (OrcCompiler *p, const char *name,
+    unsigned int insn, int b)
+{
+  ORC_ASM_CODE(p,"  %s %s\n", name, powerpc_get_regname(b));
+  powerpc_emit_VX(p, insn, 0, 0, powerpc_regnum(b));
+}
+
+void
+powerpc_emit_VX_db (OrcCompiler *p, const char *name, unsigned int insn,
+    int d, int b)
+{
+  ORC_ASM_CODE(p,"  %s %s, %s\n", name,
+      powerpc_get_regname(d),
+      powerpc_get_regname(b));
+  powerpc_emit_VX(p, insn, powerpc_regnum(d), 0, powerpc_regnum(b));
+}
+
+void
+powerpc_emit_VX_dbi (OrcCompiler *p, const char *name, unsigned int insn,
+    int d, int b, int imm)
+{
+  ORC_ASM_CODE(p,"  %s %s, %s, %d\n", name,
+      powerpc_get_regname(d),
+      powerpc_get_regname(b), imm);
+  powerpc_emit_VX(p, insn, powerpc_regnum(d), imm, powerpc_regnum(b));
 }
 
 void
@@ -328,7 +386,7 @@ orc_powerpc_flush_cache (OrcCode *code)
   }
   __asm__ __volatile ("sync");
 
-  ptr = code->exec;
+  ptr = (void *)code->exec;
   for (i=0;i<size;i+=cache_line_size) {
     __asm__ __volatile__ ("icbi %0,%1" :: "r" (ptr), "r" (i));
   }
@@ -344,46 +402,40 @@ powerpc_load_constant (OrcCompiler *p, int i, int reg)
   int greg = POWERPC_R31;
   int label_skip, label_data;
 
-#if 0
   switch (p->constants[i].type) {
     case ORC_CONST_ZERO:
       powerpc_emit_VX_2(p, "vxor", 0x100004c4, reg, reg, reg);
-      break;
+      return;
     case ORC_CONST_SPLAT_B:
       if (value < 16 && value >= -16) {
         ORC_ASM_CODE(p,"  vspltisb %s, %d\n",
-            powerpc_get_regname(reg), value&0x1f);
-        powerpc_emit_VX(p, 0x1000020c,
+            powerpc_get_regname(reg), value);
+        powerpc_emit_VX(p, 0x1000030c,
             powerpc_regnum(reg), value & 0x1f, 0);
-      } else {
-        ORC_COMPILER_ERROR(p,"can't load constant");
+        return;
       }
       break;
     case ORC_CONST_SPLAT_W:
       if (value < 16 && value >= -16) {
         ORC_ASM_CODE(p,"  vspltish %s, %d\n",
-            powerpc_get_regname(reg), value&0x1f);
-        powerpc_emit_VX(p, 0x1000024c,
+            powerpc_get_regname(reg), value);
+        powerpc_emit_VX(p, 0x1000034c,
             powerpc_regnum(reg), value & 0x1f, 0);
-      } else {
-        ORC_COMPILER_ERROR(p,"can't load constant");
+        return;
       }
       break;
     case ORC_CONST_SPLAT_L:
       if (value < 16 && value >= -16) {
         ORC_ASM_CODE(p,"  vspltisw %s, %d\n",
-            powerpc_get_regname(reg), value&0x1f);
-        powerpc_emit_VX(p, 0x1000028c,
+            powerpc_get_regname(reg), value);
+        powerpc_emit_VX(p, 0x1000038c,
             powerpc_regnum(reg), value & 0x1f, 0);
-      } else {
-        ORC_COMPILER_ERROR(p,"can't load constant");
+        return;
       }
       break;
     default:
-      ORC_COMPILER_ERROR(p,"unhandled");
       break;
   }
-#endif
 
   switch (p->constants[i].type) {
     case ORC_CONST_ZERO:
@@ -463,7 +515,7 @@ powerpc_load_constant (OrcCompiler *p, int i, int reg)
 int
 powerpc_get_constant (OrcCompiler *p, int type, int value)
 {
-  int reg = p->tmpreg;
+  int reg = orc_compiler_get_temp_reg (p);
   int i;
 
   for(i=0;i<p->n_constants;i++){
