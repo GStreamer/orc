@@ -2,7 +2,6 @@
 #include "config.h"
 
 #include <orc/orc.h>
-#include <orc-test/orctest.h>
 #include <orc/orcparse.h>
 
 #include <stdio.h>
@@ -91,7 +90,6 @@ main (int argc, char *argv[])
   char *log = NULL;
 
   orc_init ();
-  orc_test_init ();
 
   for(i=1;i<argc;i++) {
     if (strcmp(argv[i], "--header") == 0) {
