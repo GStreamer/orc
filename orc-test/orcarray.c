@@ -26,7 +26,9 @@ orc_array_new (int n, int m, int element_size, int misalignment)
 {
   OrcArray *ar;
   void *data;
+#ifdef HAVE_POSIX_MEMALIGN
   int ret;
+#endif
 
   ar = malloc (sizeof(OrcArray));
   memset (ar, 0, sizeof(OrcArray));
@@ -39,7 +41,11 @@ orc_array_new (int n, int m, int element_size, int misalignment)
   ar->stride = (ar->stride + (ALIGNMENT-1)) & (~(ALIGNMENT-1));
   ar->alloc_len = ar->stride * (m+2*EXTEND_ROWS) + (ALIGNMENT * element_size);
 
+#ifdef HAVE_POSIX_MEMALIGN
   ret = posix_memalign (&data, ALIGNMENT, ar->alloc_len);
+#else
+  data = malloc (ar->alloc_len);
+#endif
   ar->alloc_data = data;
 
   ar->data = ORC_PTR_OFFSET (ar->alloc_data,

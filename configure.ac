@@ -32,6 +32,7 @@ ACLOCAL_AMFLAGS="-I m4 $ACLOCAL_AMFLAGS"
 AC_SUBST(ACLOCAL_AMFLAGS)
 
 AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
+AC_CHECK_FUNCS([posix_memalign])
 
 ##################################################
 # Check for gtk-doc.
