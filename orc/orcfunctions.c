@@ -81,9 +81,19 @@ void orc_memset (void * d1, int p1, int n);
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
 #define ORC_MIN_NORMAL (1.1754944909521339405e-38)
-#define ORC_DENORMAL(x) (((x) > -ORC_MIN_NORMAL && (x) < ORC_MIN_NORMAL) ? ((x)<0 ? (-0.0f) : (0.0f)) : (x))
-#define ORC_MINF(a,b) (isnan(a) ? a : isnan(b) ? b : ((a)<(b)) ? (a) : (b))
-#define ORC_MAXF(a,b) (isnan(a) ? a : isnan(b) ? b : ((a)>(b)) ? (a) : (b))
+#define ORC_RECAST_INT(x) (((orc_union32)(x)).i)
+#define ORC_RECAST_FLOAT(x) (((orc_union32)(orc_int32)(x)).f)
+#define ORC_DENORMAL(x) ORC_RECAST_FLOAT(ORC_RECAST_INT(x) & (((ORC_RECAST_INT(x)&0x7f800000) == 0) ? 0xff800000 : 0xffffffff))
+#define ORC_ISNAN(x) (((ORC_RECAST_INT(x)&0x7f800000) == 0x7f800000) && ((ORC_RECAST_INT(x)&0x007fffff) != 0))
+#define ORC_MINF(a,b) (ORC_ISNAN(a) ? a : ORC_ISNAN(b) ? b : ((a)<(b)) ? (a) : (b))
+#define ORC_MAXF(a,b) (ORC_ISNAN(a) ? a : ORC_ISNAN(b) ? b : ((a)>(b)) ? (a) : (b))
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define ORC_RESTRICT restrict
+#elif defined(__GNUC__) && __GNUC__ >= 4
+#define ORC_RESTRICT __restrict__
+#else
+#define ORC_RESTRICT
+#endif
 /* end Orc C target preamble */
 
 
@@ -93,8 +103,8 @@ void orc_memset (void * d1, int p1, int n);
 void
 orc_memcpy (void * d1, const void * s1, int n){
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
   orc_int8 var32;
   orc_int8 var33;
 
@@ -114,12 +124,12 @@ orc_memcpy (void * d1, const void * s1, int n){
 
 #else
 static void
-_backup_orc_memcpy (OrcExecutor *ex)
+_backup_orc_memcpy (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
   orc_int8 var32;
   orc_int8 var33;
 
@@ -180,7 +190,7 @@ orc_memcpy (void * d1, const void * s1, int n)
 void
 orc_memset (void * d1, int p1, int n){
   int i;
-  orc_int8 * ptr0;
+  orc_int8 * ORC_RESTRICT ptr0;
   orc_int8 var32;
   orc_int8 var33;
 
@@ -199,11 +209,11 @@ orc_memset (void * d1, int p1, int n){
 
 #else
 static void
-_backup_orc_memset (OrcExecutor *ex)
+_backup_orc_memset (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_int8 * ptr0;
+  orc_int8 * ORC_RESTRICT ptr0;
   orc_int8 var32;
   orc_int8 var33;
 

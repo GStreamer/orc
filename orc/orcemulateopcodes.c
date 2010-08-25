@@ -35,9 +35,19 @@
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
 #define ORC_MIN_NORMAL (1.1754944909521339405e-38)
-#define ORC_DENORMAL(x) (((x) > -ORC_MIN_NORMAL && (x) < ORC_MIN_NORMAL) ? ((x)<0 ? (-0.0f) : (0.0f)) : (x))
-#define ORC_MINF(a,b) (isnan(a) ? a : isnan(b) ? b : ((a)<(b)) ? (a) : (b))
-#define ORC_MAXF(a,b) (isnan(a) ? a : isnan(b) ? b : ((a)>(b)) ? (a) : (b))
+#define ORC_RECAST_INT(x) (((orc_union32)(x)).i)
+#define ORC_RECAST_FLOAT(x) (((orc_union32)(orc_int32)(x)).f)
+#define ORC_DENORMAL(x) ORC_RECAST_FLOAT(ORC_RECAST_INT(x) & (((ORC_RECAST_INT(x)&0x7f800000) == 0) ? 0xff800000 : 0xffffffff))
+#define ORC_ISNAN(x) (((ORC_RECAST_INT(x)&0x7f800000) == 0x7f800000) && ((ORC_RECAST_INT(x)&0x007fffff) != 0))
+#define ORC_MINF(a,b) (ORC_ISNAN(a) ? a : ORC_ISNAN(b) ? b : ((a)<(b)) ? (a) : (b))
+#define ORC_MAXF(a,b) (ORC_ISNAN(a) ? a : ORC_ISNAN(b) ? b : ((a)>(b)) ? (a) : (b))
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define ORC_RESTRICT restrict
+#elif defined(__GNUC__) && __GNUC__ >= 4
+#define ORC_RESTRICT __restrict__
+#else
+#define ORC_RESTRICT
+#endif
 /* end Orc C target preamble */
 
 
@@ -45,8 +55,8 @@ void
 emulate_absb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
   orc_int8 var32;
   orc_int8 var33;
 
@@ -68,9 +78,9 @@ void
 emulate_addb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -96,9 +106,9 @@ void
 emulate_addssb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -124,9 +134,9 @@ void
 emulate_addusb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -152,9 +162,9 @@ void
 emulate_andb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -180,9 +190,9 @@ void
 emulate_andnb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -208,9 +218,9 @@ void
 emulate_avgsb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -236,9 +246,9 @@ void
 emulate_avgub (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -264,9 +274,9 @@ void
 emulate_cmpeqb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -292,9 +302,9 @@ void
 emulate_cmpgtsb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -320,8 +330,8 @@ void
 emulate_copyb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
   orc_int8 var32;
   orc_int8 var33;
 
@@ -343,8 +353,8 @@ void
 emulate_loadb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
   orc_int8 var32;
 
   ptr0 = (orc_int8 *)ex->dest_ptrs[0];
@@ -363,8 +373,8 @@ void
 emulate_loadoffb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
   orc_int8 var32;
 
   ptr0 = (orc_int8 *)ex->dest_ptrs[0];
@@ -383,8 +393,8 @@ void
 emulate_loadupdb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
   orc_int8 var32;
 
   ptr0 = (orc_int8 *)ex->dest_ptrs[0];
@@ -403,8 +413,8 @@ void
 emulate_loadupib (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
   orc_int8 var32;
 
   ptr0 = (orc_int8 *)ex->dest_ptrs[0];
@@ -423,7 +433,7 @@ void
 emulate_loadpb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
+  orc_int8 * ORC_RESTRICT ptr0;
   orc_int8 var32;
 
   ptr0 = (orc_int8 *)ex->dest_ptrs[0];
@@ -441,8 +451,8 @@ void
 emulate_ldresnearb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
   orc_int8 var32;
 
   ptr0 = (orc_int8 *)ex->dest_ptrs[0];
@@ -461,8 +471,8 @@ void
 emulate_ldresnearl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
 
   ptr0 = (orc_union32 *)ex->dest_ptrs[0];
@@ -481,8 +491,8 @@ void
 emulate_ldreslinb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
   orc_int8 var32;
 
   ptr0 = (orc_int8 *)ex->dest_ptrs[0];
@@ -504,8 +514,8 @@ void
 emulate_ldreslinl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
 
   ptr0 = (orc_union32 *)ex->dest_ptrs[0];
@@ -532,9 +542,9 @@ void
 emulate_maxsb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -560,9 +570,9 @@ void
 emulate_maxub (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -588,9 +598,9 @@ void
 emulate_minsb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -616,9 +626,9 @@ void
 emulate_minub (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -644,9 +654,9 @@ void
 emulate_mullb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -672,9 +682,9 @@ void
 emulate_mulhsb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -700,9 +710,9 @@ void
 emulate_mulhub (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -728,9 +738,9 @@ void
 emulate_orb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -756,8 +766,8 @@ void
 emulate_shlb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
   orc_int8 var32;
   orc_int8 var33;
 
@@ -779,8 +789,8 @@ void
 emulate_shrsb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
   orc_int8 var32;
   orc_int8 var33;
 
@@ -802,8 +812,8 @@ void
 emulate_shrub (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
   orc_int8 var32;
   orc_int8 var33;
 
@@ -825,8 +835,8 @@ void
 emulate_signb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
   orc_int8 var32;
   orc_int8 var33;
 
@@ -848,8 +858,8 @@ void
 emulate_storeb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
   orc_int8 var32;
 
   ptr0 = (orc_int8 *)ex->dest_ptrs[0];
@@ -868,9 +878,9 @@ void
 emulate_subb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -896,9 +906,9 @@ void
 emulate_subssb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -924,9 +934,9 @@ void
 emulate_subusb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -952,9 +962,9 @@ void
 emulate_xorb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -980,8 +990,8 @@ void
 emulate_absw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
   orc_union16 var33;
 
@@ -1003,9 +1013,9 @@ void
 emulate_addw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1031,9 +1041,9 @@ void
 emulate_addssw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1059,9 +1069,9 @@ void
 emulate_addusw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1087,9 +1097,9 @@ void
 emulate_andw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1115,9 +1125,9 @@ void
 emulate_andnw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1143,9 +1153,9 @@ void
 emulate_avgsw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1171,9 +1181,9 @@ void
 emulate_avguw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1199,9 +1209,9 @@ void
 emulate_cmpeqw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1227,9 +1237,9 @@ void
 emulate_cmpgtsw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1255,8 +1265,8 @@ void
 emulate_copyw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
   orc_union16 var33;
 
@@ -1278,8 +1288,8 @@ void
 emulate_div255w (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
   orc_union16 var33;
 
@@ -1301,9 +1311,9 @@ void
 emulate_divluw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1329,8 +1339,8 @@ void
 emulate_loadw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
 
   ptr0 = (orc_union16 *)ex->dest_ptrs[0];
@@ -1349,8 +1359,8 @@ void
 emulate_loadoffw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
 
   ptr0 = (orc_union16 *)ex->dest_ptrs[0];
@@ -1369,7 +1379,7 @@ void
 emulate_loadpw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
+  orc_union16 * ORC_RESTRICT ptr0;
   orc_union16 var32;
 
   ptr0 = (orc_union16 *)ex->dest_ptrs[0];
@@ -1387,9 +1397,9 @@ void
 emulate_maxsw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1415,9 +1425,9 @@ void
 emulate_maxuw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1443,9 +1453,9 @@ void
 emulate_minsw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1471,9 +1481,9 @@ void
 emulate_minuw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1499,9 +1509,9 @@ void
 emulate_mullw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1527,9 +1537,9 @@ void
 emulate_mulhsw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1555,9 +1565,9 @@ void
 emulate_mulhuw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1583,9 +1593,9 @@ void
 emulate_orw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1611,8 +1621,8 @@ void
 emulate_shlw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
   orc_union16 var33;
 
@@ -1634,8 +1644,8 @@ void
 emulate_shrsw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
   orc_union16 var33;
 
@@ -1657,8 +1667,8 @@ void
 emulate_shruw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
   orc_union16 var33;
 
@@ -1680,8 +1690,8 @@ void
 emulate_signw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
   orc_union16 var33;
 
@@ -1703,8 +1713,8 @@ void
 emulate_storew (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
 
   ptr0 = (orc_union16 *)ex->dest_ptrs[0];
@@ -1723,9 +1733,9 @@ void
 emulate_subw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1751,9 +1761,9 @@ void
 emulate_subssw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1779,9 +1789,9 @@ void
 emulate_subusw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1807,9 +1817,9 @@ void
 emulate_xorw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -1835,8 +1845,8 @@ void
 emulate_absl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union32 var33;
 
@@ -1858,9 +1868,9 @@ void
 emulate_addl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -1886,9 +1896,9 @@ void
 emulate_addssl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -1914,9 +1924,9 @@ void
 emulate_addusl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -1942,9 +1952,9 @@ void
 emulate_andl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -1970,9 +1980,9 @@ void
 emulate_andnl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -1998,9 +2008,9 @@ void
 emulate_avgsl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -2026,9 +2036,9 @@ void
 emulate_avgul (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -2054,9 +2064,9 @@ void
 emulate_cmpeql (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -2082,9 +2092,9 @@ void
 emulate_cmpgtsl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -2110,8 +2120,8 @@ void
 emulate_copyl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union32 var33;
 
@@ -2133,8 +2143,8 @@ void
 emulate_loadl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
 
   ptr0 = (orc_union32 *)ex->dest_ptrs[0];
@@ -2153,8 +2163,8 @@ void
 emulate_loadoffl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
 
   ptr0 = (orc_union32 *)ex->dest_ptrs[0];
@@ -2173,7 +2183,7 @@ void
 emulate_loadpl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
+  orc_union32 * ORC_RESTRICT ptr0;
   orc_union32 var32;
 
   ptr0 = (orc_union32 *)ex->dest_ptrs[0];
@@ -2191,9 +2201,9 @@ void
 emulate_maxsl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -2219,9 +2229,9 @@ void
 emulate_maxul (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -2247,9 +2257,9 @@ void
 emulate_minsl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -2275,9 +2285,9 @@ void
 emulate_minul (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -2303,9 +2313,9 @@ void
 emulate_mulll (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -2331,9 +2341,9 @@ void
 emulate_mulhsl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -2359,9 +2369,9 @@ void
 emulate_mulhul (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -2387,9 +2397,9 @@ void
 emulate_orl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -2415,8 +2425,8 @@ void
 emulate_shll (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union32 var33;
 
@@ -2438,8 +2448,8 @@ void
 emulate_shrsl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union32 var33;
 
@@ -2461,8 +2471,8 @@ void
 emulate_shrul (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union32 var33;
 
@@ -2484,8 +2494,8 @@ void
 emulate_signl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union32 var33;
 
@@ -2507,8 +2517,8 @@ void
 emulate_storel (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
 
   ptr0 = (orc_union32 *)ex->dest_ptrs[0];
@@ -2527,9 +2537,9 @@ void
 emulate_subl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -2555,9 +2565,9 @@ void
 emulate_subssl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -2583,9 +2593,9 @@ void
 emulate_subusl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -2611,9 +2621,9 @@ void
 emulate_xorl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -2639,8 +2649,8 @@ void
 emulate_loadq (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union64 * ptr0;
-  const orc_union64 * ptr4;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
   orc_union64 var32;
 
   ptr0 = (orc_union64 *)ex->dest_ptrs[0];
@@ -2659,7 +2669,7 @@ void
 emulate_loadpq (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union64 * ptr0;
+  orc_union64 * ORC_RESTRICT ptr0;
   orc_union64 var32;
 
   ptr0 = (orc_union64 *)ex->dest_ptrs[0];
@@ -2677,8 +2687,8 @@ void
 emulate_storeq (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union64 * ptr0;
-  const orc_union64 * ptr4;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
   orc_union64 var32;
 
   ptr0 = (orc_union64 *)ex->dest_ptrs[0];
@@ -2697,8 +2707,8 @@ void
 emulate_splatw3q (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union64 * ptr0;
-  const orc_union64 * ptr4;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
   orc_union64 var32;
   orc_union64 var33;
 
@@ -2720,8 +2730,8 @@ void
 emulate_convsbw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_int8 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
   orc_int8 var32;
   orc_union16 var33;
 
@@ -2743,8 +2753,8 @@ void
 emulate_convubw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_int8 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
   orc_int8 var32;
   orc_union16 var33;
 
@@ -2766,8 +2776,8 @@ void
 emulate_splatbw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_int8 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
   orc_int8 var32;
   orc_union16 var33;
 
@@ -2789,8 +2799,8 @@ void
 emulate_splatbl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_int8 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
   orc_int8 var32;
   orc_union32 var33;
 
@@ -2812,8 +2822,8 @@ void
 emulate_convswl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union16 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
   orc_union32 var33;
 
@@ -2835,8 +2845,8 @@ void
 emulate_convuwl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union16 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
   orc_union32 var33;
 
@@ -2858,8 +2868,8 @@ void
 emulate_convslq (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union64 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union64 var33;
 
@@ -2881,8 +2891,8 @@ void
 emulate_convulq (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union64 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union64 var33;
 
@@ -2904,8 +2914,8 @@ void
 emulate_convwb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_union16 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
   orc_int8 var33;
 
@@ -2927,8 +2937,8 @@ void
 emulate_convhwb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_union16 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
   orc_int8 var33;
 
@@ -2950,8 +2960,8 @@ void
 emulate_convssswb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_union16 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
   orc_int8 var33;
 
@@ -2973,8 +2983,8 @@ void
 emulate_convsuswb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_union16 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
   orc_int8 var33;
 
@@ -2996,8 +3006,8 @@ void
 emulate_convusswb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_union16 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
   orc_int8 var33;
 
@@ -3019,8 +3029,8 @@ void
 emulate_convuuswb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_union16 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
   orc_int8 var33;
 
@@ -3042,8 +3052,8 @@ void
 emulate_convlw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union16 var33;
 
@@ -3065,8 +3075,8 @@ void
 emulate_convhlw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union16 var33;
 
@@ -3088,8 +3098,8 @@ void
 emulate_convssslw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union16 var33;
 
@@ -3111,8 +3121,8 @@ void
 emulate_convsuslw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union16 var33;
 
@@ -3134,8 +3144,8 @@ void
 emulate_convusslw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union16 var33;
 
@@ -3157,8 +3167,8 @@ void
 emulate_convuuslw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union16 var33;
 
@@ -3180,8 +3190,8 @@ void
 emulate_convql (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union64 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
   orc_union64 var32;
   orc_union32 var33;
 
@@ -3203,8 +3213,8 @@ void
 emulate_convsssql (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union64 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
   orc_union64 var32;
   orc_union32 var33;
 
@@ -3226,8 +3236,8 @@ void
 emulate_convsusql (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union64 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
   orc_union64 var32;
   orc_union32 var33;
 
@@ -3249,8 +3259,8 @@ void
 emulate_convussql (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union64 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
   orc_union64 var32;
   orc_union32 var33;
 
@@ -3272,8 +3282,8 @@ void
 emulate_convuusql (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union64 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
   orc_union64 var32;
   orc_union32 var33;
 
@@ -3295,9 +3305,9 @@ void
 emulate_mulsbw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_union16 var34;
@@ -3323,9 +3333,9 @@ void
 emulate_mulubw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_union16 var34;
@@ -3351,9 +3361,9 @@ void
 emulate_mulswl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union32 var34;
@@ -3379,9 +3389,9 @@ void
 emulate_muluwl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union32 var34;
@@ -3407,7 +3417,7 @@ void
 emulate_accw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  const orc_union16 * ptr4;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var12 =  { 0 };
   orc_union16 var32;
 
@@ -3427,7 +3437,7 @@ void
 emulate_accl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  const orc_union32 * ptr4;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var12 =  { 0 };
   orc_union32 var32;
 
@@ -3447,8 +3457,8 @@ void
 emulate_accsadubl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_union32 var12 =  { 0 };
   orc_int8 var32;
   orc_int8 var33;
@@ -3472,8 +3482,8 @@ void
 emulate_swapw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union16 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
   orc_union16 var33;
 
@@ -3495,8 +3505,8 @@ void
 emulate_swapl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union32 var33;
 
@@ -3518,8 +3528,8 @@ void
 emulate_select0wb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_union16 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
   orc_int8 var33;
 
@@ -3541,8 +3551,8 @@ void
 emulate_select1wb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  const orc_union16 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
   orc_int8 var33;
 
@@ -3564,8 +3574,8 @@ void
 emulate_select0lw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union16 var33;
 
@@ -3587,8 +3597,8 @@ void
 emulate_select1lw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union16 var33;
 
@@ -3610,9 +3620,9 @@ void
 emulate_mergewl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union16 * ptr4;
-  const orc_union16 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union16 * ORC_RESTRICT ptr4;
+  const orc_union16 * ORC_RESTRICT ptr5;
   orc_union16 var32;
   orc_union16 var33;
   orc_union32 var34;
@@ -3638,9 +3648,9 @@ void
 emulate_mergebw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  const orc_int8 * ptr4;
-  const orc_int8 * ptr5;
+  orc_union16 * ORC_RESTRICT ptr0;
+  const orc_int8 * ORC_RESTRICT ptr4;
+  const orc_int8 * ORC_RESTRICT ptr5;
   orc_int8 var32;
   orc_int8 var33;
   orc_union16 var34;
@@ -3666,9 +3676,9 @@ void
 emulate_splitlw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union16 * ptr0;
-  orc_union16 * ptr1;
-  const orc_union32 * ptr4;
+  orc_union16 * ORC_RESTRICT ptr0;
+  orc_union16 * ORC_RESTRICT ptr1;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union16 var33;
   orc_union16 var34;
@@ -3695,9 +3705,9 @@ void
 emulate_splitwb (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_int8 * ptr0;
-  orc_int8 * ptr1;
-  const orc_union16 * ptr4;
+  orc_int8 * ORC_RESTRICT ptr0;
+  orc_int8 * ORC_RESTRICT ptr1;
+  const orc_union16 * ORC_RESTRICT ptr4;
   orc_union16 var32;
   orc_int8 var33;
   orc_int8 var34;
@@ -3724,9 +3734,9 @@ void
 emulate_addf (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -3752,9 +3762,9 @@ void
 emulate_subf (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -3780,9 +3790,9 @@ void
 emulate_mulf (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -3808,9 +3818,9 @@ void
 emulate_divf (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -3836,8 +3846,8 @@ void
 emulate_sqrtf (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union32 var33;
 
@@ -3859,9 +3869,9 @@ void
 emulate_maxf (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -3887,9 +3897,9 @@ void
 emulate_minf (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -3915,9 +3925,9 @@ void
 emulate_cmpeqf (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -3943,9 +3953,9 @@ void
 emulate_cmpltf (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -3971,9 +3981,9 @@ void
 emulate_cmplef (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
-  const orc_union32 * ptr5;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -3999,8 +4009,8 @@ void
 emulate_convfl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union32 var33;
 
@@ -4022,8 +4032,8 @@ void
 emulate_convlf (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
-  orc_union32 * ptr0;
-  const orc_union32 * ptr4;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union32 var33;
 
