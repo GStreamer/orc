@@ -75,6 +75,7 @@ main (int argc, char *argv[])
 
     opcode = orc_opcode_find_by_name (filename);
     if (opcode) {
+      programs = malloc(sizeof(void *));
       programs[0] = orc_test_get_program_for_opcode (opcode);
       n = 1;
     } else {
