@@ -79,6 +79,7 @@ void orc_memset (void * d1, int p1, int n);
 #define ORC_CLAMP_UL(x) ORC_CLAMP(x,ORC_UL_MIN,ORC_UL_MAX)
 #define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
+#define ORC_SWAP_Q(x) ((((x)&0xffU)<<56) | (((x)&0xff00U)<<40) | (((x)&0xff0000U)<<24) | (((x)&0xff000000U)<<8) | (((x)&0xff00000000U)>>8) | (((x)&0xff0000000000U)>>24) | (((x)&0xff000000000000U)>>40) | (((x)&0xff00000000000000U)>>56))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
 #define ORC_MIN_NORMAL (1.1754944909521339405e-38)
 #define ORC_RECAST_INT(x) (((orc_union32)(x)).i)

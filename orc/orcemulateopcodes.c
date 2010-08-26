@@ -33,6 +33,7 @@
 #define ORC_CLAMP_UL(x) ORC_CLAMP(x,ORC_UL_MIN,ORC_UL_MAX)
 #define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
+#define ORC_SWAP_Q(x) ((((x)&0xffU)<<56) | (((x)&0xff00U)<<40) | (((x)&0xff0000U)<<24) | (((x)&0xff000000U)<<8) | (((x)&0xff00000000U)>>8) | (((x)&0xff0000000000U)>>24) | (((x)&0xff000000000000U)>>40) | (((x)&0xff00000000000000U)>>56))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
 #define ORC_MIN_NORMAL (1.1754944909521339405e-38)
 #define ORC_RECAST_INT(x) (((orc_union32)(x)).i)
@@ -3519,6 +3520,29 @@ emulate_swapl (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: swapl */
     var33.i = ORC_SWAP_L(var32.i);
     /* 2: storel */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_swapq (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  orc_union64 var32;
+  orc_union64 var33;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: swapq */
+    var33.i = ORC_SWAP_Q(var32.i);
+    /* 2: storeq */
     ptr0[i] = var33;
   }
 

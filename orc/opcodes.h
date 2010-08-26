@@ -121,6 +121,7 @@ UNARY_LW(select0lw, "(orc_uint32)%s & 0xffff")
 UNARY_LW(select1lw, "((orc_uint32)%s >> 16)&0xffff")
 UNARY_UW(swapw, "ORC_SWAP_W(%s)")
 UNARY_UL(swapl, "ORC_SWAP_L(%s)")
+UNARY_UQ(swapq, "ORC_SWAP_Q(%s)")
 
 BINARY_F(addf, "ORC_DENORMAL(ORC_DENORMAL(%s) + ORC_DENORMAL(%s))")
 BINARY_F(subf, "ORC_DENORMAL(ORC_DENORMAL(%s) - ORC_DENORMAL(%s))")

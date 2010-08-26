@@ -442,6 +442,7 @@ static OrcStaticOpcode opcodes[] = {
 
   { "swapw", 0, { 2 }, { 2 }, emulate_swapw },
   { "swapl", 0, { 4 }, { 4 }, emulate_swapl },
+  { "swapq", 0, { 8 }, { 8 }, emulate_swapq },
   { "select0wb", 0, { 1 }, { 2 }, emulate_select0wb },
   { "select1wb", 0, { 1 }, { 2 }, emulate_select1wb },
   { "select0lw", 0, { 2 }, { 4 }, emulate_select0lw },

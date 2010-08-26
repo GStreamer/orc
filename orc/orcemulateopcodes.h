@@ -143,6 +143,7 @@ void emulate_accl (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_accsadubl (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_swapw (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_swapl (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_swapq (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_select0wb (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_select1wb (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_select0lw (OrcOpcodeExecutor *ex, int i, int n);

@@ -1437,6 +1437,27 @@ sse_rule_swapl (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_por (p, tmp, dest);
 }
 
+static void
+sse_rule_swapq (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = orc_compiler_get_temp_reg (p);
+
+  orc_sse_emit_movdqa (p, src, tmp);
+  orc_sse_emit_psllq (p, 32, tmp);
+  orc_sse_emit_psrlq (p, 32, dest);
+  orc_sse_emit_por (p, tmp, dest);
+  orc_sse_emit_movdqa (p, dest, tmp);
+  orc_sse_emit_pslld (p, 16, tmp);
+  orc_sse_emit_psrld (p, 16, dest);
+  orc_sse_emit_por (p, tmp, dest);
+  orc_sse_emit_movdqa (p, dest, tmp);
+  orc_sse_emit_psllw (p, 8, tmp);
+  orc_sse_emit_psrlw (p, 8, dest);
+  orc_sse_emit_por (p, tmp, dest);
+}
+
 #define LOAD_MASK_IS_SLOW
 #ifndef LOAD_MASK_IS_SLOW
 static void
@@ -2193,6 +2214,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "absl", sse_rule_absl_slow, NULL);
   orc_rule_register (rule_set, "swapw", sse_rule_swapw, NULL);
   orc_rule_register (rule_set, "swapl", sse_rule_swapl, NULL);
+  orc_rule_register (rule_set, "swapq", sse_rule_swapq, NULL);
   orc_rule_register (rule_set, "splitlw", sse_rule_splitlw, NULL);
   orc_rule_register (rule_set, "splitwb", sse_rule_splitwb, NULL);
   orc_rule_register (rule_set, "avgsl", sse_rule_avgsl, NULL);
