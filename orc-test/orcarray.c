@@ -177,27 +177,47 @@ orc_array_set_pattern_2 (OrcArray *array, OrcRandomContext *context,
 }
 
 #define MIN_NONDENORMAL (1.1754944909521339405e-38)
+#define MIN_NONDENORMAL_D (2.2250738585072014e-308)
 
 int
 orc_array_compare (OrcArray *array1, OrcArray *array2, int flags)
 {
-  if ((flags & ORC_TEST_FLAGS_FLOAT) && array1->element_size == 4) {
-    int j;
-    for(j=0;j<array1->m;j++){
-      float *a, *b;
-      int i;
+  if ((flags & ORC_TEST_FLAGS_FLOAT)) {
+    if (array1->element_size == 4) {
+      int j;
+      for(j=0;j<array1->m;j++){
+        float *a, *b;
+        int i;
 
-      a = ORC_PTR_OFFSET (array1->data, j*array1->stride);
-      b = ORC_PTR_OFFSET (array2->data, j*array2->stride);
+        a = ORC_PTR_OFFSET (array1->data, j*array1->stride);
+        b = ORC_PTR_OFFSET (array2->data, j*array2->stride);
 
-      for (i=0;i<array1->n;i++){
-        if (isnan(a[i]) && isnan(b[i])) continue;
-        if (a[i] == b[i]) continue;
-        if (fabs(a[i] - b[i]) < MIN_NONDENORMAL) continue;
-        return FALSE;
+        for (i=0;i<array1->n;i++){
+          if (isnan(a[i]) && isnan(b[i])) continue;
+          if (a[i] == b[i]) continue;
+          if (fabs(a[i] - b[i]) < MIN_NONDENORMAL) continue;
+          return FALSE;
+        }
       }
+      return TRUE;
+    } else if (array1->element_size == 8) {
+      int j;
+      for(j=0;j<array1->m;j++){
+        double *a, *b;
+        int i;
+
+        a = ORC_PTR_OFFSET (array1->data, j*array1->stride);
+        b = ORC_PTR_OFFSET (array2->data, j*array2->stride);
+
+        for (i=0;i<array1->n;i++){
+          if (isnan(a[i]) && isnan(b[i])) continue;
+          if (a[i] == b[i]) continue;
+          if (abs(a[i] - b[i]) < MIN_NONDENORMAL_D) continue;
+          return FALSE;
+        }
+      }
+      return TRUE;
     }
-    return TRUE;
   } else {
     if (memcmp (array1->alloc_data, array2->alloc_data,
           array1->alloc_len) == 0) {
