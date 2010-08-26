@@ -2282,6 +2282,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "copyb", sse_rule_copyx, NULL);
   orc_rule_register (rule_set, "copyw", sse_rule_copyx, NULL);
   orc_rule_register (rule_set, "copyl", sse_rule_copyx, NULL);
+  orc_rule_register (rule_set, "copyq", sse_rule_copyx, NULL);
 
   orc_rule_register (rule_set, "shlw", sse_rule_shift, (void *)0);
   orc_rule_register (rule_set, "shruw", sse_rule_shift, (void *)1);

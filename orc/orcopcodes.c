@@ -395,6 +395,7 @@ static OrcStaticOpcode opcodes[] = {
   { "loadpq", ORC_STATIC_OPCODE_LOAD|ORC_STATIC_OPCODE_SCALAR|ORC_STATIC_OPCODE_INVARIANT, { 8 }, { 8 }, emulate_loadpq },
   { "storeq", ORC_STATIC_OPCODE_STORE, { 8 }, { 8 }, emulate_storeq },
   { "splatw3q", 0, { 8 }, { 8 }, emulate_splatw3q },
+  { "copyq", 0, { 8 }, { 8 }, emulate_copyq },
 
   { "convsbw", 0, { 2 }, { 1 }, emulate_convsbw },
   { "convubw", 0, { 2 }, { 1 }, emulate_convubw },

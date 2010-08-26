@@ -82,6 +82,8 @@ BINARY_SL(subssl, "ORC_CLAMP_SL((orc_int64)%s - (orc_int64)%s)")
 BINARY_UL(subusl, "ORC_CLAMP_UL((orc_int64)(orc_uint32)%s - (orc_int64)(orc_uint32)%s)")
 BINARY_SL(xorl, "%s ^ %s")
 
+UNARY_SQ(copyq, "%s")
+
 UNARY_BW(convsbw, "%s")
 UNARY_BW(convubw, "(orc_uint8)%s")
 UNARY_WB(convwb, "%s")
