@@ -35,13 +35,18 @@
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
 #define ORC_SWAP_Q(x) ((((x)&0xffU)<<56) | (((x)&0xff00U)<<40) | (((x)&0xff0000U)<<24) | (((x)&0xff000000U)<<8) | (((x)&0xff00000000U)>>8) | (((x)&0xff0000000000U)>>24) | (((x)&0xff000000000000U)>>40) | (((x)&0xff00000000000000U)>>56))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
-#define ORC_MIN_NORMAL (1.1754944909521339405e-38)
 #define ORC_RECAST_INT(x) (((orc_union32)(x)).i)
 #define ORC_RECAST_FLOAT(x) (((orc_union32)(orc_int32)(x)).f)
 #define ORC_DENORMAL(x) ORC_RECAST_FLOAT(ORC_RECAST_INT(x) & (((ORC_RECAST_INT(x)&0x7f800000) == 0) ? 0xff800000 : 0xffffffff))
 #define ORC_ISNAN(x) (((ORC_RECAST_INT(x)&0x7f800000) == 0x7f800000) && ((ORC_RECAST_INT(x)&0x007fffff) != 0))
 #define ORC_MINF(a,b) (ORC_ISNAN(a) ? a : ORC_ISNAN(b) ? b : ((a)<(b)) ? (a) : (b))
 #define ORC_MAXF(a,b) (ORC_ISNAN(a) ? a : ORC_ISNAN(b) ? b : ((a)>(b)) ? (a) : (b))
+#define ORC_RECAST_INT64(x) (((orc_union64)(x)).i)
+#define ORC_RECAST_DOUBLE(x) (((orc_union64)(orc_int64)(x)).f)
+#define ORC_DENORMAL_D(x) ORC_RECAST_DOUBLE(ORC_RECAST_INT64(x) & (((ORC_RECAST_INT64(x)&0x7ff0000000000000) == 0) ? 0xfff0000000000000 : 0xffffffffffffffff))
+#define ORC_ISNAN_D(x) (((ORC_RECAST_INT64(x)&0x7ff0000000000000) == 0x7ff0000000000000) && ((ORC_RECAST_INT64(x)&0x000fffffffffffff) != 0))
+#define ORC_MIND(a,b) (ORC_ISNAN_D(a) ? a : ORC_ISNAN_D(b) ? b : ((a)<(b)) ? (a) : (b))
+#define ORC_MAXD(a,b) (ORC_ISNAN_D(a) ? a : ORC_ISNAN_D(b) ? b : ((a)>(b)) ? (a) : (b))
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #define ORC_RESTRICT restrict
 #elif defined(__GNUC__) && __GNUC__ >= 4
@@ -4069,6 +4074,373 @@ emulate_convlf (OrcOpcodeExecutor *ex, int offset, int n)
     var32 = ptr4[i];
     /* 1: convlf */
     var33.f = var32.i;
+    /* 2: storel */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_addd (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  const orc_union64 * ORC_RESTRICT ptr5;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+  ptr5 = (orc_union64 *)ex->src_ptrs[1];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: loadq */
+    var33 = ptr5[i];
+    /* 2: addd */
+    var34.f = ORC_DENORMAL_D(ORC_DENORMAL_D(var32.f) + ORC_DENORMAL_D(var33.f));
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
+emulate_subd (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  const orc_union64 * ORC_RESTRICT ptr5;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+  ptr5 = (orc_union64 *)ex->src_ptrs[1];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: loadq */
+    var33 = ptr5[i];
+    /* 2: subd */
+    var34.f = ORC_DENORMAL_D(ORC_DENORMAL_D(var32.f) - ORC_DENORMAL_D(var33.f));
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
+emulate_muld (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  const orc_union64 * ORC_RESTRICT ptr5;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+  ptr5 = (orc_union64 *)ex->src_ptrs[1];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: loadq */
+    var33 = ptr5[i];
+    /* 2: muld */
+    var34.f = ORC_DENORMAL_D(ORC_DENORMAL_D(var32.f) * ORC_DENORMAL_D(var33.f));
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
+emulate_divd (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  const orc_union64 * ORC_RESTRICT ptr5;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+  ptr5 = (orc_union64 *)ex->src_ptrs[1];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: loadq */
+    var33 = ptr5[i];
+    /* 2: divd */
+    var34.f = ORC_DENORMAL_D(ORC_DENORMAL_D(var32.f) / ORC_DENORMAL_D(var33.f));
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
+emulate_sqrtd (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  orc_union64 var32;
+  orc_union64 var33;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: sqrtd */
+    var33.f = sqrt(ORC_DENORMAL_D(var32.f));
+    /* 2: storeq */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_maxd (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  const orc_union64 * ORC_RESTRICT ptr5;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+  ptr5 = (orc_union64 *)ex->src_ptrs[1];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: loadq */
+    var33 = ptr5[i];
+    /* 2: maxd */
+    var34.f = ORC_MAXD(ORC_DENORMAL_D(var32.f),ORC_DENORMAL_D(var33.f));
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
+emulate_mind (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  const orc_union64 * ORC_RESTRICT ptr5;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+  ptr5 = (orc_union64 *)ex->src_ptrs[1];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: loadq */
+    var33 = ptr5[i];
+    /* 2: mind */
+    var34.f = ORC_MIND(ORC_DENORMAL_D(var32.f),ORC_DENORMAL_D(var33.f));
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
+emulate_cmpeqd (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  const orc_union64 * ORC_RESTRICT ptr5;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+  ptr5 = (orc_union64 *)ex->src_ptrs[1];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: loadq */
+    var33 = ptr5[i];
+    /* 2: cmpeqd */
+    var34.i = (ORC_DENORMAL_D(var32.f) == ORC_DENORMAL_D(var33.f)) ? (~0ULL) : 0;
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
+emulate_cmpltd (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  const orc_union64 * ORC_RESTRICT ptr5;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+  ptr5 = (orc_union64 *)ex->src_ptrs[1];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: loadq */
+    var33 = ptr5[i];
+    /* 2: cmpltd */
+    var34.i = (ORC_DENORMAL_D(var32.f) < ORC_DENORMAL_D(var33.f)) ? (~0ULL) : 0;
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
+emulate_cmpled (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  const orc_union64 * ORC_RESTRICT ptr5;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+  ptr5 = (orc_union64 *)ex->src_ptrs[1];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: loadq */
+    var33 = ptr5[i];
+    /* 2: cmpled */
+    var34.i = (ORC_DENORMAL_D(var32.f) <= ORC_DENORMAL_D(var33.f)) ? (~0ULL) : 0;
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
+emulate_convdl (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  orc_union64 var32;
+  orc_union32 var33;
+
+  ptr0 = (orc_union32 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: convdl */
+    var33.i = (int)var32.f;
+    /* 2: storel */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_convld (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  orc_union32 var32;
+  orc_union64 var33;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union32 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var32 = ptr4[i];
+    /* 1: convld */
+    var33.f = var32.i;
+    /* 2: storeq */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_convfd (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  orc_union32 var32;
+  orc_union64 var33;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union32 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var32 = ptr4[i];
+    /* 1: convfd */
+    var33.f = ORC_DENORMAL (var32.f);
+    /* 2: storeq */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_convdf (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  orc_union64 var32;
+  orc_union32 var33;
+
+  ptr0 = (orc_union32 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: convdf */
+    var33.f = ORC_DENORMAL ((float) var32.f);
     /* 2: storel */
     ptr0[i] = var33;
   }

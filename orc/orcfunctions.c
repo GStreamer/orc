@@ -81,13 +81,18 @@ void orc_memset (void * d1, int p1, int n);
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
 #define ORC_SWAP_Q(x) ((((x)&0xffU)<<56) | (((x)&0xff00U)<<40) | (((x)&0xff0000U)<<24) | (((x)&0xff000000U)<<8) | (((x)&0xff00000000U)>>8) | (((x)&0xff0000000000U)>>24) | (((x)&0xff000000000000U)>>40) | (((x)&0xff00000000000000U)>>56))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
-#define ORC_MIN_NORMAL (1.1754944909521339405e-38)
 #define ORC_RECAST_INT(x) (((orc_union32)(x)).i)
 #define ORC_RECAST_FLOAT(x) (((orc_union32)(orc_int32)(x)).f)
 #define ORC_DENORMAL(x) ORC_RECAST_FLOAT(ORC_RECAST_INT(x) & (((ORC_RECAST_INT(x)&0x7f800000) == 0) ? 0xff800000 : 0xffffffff))
 #define ORC_ISNAN(x) (((ORC_RECAST_INT(x)&0x7f800000) == 0x7f800000) && ((ORC_RECAST_INT(x)&0x007fffff) != 0))
 #define ORC_MINF(a,b) (ORC_ISNAN(a) ? a : ORC_ISNAN(b) ? b : ((a)<(b)) ? (a) : (b))
 #define ORC_MAXF(a,b) (ORC_ISNAN(a) ? a : ORC_ISNAN(b) ? b : ((a)>(b)) ? (a) : (b))
+#define ORC_RECAST_INT64(x) (((orc_union64)(x)).i)
+#define ORC_RECAST_DOUBLE(x) (((orc_union64)(orc_int64)(x)).f)
+#define ORC_DENORMAL_D(x) ORC_RECAST_DOUBLE(ORC_RECAST_INT64(x) & (((ORC_RECAST_INT64(x)&0x7ff0000000000000) == 0) ? 0xfff0000000000000 : 0xffffffffffffffff))
+#define ORC_ISNAN_D(x) (((ORC_RECAST_INT64(x)&0x7ff0000000000000) == 0x7ff0000000000000) && ((ORC_RECAST_INT64(x)&0x000fffffffffffff) != 0))
+#define ORC_MIND(a,b) (ORC_ISNAN_D(a) ? a : ORC_ISNAN_D(b) ? b : ((a)<(b)) ? (a) : (b))
+#define ORC_MAXD(a,b) (ORC_ISNAN_D(a) ? a : ORC_ISNAN_D(b) ? b : ((a)>(b)) ? (a) : (b))
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #define ORC_RESTRICT restrict
 #elif defined(__GNUC__) && __GNUC__ >= 4

@@ -103,13 +103,18 @@ orc_target_c_get_asm_preamble (void)
     "#define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))\n"
     "#define ORC_SWAP_Q(x) ((((x)&0xffU)<<56) | (((x)&0xff00U)<<40) | (((x)&0xff0000U)<<24) | (((x)&0xff000000U)<<8) | (((x)&0xff00000000U)>>8) | (((x)&0xff0000000000U)>>24) | (((x)&0xff000000000000U)>>40) | (((x)&0xff00000000000000U)>>56))\n"
     "#define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))\n"
-    "#define ORC_MIN_NORMAL (1.1754944909521339405e-38)\n"
     "#define ORC_RECAST_INT(x) (((orc_union32)(x)).i)\n"
     "#define ORC_RECAST_FLOAT(x) (((orc_union32)(orc_int32)(x)).f)\n"
     "#define ORC_DENORMAL(x) ORC_RECAST_FLOAT(ORC_RECAST_INT(x) & (((ORC_RECAST_INT(x)&0x7f800000) == 0) ? 0xff800000 : 0xffffffff))\n"
     "#define ORC_ISNAN(x) (((ORC_RECAST_INT(x)&0x7f800000) == 0x7f800000) && ((ORC_RECAST_INT(x)&0x007fffff) != 0))\n"
     "#define ORC_MINF(a,b) (ORC_ISNAN(a) ? a : ORC_ISNAN(b) ? b : ((a)<(b)) ? (a) : (b))\n"
     "#define ORC_MAXF(a,b) (ORC_ISNAN(a) ? a : ORC_ISNAN(b) ? b : ((a)>(b)) ? (a) : (b))\n"
+    "#define ORC_RECAST_INT64(x) (((orc_union64)(x)).i)\n"
+    "#define ORC_RECAST_DOUBLE(x) (((orc_union64)(orc_int64)(x)).f)\n"
+    "#define ORC_DENORMAL_D(x) ORC_RECAST_DOUBLE(ORC_RECAST_INT64(x) & (((ORC_RECAST_INT64(x)&0x7ff0000000000000) == 0) ? 0xfff0000000000000 : 0xffffffffffffffff))\n"
+    "#define ORC_ISNAN_D(x) (((ORC_RECAST_INT64(x)&0x7ff0000000000000) == 0x7ff0000000000000) && ((ORC_RECAST_INT64(x)&0x000fffffffffffff) != 0))\n"
+    "#define ORC_MIND(a,b) (ORC_ISNAN_D(a) ? a : ORC_ISNAN_D(b) ? b : ((a)<(b)) ? (a) : (b))\n"
+    "#define ORC_MAXD(a,b) (ORC_ISNAN_D(a) ? a : ORC_ISNAN_D(b) ? b : ((a)>(b)) ? (a) : (b))\n"
     "#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L\n"
     "#define ORC_RESTRICT restrict\n"
     "#elif defined(__GNUC__) && __GNUC__ >= 4\n"
@@ -596,6 +601,14 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 #define UNARY_FL(a,b) UNARYFL(a,b)
 #define UNARY_LF(a,b) UNARYLF(a,b)
 
+#define BINARY_D(a,b) BINARYF(a,b)
+#define BINARY_DQ(a,b) BINARYFL(a,b)
+#define UNARY_D(a,b) UNARYF(a,b)
+#define UNARY_DL(a,b) UNARYFL(a,b)
+#define UNARY_LD(a,b) UNARYLF(a,b)
+#define UNARY_DF(a,b) UNARYF(a,b)
+#define UNARY_FD(a,b) UNARYF(a,b)
+
 #include "opcodes.h"
 
 #undef BINARY_SB
@@ -607,6 +620,7 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 #undef BINARY_SQ
 #undef BINARY_UQ
 #undef BINARY_F
+#undef BINARY_D
 #undef UNARY_SB
 #undef UNARY_UB
 #undef UNARY_SW
@@ -616,6 +630,7 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 #undef UNARY_SQ
 #undef UNARY_UQ
 #undef UNARY_F
+#undef UNARY_D
 #undef BINARY_BW
 #undef BINARY_WL
 #undef BINARY_LW
@@ -627,8 +642,13 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 #undef UNARY_LW
 #undef UNARY_WB
 #undef UNARY_FL
+#undef UNARY_DL
 #undef UNARY_LF
+#undef UNARY_LD
 #undef BINARY_FL
+#undef BINARY_DQ
+#undef UNARY_FD
+#undef UNARY_DF
 
 static void
 c_rule_loadpX (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -973,6 +993,7 @@ orc_c_init (void)
 #define BINARY_SQ(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define BINARY_UQ(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define BINARY_F(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define BINARY_D(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define UNARY_SB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define UNARY_UB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define UNARY_SW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
@@ -982,6 +1003,7 @@ orc_c_init (void)
 #define UNARY_SQ(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define UNARY_UQ(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define UNARY_F(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define UNARY_D(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define BINARY_BW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define BINARY_WL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define BINARY_LW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
@@ -994,8 +1016,13 @@ orc_c_init (void)
 #define UNARY_WB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 
 #define UNARY_FL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define UNARY_DL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define BINARY_FL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define BINARY_DQ(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define UNARY_LF(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define UNARY_LD(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define UNARY_DF(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define UNARY_FD(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 
 #include "opcodes.h"
 

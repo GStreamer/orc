@@ -466,6 +466,22 @@ static OrcStaticOpcode opcodes[] = {
   { "convfl", ORC_STATIC_OPCODE_FLOAT_SRC, { 4 }, { 4 }, emulate_convfl },
   { "convlf", ORC_STATIC_OPCODE_FLOAT_DEST, { 4 }, { 4 }, emulate_convlf },
 
+  /* double ops */
+  { "addd", ORC_STATIC_OPCODE_FLOAT, { 8 }, { 8, 8 }, emulate_addd },
+  { "subd", ORC_STATIC_OPCODE_FLOAT, { 8 }, { 8, 8 }, emulate_subd },
+  { "muld", ORC_STATIC_OPCODE_FLOAT, { 8 }, { 8, 8 }, emulate_muld },
+  { "divd", ORC_STATIC_OPCODE_FLOAT, { 8 }, { 8, 8 }, emulate_divd },
+  { "sqrtd", ORC_STATIC_OPCODE_FLOAT, { 8 }, { 8 }, emulate_sqrtd },
+  { "maxd", ORC_STATIC_OPCODE_FLOAT, { 8 }, { 8, 8 }, emulate_maxd },
+  { "mind", ORC_STATIC_OPCODE_FLOAT, { 8 }, { 8, 8 }, emulate_mind },
+  { "cmpeqd", ORC_STATIC_OPCODE_FLOAT_SRC, { 8 }, { 8, 8 }, emulate_cmpeqd },
+  { "cmpltd", ORC_STATIC_OPCODE_FLOAT_SRC, { 8 }, { 8, 8 }, emulate_cmpltd },
+  { "cmpled", ORC_STATIC_OPCODE_FLOAT_SRC, { 8 }, { 8, 8 }, emulate_cmpled },
+  { "convdl", ORC_STATIC_OPCODE_FLOAT_SRC, { 4 }, { 8 }, emulate_convdl },
+  { "convld", ORC_STATIC_OPCODE_FLOAT_DEST, { 8 }, { 4 }, emulate_convld },
+  { "convfd", ORC_STATIC_OPCODE_FLOAT, { 8 }, { 4 }, emulate_convfd },
+  { "convdf", ORC_STATIC_OPCODE_FLOAT, { 4 }, { 8 }, emulate_convdf },
+
   { "" }
 };
 

@@ -164,6 +164,20 @@ void emulate_cmpltf (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_cmplef (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_convfl (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_convlf (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_addd (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_subd (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_muld (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_divd (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_sqrtd (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_maxd (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_mind (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_cmpeqd (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_cmpltd (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_cmpled (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_convdl (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_convld (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_convfd (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_convdf (OrcOpcodeExecutor *ex, int i, int n);
 
 #endif
 
