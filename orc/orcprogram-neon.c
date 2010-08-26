@@ -179,6 +179,7 @@ orc_compiler_neon_init (OrcCompiler *compiler)
   }
 
   switch (orc_program_get_max_array_size (compiler->program)) {
+    case 0:
     case 1:
       loop_shift = 4;
       break;
@@ -192,8 +193,8 @@ orc_compiler_neon_init (OrcCompiler *compiler)
       loop_shift = 1;
       break;
     default:
-      ORC_ERROR("unhandled max var size %d",
-          orc_program_get_max_var_size (compiler->program));
+      ORC_ERROR("unhandled max array size %d",
+          orc_program_get_max_array_size (compiler->program));
       break;
   }
   if (loop_shift < compiler->loop_shift) {
@@ -217,8 +218,8 @@ orc_compiler_neon_init (OrcCompiler *compiler)
       loop_shift = 0;
       break;
     default:
-      ORC_ERROR("unhandled max var size %d",
-          orc_program_get_max_var_size (compiler->program));
+      ORC_ERROR("unhandled max accumulator size %d",
+          orc_program_get_max_accumulator_size (compiler->program));
       break;
   }
   if (loop_shift < compiler->loop_shift) {
@@ -477,6 +478,8 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   int i;
   
   align_var = get_align_var (compiler);
+  if (compiler->error) return;
+
   var_size_shift = get_shift (compiler->vars[align_var].size);
   align_shift = 4;
 

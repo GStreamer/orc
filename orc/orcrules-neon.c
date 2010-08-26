@@ -821,6 +821,12 @@ neon_rule_loadX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int ptr_register;
   int is_aligned = src->is_aligned;
 
+  /* FIXME this should be fixed at a higher level */
+  if (src->vartype != ORC_VAR_TYPE_SRC && src->vartype != ORC_VAR_TYPE_DEST) {
+    ORC_COMPILER_ERROR(compiler, "loadX used with non src/dest");
+    return;
+  }
+
   if (src->vartype == ORC_VAR_TYPE_DEST) update = FALSE;
 
   if (type == 1) {
@@ -1158,8 +1164,8 @@ orc_neon_emit_loadil (OrcCompiler *compiler, int reg, int value)
 void
 orc_neon_emit_loadiq (OrcCompiler *compiler, int reg, int value)
 {
-  orc_uint32 code;
-  int shift;
+  //orc_uint32 code;
+  //int shift;
   int neg = FALSE;
 
   if (value == 0) {
@@ -1171,6 +1177,7 @@ orc_neon_emit_loadiq (OrcCompiler *compiler, int reg, int value)
     neg = TRUE;
     value = ~value;
   }
+#if 0
   shift = orc_neon_get_const_shift (value);
   if ((value & (0xff<<shift)) == value) {
     value >>= shift;
@@ -1206,6 +1213,7 @@ orc_neon_emit_loadiq (OrcCompiler *compiler, int reg, int value)
 
     return;
   }
+#endif
 
   ORC_COMPILER_ERROR(compiler, "unimplemented load of constant %d", value);
 }
@@ -1280,6 +1288,19 @@ orc_neon_emit_loadpq (OrcCompiler *compiler, int dest, int param)
   code = 0xf4a0000d;
   code |= 2<<10;
   code |= (0&7)<<5;
+  orc_arm_emit (compiler, code);
+
+  orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
+      compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor,
+        params[param + (ORC_VAR_T1-ORC_VAR_P1)]));
+
+  ORC_ASM_CODE(compiler,"  vld1.32 %s[1], [%s]%s\n",
+      orc_neon_reg_name (dest),
+      orc_arm_reg_name (compiler->gp_tmpreg),
+      update ? "!" : "");
+  code = 0xf4a0000d;
+  code |= 2<<10;
+  code |= (1&7)<<5;
   orc_arm_emit (compiler, code);
 }
 
@@ -1708,6 +1729,47 @@ BINARY(cmpeqf,"vceq.f32",0xf2000e00, 1)
 //BINARY_R(cmplef,"vcle.f32",0xf3000e00, 1)
 UNARY(convfl,"vcvt.s32.f32",0xf3bb0700, 1)
 UNARY(convlf,"vcvt.f32.s32",0xf3bb0600, 1)
+
+#define UNARY_VFP(opcode,insn_name,code,vec_shift) \
+static void \
+orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
+{ \
+  orc_neon_emit_unary (p, insn_name, code, \
+      p->vars[insn->dest_args[0]].alloc, \
+      p->vars[insn->src_args[0]].alloc); \
+  if (p->insn_shift == vec_shift + 1) { \
+    orc_neon_emit_unary (p, insn_name, code, \
+        p->vars[insn->dest_args[0]].alloc + 1, \
+        p->vars[insn->src_args[0]].alloc + 1); \
+  } else { \
+    ORC_COMPILER_ERROR(p, "shift too large"); \
+  } \
+}
+
+#define BINARY_VFP(opcode,insn_name,code,vec_shift) \
+static void \
+orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
+{ \
+  orc_neon_emit_binary (p, insn_name, code, \
+      p->vars[insn->dest_args[0]].alloc, \
+      p->vars[insn->src_args[0]].alloc, \
+      p->vars[insn->src_args[1]].alloc); \
+  if (p->insn_shift == vec_shift + 1) { \
+    orc_neon_emit_binary (p, insn_name, code, \
+        p->vars[insn->dest_args[0]].alloc+1, \
+        p->vars[insn->src_args[0]].alloc+1, \
+        p->vars[insn->src_args[1]].alloc+1); \
+  } else { \
+    ORC_COMPILER_ERROR(p, "shift too large"); \
+  } \
+}
+
+BINARY_VFP(addd,"vadd.f64",0xee300b00, 0)
+BINARY_VFP(subd,"vsub.f64",0xee300b40, 0)
+BINARY_VFP(muld,"vmul.f64",0xee200b00, 0)
+//BINARY_VFP(cmpeqd,"vcmpe.f64",0xee000000, 0)
+UNARY_VFP(convdf,"vcvt.f64.f32",0xee200b00, 0)
+UNARY_VFP(convfd,"vcvt.f32.f64",0xee200b00, 0)
 
 
 #if 0
@@ -2580,6 +2642,13 @@ orc_compiler_neon_register_rules (OrcTarget *target)
   //REG(cmplef);
   REG(convfl);
   REG(convlf);
+
+  REG(addd);
+  REG(subd);
+  REG(muld);
+  //REG(cmpeqd);
+  REG(convdf);
+  REG(convfd);
 
   REG(splatbw);
   REG(splatbl);
