@@ -177,6 +177,13 @@ enum {
   ORC_SAMPLE_FOUR_TAP
 };
 
+enum {
+  ORC_PARAM_TYPE_INT = 0,
+  ORC_PARAM_TYPE_FLOAT,
+  ORC_PARAM_TYPE_INT64,
+  ORC_PARAM_TYPE_DOUBLE
+};
+
 typedef enum {
   ORC_COMPILE_RESULT_OK = 0,
 
@@ -222,7 +229,7 @@ struct _OrcVariable {
   int ptr_offset;
   int mask_alloc;
   int aligned_data;
-  int is_float_param;
+  int param_type;
   int load_dest;
 };
 
@@ -628,6 +635,8 @@ int orc_program_add_destination (OrcProgram *program, int size, const char *name
 int orc_program_add_constant (OrcProgram *program, int size, int value, const char *name);
 int orc_program_add_parameter (OrcProgram *program, int size, const char *name);
 int orc_program_add_parameter_float (OrcProgram *program, int size, const char *name);
+int orc_program_add_parameter_double (OrcProgram *program, int size, const char *name);
+int orc_program_add_parameter_in64 (OrcProgram *program, int size, const char *name);
 int orc_program_add_accumulator (OrcProgram *program, int size, const char *name);
 void orc_program_set_type_name (OrcProgram *program, int var, const char *type_name);
 void orc_program_set_sampling_type (OrcProgram *program, int var, int sampling_type);
@@ -641,6 +650,8 @@ void orc_executor_set_array_str (OrcExecutor *ex, const char *name, void *ptr);
 void orc_executor_set_param (OrcExecutor *ex, int var, int value);
 void orc_executor_set_param_str (OrcExecutor *ex, const char *name, int value);
 void orc_executor_set_param_float (OrcExecutor *ex, int var, float value);
+void orc_executor_set_param_int64 (OrcExecutor *ex, int var, orc_int64 value);
+void orc_executor_set_param_double (OrcExecutor *ex, int var, double value);
 int orc_executor_get_accumulator (OrcExecutor *ex, int var);
 int orc_executor_get_accumulator_str (OrcExecutor *ex, const char *name);
 void orc_executor_set_n (OrcExecutor *ex, int n);

@@ -285,10 +285,21 @@ show (OrcProgram *program)
       dest[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size, 0);
       orc_array_set_pattern (dest[i], ORC_OOB_VALUE);
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_PARAM) {
-      if (program->vars[i].is_float_param) {
-        orc_executor_set_param_float (ex, i, 2.0);
-      } else {
-        orc_executor_set_param (ex, i, 2);
+      switch (program->vars[i].param_type) {
+        case ORC_PARAM_TYPE_INT:
+          orc_executor_set_param (ex, i, 2);
+          break;
+        case ORC_PARAM_TYPE_FLOAT:
+          orc_executor_set_param_float (ex, i, 2.0);
+          break;
+        case ORC_PARAM_TYPE_INT64:
+          orc_executor_set_param_int64 (ex, i, 2);
+          break;
+        case ORC_PARAM_TYPE_DOUBLE:
+          orc_executor_set_param_double (ex, i, 2.0);
+          break;
+        default:
+          ORC_ASSERT(0);
       }
     }
   }

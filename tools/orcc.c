@@ -535,12 +535,25 @@ output_prototype (OrcProgram *p, FILE *output)
     var = &p->vars[ORC_VAR_P1 + i];
     if (var->size) {
       if (need_comma) fprintf(output, ", ");
-      if (var->is_float_param) {
-        REQUIRE(0,4,5,1);
+      switch (var->param_type) {
+        case ORC_PARAM_TYPE_INT:
+          fprintf(output, "int %s", varnames[ORC_VAR_P1 + i]);
+          break;
+        case ORC_PARAM_TYPE_FLOAT:
+          REQUIRE(0,4,5,1);
+          fprintf(output, "float %s", varnames[ORC_VAR_P1 + i]);
+          break;
+        case ORC_PARAM_TYPE_INT64:
+          REQUIRE(0,4,7,1);
+          fprintf(output, "orc_int64 %s", varnames[ORC_VAR_P1 + i]);
+          break;
+        case ORC_PARAM_TYPE_DOUBLE:
+          REQUIRE(0,4,7,1);
+          fprintf(output, "double %s", varnames[ORC_VAR_P1 + i]);
+          break;
+        default:
+          ORC_ASSERT(0);
       }
-      fprintf(output, "%s %s",
-          var->is_float_param ? "float" : "int",
-          varnames[ORC_VAR_P1 + i]);
       need_comma = TRUE;
     }
   }
@@ -717,17 +730,44 @@ output_code_execute (OrcProgram *p, FILE *output, int is_inline)
   for(i=0;i<8;i++){
     var = &p->vars[ORC_VAR_P1 + i];
     if (var->size) {
-      if (var->is_float_param) {
-        REQUIRE(0,4,5,1);
-        fprintf(output, "  {\n");
-        fprintf(output, "    orc_union32 tmp;\n");
-        fprintf(output, "    tmp.f = %s;\n", varnames[ORC_VAR_P1 + i]);
-        fprintf(output, "    ex->params[%s] = tmp.i;\n",
-            enumnames[ORC_VAR_P1 + i]);
-        fprintf(output, "  }\n");
-      } else {
-        fprintf(output, "  ex->params[%s] = %s;\n",
-            enumnames[ORC_VAR_P1 + i], varnames[ORC_VAR_P1 + i]);
+      switch (var->param_type) {
+        case ORC_PARAM_TYPE_INT:
+          fprintf(output, "  ex->params[%s] = %s;\n",
+              enumnames[ORC_VAR_P1 + i], varnames[ORC_VAR_P1 + i]);
+          break;
+        case ORC_PARAM_TYPE_FLOAT:
+          REQUIRE(0,4,5,1);
+          fprintf(output, "  {\n");
+          fprintf(output, "    orc_union32 tmp;\n");
+          fprintf(output, "    tmp.f = %s;\n", varnames[ORC_VAR_P1 + i]);
+          fprintf(output, "    ex->params[%s] = tmp.i;\n",
+              enumnames[ORC_VAR_P1 + i]);
+          fprintf(output, "  }\n");
+          break;
+        case ORC_PARAM_TYPE_INT64:
+          REQUIRE(0,4,7,1);
+          fprintf(output, "  {\n");
+          fprintf(output, "    orc_union64 tmp;\n");
+          fprintf(output, "    tmp.i = %s;\n", varnames[ORC_VAR_P1 + i]);
+          fprintf(output, "    ex->params[%s] = tmp.x2[0];\n",
+              enumnames[ORC_VAR_P1 + i]);
+          fprintf(output, "    ex->params[%s] = tmp.x2[1];\n",
+              enumnames[ORC_VAR_T1 + i]);
+          fprintf(output, "  }\n");
+          break;
+        case ORC_PARAM_TYPE_DOUBLE:
+          REQUIRE(0,4,5,1);
+          fprintf(output, "  {\n");
+          fprintf(output, "    orc_union64 tmp;\n");
+          fprintf(output, "    tmp.f = %s;\n", varnames[ORC_VAR_P1 + i]);
+          fprintf(output, "    ex->params[%s] = tmp.x2[0];\n",
+              enumnames[ORC_VAR_P1 + i]);
+          fprintf(output, "    ex->params[%s] = tmp.x2[1];\n",
+              enumnames[ORC_VAR_T1 + i]);
+          fprintf(output, "  }\n");
+          break;
+        default:
+          ORC_ASSERT(0);
       }
     }
   }
@@ -799,12 +839,28 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
   for(i=0;i<8;i++){
     var = &p->vars[ORC_VAR_P1 + i];
     if (var->size) {
-      if (var->is_float_param) {
-        REQUIRE(0,4,5,1);
+      const char *suffix = NULL;
+      switch (var->param_type) {
+        case ORC_PARAM_TYPE_INT:
+          suffix="";
+          break;
+        case ORC_PARAM_TYPE_FLOAT:
+          REQUIRE(0,4,5,1);
+          suffix="_float";
+          break;
+        case ORC_PARAM_TYPE_INT64:
+          REQUIRE(0,4,7,1);
+          suffix="_int64";
+          break;
+        case ORC_PARAM_TYPE_DOUBLE:
+          REQUIRE(0,4,7,1);
+          suffix="_double";
+          break;
+        default:
+          ORC_ASSERT(0);
       }
       fprintf(output, "      orc_program_add_parameter%s (p, %d, \"%s\");\n",
-          var->is_float_param ? "_float" : "",
-          var->size, varnames[ORC_VAR_P1 + i]);
+          suffix, var->size, varnames[ORC_VAR_P1 + i]);
     }
   }
   for(i=0;i<16;i++){
@@ -952,12 +1008,28 @@ output_code_test (OrcProgram *p, FILE *output)
   for(i=0;i<8;i++){
     var = &p->vars[ORC_VAR_P1 + i];
     if (var->size) {
-      if (var->is_float_param) {
-        REQUIRE(0,4,5,1);
+      const char *suffix = NULL;
+      switch (var->param_type) {
+        case ORC_PARAM_TYPE_INT:
+          suffix="";
+          break;
+        case ORC_PARAM_TYPE_FLOAT:
+          REQUIRE(0,4,5,1);
+          suffix="_float";
+          break;
+        case ORC_PARAM_TYPE_INT64:
+          REQUIRE(0,4,7,1);
+          suffix="_int64";
+          break;
+        case ORC_PARAM_TYPE_DOUBLE:
+          REQUIRE(0,4,7,1);
+          suffix="_double";
+          break;
+        default:
+          ORC_ASSERT(0);
       }
       fprintf(output, "    orc_program_add_parameter%s (p, %d, \"%s\");\n",
-          var->is_float_param ? "_float" : "",
-          var->size, varnames[ORC_VAR_P1 + i]);
+          suffix, var->size, varnames[ORC_VAR_P1 + i]);
     }
   }
   for(i=0;i<16;i++){

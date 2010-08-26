@@ -373,6 +373,7 @@ orc_program_add_parameter (OrcProgram *program, int size, const char *name)
   int i = ORC_VAR_P1 + program->n_param_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_PARAM;
+  program->vars[i].param_type = ORC_PARAM_TYPE_INT;
   program->vars[i].size = size;
   program->vars[i].name = strdup(name);
   program->n_param_vars++;
@@ -396,7 +397,37 @@ orc_program_add_parameter_float (OrcProgram *program, int size, const char *name
   int i = ORC_VAR_P1 + program->n_param_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_PARAM;
-  program->vars[i].is_float_param = TRUE;
+  program->vars[i].param_type = ORC_PARAM_TYPE_FLOAT;
+  program->vars[i].size = size;
+  program->vars[i].name = strdup(name);
+  program->n_param_vars++;
+
+  return i;
+}
+
+int
+orc_program_add_parameter_double (OrcProgram *program, int size,
+    const char *name)
+{
+  int i = ORC_VAR_P1 + program->n_param_vars;
+
+  program->vars[i].vartype = ORC_VAR_TYPE_PARAM;
+  program->vars[i].param_type = ORC_PARAM_TYPE_DOUBLE;
+  program->vars[i].size = size;
+  program->vars[i].name = strdup(name);
+  program->n_param_vars++;
+
+  return i;
+}
+
+int
+orc_program_add_parameter_in64 (OrcProgram *program, int size,
+    const char *name)
+{
+  int i = ORC_VAR_P1 + program->n_param_vars;
+
+  program->vars[i].vartype = ORC_VAR_TYPE_PARAM;
+  program->vars[i].param_type = ORC_PARAM_TYPE_INT64;
   program->vars[i].size = size;
   program->vars[i].name = strdup(name);
   program->n_param_vars++;

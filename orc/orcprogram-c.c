@@ -401,18 +401,44 @@ c_get_name_int (char *name, OrcCompiler *p, OrcInstruction *insn, int var)
     if (p->target_flags & ORC_TARGET_C_NOEXEC) {
       sprintf(name,"%s", varnames[var]);
     } else if (p->target_flags & ORC_TARGET_C_OPCODE) {
-      if (p->vars[var].is_float_param) {
-        sprintf(name,"((orc_union32 *)(ex->src_ptrs[%d]))->f",
-            var - ORC_VAR_P1 + p->program->n_src_vars);
-      } else {
-        sprintf(name,"((orc_union32 *)(ex->src_ptrs[%d]))->i",
-            var - ORC_VAR_P1 + p->program->n_src_vars);
+      switch (p->vars[var].param_type) {
+        case ORC_PARAM_TYPE_INT:
+          sprintf(name,"((orc_union32 *)(ex->src_ptrs[%d]))->i",
+              var - ORC_VAR_P1 + p->program->n_src_vars);
+          break;
+        case ORC_PARAM_TYPE_FLOAT:
+          sprintf(name,"((orc_union32 *)(ex->src_ptrs[%d]))->f",
+              var - ORC_VAR_P1 + p->program->n_src_vars);
+          break;
+        case ORC_PARAM_TYPE_INT64:
+          sprintf(name,"((orc_union64 *)(ex->src_ptrs[%d]))->i",
+              var - ORC_VAR_P1 + p->program->n_src_vars);
+          break;
+        case ORC_PARAM_TYPE_DOUBLE:
+          sprintf(name,"((orc_union64 *)(ex->src_ptrs[%d]))->f",
+              var - ORC_VAR_P1 + p->program->n_src_vars);
+          break;
+        default:
+          ORC_ASSERT(0);
       }
     } else {
-      if (p->vars[var].is_float_param) {
-        sprintf(name,"((orc_union32 *)(ex->params+%d))->f", var);
-      } else {
-        sprintf(name,"ex->params[%d]", var);
+      switch (p->vars[var].param_type) {
+        case ORC_PARAM_TYPE_INT:
+          sprintf(name,"ex->params[%d]", var);
+          break;
+        case ORC_PARAM_TYPE_FLOAT:
+          sprintf(name,"((orc_union32 *)(ex->params+%d))->f", var);
+          break;
+        case ORC_PARAM_TYPE_INT64:
+          /* FIXME */
+          sprintf(name,"((orc_union32 *)(ex->params+%d))->i", var);
+          break;
+        case ORC_PARAM_TYPE_DOUBLE:
+          /* FIXME */
+          sprintf(name,"((orc_union32 *)(ex->params+%d))->f", var);
+          break;
+        default:
+          ORC_ASSERT(0);
       }
     }
   } else if (p->vars[var].vartype == ORC_VAR_TYPE_CONST) {
