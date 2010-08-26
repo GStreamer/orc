@@ -328,8 +328,8 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
     goto error;
   }
 
-  orc_code_allocate_codemem (program->orccode, program->orccode->code_size);
   program->orccode->code_size = compiler->codeptr - compiler->code;
+  orc_code_allocate_codemem (program->orccode, program->orccode->code_size);
 
   memcpy (program->orccode->code, compiler->code, program->orccode->code_size);
 
