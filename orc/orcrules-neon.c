@@ -1150,7 +1150,7 @@ orc_neon_emit_loadil (OrcCompiler *compiler, int reg, int value)
       code |= ((reg>>4)&0x1) << 22;
       code |= (reg&0xf) << 0;
       code |= ((reg>>4)&0x1) << 5;
-      code |= (shift&0xf) << 16;
+      code |= (shift&0x1f) << 16;
       code |= 0x40;
       orc_arm_emit (compiler, code);
     }
