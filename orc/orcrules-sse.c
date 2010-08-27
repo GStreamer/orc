@@ -2157,17 +2157,36 @@ sse_rule_cmpled (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_convfl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  orc_sse_emit_f30f (p, "cvttps2dq", 0x5b,
-      p->vars[insn->src_args[0]].alloc,
-      p->vars[insn->dest_args[0]].alloc);
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmpc;
+  int tmp = orc_compiler_get_temp_reg (p);
+  
+  tmpc = orc_compiler_get_temp_constant (p, 4, 0x80000000);
+  orc_sse_emit_movdqa (p, src, tmp);
+  orc_sse_emit_f30f (p, "cvttps2dq", 0x5b, src, dest);
+  orc_sse_emit_psrad (p, 31, tmp);
+  orc_sse_emit_pcmpeqd (p, dest, tmpc);
+  orc_sse_emit_pandn (p, tmpc, tmp);
+  orc_sse_emit_paddd (p, tmp, dest);
+
 }
 
 static void
 sse_rule_convdl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  orc_sse_emit_660f (p, "cvttpd2dq", 0xe6,
-      p->vars[insn->src_args[0]].alloc,
-      p->vars[insn->dest_args[0]].alloc);
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmpc;
+  int tmp = orc_compiler_get_temp_reg (p);
+  
+  tmpc = orc_compiler_get_temp_constant (p, 4, 0x80000000);
+  orc_sse_emit_pshufd (p, ORC_SSE_SHUF(3,1,3,1), src, tmp);
+  orc_sse_emit_660f (p, "cvttpd2dq", 0xe6, src, dest);
+  orc_sse_emit_psrad (p, 31, tmp);
+  orc_sse_emit_pcmpeqd (p, dest, tmpc);
+  orc_sse_emit_pandn (p, tmpc, tmp);
+  orc_sse_emit_paddd (p, tmp, dest);
 }
 
 static void
