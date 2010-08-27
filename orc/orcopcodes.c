@@ -278,6 +278,7 @@ void
 emulate_null (OrcOpcodeExecutor *ex, int offset, int n)
 {
   /* This is a placeholder for adding new opcodes */
+  ORC_ERROR("emulate_null() called.  This is a bug.");
 }
 
 #include "orc/orcemulateopcodes.h"
@@ -450,6 +451,7 @@ static OrcStaticOpcode opcodes[] = {
   { "select1lw", 0, { 2 }, { 4 }, emulate_select1lw },
   { "mergewl", 0, { 4 }, { 2, 2 }, emulate_mergewl },
   { "mergebw", 0, { 2 }, { 1, 1 }, emulate_mergebw },
+  { "splitql", 0, { 4, 4 }, { 8 }, emulate_splitql },
   { "splitlw", 0, { 2, 2 }, { 4 }, emulate_splitlw },
   { "splitwb", 0, { 1, 1 }, { 2 }, emulate_splitwb },
 

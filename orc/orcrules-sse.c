@@ -1342,6 +1342,17 @@ sse_rule_select1wb (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+sse_rule_splitql (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest1 = p->vars[insn->dest_args[0]].alloc;
+  int dest2 = p->vars[insn->dest_args[1]].alloc;
+
+  orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,2,0), src, dest2);
+  orc_sse_emit_pshufd (p, ORC_SSE_SHUF(3,1,3,1), src, dest1);
+}
+
+static void
 sse_rule_splitlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[0]].alloc;
@@ -2366,6 +2377,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "swapw", sse_rule_swapw, NULL);
   orc_rule_register (rule_set, "swapl", sse_rule_swapl, NULL);
   orc_rule_register (rule_set, "swapq", sse_rule_swapq, NULL);
+  orc_rule_register (rule_set, "splitql", sse_rule_splitql, NULL);
   orc_rule_register (rule_set, "splitlw", sse_rule_splitlw, NULL);
   orc_rule_register (rule_set, "splitwb", sse_rule_splitwb, NULL);
   orc_rule_register (rule_set, "avgsl", sse_rule_avgsl, NULL);

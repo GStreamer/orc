@@ -3725,6 +3725,35 @@ emulate_mergebw (OrcOpcodeExecutor *ex, int offset, int n)
 }
 
 void
+emulate_splitql (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union32 * ORC_RESTRICT ptr0;
+  orc_union32 * ORC_RESTRICT ptr1;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  orc_union64 var32;
+  orc_union32 var33;
+  orc_union32 var34;
+
+  ptr0 = (orc_union32 *)ex->dest_ptrs[0];
+  ptr1 = (orc_union32 *)ex->dest_ptrs[1];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: splitql */
+    var33.i = (var32.i >> 32) & 0xffffffff;
+    var34.i = var32.i & 0xffffffff;
+    /* 2: storel */
+    ptr0[i] = var33;
+    /* 3: storel */
+    ptr1[i] = var34;
+  }
+
+}
+
+void
 emulate_splitlw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;

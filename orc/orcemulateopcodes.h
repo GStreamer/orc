@@ -151,6 +151,7 @@ void emulate_select0lw (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_select1lw (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_mergewl (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_mergebw (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_splitql (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_splitlw (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_splitwb (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_addf (OrcOpcodeExecutor *ex, int i, int n);
