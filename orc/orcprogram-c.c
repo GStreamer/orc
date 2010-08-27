@@ -840,7 +840,7 @@ c_rule_ldreslinl (OrcCompiler *p, void *user, OrcInstruction *insn)
   ORC_ASM_CODE(p,"    orc_union32 a = ptr%d[tmp>>16];\n", insn->src_args[0]);
   ORC_ASM_CODE(p,"    orc_union32 b = ptr%d[(tmp>>16)+1];\n", insn->src_args[0]);
   for (i=0;i<4;i++){
-    ORC_ASM_CODE(p,"    var%d.x4[%d] = a.x4[%d] * (256-((tmp>>8)&0xff)) + b.x4[%d] * ((tmp>>8)&0xff);\n",
+    ORC_ASM_CODE(p,"    var%d.x4[%d] = (a.x4[%d] * (256-((tmp>>8)&0xff)) + b.x4[%d] * ((tmp>>8)&0xff))>>8;\n",
         insn->dest_args[0], i, i, i);
   }
   ORC_ASM_CODE(p,"    }\n");
