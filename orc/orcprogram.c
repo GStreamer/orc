@@ -350,7 +350,7 @@ orc_program_add_constant (OrcProgram *program, int size, int value, const char *
 
   program->vars[i].vartype = ORC_VAR_TYPE_CONST;
   program->vars[i].size = size;
-  program->vars[i].value = value;
+  program->vars[i].value.i = value;
   program->vars[i].name = strdup(name);
   program->n_const_vars++;
 
@@ -361,7 +361,17 @@ int
 orc_program_add_constant_int64 (OrcProgram *program, int size,
     orc_int64 value, const char *name)
 {
-  ORC_ASSERT(0);
+  int i;
+  
+  i = ORC_VAR_C1 + program->n_const_vars;
+
+  program->vars[i].vartype = ORC_VAR_TYPE_CONST;
+  program->vars[i].size = size;
+  program->vars[i].value.i = value;
+  program->vars[i].name = strdup(name);
+  program->n_const_vars++;
+
+  return i;
 }
 
 int
@@ -380,6 +390,44 @@ orc_program_add_constant_double (OrcProgram *program, int size,
   orc_union64 u;
   u.f = value;
   return orc_program_add_constant_int64 (program, size, u.i, name);
+}
+
+int
+orc_program_add_constant_str (OrcProgram *program, int size,
+    const char *value, const char *name)
+{
+  int i;
+  char *end;
+  int val_i;
+  double val_d;
+
+  i = ORC_VAR_C1 + program->n_const_vars;
+
+  val_i = strtol (value, &end, 0);
+  if (end[0] == 0) {
+    program->vars[i].value.i = val_i;
+  } else if ((end[0] == 'l' || end[0] == 'L') && end[1] == 0) {
+    program->vars[i].value.i = val_i;
+  } else {
+    val_d = strtod (value, &end);
+
+    if (end[0] == 0) {
+      orc_union32 u;
+      u.f = val_d;
+      program->vars[i].value.i = u.i;
+    } else if ((end[0] == 'l' || end[0] == 'L') && end[1] == 0) {
+      program->vars[i].value.f = val_d;
+    } else {
+      return -1;
+    }
+  }
+
+  program->vars[i].vartype = ORC_VAR_TYPE_CONST;
+  program->vars[i].size = size;
+  program->vars[i].name = strdup(name);
+  program->n_const_vars++;
+
+  return i;
 }
 
 /**

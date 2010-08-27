@@ -784,13 +784,13 @@ neon_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 
   if (src->vartype == ORC_VAR_TYPE_CONST) {
     if (size == 1) {
-      orc_neon_emit_loadib (compiler, dest->alloc, src->value);
+      orc_neon_emit_loadib (compiler, dest->alloc, src->value.i);
     } else if (size == 2) {
-      orc_neon_emit_loadiw (compiler, dest->alloc, src->value);
+      orc_neon_emit_loadiw (compiler, dest->alloc, src->value.i);
     } else if (size == 4) {
-      orc_neon_emit_loadil (compiler, dest->alloc, src->value);
+      orc_neon_emit_loadil (compiler, dest->alloc, src->value.i);
     } else if (size == 8) {
-      orc_neon_emit_loadiq (compiler, dest->alloc, src->value);
+      orc_neon_emit_loadiq (compiler, dest->alloc, src->value.i);
     } else {
       ORC_PROGRAM_ERROR(compiler,"unimplemented");
     }
@@ -838,7 +838,7 @@ neon_rule_loadX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     ptr_register = compiler->gp_tmpreg;
     orc_arm_emit_add_imm (compiler, ptr_register,
         src->ptr_register,
-        compiler->vars[insn->src_args[1]].value * src->size);
+        compiler->vars[insn->src_args[1]].value.i * src->size);
 
     update = FALSE;
     is_aligned = FALSE;
@@ -1454,7 +1454,7 @@ orc_neon_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_uint32 code;
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
-    int shift = p->vars[insn->src_args[1]].value;
+    int shift = p->vars[insn->src_args[1]].value.i;
     if (shift < 0) {
       ORC_COMPILER_ERROR(p, "shift negative");
       return;
@@ -1469,13 +1469,13 @@ orc_neon_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
           immshift_info[type].name,
           orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
           orc_neon_reg_name (p->vars[insn->src_args[0]].alloc),
-          p->vars[insn->src_args[1]].value);
+          (int)p->vars[insn->src_args[1]].value.i);
     } else {
       ORC_ASM_CODE(p,"  %s %s, %s, #%d\n",
           immshift_info[type].name,
           orc_neon_reg_name_quad (p->vars[insn->dest_args[0]].alloc),
           orc_neon_reg_name_quad (p->vars[insn->src_args[0]].alloc),
-          p->vars[insn->src_args[1]].value);
+          (int)p->vars[insn->src_args[1]].value.i);
       code |= 0x40;
     }
     code |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12;

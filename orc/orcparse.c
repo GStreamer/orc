@@ -186,16 +186,8 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
         orc_program_add_parameter (parser->program, size, token[2]);
       } else if (strcmp (token[0], ".const") == 0) {
         int size = strtol (token[1], NULL, 0);
-        char *end, *endf;
-        int value;
-        double valuef;
-        value = strtol (token[3], &end, 0);
-        valuef = strtod (token[3], &endf);
-        if (endf > end) {
-          orc_program_add_constant_float (parser->program, size, valuef, token[2]);
-        } else {
-          orc_program_add_constant (parser->program, size, value, token[2]);
-        }
+
+        orc_program_add_constant_str (parser->program, size, token[3], token[2]);
       } else if (strcmp (token[0], ".floatparam") == 0) {
         int size = strtol (token[1], NULL, 0);
         orc_program_add_parameter_float (parser->program, size, token[2]);
@@ -220,7 +212,6 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
 
       if (o) {
         int n_args = opcode_n_args (o);
-        char const_regs[10][10];
         int i;
 
         if (n_tokens != 1 + offset + n_args) {
@@ -231,22 +222,11 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
 
         for(i=offset+1;i<n_tokens;i++){
           char *end;
-          char *endf;
-          int imm;
-          double immf;
-          imm = strtol (token[i], &end, 0);
-          immf = strtod (token[i], &endf);
-          if ((end != token[i]) || (endf != token[i])) {
-            sprintf(const_regs[i], "c%d", parser->creg_index);
-            parser->creg_index++;
-            if (end >= endf) {
-              orc_program_add_constant (parser->program, 2, imm,
-                  const_regs[i]);
-            } else {
-              orc_program_add_constant_float (parser->program, 2, immf,
-                  const_regs[i]);
-            }
-            token[i] = const_regs[i];
+          double d;
+          d = strtod (token[i], &end);
+          if (end != token[i]) {
+            orc_program_add_constant_str (parser->program, 4, token[i],
+                token[i]);
           }
         }
 
@@ -322,7 +302,7 @@ orc_parse_log_valist (OrcParser *parser, const char *format, va_list args)
     sprintf(s, "In function %s:\n", parser->program->name);
     len = strlen(s);
 
-    if (parser->log_size + len > parser->log_alloc) {
+    if (parser->log_size + len + 1 >= parser->log_alloc) {
       parser->log_alloc += 100;
       parser->log = realloc (parser->log, parser->log_alloc);
     }
@@ -335,7 +315,7 @@ orc_parse_log_valist (OrcParser *parser, const char *format, va_list args)
   vsprintf(s, format, args);
   len = strlen(s);
 
-  if (parser->log_size + len > parser->log_alloc) {
+  if (parser->log_size + len + 1 >= parser->log_alloc) {
     parser->log_alloc += 100;
     parser->log = realloc (parser->log, parser->log_alloc);
   }

@@ -442,10 +442,14 @@ c_get_name_int (char *name, OrcCompiler *p, OrcInstruction *insn, int var)
       }
     }
   } else if (p->vars[var].vartype == ORC_VAR_TYPE_CONST) {
-    if (p->vars[var].value == 0x80000000) {
+    if (p->vars[var].value.i == 0x80000000) {
       sprintf(name,"0x80000000");
     } else {
-      sprintf(name, "%d", p->vars[var].value);
+      if (p->vars[var].value.i == (int)p->vars[var].value.i) {
+        sprintf(name, "%d", (int)p->vars[var].value.i);
+      } else {
+        ORC_ASSERT(0);
+      }
     }
   } else {
     if (insn && (insn->flags & ORC_INSTRUCTION_FLAG_X2)) {

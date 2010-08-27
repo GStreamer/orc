@@ -66,7 +66,7 @@ powerpc_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
         break;
     }
   } else {
-    int value = src->value;
+    int value = src->value.i;
 
     switch (size) {
       case 1:
@@ -253,9 +253,9 @@ powerpc_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
   int dest = ORC_DEST_ARG (p, insn, 0); \
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) { \
     ORC_ASM_CODE(p,"  vspltisb %s, %d\n", \
-        powerpc_get_regname(p->tmpreg), p->vars[insn->src_args[1]].value); \
+        powerpc_get_regname(p->tmpreg), (int)p->vars[insn->src_args[1]].value.i); \
     powerpc_emit_VX(p, 0x1000030c, \
-        powerpc_regnum(p->tmpreg), p->vars[insn->src_args[1]].value, 0); \
+        powerpc_regnum(p->tmpreg), (int)p->vars[insn->src_args[1]].value.i, 0); \
     powerpc_emit_VX_2 (p, opcode, code , dest, src1, p->tmpreg);\
   } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) { \
     ORC_COMPILER_ERROR(p,"rule only works with constants"); \

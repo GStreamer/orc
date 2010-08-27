@@ -262,7 +262,7 @@ orc_compiler_c64x_c_assemble (OrcCompiler *compiler)
     switch (var->vartype) {
       case ORC_VAR_TYPE_CONST:
         {
-          int value = var->value;
+          int value = var->value.i;
 
           if (var->size == 1) {
             value = (value&0xff);

@@ -265,7 +265,7 @@ orc_executor_emulate (OrcExecutor *ex)
         opcode_ex[j].src_ptrs[k] = tmpspace[insn->src_args[k]];
         /* FIXME hack */
         load_constant (tmpspace[insn->src_args[k]], 4,
-            var->value);
+            var->value.i);
       } else if (var->vartype == ORC_VAR_TYPE_PARAM) {
         opcode_ex[j].src_ptrs[k] = tmpspace[insn->src_args[k]];
         /* FIXME hack */

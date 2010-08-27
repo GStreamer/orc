@@ -223,7 +223,7 @@ struct _OrcVariable {
   int is_aligned;
   int is_uncached;
 
-  int value;
+  orc_union64 value;
 
   int ptr_register;
   int ptr_offset;
@@ -355,7 +355,34 @@ struct _OrcProgram {
   } _unused[ORC_N_INSNS]; /* needed for ABI compatibility */
   int n_insns;
 
-  OrcVariable vars[ORC_N_VARIABLES];
+  struct {
+    char *name;
+    char *type_name;
+
+    int size;
+    OrcVarType vartype;
+
+    int used;
+    int first_use;
+    int last_use;
+    int replaced;
+    int replacement;
+
+    int alloc;
+    int is_chained;
+    int is_aligned;
+    int is_uncached;
+
+    int value;
+
+    int ptr_register;
+    int ptr_offset;
+    int mask_alloc;
+    int aligned_data;
+    int param_type;
+    int load_dest;
+  } _unused3[ORC_N_VARIABLES]; /* needed for ABI compatibility */
+
   int n_src_vars;
   int n_dest_vars;
   int n_param_vars;
@@ -371,6 +398,7 @@ struct _OrcProgram {
   void *code_exec;
 
   OrcInstruction insns[ORC_N_INSNS];
+  OrcVariable vars[ORC_N_VARIABLES];
 
   void *backup_func;
   int is_2d;
@@ -455,8 +483,8 @@ struct _OrcCompiler {
 #define ORC_DEST_ARG(p,i,n) ((p)->vars[(i)->dest_args[(n)]].alloc)
 #define ORC_SRC_TYPE(p,i,n) ((p)->vars[(i)->src_args[(n)]].vartype)
 #define ORC_DEST_TYPE(p,i,n) ((p)->vars[(i)->dest_args[(n)]].vartype)
-#define ORC_SRC_VAL(p,i,n) ((p)->vars[(i)->src_args[(n)]].value)
-#define ORC_DEST_VAL(p,i,n) ((p)->vars[(i)->dest_args[(n)]].value)
+#define ORC_SRC_VAL(p,insn,n) ((p)->vars[(insn)->src_args[(n)]].value.i)
+#define ORC_DEST_VAL(p,insn,n) ((p)->vars[(insn)->dest_args[(n)]].value.i)
 
 /**
  * OrcOpcodeExecutor:
@@ -496,7 +524,7 @@ struct _OrcExecutor {
   /* m is stored in params[ORC_VAR_A1] */
   /* m_index is stored in params[ORC_VAR_A2] */
   /* elapsed time is stored in params[ORC_VAR_A3] */
-  /* source resampling parameters are in params[ORC_VAR_C1..C8] */
+  /* high half of params is stored in params[ORC_VAR_T1..] */
 };
 
 /* the alternate view of OrcExecutor */
@@ -516,9 +544,10 @@ struct _OrcExecutorAlt {
   int m_index;
   int time;
   int unused2;
-  int src_resample[8];
+  int unused4[8];
   int params[ORC_VAR_T1-ORC_VAR_P1];
-  int unused3[ORC_N_VARIABLES - ORC_VAR_T1];
+  int params_hi[ORC_VAR_T1-ORC_VAR_P1];
+  int unused3[ORC_N_VARIABLES - ORC_VAR_T9];
   int accumulators[4];
 };
 #define ORC_EXECUTOR_EXEC(ex) ((OrcExecutorFunc)((ex)->arrays[ORC_VAR_A1]))
@@ -531,7 +560,7 @@ struct _OrcCodeVariable {
   /*< private >*/
   int vartype;
   int size;
-  int value;
+  orc_union64 value;
 };
 
 struct _OrcCode {
@@ -636,6 +665,7 @@ int orc_program_add_constant (OrcProgram *program, int size, int value, const ch
 int orc_program_add_constant_int64 (OrcProgram *program, int size, orc_int64 value, const char *name);
 int orc_program_add_constant_float (OrcProgram *program, int size, float value, const char *name);
 int orc_program_add_constant_double (OrcProgram *program, int size, double value, const char *name);
+int orc_program_add_constant_str (OrcProgram *program, int size, const char *value, const char *name);
 int orc_program_add_parameter (OrcProgram *program, int size, const char *name);
 int orc_program_add_parameter_float (OrcProgram *program, int size, const char *name);
 int orc_program_add_parameter_double (OrcProgram *program, int size, const char *name);

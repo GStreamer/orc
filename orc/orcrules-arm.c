@@ -83,7 +83,7 @@ arm_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
   if (compiler->vars[insn->src_args[0]].vartype == ORC_VAR_TYPE_CONST) {
     orc_arm_emit_load_imm (compiler, compiler->vars[insn->dest_args[0]].alloc,
-        (int)compiler->vars[insn->src_args[0]].value);
+        (int)compiler->vars[insn->src_args[0]].value.i);
   } else {
     orc_arm_loadw (compiler, compiler->vars[insn->dest_args[0]].alloc,
         compiler->exec_reg,

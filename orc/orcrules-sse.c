@@ -46,7 +46,7 @@ sse_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     }
 #endif
   } else if (src->vartype == ORC_VAR_TYPE_CONST) {
-    sse_load_constant (compiler, dest->alloc, size, src->value);
+    sse_load_constant (compiler, dest->alloc, size, src->value.i);
   } else {
     ORC_ASSERT(0);
   }
@@ -112,7 +112,7 @@ sse_rule_loadoffX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     return;
   }
 
-  offset = (compiler->offset + compiler->vars[insn->src_args[1]].value) *
+  offset = (compiler->offset + compiler->vars[insn->src_args[1]].value.i) *
     src->size;
   if (src->ptr_register == 0) {
     int i = insn->src_args[0];
@@ -610,7 +610,7 @@ sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
     orc_sse_emit_shiftimm (p, code[type], imm_code1[type], imm_code2[type],
-        p->vars[insn->src_args[1]].value,
+        p->vars[insn->src_args[1]].value.i,
         p->vars[insn->dest_args[0]].alloc);
   } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
     int tmp = orc_compiler_get_temp_reg (p);
@@ -636,9 +636,9 @@ sse_rule_shlb (OrcCompiler *p, void *user, OrcInstruction *insn)
   int tmp;
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
-    orc_sse_emit_psllw (p, p->vars[insn->src_args[1]].value, dest);
+    orc_sse_emit_psllw (p, p->vars[insn->src_args[1]].value.i, dest);
     tmp = orc_compiler_get_constant (p, 1,
-        0xff&(0xff<<p->vars[insn->src_args[1]].value));
+        0xff&(0xff<<p->vars[insn->src_args[1]].value.i));
     orc_sse_emit_pand (p, tmp, dest);
   } else {
     ORC_COMPILER_ERROR(p,"rule only works with constants");
@@ -656,10 +656,10 @@ sse_rule_shrsb (OrcCompiler *p, void *user, OrcInstruction *insn)
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
     orc_sse_emit_movdqa (p, src, tmp);
     orc_sse_emit_psllw (p, 8, tmp);
-    orc_sse_emit_psraw (p, p->vars[insn->src_args[1]].value, tmp);
+    orc_sse_emit_psraw (p, p->vars[insn->src_args[1]].value.i, tmp);
     orc_sse_emit_psrlw (p, 8, tmp);
 
-    orc_sse_emit_psraw (p, 8 + p->vars[insn->src_args[1]].value, dest);
+    orc_sse_emit_psraw (p, 8 + p->vars[insn->src_args[1]].value.i, dest);
     orc_sse_emit_psllw (p, 8, dest);
 
     orc_sse_emit_por (p, tmp, dest);
@@ -676,9 +676,9 @@ sse_rule_shrub (OrcCompiler *p, void *user, OrcInstruction *insn)
   int tmp;
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
-    orc_sse_emit_psrlw (p, p->vars[insn->src_args[1]].value, dest);
+    orc_sse_emit_psrlw (p, p->vars[insn->src_args[1]].value.i, dest);
     tmp = orc_compiler_get_constant (p, 1,
-        (0xff>>p->vars[insn->src_args[1]].value));
+        (0xff>>p->vars[insn->src_args[1]].value.i));
     orc_sse_emit_pand (p, tmp, dest);
   } else {
     ORC_COMPILER_ERROR(p,"rule only works with constants");
@@ -1219,6 +1219,7 @@ sse_rule_mulll_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
       FALSE);
 }
 
+#ifndef MMX
 static void
 sse_rule_mulhsl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -1235,6 +1236,7 @@ sse_rule_mulhsl (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,3,1), tmp2, tmp2);
   orc_sse_emit_punpckldq (p, tmp2, dest);
 }
+#endif
 
 static void
 sse_rule_mulhsl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -1272,6 +1274,7 @@ sse_rule_mulhsl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_x86_emit_add_imm_reg (p, regsize, stackframe, X86_ESP, FALSE);
 }
 
+#ifndef MMX
 static void
 sse_rule_mulhul (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -1288,6 +1291,7 @@ sse_rule_mulhul (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,3,1), tmp2, tmp2);
   orc_sse_emit_punpckldq (p, tmp2, dest);
 }
+#endif
 
 static void
 sse_rule_select0lw (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -1348,8 +1352,13 @@ sse_rule_splitql (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest1 = p->vars[insn->dest_args[0]].alloc;
   int dest2 = p->vars[insn->dest_args[1]].alloc;
 
+#ifndef MMX
   orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,2,0), src, dest2);
   orc_sse_emit_pshufd (p, ORC_SSE_SHUF(3,1,3,1), src, dest1);
+#else
+  orc_sse_emit_movdqa (p, src, dest2);
+  orc_sse_emit_pshufw (p, ORC_SSE_SHUF(3,2,3,2), src, dest1);
+#endif
 }
 
 static void
@@ -2406,7 +2415,9 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "shrub", sse_rule_shrub, NULL);
   orc_rule_register (rule_set, "mulll", sse_rule_mulll_slow, NULL);
   orc_rule_register (rule_set, "mulhsl", sse_rule_mulhsl_slow, NULL);
+#ifndef MMX
   orc_rule_register (rule_set, "mulhul", sse_rule_mulhul, NULL);
+#endif
   orc_rule_register (rule_set, "mullb", sse_rule_mullb, NULL);
   orc_rule_register (rule_set, "mulhsb", sse_rule_mulhsb, NULL);
   orc_rule_register (rule_set, "mulhub", sse_rule_mulhub, NULL);
@@ -2457,7 +2468,9 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   REG(minul);
   REG(mulll);
   orc_rule_register (rule_set, "convsuslw", sse_rule_convsuslw, NULL);
+#ifndef MMX
   orc_rule_register (rule_set, "mulhsl", sse_rule_mulhsl, NULL);
+#endif
 
   /* SSE 4.2 -- no rules */
 
