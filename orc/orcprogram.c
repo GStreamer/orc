@@ -357,6 +357,31 @@ orc_program_add_constant (OrcProgram *program, int size, int value, const char *
   return i;
 }
 
+int
+orc_program_add_constant_int64 (OrcProgram *program, int size,
+    orc_int64 value, const char *name)
+{
+  ORC_ASSERT(0);
+}
+
+int
+orc_program_add_constant_float (OrcProgram *program, int size,
+    float value, const char *name)
+{
+  orc_union32 u;
+  u.f = value;
+  return orc_program_add_constant (program, size, u.i, name);
+}
+
+int
+orc_program_add_constant_double (OrcProgram *program, int size,
+    double value, const char *name)
+{
+  orc_union64 u;
+  u.f = value;
+  return orc_program_add_constant_int64 (program, size, u.i, name);
+}
+
 /**
  * orc_program_add_parameter:
  * @program: a pointer to an OrcProgram structure

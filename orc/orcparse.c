@@ -186,8 +186,16 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
         orc_program_add_parameter (parser->program, size, token[2]);
       } else if (strcmp (token[0], ".const") == 0) {
         int size = strtol (token[1], NULL, 0);
-        int value = strtoul (token[3], NULL, 0);
-        orc_program_add_constant (parser->program, size, value, token[2]);
+        char *end, *endf;
+        int value;
+        double valuef;
+        value = strtol (token[3], &end, 0);
+        valuef = strtod (token[3], &endf);
+        if (endf > end) {
+          orc_program_add_constant_float (parser->program, size, valuef, token[2]);
+        } else {
+          orc_program_add_constant (parser->program, size, value, token[2]);
+        }
       } else if (strcmp (token[0], ".floatparam") == 0) {
         int size = strtol (token[1], NULL, 0);
         orc_program_add_parameter_float (parser->program, size, token[2]);
@@ -212,6 +220,8 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
 
       if (o) {
         int n_args = opcode_n_args (o);
+        char const_regs[10][10];
+        int i;
 
         if (n_tokens != 1 + offset + n_args) {
           orc_parse_log (parser, "error: line %d: too %s arguments for %s (expected %d)\n",
@@ -219,23 +229,33 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
               token[offset], n_args);
         }
 
+        for(i=offset+1;i<n_tokens;i++){
+          char *end;
+          char *endf;
+          int imm;
+          double immf;
+          imm = strtol (token[i], &end, 0);
+          immf = strtod (token[i], &endf);
+          if ((end != token[i]) || (endf != token[i])) {
+            sprintf(const_regs[i], "c%d", parser->creg_index);
+            parser->creg_index++;
+            if (end >= endf) {
+              orc_program_add_constant (parser->program, 2, imm,
+                  const_regs[i]);
+            } else {
+              orc_program_add_constant_float (parser->program, 2, immf,
+                  const_regs[i]);
+            }
+            token[i] = const_regs[i];
+          }
+        }
+
         if (n_tokens - offset == 5) {
           orc_program_append_str_2 (parser->program, token[offset], flags,
               token[offset+1], token[offset+2], token[offset+3], token[offset+4]);
         } else if (n_tokens - offset == 4) {
-          char *end;
-          int imm = strtol (token[offset + 3], &end, 0);
-          if (end != token[offset + 3]) {
-            char creg[10];
-            sprintf(creg, "c%d", parser->creg_index);
-            parser->creg_index++;
-            orc_program_add_constant (parser->program, 2, imm, creg);
-            orc_program_append_str_2 (parser->program, token[offset], flags,
-                token[offset+1], token[offset+2], creg, NULL);
-          } else {
-            orc_program_append_str_2 (parser->program, token[offset], flags,
-                token[offset+1], token[offset+2], token[offset+3], NULL);
-          }
+          orc_program_append_str_2 (parser->program, token[offset], flags,
+              token[offset+1], token[offset+2], token[offset+3], NULL);
         } else {
           orc_program_append_str_2 (parser->program, token[offset], flags,
               token[offset+1], token[offset+2], NULL, NULL);

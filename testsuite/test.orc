@@ -2228,3 +2228,16 @@ ldresnearb d1, s1, p1, p2
 
 ldreslinb d1, s1, p1, p2
 
+
+.function test_float_constant_1
+.dest 4 d1
+.const 4 c1 2.0
+
+copyl d1, c1
+
+
+.function test_float_constant_2
+.dest 4 d1
+
+copyl d1, 2.0
+
