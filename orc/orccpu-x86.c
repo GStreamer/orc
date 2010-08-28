@@ -168,7 +168,7 @@ orc_mmx_getflags_cpuinfo (char *cpuinfo)
 #ifdef USE_I386_CPUID
 #ifdef _MSC_VER
 static void
-get_cpuid (orc_uint32 op, orc_uint32 *a, orc_uint32 *b, orc_uint32 *c, orc_uint32 *d)
+get_cpuid (orc_uint32 op, orc_uint32 init_ecx, orc_uint32 *a, orc_uint32 *b, orc_uint32 *c, orc_uint32 *d)
 {
   int tmp[4];
   __cpuid(tmp, op);

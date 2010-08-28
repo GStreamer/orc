@@ -84,6 +84,9 @@ main(int argc, char *argv[])
     result = orc_program_compile (p);
   }
 
+#ifndef M_LN2
+#define M_LN2 0.69314718055994530942
+#endif
   orc_get_data_cache_sizes (&level1, &level2, &level3);
   if (level3 > 0) {
     max = (log(level3)/M_LN2 - 6.0) * 10 + 20;
