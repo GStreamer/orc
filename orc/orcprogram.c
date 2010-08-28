@@ -494,7 +494,7 @@ orc_program_add_parameter_double (OrcProgram *program, int size,
 }
 
 int
-orc_program_add_parameter_in64 (OrcProgram *program, int size,
+orc_program_add_parameter_int64 (OrcProgram *program, int size,
     const char *name)
 {
   int i = ORC_VAR_P1 + program->n_param_vars;
