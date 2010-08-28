@@ -35,18 +35,10 @@
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
 #define ORC_SWAP_Q(x) ((((x)&0xffULL)<<56) | (((x)&0xff00ULL)<<40) | (((x)&0xff0000ULL)<<24) | (((x)&0xff000000ULL)<<8) | (((x)&0xff00000000ULL)>>8) | (((x)&0xff0000000000ULL)>>24) | (((x)&0xff000000000000ULL)>>40) | (((x)&0xff00000000000000ULL)>>56))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
-#define ORC_RECAST_INT(x) (((orc_union32)(x)).i)
-#define ORC_RECAST_FLOAT(x) (((orc_union32)(orc_int32)(x)).f)
-#define ORC_DENORMAL(x) ORC_RECAST_FLOAT(ORC_RECAST_INT(x) & (((ORC_RECAST_INT(x)&0x7f800000) == 0) ? 0xff800000 : 0xffffffff))
-#define ORC_ISNAN(x) (((ORC_RECAST_INT(x)&0x7f800000) == 0x7f800000) && ((ORC_RECAST_INT(x)&0x007fffff) != 0))
-#define ORC_MINF(a,b) (ORC_ISNAN(a) ? a : ORC_ISNAN(b) ? b : ((a)<(b)) ? (a) : (b))
-#define ORC_MAXF(a,b) (ORC_ISNAN(a) ? a : ORC_ISNAN(b) ? b : ((a)>(b)) ? (a) : (b))
-#define ORC_RECAST_INT64(x) (((orc_union64)(x)).i)
-#define ORC_RECAST_DOUBLE(x) (((orc_union64)(orc_int64)(x)).f)
-#define ORC_DENORMAL_D(x) ORC_RECAST_DOUBLE(ORC_RECAST_INT64(x) & (((ORC_RECAST_INT64(x)&0x7ff0000000000000ULL) == 0) ? 0xfff0000000000000ULL : 0xffffffffffffffffULL))
-#define ORC_ISNAN_D(x) (((ORC_RECAST_INT64(x)&0x7ff0000000000000ULL) == 0x7ff0000000000000ULL) && ((ORC_RECAST_INT64(x)&0x000fffffffffffffULL) != 0))
-#define ORC_MIND(a,b) (ORC_ISNAN_D(a) ? a : ORC_ISNAN_D(b) ? b : ((a)<(b)) ? (a) : (b))
-#define ORC_MAXD(a,b) (ORC_ISNAN_D(a) ? a : ORC_ISNAN_D(b) ? b : ((a)>(b)) ? (a) : (b))
+#define ORC_DENORMAL(x) ((x) & ((((x)&0x7f800000) == 0) ? 0xff800000 : 0xffffffff))
+#define ORC_ISNAN(x) ((((x)&0x7f800000) == 0x7f800000) && (((x)&0x007fffff) != 0))
+#define ORC_DENORMAL_DOUBLE(x) ((x) & ((((x)&0x7ff0000000000000ULL) == 0) ? 0xfff0000000000000ULL : 0xffffffffffffffffULL))
+#define ORC_ISNAN_DOUBLE(x) ((((x)&0x7ff0000000000000ULL) == 0x7ff0000000000000ULL) && (((x)&0x000fffffffffffffULL) != 0))
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #define ORC_RESTRICT restrict
 #elif defined(__GNUC__) && __GNUC__ >= 4
@@ -3832,7 +3824,15 @@ emulate_addf (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadl */
     var33 = ptr5[i];
     /* 2: addf */
-    var34.f = ORC_DENORMAL(ORC_DENORMAL(var32.f) + ORC_DENORMAL(var33.f));
+    {
+       orc_union32 _src1;
+       orc_union32 _src2;
+       orc_union32 _dest1;
+       _src1.i = ORC_DENORMAL(var32.i);
+       _src2.i = ORC_DENORMAL(var33.i);
+       _dest1.f = _src1.f + _src2.f;
+       var34.i = ORC_DENORMAL(_dest1.i);
+    }
     /* 3: storel */
     ptr0[i] = var34;
   }
@@ -3860,7 +3860,15 @@ emulate_subf (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadl */
     var33 = ptr5[i];
     /* 2: subf */
-    var34.f = ORC_DENORMAL(ORC_DENORMAL(var32.f) - ORC_DENORMAL(var33.f));
+    {
+       orc_union32 _src1;
+       orc_union32 _src2;
+       orc_union32 _dest1;
+       _src1.i = ORC_DENORMAL(var32.i);
+       _src2.i = ORC_DENORMAL(var33.i);
+       _dest1.f = _src1.f - _src2.f;
+       var34.i = ORC_DENORMAL(_dest1.i);
+    }
     /* 3: storel */
     ptr0[i] = var34;
   }
@@ -3888,7 +3896,15 @@ emulate_mulf (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadl */
     var33 = ptr5[i];
     /* 2: mulf */
-    var34.f = ORC_DENORMAL(ORC_DENORMAL(var32.f) * ORC_DENORMAL(var33.f));
+    {
+       orc_union32 _src1;
+       orc_union32 _src2;
+       orc_union32 _dest1;
+       _src1.i = ORC_DENORMAL(var32.i);
+       _src2.i = ORC_DENORMAL(var33.i);
+       _dest1.f = _src1.f * _src2.f;
+       var34.i = ORC_DENORMAL(_dest1.i);
+    }
     /* 3: storel */
     ptr0[i] = var34;
   }
@@ -3916,7 +3932,15 @@ emulate_divf (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadl */
     var33 = ptr5[i];
     /* 2: divf */
-    var34.f = ORC_DENORMAL(ORC_DENORMAL(var32.f) / ORC_DENORMAL(var33.f));
+    {
+       orc_union32 _src1;
+       orc_union32 _src2;
+       orc_union32 _dest1;
+       _src1.i = ORC_DENORMAL(var32.i);
+       _src2.i = ORC_DENORMAL(var33.i);
+       _dest1.f = _src1.f / _src2.f;
+       var34.i = ORC_DENORMAL(_dest1.i);
+    }
     /* 3: storel */
     ptr0[i] = var34;
   }
@@ -3939,7 +3963,13 @@ emulate_sqrtf (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadl */
     var32 = ptr4[i];
     /* 1: sqrtf */
-    var33.f = sqrt(ORC_DENORMAL(var32.f));
+    {
+       orc_union32 _src1;
+       orc_union32 _dest1;
+       _src1.i = ORC_DENORMAL(var32.i);
+       _dest1.f = sqrt(_src1.f);
+       var33.i = ORC_DENORMAL(_dest1.i);
+    }
     /* 2: storel */
     ptr0[i] = var33;
   }
@@ -3967,7 +3997,15 @@ emulate_maxf (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadl */
     var33 = ptr5[i];
     /* 2: maxf */
-    var34.f = ORC_MAXF(ORC_DENORMAL(var32.f),ORC_DENORMAL(var33.f));
+    {
+      orc_union32 _src1;
+      orc_union32 _src2;
+      _src1.i = ORC_DENORMAL(var32.i);
+      _src2.i = ORC_DENORMAL(var33.i);
+      if (ORC_ISNAN(_src1.i)) var34.i = _src1.i;
+      else if (ORC_ISNAN(_src2.i)) var34.i = _src2.i;
+      else var34.i = (_src1.f > _src2.f) ? _src1.i : _src2.i;
+    }
     /* 3: storel */
     ptr0[i] = var34;
   }
@@ -3995,7 +4033,15 @@ emulate_minf (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadl */
     var33 = ptr5[i];
     /* 2: minf */
-    var34.f = ORC_MINF(ORC_DENORMAL(var32.f),ORC_DENORMAL(var33.f));
+    {
+      orc_union32 _src1;
+      orc_union32 _src2;
+      _src1.i = ORC_DENORMAL(var32.i);
+      _src2.i = ORC_DENORMAL(var33.i);
+      if (ORC_ISNAN(_src1.i)) var34.i = _src1.i;
+      else if (ORC_ISNAN(_src2.i)) var34.i = _src2.i;
+      else var34.i = (_src1.f < _src2.f) ? _src1.i : _src2.i;
+    }
     /* 3: storel */
     ptr0[i] = var34;
   }
@@ -4023,7 +4069,13 @@ emulate_cmpeqf (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadl */
     var33 = ptr5[i];
     /* 2: cmpeqf */
-    var34.i = (ORC_DENORMAL(var32.f) == ORC_DENORMAL(var33.f)) ? (~0) : 0;
+    {
+       orc_union32 _src1;
+       orc_union32 _src2;
+       _src1.i = ORC_DENORMAL(var32.i);
+       _src2.i = ORC_DENORMAL(var33.i);
+       var34.i = (_src1.f == _src2.f) ? (~0) : 0;
+    }
     /* 3: storel */
     ptr0[i] = var34;
   }
@@ -4051,7 +4103,13 @@ emulate_cmpltf (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadl */
     var33 = ptr5[i];
     /* 2: cmpltf */
-    var34.i = (ORC_DENORMAL(var32.f) < ORC_DENORMAL(var33.f)) ? (~0) : 0;
+    {
+       orc_union32 _src1;
+       orc_union32 _src2;
+       _src1.i = ORC_DENORMAL(var32.i);
+       _src2.i = ORC_DENORMAL(var33.i);
+       var34.i = (_src1.f < _src2.f) ? (~0) : 0;
+    }
     /* 3: storel */
     ptr0[i] = var34;
   }
@@ -4079,7 +4137,13 @@ emulate_cmplef (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadl */
     var33 = ptr5[i];
     /* 2: cmplef */
-    var34.i = (ORC_DENORMAL(var32.f) <= ORC_DENORMAL(var33.f)) ? (~0) : 0;
+    {
+       orc_union32 _src1;
+       orc_union32 _src2;
+       _src1.i = ORC_DENORMAL(var32.i);
+       _src2.i = ORC_DENORMAL(var33.i);
+       var34.i = (_src1.f <= _src2.f) ? (~0) : 0;
+    }
     /* 3: storel */
     ptr0[i] = var34;
   }
@@ -4130,7 +4194,7 @@ emulate_convlf (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadl */
     var32 = ptr4[i];
     /* 1: convlf */
-    var33.f = var32.i;
+     var33.f = var32.i;
     /* 2: storel */
     ptr0[i] = var33;
   }
@@ -4158,7 +4222,15 @@ emulate_addd (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadq */
     var33 = ptr5[i];
     /* 2: addd */
-    var34.f = ORC_DENORMAL_D(ORC_DENORMAL_D(var32.f) + ORC_DENORMAL_D(var33.f));
+    {
+       orc_union64 _src1;
+       orc_union64 _src2;
+       orc_union64 _dest1;
+       _src1.i = ORC_DENORMAL_DOUBLE(var32.i);
+       _src2.i = ORC_DENORMAL_DOUBLE(var33.i);
+       _dest1.f = _src1.f + _src2.f;
+       var34.i = ORC_DENORMAL_DOUBLE(_dest1.i);
+    }
     /* 3: storeq */
     ptr0[i] = var34;
   }
@@ -4186,7 +4258,15 @@ emulate_subd (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadq */
     var33 = ptr5[i];
     /* 2: subd */
-    var34.f = ORC_DENORMAL_D(ORC_DENORMAL_D(var32.f) - ORC_DENORMAL_D(var33.f));
+    {
+       orc_union64 _src1;
+       orc_union64 _src2;
+       orc_union64 _dest1;
+       _src1.i = ORC_DENORMAL_DOUBLE(var32.i);
+       _src2.i = ORC_DENORMAL_DOUBLE(var33.i);
+       _dest1.f = _src1.f - _src2.f;
+       var34.i = ORC_DENORMAL_DOUBLE(_dest1.i);
+    }
     /* 3: storeq */
     ptr0[i] = var34;
   }
@@ -4214,7 +4294,15 @@ emulate_muld (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadq */
     var33 = ptr5[i];
     /* 2: muld */
-    var34.f = ORC_DENORMAL_D(ORC_DENORMAL_D(var32.f) * ORC_DENORMAL_D(var33.f));
+    {
+       orc_union64 _src1;
+       orc_union64 _src2;
+       orc_union64 _dest1;
+       _src1.i = ORC_DENORMAL_DOUBLE(var32.i);
+       _src2.i = ORC_DENORMAL_DOUBLE(var33.i);
+       _dest1.f = _src1.f * _src2.f;
+       var34.i = ORC_DENORMAL_DOUBLE(_dest1.i);
+    }
     /* 3: storeq */
     ptr0[i] = var34;
   }
@@ -4242,7 +4330,15 @@ emulate_divd (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadq */
     var33 = ptr5[i];
     /* 2: divd */
-    var34.f = ORC_DENORMAL_D(ORC_DENORMAL_D(var32.f) / ORC_DENORMAL_D(var33.f));
+    {
+       orc_union64 _src1;
+       orc_union64 _src2;
+       orc_union64 _dest1;
+       _src1.i = ORC_DENORMAL_DOUBLE(var32.i);
+       _src2.i = ORC_DENORMAL_DOUBLE(var33.i);
+       _dest1.f = _src1.f / _src2.f;
+       var34.i = ORC_DENORMAL_DOUBLE(_dest1.i);
+    }
     /* 3: storeq */
     ptr0[i] = var34;
   }
@@ -4265,7 +4361,13 @@ emulate_sqrtd (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadq */
     var32 = ptr4[i];
     /* 1: sqrtd */
-    var33.f = sqrt(ORC_DENORMAL_D(var32.f));
+    {
+       orc_union64 _src1;
+       orc_union64 _dest1;
+       _src1.i = ORC_DENORMAL_DOUBLE(var32.i);
+       _dest1.f = sqrt(_src1.f);
+       var33.i = ORC_DENORMAL_DOUBLE(_dest1.i);
+    }
     /* 2: storeq */
     ptr0[i] = var33;
   }
@@ -4293,7 +4395,15 @@ emulate_maxd (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadq */
     var33 = ptr5[i];
     /* 2: maxd */
-    var34.f = ORC_MAXD(ORC_DENORMAL_D(var32.f),ORC_DENORMAL_D(var33.f));
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      _src1.i = ORC_DENORMAL_DOUBLE(var32.i);
+      _src2.i = ORC_DENORMAL_DOUBLE(var33.i);
+      if (ORC_ISNAN_DOUBLE(_src1.i)) var34.i = _src1.i;
+      else if (ORC_ISNAN_DOUBLE(_src2.i)) var34.i = _src2.i;
+      else var34.i = (_src1.f > _src2.f) ? _src1.i : _src2.i;
+    }
     /* 3: storeq */
     ptr0[i] = var34;
   }
@@ -4321,7 +4431,15 @@ emulate_mind (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadq */
     var33 = ptr5[i];
     /* 2: mind */
-    var34.f = ORC_MIND(ORC_DENORMAL_D(var32.f),ORC_DENORMAL_D(var33.f));
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      _src1.i = ORC_DENORMAL_DOUBLE(var32.i);
+      _src2.i = ORC_DENORMAL_DOUBLE(var33.i);
+      if (ORC_ISNAN_DOUBLE(_src1.i)) var34.i = _src1.i;
+      else if (ORC_ISNAN_DOUBLE(_src2.i)) var34.i = _src2.i;
+      else var34.i = (_src1.f < _src2.f) ? _src1.i : _src2.i;
+    }
     /* 3: storeq */
     ptr0[i] = var34;
   }
@@ -4349,7 +4467,13 @@ emulate_cmpeqd (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadq */
     var33 = ptr5[i];
     /* 2: cmpeqd */
-    var34.i = (ORC_DENORMAL_D(var32.f) == ORC_DENORMAL_D(var33.f)) ? (~0ULL) : 0;
+    {
+       orc_union64 _src1;
+       orc_union64 _src2;
+       _src1.i = ORC_DENORMAL_DOUBLE(var32.i);
+       _src2.i = ORC_DENORMAL_DOUBLE(var33.i);
+       var34.i = (_src1.f == _src2.f) ? (~0ULL) : 0;
+    }
     /* 3: storeq */
     ptr0[i] = var34;
   }
@@ -4377,7 +4501,13 @@ emulate_cmpltd (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadq */
     var33 = ptr5[i];
     /* 2: cmpltd */
-    var34.i = (ORC_DENORMAL_D(var32.f) < ORC_DENORMAL_D(var33.f)) ? (~0ULL) : 0;
+    {
+       orc_union64 _src1;
+       orc_union64 _src2;
+       _src1.i = ORC_DENORMAL_DOUBLE(var32.i);
+       _src2.i = ORC_DENORMAL_DOUBLE(var33.i);
+       var34.i = (_src1.f < _src2.f) ? (~0ULL) : 0;
+    }
     /* 3: storeq */
     ptr0[i] = var34;
   }
@@ -4405,7 +4535,13 @@ emulate_cmpled (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadq */
     var33 = ptr5[i];
     /* 2: cmpled */
-    var34.i = (ORC_DENORMAL_D(var32.f) <= ORC_DENORMAL_D(var33.f)) ? (~0ULL) : 0;
+    {
+       orc_union64 _src1;
+       orc_union64 _src2;
+       _src1.i = ORC_DENORMAL_DOUBLE(var32.i);
+       _src2.i = ORC_DENORMAL_DOUBLE(var33.i);
+       var34.i = (_src1.f <= _src2.f) ? (~0ULL) : 0;
+    }
     /* 3: storeq */
     ptr0[i] = var34;
   }
@@ -4456,7 +4592,7 @@ emulate_convld (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadl */
     var32 = ptr4[i];
     /* 1: convld */
-    var33.f = var32.i;
+     var33.f = var32.i;
     /* 2: storeq */
     ptr0[i] = var33;
   }
@@ -4479,7 +4615,11 @@ emulate_convfd (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadl */
     var32 = ptr4[i];
     /* 1: convfd */
-    var33.f = ORC_DENORMAL (var32.f);
+    {
+       orc_union32 _src1;
+       _src1.i = ORC_DENORMAL(var32.i);
+       var33.f = _src1.f;
+    }
     /* 2: storeq */
     ptr0[i] = var33;
   }
@@ -4502,7 +4642,11 @@ emulate_convdf (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadq */
     var32 = ptr4[i];
     /* 1: convdf */
-    var33.f = ORC_DENORMAL ((float) var32.f);
+    {
+       orc_union64 _src1;
+       _src1.i = ORC_DENORMAL_DOUBLE(var32.i);
+       var33.f = _src1.f;
+    }
     /* 2: storel */
     ptr0[i] = var33;
   }

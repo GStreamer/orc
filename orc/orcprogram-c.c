@@ -103,18 +103,10 @@ orc_target_c_get_asm_preamble (void)
     "#define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))\n"
     "#define ORC_SWAP_Q(x) ((((x)&0xffULL)<<56) | (((x)&0xff00ULL)<<40) | (((x)&0xff0000ULL)<<24) | (((x)&0xff000000ULL)<<8) | (((x)&0xff00000000ULL)>>8) | (((x)&0xff0000000000ULL)>>24) | (((x)&0xff000000000000ULL)>>40) | (((x)&0xff00000000000000ULL)>>56))\n"
     "#define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))\n"
-    "#define ORC_RECAST_INT(x) (((orc_union32)(x)).i)\n"
-    "#define ORC_RECAST_FLOAT(x) (((orc_union32)(orc_int32)(x)).f)\n"
-    "#define ORC_DENORMAL(x) ORC_RECAST_FLOAT(ORC_RECAST_INT(x) & (((ORC_RECAST_INT(x)&0x7f800000) == 0) ? 0xff800000 : 0xffffffff))\n"
-    "#define ORC_ISNAN(x) (((ORC_RECAST_INT(x)&0x7f800000) == 0x7f800000) && ((ORC_RECAST_INT(x)&0x007fffff) != 0))\n"
-    "#define ORC_MINF(a,b) (ORC_ISNAN(a) ? a : ORC_ISNAN(b) ? b : ((a)<(b)) ? (a) : (b))\n"
-    "#define ORC_MAXF(a,b) (ORC_ISNAN(a) ? a : ORC_ISNAN(b) ? b : ((a)>(b)) ? (a) : (b))\n"
-    "#define ORC_RECAST_INT64(x) (((orc_union64)(x)).i)\n"
-    "#define ORC_RECAST_DOUBLE(x) (((orc_union64)(orc_int64)(x)).f)\n"
-    "#define ORC_DENORMAL_D(x) ORC_RECAST_DOUBLE(ORC_RECAST_INT64(x) & (((ORC_RECAST_INT64(x)&0x7ff0000000000000ULL) == 0) ? 0xfff0000000000000ULL : 0xffffffffffffffffULL))\n"
-    "#define ORC_ISNAN_D(x) (((ORC_RECAST_INT64(x)&0x7ff0000000000000ULL) == 0x7ff0000000000000ULL) && ((ORC_RECAST_INT64(x)&0x000fffffffffffffULL) != 0))\n"
-    "#define ORC_MIND(a,b) (ORC_ISNAN_D(a) ? a : ORC_ISNAN_D(b) ? b : ((a)<(b)) ? (a) : (b))\n"
-    "#define ORC_MAXD(a,b) (ORC_ISNAN_D(a) ? a : ORC_ISNAN_D(b) ? b : ((a)>(b)) ? (a) : (b))\n"
+    "#define ORC_DENORMAL(x) ((x) & ((((x)&0x7f800000) == 0) ? 0xff800000 : 0xffffffff))\n"
+    "#define ORC_ISNAN(x) ((((x)&0x7f800000) == 0x7f800000) && (((x)&0x007fffff) != 0))\n"
+    "#define ORC_DENORMAL_DOUBLE(x) ((x) & ((((x)&0x7ff0000000000000ULL) == 0) ? 0xfff0000000000000ULL : 0xffffffffffffffffULL))\n"
+    "#define ORC_ISNAN_DOUBLE(x) ((((x)&0x7ff0000000000000ULL) == 0x7ff0000000000000ULL) && (((x)&0x000fffffffffffffULL) != 0))\n"
     "#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L\n"
     "#define ORC_RESTRICT restrict\n"
     "#elif defined(__GNUC__) && __GNUC__ >= 4\n"
@@ -542,10 +534,16 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
   char dest[40], src1[40]; \
 \
-  c_get_name_float (dest, p, insn, insn->dest_args[0]); \
-  c_get_name_float (src1, p, insn, insn->src_args[0]); \
+  c_get_name_int (dest, p, insn, insn->dest_args[0]); \
+  c_get_name_int (src1, p, insn, insn->src_args[0]); \
  \
-  ORC_ASM_CODE(p,"    %s = " op ";\n", dest, src1); \
+  ORC_ASM_CODE(p, "    {\n"); \
+  ORC_ASM_CODE(p,"       orc_union32 _src1;\n"); \
+  ORC_ASM_CODE(p,"       orc_union32 _dest1;\n"); \
+  ORC_ASM_CODE(p,"       _src1.i = ORC_DENORMAL(%s);\n", src1); \
+  ORC_ASM_CODE(p,"       _dest1.f = " op ";\n", "_src1.f"); \
+  ORC_ASM_CODE(p,"       %s = ORC_DENORMAL(_dest1.i);\n", dest); \
+  ORC_ASM_CODE(p, "    }\n"); \
 }
 
 #define BINARYF(name,op) \
@@ -554,11 +552,19 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
   char dest[40], src1[40], src2[40]; \
 \
-  c_get_name_float (dest, p, insn, insn->dest_args[0]); \
-  c_get_name_float (src1, p, insn, insn->src_args[0]); \
-  c_get_name_float (src2, p, insn, insn->src_args[1]); \
+  c_get_name_int (dest, p, insn, insn->dest_args[0]); \
+  c_get_name_int (src1, p, insn, insn->src_args[0]); \
+  c_get_name_int (src2, p, insn, insn->src_args[1]); \
  \
-  ORC_ASM_CODE(p,"    %s = " op ";\n", dest, src1, src2); \
+  ORC_ASM_CODE(p, "    {\n"); \
+  ORC_ASM_CODE(p,"       orc_union32 _src1;\n"); \
+  ORC_ASM_CODE(p,"       orc_union32 _src2;\n"); \
+  ORC_ASM_CODE(p,"       orc_union32 _dest1;\n"); \
+  ORC_ASM_CODE(p,"       _src1.i = ORC_DENORMAL(%s);\n", src1); \
+  ORC_ASM_CODE(p,"       _src2.i = ORC_DENORMAL(%s);\n", src2); \
+  ORC_ASM_CODE(p,"       _dest1.f = " op ";\n", "_src1.f", "_src2.f"); \
+  ORC_ASM_CODE(p,"       %s = ORC_DENORMAL(_dest1.i);\n", dest); \
+  ORC_ASM_CODE(p, "    }\n"); \
 }
 
 #define BINARYFL(name,op) \
@@ -568,34 +574,74 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
   char dest[40], src1[40], src2[40]; \
 \
   c_get_name_int (dest, p, insn, insn->dest_args[0]); \
-  c_get_name_float (src1, p, insn, insn->src_args[0]); \
-  c_get_name_float (src2, p, insn, insn->src_args[1]); \
+  c_get_name_int (src1, p, insn, insn->src_args[0]); \
+  c_get_name_int (src2, p, insn, insn->src_args[1]); \
  \
-  ORC_ASM_CODE(p,"    %s = " op ";\n", dest, src1, src2); \
+  ORC_ASM_CODE(p, "    {\n"); \
+  ORC_ASM_CODE(p,"       orc_union32 _src1;\n"); \
+  ORC_ASM_CODE(p,"       orc_union32 _src2;\n"); \
+  ORC_ASM_CODE(p,"       _src1.i = ORC_DENORMAL(%s);\n", src1); \
+  ORC_ASM_CODE(p,"       _src2.i = ORC_DENORMAL(%s);\n", src2); \
+  ORC_ASM_CODE(p,"       %s = " op ";\n", dest, "_src1.f", "_src2.f"); \
+  ORC_ASM_CODE(p, "    }\n"); \
 }
 
-#define UNARYFL(name,op) \
+#define UNARYD(name,op) \
 static void \
 c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
   char dest[40], src1[40]; \
 \
   c_get_name_int (dest, p, insn, insn->dest_args[0]); \
-  c_get_name_float (src1, p, insn, insn->src_args[0]); \
+  c_get_name_int (src1, p, insn, insn->src_args[0]); \
  \
-  ORC_ASM_CODE(p,"    %s = " op ";\n", dest, src1); \
+  ORC_ASM_CODE(p, "    {\n"); \
+  ORC_ASM_CODE(p,"       orc_union64 _src1;\n"); \
+  ORC_ASM_CODE(p,"       orc_union64 _dest1;\n"); \
+  ORC_ASM_CODE(p,"       _src1.i = ORC_DENORMAL_DOUBLE(%s);\n", src1); \
+  ORC_ASM_CODE(p,"       _dest1.f = " op ";\n", "_src1.f"); \
+  ORC_ASM_CODE(p,"       %s = ORC_DENORMAL_DOUBLE(_dest1.i);\n", dest); \
+  ORC_ASM_CODE(p, "    }\n"); \
 }
 
-#define UNARYLF(name,op) \
+#define BINARYD(name,op) \
 static void \
 c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  char dest[40], src1[40]; \
+  char dest[40], src1[40], src2[40]; \
 \
-  c_get_name_float (dest, p, insn, insn->dest_args[0]); \
+  c_get_name_int (dest, p, insn, insn->dest_args[0]); \
   c_get_name_int (src1, p, insn, insn->src_args[0]); \
+  c_get_name_int (src2, p, insn, insn->src_args[1]); \
  \
-  ORC_ASM_CODE(p,"    %s = " op ";\n", dest, src1); \
+  ORC_ASM_CODE(p, "    {\n"); \
+  ORC_ASM_CODE(p,"       orc_union64 _src1;\n"); \
+  ORC_ASM_CODE(p,"       orc_union64 _src2;\n"); \
+  ORC_ASM_CODE(p,"       orc_union64 _dest1;\n"); \
+  ORC_ASM_CODE(p,"       _src1.i = ORC_DENORMAL_DOUBLE(%s);\n", src1); \
+  ORC_ASM_CODE(p,"       _src2.i = ORC_DENORMAL_DOUBLE(%s);\n", src2); \
+  ORC_ASM_CODE(p,"       _dest1.f = " op ";\n", "_src1.f", "_src2.f"); \
+  ORC_ASM_CODE(p,"       %s = ORC_DENORMAL_DOUBLE(_dest1.i);\n", dest); \
+  ORC_ASM_CODE(p, "    }\n"); \
+}
+
+#define BINARYDQ(name,op) \
+static void \
+c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
+{ \
+  char dest[40], src1[40], src2[40]; \
+\
+  c_get_name_int (dest, p, insn, insn->dest_args[0]); \
+  c_get_name_int (src1, p, insn, insn->src_args[0]); \
+  c_get_name_int (src2, p, insn, insn->src_args[1]); \
+ \
+  ORC_ASM_CODE(p, "    {\n"); \
+  ORC_ASM_CODE(p,"       orc_union64 _src1;\n"); \
+  ORC_ASM_CODE(p,"       orc_union64 _src2;\n"); \
+  ORC_ASM_CODE(p,"       _src1.i = ORC_DENORMAL_DOUBLE(%s);\n", src1); \
+  ORC_ASM_CODE(p,"       _src2.i = ORC_DENORMAL_DOUBLE(%s);\n", src2); \
+  ORC_ASM_CODE(p,"       %s = " op ";\n", dest, "_src1.f", "_src2.f"); \
+  ORC_ASM_CODE(p, "    }\n"); \
 }
 
 #define BINARY_SB(a,b) BINARY(a,b)
@@ -631,9 +677,9 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 #define UNARY_FL(a,b) UNARYFL(a,b)
 #define UNARY_LF(a,b) UNARYLF(a,b)
 
-#define BINARY_D(a,b) BINARYF(a,b)
-#define BINARY_DQ(a,b) BINARYFL(a,b)
-#define UNARY_D(a,b) UNARYF(a,b)
+#define BINARY_D(a,b) BINARYD(a,b)
+#define BINARY_DQ(a,b) BINARYDQ(a,b)
+#define UNARY_D(a,b) UNARYD(a,b)
 #define UNARY_DL(a,b) UNARYFL(a,b)
 #define UNARY_LD(a,b) UNARYLF(a,b)
 #define UNARY_DF(a,b) UNARYF(a,b)
@@ -1006,6 +1052,58 @@ c_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+c_rule_convlf (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src1[40];
+
+  c_get_name_float (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src1, p, insn, insn->src_args[0]);
+
+  ORC_ASM_CODE(p,"     %s = %s;\n", dest, src1);
+}
+
+static void
+c_rule_convld (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src1[40];
+
+  c_get_name_float (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src1, p, insn, insn->src_args[0]);
+
+  ORC_ASM_CODE(p,"     %s = %s;\n", dest, src1);
+}
+
+static void
+c_rule_convfd (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src1[40];
+
+  c_get_name_float (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src1, p, insn, insn->src_args[0]);
+
+  ORC_ASM_CODE(p, "    {\n");
+  ORC_ASM_CODE(p,"       orc_union32 _src1;\n");
+  ORC_ASM_CODE(p,"       _src1.i = ORC_DENORMAL(%s);\n", src1);
+  ORC_ASM_CODE(p,"       %s = _src1.f;\n", dest);
+  ORC_ASM_CODE(p, "    }\n");
+}
+
+static void
+c_rule_convdf (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src1[40];
+
+  c_get_name_float (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src1, p, insn, insn->src_args[0]);
+
+  ORC_ASM_CODE(p, "    {\n");
+  ORC_ASM_CODE(p,"       orc_union64 _src1;\n");
+  ORC_ASM_CODE(p,"       _src1.i = ORC_DENORMAL_DOUBLE(%s);\n", src1);
+  ORC_ASM_CODE(p,"       %s = _src1.f;\n", dest);
+  ORC_ASM_CODE(p, "    }\n");
+}
+
+static void
 c_rule_convfl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   char dest[40], src[40], src_i[40];
@@ -1037,6 +1135,86 @@ c_rule_convdl (OrcCompiler *p, void *user, OrcInstruction *insn)
   ORC_ASM_CODE(p,"       if (tmp == 0x80000000 && !(%s&0x8000000000000000ULL)) tmp = 0x7fffffff;\n", src_i);
   ORC_ASM_CODE(p,"       %s = tmp;\n", dest);
   ORC_ASM_CODE(p, "    }\n");
+}
+
+static void
+c_rule_minf (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src1[40], src2[40];
+
+  c_get_name_int (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src1, p, insn, insn->src_args[0]);
+  c_get_name_int (src2, p, insn, insn->src_args[1]);
+
+  ORC_ASM_CODE(p,"    {\n");
+  ORC_ASM_CODE(p,"      orc_union32 _src1;\n");
+  ORC_ASM_CODE(p,"      orc_union32 _src2;\n");
+  ORC_ASM_CODE(p,"      _src1.i = ORC_DENORMAL(%s);\n", src1);
+  ORC_ASM_CODE(p,"      _src2.i = ORC_DENORMAL(%s);\n", src2);
+  ORC_ASM_CODE(p,"      if (ORC_ISNAN(_src1.i)) %s = _src1.i;\n", dest);
+  ORC_ASM_CODE(p,"      else if (ORC_ISNAN(_src2.i)) %s = _src2.i;\n", dest);
+  ORC_ASM_CODE(p,"      else %s = (_src1.f < _src2.f) ? _src1.i : _src2.i;\n", dest);
+  ORC_ASM_CODE(p,"    }\n");
+}
+
+static void
+c_rule_maxf (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src1[40], src2[40];
+
+  c_get_name_int (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src1, p, insn, insn->src_args[0]);
+  c_get_name_int (src2, p, insn, insn->src_args[1]);
+
+  ORC_ASM_CODE(p,"    {\n");
+  ORC_ASM_CODE(p,"      orc_union32 _src1;\n");
+  ORC_ASM_CODE(p,"      orc_union32 _src2;\n");
+  ORC_ASM_CODE(p,"      _src1.i = ORC_DENORMAL(%s);\n", src1);
+  ORC_ASM_CODE(p,"      _src2.i = ORC_DENORMAL(%s);\n", src2);
+  ORC_ASM_CODE(p,"      if (ORC_ISNAN(_src1.i)) %s = _src1.i;\n", dest);
+  ORC_ASM_CODE(p,"      else if (ORC_ISNAN(_src2.i)) %s = _src2.i;\n", dest);
+  ORC_ASM_CODE(p,"      else %s = (_src1.f > _src2.f) ? _src1.i : _src2.i;\n", dest);
+  ORC_ASM_CODE(p,"    }\n");
+}
+
+static void
+c_rule_mind (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src1[40], src2[40];
+
+  c_get_name_int (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src1, p, insn, insn->src_args[0]);
+  c_get_name_int (src2, p, insn, insn->src_args[1]);
+
+  ORC_ASM_CODE(p,"    {\n");
+  ORC_ASM_CODE(p,"      orc_union64 _src1;\n");
+  ORC_ASM_CODE(p,"      orc_union64 _src2;\n");
+  ORC_ASM_CODE(p,"      _src1.i = ORC_DENORMAL_DOUBLE(%s);\n", src1);
+  ORC_ASM_CODE(p,"      _src2.i = ORC_DENORMAL_DOUBLE(%s);\n", src2);
+  ORC_ASM_CODE(p,"      if (ORC_ISNAN_DOUBLE(_src1.i)) %s = _src1.i;\n", dest);
+  ORC_ASM_CODE(p,"      else if (ORC_ISNAN_DOUBLE(_src2.i)) %s = _src2.i;\n", dest);
+  ORC_ASM_CODE(p,"      else %s = (_src1.f < _src2.f) ? _src1.i : _src2.i;\n", dest);
+  ORC_ASM_CODE(p,"    }\n");
+}
+
+static void
+c_rule_maxd (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src1[40], src2[40];
+
+  c_get_name_int (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src1, p, insn, insn->src_args[0]);
+  c_get_name_int (src2, p, insn, insn->src_args[1]);
+
+  ORC_ASM_CODE(p,"    {\n");
+  ORC_ASM_CODE(p,"      orc_union64 _src1;\n");
+  ORC_ASM_CODE(p,"      orc_union64 _src2;\n");
+  ORC_ASM_CODE(p,"      _src1.i = ORC_DENORMAL_DOUBLE(%s);\n", src1);
+  ORC_ASM_CODE(p,"      _src2.i = ORC_DENORMAL_DOUBLE(%s);\n", src2);
+  ORC_ASM_CODE(p,"      if (ORC_ISNAN_DOUBLE(_src1.i)) %s = _src1.i;\n", dest);
+  ORC_ASM_CODE(p,"      else if (ORC_ISNAN_DOUBLE(_src2.i)) %s = _src2.i;\n", dest);
+  ORC_ASM_CODE(p,"      else %s = (_src1.f > _src2.f) ? _src1.i : _src2.i;\n", dest);
+  ORC_ASM_CODE(p,"    }\n");
 }
 
 static OrcTarget c_target = {
@@ -1136,7 +1314,15 @@ orc_c_init (void)
   orc_rule_register (rule_set, "splatw3q", c_rule_splatw3q, NULL);
   orc_rule_register (rule_set, "div255w", c_rule_div255w, NULL);
   orc_rule_register (rule_set, "divluw", c_rule_divluw, NULL);
+  orc_rule_register (rule_set, "convlf", c_rule_convlf, NULL);
+  orc_rule_register (rule_set, "convld", c_rule_convld, NULL);
   orc_rule_register (rule_set, "convfl", c_rule_convfl, NULL);
   orc_rule_register (rule_set, "convdl", c_rule_convdl, NULL);
+  orc_rule_register (rule_set, "convfd", c_rule_convfd, NULL);
+  orc_rule_register (rule_set, "convdf", c_rule_convdf, NULL);
+  orc_rule_register (rule_set, "minf", c_rule_minf, NULL);
+  orc_rule_register (rule_set, "maxf", c_rule_maxf, NULL);
+  orc_rule_register (rule_set, "mind", c_rule_mind, NULL);
+  orc_rule_register (rule_set, "maxd", c_rule_maxd, NULL);
 }
 
