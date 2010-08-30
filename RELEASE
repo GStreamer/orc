@@ -1,4 +1,25 @@
 
+0.4.8
+=====
+
+Changes:
+
+ - Fix Windows and OS/X builds
+ - Improve behavior in failure cases
+ - Major improvements for Altivec backend
+ - Significant documentation additions
+
+Memory for executable code storage is now handled in a much more
+controlled manner, and it's now possible to reclaim this memory
+after it's no longer needed.
+
+A few more 64-bit opcodes have been added, mostly related to
+arithmetic on floating point values.
+
+The orcc tool now handles 64-bit and floating point parameters
+and constants.
+
+
 0.4.7
 =====
 
