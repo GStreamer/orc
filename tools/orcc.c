@@ -1058,15 +1058,29 @@ output_code_test (OrcProgram *p, FILE *output)
             enumnames[insn->src_args[0]]);
       }
     } else {
-      if (p->vars[insn->src_args[1]].size != 0) {
-        fprintf(output, "      orc_program_append_2 (p, \"%s\", %d, %s, %s, %s, -1);\n",
-            insn->opcode->name, insn->flags, enumnames[insn->dest_args[0]],
-            enumnames[insn->src_args[0]], enumnames[insn->src_args[1]]);
-      } else {
-        fprintf(output, "      orc_program_append_2 (p, \"%s\", %d, %s, %s, -1, -1);\n",
-            insn->opcode->name, insn->flags, enumnames[insn->dest_args[0]],
-            enumnames[insn->src_args[0]]);
+      int args[4] = { 0, 0, 0, 0 };
+      int n_args = 0;
+
+      if (insn->opcode->dest_size[0] != 0) {
+        args[n_args++] = insn->dest_args[0];
       }
+      if (insn->opcode->dest_size[1] != 0) {
+        args[n_args++] = insn->dest_args[1];
+      }
+      if (insn->opcode->src_size[0] != 0) {
+        args[n_args++] = insn->src_args[0];
+      }
+      if (insn->opcode->src_size[1] != 0) {
+        args[n_args++] = insn->src_args[1];
+      }
+      if (insn->opcode->src_size[2] != 0) {
+        args[n_args++] = insn->src_args[2];
+      }
+
+      fprintf(output, "      orc_program_append_2 (p, \"%s\", %d, %s, %s, %s, %s);\n",
+          insn->opcode->name, insn->flags, enumnames[args[0]],
+          enumnames[args[1]], enumnames[args[2]],
+          enumnames[args[3]]);
     }
   }
 
