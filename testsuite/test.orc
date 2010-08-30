@@ -1618,9 +1618,9 @@ select1wb d1, l_gray2
 
 
 .function canny_calc_delta_x
-.dest 4 d1 gint32
-.source 4 s1 guint8
-.source 4 s2 guint8
+.dest 4 d1 int32_t
+.source 4 s1 uint8_t
+.source 4 s2 uint8_t
 .temp 2 t1
 .temp 2 t2
 .temp 1 t3
