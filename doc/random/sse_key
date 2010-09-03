@@ -1,0 +1,108 @@
+
+Key to SSE opcodes and flags
+
+SSE	70
+
+SSE2	144
+	
+
+SSE3	13
+	addsubpd
+	addsubps
+	haddpd
+	haddps
+	hsubpd
+	hsubps
+	lddqu
+	movddup
+	movshdup
+	movsldup
+	fisttp
+	monitor
+	mwait
+
+SSSE3	16
+	psignb
+	psignw
+	psignd
+	pabsb
+	pabsw
+	pabsd
+	palignr
+	pshufb
+	pmulhrsw
+	pmaddubsw
+	phsubw
+	phsubd
+	phsubsw
+	phaddw
+	phaddd
+	phaddsw
+
+SSE4.1	47
+	mpsadbw
+	phminposuw
+	pmuldq
+	pmulld
+	dpps
+	dppd
+	blendps
+	blendpd
+	blendvps
+	blendvpd
+	pblendvb
+	pblendw
+	pminsb
+	pmaxsb
+	pminuw
+	pmaxuw
+	pminud
+	pmaxud
+	pminsd
+	pmaxsd
+	roundps
+	roundss
+	roundpd
+	roundsd
+	insertps
+	psinsrb
+	pinsrd pinsrq
+	extractps
+	pextrb
+	pextrw
+	pextrd pextrq
+	pmovsxbw
+	pmovzxbw
+	pmovsxbd
+	pmovzxbd
+	pmovsxbq
+	pmovzxbq
+	pmovsxwd
+	pmovzxwd
+	pmovsxwq
+	pmovzxwq
+	pmovsxdq
+	pmovzxdq
+	ptest
+	pcmpeqq
+	packusdw
+	movntdqa
+	
+SSE4.2	7
+	crc32
+	pcmpestri
+	pcmpestrm
+	pcmpistri
+	pcmpistrm
+	pcmpgtq
+	popcnt
+
+SSE4a	
+	lzcnt
+	popcnt
+	extrq insertq
+	movntsd
+	movntss
+	
+SSE5	http://developer.amd.com/cpu/SSE5/Pages/default.aspx
+
