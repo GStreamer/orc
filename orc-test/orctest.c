@@ -359,7 +359,7 @@ orc_test_random_bits (void *data, int n_bytes)
 #endif
 }
 
-int
+static int
 print_array_val_signed (OrcArray *array, int i, int j)
 {
   void *ptr = ORC_PTR_OFFSET (array->data,
@@ -383,7 +383,7 @@ print_array_val_signed (OrcArray *array, int i, int j)
   }
 }
 
-int
+static int
 print_array_val_unsigned (OrcArray *array, int i, int j)
 {
   void *ptr = ORC_PTR_OFFSET (array->data,
@@ -407,7 +407,7 @@ print_array_val_unsigned (OrcArray *array, int i, int j)
   }
 }
 
-int
+static int
 print_array_val_hex (OrcArray *array, int i, int j)
 {
   void *ptr = ORC_PTR_OFFSET (array->data,
@@ -431,7 +431,7 @@ print_array_val_hex (OrcArray *array, int i, int j)
   }
 }
 
-int
+static int
 print_array_val_float (OrcArray *array, int i, int j)
 {
   void *ptr = ORC_PTR_OFFSET (array->data,
