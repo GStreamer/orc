@@ -400,6 +400,7 @@ orc_program_add_constant_str (OrcProgram *program, int size,
   char *end;
   int val_i;
   double val_d;
+  int j;
 
   i = ORC_VAR_C1 + program->n_const_vars;
 
@@ -419,6 +420,12 @@ orc_program_add_constant_str (OrcProgram *program, int size,
       program->vars[i].value.f = val_d;
     } else {
       return -1;
+    }
+  }
+
+  for(j=0;j<program->n_const_vars;j++){
+    if (program->vars[ORC_VAR_C1 + j].value.i == program->vars[i].value.i) {
+      return ORC_VAR_C1 + j;
     }
   }
 
