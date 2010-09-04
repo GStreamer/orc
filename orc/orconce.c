@@ -54,6 +54,34 @@ orc_once_mutex_unlock (void)
   LeaveCriticalSection (&once_mutex);
 }
 
+#ifdef _MSC_VER
+
+#pragma section(".CRT$XCU",read)
+
+static void __cdecl
+orc_once_cs_init (void)
+{
+  InitializeCriticalSection (&once_mutex);
+}
+
+__declspec(allocate(".CRT$XCU"))
+void (__cdecl * orc_once_cs_init_constructor)(void) = orc_once_cs_init;
+
+#elif defined(__GNUC__)
+
+static void orc_once_cs_init (void) __attribute__((constructor));
+
+static void
+orc_once_cs_init (void) 
+{
+  InitializeCriticalSection (&once_mutex);
+}
+
+#else
+#error Expecting GCC or MSVC on Windows
+#endif
+
+#if 0
 BOOL WINAPI
 DllMain (HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
@@ -62,6 +90,7 @@ DllMain (HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
   }
   return TRUE;
 }
+#endif
 
 #else
 
