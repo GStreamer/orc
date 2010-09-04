@@ -146,7 +146,6 @@ orc_compiler_sse_init (OrcCompiler *compiler)
     for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+16;i++){
       compiler->valid_regs[i] = 1;
     }
-    compiler->valid_regs[X86_EDI] = 0;
     compiler->valid_regs[X86_ESP] = 0;
 #ifndef MMX
     for(i=X86_XMM0;i<X86_XMM0+16;i++){
@@ -163,6 +162,13 @@ orc_compiler_sse_init (OrcCompiler *compiler)
     compiler->save_regs[X86_R13] = 1;
     compiler->save_regs[X86_R14] = 1;
     compiler->save_regs[X86_R15] = 1;
+#ifdef HAVE_OS_WIN32
+    compiler->save_regs[X86_EDI] = 1;
+    compiler->save_regs[X86_ESI] = 1;
+    for(i=X86_XMM0+6;i<X86_XMM0+16;i++){
+      compiler->save_regs[i] = 1;
+    }
+#endif
   } else {
     for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+8;i++){
       compiler->valid_regs[i] = 1;
@@ -187,7 +193,12 @@ orc_compiler_sse_init (OrcCompiler *compiler)
   compiler->valid_regs[compiler->gp_tmpreg] = 0;
 
   if (compiler->is_64bit) {
+#ifdef HAVE_OS_WIN32
+    compiler->exec_reg = X86_ECX;
+    compiler->gp_tmpreg = X86_EAX;
+#else
     compiler->exec_reg = X86_EDI;
+#endif
   } else {
     if (compiler->use_frame_pointer) {
       compiler->exec_reg = X86_EBX;
