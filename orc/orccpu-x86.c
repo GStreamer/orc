@@ -1,6 +1,6 @@
 /*
  * ORC - Library of Optimized Inner Loops
- * Copyright (c) 2003,2004 David A. Schleef <ds@schleef.org>
+ * Copyright (c) 2003,2004,2010 David A. Schleef <ds@schleef.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,133 +42,15 @@
 #include <signal.h>
 #include <time.h>
 
-#if defined(__FreeBSD__) || defined(__APPLE__)
-#include <sys/types.h>
-#include <sys/sysctl.h>
-#endif
 
-#ifdef __sun
-#include <sys/auxv.h>
-#endif
+orc_uint32 orc_x86_vendor;
+int orc_x86_sse_flags;
+int orc_x86_mmx_flags;
 
-/***** i386, amd64 *****/
 
-#if defined(__sun)
-#define USE_I386_GETISAX
-#else
-#define USE_I386_CPUID
-#endif
-
-int orc_x86_family_id;
-int orc_x86_model_id;
-int orc_x86_stepping;
-
-#ifdef USE_I386_CPUINFO
-static unsigned int
-orc_sse_getflags_cpuinfo (char *cpuinfo)
-{
-  unsigned int sse_flags;
-  char *cpuinfo_flags;
-  char **flags;
-  char **f;
-
-  cpuinfo_flags = get_tag_value (cpuinfo, "flags");
-  if (cpuinfo_flags == NULL) {
-    free (cpuinfo);
-    return;
-  }
-
-  flags = strsplit(cpuinfo_flags, ' ');
-  for (f = flags; *f; f++) {
-    if (strcmp (*f, "sse2") == 0) {
-      ORC_DEBUG ("cpu flag %s", *f);
-      sse_flags |= ORC_TARGET_SSE_SSE2;
-    }
-    if (strcmp (*f, "pni") == 0) {
-      ORC_DEBUG ("cpu flag %s", *f);
-      sse_flags |= ORC_TARGET_SSE_SSE3;
-    }
-    if (strcmp (*f, "ssse3") == 0) {
-      ORC_DEBUG ("cpu flag %s", *f);
-      sse_flags |= ORC_TARGET_SSE_SSSE3;
-    }
-    if (strcmp (*f, "sse4_1") == 0) {
-      ORC_DEBUG ("cpu flag %s", *f);
-      sse_flags |= ORC_TARGET_SSE_SSSE4_1;
-    }
-    if (strcmp (*f, "sse4_2") == 0) {
-      ORC_DEBUG ("cpu flag %s", *f);
-      sse_flags |= ORC_TARGET_SSE_SSSE4_2;
-    }
-    if (strcmp (*f, "sse4a") == 0) {
-      ORC_DEBUG ("cpu flag %s", *f);
-      sse_flags |= ORC_TARGET_SSE_SSSE4A;
-    }
-    if (strcmp (*f, "sse5") == 0) {
-      ORC_DEBUG ("cpu flag %s", *f);
-      orc_cpu_flags |= ORC_CPU_FLAG_SSE5;
-    }
-
-    free (*f);
-  }
-  free (flags);
-  free (cpuinfo);
-  free (cpuinfo_flags);
-
-  return sse_flags;
-}
-
-static unsigned int
-orc_mmx_getflags_cpuinfo (char *cpuinfo)
-{
-  unsigned int sse_flags;
-  char *cpuinfo_flags;
-  char **flags;
-  char **f;
-
-  cpuinfo_flags = get_tag_value (cpuinfo, "flags");
-  if (cpuinfo_flags == NULL) {
-    free (cpuinfo);
-    return;
-  }
-
-  flags = strsplit(cpuinfo_flags, ' ');
-  for (f = flags; *f; f++) {
-    if (strcmp (*f, "mmx") == 0) {
-      ORC_DEBUG ("cpu flag %s", *f);
-      sse_flags |= ORC_TARGET_MMX_MMX;
-    }
-    if (strcmp (*f, "mmxext") == 0) {
-      ORC_DEBUG ("cpu flag %s", *f);
-      sse_flags |= ORC_TARGET_MMX_MMXEXT;
-    }
-    if (strcmp (*f, "ssse3") == 0) {
-      ORC_DEBUG ("cpu flag %s", *f);
-      sse_flags |= ORC_TARGET_MMX_SSSE3;
-    }
-    if (strcmp (*f, "3dnow") == 0) {
-      ORC_DEBUG ("cpu flag %s", *f);
-      sse_flags |= ORC_TARGET_MMX_3DNOW;
-    }
-    if (strcmp (*f, "3dnowext") == 0) {
-      ORC_DEBUG ("cpu flag %s", *f);
-      sse_flags |= ORC_TARGET_MMX_3DNOWEXT;
-    }
-
-    free (*f);
-  }
-  free (flags);
-  free (cpuinfo);
-  free (cpuinfo_flags);
-
-  return sse_flags;
-}
-#endif
-
-#ifdef USE_I386_CPUID
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
 static void
-get_cpuid (orc_uint32 op, orc_uint32 init_ecx, orc_uint32 *a, orc_uint32 *b, orc_uint32 *c, orc_uint32 *d)
+get_cpuid (orc_uint32 op, orc_uint32 *a, orc_uint32 *b, orc_uint32 *c, orc_uint32 *d)
 {
   int tmp[4];
   __cpuid(tmp, op);
@@ -177,47 +59,53 @@ get_cpuid (orc_uint32 op, orc_uint32 init_ecx, orc_uint32 *a, orc_uint32 *b, orc
   *c = tmp[2];
   *d = tmp[3];
 }
-#endif
 
-#ifdef __i386__
 static void
-get_cpuid (orc_uint32 op, orc_uint32 init_ecx, orc_uint32 *a, orc_uint32 *b,
+get_cpuid_ecx (orc_uint32 op, orc_uint32 *a, orc_uint32 *b, orc_uint32 *c, orc_uint32 *d)
+{
+  int tmp[4];
+  __cpuidex(tmp, op, ecx);
+  *a = tmp[0];
+  *b = tmp[1];
+  *c = tmp[2];
+  *d = tmp[3];
+}
+#elif defined(__GNUC__)
+
+static void
+get_cpuid_ecx (orc_uint32 op, orc_uint32 init_ecx, orc_uint32 *a, orc_uint32 *b,
     orc_uint32 *c, orc_uint32 *d)
 {
   *a = op;
   *c = init_ecx;
+#ifdef __i386__
   __asm__ (
       "  pushl %%ebx\n"
       "  cpuid\n"
       "  mov %%ebx, %%esi\n"
       "  popl %%ebx\n"
       : "+a" (*a), "=S" (*b), "+c" (*c), "=d" (*d));
-}
-#endif
-
-#ifdef __amd64__
-static void
-get_cpuid (orc_uint32 op, orc_uint32 init_ecx, orc_uint32 *a, orc_uint32 *b,
-    orc_uint32 *c, orc_uint32 *d)
-{
-  *a = op;
-  *c = init_ecx;
+#elif defined(__amd64__)
   __asm__ (
       "  cpuid\n"
       : "+a" (*a), "=b" (*b), "+c" (*c), "=d" (*d));
-  //ORC_ERROR("cpuid %08x %08x -> %08x %08x %08x %08x", op, init_ecx, *a, *b, *c, *d);
-}
 #endif
+}
 
-#if 0
 static void
-test_cpuid (void *ignored)
+get_cpuid (orc_uint32 op, orc_uint32 *a, orc_uint32 *b,
+    orc_uint32 *c, orc_uint32 *d)
 {
-  orc_uint32 eax, ebx, ecx, edx;
-
-  get_cpuid (0x00000000, &eax, &ebx, &ecx, &edx);
+  get_cpuid_ecx (op, 0, a, b, c, d);
 }
+
+#else
+
+/* FIXME generate a get_cpuid() function at runtime. */
+#error Need get_cpuid() function.
+
 #endif
+
 
 struct desc_struct {
   int desc;
@@ -278,7 +166,7 @@ handle_cache_descriptor (unsigned int desc)
   if (desc == 0) return;
 
   /* special case */
-  if (desc == 0x49 && orc_x86_family_id == 0xf && orc_x86_model_id == 0x6) {
+  if (desc == 0x49 && _orc_cpu_family == 0xf && _orc_cpu_model == 0x6) {
     ORC_DEBUG("level %d size %d", 3, 4*1024*1024);
     _orc_data_cache_size_level3 = 4*1024*1024;
     return;
@@ -303,77 +191,144 @@ handle_cache_descriptor (unsigned int desc)
   }
 }
 
-static unsigned int
-orc_sse_detect_cpuid (void)
+static void orc_sse_detect_cpuid_intel (orc_uint32 level);
+static void orc_sse_detect_cpuid_amd (orc_uint32 level);
+
+static void
+orc_x86_detect_cpuid (void)
+{
+  static int inited = 0;
+  orc_uint32 ecx, edx;
+  orc_uint32 level;
+
+  if (inited) return;
+  inited = 1;
+
+  get_cpuid (0x00000000, &level, &orc_x86_vendor, &ecx, &edx);
+
+  ORC_DEBUG("cpuid %d %08x %08x %08x", level, orc_x86_vendor, ecx, edx);
+
+  if (orc_x86_vendor == (('G'<<0)|('e'<<8)|('n'<<16)|('u'<<24))) {
+    orc_sse_detect_cpuid_intel (level);
+  } else if (orc_x86_vendor == (('A'<<0)|('u'<<8)|('t'<<16)|('h'<<24))) {
+    orc_sse_detect_cpuid_amd (level);
+  } else {
+    /* FIXME */
+  }
+
+  if (orc_compiler_flag_check ("-sse2")) {
+    orc_x86_sse_flags &= ~ORC_TARGET_SSE_SSE2;
+  }
+  if (orc_compiler_flag_check ("-sse3")) {
+    orc_x86_sse_flags &= ~ORC_TARGET_SSE_SSE3;
+  }
+  if (orc_compiler_flag_check ("-ssse3")) {
+    orc_x86_sse_flags &= ~ORC_TARGET_SSE_SSSE3;
+  }
+  if (orc_compiler_flag_check ("-sse41")) {
+    orc_x86_sse_flags &= ~ORC_TARGET_SSE_SSE4_1;
+  }
+  if (orc_compiler_flag_check ("-sse42")) {
+    orc_x86_sse_flags &= ~ORC_TARGET_SSE_SSE4_2;
+  }
+  if (orc_compiler_flag_check ("-sse4a")) {
+    orc_x86_sse_flags &= ~ORC_TARGET_SSE_SSE4A;
+  }
+  if (orc_compiler_flag_check ("-sse5")) {
+    orc_x86_sse_flags &= ~ORC_TARGET_SSE_SSE5;
+  }
+
+}
+
+char orc_x86_processor_string[49];
+
+static void
+orc_x86_cpuid_get_branding_string (void)
+{
+  get_cpuid (0x80000002,
+      (orc_uint32 *)(orc_x86_processor_string+0),
+      (orc_uint32 *)(orc_x86_processor_string+4),
+      (orc_uint32 *)(orc_x86_processor_string+8),
+      (orc_uint32 *)(orc_x86_processor_string+12));
+  get_cpuid (0x80000003,
+      (orc_uint32 *)(orc_x86_processor_string+16),
+      (orc_uint32 *)(orc_x86_processor_string+20),
+      (orc_uint32 *)(orc_x86_processor_string+24),
+      (orc_uint32 *)(orc_x86_processor_string+28));
+  get_cpuid (0x80000004,
+      (orc_uint32 *)(orc_x86_processor_string+32),
+      (orc_uint32 *)(orc_x86_processor_string+36),
+      (orc_uint32 *)(orc_x86_processor_string+40),
+      (orc_uint32 *)(orc_x86_processor_string+44));
+
+  ORC_INFO ("processor string '%s'", orc_x86_processor_string);
+
+  _orc_cpu_name = orc_x86_processor_string;
+}
+
+static void
+orc_x86_cpuid_handle_standard_flags (void)
 {
   orc_uint32 eax, ebx, ecx, edx;
-  orc_uint32 level;
-  orc_uint32 vendor;
-  unsigned int sse_flags = 0;
-#if 0
-  int ret;
 
-  orc_fault_check_enable ();
-  ret = orc_fault_check_try(test_cpuid, NULL);
-  orc_fault_check_disable ();
-  if (!ret) {
-    /* CPU thinks cpuid is an illegal instruction. */
-    return;
+  get_cpuid (0x00000001, &eax, &ebx, &ecx, &edx);
+
+  if (edx & (1<<26)) {
+    orc_x86_sse_flags |= ORC_TARGET_SSE_SSE2;
   }
-#endif
+  if (ecx & (1<<0)) {
+    orc_x86_sse_flags |= ORC_TARGET_SSE_SSE3;
+  }
+  if (ecx & (1<<9)) {
+    orc_x86_sse_flags |= ORC_TARGET_SSE_SSSE3;
+    orc_x86_mmx_flags |= ORC_TARGET_MMX_SSSE3;
+  }
+  if (ecx & (1<<19)) {
+    orc_x86_sse_flags |= ORC_TARGET_SSE_SSE4_1;
+    orc_x86_mmx_flags |= ORC_TARGET_MMX_SSE4_1;
+  }
+  if (ecx & (1<<20)) {
+    orc_x86_sse_flags |= ORC_TARGET_SSE_SSE4_2;
+  }
+}
 
-  get_cpuid (0x00000000, 0, &level, &vendor, &ecx, &edx);
+static void
+orc_x86_cpuid_handle_family_model_stepping (void)
+{
+  orc_uint32 eax, ebx, ecx, edx;
+  int family_id;
+  int model_id;
+  int ext_family_id;
+  int ext_model_id;
 
-  ORC_DEBUG("cpuid %d %08x %08x %08x", level, vendor, ecx, edx);
+  get_cpuid (0x00000001, &eax, &ebx, &ecx, &edx);
+
+  family_id = (eax>>8)&0xf;
+  model_id = (eax>>4)&0xf;
+  ext_family_id = (eax>>20)&0xff;
+  ext_model_id = (eax>>16)&0xf;
+
+  _orc_cpu_family = family_id + ext_family_id;
+  _orc_cpu_model = (ext_model_id << 4) | model_id;
+  _orc_cpu_stepping = eax&0xf;
+
+  ORC_INFO ("family_id %d model_id %d stepping %d",
+      _orc_cpu_family, _orc_cpu_model, _orc_cpu_stepping);
+}
+
+static void
+orc_sse_detect_cpuid_intel (orc_uint32 level)
+{
+  orc_uint32 eax, ebx, ecx, edx;
 
   if (level >= 1) {
-    get_cpuid (0x00000001, 0, &eax, &ebx, &ecx, &edx);
 
-    /* generic flags */
-    if (edx & (1<<26)) {
-      sse_flags |= ORC_TARGET_SSE_SSE2;
-    }
-    if (ecx & (1<<0)) {
-      sse_flags |= ORC_TARGET_SSE_SSE3;
-    }
-    if (ecx & (1<<9)) {
-      sse_flags |= ORC_TARGET_SSE_SSSE3;
-    }
-    if (ecx & (1<<19)) {
-      sse_flags |= ORC_TARGET_SSE_SSE4_1;
-    }
-    if (ecx & (1<<20)) {
-      sse_flags |= ORC_TARGET_SSE_SSE4_2;
-    }
-
-    if (vendor == (('G'<<0)|('e'<<8)|('n'<<16)|('u'<<24))) {
-      int family_id = (eax>>8)&0xf;
-      int model_id = (eax>>4)&0xf;
-      int ext_family_id = (eax>>20)&0xff;
-      int ext_model_id = (eax>>16)&0xf;
-
-      if (family_id == 0xf) {
-        orc_x86_family_id = family_id + ext_family_id;
-      } else {
-        orc_x86_family_id = family_id;
-      }
-
-      if (model_id == 0xf) {
-        orc_x86_model_id = model_id + ext_model_id;
-      } else {
-        orc_x86_model_id = model_id;
-      }
-
-      orc_x86_stepping = eax&0xf;
-
-      ORC_DEBUG("family_id %d model_id %d stepping %d",
-          orc_x86_family_id, orc_x86_model_id, orc_x86_stepping);
-
-    }
+    orc_x86_cpuid_handle_standard_flags ();
+    orc_x86_cpuid_handle_family_model_stepping ();
   }
 
-  if (level >= 2 && vendor == (('G'<<0)|('e'<<8)|('n'<<16)|('u'<<24))) {
-    get_cpuid (0x00000002, 0, &eax, &ebx, &ecx, &edx);
+  if (level >= 2) {
+    get_cpuid (0x00000002, &eax, &ebx, &ecx, &edx);
 
     if ((eax&0x80000000) == 0) {
       handle_cache_descriptor ((eax>>8)&0xff);
@@ -400,7 +355,7 @@ orc_sse_detect_cpuid (void)
     }
   }
 
-  if (level >= 4 && vendor == (('G'<<0)|('e'<<8)|('n'<<16)|('u'<<24))) {
+  if (level >= 4) {
     int i;
     for(i=0;i<10;i++){
       int type;
@@ -410,7 +365,7 @@ orc_sse_detect_cpuid (void)
       int w;
       int s;
 
-      get_cpuid (0x00000004, i, &eax, &ebx, &ecx, &edx);
+      get_cpuid_ecx (0x00000004, i, &eax, &ebx, &ecx, &edx);
       type = eax&0xf;
       if (type == 0) break;
 
@@ -420,7 +375,7 @@ orc_sse_detect_cpuid (void)
       w = ((ebx>>22)&0x3ff)+1;
       s = ecx + 1;
 
-      ORC_DEBUG("type %d level %d line size %d partitions %d ways %d sets %d",
+      ORC_INFO ("type %d level %d line size %d partitions %d ways %d sets %d",
           type, level, l, p, w, s);
       if (type == 1 || type == 3) {
         switch (level) {
@@ -438,236 +393,80 @@ orc_sse_detect_cpuid (void)
     }
 
   }
+
+  get_cpuid (0x80000000, &level, &ebx, &ecx, &edx);
+
+  if (level >= 4) {
+    orc_x86_cpuid_get_branding_string ();
+  }
+
+}
   
-  if (level >= 1 && vendor == (('A'<<0)|('u'<<8)|('t'<<16)|('h'<<24))) {
-    get_cpuid (0x80000001, 0, &eax, &ebx, &ecx, &edx);
+static void
+orc_sse_detect_cpuid_amd (orc_uint32 level)
+{
+  orc_uint32 eax, ebx, ecx, edx;
+
+  if (level >= 1) {
+    orc_x86_cpuid_handle_standard_flags ();
+    orc_x86_cpuid_handle_family_model_stepping ();
+  }
+
+  get_cpuid (0x80000000, &level, &ebx, &ecx, &edx);
+
+  if (level >= 1) {
+    get_cpuid (0x80000001, &eax, &ebx, &ecx, &edx);
 
     /* AMD flags */
     if (ecx & (1<<6)) {
-      sse_flags |= ORC_TARGET_SSE_SSE4A;
+      orc_x86_sse_flags |= ORC_TARGET_SSE_SSE4A;
     }
     if (ecx & (1<<11)) {
-      sse_flags |= ORC_TARGET_SSE_SSE5;
+      orc_x86_sse_flags |= ORC_TARGET_SSE_SSE5;
     }
-
-    get_cpuid (0x80000005, 0, &eax, &ebx, &ecx, &edx);
-    _orc_data_cache_size_level1 = ((ecx>>24)&0xff) * 1024;
-    ORC_DEBUG ("L1 D-cache: %d kbytes, %d-way, %d lines/tag, %d line size",
-        (ecx>>24)&0xff, (ecx>>16)&0xff, (ecx>>8)&0xff, ecx&0xff);
-    ORC_DEBUG ("L1 I-cache: %d kbytes, %d-way, %d lines/tag, %d line size",
-        (edx>>24)&0xff, (edx>>16)&0xff, (edx>>8)&0xff, edx&0xff);
-
-    get_cpuid (0x80000006, 0, &eax, &ebx, &ecx, &edx);
-    _orc_data_cache_size_level2 = ((ecx>>16)&0xffff) * 1024;
-    ORC_DEBUG ("L2 cache: %d kbytes, %d assoc, %d lines/tag, %d line size",
-        (ecx>>16)&0xffff, (ecx>>12)&0xf, (ecx>>8)&0xf, ecx&0xff);
-  }
-
-  if (orc_compiler_flag_check ("-sse2")) {
-    sse_flags &= ~ORC_TARGET_SSE_SSE2;
-  }
-  if (orc_compiler_flag_check ("-sse3")) {
-    sse_flags &= ~ORC_TARGET_SSE_SSE3;
-  }
-  if (orc_compiler_flag_check ("-ssse3")) {
-    sse_flags &= ~ORC_TARGET_SSE_SSSE3;
-  }
-  if (orc_compiler_flag_check ("-sse41")) {
-    sse_flags &= ~ORC_TARGET_SSE_SSE4_1;
-  }
-  if (orc_compiler_flag_check ("-sse42")) {
-    sse_flags &= ~ORC_TARGET_SSE_SSE4_2;
-  }
-  if (orc_compiler_flag_check ("-sse4a")) {
-    sse_flags &= ~ORC_TARGET_SSE_SSE4A;
-  }
-  if (orc_compiler_flag_check ("-sse5")) {
-    sse_flags &= ~ORC_TARGET_SSE_SSE5;
-  }
-
-  return sse_flags;
-}
-
-static unsigned int
-orc_mmx_detect_cpuid (void)
-{
-  orc_uint32 eax, ebx, ecx, edx;
-  orc_uint32 level;
-  char vendor[13] = { 0 };
-  unsigned int mmx_flags = 0;
-
-  get_cpuid (0x00000000, 0, &level, (orc_uint32 *)(vendor+0),
-      (orc_uint32 *)(vendor+8), (orc_uint32 *)(vendor+4));
-
-  ORC_DEBUG("cpuid %d %s", level, vendor);
-
-  if (level < 1) {
-    return 0;
-  }
-
-  get_cpuid (0x00000001, 0, &eax, &ebx, &ecx, &edx);
-
-  /* Intel flags */
-  if (edx & (1<<23)) {
-    mmx_flags |= ORC_TARGET_MMX_MMX;
-  }
-  if (ecx & (1<<9)) {
-    mmx_flags |= ORC_TARGET_MMX_SSSE3;
-  }
-  
-  if (memcmp (vendor, "AuthenticAMD", 12) == 0) {
-    get_cpuid (0x80000001, 0, &eax, &ebx, &ecx, &edx);
-
-    /* AMD flags */
     if (edx & (1<<22)) {
-      mmx_flags |= ORC_TARGET_MMX_MMXEXT;
+      orc_x86_mmx_flags |= ORC_TARGET_MMX_MMXEXT;
     }
     if (edx & (1<<31)) {
-      mmx_flags |= ORC_TARGET_MMX_3DNOW;
+      orc_x86_mmx_flags |= ORC_TARGET_MMX_3DNOW;
     }
     if (edx & (1<<30)) {
-      mmx_flags |= ORC_TARGET_MMX_3DNOWEXT;
+      orc_x86_mmx_flags |= ORC_TARGET_MMX_3DNOWEXT;
     }
   }
 
-  return mmx_flags;
+  if (level >= 4) {
+    orc_x86_cpuid_get_branding_string ();
+  }
+
+  if (level >= 6) {
+    get_cpuid (0x80000005, &eax, &ebx, &ecx, &edx);
+
+    _orc_data_cache_size_level1 = ((ecx>>24)&0xff) * 1024;
+    ORC_INFO ("L1 D-cache: %d kbytes, %d-way, %d lines/tag, %d line size",
+        (ecx>>24)&0xff, (ecx>>16)&0xff, (ecx>>8)&0xff, ecx&0xff);
+    ORC_INFO ("L1 I-cache: %d kbytes, %d-way, %d lines/tag, %d line size",
+        (edx>>24)&0xff, (edx>>16)&0xff, (edx>>8)&0xff, edx&0xff);
+
+    get_cpuid (0x80000006, &eax, &ebx, &ecx, &edx);
+    _orc_data_cache_size_level2 = ((ecx>>16)&0xffff) * 1024;
+    ORC_INFO ("L2 cache: %d kbytes, %d assoc, %d lines/tag, %d line size",
+        (ecx>>16)&0xffff, (ecx>>12)&0xf, (ecx>>8)&0xf, ecx&0xff);
+  }
 }
-#endif
-
-#ifdef USE_I386_GETISAX
-static unsigned int
-orc_sse_detect_getisax (void)
-{
-  unsigned int sse_flags;
-  uint_t ui;
-
-  getisax (&ui, 1);
-
-  if (ui & AV_386_SSE2) {
-     sse_flags |= ORC_TARGET_SSE_SSE2;
-  }
-  if (ui & AV_386_SSE3) {
-     sse_flags |= ORC_TARGET_SSE_SSE3;
-  }
-
-  /* guesses.  if these fail to compile, please fix */
-  if (ui & AV_386_SSSE3) {
-     sse_flags |= ORC_TARGET_SSE_SSSE3;
-  }
-  if (ui & AV_386_SSE4_1) {
-     sse_flags |= ORC_TARGET_SSE_SSE4_1;
-  }
-  if (ui & AV_386_SSE4_2) {
-     sse_flags |= ORC_TARGET_SSE_SSE4_2;
-  }
-  if (ui & AV_386_AMD_SSE4A) {
-     sse_flags |= ORC_TARGET_SSE_SSE4A;
-  }
-//  if (ui & AV_386_SSE5) {
-//     sse_flags |= ORC_TARGET_SSE_SSE5;
-//  }
-
-  return sse_flags;
-}
-
-static unsigned int
-orc_mmx_detect_getisax (void)
-{
-  unsigned int mmx_flags;
-  uint_t ui;
-
-  getisax (&ui, 1);
-
-  if (ui & AV_386_MMX) {
-     mmx_flags |= ORC_TARGET_MMX_MMX;
-  }
-
-  /* guesses.  if these fail to compile, please fix */
-  if (ui & AV_386_AMD_MMX) {
-     mmx_flags |= ORC_TARGET_MMX_MMXEXT;
-  }
-  if (ui & AV_386_SSSE3) {
-     mmx_flags |= ORC_TARGET_MMX_SSSE3;
-  }
-  if (ui & AV_386_AMD_3DNow) {
-     mmx_flags |= ORC_TARGET_MMX_3DNOW;
-  }
-  if (ui & AV_386_AMD_3DNowx) {
-     mmx_flags |= ORC_TARGET_MMX_3DNOWEXT;
-  }
-
-  return mmx_flags;
-}
-#endif
-
-#if 0
-/* Reduce the set of CPU capabilities detected by whatever detection mechanism
- * was chosen, according to kernel limitations.  SSE requires kernel support for
- * use.
- */
-static void
-orc_cpu_detect_kernel_support (void)
-{
-#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__APPLE__)
-  int ret, enabled;
-  size_t len;
-
-  len = sizeof(enabled);
-  ret = sysctlbyname("hw.instruction_sse", &enabled, &len, NULL, 0);
-  if (ret || !enabled) {
-    orc_cpu_flags &= ~(ORC_CPU_FLAG_SSE | ORC_CPU_FLAG_SSE2 |
-		       ORC_CPU_FLAG_MMXEXT | ORC_CPU_FLAG_SSE3);
-  }
-#elif defined(__linux__)
-  /*
-   * Might also want to grow a check for the old RedHat + Linux 2.2
-   * unmasked SSE FPU exception bug.  Other than that, if /proc/cpuinfo
-   * reported SSE, then it's safe.
-   */
-#elif defined(__sun) || defined(__NetBSD__) || defined(__OpenBSD__)
-  /* Solaris/NetBSD/OpenBSD are OK */
-#else
-   
-  ORC_WARNING("Operating system is not known to support SSE.  "
-      "Assuming it does, which might cause problems");
-#if 0
-  orc_cpu_flags &= ~(ORC_CPU_FLAG_SSE | ORC_CPU_FLAG_SSE2 |
-		     ORC_CPU_FLAG_MMXEXT | ORC_CPU_FLAG_SSE3);
-#endif
-#endif
-}
-#endif
 
 unsigned int
 orc_sse_get_cpu_flags(void)
 {
-  //orc_cpu_detect_kernel_support ();
-
-#ifdef USE_I386_CPUID
-  return orc_sse_detect_cpuid ();
-#endif
-#ifdef USE_I386_GETISAX
-  return orc_sse_detect_getisax ();
-#endif
-#ifdef USE_I386_CPUINFO
-  return orc_sse_detect_cpuinfo ();
-#endif
+  orc_x86_detect_cpuid ();
+  return orc_x86_sse_flags;
 }
 
 unsigned int
 orc_mmx_get_cpu_flags(void)
 {
-  //orc_cpu_detect_kernel_support ();
-
-#ifdef USE_I386_CPUID
-  return orc_mmx_detect_cpuid ();
-#endif
-#ifdef USE_I386_GETISAX
-  return orc_mmx_detect_getisax ();
-#endif
-#ifdef USE_I386_CPUINFO
-  return orc_mmx_detect_cpuinfo ();
-#endif
+  orc_x86_detect_cpuid ();
+  return orc_x86_mmx_flags;
 }
 
 

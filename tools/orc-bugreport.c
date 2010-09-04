@@ -67,6 +67,13 @@ main (int argc, char *argv[])
     printf("L3 cache: %d\n", level3);
   }
 
+  {
+    int family, model, stepping;
+    orc_get_cpu_family_model_stepping (&family, &model, &stepping);
+    printf("family/model/stepping: %d/%d/%d\n", family, model, stepping);
+    printf("CPU name: %s\n", orc_get_cpu_name ());
+  }
+
   if (filename) {
     int n;
     int ret;

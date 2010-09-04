@@ -52,6 +52,8 @@ static OrcTarget sse_target = {
 };
 
 
+extern int orc_x86_sse_flags;
+extern int orc_x86_mmx_flags;
 
 void
 orc_sse_init (void)
@@ -63,11 +65,11 @@ orc_sse_init (void)
 
 #if defined(HAVE_I386)
 #ifndef MMX
-  if (!(orc_sse_get_cpu_flags () & ORC_TARGET_SSE_SSE2)) {
+  if (!(orc_x86_sse_flags & ORC_TARGET_SSE_SSE2)) {
     sse_target.executable = FALSE;
   }
 #else
-  if (!(orc_mmx_get_cpu_flags () & ORC_TARGET_MMX_MMX)) {
+  if (!(orc_x86_mmx_flags & ORC_TARGET_MMX_MMX)) {
     mmx_target.executable = FALSE;
   }
 #endif
@@ -91,7 +93,11 @@ orc_compiler_sse_get_default_flags (void)
   }
   
 #if defined(HAVE_AMD64) || defined(HAVE_I386)
-  flags |= orc_sse_get_cpu_flags ();
+#ifndef MMX
+  flags |= orc_x86_sse_flags;
+#else
+  flags |= orc_x86_mmx_flags;
+#endif
 #else
 #ifndef MMX
   flags |= ORC_TARGET_SSE_SSE2;

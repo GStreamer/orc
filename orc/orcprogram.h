@@ -736,6 +736,8 @@ int orc_program_get_max_array_size (OrcProgram *program);
 int orc_program_get_max_accumulator_size (OrcProgram *program);
 
 void orc_get_data_cache_sizes (int *level1, int *level2, int *level3);
+void orc_get_cpu_family_model_stepping (int *family, int *model, int *stepping);
+const char * orc_get_cpu_name (void);
 
 OrcCode * orc_code_new (void);
 void orc_code_free (OrcCode *code);
@@ -748,6 +750,10 @@ int orc_compiler_flag_check (const char *flag);
 extern int _orc_data_cache_size_level1;
 extern int _orc_data_cache_size_level2;
 extern int _orc_data_cache_size_level3;
+extern int _orc_cpu_family;
+extern int _orc_cpu_model;
+extern int _orc_cpu_stepping;
+extern const char *_orc_cpu_name;
 
 extern int _orc_compiler_flag_backup;
 extern int _orc_compiler_flag_debug;
