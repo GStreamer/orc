@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -e
+set -x
+
+version=0.4.5
+topdir=`pwd`
+tmpdir=${topdir}/tmp
+
+test -f orc-${version}.tar.gz || \
+  wget http://code.entropywave.com/download/orc/orc-${version}.tar.gz
+
+rm -rf ${tmpdir}
+mkdir -p ${tmpdir}
+
+../tools/orcc -o ${tmpdir}/out.c --implementation test.orc
+
+tar -xzf orc-${version}.tar.gz --directory ${tmpdir}
+cd ${tmpdir}
+
+cd orc-${version}
+./configure --prefix=${tmpdir}/_inst
+make
+make install
+
+cd ${tmpdir}
+gcc -Wall -Werror -I${tmpdir}/_inst/include/orc-0.4/ -c -o out.o out.c
+
+
