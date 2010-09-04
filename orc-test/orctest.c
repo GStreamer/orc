@@ -383,6 +383,7 @@ print_array_val_signed (OrcArray *array, int i, int j)
   }
 }
 
+#ifdef unused
 static int
 print_array_val_unsigned (OrcArray *array, int i, int j)
 {
@@ -406,6 +407,7 @@ print_array_val_unsigned (OrcArray *array, int i, int j)
       return -1;
   }
 }
+#endif
 
 static int
 print_array_val_hex (OrcArray *array, int i, int j)
