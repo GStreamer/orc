@@ -109,6 +109,7 @@ orc_memcpy (void * d1, const void * s1, int n){
   ptr0 = (orc_int8 *)d1;
   ptr4 = (orc_int8 *)s1;
 
+
   for (i = 0; i < n; i++) {
     /* 0: loadb */
     var32 = ptr4[i];
@@ -133,6 +134,7 @@ _backup_orc_memcpy (OrcExecutor * ORC_RESTRICT ex)
 
   ptr0 = (orc_int8 *)ex->arrays[0];
   ptr4 = (orc_int8 *)ex->arrays[4];
+
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -194,9 +196,10 @@ orc_memset (void * d1, int p1, int n){
 
   ptr0 = (orc_int8 *)d1;
 
-  for (i = 0; i < n; i++) {
     /* 0: loadpb */
     var32 = p1;
+
+  for (i = 0; i < n; i++) {
     /* 1: copyb */
     var33 = var32;
     /* 2: storeb */
@@ -217,9 +220,10 @@ _backup_orc_memset (OrcExecutor * ORC_RESTRICT ex)
 
   ptr0 = (orc_int8 *)ex->arrays[0];
 
-  for (i = 0; i < n; i++) {
     /* 0: loadpb */
     var32 = ex->params[24];
+
+  for (i = 0; i < n; i++) {
     /* 1: copyb */
     var33 = var32;
     /* 2: storeb */
