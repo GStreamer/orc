@@ -23,6 +23,18 @@ enum {
   X86_R15
 };
 
+enum {
+  ORC_X86_UNKNOWN,
+  ORC_X86_P6,
+  ORC_X86_NETBURST,
+  ORC_X86_CORE,
+  ORC_X86_PENRYN,
+  ORC_X86_NEHALEM,
+  ORC_X86_BONNELL,
+  ORC_X86_WESTMERE,
+  ORC_X86_SANDY_BRIDGE,
+};
+
 const char * orc_x86_get_regname(int i);
 int orc_x86_get_regnum(int i);
 const char * orc_x86_get_regname_16(int i);

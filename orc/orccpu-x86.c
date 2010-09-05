@@ -46,6 +46,7 @@
 orc_uint32 orc_x86_vendor;
 int orc_x86_sse_flags;
 int orc_x86_mmx_flags;
+int orc_x86_microarchitecture;
 
 
 #if defined(_MSC_VER)
@@ -193,27 +194,45 @@ handle_cache_descriptor (unsigned int desc)
 
 static void orc_sse_detect_cpuid_intel (orc_uint32 level);
 static void orc_sse_detect_cpuid_amd (orc_uint32 level);
+static void orc_sse_detect_cpuid_generic (orc_uint32 level);
 
 static void
 orc_x86_detect_cpuid (void)
 {
   static int inited = 0;
-  orc_uint32 ecx, edx;
+  orc_uint32 ebx, edx;
   orc_uint32 level;
 
   if (inited) return;
   inited = 1;
 
-  get_cpuid (0x00000000, &level, &orc_x86_vendor, &ecx, &edx);
+  get_cpuid (0x00000000, &level, &ebx, &orc_x86_vendor, &edx);
 
-  ORC_DEBUG("cpuid %d %08x %08x %08x", level, orc_x86_vendor, ecx, edx);
+  ORC_DEBUG("cpuid %d %08x %08x %08x", level, ebx, edx, orc_x86_vendor);
 
-  if (orc_x86_vendor == (('G'<<0)|('e'<<8)|('n'<<16)|('u'<<24))) {
-    orc_sse_detect_cpuid_intel (level);
-  } else if (orc_x86_vendor == (('A'<<0)|('u'<<8)|('t'<<16)|('h'<<24))) {
-    orc_sse_detect_cpuid_amd (level);
-  } else {
-    /* FIXME */
+#define ORC_X86_GenuineIntel (('n'<<0)|('t'<<8)|('e'<<16)|('l'<<24))
+#define ORC_X86_AuthenticAMD (('c'<<0)|('A'<<8)|('M'<<16)|('D'<<24))
+#define ORC_X86_CentaurHauls (('a'<<0)|('u'<<8)|('l'<<16)|('s'<<24))
+#define ORC_X86_CyrixInstead (('t'<<0)|('e'<<8)|('a'<<16)|('d'<<24))
+#define ORC_X86_GenuineTMx86 (('M'<<0)|('x'<<8)|('8'<<16)|('6'<<24))
+#define ORC_X86_Geode_by_NSC ((' '<<0)|('N'<<8)|('S'<<16)|('6'<<24))
+#define ORC_X86_NexGenDriven (('i'<<0)|('v'<<8)|('e'<<16)|('n'<<24))
+#define ORC_X86_RiseRiseRise (('R'<<0)|('i'<<8)|('s'<<16)|('e'<<24))
+#define ORC_X86_SiS_SiS_SiS_ (('S'<<0)|('i'<<8)|('S'<<16)|(' '<<24))
+#define ORC_X86_UMC_UMC_UMC_ (('U'<<0)|('M'<<8)|('C'<<16)|(' '<<24))
+#define ORC_X86_VIA_VIA_VIA_ (('V'<<0)|('I'<<8)|('A'<<16)|(' '<<24))
+
+  switch (orc_x86_vendor) {
+    case ORC_X86_GenuineIntel:
+      orc_sse_detect_cpuid_intel (level);
+      break;
+    case ORC_X86_AuthenticAMD:
+      orc_sse_detect_cpuid_amd (level);
+      break;
+    default:
+      ORC_INFO("unhandled vendor %08x %08x %08x", ebx, edx, orc_x86_vendor);
+      orc_sse_detect_cpuid_generic (level);
+      break;
   }
 
   if (orc_compiler_flag_check ("-sse2")) {
@@ -317,6 +336,15 @@ orc_x86_cpuid_handle_family_model_stepping (void)
 }
 
 static void
+orc_sse_detect_cpuid_generic (orc_uint32 level)
+{
+  if (level >= 1) {
+    orc_x86_cpuid_handle_standard_flags ();
+    orc_x86_cpuid_handle_family_model_stepping ();
+  }
+}
+
+static void
 orc_sse_detect_cpuid_intel (orc_uint32 level)
 {
   orc_uint32 eax, ebx, ecx, edx;
@@ -325,6 +353,35 @@ orc_sse_detect_cpuid_intel (orc_uint32 level)
 
     orc_x86_cpuid_handle_standard_flags ();
     orc_x86_cpuid_handle_family_model_stepping ();
+
+    orc_x86_microarchitecture = ORC_X86_UNKNOWN;
+    if (_orc_cpu_family == 6) {
+      switch (_orc_cpu_model) {
+        case 6: /* Mendocino */
+        case 11: /* Tualatin-256 */
+          orc_x86_microarchitecture = ORC_X86_P6;
+          break;
+        case 15:
+        case 22:
+          orc_x86_microarchitecture = ORC_X86_CORE;
+          break;
+        case 23:
+        case 29:
+          orc_x86_microarchitecture = ORC_X86_PENRYN;
+          break;
+        case 26:
+          orc_x86_microarchitecture = ORC_X86_NEHALEM;
+          break;
+        case 28:
+          orc_x86_microarchitecture = ORC_X86_BONNELL;
+          break;
+          //orc_x86_microarchitecture = ORC_X86_WESTMERE;
+          //orc_x86_microarchitecture = ORC_X86_SANDY_BRIDGE;
+      }
+    } else if (_orc_cpu_family == 15) {
+      orc_x86_microarchitecture = ORC_X86_NETBURST;
+    }
+
   }
 
   if (level >= 2) {
