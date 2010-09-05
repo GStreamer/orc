@@ -471,7 +471,10 @@ const char *enumnames[] = {
   "ORC_VAR_T1", "ORC_VAR_T2", "ORC_VAR_T3", "ORC_VAR_T4",
   "ORC_VAR_T5", "ORC_VAR_T6", "ORC_VAR_T7", "ORC_VAR_T8",
   "ORC_VAR_T9", "ORC_VAR_T10", "ORC_VAR_T11", "ORC_VAR_T12",
-  "ORC_VAR_T13", "ORC_VAR_T14", "ORC_VAR_T15", "ORC_VAR_T16"
+  "ORC_VAR_T13", "ORC_VAR_T14", "ORC_VAR_T15",
+  /* ORC_VAR_T16 is a special case because it didn't exist in
+     the API until 0.4.8 */
+  "47"
 };
 
 void
