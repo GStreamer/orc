@@ -259,7 +259,9 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
   } else {
     free (parser->log);
   }
-  parser->programs[0]->init_function = init_function;
+  if (parser->programs[0]) {
+    parser->programs[0]->init_function = init_function;
+  }
   *programs = parser->programs;
   return parser->n_programs;
 }
