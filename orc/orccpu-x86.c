@@ -471,6 +471,29 @@ orc_sse_detect_cpuid_amd (orc_uint32 level)
   if (level >= 1) {
     orc_x86_cpuid_handle_standard_flags ();
     orc_x86_cpuid_handle_family_model_stepping ();
+
+    orc_x86_microarchitecture = ORC_X86_UNKNOWN;
+    switch (_orc_cpu_family) {
+      case 5:
+        /* Don't know if 8 is correct */
+        if (_orc_cpu_model < 8) {
+          orc_x86_microarchitecture = ORC_X86_K5;
+        } else {
+          orc_x86_microarchitecture = ORC_X86_K6;
+        }
+        break;
+      case 6:
+        orc_x86_microarchitecture = ORC_X86_K7;
+        break;
+      case 0xf:
+        orc_x86_microarchitecture = ORC_X86_K8;
+        break;
+      case 0x10:
+        orc_x86_microarchitecture = ORC_X86_K10;
+        break;
+      default:
+        break;
+    }
   }
 
   get_cpuid (0x80000000, &level, &ebx, &ecx, &edx);
