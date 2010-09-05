@@ -398,17 +398,21 @@ orc_program_add_constant_str (OrcProgram *program, int size,
 {
   int i;
   char *end;
-  int val_i;
+  orc_int64 val_i;
   double val_d;
   int j;
 
   i = ORC_VAR_C1 + program->n_const_vars;
 
-  val_i = strtol (value, &end, 0);
+  val_i = _strtoll (value, &end, 0);
   if (end[0] == 0) {
     program->vars[i].value.i = val_i;
+    if (size == 0)
+      size = 4;
   } else if ((end[0] == 'l' || end[0] == 'L') && end[1] == 0) {
     program->vars[i].value.i = val_i;
+    if (size == 0)
+      size = 8;
   } else {
     val_d = strtod (value, &end);
 
@@ -416,8 +420,12 @@ orc_program_add_constant_str (OrcProgram *program, int size,
       orc_union32 u;
       u.f = val_d;
       program->vars[i].value.i = u.i;
+      if (size == 0)
+        size = 4;
     } else if ((end[0] == 'l' || end[0] == 'L') && end[1] == 0) {
       program->vars[i].value.f = val_d;
+      if (size == 0)
+        size = 8;
     } else {
       return -1;
     }
