@@ -196,11 +196,12 @@ orc_x86_emit_mov_memoffset_reg (OrcCompiler *compiler, int size, int offset,
 
   switch (size) {
     case 1:
-      ORC_ASM_CODE(compiler,"  movb %d(%%%s), %%%s\n", offset,
+      ORC_ASM_CODE(compiler,"  movzx %d(%%%s), %%%s\n", offset,
           orc_x86_get_regname_ptr(compiler, reg1),
-          orc_x86_get_regname_8(reg2));
+          orc_x86_get_regname(reg2));
       orc_x86_emit_rex(compiler, size, reg2, 0, reg1);
-      *compiler->codeptr++ = 0x8a;
+      *compiler->codeptr++ = 0x0f;
+      *compiler->codeptr++ = 0xb6;
       orc_x86_emit_modrm_memoffset (compiler, reg2, offset, reg1);
       return;
     case 2:
