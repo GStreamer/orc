@@ -34,6 +34,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 /**
  * SECTION:orcutils
@@ -94,5 +95,80 @@ get_tag_value (char *s, const char *tag)
   if(colon >= end) return NULL;
 
   return _strndup (colon, end-colon);
+}
+
+orc_int64
+_strtoll (const char *nptr, char **endptr, int base)
+{
+  int neg = 0;
+  orc_int64 val = 0;
+  
+  /* Skip all spaces */
+  while (isspace (*nptr))
+    nptr++;
+
+  if (!*nptr)
+    return val;
+
+  /* Get sign */
+  if (*nptr == '-') {
+    neg = 1;
+    nptr++;
+  } else if (*nptr == '+') {
+    nptr++;
+  }
+
+  if (!*nptr)
+    return val;
+
+  /* Try to detect the base if none was given */
+  if (base == 0) {
+    if (*nptr == '0' && (*(nptr + 1) == 'x' || *(nptr + 1) == 'X')) {
+      base = 16;
+      nptr += 2;
+    } else if (*nptr == '0') {
+      base = 8;
+      nptr++;
+    } else {
+      base = 10;
+    }
+  } else if (base == 16) {
+    if (*nptr == '0' && (*(nptr + 1) == 'x' || *(nptr + 1) == 'X'))
+      nptr += 2;
+  } else if (base == 8) {
+    if (*nptr == '0')
+      nptr++;
+  }
+
+  while (*nptr) {
+    int c = *nptr;
+
+    if (c >= '0' && c <= '9')
+      c = c - '0';
+    else if (c >= 'a' && c <= 'z')
+      c = 10 + c - 'a';
+    else if (c >= 'A' && c <= 'Z')
+      c = 10 + c - 'A';
+    else
+      break;
+
+    if (c >= base)
+      break;
+
+    if ((orc_uint64) val > 0xffffffffffffffffULL / base ||
+        (orc_uint64) (val * base) > 0xffffffffffffffffULL - c) {
+      val = 0xffffffffffffffffULL;
+      break;
+    }
+
+    val = val * base + c;
+    
+    nptr++;
+  }
+
+  if (endptr)
+    *endptr = (char *) nptr;
+
+  return (neg) ? - val : val;
 }
 
