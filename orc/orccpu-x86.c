@@ -292,8 +292,12 @@ orc_x86_cpuid_handle_standard_flags (void)
 
   get_cpuid (0x00000001, &eax, &ebx, &ecx, &edx);
 
+  if (edx & (1<<23)) {
+    orc_x86_mmx_flags |= ORC_TARGET_MMX_MMX;
+  }
   if (edx & (1<<26)) {
     orc_x86_sse_flags |= ORC_TARGET_SSE_SSE2;
+    orc_x86_mmx_flags |= ORC_TARGET_MMX_MMXEXT;
   }
   if (ecx & (1<<0)) {
     orc_x86_sse_flags |= ORC_TARGET_SSE_SSE3;

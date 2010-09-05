@@ -59,6 +59,9 @@ main (int argc, char *argv[])
 
   printf("Orc " VERSION " - integrated testing tool\n");
 
+  printf("Active backend: %s\n",
+      orc_target_get_name(orc_target_get_default()));
+
   {
     int level1, level2, level3;
     orc_get_data_cache_sizes(&level1, &level2, &level3);
