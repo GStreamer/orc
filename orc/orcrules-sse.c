@@ -706,10 +706,10 @@ static void
 sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int type = ORC_PTR_TO_INT(user);
-  int imm_code1[] = { 0x71, 0x71, 0x71, 0x72, 0x72, 0x72 };
-  int imm_code2[] = { 6, 2, 4, 6, 2, 4 };
-  int reg_code[] = { 0xf1, 0xd1, 0xe1, 0xf2, 0xd2, 0xe2 };
-  const char *code[] = { "psllw", "psrlw", "psraw", "pslld", "psrld", "psrad" };
+  int imm_code1[] = { 0x71, 0x71, 0x71, 0x72, 0x72, 0x72, 0x73, 0x73 };
+  int imm_code2[] = { 6, 2, 4, 6, 2, 4, 6, 2 };
+  int reg_code[] = { 0xf1, 0xd1, 0xe1, 0xf2, 0xd2, 0xe2, 0xf3, 0xd3 };
+  const char *code[] = { "psllw", "psrlw", "psraw", "pslld", "psrld", "psrad", "psllq", "psrlq" };
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
     orc_sse_emit_shiftimm (p, code[type], imm_code1[type], imm_code2[type],
@@ -2366,6 +2366,8 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "shll", sse_rule_shift, (void *)3);
   orc_rule_register (rule_set, "shrul", sse_rule_shift, (void *)4);
   orc_rule_register (rule_set, "shrsl", sse_rule_shift, (void *)5);
+  orc_rule_register (rule_set, "shlq", sse_rule_shift, (void *)6);
+  orc_rule_register (rule_set, "shruq", sse_rule_shift, (void *)7);
 
   orc_rule_register (rule_set, "convsbw", sse_rule_convsbw, NULL);
   orc_rule_register (rule_set, "convubw", sse_rule_convubw, NULL);
