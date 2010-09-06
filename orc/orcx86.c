@@ -1054,22 +1054,22 @@ orc_x86_assemble_copy (OrcCompiler *compiler)
       compiler->exec_reg, X86_ESI);
   orc_x86_emit_mov_memoffset_reg (compiler, 4,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,n), compiler->exec_reg,
-      X86_ECX);
+      compiler->gp_tmpreg);
 
-  orc_x86_emit_sar_imm_reg (compiler, 4, 2 - shift, X86_ECX);
+  orc_x86_emit_sar_imm_reg (compiler, 4, 2 - shift, compiler->gp_tmpreg);
   orc_x86_emit_rep_movs (compiler, 4);
   if (shift == 0) {
     orc_x86_emit_mov_memoffset_reg (compiler, 4,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,n), compiler->exec_reg,
-        X86_ECX);
-    orc_x86_emit_and_imm_reg (compiler, 4, 3, X86_ECX);
+        compiler->gp_tmpreg);
+    orc_x86_emit_and_imm_reg (compiler, 4, 3, compiler->gp_tmpreg);
     orc_x86_emit_rep_movs (compiler, 1);
   }
   if (shift == 1) {
     orc_x86_emit_mov_memoffset_reg (compiler, 4,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,n), compiler->exec_reg,
-        X86_ECX);
-    orc_x86_emit_and_imm_reg (compiler, 4, 1, X86_ECX);
+        compiler->gp_tmpreg);
+    orc_x86_emit_and_imm_reg (compiler, 4, 1, compiler->gp_tmpreg);
     orc_x86_emit_rep_movs (compiler, 2);
   }
 

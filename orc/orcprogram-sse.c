@@ -481,9 +481,9 @@ sse_add_strides (OrcCompiler *compiler)
       case ORC_VAR_TYPE_DEST:
         orc_x86_emit_mov_memoffset_reg (compiler, 4,
             (int)ORC_STRUCT_OFFSET(OrcExecutor, params[i]), compiler->exec_reg,
-            X86_ECX);
+            compiler->gp_tmpreg);
         orc_x86_emit_add_reg_memoffset (compiler, compiler->is_64bit ? 8 : 4,
-            X86_ECX,
+            compiler->gp_tmpreg,
             (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]), compiler->exec_reg);
         break;
       case ORC_VAR_TYPE_ACCUMULATOR:
