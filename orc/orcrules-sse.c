@@ -550,6 +550,8 @@ BINARY(orq,"por",0xeb)
 BINARY(xorq,"pxor",0xef)
 BINARY(cmpeqq,"pcmpeqq",0x3829)
 BINARY(cmpgtsq,"pcmpgtq",0x3837)
+BINARY(addq,"paddq",0xd4)
+BINARY(subq,"psubq",0xfb)
 
 static void
 sse_rule_accw (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -2343,6 +2345,8 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   REG(andnq);
   REG(orq);
   REG(xorq);
+  REG(addq);
+  REG(subq);
 
   REG(select0lw);
   REG(select1lw);
