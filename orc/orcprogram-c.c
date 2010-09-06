@@ -1141,13 +1141,15 @@ c_rule_convdf (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   char dest[40], src1[40];
 
-  c_get_name_float (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (dest, p, insn, insn->dest_args[0]);
   c_get_name_int (src1, p, insn, insn->src_args[0]);
 
   ORC_ASM_CODE(p, "    {\n");
   ORC_ASM_CODE(p,"       orc_union64 _src1;\n");
+  ORC_ASM_CODE(p,"       orc_union32 _dest;\n");
   ORC_ASM_CODE(p,"       _src1.i = ORC_DENORMAL_DOUBLE(%s);\n", src1);
-  ORC_ASM_CODE(p,"       %s = _src1.f;\n", dest);
+  ORC_ASM_CODE(p,"       _dest.f = _src1.f;\n");
+  ORC_ASM_CODE(p,"       %s = ORC_DENORMAL(_dest.i);\n", dest);
   ORC_ASM_CODE(p, "    }\n");
 }
 

@@ -4820,8 +4820,10 @@ emulate_convdf (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: convdf */
     {
        orc_union64 _src1;
+       orc_union32 _dest;
        _src1.i = ORC_DENORMAL_DOUBLE(var32.i);
-       var33.f = _src1.f;
+       _dest.f = _src1.f;
+       var33.i = ORC_DENORMAL(_dest.i);
     }
     /* 2: storel */
     ptr0[i] = var33;
