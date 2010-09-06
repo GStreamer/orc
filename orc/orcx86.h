@@ -33,6 +33,11 @@ enum {
   ORC_X86_BONNELL,
   ORC_X86_WESTMERE,
   ORC_X86_SANDY_BRIDGE,
+  ORC_X86_K5,
+  ORC_X86_K6,
+  ORC_X86_K7,
+  ORC_X86_K8,
+  ORC_X86_K10
 };
 
 const char * orc_x86_get_regname(int i);
