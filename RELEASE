@@ -1,4 +1,21 @@
 
+0.4.9
+=====
+
+This is primarily a bug fixing release.
+
+Changes:
+
+ - Added handling for 64-bit constants
+ - Fix building and use of static library
+ - Fix register allocation on Win64 (still partly broken, however)
+ - Quiet some non-errors printed by orcc in 0.4.8.
+ - Fix implementation of several opcodes.
+
+Until this release, the shared libraries all had the same versioning
+information.  This should be fixed going forward.
+
+
 0.4.8
 =====
 
