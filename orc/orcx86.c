@@ -958,17 +958,21 @@ orc_x86_emit_prologue (OrcCompiler *compiler)
     }
   }
 
+#if 0
   orc_x86_emit_rdtsc(compiler);
   orc_x86_emit_mov_reg_memoffset (compiler, 4, X86_EAX,
       ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A3]), compiler->exec_reg);
+#endif
 }
 
 void
 orc_x86_emit_epilogue (OrcCompiler *compiler)
 {
+#if 0
   orc_x86_emit_rdtsc(compiler);
   orc_x86_emit_mov_reg_memoffset (compiler, 4, X86_EAX,
       ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A4]), compiler->exec_reg);
+#endif
 
   if (compiler->is_64bit) {
     int i;
