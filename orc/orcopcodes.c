@@ -403,6 +403,8 @@ static OrcStaticOpcode opcodes[] = {
   { "andnq", 0, { 8 }, { 8, 8 }, emulate_andnq },
   { "orq", 0, { 8 }, { 8, 8 }, emulate_orq },
   { "xorq", 0, { 8 }, { 8, 8 }, emulate_xorq },
+  { "addq", 0, { 8 }, { 8, 8 }, emulate_addq },
+  { "subq", 0, { 8 }, { 8, 8 }, emulate_subq },
 
   { "convsbw", 0, { 2 }, { 1 }, emulate_convsbw },
   { "convubw", 0, { 2 }, { 1 }, emulate_convubw },

@@ -89,6 +89,8 @@ BINARY_SQ(andq, "%s & %s")
 BINARY_SQ(andnq, "(~%s) & %s")
 BINARY_SQ(orq, "%s | %s")
 BINARY_SQ(xorq, "%s ^ %s")
+BINARY_SQ(addq, "%s + %s")
+BINARY_SQ(subq, "%s - %s")
 
 UNARY_BW(convsbw, "%s")
 UNARY_BW(convubw, "(orc_uint8)%s")

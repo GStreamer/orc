@@ -116,6 +116,8 @@ void emulate_andq (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_andnq (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_orq (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_xorq (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_addq (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_subq (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_convsbw (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_convubw (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_splatbw (OrcOpcodeExecutor *ex, int i, int n);
