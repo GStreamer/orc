@@ -397,6 +397,12 @@ static OrcStaticOpcode opcodes[] = {
   { "storeq", ORC_STATIC_OPCODE_STORE, { 8 }, { 8 }, emulate_storeq },
   { "splatw3q", 0, { 8 }, { 8 }, emulate_splatw3q },
   { "copyq", 0, { 8 }, { 8 }, emulate_copyq },
+  { "cmpeqq", 0, { 8 }, { 8, 8 }, emulate_cmpeqq },
+  { "cmpgtsq", 0, { 8 }, { 8, 8 }, emulate_cmpgtsq },
+  { "andq", 0, { 8 }, { 8, 8 }, emulate_andq },
+  { "andnq", 0, { 8 }, { 8, 8 }, emulate_andnq },
+  { "orq", 0, { 8 }, { 8, 8 }, emulate_orq },
+  { "xorq", 0, { 8 }, { 8, 8 }, emulate_xorq },
 
   { "convsbw", 0, { 2 }, { 1 }, emulate_convsbw },
   { "convubw", 0, { 2 }, { 1 }, emulate_convubw },

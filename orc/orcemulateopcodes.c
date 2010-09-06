@@ -2854,6 +2854,180 @@ emulate_copyq (OrcOpcodeExecutor *ex, int offset, int n)
 }
 
 void
+emulate_cmpeqq (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  const orc_union64 * ORC_RESTRICT ptr5;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+  ptr5 = (orc_union64 *)ex->src_ptrs[1];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: loadq */
+    var33 = ptr5[i];
+    /* 2: cmpeqq */
+    var34.i = (var32.i == var33.i) ? (~0) : 0;
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
+emulate_cmpgtsq (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  const orc_union64 * ORC_RESTRICT ptr5;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+  ptr5 = (orc_union64 *)ex->src_ptrs[1];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: loadq */
+    var33 = ptr5[i];
+    /* 2: cmpgtsq */
+    var34.i = (var32.i > var33.i) ? (~0) : 0;
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
+emulate_andq (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  const orc_union64 * ORC_RESTRICT ptr5;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+  ptr5 = (orc_union64 *)ex->src_ptrs[1];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: loadq */
+    var33 = ptr5[i];
+    /* 2: andq */
+    var34.i = var32.i & var33.i;
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
+emulate_andnq (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  const orc_union64 * ORC_RESTRICT ptr5;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+  ptr5 = (orc_union64 *)ex->src_ptrs[1];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: loadq */
+    var33 = ptr5[i];
+    /* 2: andnq */
+    var34.i = (~var32.i) & var33.i;
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
+emulate_orq (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  const orc_union64 * ORC_RESTRICT ptr5;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+  ptr5 = (orc_union64 *)ex->src_ptrs[1];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: loadq */
+    var33 = ptr5[i];
+    /* 2: orq */
+    var34.i = var32.i | var33.i;
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
+emulate_xorq (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  const orc_union64 * ORC_RESTRICT ptr5;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+  ptr5 = (orc_union64 *)ex->src_ptrs[1];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: loadq */
+    var33 = ptr5[i];
+    /* 2: xorq */
+    var34.i = var32.i ^ var33.i;
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
 emulate_convsbw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;

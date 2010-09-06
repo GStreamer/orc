@@ -83,6 +83,12 @@ BINARY_UL(subusl, "ORC_CLAMP_UL((orc_int64)(orc_uint32)%s - (orc_int64)(orc_uint
 BINARY_SL(xorl, "%s ^ %s")
 
 UNARY_SQ(copyq, "%s")
+BINARY_SQ(cmpeqq, "(%s == %s) ? (~0) : 0")
+BINARY_SQ(cmpgtsq, "(%s > %s) ? (~0) : 0")
+BINARY_SQ(andq, "%s & %s")
+BINARY_SQ(andnq, "(~%s) & %s")
+BINARY_SQ(orq, "%s | %s")
+BINARY_SQ(xorq, "%s ^ %s")
 
 UNARY_BW(convsbw, "%s")
 UNARY_BW(convubw, "(orc_uint8)%s")
