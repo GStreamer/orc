@@ -544,6 +544,12 @@ BINARY(subl,"psubd",0xfa)
 //BINARY(subusl,"psubusd",0xd9)
 BINARY(xorl,"pxor",0xef)
 
+BINARY(andq,"pand",0xdb)
+BINARY(andnq,"pandn",0xdf)
+BINARY(orq,"por",0xeb)
+BINARY(xorq,"pxor",0xef)
+BINARY(cmpeqq,"pcmpeqq",0x3829)
+BINARY(cmpgtsq,"pcmpgtq",0x3837)
 
 static void
 sse_rule_accw (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -2333,6 +2339,11 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   REG(subl);
   REG(xorl);
 
+  REG(andq);
+  REG(andnq);
+  REG(orq);
+  REG(xorq);
+
   REG(select0lw);
   REG(select1lw);
   REG(select0wb);
@@ -2495,7 +2506,13 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "mulhsl", sse_rule_mulhsl, NULL);
 #endif
 
+  REG(cmpeqq);
+
   /* SSE 4.2 -- no rules */
+  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target,
+      ORC_TARGET_SSE_SSE4_2);
+
+  REG(cmpgtsq);
 
   /* SSE 4a -- no rules */
 }
