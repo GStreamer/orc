@@ -3086,6 +3086,78 @@ emulate_subq (OrcOpcodeExecutor *ex, int offset, int n)
 }
 
 void
+emulate_shlq (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  orc_union64 var32;
+  orc_union64 var33;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: shlq */
+    var33.i = var32.i << ((orc_union32 *)(ex->src_ptrs[1]))->i;
+    /* 2: storeq */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_shrsq (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  orc_union64 var32;
+  orc_union64 var33;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: shrsq */
+    var33.i = var32.i >> ((orc_union32 *)(ex->src_ptrs[1]))->i;
+    /* 2: storeq */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_shruq (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  orc_union64 var32;
+  orc_union64 var33;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: shruq */
+    var33.i = ((orc_uint64)var32.i) >> ((orc_union32 *)(ex->src_ptrs[1]))->i;
+    /* 2: storeq */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
 emulate_convsbw (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
