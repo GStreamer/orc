@@ -1009,6 +1009,11 @@ sse_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
   stackframe = 32 + 2*regsize;
   stackframe = (stackframe + 0xf) & (~0xf);
 
+  if (p->exec_ptr == X86_ECX) {
+    ORC_COMPILER_ERROR(compiler, "unimplemented");
+    return;
+  }
+
   orc_x86_emit_add_imm_reg (p, regsize, -stackframe, X86_ESP, FALSE);
   orc_x86_emit_mov_sse_memoffset (p, 16, p->vars[insn->src_args[0]].alloc,
       0, X86_ESP, FALSE, FALSE);
@@ -1207,9 +1212,9 @@ sse_rule_mulll_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
       16, X86_ESP, FALSE, FALSE);
 
   for(i=0;i<(1<<p->loop_shift);i++) {
-    orc_x86_emit_mov_memoffset_reg (p, 4, 4*i, X86_ESP, X86_ECX);
-    orc_x86_emit_imul_memoffset_reg (p, 4, 16+4*i, X86_ESP, X86_ECX);
-    orc_x86_emit_mov_reg_memoffset (p, 4, X86_ECX, 4*i, X86_ESP);
+    orc_x86_emit_mov_memoffset_reg (p, 4, 4*i, X86_ESP, p->gp_tmpreg);
+    orc_x86_emit_imul_memoffset_reg (p, 4, 16+4*i, X86_ESP, p->gp_tmpreg);
+    orc_x86_emit_mov_reg_memoffset (p, 4, p->gp_tmpreg, 4*i, X86_ESP);
   }
 
   orc_x86_emit_mov_memoffset_sse (p, 16, 0, X86_ESP,

@@ -195,23 +195,23 @@ orc_compiler_sse_init (OrcCompiler *compiler)
     compiler->used_regs[i] = 0;
   }
 
-  compiler->gp_tmpreg = X86_ECX;
-  compiler->valid_regs[compiler->gp_tmpreg] = 0;
-
   if (compiler->is_64bit) {
 #ifdef HAVE_OS_WIN32
     compiler->exec_reg = X86_ECX;
-    compiler->gp_tmpreg = X86_EAX;
+    compiler->gp_tmpreg = X86_EDX;
 #else
     compiler->exec_reg = X86_EDI;
+    compiler->gp_tmpreg = X86_ECX;
 #endif
   } else {
+    compiler->gp_tmpreg = X86_ECX;
     if (compiler->use_frame_pointer) {
       compiler->exec_reg = X86_EBX;
     } else {
       compiler->exec_reg = X86_EBP;
     }
   }
+  compiler->valid_regs[compiler->gp_tmpreg] = 0;
   compiler->valid_regs[compiler->exec_reg] = 0;
 
   switch (orc_program_get_max_var_size (compiler->program)) {
