@@ -151,7 +151,8 @@ print_array_val_signed (OrcArray *array, int i, int j)
       printf(" %10d", *(orc_int32 *)ptr);
       return *(orc_int32 *)ptr;
     case 8:
-      printf(" %20lld", (long long)*(orc_int64 *)ptr);
+      printf(" 0x%08x%08x", (orc_uint32)((*(orc_uint64 *)ptr)>>32),
+          (orc_uint32)((*(orc_uint64 *)ptr)));
       return *(orc_int64 *)ptr;
     default:
       return -1;
@@ -175,7 +176,8 @@ print_array_val_unsigned (OrcArray *array, int i, int j)
       printf(" %10u", *(orc_uint32 *)ptr);
       return *(orc_int32 *)ptr;
     case 8:
-      printf(" %20llu", (long long)*(orc_uint64 *)ptr);
+      printf(" 0x%08x%08x", (orc_uint32)((*(orc_uint64 *)ptr)>>32),
+          (orc_uint32)((*(orc_uint64 *)ptr)));
       return *(orc_int64 *)ptr;
     default:
       return -1;
@@ -199,7 +201,8 @@ print_array_val_hex (OrcArray *array, int i, int j)
       printf(" %08x", *(orc_uint32 *)ptr);
       return *(orc_int32 *)ptr;
     case 8:
-      printf(" %016llx", (long long)*(orc_uint64 *)ptr);
+      printf(" 0x%08x%08x", (orc_uint32)((*(orc_uint64 *)ptr)>>32),
+          (orc_uint32)((*(orc_uint64 *)ptr)));
       return *(orc_int64 *)ptr;
     default:
       return -1;

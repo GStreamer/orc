@@ -838,8 +838,10 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
       fprintf(output, "      orc_program_add_constant (p, %d, 0x%08x, \"%s\");\n",
           var->size, (int)var->value.i, varnames[ORC_VAR_C1 + i]);
     } else if (var->size > 4) {
-      fprintf(output, "      orc_program_add_constant_int64 (p, %d, 0x%016lx, \"%s\");\n",
-          var->size, var->value.i, varnames[ORC_VAR_C1 + i]);
+      REQUIRE(0,4,8,1);
+      fprintf(output, "      orc_program_add_constant_int64 (p, %d, 0x%08x%08x, \"%s\");\n",
+          var->size, (orc_uint32)(((orc_uint64)var->value.i)>>32),
+          (orc_uint32)(var->value.i), varnames[ORC_VAR_C1 + i]);
     }
   }
   for(i=0;i<8;i++){

@@ -62,10 +62,10 @@ get_cpuid (orc_uint32 op, orc_uint32 *a, orc_uint32 *b, orc_uint32 *c, orc_uint3
 }
 
 static void
-get_cpuid_ecx (orc_uint32 op, orc_uint32 *a, orc_uint32 *b, orc_uint32 *c, orc_uint32 *d)
+get_cpuid_ecx (orc_uint32 op, orc_uint32 init_ecx, orc_uint32 *a, orc_uint32 *b, orc_uint32 *c, orc_uint32 *d)
 {
   int tmp[4];
-  __cpuidex(tmp, op, ecx);
+  __cpuidex(tmp, op, init_ecx);
   *a = tmp[0];
   *b = tmp[1];
   *c = tmp[2];

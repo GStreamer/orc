@@ -793,16 +793,17 @@ c_rule_loadpX (OrcCompiler *p, void *user, OrcInstruction *insn)
       }
     }
   } else if (p->vars[insn->src_args[0]].vartype == ORC_VAR_TYPE_CONST) {
-    if (p->vars[insn->src_args[0]].size <= 4)
+    if (p->vars[insn->src_args[0]].size <= 4) {
       ORC_ASM_CODE(p,"    %s = 0x%08x; /* %d or %gf */\n", dest,
           (unsigned int)p->vars[insn->src_args[0]].value.i,
           (int)p->vars[insn->src_args[0]].value.i,
           p->vars[insn->src_args[0]].value.f);
-    else
-      ORC_ASM_CODE(p,"    %s = 0x%016lx; /* %ld or %lff */\n", dest,
-          p->vars[insn->src_args[0]].value.i,
-          p->vars[insn->src_args[0]].value.i,
+    } else {
+      ORC_ASM_CODE(p,"    %s = 0x%08x%08x; /* %gf */\n", dest,
+          (orc_uint32)(((orc_uint64)p->vars[insn->src_args[0]].value.i)>>32),
+          ((orc_uint32)p->vars[insn->src_args[0]].value.i),
           p->vars[insn->src_args[0]].value.f);
+    }
   } else {
     ORC_COMPILER_ERROR(p, "expected param or constant");
   }

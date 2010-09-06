@@ -251,14 +251,14 @@ main (int argc, char *argv[])
   for (i = 0; i < TIMES; i++)
     do_volume_c (dest, vols, samp, N);
   stop = get_timestamp ();
-  printf ("elapsed C: %llu ms\n", (long long unsigned int) (stop - start));
+  printf ("elapsed C: %d ms\n", (int) (stop - start));
 
 
   start = get_timestamp ();
   for (i = 0; i < TIMES; i++)
     do_volume_orc (dest, vols, samp, N);
   stop = get_timestamp ();
-  printf ("elapsed ORC: %llu ms\n", (long long unsigned int) (stop - start));
+  printf ("elapsed ORC: %d ms\n", (int) (stop - start));
 
   /* Print the results */
   for(i=0;i<20;i++){
