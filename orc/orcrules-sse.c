@@ -2306,6 +2306,23 @@ sse_rule_convdf (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 #endif
 
+#define UNARY_SSE41(opcode,insn_name) \
+static void \
+sse_rule_ ## opcode ## _sse41 (OrcCompiler *p, void *user, OrcInstruction *insn) \
+{ \
+  orc_sse_emit_ ## insn_name (p, \
+      p->vars[insn->src_args[0]].alloc, \
+      p->vars[insn->dest_args[0]].alloc); \
+}
+
+UNARY_SSE41(convsbw,pmovsxbw);
+UNARY_SSE41(convswl,pmovsxwd);
+UNARY_SSE41(convslq,pmovsxdq);
+UNARY_SSE41(convubw,pmovzxbw);
+UNARY_SSE41(convuwl,pmovzxwd);
+UNARY_SSE41(convulq,pmovzxdq);
+
+
 void
 orc_compiler_sse_register_rules (OrcTarget *target)
 {
@@ -2554,6 +2571,12 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   REG(minsl);
   REG(minul);
   REG(mulll);
+  orc_rule_register (rule_set, "convsbw", sse_rule_convsbw_sse41, NULL);
+  orc_rule_register (rule_set, "convswl", sse_rule_convswl_sse41, NULL);
+  orc_rule_register (rule_set, "convslq", sse_rule_convslq_sse41, NULL);
+  orc_rule_register (rule_set, "convubw", sse_rule_convubw_sse41, NULL);
+  orc_rule_register (rule_set, "convuwl", sse_rule_convuwl_sse41, NULL);
+  orc_rule_register (rule_set, "convulq", sse_rule_convulq_sse41, NULL);
   orc_rule_register (rule_set, "convsuslw", sse_rule_convsuslw, NULL);
 #ifndef MMX
   orc_rule_register (rule_set, "mulhsl", sse_rule_mulhsl, NULL);
