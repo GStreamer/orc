@@ -790,6 +790,35 @@ sse_rule_shrub (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+sse_rule_shrsq (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = orc_compiler_get_temp_reg (p);
+  int tmp2 = orc_compiler_get_temp_reg (p);
+
+  if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
+    orc_sse_emit_pcmpeqd (p, tmp, tmp);
+    orc_sse_emit_psllq (p, 63, tmp);
+    orc_sse_emit_pand (p, src, tmp);
+    orc_sse_emit_pxor (p, tmp2, tmp2);
+    orc_sse_emit_pcmpgtd (p, tmp, tmp2);
+    orc_sse_emit_punpckhdq (p, tmp2, tmp2);
+    /* tmp2 = 0xff..ff if negative, 0 otherwise */
+
+    orc_sse_emit_psrlq (p, p->vars[insn->src_args[1]].value.i, dest);
+
+    orc_sse_emit_pcmpeqd (p, tmp, tmp);
+    orc_sse_emit_psllq (p, 64 - p->vars[insn->src_args[1]].value.i, tmp);
+    orc_sse_emit_pand (p, tmp2, tmp);
+    orc_sse_emit_por (p, tmp, dest);
+  } else {
+    ORC_COMPILER_ERROR(p,"rule only works with constants");
+    p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
+  }
+}
+
+static void
 sse_rule_convsbw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[0]].alloc;
@@ -2368,6 +2397,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "shrsl", sse_rule_shift, (void *)5);
   orc_rule_register (rule_set, "shlq", sse_rule_shift, (void *)6);
   orc_rule_register (rule_set, "shruq", sse_rule_shift, (void *)7);
+  orc_rule_register (rule_set, "shrsq", sse_rule_shrsq, NULL);
 
   orc_rule_register (rule_set, "convsbw", sse_rule_convsbw, NULL);
   orc_rule_register (rule_set, "convubw", sse_rule_convubw, NULL);
