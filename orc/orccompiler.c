@@ -1081,6 +1081,41 @@ orc_compiler_get_constant_long (OrcCompiler *compiler,
 }
 
 int
+orc_compiler_try_get_constant_long (OrcCompiler *compiler,
+    orc_uint32 a, orc_uint32 b, orc_uint32 c, orc_uint32 d)
+{
+  int i;
+
+  for(i=0;i<compiler->n_constants;i++){
+    if (compiler->constants[i].is_long == TRUE &&
+        compiler->constants[i].full_value[0] == a &&
+        compiler->constants[i].full_value[1] == b &&
+        compiler->constants[i].full_value[2] == c &&
+        compiler->constants[i].full_value[3] == d) {
+      break;
+    }
+  }
+  if (i == compiler->n_constants) {
+    compiler->n_constants++;
+    compiler->constants[i].full_value[0] = a;
+    compiler->constants[i].full_value[1] = b;
+    compiler->constants[i].full_value[2] = c;
+    compiler->constants[i].full_value[3] = d;
+    compiler->constants[i].is_long = TRUE;
+    compiler->constants[i].alloc_reg = 0;
+    compiler->constants[i].use_count = 0;
+  }
+
+  compiler->constants[i].use_count++;
+
+  if (compiler->constants[i].alloc_reg != 0) {;
+    return compiler->constants[i].alloc_reg;
+  }
+  return ORC_REG_INVALID;
+}
+
+
+int
 orc_compiler_get_constant_reg (OrcCompiler *compiler)
 {
   int j;

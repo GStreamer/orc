@@ -1550,9 +1550,13 @@ sse_rule_swapw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp;
 
-  tmp = orc_compiler_get_constant_long (p,
+  tmp = orc_compiler_try_get_constant_long (p,
       0x02030001, 0x06070405, 0x0a0b0809, 0x0e0f0c0d);
-  orc_sse_emit_pshufb (p, tmp, dest);
+  if (tmp != ORC_REG_INVALID) {
+    orc_sse_emit_pshufb (p, tmp, dest);
+  } else {
+    sse_rule_swapw (p, user, insn);
+  }
 }
 
 static void
@@ -1561,10 +1565,13 @@ sse_rule_swapl_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp;
 
-  tmp = orc_compiler_get_constant_long (p,
+  tmp = orc_compiler_try_get_constant_long (p,
       0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f);
-
-  orc_sse_emit_pshufb (p, tmp, dest);
+  if (tmp != ORC_REG_INVALID) {
+    orc_sse_emit_pshufb (p, tmp, dest);
+  } else {
+    sse_rule_swapl (p, user, insn);
+  }
 }
 
 static void
@@ -1573,10 +1580,13 @@ sse_rule_swapq_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp;
 
-  tmp = orc_compiler_get_constant_long (p,
+  tmp = orc_compiler_try_get_constant_long (p,
       0x04050607, 0x00010203, 0x0c0d0e0f, 0x08090a0b);
-
-  orc_sse_emit_pshufb (p, tmp, dest);
+  if (tmp != ORC_REG_INVALID) {
+    orc_sse_emit_pshufb (p, tmp, dest);
+  } else {
+    sse_rule_swapq (p, user, insn);
+  }
 }
 
 static void
@@ -1585,10 +1595,13 @@ sse_rule_select0lw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp;
 
-  tmp = orc_compiler_get_constant_long (p,
+  tmp = orc_compiler_try_get_constant_long (p,
       0x05040100, 0x0d0c0908, 0x05040100, 0x0d0c0908);
-
-  orc_sse_emit_pshufb (p, tmp, dest);
+  if (tmp != ORC_REG_INVALID) {
+    orc_sse_emit_pshufb (p, tmp, dest);
+  } else {
+    sse_rule_select0lw (p, user, insn);
+  }
 }
 
 static void
@@ -1597,10 +1610,13 @@ sse_rule_select1lw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp;
 
-  tmp = orc_compiler_get_constant_long (p,
+  tmp = orc_compiler_try_get_constant_long (p,
       0x07060302, 0x0f0e0b0a, 0x07060302, 0x0f0e0b0a);
-
-  orc_sse_emit_pshufb (p, tmp, dest);
+  if (tmp != ORC_REG_INVALID) {
+    orc_sse_emit_pshufb (p, tmp, dest);
+  } else {
+    sse_rule_select1lw (p, user, insn);
+  }
 }
 
 static void
@@ -1609,10 +1625,13 @@ sse_rule_select0wb_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp;
 
-  tmp = orc_compiler_get_constant_long (p,
+  tmp = orc_compiler_try_get_constant_long (p,
       0x06040200, 0x0e0c0a08, 0x06040200, 0x0e0c0a08);
-
-  orc_sse_emit_pshufb (p, tmp, dest);
+  if (tmp != ORC_REG_INVALID) {
+    orc_sse_emit_pshufb (p, tmp, dest);
+  } else {
+    sse_rule_select0wb (p, user, insn);
+  }
 }
 
 static void
@@ -1621,10 +1640,13 @@ sse_rule_select1wb_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp;
 
-  tmp = orc_compiler_get_constant_long (p,
+  tmp = orc_compiler_try_get_constant_long (p,
       0x07050301, 0x0f0d0b09, 0x07050301, 0x0f0d0b09);
-
-  orc_sse_emit_pshufb (p, tmp, dest);
+  if (tmp != ORC_REG_INVALID) {
+    orc_sse_emit_pshufb (p, tmp, dest);
+  } else {
+    sse_rule_select1wb (p, user, insn);
+  }
 }
 #endif
 

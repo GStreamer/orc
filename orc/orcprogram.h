@@ -722,6 +722,8 @@ int orc_compiler_label_new (OrcCompiler *compiler);
 int orc_compiler_get_constant (OrcCompiler *compiler, int size, int value);
 int orc_compiler_get_constant_long (OrcCompiler *compiler, orc_uint32 a,
     orc_uint32 b, orc_uint32 c, orc_uint32 d);
+int orc_compiler_try_get_constant_long (OrcCompiler *compiler, orc_uint32 a,
+    orc_uint32 b, orc_uint32 c, orc_uint32 d);
 int orc_compiler_get_temp_constant (OrcCompiler *compiler, int size, int value);
 int orc_compiler_get_temp_reg (OrcCompiler *compiler);
 int orc_compiler_get_constant_reg (OrcCompiler *compiler);
