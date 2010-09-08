@@ -731,7 +731,7 @@ orc_arm_flush_cache (OrcCode *code)
 void
 orc_arm_emit_data (OrcCompiler *compiler, orc_uint32 data)
 {
-  if (compiler->target_flags & ORC_TARGET_NEON_CLEAN_COMPILE) {
+  if (compiler->target_flags & ORC_TARGET_CLEAN_COMPILE) {
     orc_arm_emit_nop (compiler);
   } else {
     ORC_ASM_CODE(compiler,"  .word 0x%08x\n", data);

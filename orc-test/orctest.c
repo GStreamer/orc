@@ -62,8 +62,12 @@ orc_test_gcc_compile (OrcProgram *p)
 
   target = orc_target_get_default ();
   flags = orc_target_get_default_flags (target);
+  flags |= ORC_TARGET_CLEAN_COMPILE;
   if (strcmp (orc_target_get_name (target), "sse") == 0) {
     flags |= ORC_TARGET_SSE_SHORT_JUMPS;
+  }
+  if (strcmp (orc_target_get_name (target), "mmx") == 0) {
+    flags |= ORC_TARGET_MMX_SHORT_JUMPS;
   }
 
   result = orc_program_compile_full (p, target, flags);
@@ -176,7 +180,7 @@ orc_test_gcc_compile_neon (OrcProgram *p)
 
   target = orc_target_get_by_name ("neon");
   flags = orc_target_get_default_flags (target);
-  flags |= ORC_TARGET_NEON_CLEAN_COMPILE;
+  flags |= ORC_TARGET_CLEAN_COMPILE;
 
   result = orc_program_compile_full (p, target, flags);
   if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
