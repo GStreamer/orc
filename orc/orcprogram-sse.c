@@ -30,6 +30,8 @@ void orc_sse_emit_invariants (OrcCompiler *compiler);
 void orc_compiler_rewrite_vars (OrcCompiler *compiler);
 void orc_compiler_dump (OrcCompiler *compiler);
 void sse_load_constant (OrcCompiler *compiler, int reg, int size, int value);
+void sse_load_constant_long (OrcCompiler *compiler, int reg,
+    OrcConstant *constant);
 static const char * sse_get_flag_name (int shift);
 
 static OrcTarget sse_target = {
@@ -48,7 +50,8 @@ static OrcTarget sse_target = {
   NULL,
   sse_load_constant,
   sse_get_flag_name,
-  NULL
+  NULL,
+  sse_load_constant_long
 };
 
 
@@ -394,6 +397,30 @@ sse_load_constant (OrcCompiler *compiler, int reg, int size, int value)
 }
 
 void
+sse_load_constant_long (OrcCompiler *compiler, int reg,
+    OrcConstant *constant)
+{
+  int i;
+  int offset = ORC_STRUCT_OFFSET(OrcExecutor,arrays[ORC_VAR_T1]);
+
+  /* FIXME this is slower than it could be */
+
+  ORC_ASM_CODE(compiler, "# loading constant %08x %08x %08x %08x\n",
+      constant->full_value[0], constant->full_value[1],
+      constant->full_value[2], constant->full_value[3]);
+
+  for(i=0;i<4;i++){
+    orc_x86_emit_mov_imm_reg (compiler, 4, constant->full_value[i],
+        compiler->gp_tmpreg);
+    orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
+        offset + 4*i, compiler->exec_reg);
+  }
+  orc_x86_emit_mov_memoffset_sse (compiler, 16, offset, compiler->exec_reg,
+      reg, FALSE);
+
+}
+
+void
 sse_load_constants_outer (OrcCompiler *compiler)
 {
   int i;
@@ -429,8 +456,13 @@ sse_load_constants_outer (OrcCompiler *compiler)
 
   for(i=0;i<compiler->n_constants;i++){
     if (compiler->constants[i].alloc_reg) {
-      sse_load_constant (compiler, compiler->constants[i].alloc_reg,
-          4, compiler->constants[i].value);
+      if (compiler->constants[i].is_long) {
+        sse_load_constant_long (compiler, compiler->constants[i].alloc_reg,
+            compiler->constants + i);
+      } else {
+        sse_load_constant (compiler, compiler->constants[i].alloc_reg,
+            4, compiler->constants[i].value);
+      }
     }
   }
 }

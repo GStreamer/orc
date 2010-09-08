@@ -325,6 +325,7 @@ struct _OrcConstant {
   unsigned int value;
   unsigned int full_value[4];
   int use_count;
+  int is_long;
 };
 
 /**
@@ -603,8 +604,10 @@ struct _OrcTarget {
   void (*load_constant)(OrcCompiler *compiler, int reg, int size, int value);
   const char * (*get_flag_name)(int shift);
   void (*flush_cache) (OrcCode *code);
+  void (*load_constant_long)(OrcCompiler *compiler, int reg,
+      OrcConstant *constant);
 
-  void *_unused[6];
+  void *_unused[5];
 };
 
 
@@ -714,6 +717,8 @@ int orc_program_allocate_register (OrcProgram *program, int is_data);
 void orc_code_allocate_codemem (OrcCode *code, int size);
 int orc_compiler_label_new (OrcCompiler *compiler);
 int orc_compiler_get_constant (OrcCompiler *compiler, int size, int value);
+int orc_compiler_get_constant_long (OrcCompiler *compiler, orc_uint32 a,
+    orc_uint32 b, orc_uint32 c, orc_uint32 d);
 int orc_compiler_get_temp_constant (OrcCompiler *compiler, int size, int value);
 int orc_compiler_get_temp_reg (OrcCompiler *compiler);
 int orc_compiler_get_constant_reg (OrcCompiler *compiler);

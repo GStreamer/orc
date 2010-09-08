@@ -984,6 +984,13 @@ orc_compiler_load_constant (OrcCompiler *compiler, int reg, int size,
   compiler->target->load_constant (compiler, reg, size, value);
 }
 
+void
+orc_compiler_load_constant_long (OrcCompiler *compiler, int reg,
+    OrcConstant *constant)
+{
+  compiler->target->load_constant_long (compiler, reg, constant);
+}
+
 int
 orc_compiler_get_temp_constant (OrcCompiler *compiler, int size, int value)
 {
@@ -1010,13 +1017,52 @@ orc_compiler_get_constant (OrcCompiler *compiler, int size, int value)
   }
 
   for(i=0;i<compiler->n_constants;i++){
-    if (compiler->constants[i].value == value) {
+    if (compiler->constants[i].is_long == FALSE &&
+        compiler->constants[i].value == value) {
       break;
     }
   }
   if (i == compiler->n_constants) {
     compiler->n_constants++;
     compiler->constants[i].value = value;
+    compiler->constants[i].alloc_reg = 0;
+    compiler->constants[i].use_count = 0;
+    compiler->constants[i].is_long = FALSE;
+  }
+
+  compiler->constants[i].use_count++;
+
+  if (compiler->constants[i].alloc_reg != 0) {;
+    return compiler->constants[i].alloc_reg;
+  }
+  tmp = orc_compiler_get_temp_reg (compiler);
+  orc_compiler_load_constant (compiler, tmp, size, value);
+  return tmp;
+}
+
+int
+orc_compiler_get_constant_long (OrcCompiler *compiler,
+    orc_uint32 a, orc_uint32 b, orc_uint32 c, orc_uint32 d)
+{
+  int i;
+  int tmp;
+
+  for(i=0;i<compiler->n_constants;i++){
+    if (compiler->constants[i].is_long == TRUE &&
+        compiler->constants[i].full_value[0] == a &&
+        compiler->constants[i].full_value[1] == b &&
+        compiler->constants[i].full_value[2] == c &&
+        compiler->constants[i].full_value[3] == d) {
+      break;
+    }
+  }
+  if (i == compiler->n_constants) {
+    compiler->n_constants++;
+    compiler->constants[i].full_value[0] = a;
+    compiler->constants[i].full_value[1] = b;
+    compiler->constants[i].full_value[2] = c;
+    compiler->constants[i].full_value[3] = d;
+    compiler->constants[i].is_long = TRUE;
     compiler->constants[i].alloc_reg = 0;
     compiler->constants[i].use_count = 0;
   }
@@ -1027,7 +1073,7 @@ orc_compiler_get_constant (OrcCompiler *compiler, int size, int value)
     return compiler->constants[i].alloc_reg;
   }
   tmp = orc_compiler_get_temp_reg (compiler);
-  orc_compiler_load_constant (compiler, tmp, size, value);
+  orc_compiler_load_constant_long (compiler, tmp, &compiler->constants[i]);
   return tmp;
 }
 
