@@ -380,7 +380,10 @@ main (int argc, char *argv[])
 
   fclose (output);
 
-  if (error) exit(1);
+  if (error) {
+    remove (output_file);
+    exit(1);
+  }
 
   return 0;
 }
