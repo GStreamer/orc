@@ -363,7 +363,7 @@ orc_test_random_bits (void *data, int n_bytes)
 #endif
 }
 
-static int
+static orc_uint64
 print_array_val_signed (OrcArray *array, int i, int j)
 {
   void *ptr = ORC_PTR_OFFSET (array->data,
@@ -389,7 +389,7 @@ print_array_val_signed (OrcArray *array, int i, int j)
 }
 
 #ifdef unused
-static int
+static orc_uint64
 print_array_val_unsigned (OrcArray *array, int i, int j)
 {
   void *ptr = ORC_PTR_OFFSET (array->data,
@@ -415,7 +415,7 @@ print_array_val_unsigned (OrcArray *array, int i, int j)
 }
 #endif
 
-static int
+static orc_uint64
 print_array_val_hex (OrcArray *array, int i, int j)
 {
   void *ptr = ORC_PTR_OFFSET (array->data,
@@ -440,7 +440,7 @@ print_array_val_hex (OrcArray *array, int i, int j)
   }
 }
 
-static int
+static orc_uint64
 print_array_val_float (OrcArray *array, int i, int j)
 {
   void *ptr = ORC_PTR_OFFSET (array->data,
@@ -653,7 +653,7 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
   if (bad) {
     for(j=0;j<m;j++){
       for(i=0;i<n;i++){
-        int a,b;
+        orc_uint64 a,b;
         int l;
         int line_bad = 0;
 
