@@ -1500,45 +1500,38 @@ sse_rule_swapq (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_por (p, tmp, dest);
 }
 
-#define LOAD_MASK_IS_SLOW
-#ifndef LOAD_MASK_IS_SLOW
-static void
-sse_emit_load_mask (OrcCompiler *p, unsigned int mask1, unsigned int mask2)
-{
-  int tmp = orc_compiler_get_temp_reg (p);
-  int gptmp = p->gp_tmpreg;
-  int tmp2 = orc_compiler_get_temp_reg (p);
-
-  orc_x86_emit_mov_imm_reg (p, 4, mask1, gptmp);
-  orc_x86_emit_mov_reg_sse (p, gptmp, tmp);
-  orc_sse_emit_pshufd (p, 0, tmp, tmp);
-  orc_x86_emit_mov_imm_reg (p, 4, mask2, gptmp);
-  orc_x86_emit_mov_reg_sse (p, gptmp, tmp2);
-  orc_sse_emit_punpcklbw (p, tmp2, tmp2);
-  orc_sse_emit_punpcklwd (p, tmp2, tmp2);
-  orc_sse_emit_paddb (p, tmp2, tmp);
-}
-
+#ifndef MMX
 static void
 sse_rule_swapw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  int tmp;
 
-  sse_emit_load_mask (p, 0x02030001, 0x0c080400);
-
+  tmp = orc_compiler_get_constant_long (p,
+      0x02030001, 0x06070405, 0x0a0b0809, 0x0e0f0c0d);
   orc_sse_emit_pshufb (p, tmp, dest);
 }
 
 static void
 sse_rule_swapl_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  int tmp;
 
-  sse_emit_load_mask (p, 0x00010203, 0x0c080400);
+  tmp = orc_compiler_get_constant_long (p,
+      0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f);
+
+  orc_sse_emit_pshufb (p, tmp, dest);
+}
+
+static void
+sse_rule_swapq_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp;
+
+  tmp = orc_compiler_get_constant_long (p,
+      0x04050607, 0x00010203, 0x0c0d0e0f, 0x08090a0b);
 
   orc_sse_emit_pshufb (p, tmp, dest);
 }
@@ -1546,11 +1539,11 @@ sse_rule_swapl_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_select0lw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  int tmp;
 
-  sse_emit_load_mask (p, 0x05040100, 0x08000800);
+  tmp = orc_compiler_get_constant_long (p,
+      0x05040100, 0x0d0c0908, 0x05040100, 0x0d0c0908);
 
   orc_sse_emit_pshufb (p, tmp, dest);
 }
@@ -1558,11 +1551,11 @@ sse_rule_select0lw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_select1lw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  int tmp;
 
-  sse_emit_load_mask (p, 0x07060302, 0x08000800);
+  tmp = orc_compiler_get_constant_long (p,
+      0x07060302, 0x0f0e0b0a, 0x07060302, 0x0f0e0b0a);
 
   orc_sse_emit_pshufb (p, tmp, dest);
 }
@@ -1570,11 +1563,11 @@ sse_rule_select1lw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_select0wb_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  int tmp;
 
-  sse_emit_load_mask (p, 0x06040200, 0x08000800);
+  tmp = orc_compiler_get_constant_long (p,
+      0x06040200, 0x0e0c0a08, 0x06040200, 0x0e0c0a08);
 
   orc_sse_emit_pshufb (p, tmp, dest);
 }
@@ -1582,11 +1575,11 @@ sse_rule_select0wb_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 sse_rule_select1wb_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  int tmp;
 
-  sse_emit_load_mask (p, 0x07050301, 0x08000800);
+  tmp = orc_compiler_get_constant_long (p,
+      0x07050301, 0x0f0d0b09, 0x07050301, 0x0f0d0b09);
 
   orc_sse_emit_pshufb (p, tmp, dest);
 }
@@ -2468,9 +2461,10 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   REG(absb);
   REG(absw);
   REG(absl);
-#ifndef LOAD_MASK_IS_SLOW
+#ifndef MMX
   orc_rule_register (rule_set, "swapw", sse_rule_swapw_ssse3, NULL);
   orc_rule_register (rule_set, "swapl", sse_rule_swapl_ssse3, NULL);
+  orc_rule_register (rule_set, "swapq", sse_rule_swapq_ssse3, NULL);
   orc_rule_register (rule_set, "select0lw", sse_rule_select0lw_ssse3, NULL);
   orc_rule_register (rule_set, "select1lw", sse_rule_select1lw_ssse3, NULL);
   orc_rule_register (rule_set, "select0wb", sse_rule_select0wb_ssse3, NULL);
