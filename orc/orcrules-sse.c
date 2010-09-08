@@ -413,8 +413,14 @@ sse_rule_ldresnearl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     } else {
       orc_x86_emit_mov_memindex_sse (compiler, 4, 0,
           src->ptr_register, compiler->gp_tmpreg, 2, tmp, FALSE);
+#ifdef MMX
+      //orc_mmx_emit_punpckldq (compiler, tmp, dest->alloc);
+      orc_sse_emit_psllq (compiler, 8*4*i, tmp);
+      orc_sse_emit_por (compiler, tmp, dest->alloc);
+#else
       orc_sse_emit_pslldq (compiler, 4*i, tmp);
       orc_sse_emit_por (compiler, tmp, dest->alloc);
+#endif
     }
 
     if (compiler->vars[increment_var].vartype == ORC_VAR_TYPE_PARAM) {

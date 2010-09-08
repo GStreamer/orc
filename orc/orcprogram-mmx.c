@@ -30,6 +30,8 @@ void orc_mmx_emit_invariants (OrcCompiler *compiler);
 void orc_compiler_rewrite_vars (OrcCompiler *compiler);
 void orc_compiler_dump (OrcCompiler *compiler);
 void mmx_load_constant (OrcCompiler *compiler, int reg, int size, int value);
+void mmx_load_constant_long (OrcCompiler *compiler, int reg,
+    OrcConstant *constant);
 static const char * mmx_get_flag_name (int shift);
 
 static OrcTarget mmx_target = {
@@ -48,10 +50,13 @@ static OrcTarget mmx_target = {
   NULL,
   mmx_load_constant,
   mmx_get_flag_name,
-  NULL
+  NULL,
+  mmx_load_constant_long
 };
 
 
+extern int orc_x86_mmx_flags;
+extern int orc_x86_mmx_flags;
 
 void
 orc_mmx_init (void)
@@ -63,11 +68,11 @@ orc_mmx_init (void)
 
 #if defined(HAVE_I386)
 #ifndef MMX
-  if (!(orc_mmx_get_cpu_flags () & ORC_TARGET_MMX_MMXEXT)) {
+  if (!(orc_x86_mmx_flags & ORC_TARGET_MMX_MMXEXT)) {
     mmx_target.executable = FALSE;
   }
 #else
-  if (!(orc_mmx_get_cpu_flags () & ORC_TARGET_MMX_MMX)) {
+  if (!(orc_x86_mmx_flags & ORC_TARGET_MMX_MMX)) {
     mmx_target.executable = FALSE;
   }
 #endif
@@ -91,7 +96,11 @@ orc_compiler_mmx_get_default_flags (void)
   }
   
 #if defined(HAVE_AMD64) || defined(HAVE_I386)
-  flags |= orc_mmx_get_cpu_flags ();
+#ifndef MMX
+  flags |= orc_x86_mmx_flags;
+#else
+  flags |= orc_x86_mmx_flags;
+#endif
 #else
 #ifndef MMX
   flags |= ORC_TARGET_MMX_MMXEXT;
@@ -146,7 +155,6 @@ orc_compiler_mmx_init (OrcCompiler *compiler)
     for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+16;i++){
       compiler->valid_regs[i] = 1;
     }
-    compiler->valid_regs[X86_EDI] = 0;
     compiler->valid_regs[X86_ESP] = 0;
 #ifndef MMX
     for(i=X86_MM0;i<X86_MM0+16;i++){
@@ -163,6 +171,13 @@ orc_compiler_mmx_init (OrcCompiler *compiler)
     compiler->save_regs[X86_R13] = 1;
     compiler->save_regs[X86_R14] = 1;
     compiler->save_regs[X86_R15] = 1;
+#ifdef HAVE_OS_WIN32
+    compiler->save_regs[X86_EDI] = 1;
+    compiler->save_regs[X86_ESI] = 1;
+    for(i=X86_MM0+6;i<X86_MM0+16;i++){
+      compiler->save_regs[i] = 1;
+    }
+#endif
   } else {
     for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+8;i++){
       compiler->valid_regs[i] = 1;
@@ -183,18 +198,23 @@ orc_compiler_mmx_init (OrcCompiler *compiler)
     compiler->used_regs[i] = 0;
   }
 
-  compiler->gp_tmpreg = X86_ECX;
-  compiler->valid_regs[compiler->gp_tmpreg] = 0;
-
   if (compiler->is_64bit) {
+#ifdef HAVE_OS_WIN32
+    compiler->exec_reg = X86_ECX;
+    compiler->gp_tmpreg = X86_EDX;
+#else
     compiler->exec_reg = X86_EDI;
+    compiler->gp_tmpreg = X86_ECX;
+#endif
   } else {
+    compiler->gp_tmpreg = X86_ECX;
     if (compiler->use_frame_pointer) {
       compiler->exec_reg = X86_EBX;
     } else {
       compiler->exec_reg = X86_EBP;
     }
   }
+  compiler->valid_regs[compiler->gp_tmpreg] = 0;
   compiler->valid_regs[compiler->exec_reg] = 0;
 
   switch (orc_program_get_max_var_size (compiler->program)) {
@@ -234,6 +254,20 @@ orc_compiler_mmx_init (OrcCompiler *compiler)
   }
   compiler->alloc_loop_counter = TRUE;
   compiler->allow_gp_on_stack = TRUE;
+
+  {
+    for(i=0;i<compiler->n_insns;i++){
+      OrcInstruction *insn = compiler->insns + i;
+      OrcStaticOpcode *opcode = insn->opcode;
+
+      if (strcmp (opcode->name, "ldreslinb") == 0 ||
+          strcmp (opcode->name, "ldreslinl") == 0 ||
+          strcmp (opcode->name, "ldresnearb") == 0 ||
+          strcmp (opcode->name, "ldresnearl") == 0) {
+        compiler->vars[insn->src_args[0]].need_offset_reg = TRUE;
+      }
+    }
+  }
 }
 
 void
@@ -377,6 +411,30 @@ mmx_load_constant (OrcCompiler *compiler, int reg, int size, int value)
 }
 
 void
+mmx_load_constant_long (OrcCompiler *compiler, int reg,
+    OrcConstant *constant)
+{
+  int i;
+  int offset = ORC_STRUCT_OFFSET(OrcExecutor,arrays[ORC_VAR_T1]);
+
+  /* FIXME this is slower than it could be */
+
+  ORC_ASM_CODE(compiler, "# loading constant %08x %08x %08x %08x\n",
+      constant->full_value[0], constant->full_value[1],
+      constant->full_value[2], constant->full_value[3]);
+
+  for(i=0;i<4;i++){
+    orc_x86_emit_mov_imm_reg (compiler, 4, constant->full_value[i],
+        compiler->gp_tmpreg);
+    orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
+        offset + 4*i, compiler->exec_reg);
+  }
+  orc_x86_emit_mov_memoffset_mmx (compiler, 16, offset, compiler->exec_reg,
+      reg, FALSE);
+
+}
+
+void
 mmx_load_constants_outer (OrcCompiler *compiler)
 {
   int i;
@@ -412,8 +470,36 @@ mmx_load_constants_outer (OrcCompiler *compiler)
 
   for(i=0;i<compiler->n_constants;i++){
     if (compiler->constants[i].alloc_reg) {
-      mmx_load_constant (compiler, compiler->constants[i].alloc_reg,
-          4, compiler->constants[i].value);
+      if (compiler->constants[i].is_long) {
+        mmx_load_constant_long (compiler, compiler->constants[i].alloc_reg,
+            compiler->constants + i);
+      } else {
+        mmx_load_constant (compiler, compiler->constants[i].alloc_reg,
+            4, compiler->constants[i].value);
+      }
+    }
+  }
+
+  {
+    for(i=0;i<compiler->n_insns;i++){
+      OrcInstruction *insn = compiler->insns + i;
+      OrcStaticOpcode *opcode = insn->opcode;
+
+      if (strcmp (opcode->name, "ldreslinb") == 0 ||
+          strcmp (opcode->name, "ldreslinl") == 0 ||
+          strcmp (opcode->name, "ldresnearb") == 0 ||
+          strcmp (opcode->name, "ldresnearl") == 0) {
+        if (compiler->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
+          orc_x86_emit_mov_memoffset_reg (compiler, 4,
+              (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[1]]),
+              compiler->exec_reg,
+              compiler->vars[insn->src_args[0]].ptr_offset);
+        } else {
+          orc_x86_emit_mov_imm_reg (compiler, 4,
+              compiler->vars[insn->src_args[1]].value.i,
+              compiler->vars[insn->src_args[0]].ptr_offset);
+        }
+      }
     }
   }
 }
@@ -464,10 +550,14 @@ mmx_add_strides (OrcCompiler *compiler)
       case ORC_VAR_TYPE_DEST:
         orc_x86_emit_mov_memoffset_reg (compiler, 4,
             (int)ORC_STRUCT_OFFSET(OrcExecutor, params[i]), compiler->exec_reg,
-            X86_ECX);
+            compiler->gp_tmpreg);
         orc_x86_emit_add_reg_memoffset (compiler, compiler->is_64bit ? 8 : 4,
-            X86_ECX,
+            compiler->gp_tmpreg,
             (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]), compiler->exec_reg);
+
+        if (compiler->vars[i].ptr_register == 0) {
+          ORC_COMPILER_ERROR(compiler, "unimplemented: stride on mem pointer");
+        }
         break;
       case ORC_VAR_TYPE_ACCUMULATOR:
         break;
@@ -906,18 +996,31 @@ orc_mmx_emit_loop (OrcCompiler *compiler, int offset, int update)
 
   if (update) {
     for(k=0;k<ORC_N_COMPILER_VARIABLES;k++){
-      if (compiler->vars[k].name == NULL) continue;
-      if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
-          compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
-        if (compiler->vars[k].ptr_register) {
-          orc_x86_emit_add_imm_reg (compiler, compiler->is_64bit ? 8 : 4,
-              compiler->vars[k].size * update,
-              compiler->vars[k].ptr_register, FALSE);
+      OrcVariable *var = compiler->vars + k;
+
+      if (var->name == NULL) continue;
+      if (var->vartype == ORC_VAR_TYPE_SRC ||
+          var->vartype == ORC_VAR_TYPE_DEST) {
+        int offset;
+        if (var->update_type == 0) {
+          offset = 0;
+        } else if (var->update_type == 1) {
+          offset = (var->size * update) >> 1;
         } else {
-          orc_x86_emit_add_imm_memoffset (compiler, compiler->is_64bit ? 8 : 4,
-              compiler->vars[k].size * update,
-              (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]),
-              compiler->exec_reg);
+          offset = var->size * update;
+        }
+
+        if (offset != 0) {
+          if (compiler->vars[k].ptr_register) {
+            orc_x86_emit_add_imm_reg (compiler, compiler->is_64bit ? 8 : 4,
+                offset,
+                compiler->vars[k].ptr_register, FALSE);
+          } else {
+            orc_x86_emit_add_imm_memoffset (compiler, compiler->is_64bit ? 8 : 4,
+                offset,
+                (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]),
+                compiler->exec_reg);
+          }
         }
       }
     }
