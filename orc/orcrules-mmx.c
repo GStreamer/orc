@@ -544,6 +544,14 @@ BINARY(subl,"psubd",0xfa)
 //BINARY(subusl,"psubusd",0xd9)
 BINARY(xorl,"pxor",0xef)
 
+BINARY(andq,"pand",0xdb)
+BINARY(andnq,"pandn",0xdf)
+BINARY(orq,"por",0xeb)
+BINARY(xorq,"pxor",0xef)
+BINARY(cmpeqq,"pcmpeqq",0x3829)
+BINARY(cmpgtsq,"pcmpgtq",0x3837)
+BINARY(addq,"paddq",0xd4)
+BINARY(subq,"psubq",0xfb)
 
 static void
 mmx_rule_accw (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -698,10 +706,10 @@ static void
 mmx_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int type = ORC_PTR_TO_INT(user);
-  int imm_code1[] = { 0x71, 0x71, 0x71, 0x72, 0x72, 0x72 };
-  int imm_code2[] = { 6, 2, 4, 6, 2, 4 };
-  int reg_code[] = { 0xf1, 0xd1, 0xe1, 0xf2, 0xd2, 0xe2 };
-  const char *code[] = { "psllw", "psrlw", "psraw", "pslld", "psrld", "psrad" };
+  int imm_code1[] = { 0x71, 0x71, 0x71, 0x72, 0x72, 0x72, 0x73, 0x73 };
+  int imm_code2[] = { 6, 2, 4, 6, 2, 4, 6, 2 };
+  int reg_code[] = { 0xf1, 0xd1, 0xe1, 0xf2, 0xd2, 0xe2, 0xf3, 0xd3 };
+  const char *code[] = { "psllw", "psrlw", "psraw", "pslld", "psrld", "psrad", "psllq", "psrlq" };
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
     orc_mmx_emit_shiftimm (p, code[type], imm_code1[type], imm_code2[type],
@@ -775,6 +783,30 @@ mmx_rule_shrub (OrcCompiler *p, void *user, OrcInstruction *insn)
     tmp = orc_compiler_get_constant (p, 1,
         (0xff>>p->vars[insn->src_args[1]].value.i));
     orc_mmx_emit_pand (p, tmp, dest);
+  } else {
+    ORC_COMPILER_ERROR(p,"rule only works with constants");
+    p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
+  }
+}
+
+static void
+mmx_rule_shrsq (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = orc_compiler_get_temp_reg (p);
+
+  if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
+#ifndef MMX
+    orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(3,3,1,1), src, tmp);
+#else
+    orc_mmx_emit_pshufw (p, ORC_MMX_SHUF(3,2,3,2), src, tmp);
+#endif
+    orc_mmx_emit_psrad (p, 31, tmp);
+    orc_mmx_emit_psllq (p, 64-p->vars[insn->src_args[1]].value.i, tmp);
+
+    orc_mmx_emit_psrlq (p, p->vars[insn->src_args[1]].value.i, dest);
+    orc_mmx_emit_por (p, tmp, dest);
   } else {
     ORC_COMPILER_ERROR(p,"rule only works with constants");
     p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
@@ -1513,9 +1545,13 @@ mmx_rule_swapw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp;
 
-  tmp = orc_compiler_get_constant_long (p,
+  tmp = orc_compiler_try_get_constant_long (p,
       0x02030001, 0x06070405, 0x0a0b0809, 0x0e0f0c0d);
-  orc_mmx_emit_pshufb (p, tmp, dest);
+  if (tmp != ORC_REG_INVALID) {
+    orc_mmx_emit_pshufb (p, tmp, dest);
+  } else {
+    mmx_rule_swapw (p, user, insn);
+  }
 }
 
 static void
@@ -1524,10 +1560,13 @@ mmx_rule_swapl_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp;
 
-  tmp = orc_compiler_get_constant_long (p,
+  tmp = orc_compiler_try_get_constant_long (p,
       0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f);
-
-  orc_mmx_emit_pshufb (p, tmp, dest);
+  if (tmp != ORC_REG_INVALID) {
+    orc_mmx_emit_pshufb (p, tmp, dest);
+  } else {
+    mmx_rule_swapl (p, user, insn);
+  }
 }
 
 static void
@@ -1536,10 +1575,13 @@ mmx_rule_swapq_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp;
 
-  tmp = orc_compiler_get_constant_long (p,
+  tmp = orc_compiler_try_get_constant_long (p,
       0x04050607, 0x00010203, 0x0c0d0e0f, 0x08090a0b);
-
-  orc_mmx_emit_pshufb (p, tmp, dest);
+  if (tmp != ORC_REG_INVALID) {
+    orc_mmx_emit_pshufb (p, tmp, dest);
+  } else {
+    mmx_rule_swapq (p, user, insn);
+  }
 }
 
 static void
@@ -1548,10 +1590,13 @@ mmx_rule_select0lw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp;
 
-  tmp = orc_compiler_get_constant_long (p,
+  tmp = orc_compiler_try_get_constant_long (p,
       0x05040100, 0x0d0c0908, 0x05040100, 0x0d0c0908);
-
-  orc_mmx_emit_pshufb (p, tmp, dest);
+  if (tmp != ORC_REG_INVALID) {
+    orc_mmx_emit_pshufb (p, tmp, dest);
+  } else {
+    mmx_rule_select0lw (p, user, insn);
+  }
 }
 
 static void
@@ -1560,10 +1605,13 @@ mmx_rule_select1lw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp;
 
-  tmp = orc_compiler_get_constant_long (p,
+  tmp = orc_compiler_try_get_constant_long (p,
       0x07060302, 0x0f0e0b0a, 0x07060302, 0x0f0e0b0a);
-
-  orc_mmx_emit_pshufb (p, tmp, dest);
+  if (tmp != ORC_REG_INVALID) {
+    orc_mmx_emit_pshufb (p, tmp, dest);
+  } else {
+    mmx_rule_select1lw (p, user, insn);
+  }
 }
 
 static void
@@ -1572,10 +1620,13 @@ mmx_rule_select0wb_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp;
 
-  tmp = orc_compiler_get_constant_long (p,
+  tmp = orc_compiler_try_get_constant_long (p,
       0x06040200, 0x0e0c0a08, 0x06040200, 0x0e0c0a08);
-
-  orc_mmx_emit_pshufb (p, tmp, dest);
+  if (tmp != ORC_REG_INVALID) {
+    orc_mmx_emit_pshufb (p, tmp, dest);
+  } else {
+    mmx_rule_select0wb (p, user, insn);
+  }
 }
 
 static void
@@ -1584,10 +1635,13 @@ mmx_rule_select1wb_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
   int tmp;
 
-  tmp = orc_compiler_get_constant_long (p,
+  tmp = orc_compiler_try_get_constant_long (p,
       0x07050301, 0x0f0d0b09, 0x07050301, 0x0f0d0b09);
-
-  orc_mmx_emit_pshufb (p, tmp, dest);
+  if (tmp != ORC_REG_INVALID) {
+    orc_mmx_emit_pshufb (p, tmp, dest);
+  } else {
+    mmx_rule_select1wb (p, user, insn);
+  }
 }
 #endif
 
@@ -2333,6 +2387,13 @@ orc_compiler_mmx_register_rules (OrcTarget *target)
   REG(subl);
   REG(xorl);
 
+  REG(andq);
+  REG(andnq);
+  REG(orq);
+  REG(xorq);
+  REG(addq);
+  REG(subq);
+
   REG(select0lw);
   REG(select1lw);
   REG(select0wb);
@@ -2351,6 +2412,9 @@ orc_compiler_mmx_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "shll", mmx_rule_shift, (void *)3);
   orc_rule_register (rule_set, "shrul", mmx_rule_shift, (void *)4);
   orc_rule_register (rule_set, "shrsl", mmx_rule_shift, (void *)5);
+  orc_rule_register (rule_set, "shlq", mmx_rule_shift, (void *)6);
+  orc_rule_register (rule_set, "shruq", mmx_rule_shift, (void *)7);
+  orc_rule_register (rule_set, "shrsq", mmx_rule_shrsq, NULL);
 
   orc_rule_register (rule_set, "convsbw", mmx_rule_convsbw, NULL);
   orc_rule_register (rule_set, "convubw", mmx_rule_convubw, NULL);
@@ -2495,7 +2559,13 @@ orc_compiler_mmx_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "mulhsl", mmx_rule_mulhsl, NULL);
 #endif
 
+  REG(cmpeqq);
+
   /* SSE 4.2 -- no rules */
+  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target,
+      ORC_TARGET_MMX_SSE4_2);
+
+  REG(cmpgtsq);
 
   /* SSE 4a -- no rules */
 }
