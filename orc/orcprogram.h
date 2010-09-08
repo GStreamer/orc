@@ -231,6 +231,8 @@ struct _OrcVariable {
   int aligned_data;
   int param_type;
   int load_dest;
+  int update_type;
+  int need_offset_reg;
 };
 
 /**

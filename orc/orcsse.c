@@ -244,6 +244,56 @@ orc_x86_emit_mov_memoffset_sse (OrcCompiler *compiler, int size, int offset,
 }
 
 void
+orc_x86_emit_mov_memindex_sse (OrcCompiler *compiler, int size, int offset,
+    int reg1, int regindex, int shift, int reg2, int is_aligned)
+{
+  switch (size) {
+    case 4:
+      ORC_ASM_CODE(compiler,"  movd %d(%%%s,%%%s,%d), %%%s\n", offset,
+          orc_x86_get_regname_ptr(compiler, reg1),
+          orc_x86_get_regname_ptr(compiler, regindex), 1<<shift,
+          orc_x86_get_regname_sse(reg2));
+      *compiler->codeptr++ = 0x66;
+      orc_x86_emit_rex(compiler, 0, reg2, 0, reg1);
+      *compiler->codeptr++ = 0x0f;
+      *compiler->codeptr++ = 0x6e;
+      break;
+    case 8:
+      ORC_ASM_CODE(compiler,"  movq %d(%%%s,%%%s,%d), %%%s\n", offset, orc_x86_get_regname_ptr(compiler, reg1),
+          orc_x86_get_regname_ptr(compiler, regindex), 1<<shift,
+          orc_x86_get_regname_sse(reg2));
+      *compiler->codeptr++ = 0xf3;
+      orc_x86_emit_rex(compiler, 0, reg2, 0, reg1);
+      *compiler->codeptr++ = 0x0f;
+      *compiler->codeptr++ = 0x7e;
+      break;
+    case 16:
+      if (is_aligned) {
+        ORC_ASM_CODE(compiler,"  movdqa %d(%%%s,%%%s,%d), %%%s\n", offset, orc_x86_get_regname_ptr(compiler, reg1),
+            orc_x86_get_regname_ptr(compiler, regindex), 1<<shift,
+            orc_x86_get_regname_sse(reg2));
+        *compiler->codeptr++ = 0x66;
+        orc_x86_emit_rex(compiler, 0, reg2, 0, reg1);
+        *compiler->codeptr++ = 0x0f;
+        *compiler->codeptr++ = 0x6f;
+      } else {
+        ORC_ASM_CODE(compiler,"  movdqu %d(%%%s,%%%s,%d), %%%s\n", offset, orc_x86_get_regname_ptr(compiler, reg1),
+            orc_x86_get_regname_ptr(compiler, regindex), 1<<shift,
+            orc_x86_get_regname_sse(reg2));
+        *compiler->codeptr++ = 0xf3;
+        orc_x86_emit_rex(compiler, 0, reg2, 0, reg1);
+        *compiler->codeptr++ = 0x0f;
+        *compiler->codeptr++ = 0x6f;
+      }
+      break;
+    default:
+      ORC_COMPILER_ERROR(compiler, "bad size");
+      break;
+  }
+  orc_x86_emit_modrm_memindex (compiler, reg2, offset, reg1, regindex, shift);
+}
+
+void
 orc_x86_emit_mov_sse_memoffset (OrcCompiler *compiler, int size, int reg1, int offset,
     int reg2, int aligned, int uncached)
 {

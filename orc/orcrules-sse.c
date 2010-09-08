@@ -97,6 +97,8 @@ sse_rule_loadX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
           src->size << compiler->loop_shift);
       break;
   }
+
+  src->update_type = 2;
 }
 
 static void
@@ -150,6 +152,8 @@ sse_rule_loadoffX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
           src->size << compiler->loop_shift);
       break;
   }
+
+  src->update_type = 2;
 }
 
 static void
@@ -161,7 +165,7 @@ sse_rule_loadupib (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int offset = 0;
   int tmp = orc_compiler_get_temp_reg (compiler);
 
-  offset = compiler->offset * src->size;
+  offset = (compiler->offset * src->size) >> 1;
   if (src->ptr_register == 0) {
     int i = insn->src_args[0];
     orc_x86_emit_mov_memoffset_reg (compiler, compiler->is_64bit ? 8 : 4,
@@ -209,17 +213,7 @@ sse_rule_loadupib (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   orc_sse_emit_pavgb (compiler, dest->alloc, tmp);
   orc_sse_emit_punpcklbw (compiler, tmp, dest->alloc);
 
-  /* FIXME hack */
-  if (src->ptr_register) {
-    orc_x86_emit_add_imm_reg (compiler, compiler->is_64bit ? 8 : 4,
-        -(src->size << compiler->loop_shift)>>1,
-        src->ptr_register, FALSE);
-  } else {
-    orc_x86_emit_add_imm_memoffset (compiler, compiler->is_64bit ? 8 : 4,
-        -(src->size << compiler->loop_shift)>>1,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[insn->src_args[0]]),
-        compiler->exec_reg);
-  }
+  src->update_type = 1;
 }
 
 static void
@@ -230,7 +224,7 @@ sse_rule_loadupdb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int ptr_reg;
   int offset = 0;
 
-  offset = compiler->offset * src->size;
+  offset = (compiler->offset * src->size) >> 1;
   if (src->ptr_register == 0) {
     int i = insn->src_args[0];
     orc_x86_emit_mov_memoffset_reg (compiler, compiler->is_64bit ? 8 : 4,
@@ -278,17 +272,8 @@ sse_rule_loadupdb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
       orc_sse_emit_punpckldq (compiler, dest->alloc, dest->alloc);
       break;
   }
-  /* FIXME hack */
-  if (src->ptr_register) {
-    orc_x86_emit_add_imm_reg (compiler, compiler->is_64bit ? 8 : 4,
-        -(src->size << compiler->loop_shift)>>1,
-        src->ptr_register, FALSE);
-  } else {
-    orc_x86_emit_add_imm_memoffset (compiler, compiler->is_64bit ? 8 : 4,
-        -(src->size << compiler->loop_shift)>>1,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[insn->src_args[0]]),
-        compiler->exec_reg);
-  }
+
+  src->update_type = 1;
 }
 
 static void
@@ -347,6 +332,110 @@ sse_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
       ORC_COMPILER_ERROR(compiler,"bad size");
       break;
   }
+
+  dest->update_type = 2;
+}
+
+#if try1
+static void
+sse_rule_ldresnearl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  OrcVariable *src = compiler->vars + insn->src_args[0];
+  OrcVariable *dest = compiler->vars + insn->dest_args[0];
+  int tmp = orc_compiler_get_temp_reg (compiler);
+  int tmp2 = orc_compiler_get_temp_reg (compiler);
+  int tmpc;
+
+  orc_x86_emit_mov_sse_reg (compiler, X86_XMM6, compiler->gp_tmpreg);
+  orc_x86_emit_sar_imm_reg (compiler, 4, 16, compiler->gp_tmpreg);
+
+  ORC_ASM_CODE(compiler,"  movdqu 0(%%%s,%%%s,4), %%%s\n",
+      orc_x86_get_regname_ptr(compiler, src->ptr_register),
+      orc_x86_get_regname_ptr(compiler, compiler->gp_tmpreg),
+      orc_x86_get_regname_sse(dest->alloc));
+  *compiler->codeptr++ = 0xf3;
+  orc_x86_emit_rex(compiler, 0, dest->ptr_register, 0, dest->alloc);
+  *compiler->codeptr++ = 0x0f;
+  *compiler->codeptr++ = 0x6f;
+  orc_x86_emit_modrm_memindex (compiler, dest->alloc, 0,
+      src->ptr_register, compiler->gp_tmpreg, 2);
+
+#if 0
+  orc_sse_emit_movdqa (compiler, X86_XMM6, tmp);
+  orc_sse_emit_pslld (compiler, 10, tmp);
+  orc_sse_emit_psrld (compiler, 26, tmp);
+  orc_sse_emit_pslld (compiler, 2, tmp);
+
+  orc_sse_emit_movdqa (compiler, tmp, tmp2);
+  orc_sse_emit_pslld (compiler, 8, tmp2);
+  orc_sse_emit_por (compiler, tmp2, tmp);
+  orc_sse_emit_movdqa (compiler, tmp, tmp2);
+  orc_sse_emit_pslld (compiler, 16, tmp2);
+  orc_sse_emit_por (compiler, tmp2, tmp);
+#else
+  orc_sse_emit_movdqa (compiler, X86_XMM6, tmp);
+  tmpc = orc_compiler_get_constant_long (compiler, 0x02020202,
+      0x06060606, 0x0a0a0a0a, 0x0e0e0e0e);
+  orc_sse_emit_pshufb (compiler, tmpc, tmp);
+  orc_sse_emit_paddb (compiler, tmp, tmp);
+  orc_sse_emit_paddb (compiler, tmp, tmp);
+#endif
+
+  orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(0,0,0,0), tmp, tmp2);
+  orc_sse_emit_psubd (compiler, tmp2, tmp);
+  tmpc = orc_compiler_get_constant (compiler, 4, 0x03020100);
+  orc_sse_emit_paddd (compiler, tmpc, tmp);
+
+  orc_sse_emit_pshufb (compiler, tmp, dest->alloc);
+
+  orc_sse_emit_movdqa (compiler, X86_XMM7, tmp);
+  orc_sse_emit_pslld (compiler, compiler->loop_shift, tmp);
+
+  orc_sse_emit_paddd (compiler, tmp, X86_XMM6);
+
+  src->update_type = 0;
+}
+#endif
+
+static void
+sse_rule_ldresnearl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  OrcVariable *src = compiler->vars + insn->src_args[0];
+  int increment_var = insn->src_args[2];
+  OrcVariable *dest = compiler->vars + insn->dest_args[0];
+  int tmp = orc_compiler_get_temp_reg (compiler);
+  int i;
+
+  for(i=0;i<(1<<compiler->loop_shift);i++){
+    if (i == 0) {
+      orc_x86_emit_mov_memoffset_sse (compiler, 4, 0,
+          src->ptr_register, dest->alloc, FALSE);
+    } else {
+      orc_x86_emit_mov_memindex_sse (compiler, 4, 0,
+          src->ptr_register, compiler->gp_tmpreg, 2, tmp, FALSE);
+      orc_sse_emit_pslldq (compiler, 4*i, tmp);
+      orc_sse_emit_por (compiler, tmp, dest->alloc);
+    }
+
+    if (compiler->vars[increment_var].vartype == ORC_VAR_TYPE_PARAM) {
+      orc_x86_emit_add_memoffset_reg (compiler, 4,
+          (int)ORC_STRUCT_OFFSET(OrcExecutor, params[increment_var]),
+          compiler->exec_reg, src->ptr_offset);
+    } else {
+      orc_x86_emit_add_imm_reg (compiler, 4,
+          compiler->vars[increment_var].value.i,
+          src->ptr_offset, FALSE);
+    }
+
+    orc_x86_emit_mov_reg_reg (compiler, 4, src->ptr_offset, compiler->gp_tmpreg);
+    orc_x86_emit_sar_imm_reg (compiler, 4, 16, compiler->gp_tmpreg);
+  }
+
+  orc_x86_emit_add_reg_reg_shift (compiler, 4, compiler->gp_tmpreg,
+      src->ptr_register, 2);
+  orc_x86_emit_and_imm_reg (compiler, 4, 0xffff, src->ptr_offset);
+
+  src->update_type = 0;
 }
 
 static void
@@ -2194,6 +2283,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "loadpw", sse_rule_loadpX, (void *)2);
   orc_rule_register (rule_set, "loadpl", sse_rule_loadpX, (void *)4);
   orc_rule_register (rule_set, "loadpq", sse_rule_loadpX, (void *)8);
+  orc_rule_register (rule_set, "ldresnearl", sse_rule_ldresnearl, NULL);
 
   orc_rule_register (rule_set, "storeb", sse_rule_storeX, NULL);
   orc_rule_register (rule_set, "storew", sse_rule_storeX, NULL);

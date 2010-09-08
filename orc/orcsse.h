@@ -41,6 +41,8 @@ typedef enum {
 const char * orc_x86_get_regname_sse(int i);
 void orc_x86_emit_mov_memoffset_sse (OrcCompiler *compiler, int size, int offset,
     int reg1, int reg2, int is_aligned);
+void orc_x86_emit_mov_memindex_sse (OrcCompiler *compiler, int size, int offset,
+    int reg1, int regindex, int shift, int reg2, int is_aligned);
 void orc_x86_emit_mov_sse_memoffset (OrcCompiler *compiler, int size, int reg1, int offset,
     int reg2, int aligned, int uncached);
 void orc_x86_emit_mov_sse_reg_reg (OrcCompiler *compiler, int reg1, int reg2);

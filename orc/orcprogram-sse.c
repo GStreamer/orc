@@ -254,6 +254,20 @@ orc_compiler_sse_init (OrcCompiler *compiler)
   }
   compiler->alloc_loop_counter = TRUE;
   compiler->allow_gp_on_stack = TRUE;
+
+  {
+    for(i=0;i<compiler->n_insns;i++){
+      OrcInstruction *insn = compiler->insns + i;
+      OrcStaticOpcode *opcode = insn->opcode;
+
+      if (strcmp (opcode->name, "ldreslinb") == 0 ||
+          strcmp (opcode->name, "ldreslinl") == 0 ||
+          strcmp (opcode->name, "ldresnearb") == 0 ||
+          strcmp (opcode->name, "ldresnearl") == 0) {
+        compiler->vars[insn->src_args[0]].need_offset_reg = TRUE;
+      }
+    }
+  }
 }
 
 void
@@ -465,6 +479,29 @@ sse_load_constants_outer (OrcCompiler *compiler)
       }
     }
   }
+
+  {
+    for(i=0;i<compiler->n_insns;i++){
+      OrcInstruction *insn = compiler->insns + i;
+      OrcStaticOpcode *opcode = insn->opcode;
+
+      if (strcmp (opcode->name, "ldreslinb") == 0 ||
+          strcmp (opcode->name, "ldreslinl") == 0 ||
+          strcmp (opcode->name, "ldresnearb") == 0 ||
+          strcmp (opcode->name, "ldresnearl") == 0) {
+        if (compiler->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
+          orc_x86_emit_mov_memoffset_reg (compiler, 4,
+              (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[1]]),
+              compiler->exec_reg,
+              compiler->vars[insn->src_args[0]].ptr_offset);
+        } else {
+          orc_x86_emit_mov_imm_reg (compiler, 4,
+              compiler->vars[insn->src_args[1]].value.i,
+              compiler->vars[insn->src_args[0]].ptr_offset);
+        }
+      }
+    }
+  }
 }
 
 void
@@ -517,6 +554,10 @@ sse_add_strides (OrcCompiler *compiler)
         orc_x86_emit_add_reg_memoffset (compiler, compiler->is_64bit ? 8 : 4,
             compiler->gp_tmpreg,
             (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]), compiler->exec_reg);
+
+        if (compiler->vars[i].ptr_register == 0) {
+          ORC_COMPILER_ERROR(compiler, "unimplemented: stride on mem pointer");
+        }
         break;
       case ORC_VAR_TYPE_ACCUMULATOR:
         break;
@@ -955,18 +996,31 @@ orc_sse_emit_loop (OrcCompiler *compiler, int offset, int update)
 
   if (update) {
     for(k=0;k<ORC_N_COMPILER_VARIABLES;k++){
-      if (compiler->vars[k].name == NULL) continue;
-      if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
-          compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
-        if (compiler->vars[k].ptr_register) {
-          orc_x86_emit_add_imm_reg (compiler, compiler->is_64bit ? 8 : 4,
-              compiler->vars[k].size * update,
-              compiler->vars[k].ptr_register, FALSE);
+      OrcVariable *var = compiler->vars + k;
+
+      if (var->name == NULL) continue;
+      if (var->vartype == ORC_VAR_TYPE_SRC ||
+          var->vartype == ORC_VAR_TYPE_DEST) {
+        int offset;
+        if (var->update_type == 0) {
+          offset = 0;
+        } else if (var->update_type == 1) {
+          offset = (var->size * update) >> 1;
         } else {
-          orc_x86_emit_add_imm_memoffset (compiler, compiler->is_64bit ? 8 : 4,
-              compiler->vars[k].size * update,
-              (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]),
-              compiler->exec_reg);
+          offset = var->size * update;
+        }
+
+        if (offset != 0) {
+          if (compiler->vars[k].ptr_register) {
+            orc_x86_emit_add_imm_reg (compiler, compiler->is_64bit ? 8 : 4,
+                offset,
+                compiler->vars[k].ptr_register, FALSE);
+          } else {
+            orc_x86_emit_add_imm_memoffset (compiler, compiler->is_64bit ? 8 : 4,
+                offset,
+                (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]),
+                compiler->exec_reg);
+          }
         }
       }
     }

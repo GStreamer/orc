@@ -168,6 +168,26 @@ orc_x86_emit_modrm_memoffset (OrcCompiler *compiler, int reg1, int offset, int r
   }
 }
 
+void orc_x86_emit_modrm_memindex (OrcCompiler *compiler, int reg1, int offset,
+    int reg2, int regindex, int shift)
+{
+  if (offset == 0) {
+    *compiler->codeptr++ = X86_MODRM(0, 4, reg1);
+    *compiler->codeptr++ = X86_SIB(shift, regindex, reg2);
+  } else if (offset >= -128 && offset < 128) {
+    *compiler->codeptr++ = X86_MODRM(1, 4, reg1);
+    *compiler->codeptr++ = X86_SIB(shift, regindex, reg2);
+    *compiler->codeptr++ = (offset & 0xff);
+  } else {
+    *compiler->codeptr++ = X86_MODRM(2, 4, reg1);
+    *compiler->codeptr++ = X86_SIB(shift, regindex, reg2);
+    *compiler->codeptr++ = (offset & 0xff);
+    *compiler->codeptr++ = ((offset>>8) & 0xff);
+    *compiler->codeptr++ = ((offset>>16) & 0xff);
+    *compiler->codeptr++ = ((offset>>24) & 0xff);
+  }
+}
+
 void
 orc_x86_emit_modrm_reg (OrcCompiler *compiler, int reg1, int reg2)
 {
@@ -475,7 +495,7 @@ orc_x86_emit_add_imm_reg (OrcCompiler *compiler, int size, int value, int reg, o
 {
   if (!record) {
     if (size == 4 && !compiler->is_64bit) {
-      ORC_ASM_CODE(compiler,"  lea %d(%%%s), %%%s\n", value,
+      ORC_ASM_CODE(compiler,"  leal %d(%%%s), %%%s\n", value,
           orc_x86_get_regname(reg), orc_x86_get_regname(reg));
       orc_x86_emit_rex(compiler, size, 0, 0, reg);
       *compiler->codeptr++ = 0x8d;
@@ -483,7 +503,7 @@ orc_x86_emit_add_imm_reg (OrcCompiler *compiler, int size, int value, int reg, o
       return;
     }
     if (size == 8 && compiler->is_64bit) {
-      ORC_ASM_CODE(compiler,"  lea %d(%%%s), %%%s\n", value,
+      ORC_ASM_CODE(compiler,"  leaq %d(%%%s), %%%s\n", value,
           orc_x86_get_regname_64(reg), orc_x86_get_regname_64(reg));
       orc_x86_emit_rex(compiler, size, reg, 0, reg);
       *compiler->codeptr++ = 0x8d;
@@ -516,6 +536,27 @@ orc_x86_emit_add_imm_reg (OrcCompiler *compiler, int size, int value, int reg, o
       *compiler->codeptr++ = ((value>>24) & 0xff);
     }
   }
+}
+
+void
+orc_x86_emit_add_reg_reg_shift (OrcCompiler *compiler, int size, int reg1,
+    int reg2, int shift)
+{
+  if (size == 4) {
+    ORC_ASM_CODE(compiler,"  leal (%%%s, %%%s, %d), %%%s\n",
+        orc_x86_get_regname(reg2),
+        orc_x86_get_regname(reg1), 1<<shift,
+        orc_x86_get_regname(reg2));
+  } else {
+    ORC_ASM_CODE(compiler,"  leaq (%%%s, %%%s, %d), %%%s\n",
+        orc_x86_get_regname(reg2),
+        orc_x86_get_regname(reg1), 1<<shift,
+        orc_x86_get_regname(reg2));
+  }
+
+  orc_x86_emit_rex(compiler, size, reg2, 0, reg1);
+  *compiler->codeptr++ = 0x8d;
+  orc_x86_emit_modrm_memindex (compiler, reg2, 0, reg2, reg1, shift);
 }
 
 void
@@ -569,6 +610,30 @@ orc_x86_emit_imul_memoffset_reg (OrcCompiler *compiler, int size,
   orc_x86_emit_rex(compiler, size, 0, 0, reg);
   *compiler->codeptr++ = 0x0f;
   *compiler->codeptr++ = 0xaf;
+  orc_x86_emit_modrm_memoffset (compiler, destreg, offset, reg);
+}
+
+void
+orc_x86_emit_add_memoffset_reg (OrcCompiler *compiler, int size,
+    int offset, int reg, int destreg)
+{
+  if (size == 2) {
+    ORC_ASM_CODE(compiler,"  addw %d(%%%s), %%%s\n", offset,
+        orc_x86_get_regname_ptr(compiler, reg),
+        orc_x86_get_regname_16(destreg));
+    *compiler->codeptr++ = 0x66;
+  } else if (size == 4) {
+    ORC_ASM_CODE(compiler,"  addl %d(%%%s), %%%s\n", offset,
+        orc_x86_get_regname_ptr(compiler, reg),
+        orc_x86_get_regname(destreg));
+  } else {
+    ORC_ASM_CODE(compiler,"  add %d(%%%s), %%%s\n", offset,
+        orc_x86_get_regname_ptr(compiler, reg),
+        orc_x86_get_regname_64(destreg));
+  }
+
+  orc_x86_emit_rex(compiler, size, 0, 0, reg);
+  *compiler->codeptr++ = 0x03;
   orc_x86_emit_modrm_memoffset (compiler, destreg, offset, reg);
 }
 
