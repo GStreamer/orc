@@ -444,7 +444,8 @@ sse_rule_ldresnearl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     orc_x86_emit_sar_imm_reg (compiler, 4, 16, compiler->gp_tmpreg);
   }
 
-  orc_x86_emit_add_reg_reg_shift (compiler, 4, compiler->gp_tmpreg,
+  orc_x86_emit_add_reg_reg_shift (compiler, compiler->is_64bit ? 8 : 4,
+      compiler->gp_tmpreg,
       src->ptr_register, 2);
   orc_x86_emit_and_imm_reg (compiler, 4, 0xffff, src->ptr_offset);
 
