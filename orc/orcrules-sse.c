@@ -454,7 +454,7 @@ sse_rule_ldreslinl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int tmp2 = orc_compiler_get_temp_reg (compiler);
   int i;
 
-  for(i=0;i<(1<<compiler->loop_shift);i++){
+  if (compiler->loop_shift == 0) {
     orc_x86_emit_mov_memoffset_sse (compiler, 8, 0,
         src->ptr_register, tmp, FALSE);
 
@@ -471,17 +471,9 @@ sse_rule_ldreslinl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     orc_sse_emit_pxor (compiler, tmp2, tmp2);
     orc_sse_emit_packsswb (compiler, tmp2, tmp);
 
-    if (i == 0) {
-      orc_x86_emit_mov_memoffset_sse (compiler, 4, 0,
-          src->ptr_register, dest->alloc, FALSE);
-      orc_sse_emit_paddb (compiler, tmp, dest->alloc);
-    } else {
-      orc_x86_emit_mov_memoffset_sse (compiler, 4, 0,
-          src->ptr_register, tmp2, FALSE);
-      orc_sse_emit_paddb (compiler, tmp, tmp2);
-      orc_sse_emit_pslldq (compiler, 4*i, tmp2);
-      orc_sse_emit_por (compiler, tmp2, dest->alloc);
-    }
+    orc_x86_emit_mov_memoffset_sse (compiler, 4, 0,
+        src->ptr_register, dest->alloc, FALSE);
+    orc_sse_emit_paddb (compiler, tmp, dest->alloc);
 
     if (compiler->vars[increment_var].vartype == ORC_VAR_TYPE_PARAM) {
       orc_x86_emit_add_memoffset_reg (compiler, 4,
@@ -499,6 +491,89 @@ sse_rule_ldreslinl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     orc_x86_emit_add_reg_reg_shift (compiler, 4, compiler->gp_tmpreg,
         src->ptr_register, 2);
     orc_x86_emit_and_imm_reg (compiler, 4, 0xffff, src->ptr_offset);
+  } else {
+    int tmp3 = orc_compiler_get_temp_reg (compiler);
+    int tmp4 = orc_compiler_get_temp_reg (compiler);
+
+    for(i=0;i<(1<<compiler->loop_shift);i+=2){
+      orc_x86_emit_mov_memoffset_sse (compiler, 8, 0,
+          src->ptr_register, tmp, FALSE);
+      orc_x86_emit_mov_reg_sse (compiler, src->ptr_offset, tmp4);
+
+      if (compiler->vars[increment_var].vartype == ORC_VAR_TYPE_PARAM) {
+        orc_x86_emit_add_memoffset_reg (compiler, 4,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[increment_var]),
+            compiler->exec_reg, src->ptr_offset);
+      } else {
+        orc_x86_emit_add_imm_reg (compiler, 4,
+            compiler->vars[increment_var].value.i,
+            src->ptr_offset, FALSE);
+      }
+      orc_x86_emit_mov_reg_reg (compiler, 4, src->ptr_offset, compiler->gp_tmpreg);
+      orc_x86_emit_sar_imm_reg (compiler, 4, 16, compiler->gp_tmpreg);
+
+      orc_x86_emit_mov_memindex_sse (compiler, 8, 0,
+          src->ptr_register, compiler->gp_tmpreg, 2, tmp2, FALSE);
+
+      orc_sse_emit_punpckldq (compiler, tmp2, tmp);
+      orc_sse_emit_movdqa (compiler, tmp, tmp2);
+      if (i == 0) {
+        orc_sse_emit_movdqa (compiler, tmp, dest->alloc);
+      } else {
+        orc_sse_emit_punpcklqdq (compiler, tmp, dest->alloc);
+      }
+
+      orc_sse_emit_pxor (compiler, tmp3, tmp3);
+      orc_sse_emit_punpcklbw (compiler, tmp3, tmp);
+      orc_sse_emit_punpckhbw (compiler, tmp3, tmp2);
+
+      orc_sse_emit_psubw (compiler, tmp, tmp2);
+
+      ORC_ASM_CODE(compiler,"  pinsrw $%d, %%%s, %%%s\n", 1,
+          orc_x86_get_regname (src->ptr_offset),
+          orc_x86_get_regname_sse(tmp4));
+      *compiler->codeptr++ = 0x66;
+      orc_x86_emit_rex (compiler, 0, tmp4, 0, src->ptr_offset);
+      *compiler->codeptr++ = 0x0f;
+      *compiler->codeptr++ = 0xc4;
+      orc_x86_emit_modrm_reg (compiler, src->ptr_offset, tmp4);
+      *compiler->codeptr++ = 1;
+
+#if 0
+      orc_sse_emit_punpcklwd (compiler, tmp4, tmp4);
+      orc_sse_emit_punpckldq (compiler, tmp4, tmp4);
+#else
+      orc_sse_emit_pshuflw (compiler, ORC_SSE_SHUF(1,1,0,0), tmp4, tmp4);
+      orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(1,1,0,0), tmp4, tmp4);
+#endif
+      orc_sse_emit_psrlw (compiler, 8, tmp4);
+      orc_sse_emit_pmullw (compiler, tmp4, tmp2);
+      orc_sse_emit_psraw (compiler, 8, tmp2);
+      orc_sse_emit_pxor (compiler, tmp, tmp);
+      orc_sse_emit_packsswb (compiler, tmp, tmp2);
+
+      if (i != 0) {
+        orc_sse_emit_pslldq (compiler, 8, tmp2);
+      }
+      orc_sse_emit_paddb (compiler, tmp2, dest->alloc);
+
+      if (compiler->vars[increment_var].vartype == ORC_VAR_TYPE_PARAM) {
+        orc_x86_emit_add_memoffset_reg (compiler, 4,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[increment_var]),
+            compiler->exec_reg, src->ptr_offset);
+      } else {
+        orc_x86_emit_add_imm_reg (compiler, 4,
+            compiler->vars[increment_var].value.i,
+            src->ptr_offset, FALSE);
+      }
+
+      orc_x86_emit_mov_reg_reg (compiler, 4, src->ptr_offset, compiler->gp_tmpreg);
+      orc_x86_emit_sar_imm_reg (compiler, 4, 16, compiler->gp_tmpreg);
+
+      orc_x86_emit_add_reg_reg_shift (compiler, 4, compiler->gp_tmpreg,
+          src->ptr_register, 2);
+      orc_x86_emit_and_imm_reg (compiler, 4, 0xffff, src->ptr_offset);
+    }
   }
 
   src->update_type = 0;
