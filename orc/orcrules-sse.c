@@ -27,6 +27,10 @@ sse_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   if (src->vartype == ORC_VAR_TYPE_PARAM) {
     reg = dest->alloc;
 
+    if (size == 8 && src->size == 8) {
+      ORC_COMPILER_ERROR(compiler,"64-bit parameters not implemented");
+    }
+
     orc_x86_emit_mov_memoffset_sse (compiler, 4,
         (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[0]]),
         compiler->exec_reg, reg, FALSE);
@@ -46,6 +50,9 @@ sse_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     }
 #endif
   } else if (src->vartype == ORC_VAR_TYPE_CONST) {
+    if (size == 8 && src->size == 8) {
+      ORC_COMPILER_ERROR(compiler,"64-bit constants not implemented");
+    }
     sse_load_constant (compiler, dest->alloc, size, src->value.i);
   } else {
     ORC_ASSERT(0);

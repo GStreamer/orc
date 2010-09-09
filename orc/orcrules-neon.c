@@ -790,6 +790,9 @@ neon_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     } else if (size == 4) {
       orc_neon_emit_loadil (compiler, dest->alloc, src->value.i);
     } else if (size == 8) {
+      if (src->size == 8) {
+        ORC_COMPILER_ERROR(compiler,"64-bit constants not implemented");
+      }
       orc_neon_emit_loadiq (compiler, dest->alloc, src->value.i);
     } else {
       ORC_PROGRAM_ERROR(compiler,"unimplemented");
@@ -802,6 +805,9 @@ neon_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     } else if (size == 4) {
       orc_neon_emit_loadpl (compiler, dest->alloc, insn->src_args[0]);
     } else if (size == 8) {
+      if (src->size == 8) {
+        ORC_COMPILER_ERROR(compiler,"64-bit parameters not implemented");
+      }
       orc_neon_emit_loadpq (compiler, dest->alloc, insn->src_args[0]);
     } else {
       ORC_PROGRAM_ERROR(compiler,"unimplemented");
