@@ -837,6 +837,7 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
   }
   for(i=0;i<8;i++){
     var = &p->vars[ORC_VAR_C1 + i];
+    if (var->size == 0) continue;
     if (var->size <= 4) {
       fprintf(output, "      orc_program_add_constant (p, %d, 0x%08x, \"%s\");\n",
           var->size, (int)var->value.i, varnames[ORC_VAR_C1 + i]);
