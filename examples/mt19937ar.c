@@ -41,12 +41,11 @@
    email: m-mat @ math.sci.hiroshima-u.ac.jp (remove space)
 */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <stdio.h>
 #include <orc/orc.h>
+#include <stdlib.h>
+#include <string.h>
+#include "mt19937arorc.h"
 
 /* Period parameters */  
 #define N 624
@@ -55,29 +54,82 @@
 #define UPPER_MASK 0x80000000UL /* most significant w-r bits */
 #define LOWER_MASK 0x7fffffffUL /* least significant r bits */
 
+static unsigned long mt[N]; /* the array for the state vector  */
+static int mti=N+1; /* mti==N+1 means mt[N] is not initialized */
 
-/* mag01[x] = x * MATRIX_A  for x=0,1 */
-static const orc_uint32 mag01[2]={0x0UL, MATRIX_A};
-
-void
-mt19937_ref (orc_uint32 *d, orc_uint32 *mt)
+/* initializes mt[N] with a seed */
+void init_genrand(unsigned long s)
 {
-  orc_uint32 y;
-  int kk;
+    mt[0]= s & 0xffffffffUL;
+    for (mti=1; mti<N; mti++) {
+        mt[mti] = 
+	    (1812433253UL * (mt[mti-1] ^ (mt[mti-1] >> 30)) + mti); 
+        /* See Knuth TAOCP Vol2. 3rd Ed. P.106 for multiplier. */
+        /* In the previous versions, MSBs of the seed affect   */
+        /* only MSBs of the array mt[].                        */
+        /* 2002/01/09 modified by Makoto Matsumoto             */
+        mt[mti] &= 0xffffffffUL;
+        /* for >32 bit machines */
+    }
+}
 
-  for (kk=0;kk<N-M;kk++) {
-      y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
-      mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1UL];
-  }
-  for (;kk<N-1;kk++) {
-      y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
-      mt[kk] = mt[kk+(M-N)] ^ (y >> 1) ^ mag01[y & 0x1UL];
-  }
-  y = (mt[N-1]&UPPER_MASK)|(mt[0]&LOWER_MASK);
-  mt[N-1] = mt[M-1] ^ (y >> 1) ^ mag01[y & 0x1UL];
+/* initialize by an array with array-length */
+/* init_key is the array for initializing keys */
+/* key_length is its length */
+/* slight change for C++, 2004/2/26 */
+void init_by_array(orc_uint32 init_key[], int key_length)
+{
+    int i, j, k;
+    init_genrand(19650218UL);
+    i=1; j=0;
+    k = (N>key_length ? N : key_length);
+    for (; k; k--) {
+        mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1664525UL))
+          + init_key[j] + j; /* non linear */
+        mt[i] &= 0xffffffffUL; /* for WORDSIZE > 32 machines */
+        i++; j++;
+        if (i>=N) { mt[0] = mt[N-1]; i=1; }
+        if (j>=key_length) j=0;
+    }
+    for (k=N-1; k; k--) {
+        mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1566083941UL))
+          - i; /* non linear */
+        mt[i] &= 0xffffffffUL; /* for WORDSIZE > 32 machines */
+        i++;
+        if (i>=N) { mt[0] = mt[N-1]; i=1; }
+    }
 
-  for(kk=0;kk<N;kk++){
-    y = mt[kk];
+    mt[0] = 0x80000000UL; /* MSB is 1; assuring non-zero initial array */ 
+}
+
+/* generates a random number on [0,0xffffffff]-interval */
+unsigned long genrand_int32(void)
+{
+    unsigned long y;
+    static unsigned long mag01[2]={0x0UL, MATRIX_A};
+    /* mag01[x] = x * MATRIX_A  for x=0,1 */
+
+    if (mti >= N) { /* generate N words at one time */
+        int kk;
+
+        if (mti == N+1)   /* if init_genrand() has not been called, */
+            init_genrand(5489UL); /* a default initial seed is used */
+
+        for (kk=0;kk<N-M;kk++) {
+            y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
+            mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1UL];
+        }
+        for (;kk<N-1;kk++) {
+            y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
+            mt[kk] = mt[kk+(M-N)] ^ (y >> 1) ^ mag01[y & 0x1UL];
+        }
+        y = (mt[N-1]&UPPER_MASK)|(mt[0]&LOWER_MASK);
+        mt[N-1] = mt[M-1] ^ (y >> 1) ^ mag01[y & 0x1UL];
+
+        mti = 0;
+    }
+  
+    y = mt[mti++];
 
     /* Tempering */
     y ^= (y >> 11);
@@ -85,78 +137,178 @@ mt19937_ref (orc_uint32 *d, orc_uint32 *mt)
     y ^= (y << 15) & 0xefc60000UL;
     y ^= (y >> 18);
 
-    d[kk] = y;
+    return y;
+}
+
+/* Orc version */
+
+typedef struct _OrcRandomContext OrcRandomContext;
+struct _OrcRandomContext {
+  orc_uint32 d[N];
+  orc_uint32 mt[N+1];
+  int mti;
+};
+
+OrcRandomContext *
+orc_random_context_new (void)
+{
+  OrcRandomContext *context;
+  context = malloc(sizeof(OrcRandomContext));
+  memset (context, 0, sizeof(OrcRandomContext));
+  context->mti = N+1;
+  return context;
+}
+
+void
+orc_random_init_genrand(OrcRandomContext *context, orc_uint32 s)
+{
+  orc_uint32 *mt = context->mt;
+  int mti;
+
+  mt[0] = s;
+  for (mti=1; mti<N; mti++) {
+    mt[mti] = 
+      (1812433253UL * (mt[mti-1] ^ (mt[mti-1] >> 30)) + mti); 
+    /* See Knuth TAOCP Vol2. 3rd Ed. P.106 for multiplier. */
+  }
+  context->mti = mti;
+}
+
+void
+orc_random_init_by_array (OrcRandomContext *context, orc_uint32 *init_key,
+    int key_length)
+{
+  int i, j, k;
+  orc_uint32 *mt = context->mt;
+
+  orc_random_init_genrand (context, 19650218UL);
+  i=1; j=0;
+  k = (N>key_length ? N : key_length);
+  for (; k; k--) {
+    mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1664525UL))
+      + init_key[j] + j; /* non linear */
+    i++; j++;
+    if (i>=N) { mt[0] = mt[N-1]; i=1; }
+    if (j>=key_length) j=0;
+  }
+  for (k=N-1; k; k--) {
+    mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1566083941UL))
+      - i; /* non linear */
+    i++;
+    if (i>=N) { mt[0] = mt[N-1]; i=1; }
+  }
+
+  mt[0] = 0x80000000UL; /* MSB is 1; assuring non-zero initial array */ 
+}
+
+#if 0
+/* These are the functions that were converted to Orc code. */
+static void
+mix (orc_uint32 *mt, orc_uint32 *mt2, int n)
+{
+  orc_uint32 y;
+  int kk;
+
+  for (kk=0;kk<n;kk++) {
+    orc_uint32 t1;
+    orc_uint32 t2;
+
+    t1 = mt[kk]&UPPER_MASK;
+    t2 = mt[kk+1]&LOWER_MASK;
+    y = t1 | t2;
+
+    t1 = y&1;
+    t1 = (t1) ? MATRIX_A : 0;
+    y = y >> 1;
+    y ^= t1;
+
+    mt[kk] = mt2[kk] ^ y;
   }
 }
 
-
-OrcProgram *p1, *p2;
-
-void
-create_programs (void)
+static void
+temper (orc_uint32 *d, orc_uint32 *mt, int n)
 {
+  orc_uint32 y;
+  int i;
 
-  /* s1 is mt, s2 is mt+1, s3 is mt+M */
-  p1 = orc_program_new_dss (4, 4, 4);
-  orc_program_add_source (p1, 4, "s3");
+  for(i=0;i<N;i++){
+    y = mt[i];
+    y ^= (y >> 11);
+    y ^= (y << 7) & 0x9d2c5680UL;
+    y ^= (y << 15) & 0xefc60000UL;
+    y ^= (y >> 18);
+    d[i] = y;
+  }
+}
+#endif
 
-  orc_program_add_temporary (p1, 4, "t1");
-  orc_program_add_temporary (p1, 4, "t2");
-  orc_program_add_temporary (p1, 4, "y");
+static void
+update_context (OrcRandomContext *context)
+{
+  orc_uint32 *d = context->d;
+  orc_uint32 *mt = context->mt;
 
-  orc_program_add_constant (p1, 4, UPPER_MASK, "c1");
-  orc_program_add_constant (p1, 4, LOWER_MASK, "c2");
-  orc_program_add_constant (p1, 4, 1, "c3");
-  orc_program_add_constant (p1, 4, MATRIX_A, "c6");
+#if 0
+  mix (mt, mt + M, N-M);
+  mt[N] = mt[0];
+  mix (mt + N - M, mt, M);
+  temper (d, mt, N);
+#endif
 
-  orc_program_append_str (p1, "andl", "t1", "s1", "c1");
-  orc_program_append_str (p1, "andl", "t2", "s2", "c2");
-  orc_program_append_str (p1, "orl", "y", "t1", "t2");
+  mt19937ar_mix (mt, mt + 1, mt + M, N-M);
+  mt[N] = mt[0];
+  mt19937ar_mix (mt + N - M, mt + N - M + 1, mt, M);
+  mt19937ar_temper (d, mt, N);
 
-  orc_program_append_str (p1, "shrul", "t1", "y", "c3");
-  orc_program_append_str (p1, "xorl", "t2", "s3", "t1");
-  orc_program_append_str (p1, "andl", "y", "y", "c3");
-  orc_program_append_str (p1, "cmpeql", "y", "y", "c3");
-  orc_program_append_str (p1, "andl", "y", "y", "c6");
-  orc_program_append_str (p1, "xorl", "d1", "t2", "y");
-  
-  orc_program_compile (p1);
+#if 0
+  /* too many temp variables, compiles incorrectly */
+  mt19937ar_mix_temper (d, mt, mt + 1, mt + M, N-M);
+  mt[N] = mt[0];
+  mt19937ar_mix_temper (d + N - M, mt + N - M, mt + N - M + 1, mt, M);
+#endif
+}
 
+orc_uint32
+orc_random_genrand_int32 (OrcRandomContext *context)
+{
+  if (context->mti >= N) { /* generate N words at one time */
+    if (context->mti == N+1)   /* if init_genrand() has not been called, */
+      orc_random_init_genrand(context, 5489UL); /* a default initial seed is used */
 
-  p2 = orc_program_new ();
-  orc_program_add_destination (p2, 4, "d1");
-  orc_program_add_temporary (p2, 4, "y");
-  orc_program_add_temporary (p2, 4, "t1");
+    update_context (context);
 
-  orc_program_add_constant (p2, 4, 11, "c11");
-  orc_program_add_constant (p2, 4, 7, "c7");
-  orc_program_add_constant (p2, 4, 0x9d2c5680, "x1");
-  orc_program_add_constant (p2, 4, 15, "c15");
-  orc_program_add_constant (p2, 4, 0xefc60000, "x2");
-  orc_program_add_constant (p2, 4, 15, "c18");
+    context->mti = 0;
+  }
 
-  orc_program_append_str (p2, "shrul", "t1", "d1", "c11");
-  orc_program_append_str (p2, "xorl", "y", "d1", "t1");
-  orc_program_append_str (p2, "shll", "t1", "y", "c7");
-  orc_program_append_str (p2, "andl", "t1", "t1", "x1");
-  orc_program_append_str (p2, "xorl", "y", "y", "t1");
-  orc_program_append_str (p2, "shll", "t1", "y", "c15");
-  orc_program_append_str (p2, "andl", "t1", "t1", "x2");
-  orc_program_append_str (p2, "xorl", "y", "y", "t1");
-  orc_program_append_str (p2, "shrul", "t1", "y", "c18");
-  orc_program_append_str (p2, "xorl", "d1", "y", "t1");
-
-  orc_program_compile (p2);
-
+  return context->d[context->mti++];
 }
 
 
-int
-main (int argc, char *argv[])
+int main(void)
 {
-  orc_init();
+  int i;
+  orc_uint32 init[4]={0x123, 0x234, 0x345, 0x456};
+  int length=4;
+  orc_uint32 ref, test;
+  OrcRandomContext *context;
+  int error = 0;
 
-  create_programs ();
+  init_by_array(init, length);
+
+  context = orc_random_context_new ();
+  orc_random_init_by_array (context, init, length);
+
+  printf("1000 outputs of genrand_int32()\n");
+  for (i=0; i<1000; i++) {
+    ref = genrand_int32();
+    test = orc_random_genrand_int32(context);
+    printf("%08x %08x %c\n", ref, test, (ref == test) ? ' ' : '*');
+    if (ref != test) error = 1;
+  }
+  if (error) {
+    printf("FAIL\n");
+  }
 
   return 0;
 }
