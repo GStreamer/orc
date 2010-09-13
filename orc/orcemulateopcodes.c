@@ -3990,6 +3990,30 @@ emulate_swapl (OrcOpcodeExecutor *ex, int offset, int n)
 }
 
 void
+emulate_swapwl (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  orc_union32 var32;
+  orc_union32 var33;
+
+  ptr0 = (orc_union32 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union32 *)ex->src_ptrs[0];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var32 = ptr4[i];
+    /* 1: swapwl */
+    var33.i = ((var32.i&0x0000ffff) << 16) | ((var32.i&0xffff0000) >> 16);
+    /* 2: storel */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
 emulate_swapq (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
@@ -4007,6 +4031,30 @@ emulate_swapq (OrcOpcodeExecutor *ex, int offset, int n)
     var32 = ptr4[i];
     /* 1: swapq */
     var33.i = ORC_SWAP_Q(var32.i);
+    /* 2: storeq */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_swaplq (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  orc_union64 var32;
+  orc_union64 var33;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: swaplq */
+    var33.i = ((var32.i&0x00000000ffffffffULL) << 32) | ((var32.i&0xffffffff00000000ULL) >> 32);
     /* 2: storeq */
     ptr0[i] = var33;
   }

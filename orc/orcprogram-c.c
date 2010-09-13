@@ -1274,6 +1274,30 @@ c_rule_maxd (OrcCompiler *p, void *user, OrcInstruction *insn)
   ORC_ASM_CODE(p,"    }\n");
 }
 
+static void
+c_rule_swapwl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src[40];
+
+  c_get_name_int (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src, p, insn, insn->src_args[0]);
+
+  ORC_ASM_CODE(p,"    %s = ((%s&0x0000ffff) << 16) | ((%s&0xffff0000) >> 16);\n",
+      dest, src, src);
+}
+
+static void
+c_rule_swaplq (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src[40];
+
+  c_get_name_int (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src, p, insn, insn->src_args[0]);
+
+  ORC_ASM_CODE(p,"    %s = ((%s&0x00000000ffffffffULL) << 32) | ((%s&0xffffffff00000000ULL) >> 32);\n",
+      dest, src, src);
+}
+
 static OrcTarget c_target = {
   "c",
   FALSE,
@@ -1381,5 +1405,7 @@ orc_c_init (void)
   orc_rule_register (rule_set, "maxf", c_rule_maxf, NULL);
   orc_rule_register (rule_set, "mind", c_rule_mind, NULL);
   orc_rule_register (rule_set, "maxd", c_rule_maxd, NULL);
+  orc_rule_register (rule_set, "swapwl", c_rule_swapwl, NULL);
+  orc_rule_register (rule_set, "swaplq", c_rule_swaplq, NULL);
 }
 
