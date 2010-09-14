@@ -2241,3 +2241,14 @@ copyl d1, c1
 
 copyl d1, 2.0
 
+.init convert_fc32_to_int32_init
+.function convert_fc32_to_int32
+.source 8 src #one complex float
+.dest 4 dst #one complex short
+.temp 8 scaled
+x2 mulf scaled, src, 32767.0
+.temp 8 lscaled
+x2 convfl lscaled, scaled
+x2 convlw dst, lscaled
+
+
