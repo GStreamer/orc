@@ -68,7 +68,7 @@ orc_target_c_get_typedefs (void)
     "#endif\n"
     "typedef union { orc_int16 i; orc_int8 x2[2]; } orc_union16;\n"
     "typedef union { orc_int32 i; float f; orc_int16 x2[2]; orc_int8 x4[4]; } orc_union32;\n"
-    "typedef union { orc_int64 i; double f; orc_int32 x2[2]; orc_int16 x4[4]; } orc_union64;\n"
+    "typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 x4[4]; } orc_union64;\n"
     "#endif\n";
 }
 
@@ -499,9 +499,9 @@ static void
 c_get_name_float (char *name, OrcCompiler *p, OrcInstruction *insn, int var)
 {
   if (insn && (insn->flags & ORC_INSTRUCTION_FLAG_X2)) {
-    sprintf(name, "var%d[%d].x2f", var, p->unroll_index);
+    sprintf(name, "var%d.x2f[%d]", var, p->unroll_index);
   } else if (insn && (insn->flags & ORC_INSTRUCTION_FLAG_X4)) {
-    sprintf(name, "var%d[%d].x4f", var, p->unroll_index);
+    sprintf(name, "var%d.x4f[%d]", var, p->unroll_index);
   } else {
     switch (p->vars[var].vartype) {
       case ORC_VAR_TYPE_CONST:
