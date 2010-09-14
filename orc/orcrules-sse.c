@@ -1660,6 +1660,19 @@ sse_rule_swapl (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+sse_rule_swapwl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = orc_compiler_get_temp_reg (p);
+
+  orc_sse_emit_movdqa (p, src, tmp);
+  orc_sse_emit_pslld (p, 16, tmp);
+  orc_sse_emit_psrld (p, 16, dest);
+  orc_sse_emit_por (p, tmp, dest);
+}
+
+static void
 sse_rule_swapq (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[0]].alloc;
@@ -1678,6 +1691,14 @@ sse_rule_swapq (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_psllw (p, 8, tmp);
   orc_sse_emit_psrlw (p, 8, dest);
   orc_sse_emit_por (p, tmp, dest);
+}
+
+static void
+sse_rule_swaplq (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int dest = p->vars[insn->dest_args[0]].alloc;
+
+  orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,3,0,1), dest, dest);
 }
 
 #ifndef MMX
@@ -1704,6 +1725,21 @@ sse_rule_swapl_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   tmp = orc_compiler_try_get_constant_long (p,
       0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f);
+  if (tmp != ORC_REG_INVALID) {
+    orc_sse_emit_pshufb (p, tmp, dest);
+  } else {
+    sse_rule_swapl (p, user, insn);
+  }
+}
+
+static void
+sse_rule_swapwl_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp;
+
+  tmp = orc_compiler_try_get_constant_long (p,
+      0x01000302, 0x05040706, 0x09080b0a, 0x0d0c0f0e);
   if (tmp != ORC_REG_INVALID) {
     orc_sse_emit_pshufb (p, tmp, dest);
   } else {
@@ -2650,7 +2686,9 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "absl", sse_rule_absl_slow, NULL);
   orc_rule_register (rule_set, "swapw", sse_rule_swapw, NULL);
   orc_rule_register (rule_set, "swapl", sse_rule_swapl, NULL);
+  orc_rule_register (rule_set, "swapwl", sse_rule_swapwl, NULL);
   orc_rule_register (rule_set, "swapq", sse_rule_swapq, NULL);
+  orc_rule_register (rule_set, "swaplq", sse_rule_swaplq, NULL);
   orc_rule_register (rule_set, "splitql", sse_rule_splitql, NULL);
   orc_rule_register (rule_set, "splitlw", sse_rule_splitlw, NULL);
   orc_rule_register (rule_set, "splitwb", sse_rule_splitwb, NULL);
@@ -2694,6 +2732,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
 #ifndef MMX
   orc_rule_register (rule_set, "swapw", sse_rule_swapw_ssse3, NULL);
   orc_rule_register (rule_set, "swapl", sse_rule_swapl_ssse3, NULL);
+  orc_rule_register (rule_set, "swapwl", sse_rule_swapwl_ssse3, NULL);
   orc_rule_register (rule_set, "swapq", sse_rule_swapq_ssse3, NULL);
   orc_rule_register (rule_set, "select0lw", sse_rule_select0lw_ssse3, NULL);
   orc_rule_register (rule_set, "select1lw", sse_rule_select1lw_ssse3, NULL);
