@@ -35,46 +35,9 @@ void
 test_opcode_src (OrcStaticOpcode *opcode)
 {
   OrcProgram *p;
-  char s[40];
   int flags = 0;
 
-  p = orc_program_new ();
-  if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
-    orc_program_add_accumulator (p, opcode->dest_size[0], "d1");
-  } else {
-    orc_program_add_destination (p, opcode->dest_size[0], "d1");
-  }
-  if (opcode->dest_size[1] != 0) {
-    orc_program_add_destination (p, opcode->dest_size[1], "d2");
-  }
-  if (opcode->src_size[1] != 0) {
-    orc_program_add_source (p, opcode->src_size[0], "s1");
-    if (opcode->flags & ORC_STATIC_OPCODE_SCALAR) {
-      orc_program_add_constant (p, opcode->src_size[1], 1, "s2");
-    } else {
-      orc_program_add_source (p, opcode->src_size[1], "s2");
-    }
-  } else {
-    if (opcode->flags & ORC_STATIC_OPCODE_SCALAR) {
-      orc_program_add_constant (p, opcode->src_size[0], 1, "s1");
-    } else {
-      orc_program_add_source (p, opcode->src_size[0], "s1");
-    }
-  }
-
-  if ((opcode->flags & ORC_STATIC_OPCODE_FLOAT_SRC) ||
-      (opcode->flags & ORC_STATIC_OPCODE_FLOAT_DEST)) {
-    flags = ORC_TEST_FLAGS_FLOAT;
-  }
-
-  sprintf(s, "test_s_%s ", opcode->name);
-  orc_program_set_name (p, s);
-
-  if (opcode->dest_size[1] != 0) {
-    orc_program_append_dds_str (p, opcode->name, "d1", "d2", "s1");
-  } else {
-    orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
-  }
+  p = orc_test_get_program_for_opcode (opcode);
 
   printf("%g\n", orc_test_performance_full (p, flags, NULL));
 
