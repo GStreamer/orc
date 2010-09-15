@@ -187,58 +187,86 @@ orc_code_chunk_free (OrcCodeChunk *chunk)
 }
 
 #ifdef HAVE_CODEMEM_MMAP
-void
-orc_code_region_allocate_codemem (OrcCodeRegion *region)
+int
+orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
+    const char *dir, int force_unlink)
 {
   int fd;
   int n;
-  static char *tmpdir = NULL;
   char *filename;
 
-  if (tmpdir == NULL) {
-    tmpdir = getenv ("TMPDIR");
-    if (tmpdir == NULL) {
-      tmpdir = "/tmp";
-    }
-  }
-
-#if 0
   filename = malloc (strlen ("/orcexec..") +
-      strlen (tmpdir) + strlen (compiler->program->name) + 6 + 1);
-  sprintf(filename, "%s/orcexec.%s.XXXXXX", tmpdir, compiler->program->name);
-#endif
-  filename = malloc (strlen ("/orcexec..") +
-      strlen (tmpdir) + 6 + 1);
-  sprintf(filename, "%s/orcexec.XXXXXX", tmpdir);
+      strlen (dir) + 6 + 1);
+  sprintf(filename, "%s/orcexec.XXXXXX", dir);
   fd = mkstemp (filename);
   if (fd == -1) {
-    /* FIXME oh crap */
-    ORC_ERROR ("failed to create temp file");
-    return;
+    ORC_WARNING ("failed to create temp file");
+    return FALSE;
   }
-  if (!_orc_compiler_flag_debug) {
+  if (force_unlink || !_orc_compiler_flag_debug) {
     unlink (filename);
   }
   free (filename);
 
   n = ftruncate (fd, SIZE);
 
-  region->write_ptr = mmap (NULL, SIZE, PROT_READ|PROT_WRITE,
-      MAP_SHARED, fd, 0);
-  if (region->write_ptr == MAP_FAILED) {
-    ORC_ERROR("failed to create write map");
-    return;
-  }
   region->exec_ptr = mmap (NULL, SIZE, PROT_READ|PROT_EXEC,
       MAP_SHARED, fd, 0);
   if (region->exec_ptr == MAP_FAILED) {
-    ORC_ERROR("failed to create exec map");
-    return;
+    ORC_WARNING("failed to create exec map");
+    close (fd);
+    return FALSE;
+  }
+  region->write_ptr = mmap (NULL, SIZE, PROT_READ|PROT_WRITE,
+      MAP_SHARED, fd, 0);
+  if (region->write_ptr == MAP_FAILED) {
+    ORC_WARNING ("failed to create write map");
+    close (fd);
+    return FALSE;
   }
   region->size = SIZE;
 
   close (fd);
+  return TRUE;
 }
+
+int
+orc_code_region_allocate_codemem_anon_map (OrcCodeRegion *region)
+{
+  region->exec_ptr = mmap (NULL, SIZE, PROT_READ|PROT_WRITE|PROT_EXEC,
+      MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+  if (region->exec_ptr == MAP_FAILED) {
+    ORC_WARNING("failed to create write/exec map");
+    return FALSE;
+  }
+  region->write_ptr = region->exec_ptr;
+  region->size = SIZE;
+  return TRUE;
+}
+
+void
+orc_code_region_allocate_codemem (OrcCodeRegion *region)
+{
+  int ret;
+  const char *tmpdir;
+
+  tmpdir = getenv ("TMPDIR");
+  ret = orc_code_region_allocate_codemem_dual_map (region,
+      tmpdir ? tmpdir : "/tmp", FALSE);
+  if (!ret) {
+    ret = orc_code_region_allocate_codemem_dual_map (region,
+        getenv ("HOME"), TRUE);
+  }
+  if (!ret) {
+    ret = orc_code_region_allocate_codemem_anon_map (region);
+  }
+  if (!ret) {
+    ORC_ERROR("Failed to create write and exec mmap regions.  This "
+        "is probably because SELinux execmem check is enabled (good) "
+        "and $TMPDIR and $HOME are mounted noexec (bad).");
+  }
+}
+
 #endif
 
 #ifdef HAVE_CODEMEM_VIRTUALALLOC
