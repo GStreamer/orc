@@ -21,7 +21,8 @@ EXTRA_DIST = example1orc.orc example2orc.orc example3orc.orc
 
 CLEANFILES = example1orc.c example1orc.h \
 	example2orc.c example2orc.h \
-	example3orc.c example3orc.h
+	example3orc.c example3orc.h \
+	mt19937arorc.c mt19937arorc.h
 
 example1_SOURCES = example1.c
 nodist_example1_SOURCES = example1orc.c example1orc.h
