@@ -34,7 +34,7 @@ static OrcTarget *default_target;
 #define ORC_UW_MIN 0
 #define ORC_SL_MAX 2147483647
 #define ORC_SL_MIN (-1-ORC_SL_MAX)
-#define ORC_UL_MAX 4294967295ULL
+#define ORC_UL_MAX ORC_UINT64_C(4294967295)
 #define ORC_UL_MIN 0
 
 #define ORC_CLAMP_SB(x) ORC_CLAMP(x,ORC_SB_MIN,ORC_SB_MAX)

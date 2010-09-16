@@ -33,12 +33,12 @@
 #define ORC_CLAMP_UL(x) ORC_CLAMP(x,ORC_UL_MIN,ORC_UL_MAX)
 #define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
-#define ORC_SWAP_Q(x) ((((x)&0xffULL)<<56) | (((x)&0xff00ULL)<<40) | (((x)&0xff0000ULL)<<24) | (((x)&0xff000000ULL)<<8) | (((x)&0xff00000000ULL)>>8) | (((x)&0xff0000000000ULL)>>24) | (((x)&0xff000000000000ULL)>>40) | (((x)&0xff00000000000000ULL)>>56))
+#define ORC_SWAP_Q(x) ((((x)&ORC_UINT64_C(0xff))<<56) | (((x)&ORC_UINT64_C(0xff00))<<40) | (((x)&ORC_UINT64_C(0xff0000))<<24) | (((x)&ORC_UINT64_C(0xff000000))<<8) | (((x)&ORC_UINT64_C(0xff00000000))>>8) | (((x)&ORC_UINT64_C(0xff0000000000))>>24) | (((x)&ORC_UINT64_C(0xff000000000000))>>40) | (((x)&ORC_UINT64_C(0xff00000000000000))>>56))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
 #define ORC_DENORMAL(x) ((x) & ((((x)&0x7f800000) == 0) ? 0xff800000 : 0xffffffff))
 #define ORC_ISNAN(x) ((((x)&0x7f800000) == 0x7f800000) && (((x)&0x007fffff) != 0))
-#define ORC_DENORMAL_DOUBLE(x) ((x) & ((((x)&0x7ff0000000000000ULL) == 0) ? 0xfff0000000000000ULL : 0xffffffffffffffffULL))
-#define ORC_ISNAN_DOUBLE(x) ((((x)&0x7ff0000000000000ULL) == 0x7ff0000000000000ULL) && (((x)&0x000fffffffffffffULL) != 0))
+#define ORC_DENORMAL_DOUBLE(x) ((x) & ((((x)&ORC_UINT64_C(0x7ff0000000000000)) == 0) ? ORC_UINT64_C(0xfff0000000000000) : ORC_UINT64_C(0xffffffffffffffff)))
+#define ORC_ISNAN_DOUBLE(x) ((((x)&ORC_UINT64_C(0x7ff0000000000000)) == ORC_UINT64_C(0x7ff0000000000000)) && (((x)&ORC_UINT64_C(0x000fffffffffffff)) != 0))
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #define ORC_RESTRICT restrict
 #elif defined(__GNUC__) && __GNUC__ >= 4
@@ -4054,7 +4054,7 @@ emulate_swaplq (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadq */
     var32 = ptr4[i];
     /* 1: swaplq */
-    var33.i = ((var32.i&0x00000000ffffffffULL) << 32) | ((var32.i&0xffffffff00000000ULL) >> 32);
+    var33.i = (ORC_UINT64_C(var32.i&0x00000000ffffffff) << 32) | (ORC_UINT64_C(var32.i&0xffffffff00000000) >> 32);
     /* 2: storeq */
     ptr0[i] = var33;
   }
@@ -4994,7 +4994,7 @@ emulate_cmpeqd (OrcOpcodeExecutor *ex, int offset, int n)
        orc_union64 _src2;
        _src1.i = ORC_DENORMAL_DOUBLE(var32.i);
        _src2.i = ORC_DENORMAL_DOUBLE(var33.i);
-       var34.i = (_src1.f == _src2.f) ? (~0ULL) : 0;
+       var34.i = (_src1.f == _src2.f) ? ORC_UINT64_C(~0) : 0;
     }
     /* 3: storeq */
     ptr0[i] = var34;
@@ -5029,7 +5029,7 @@ emulate_cmpltd (OrcOpcodeExecutor *ex, int offset, int n)
        orc_union64 _src2;
        _src1.i = ORC_DENORMAL_DOUBLE(var32.i);
        _src2.i = ORC_DENORMAL_DOUBLE(var33.i);
-       var34.i = (_src1.f < _src2.f) ? (~0ULL) : 0;
+       var34.i = (_src1.f < _src2.f) ? ORC_UINT64_C(~0) : 0;
     }
     /* 3: storeq */
     ptr0[i] = var34;
@@ -5064,7 +5064,7 @@ emulate_cmpled (OrcOpcodeExecutor *ex, int offset, int n)
        orc_union64 _src2;
        _src1.i = ORC_DENORMAL_DOUBLE(var32.i);
        _src2.i = ORC_DENORMAL_DOUBLE(var33.i);
-       var34.i = (_src1.f <= _src2.f) ? (~0ULL) : 0;
+       var34.i = (_src1.f <= _src2.f) ? ORC_UINT64_C(~0) : 0;
     }
     /* 3: storeq */
     ptr0[i] = var34;
@@ -5092,7 +5092,7 @@ emulate_convdl (OrcOpcodeExecutor *ex, int offset, int n)
     {
        int tmp;
        tmp = var32.f;
-       if (tmp == 0x80000000 && !(var32.i&0x8000000000000000ULL)) tmp = 0x7fffffff;
+       if (tmp == 0x80000000 && !(var32.i & ORC_UINT64_C(0x8000000000000000))) tmp = 0x7fffffff;
        var33.i = tmp;
     }
     /* 2: storel */

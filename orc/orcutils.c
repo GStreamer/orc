@@ -155,9 +155,9 @@ _strtoll (const char *nptr, char **endptr, int base)
     if (c >= base)
       break;
 
-    if ((orc_uint64) val > 0xffffffffffffffffULL / base ||
-        (orc_uint64) (val * base) > 0xffffffffffffffffULL - c) {
-      val = 0xffffffffffffffffULL;
+    if ((orc_uint64) val > ORC_UINT64_C(0xffffffffffffffff) / base ||
+        (orc_uint64) (val * base) > ORC_UINT64_C(0xffffffffffffffff) - c) {
+      val = ORC_UINT64_C(0xffffffffffffffff);
       break;
     }
 

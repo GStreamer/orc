@@ -41,6 +41,7 @@ orc_target_c_get_typedefs (void)
     "typedef uint16_t orc_uint16;\n"
     "typedef uint32_t orc_uint32;\n"
     "typedef uint64_t orc_uint64;\n"
+    "#define ORC_UINT64_C(x) UINT64_C(x)\n"
     "#elif defined(_MSC_VER)\n"
     "typedef signed __int8 orc_int8;\n"
     "typedef signed __int16 orc_int16;\n"
@@ -50,6 +51,7 @@ orc_target_c_get_typedefs (void)
     "typedef unsigned __int16 orc_uint16;\n"
     "typedef unsigned __int32 orc_uint32;\n"
     "typedef unsigned __int64 orc_uint64;\n"
+    "#define ORC_UINT64_C(x) (x##Ui64)\n"
     "#else\n"
     "#include <limits.h>\n"
     "typedef signed char orc_int8;\n"
@@ -61,9 +63,11 @@ orc_target_c_get_typedefs (void)
     "#if INT_MAX == LONG_MAX\n"
     "typedef long long orc_int64;\n"
     "typedef unsigned long long orc_uint64;\n"
+    "#define ORC_UINT64_C(x) (x##ULL)\n"
     "#else\n"
     "typedef long orc_int64;\n"
     "typedef unsigned long orc_uint64;\n"
+    "#define ORC_UINT64_C(x) (x##UL)\n"
     "#endif\n"
     "#endif\n"
     "typedef union { orc_int16 i; orc_int8 x2[2]; } orc_union16;\n"
@@ -101,12 +105,12 @@ orc_target_c_get_asm_preamble (void)
     "#define ORC_CLAMP_UL(x) ORC_CLAMP(x,ORC_UL_MIN,ORC_UL_MAX)\n"
     "#define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))\n"
     "#define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))\n"
-    "#define ORC_SWAP_Q(x) ((((x)&0xffULL)<<56) | (((x)&0xff00ULL)<<40) | (((x)&0xff0000ULL)<<24) | (((x)&0xff000000ULL)<<8) | (((x)&0xff00000000ULL)>>8) | (((x)&0xff0000000000ULL)>>24) | (((x)&0xff000000000000ULL)>>40) | (((x)&0xff00000000000000ULL)>>56))\n"
+    "#define ORC_SWAP_Q(x) ((((x)&ORC_UINT64_C(0xff))<<56) | (((x)&ORC_UINT64_C(0xff00))<<40) | (((x)&ORC_UINT64_C(0xff0000))<<24) | (((x)&ORC_UINT64_C(0xff000000))<<8) | (((x)&ORC_UINT64_C(0xff00000000))>>8) | (((x)&ORC_UINT64_C(0xff0000000000))>>24) | (((x)&ORC_UINT64_C(0xff000000000000))>>40) | (((x)&ORC_UINT64_C(0xff00000000000000))>>56))\n"
     "#define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))\n"
     "#define ORC_DENORMAL(x) ((x) & ((((x)&0x7f800000) == 0) ? 0xff800000 : 0xffffffff))\n"
     "#define ORC_ISNAN(x) ((((x)&0x7f800000) == 0x7f800000) && (((x)&0x007fffff) != 0))\n"
-    "#define ORC_DENORMAL_DOUBLE(x) ((x) & ((((x)&0x7ff0000000000000ULL) == 0) ? 0xfff0000000000000ULL : 0xffffffffffffffffULL))\n"
-    "#define ORC_ISNAN_DOUBLE(x) ((((x)&0x7ff0000000000000ULL) == 0x7ff0000000000000ULL) && (((x)&0x000fffffffffffffULL) != 0))\n"
+    "#define ORC_DENORMAL_DOUBLE(x) ((x) & ((((x)&ORC_UINT64_C(0x7ff0000000000000)) == 0) ? ORC_UINT64_C(0xfff0000000000000) : ORC_UINT64_C(0xffffffffffffffff)))\n"
+    "#define ORC_ISNAN_DOUBLE(x) ((((x)&ORC_UINT64_C(0x7ff0000000000000)) == ORC_UINT64_C(0x7ff0000000000000)) && (((x)&ORC_UINT64_C(0x000fffffffffffff)) != 0))\n"
     "#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L\n"
     "#define ORC_RESTRICT restrict\n"
     "#elif defined(__GNUC__) && __GNUC__ >= 4\n"
@@ -799,7 +803,7 @@ c_rule_loadpX (OrcCompiler *p, void *user, OrcInstruction *insn)
           (int)p->vars[insn->src_args[0]].value.i,
           p->vars[insn->src_args[0]].value.f);
     } else {
-      ORC_ASM_CODE(p,"    %s = 0x%08x%08xULL; /* %gf */\n", dest,
+      ORC_ASM_CODE(p,"    %s = ORC_UINT64_C(0x%08x%08x); /* %gf */\n", dest,
           (orc_uint32)(((orc_uint64)p->vars[insn->src_args[0]].value.i)>>32),
           ((orc_uint32)p->vars[insn->src_args[0]].value.i),
           p->vars[insn->src_args[0]].value.f);
@@ -1189,7 +1193,7 @@ c_rule_convdl (OrcCompiler *p, void *user, OrcInstruction *insn)
   ORC_ASM_CODE(p, "    {\n");
   ORC_ASM_CODE(p,"       int tmp;\n");
   ORC_ASM_CODE(p,"       tmp = %s;\n", src);
-  ORC_ASM_CODE(p,"       if (tmp == 0x80000000 && !(%s&0x8000000000000000ULL)) tmp = 0x7fffffff;\n", src_i);
+  ORC_ASM_CODE(p,"       if (tmp == 0x80000000 && !(%s & ORC_UINT64_C(0x8000000000000000))) tmp = 0x7fffffff;\n", src_i);
   ORC_ASM_CODE(p,"       %s = tmp;\n", dest);
   ORC_ASM_CODE(p, "    }\n");
 }
@@ -1294,7 +1298,7 @@ c_rule_swaplq (OrcCompiler *p, void *user, OrcInstruction *insn)
   c_get_name_int (dest, p, insn, insn->dest_args[0]);
   c_get_name_int (src, p, insn, insn->src_args[0]);
 
-  ORC_ASM_CODE(p,"    %s = ((%s&0x00000000ffffffffULL) << 32) | ((%s&0xffffffff00000000ULL) >> 32);\n",
+  ORC_ASM_CODE(p,"    %s = (ORC_UINT64_C(%s&0x00000000ffffffff) << 32) | (ORC_UINT64_C(%s&0xffffffff00000000) >> 32);\n",
       dest, src, src);
 }
 
