@@ -230,6 +230,10 @@ orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
   return TRUE;
 }
 
+#ifndef MAP_ANONYMOUS
+#define MAP_ANONYMOUS MAP_ANON
+#endif
+
 int
 orc_code_region_allocate_codemem_anon_map (OrcCodeRegion *region)
 {
