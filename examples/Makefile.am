@@ -1,8 +1,8 @@
 
-orcbin_PROGRAMS = mt19937ar
+noinst_PROGRAMS = 
 if CROSS_COMPILING
 else
-orcbin_PROGRAMS += example1 example2 example3 mt19937ar
+noinst_PROGRAMS += example1 example2 example3 mt19937ar
 
 BUILT_SOURCES = example1orc.c example1orc.h \
 	example2orc.c example2orc.h \
@@ -11,7 +11,7 @@ BUILT_SOURCES = example1orc.c example1orc.h \
 endif
 
 if ENABLE_BACKEND_MMX
-orcbin_PROGRAMS += volscale
+noinst_PROGRAMS += volscale
 endif
 
 AM_LDFLAGS = $(ORC_LIBS)

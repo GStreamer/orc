@@ -180,8 +180,6 @@ AC_SUBST(ORC_LIBS)
 pkgconfigdir="\$(libdir)/pkgconfig"
 AC_SUBST(pkgconfigdir)
 
-orcbindir="\$(libdir)/orc/"
-AC_SUBST(orcbindir)
 
 AC_CONFIG_FILES([
 Makefile 
