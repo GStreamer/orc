@@ -3462,7 +3462,7 @@ emulate_convusswb (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadw */
     var32 = ptr4[i];
     /* 1: convusswb */
-    var33 = ORC_CLAMP_SB((orc_uint16)var32.i);
+    var33 = ORC_MIN((orc_uint16)var32.i,ORC_SB_MAX);
     /* 2: storeb */
     ptr0[i] = var33;
   }
@@ -3486,7 +3486,7 @@ emulate_convuuswb (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadw */
     var32 = ptr4[i];
     /* 1: convuuswb */
-    var33 = ORC_CLAMP_UB((orc_uint16)var32.i);
+    var33 = ORC_MIN((orc_uint16)var32.i,ORC_UB_MAX);
     /* 2: storeb */
     ptr0[i] = var33;
   }
@@ -3606,7 +3606,7 @@ emulate_convusslw (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadl */
     var32 = ptr4[i];
     /* 1: convusslw */
-    var33.i = ORC_CLAMP_SW((orc_uint32)var32.i);
+    var33.i = ORC_CLAMP((orc_uint32)var32.i,0,ORC_SW_MAX);
     /* 2: storew */
     ptr0[i] = var33;
   }
