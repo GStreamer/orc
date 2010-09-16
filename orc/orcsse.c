@@ -244,6 +244,19 @@ orc_x86_emit_mov_memoffset_sse (OrcCompiler *compiler, int size, int offset,
 }
 
 void
+orc_x86_emit_movhps_memoffset_sse (OrcCompiler *compiler, int offset,
+    int reg1, int reg2)
+{
+  ORC_ASM_CODE(compiler,"  movhps %d(%%%s), %%%s\n", offset,
+      orc_x86_get_regname_ptr(compiler, reg1),
+      orc_x86_get_regname_sse(reg2));
+  orc_x86_emit_rex(compiler, 0, reg2, 0, reg1);
+  *compiler->codeptr++ = 0x0f;
+  *compiler->codeptr++ = 0x16;
+  orc_x86_emit_modrm_memoffset (compiler, reg2, offset, reg1);
+}
+
+void
 orc_x86_emit_mov_memindex_sse (OrcCompiler *compiler, int size, int offset,
     int reg1, int regindex, int shift, int reg2, int is_aligned)
 {

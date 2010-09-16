@@ -28,32 +28,55 @@ sse_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     reg = dest->alloc;
 
     if (size == 8 && src->size == 8) {
-      ORC_COMPILER_ERROR(compiler,"64-bit parameters not implemented");
-    }
-
-    orc_x86_emit_mov_memoffset_sse (compiler, 4,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[0]]),
-        compiler->exec_reg, reg, FALSE);
-    if (size == 1) {
-      orc_sse_emit_punpcklbw (compiler, reg, reg);
-    }
-#ifndef MMX
-    if (size <= 2) {
-      orc_sse_emit_pshuflw (compiler, 0, reg, reg);
-    }
-    orc_sse_emit_pshufd (compiler, 0, reg, reg);
-#else
-    if (size <= 2) {
-      orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(0,0,0,0), reg, reg);
+      orc_x86_emit_mov_memoffset_sse (compiler, 4,
+          (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[0]]),
+          compiler->exec_reg, reg, FALSE);
+      if (0) {
+        /* FIXME yes, I understand this is terrible */
+        orc_sse_emit_pinsrw_memoffset (compiler, 2,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor,
+              params[insn->src_args[0] + (ORC_VAR_T1 - ORC_VAR_P1)]) + 0,
+            compiler->exec_reg, reg);
+        orc_sse_emit_pinsrw_memoffset (compiler, 3,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor,
+              params[insn->src_args[0] + (ORC_VAR_T1 - ORC_VAR_P1)]) + 1,
+            compiler->exec_reg, reg);
+        orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(1,0,1,0), reg, reg);
+      } else {
+        orc_x86_emit_movhps_memoffset_sse (compiler,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor,
+              params[insn->src_args[0] + (ORC_VAR_T1 - ORC_VAR_P1)]),
+            compiler->exec_reg, reg);
+        orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(2,0,2,0), reg, reg);
+      }
     } else {
-      orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(1,0,1,0), reg, reg);
-    }
+      orc_x86_emit_mov_memoffset_sse (compiler, 4,
+          (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[0]]),
+          compiler->exec_reg, reg, FALSE);
+      if (size < 8) {
+        if (size == 1) {
+          orc_sse_emit_punpcklbw (compiler, reg, reg);
+        }
+#ifndef MMX
+        if (size <= 2) {
+          orc_sse_emit_pshuflw (compiler, 0, reg, reg);
+        }
+        orc_sse_emit_pshufd (compiler, 0, reg, reg);
+#else
+        if (size <= 2) {
+          orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(0,0,0,0), reg, reg);
+        } else {
+          orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(1,0,1,0), reg, reg);
+        }
 #endif
-  } else if (src->vartype == ORC_VAR_TYPE_CONST) {
-    if (size == 8 && src->size == 8) {
-      ORC_COMPILER_ERROR(compiler,"64-bit constants not implemented");
+      } else {
+#ifndef MMX
+        orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(1,0,1,0), reg, reg);
+#endif
+      }
     }
-    sse_load_constant (compiler, dest->alloc, size, src->value.i);
+  } else if (src->vartype == ORC_VAR_TYPE_CONST) {
+    orc_sse_load_constant (compiler, dest->alloc, size, src->value.i);
   } else {
     ORC_ASSERT(0);
   }
@@ -1200,7 +1223,7 @@ sse_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_psllw (p, 8, divisor);
   orc_sse_emit_psrlw (p, 1, divisor);
 
-  sse_load_constant (p, a, 2, 0x00ff);
+  orc_sse_load_constant (p, a, 2, 0x00ff);
   tmp = orc_compiler_get_constant (p, 2, 0x8000);
   orc_sse_emit_movdqa (p, tmp, j);
   orc_sse_emit_psrlw (p, 8, j);
