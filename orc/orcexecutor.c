@@ -161,7 +161,7 @@ orc_executor_set_m (OrcExecutor *ex, int m)
 }
 
 static void
-load_constant (void *data, int size, int value)
+load_constant (void *data, int size, orc_uint64 value)
 {
   switch (size) {
     case 1:
@@ -264,13 +264,15 @@ orc_executor_emulate (OrcExecutor *ex)
       if (var->vartype == ORC_VAR_TYPE_CONST) {
         opcode_ex[j].src_ptrs[k] = tmpspace[insn->src_args[k]];
         /* FIXME hack */
-        load_constant (tmpspace[insn->src_args[k]], 4,
+        load_constant (tmpspace[insn->src_args[k]], 8,
             var->value.i);
       } else if (var->vartype == ORC_VAR_TYPE_PARAM) {
         opcode_ex[j].src_ptrs[k] = tmpspace[insn->src_args[k]];
         /* FIXME hack */
-        load_constant (tmpspace[insn->src_args[k]], 4,
-            ex->params[insn->src_args[k]]);
+        load_constant (tmpspace[insn->src_args[k]], 8,
+            (orc_uint64)ex->params[insn->src_args[k]] |
+            (((orc_uint64)ex->params[insn->src_args[k] +
+             (ORC_VAR_T1 - ORC_VAR_P1)])<<32));
       } else if (var->vartype == ORC_VAR_TYPE_TEMP) {
         opcode_ex[j].src_ptrs[k] = tmpspace[insn->src_args[k]];
       } else if (var->vartype == ORC_VAR_TYPE_SRC) {

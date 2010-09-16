@@ -843,7 +843,7 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
           var->size, (int)var->value.i, varnames[ORC_VAR_C1 + i]);
     } else if (var->size > 4) {
       REQUIRE(0,4,8,1);
-      fprintf(output, "      orc_program_add_constant_int64 (p, %d, 0x%08x%08x, \"%s\");\n",
+      fprintf(output, "      orc_program_add_constant_int64 (p, %d, 0x%08x%08xULL, \"%s\");\n",
           var->size, (orc_uint32)(((orc_uint64)var->value.i)>>32),
           (orc_uint32)(var->value.i), varnames[ORC_VAR_C1 + i]);
     }
@@ -1008,12 +1008,19 @@ output_code_test (OrcProgram *p, FILE *output)
   for(i=0;i<8;i++){
     var = &p->vars[ORC_VAR_C1 + i];
     if (var->size) {
-      if (var->value.i != 0x80000000) {
-        fprintf(output, "      orc_program_add_constant (p, %d, %u, \"%s\");\n",
-            var->size, (int)var->value.i, varnames[ORC_VAR_C1 + i]);
+      if (var->size < 8) {
+        if (var->value.i != 0x80000000) {
+          fprintf(output, "      orc_program_add_constant (p, %d, 0x%08x, \"%s\");\n",
+              var->size, (int)var->value.i, varnames[ORC_VAR_C1 + i]);
+        } else {
+          fprintf(output, "      orc_program_add_constant (p, %d, 0x%08x, \"%s\");\n",
+              var->size, (int)var->value.i, varnames[ORC_VAR_C1 + i]);
+        }
       } else {
-        fprintf(output, "      orc_program_add_constant (p, %d, 0x%08x, \"%s\");\n",
-            var->size, (int)var->value.i, varnames[ORC_VAR_C1 + i]);
+        fprintf(output, "      orc_program_add_constant_int64 (p, %d, "
+            "0x%08x%08xULL, \"%s\");\n",
+            var->size, (orc_uint32)(((orc_uint64)var->value.i)>>32),
+            (orc_uint32)(var->value.i), varnames[ORC_VAR_C1 + i]);
       }
     }
   }

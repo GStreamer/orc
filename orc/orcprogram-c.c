@@ -785,7 +785,7 @@ c_rule_loadpX (OrcCompiler *p, void *user, OrcInstruction *insn)
       }
     } else {
       if (size == 8) {
-        ORC_ASM_CODE(p,"    %s = (ex->params[%d] & 0xffffffff) | (((orc_uint64)(ex->params[%d + (ORC_VAR_T1 - ORC_VAR_P1)]) << 32);\n",
+        ORC_ASM_CODE(p,"    %s = (ex->params[%d] & 0xffffffff) | ((orc_uint64)(ex->params[%d + (ORC_VAR_T1 - ORC_VAR_P1)]) << 32);\n",
             dest, insn->src_args[0], insn->src_args[0]);
       } else {
         ORC_ASM_CODE(p,"    %s = ex->params[%d];\n", dest,
@@ -799,7 +799,7 @@ c_rule_loadpX (OrcCompiler *p, void *user, OrcInstruction *insn)
           (int)p->vars[insn->src_args[0]].value.i,
           p->vars[insn->src_args[0]].value.f);
     } else {
-      ORC_ASM_CODE(p,"    %s = 0x%08x%08x; /* %gf */\n", dest,
+      ORC_ASM_CODE(p,"    %s = 0x%08x%08xULL; /* %gf */\n", dest,
           (orc_uint32)(((orc_uint64)p->vars[insn->src_args[0]].value.i)>>32),
           ((orc_uint32)p->vars[insn->src_args[0]].value.i),
           p->vars[insn->src_args[0]].value.f);
