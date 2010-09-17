@@ -434,26 +434,8 @@ c_get_name_int (char *name, OrcCompiler *p, OrcInstruction *insn, int var)
     if (p->target_flags & ORC_TARGET_C_NOEXEC) {
       sprintf(name,"%s", varnames[var]);
     } else if (p->target_flags & ORC_TARGET_C_OPCODE) {
-      switch (p->vars[var].param_type) {
-        case ORC_PARAM_TYPE_INT:
-          sprintf(name,"((orc_union32 *)(ex->src_ptrs[%d]))->i",
-              var - ORC_VAR_P1 + p->program->n_src_vars);
-          break;
-        case ORC_PARAM_TYPE_FLOAT:
-          sprintf(name,"((orc_union32 *)(ex->src_ptrs[%d]))->i",
-              var - ORC_VAR_P1 + p->program->n_src_vars);
-          break;
-        case ORC_PARAM_TYPE_INT64:
-          sprintf(name,"((orc_union64 *)(ex->src_ptrs[%d]))->i",
-              var - ORC_VAR_P1 + p->program->n_src_vars);
-          break;
-        case ORC_PARAM_TYPE_DOUBLE:
-          sprintf(name,"((orc_union64 *)(ex->src_ptrs[%d]))->i",
-              var - ORC_VAR_P1 + p->program->n_src_vars);
-          break;
-        default:
-          ORC_ASSERT(0);
-      }
+      sprintf(name,"((orc_union64 *)(ex->src_ptrs[%d]))->i",
+          var - ORC_VAR_P1 + p->program->n_src_vars);
     } else {
       switch (p->vars[var].param_type) {
         case ORC_PARAM_TYPE_INT:
@@ -780,13 +762,8 @@ c_rule_loadpX (OrcCompiler *p, void *user, OrcInstruction *insn)
     if (p->target_flags & ORC_TARGET_C_NOEXEC) {
       ORC_ASM_CODE(p,"    %s = %s;\n", dest, varnames[insn->src_args[0]]);
     } else if (p->target_flags & ORC_TARGET_C_OPCODE) {
-      if (size == 8) {
-        ORC_ASM_CODE(p,"    %s = ((orc_union64 *)(ex->src_ptrs[%d]))->i;\n",
-            dest, insn->src_args[0] - ORC_VAR_P1 + p->program->n_src_vars);
-      } else {
-        ORC_ASM_CODE(p,"    %s = ((orc_union32 *)(ex->src_ptrs[%d]))->i;\n",
-            dest, insn->src_args[0] - ORC_VAR_P1 + p->program->n_src_vars);
-      }
+      ORC_ASM_CODE(p,"    %s = ((orc_union64 *)(ex->src_ptrs[%d]))->i;\n",
+          dest, insn->src_args[0] - ORC_VAR_P1 + p->program->n_src_vars);
     } else {
       if (size == 8) {
         ORC_ASM_CODE(p,"    %s = (ex->params[%d] & 0xffffffff) | ((orc_uint64)(ex->params[%d + (ORC_VAR_T1 - ORC_VAR_P1)]) << 32);\n",
