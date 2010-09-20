@@ -483,6 +483,7 @@ sse_rule_ldreslinl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   OrcVariable *dest = compiler->vars + insn->dest_args[0];
   int tmp = orc_compiler_get_temp_reg (compiler);
   int tmp2 = orc_compiler_get_temp_reg (compiler);
+  int regsize = compiler->is_64bit ? 8 : 4;
   int i;
 
   if (compiler->loop_shift == 0) {
@@ -511,7 +512,7 @@ sse_rule_ldreslinl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
           (int)ORC_STRUCT_OFFSET(OrcExecutor, params[increment_var]),
           compiler->exec_reg, src->ptr_offset);
     } else {
-      orc_x86_emit_add_imm_reg (compiler, 4,
+      orc_x86_emit_add_imm_reg (compiler, regsize,
           compiler->vars[increment_var].value.i,
           src->ptr_offset, FALSE);
     }
@@ -519,7 +520,7 @@ sse_rule_ldreslinl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     orc_x86_emit_mov_reg_reg (compiler, 4, src->ptr_offset, compiler->gp_tmpreg);
     orc_x86_emit_sar_imm_reg (compiler, 4, 16, compiler->gp_tmpreg);
 
-    orc_x86_emit_add_reg_reg_shift (compiler, 4, compiler->gp_tmpreg,
+    orc_x86_emit_add_reg_reg_shift (compiler, regsize, compiler->gp_tmpreg,
         src->ptr_register, 2);
     orc_x86_emit_and_imm_reg (compiler, 4, 0xffff, src->ptr_offset);
   } else {
@@ -601,7 +602,7 @@ sse_rule_ldreslinl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
       orc_x86_emit_mov_reg_reg (compiler, 4, src->ptr_offset, compiler->gp_tmpreg);
       orc_x86_emit_sar_imm_reg (compiler, 4, 16, compiler->gp_tmpreg);
 
-      orc_x86_emit_add_reg_reg_shift (compiler, 4, compiler->gp_tmpreg,
+      orc_x86_emit_add_reg_reg_shift (compiler, 8, compiler->gp_tmpreg,
           src->ptr_register, 2);
       orc_x86_emit_and_imm_reg (compiler, 4, 0xffff, src->ptr_offset);
     }
