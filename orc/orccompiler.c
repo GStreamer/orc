@@ -43,6 +43,7 @@ void orc_compiler_check_sizes (OrcCompiler *compiler);
 
 static char **_orc_compiler_flag_list;
 int _orc_compiler_flag_backup;
+int _orc_compiler_flag_emulate;
 int _orc_compiler_flag_debug;
 
 void
@@ -56,6 +57,7 @@ _orc_compiler_init (void)
   }
 
   _orc_compiler_flag_backup = orc_compiler_flag_check ("backup");
+  _orc_compiler_flag_emulate = orc_compiler_flag_check ("emulate");
   _orc_compiler_flag_debug = orc_compiler_flag_check ("debug");
 }
 
@@ -202,6 +204,12 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
 
   if (program->backup_func && _orc_compiler_flag_backup) {
     ORC_COMPILER_ERROR(compiler, "Compilation disabled");
+    compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
+    goto error;
+  }
+
+  if (_orc_compiler_flag_emulate) {
+    program->code_exec = (void *)orc_executor_emulate;
     compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
     goto error;
   }
