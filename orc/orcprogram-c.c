@@ -756,7 +756,11 @@ c_rule_loadpX (OrcCompiler *p, void *user, OrcInstruction *insn)
   char dest[40];
   int size = ORC_PTR_TO_INT(user);
 
-  c_get_name_int (dest, p, insn, insn->dest_args[0]);
+  if ((p->target_flags & ORC_TARGET_C_NOEXEC) &&
+      (p->vars[insn->src_args[0]].param_type == ORC_PARAM_TYPE_FLOAT))
+    c_get_name_float (dest, p, insn, insn->dest_args[0]);
+  else
+    c_get_name_int (dest, p, insn, insn->dest_args[0]);
 
   if (p->vars[insn->src_args[0]].vartype == ORC_VAR_TYPE_PARAM) {
     if (p->target_flags & ORC_TARGET_C_NOEXEC) {
