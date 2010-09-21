@@ -341,7 +341,35 @@ mmx_save_accumulators (OrcCompiler *compiler)
 void
 mmx_load_constant (OrcCompiler *compiler, int reg, int size, int value)
 {
+  orc_mmx_load_constant (compiler, reg, size, value);
+}
+
+void
+orc_mmx_load_constant (OrcCompiler *compiler, int reg, int size, orc_uint64 value)
+{
   int i;
+
+  if (size == 8) {
+    int offset = ORC_STRUCT_OFFSET(OrcExecutor,arrays[ORC_VAR_T1]);
+
+    /* FIXME how ugly and slow! */
+    orc_x86_emit_mov_imm_reg (compiler, 4, value>>0,
+        compiler->gp_tmpreg);
+    orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
+        offset + 0, compiler->exec_reg);
+
+    orc_x86_emit_mov_imm_reg (compiler, 4, value>>32,
+        compiler->gp_tmpreg);
+    orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
+        offset + 4, compiler->exec_reg);
+
+    orc_x86_emit_mov_memoffset_mmx (compiler, 8, offset, compiler->exec_reg,
+        reg, FALSE);
+#ifndef MMX
+    orc_mmx_emit_pshufd (compiler, ORC_MMX_SHUF(1,0,1,0), reg, reg);
+#endif
+    return;
+  }
 
   if (size == 1) {
     value &= 0xff;
@@ -353,7 +381,7 @@ mmx_load_constant (OrcCompiler *compiler, int reg, int size, int value)
     value |= (value << 16);
   }
 
-  ORC_ASM_CODE(compiler, "# loading constant %d 0x%08x\n", value, value);
+  ORC_ASM_CODE(compiler, "# loading constant %d 0x%08x\n", (int)value, (int)value);
   if (value == 0) {
     orc_mmx_emit_pxor(compiler, reg, reg);
     return;

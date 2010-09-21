@@ -66,7 +66,8 @@ void orc_mmx_emit_shiftimm (OrcCompiler *p, const char *insn_name,
     int code, int modrm_code, int shift, int reg);
 unsigned int orc_mmx_get_cpu_flags (void);
 
-void mmx_load_constant (OrcCompiler *compiler, int reg, int size, int value);
+void orc_mmx_load_constant (OrcCompiler *compiler, int reg, int size,
+    orc_uint64 value);
 
 /* MMX instructions */
 #define orc_mmx_emit_punpcklbw(p,a,b)  orc_mmx_emit_660f (p, "punpcklbw", 0x60, a, b)
