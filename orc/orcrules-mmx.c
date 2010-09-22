@@ -785,8 +785,11 @@ BINARY(orq,"por",0xeb)
 BINARY(xorq,"pxor",0xef)
 BINARY(cmpeqq,"pcmpeqq",0x3829)
 BINARY(cmpgtsq,"pcmpgtq",0x3837)
+
+#ifndef MMX
 BINARY(addq,"paddq",0xd4)
 BINARY(subq,"psubq",0xfb)
+#endif
 
 static void
 mmx_rule_accw (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -2684,8 +2687,6 @@ orc_compiler_mmx_register_rules (OrcTarget *target)
   REG(andnq);
   REG(orq);
   REG(xorq);
-  REG(addq);
-  REG(subq);
 
   REG(select0lw);
   REG(select1lw);
@@ -2735,6 +2736,9 @@ orc_compiler_mmx_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "accsadubl", mmx_rule_accsadubl, NULL);
 
 #ifndef MMX
+  REG(addq);
+  REG(subq);
+
   orc_rule_register (rule_set, "addf", mmx_rule_addf, NULL);
   orc_rule_register (rule_set, "subf", mmx_rule_subf, NULL);
   orc_rule_register (rule_set, "mulf", mmx_rule_mulf, NULL);
