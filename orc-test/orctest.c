@@ -102,7 +102,11 @@ orc_test_gcc_compile (OrcProgram *p)
     return ORC_TEST_FAILED;
   }
 
+#if 0
+  sprintf (cmd, "objdump -dr %s | sed 's/^[ 0-9a-f]*:/XXX:/' >%s", obj_filename, dis_filename);
+#else
   sprintf (cmd, "objdump -dr %s >%s", obj_filename, dis_filename);
+#endif
   ret = system (cmd);
   if (ret != 0) {
     ORC_ERROR ("objdump failed");
@@ -128,7 +132,11 @@ orc_test_gcc_compile (OrcProgram *p)
     return ORC_TEST_FAILED;
   }
 
+#if 0
+  sprintf (cmd, "objdump -Dr %s | sed 's/^[ 0-9a-f]*:/XXX:/' >%s", obj_filename, dump_dis_filename);
+#else
   sprintf (cmd, "objdump -Dr %s >%s", obj_filename, dump_dis_filename);
+#endif
   ret = system (cmd);
   if (ret != 0) {
     printf("objdump failed\n");
