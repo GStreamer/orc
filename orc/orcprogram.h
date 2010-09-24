@@ -481,6 +481,7 @@ struct _OrcCompiler {
   int max_used_temp_reg;
 
   int insn_shift; /* used when emitting rules */
+  int max_var_size; /* size of largest var */
 };
 
 #define ORC_SRC_ARG(p,i,n) ((p)->vars[(i)->src_args[(n)]].alloc)
@@ -741,7 +742,6 @@ void orc_compiler_append_code (OrcCompiler *p, const char *fmt, ...)
  
 void orc_target_register (OrcTarget *target);
 OrcTarget *orc_target_get_by_name (const char *target_name);
-int orc_program_get_max_var_size (OrcProgram *program);
 int orc_program_get_max_array_size (OrcProgram *program);
 int orc_program_get_max_accumulator_size (OrcProgram *program);
 

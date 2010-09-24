@@ -843,31 +843,6 @@ orc_program_get_asm_code (OrcProgram *program)
 }
 
 /**
- * orc_program_get_max_var_size:
- * @program: a pointer to an OrcProgram structure
- *
- * Returns the size of the largest variable used in the program.
- * 
- * Returns: the number of bytes
- */
-int
-orc_program_get_max_var_size (OrcProgram *program)
-{
-  int i;
-  int max;
-
-  max = 0;
-  for(i=0;i<ORC_N_VARIABLES;i++){
-    if (program->vars[i].size &&
-        program->vars[i].vartype != ORC_VAR_TYPE_ACCUMULATOR) {
-      max = MAX(max, program->vars[i].size);
-    }
-  }
-
-  return max;
-}
-
-/**
  * orc_program_get_max_array_size:
  * @program: a pointer to an OrcProgram structure
  *

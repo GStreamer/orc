@@ -217,7 +217,7 @@ orc_compiler_mmx_init (OrcCompiler *compiler)
   compiler->valid_regs[compiler->gp_tmpreg] = 0;
   compiler->valid_regs[compiler->exec_reg] = 0;
 
-  switch (orc_program_get_max_var_size (compiler->program)) {
+  switch (compiler->max_var_size) {
     case 1:
       compiler->loop_shift = 4;
       break;
@@ -231,8 +231,7 @@ orc_compiler_mmx_init (OrcCompiler *compiler)
       compiler->loop_shift = 1;
       break;
     default:
-      ORC_ERROR("unhandled max var size %d",
-          orc_program_get_max_var_size (compiler->program));
+      ORC_ERROR("unhandled max var size %d", compiler->max_var_size);
       break;
   }
 #ifdef MMX

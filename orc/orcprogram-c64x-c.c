@@ -221,7 +221,7 @@ orc_compiler_c64x_c_assemble (OrcCompiler *compiler)
 
   align_var = get_align_var (compiler);
 
-  switch (orc_program_get_max_var_size (compiler->program)) {
+  switch (compiler->max_var_size) {
     case 1:
       loop_shift = 2;
       break;
@@ -232,8 +232,7 @@ orc_compiler_c64x_c_assemble (OrcCompiler *compiler)
       loop_shift = 0;
       break;
     default:
-      ORC_ERROR("unhandled max var size %d",
-          orc_program_get_max_var_size (compiler->program));
+      ORC_ERROR("unhandled max var size %d", compiler->max_var_size);
       break;
   }
 

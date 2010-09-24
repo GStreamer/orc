@@ -257,10 +257,10 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
     compiler->valid_regs[i] = 1;
   }
 
-  compiler->target->compiler_init (compiler);
-
   orc_compiler_check_sizes (compiler);
   if (compiler->error) goto error;
+
+  compiler->target->compiler_init (compiler);
 
   orc_compiler_rewrite_insns (compiler);
   if (compiler->error) goto error;
@@ -393,6 +393,7 @@ orc_compiler_check_sizes (OrcCompiler *compiler)
 {
   int i;
   int j;
+  int max_size = 1;
 
   for(i=0;i<compiler->n_insns;i++) {
     OrcInstruction *insn = compiler->insns + i;
@@ -415,6 +416,7 @@ orc_compiler_check_sizes (OrcCompiler *compiler)
         compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE;
         return;
       }
+      max_size = MAX(max_size, multiplier * opcode->dest_size[j]);
     }
     for(j=0;j<ORC_STATIC_OPCODE_N_SRC;j++){
       if (opcode->src_size[j] == 0) continue;
@@ -436,6 +438,7 @@ orc_compiler_check_sizes (OrcCompiler *compiler)
         compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE;
         return;
       }
+      max_size = MAX(max_size, multiplier * opcode->src_size[j]);
     }
     if (opcode->flags & ORC_STATIC_OPCODE_SCALAR &&
         opcode->src_size[1] == 0 &&
@@ -447,6 +450,7 @@ orc_compiler_check_sizes (OrcCompiler *compiler)
       return;
     }
   }
+  compiler->max_var_size = max_size;
 }
 
 static OrcStaticOpcode *
