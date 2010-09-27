@@ -208,12 +208,6 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
     goto error;
   }
 
-  if (_orc_compiler_flag_emulate) {
-    program->code_exec = (void *)orc_executor_emulate;
-    compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
-    goto error;
-  }
-
   if (target == NULL) {
     ORC_COMPILER_ERROR(compiler, "No target given");
     compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
@@ -318,6 +312,12 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
     program->orccode->vars[i].vartype = compiler->vars[i].vartype;
     program->orccode->vars[i].size = compiler->vars[i].size;
     program->orccode->vars[i].value = compiler->vars[i].value;
+  }
+
+  if (_orc_compiler_flag_emulate) {
+    program->code_exec = (void *)orc_executor_emulate;
+    compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
+    goto error;
   }
 
   orc_compiler_assign_rules (compiler);
