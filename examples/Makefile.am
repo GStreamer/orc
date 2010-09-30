@@ -17,7 +17,7 @@ endif
 AM_LDFLAGS = $(ORC_LIBS)
 AM_CFLAGS = $(ORC_CFLAGS)
 
-EXTRA_DIST = example1orc.orc example2orc.orc example3orc.orc
+EXTRA_DIST = example1orc.orc example2orc.orc example3orc.orc mt19937arorc.orc
 
 CLEANFILES = example1orc.c example1orc.h \
 	example2orc.c example2orc.h \
