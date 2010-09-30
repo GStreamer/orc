@@ -685,6 +685,8 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 #define UNARY_UQ(a,b) UNARY(a,b)
 #define BINARY_BW(a,b) BINARY(a,b)
 #define BINARY_WL(a,b) BINARY(a,b)
+#define BINARY_LQ(a,b) BINARY(a,b)
+#define BINARY_QL(a,b) BINARY(a,b)
 #define BINARY_LW(a,b) BINARY(a,b)
 #define BINARY_WB(a,b) BINARY(a,b)
 #define UNARY_BW(a,b) UNARY(a,b)
@@ -732,6 +734,8 @@ c_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
 #undef UNARY_D
 #undef BINARY_BW
 #undef BINARY_WL
+#undef BINARY_LQ
+#undef BINARY_QL
 #undef BINARY_LW
 #undef BINARY_WB
 #undef UNARY_BW
@@ -1327,6 +1331,8 @@ orc_c_init (void)
 #define UNARY_D(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define BINARY_BW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define BINARY_WL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define BINARY_LQ(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+#define BINARY_QL(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define BINARY_LW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define BINARY_WB(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
 #define UNARY_BW(a,b) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);

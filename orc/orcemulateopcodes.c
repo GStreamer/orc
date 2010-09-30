@@ -4158,6 +4158,83 @@ emulate_select1lw (OrcOpcodeExecutor *ex, int offset, int n)
 }
 
 void
+emulate_select0ql (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  orc_union64 var32;
+  orc_union32 var33;
+
+  ptr0 = (orc_union32 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: select0ql */
+    var33.i = (orc_uint64)var32.i & 0xffffffff;
+    /* 2: storel */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_select1ql (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union64 * ORC_RESTRICT ptr4;
+  orc_union64 var32;
+  orc_union32 var33;
+
+  ptr0 = (orc_union32 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union64 *)ex->src_ptrs[0];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr4[i];
+    /* 1: select1ql */
+    var33.i = ((orc_uint64)var32.i >> 32)&0xffffffff;
+    /* 2: storel */
+    ptr0[i] = var33;
+  }
+
+}
+
+void
+emulate_mergelq (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
+  orc_union32 var32;
+  orc_union32 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union32 *)ex->src_ptrs[0];
+  ptr5 = (orc_union32 *)ex->src_ptrs[1];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var32 = ptr4[i];
+    /* 1: loadl */
+    var33 = ptr5[i];
+    /* 2: mergelq */
+    var34.i = ((orc_uint64)var32.i & ORC_UINT64_C(0xffffffff)) | ((orc_uint64)var33.i << 32);
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
 emulate_mergewl (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;
