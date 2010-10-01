@@ -1726,6 +1726,15 @@ sse_rule_mergewl (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+sse_rule_mergelq (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[1]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+
+  orc_sse_emit_punpckldq (p, src, dest);
+}
+
+static void
 sse_rule_swapw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[0]].alloc;
@@ -2694,6 +2703,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   REG(select1wb);
   REG(mergebw);
   REG(mergewl);
+  REG(mergelq);
 
   orc_rule_register (rule_set, "copyb", sse_rule_copyx, NULL);
   orc_rule_register (rule_set, "copyw", sse_rule_copyx, NULL);
