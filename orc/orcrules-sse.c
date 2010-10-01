@@ -1618,6 +1618,34 @@ sse_rule_select1lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+sse_rule_select0ql (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+
+  /* same as convql */
+#ifndef MMX
+  orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,2,0), src, dest);
+#else
+  orc_sse_emit_movdqa (p, src, dest);
+#endif
+}
+
+static void
+sse_rule_select1ql (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+
+  orc_sse_emit_psrlq (p, 32, dest);
+#ifndef MMX
+  orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,2,0), src, dest);
+#else
+  orc_sse_emit_movdqa (p, src, dest);
+#endif
+}
+
+static void
 sse_rule_select0wb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   //int src = p->vars[insn->src_args[0]].alloc;
@@ -2697,6 +2725,8 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   REG(orq);
   REG(xorq);
 
+  REG(select0ql);
+  REG(select1ql);
   REG(select0lw);
   REG(select1lw);
   REG(select0wb);
