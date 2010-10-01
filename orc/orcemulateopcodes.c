@@ -4256,7 +4256,7 @@ emulate_mergewl (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadw */
     var33 = ptr5[i];
     /* 2: mergewl */
-    var34.i = ((orc_uint16)var32.i) | ((orc_uint16)var33.i << 16);
+    var34.i = ((orc_uint16)var32.i & 0x0000ffff) | ((orc_uint16)var33.i << 16);
     /* 3: storel */
     ptr0[i] = var34;
   }
@@ -4285,7 +4285,7 @@ emulate_mergebw (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadb */
     var33 = ptr5[i];
     /* 2: mergebw */
-    var34.i = ((orc_uint8)var32) | ((orc_uint8)var33 << 8);
+    var34.i = ((orc_uint8)var32 & 0x00ff) | ((orc_uint8)var33 << 8);
     /* 3: storew */
     ptr0[i] = var34;
   }
