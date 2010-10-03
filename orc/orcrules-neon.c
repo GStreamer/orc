@@ -1695,6 +1695,27 @@ BINARY(subssl,"vqsub.s32",0xf2200210, 1)
 BINARY(subusl,"vqsub.u32",0xf3200210, 1)
 BINARY(xorl,"veor",0xf3000110, 1)
 
+//UNARY(absq,"vabs.s8",0xf3b10300, 3)
+//BINARY(addq,"vadd.i8",0xf2000800, 3)
+//BINARY(addssq,"vqadd.s8",0xf2000010, 3)
+//BINARY(addusq,"vqadd.u8",0xf3000010, 3)
+BINARY(andq,"vand",0xf2000110, 3)
+//BINARY(avgsq,"vrhadd.s8",0xf2000100, 3)
+//BINARY(avguq,"vrhadd.u8",0xf3000100, 3)
+//BINARY(cmpeqq,"vceq.i8",0xf3000810, 3)
+//BINARY(cmpgtsq,"vcgt.s8",0xf2000300, 3)
+MOVE(copyq,"vmov",0xf2200110, 3)
+//BINARY(maxsq,"vmax.s8",0xf2000600, 3)
+//BINARY(maxuq,"vmax.u8",0xf3000600, 3)
+//BINARY(minsq,"vmin.s8",0xf2000610, 3)
+//BINARY(minuq,"vmin.u8",0xf3000610, 3)
+//BINARY(mullq,"vmul.i8",0xf2000910, 3)
+BINARY(orq,"vorr",0xf2200110, 3)
+//BINARY(subq,"vsub.i8",0xf3000800, 3)
+//BINARY(subssq,"vqsub.s8",0xf2000210, 3)
+//BINARY(subusq,"vqsub.u8",0xf3000210, 3)
+BINARY(xorq,"veor",0xf3000110, 3)
+
 UNARY_LONG(convsbw,"vmovl.s8",0xf2880a10, 3)
 UNARY_LONG(convubw,"vmovl.u8",0xf3880a10, 3)
 UNARY_LONG(convswl,"vmovl.s16",0xf2900a10, 2)
@@ -2595,6 +2616,11 @@ orc_compiler_neon_register_rules (OrcTarget *target)
   REG(subssl);
   REG(subusl);
   REG(xorl);
+
+  REG(andq);
+  REG(orq);
+  REG(copyq);
+  REG(xorq);
 
   REG(convsbw);
   REG(convubw);
