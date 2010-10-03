@@ -122,9 +122,11 @@ UNARY_LW(convussql, "ORC_CLAMP_SL((orc_uint64)%s)")
 UNARY_LW(convuusql, "ORC_CLAMP_UL((orc_uint64)%s)")
 
 BINARY_BW(mulsbw, "%s * %s")
-BINARY_BW(mulubw, "(orc_uint8)%s * (orc_uint8)%s")
+BINARY_BW(mulubw, "((orc_uint8)%s) * ((orc_uint8)%s)")
 BINARY_WL(mulswl, "%s * %s")
-BINARY_WL(muluwl, "(orc_uint16)%s * (orc_uint16)%s")
+BINARY_WL(muluwl, "((orc_uint16)%s) * ((orc_uint16)%s)")
+BINARY_LQ(mulslq, "((orc_int64)%s) * ((orc_int64)%s)")
+BINARY_LQ(mululq, "((orc_uint64)((orc_uint32)%s)) * ((orc_uint64)((orc_uint32)%s))")
 
 BINARY_LQ(mergelq, "((orc_uint64)%s & ORC_UINT64_C(0xffffffff)) | ((orc_uint64)%s << 32)")
 BINARY_WL(mergewl, "((orc_uint16)%s & 0x0000ffff) | ((orc_uint16)%s << 16)")

@@ -3808,7 +3808,7 @@ emulate_mulubw (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadb */
     var33 = ptr5[i];
     /* 2: mulubw */
-    var34.i = (orc_uint8)var32 * (orc_uint8)var33;
+    var34.i = ((orc_uint8)var32) * ((orc_uint8)var33);
     /* 3: storew */
     ptr0[i] = var34;
   }
@@ -3866,8 +3866,66 @@ emulate_muluwl (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadw */
     var33 = ptr5[i];
     /* 2: muluwl */
-    var34.i = (orc_uint16)var32.i * (orc_uint16)var33.i;
+    var34.i = ((orc_uint16)var32.i) * ((orc_uint16)var33.i);
     /* 3: storel */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
+emulate_mulslq (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
+  orc_union32 var32;
+  orc_union32 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union32 *)ex->src_ptrs[0];
+  ptr5 = (orc_union32 *)ex->src_ptrs[1];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var32 = ptr4[i];
+    /* 1: loadl */
+    var33 = ptr5[i];
+    /* 2: mulslq */
+    var34.i = ((orc_int64)var32.i) * ((orc_int64)var33.i);
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
+emulate_mululq (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union64 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
+  orc_union32 var32;
+  orc_union32 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union32 *)ex->src_ptrs[0];
+  ptr5 = (orc_union32 *)ex->src_ptrs[1];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var32 = ptr4[i];
+    /* 1: loadl */
+    var33 = ptr5[i];
+    /* 2: mululq */
+    var34.i = ((orc_uint64)((orc_uint32)var32.i)) * ((orc_uint64)((orc_uint32)var33.i));
+    /* 3: storeq */
     ptr0[i] = var34;
   }
 

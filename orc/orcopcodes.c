@@ -443,10 +443,8 @@ static OrcStaticOpcode opcodes[] = {
   { "mulubw", 0, { 2 }, { 1, 1 }, emulate_mulubw },
   { "mulswl", 0, { 4 }, { 2, 2 }, emulate_mulswl },
   { "muluwl", 0, { 4 }, { 2, 2 }, emulate_muluwl },
-#ifdef ENABLE_64BIT
   { "mulslq", 0, { 8 }, { 4, 4 }, emulate_mulslq },
   { "mululq", 0, { 8 }, { 4, 4 }, emulate_mululq },
-#endif
 
   /* accumulators */
   { "accw", ORC_STATIC_OPCODE_ACCUMULATOR, { 2 }, { 2 }, emulate_accw },

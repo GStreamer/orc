@@ -150,6 +150,8 @@ void emulate_mulsbw (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_mulubw (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_mulswl (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_muluwl (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_mulslq (OrcOpcodeExecutor *ex, int i, int n);
+void emulate_mululq (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_accw (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_accl (OrcOpcodeExecutor *ex, int i, int n);
 void emulate_accsadubl (OrcOpcodeExecutor *ex, int i, int n);
