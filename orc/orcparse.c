@@ -184,6 +184,9 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
       } else if (strcmp (token[0], ".param") == 0) {
         int size = strtol (token[1], NULL, 0);
         orc_program_add_parameter (parser->program, size, token[2]);
+      } else if (strcmp (token[0], ".longparam") == 0) {
+        int size = strtol (token[1], NULL, 0);
+        orc_program_add_parameter_int64 (parser->program, size, token[2]);
       } else if (strcmp (token[0], ".const") == 0) {
         int size = strtol (token[1], NULL, 0);
 
@@ -191,6 +194,9 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
       } else if (strcmp (token[0], ".floatparam") == 0) {
         int size = strtol (token[1], NULL, 0);
         orc_program_add_parameter_float (parser->program, size, token[2]);
+      } else if (strcmp (token[0], ".doubleparam") == 0) {
+        int size = strtol (token[1], NULL, 0);
+        orc_program_add_parameter_double (parser->program, size, token[2]);
       } else {
         orc_parse_log (parser, "error: line %d: unknown directive: %s\n",
             parser->line_number, token[0]);
