@@ -1,4 +1,23 @@
 
+0.4.10
+======
+
+Changes:
+
+ - Added several simple 64-bit opcodes
+ - Improved debugging by adding ORC_CODE=emulate
+ - Allocation of mmap'd areas for code now has several fallback
+   methods, in order to placate various SELinux configurations.
+ - Various speed improvements in SSE backend
+ - Add SSE implementations of ldreslinl and ldresnearl.
+ - Update Mersenne Twister example
+
+There was a bug in the calculation of maximum loop shift that, when
+fixed, increases the speed of certain functions by a factor of two.
+However, the fix also triggers a bug in Schroedinger, which is fixed
+in the 1.0.10 release.
+
+
 0.4.9
 =====
 
