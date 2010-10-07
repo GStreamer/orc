@@ -1695,26 +1695,26 @@ BINARY(subssl,"vqsub.s32",0xf2200210, 1)
 BINARY(subusl,"vqsub.u32",0xf3200210, 1)
 BINARY(xorl,"veor",0xf3000110, 1)
 
-//UNARY(absq,"vabs.s8",0xf3b10300, 3)
-//BINARY(addq,"vadd.i8",0xf2000800, 3)
-//BINARY(addssq,"vqadd.s8",0xf2000010, 3)
-//BINARY(addusq,"vqadd.u8",0xf3000010, 3)
-BINARY(andq,"vand",0xf2000110, 3)
-//BINARY(avgsq,"vrhadd.s8",0xf2000100, 3)
-//BINARY(avguq,"vrhadd.u8",0xf3000100, 3)
-//BINARY(cmpeqq,"vceq.i8",0xf3000810, 3)
-//BINARY(cmpgtsq,"vcgt.s8",0xf2000300, 3)
-MOVE(copyq,"vmov",0xf2200110, 3)
-//BINARY(maxsq,"vmax.s8",0xf2000600, 3)
-//BINARY(maxuq,"vmax.u8",0xf3000600, 3)
-//BINARY(minsq,"vmin.s8",0xf2000610, 3)
-//BINARY(minuq,"vmin.u8",0xf3000610, 3)
-//BINARY(mullq,"vmul.i8",0xf2000910, 3)
-BINARY(orq,"vorr",0xf2200110, 3)
-//BINARY(subq,"vsub.i8",0xf3000800, 3)
-//BINARY(subssq,"vqsub.s8",0xf2000210, 3)
-//BINARY(subusq,"vqsub.u8",0xf3000210, 3)
-BINARY(xorq,"veor",0xf3000110, 3)
+//UNARY(absq,"vabs.s64",0xf3b10300, 0)
+BINARY(addq,"vadd.i64",0xf2300800, 0)
+//BINARY(addssq,"vqadd.s64",0xf2000010, 0)
+//BINARY(addusq,"vqadd.u64",0xf3000010, 0)
+BINARY(andq,"vand",0xf2000110, 0)
+//BINARY(avgsq,"vrhadd.s64",0xf2000100, 0)
+//BINARY(avguq,"vrhadd.u64",0xf3000100, 0)
+//BINARY(cmpeqq,"vceq.i64",0xf3000810, 0)
+//BINARY(cmpgtsq,"vcgt.s64",0xf2000300, 0)
+MOVE(copyq,"vmov",0xf2200110, 0)
+//BINARY(maxsq,"vmax.s64",0xf2000600, 0)
+//BINARY(maxuq,"vmax.u64",0xf3000600, 0)
+//BINARY(minsq,"vmin.s64",0xf2000610, 0)
+//BINARY(minuq,"vmin.u64",0xf3000610, 0)
+//BINARY(mullq,"vmul.i64",0xf2000910, 0)
+BINARY(orq,"vorr",0xf2200110, 0)
+BINARY(subq,"vsub.i64",0xf3300800, 0)
+//BINARY(subssq,"vqsub.s64",0xf2000210, 0)
+//BINARY(subusq,"vqsub.u64",0xf3000210, 0)
+BINARY(xorq,"veor",0xf3000110, 0)
 
 UNARY_LONG(convsbw,"vmovl.s8",0xf2880a10, 3)
 UNARY_LONG(convubw,"vmovl.u8",0xf3880a10, 3)
@@ -1742,7 +1742,11 @@ BINARY_LONG(muluwl,"vmull.u16",0xf3900c00, 2)
 
 UNARY(swapw,"vrev16.i8",0xf3b00100, 2)
 UNARY(swapl,"vrev32.i8",0xf3b00080, 1)
+UNARY(swapq,"vrev64.i8",0xf3b00000, 0)
+UNARY(swapwl,"vrev32.i16",0xf3b40080, 1)
+UNARY(swaplq,"vrev64.i32",0xf3b80000, 0)
 
+UNARY_NARROW(select0ql,"vmovn.i64",0xf3ba0200, 1)
 UNARY_NARROW(select0lw,"vmovn.i32",0xf3b60200, 2)
 UNARY_NARROW(select0wb,"vmovn.i16",0xf3b20200, 3)
 
@@ -1910,6 +1914,19 @@ orc_neon_rule_select1lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+orc_neon_rule_select1ql (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  unsigned int code;
+  ORC_ASM_CODE(p,"  vtrn.32 %s, %s\n",
+      orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
+      orc_neon_reg_name_quad (p->vars[insn->src_args[0]].alloc));
+  code = NEON_BINARY (0xf2a00810,
+      p->vars[insn->dest_args[0]].alloc,
+      0, p->vars[insn->src_args[0]].alloc);
+  orc_arm_emit (p, code);
+}
+
+static void
 orc_neon_rule_convhwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   unsigned int code;
@@ -1999,6 +2016,44 @@ orc_neon_rule_mergewl (OrcCompiler *p, void *user, OrcInstruction *insn)
           p->tmpreg);
     } else {
       orc_neon_emit_unary_quad (p, "vzip.16", 0xf3b60180,
+          p->vars[insn->dest_args[0]].alloc,
+          p->vars[insn->src_args[1]].alloc);
+    }
+  }
+}
+
+static void
+orc_neon_rule_mergelq (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  if (p->insn_shift <= 0) {
+    if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
+      orc_neon_emit_mov (p, p->vars[insn->dest_args[0]].alloc,
+          p->vars[insn->src_args[0]].alloc);
+    }
+
+    if (p->vars[insn->src_args[1]].last_use != p->insn_index) {
+      orc_neon_emit_mov (p, p->tmpreg, p->vars[insn->src_args[1]].alloc);
+      orc_neon_emit_unary (p, "vtrn.32", 0xf3ba0080,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg);
+    } else {
+      orc_neon_emit_unary (p, "vtrn.32", 0xf3ba0080,
+          p->vars[insn->dest_args[0]].alloc,
+          p->vars[insn->src_args[1]].alloc);
+    }
+  } else {
+    if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
+      orc_neon_emit_mov_quad (p, p->vars[insn->dest_args[0]].alloc,
+          p->vars[insn->src_args[0]].alloc);
+    }
+
+    if (p->vars[insn->src_args[1]].last_use != p->insn_index) {
+      orc_neon_emit_mov_quad (p, p->tmpreg, p->vars[insn->src_args[1]].alloc);
+      orc_neon_emit_unary_quad (p, "vzip.32", 0xf3ba0180,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg);
+    } else {
+      orc_neon_emit_unary_quad (p, "vzip.32", 0xf3ba0180,
           p->vars[insn->dest_args[0]].alloc,
           p->vars[insn->src_args[1]].alloc);
     }
@@ -2442,6 +2497,32 @@ orc_neon_rule_mulhsl (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+orc_neon_rule_splitql (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int dest0 = p->vars[insn->dest_args[0]].alloc;
+  int dest1 = p->vars[insn->dest_args[1]].alloc;
+  int src = p->vars[insn->src_args[0]].alloc;
+
+  if (p->insn_shift < 1) {
+    if (src != dest0) {
+      orc_neon_emit_mov (p, dest0, src);
+    }
+    if (src != dest1) {
+      orc_neon_emit_mov (p, dest1, src);
+    }
+    orc_neon_emit_unary (p, "vtrn.32", 0xf3ba0080, dest1, dest0);
+  } else {
+    if (src != dest0) {
+      orc_neon_emit_mov_quad (p, dest0, src);
+    }
+    if (src != dest1) {
+      orc_neon_emit_mov_quad (p, dest1, src);
+    }
+    orc_neon_emit_unary_quad (p, "vuzp.32", 0xf3ba0140, dest1, dest0);
+  }
+}
+
+static void
 orc_neon_rule_splitlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int dest0 = p->vars[insn->dest_args[0]].alloc;
@@ -2617,9 +2698,11 @@ orc_compiler_neon_register_rules (OrcTarget *target)
   REG(subusl);
   REG(xorl);
 
+  REG(addq);
   REG(andq);
   REG(orq);
   REG(copyq);
+  REG(subq);
   REG(xorq);
 
   REG(convsbw);
@@ -2653,12 +2736,19 @@ orc_compiler_neon_register_rules (OrcTarget *target)
   REG(accsadubl);
   REG(swapw);
   REG(swapl);
+  REG(swapq);
+  REG(swapwl);
+  REG(swaplq);
   REG(select0wb);
   REG(select1wb);
   REG(select0lw);
   REG(select1lw);
+  REG(select0ql);
+  if (0) REG(select1ql);
   REG(mergebw);
   REG(mergewl);
+  REG(mergelq);
+  REG(splitql);
   REG(splitlw);
   REG(splitwb);
 
@@ -2716,5 +2806,6 @@ orc_compiler_neon_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "andnb", orc_neon_rule_andn, (void *)3);
   orc_rule_register (rule_set, "andnw", orc_neon_rule_andn, (void *)2);
   orc_rule_register (rule_set, "andnl", orc_neon_rule_andn, (void *)1);
+  orc_rule_register (rule_set, "andnq", orc_neon_rule_andn, (void *)0);
 }
 
