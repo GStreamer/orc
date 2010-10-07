@@ -1592,6 +1592,32 @@ mmx_rule_mulhul (OrcCompiler *p, void *user, OrcInstruction *insn)
 #endif
 
 static void
+mmx_rule_mulslq (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[1]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = orc_compiler_get_temp_reg (p);
+
+  orc_mmx_emit_movq (p, src, tmp);
+  orc_mmx_emit_punpckldq (p, dest, dest);
+  orc_mmx_emit_punpckldq (p, tmp, tmp);
+  orc_mmx_emit_pmuldq (p, tmp, dest);
+}
+
+static void
+mmx_rule_mululq (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[1]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = orc_compiler_get_temp_reg (p);
+
+  orc_mmx_emit_movq (p, src, tmp);
+  orc_mmx_emit_punpckldq (p, dest, dest);
+  orc_mmx_emit_punpckldq (p, tmp, tmp);
+  orc_mmx_emit_pmuludq (p, tmp, dest);
+}
+
+static void
 mmx_rule_select0lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   //int src = p->vars[insn->src_args[0]].alloc;
@@ -1615,6 +1641,34 @@ mmx_rule_select1lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   orc_mmx_emit_psrad (p, 16, dest);
   orc_mmx_emit_packssdw (p, dest, dest);
+}
+
+static void
+mmx_rule_select0ql (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+
+  /* same as convql */
+#ifndef MMX
+  orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(2,0,2,0), src, dest);
+#else
+  orc_mmx_emit_movq (p, src, dest);
+#endif
+}
+
+static void
+mmx_rule_select1ql (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+
+  orc_mmx_emit_psrlq (p, 32, dest);
+#ifndef MMX
+  orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(2,0,2,0), src, dest);
+#else
+  orc_mmx_emit_movq (p, src, dest);
+#endif
 }
 
 static void
@@ -1723,6 +1777,15 @@ mmx_rule_mergewl (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = p->vars[insn->dest_args[0]].alloc;
 
   orc_mmx_emit_punpcklwd (p, src, dest);
+}
+
+static void
+mmx_rule_mergelq (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[1]].alloc;
+  int dest = p->vars[insn->dest_args[0]].alloc;
+
+  orc_mmx_emit_punpckldq (p, src, dest);
 }
 
 static void
@@ -2688,12 +2751,15 @@ orc_compiler_mmx_register_rules (OrcTarget *target)
   REG(orq);
   REG(xorq);
 
+  REG(select0ql);
+  REG(select1ql);
   REG(select0lw);
   REG(select1lw);
   REG(select0wb);
   REG(select1wb);
   REG(mergebw);
   REG(mergewl);
+  REG(mergelq);
 
   orc_rule_register (rule_set, "copyb", mmx_rule_copyx, NULL);
   orc_rule_register (rule_set, "copyw", mmx_rule_copyx, NULL);
@@ -2730,6 +2796,7 @@ orc_compiler_mmx_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "mulubw", mmx_rule_mulubw, NULL);
   orc_rule_register (rule_set, "mulswl", mmx_rule_mulswl, NULL);
   orc_rule_register (rule_set, "muluwl", mmx_rule_muluwl, NULL);
+  orc_rule_register (rule_set, "mululq", mmx_rule_mululq, NULL);
 
   orc_rule_register (rule_set, "accw", mmx_rule_accw, NULL);
   orc_rule_register (rule_set, "accl", mmx_rule_accl, NULL);
@@ -2861,10 +2928,10 @@ orc_compiler_mmx_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "convuwl", mmx_rule_convuwl_mmx41, NULL);
   orc_rule_register (rule_set, "convulq", mmx_rule_convulq_mmx41, NULL);
   orc_rule_register (rule_set, "convsuslw", mmx_rule_convsuslw, NULL);
+  orc_rule_register (rule_set, "mulslq", mmx_rule_mulslq, NULL);
 #ifndef MMX
   orc_rule_register (rule_set, "mulhsl", mmx_rule_mulhsl, NULL);
 #endif
-
   REG(cmpeqq);
 
   /* SSE 4.2 -- no rules */
