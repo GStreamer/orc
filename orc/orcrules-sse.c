@@ -1604,6 +1604,7 @@ sse_rule_mulslq (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_pmuldq (p, tmp, dest);
 }
 
+#ifndef MMX
 static void
 sse_rule_mululq (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -1616,6 +1617,7 @@ sse_rule_mululq (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_punpckldq (p, tmp, tmp);
   orc_sse_emit_pmuludq (p, tmp, dest);
 }
+#endif
 
 static void
 sse_rule_select0lw (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -2796,13 +2798,15 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "mulubw", sse_rule_mulubw, NULL);
   orc_rule_register (rule_set, "mulswl", sse_rule_mulswl, NULL);
   orc_rule_register (rule_set, "muluwl", sse_rule_muluwl, NULL);
-  orc_rule_register (rule_set, "mululq", sse_rule_mululq, NULL);
 
   orc_rule_register (rule_set, "accw", sse_rule_accw, NULL);
   orc_rule_register (rule_set, "accl", sse_rule_accl, NULL);
   orc_rule_register (rule_set, "accsadubl", sse_rule_accsadubl, NULL);
 
 #ifndef MMX
+  /* These require the SSE2 flag, although could be used with MMX.
+     That flag is not yet handled. */
+  orc_rule_register (rule_set, "mululq", sse_rule_mululq, NULL);
   REG(addq);
   REG(subq);
 
