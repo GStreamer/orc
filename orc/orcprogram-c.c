@@ -761,7 +761,8 @@ c_rule_loadpX (OrcCompiler *p, void *user, OrcInstruction *insn)
   int size = ORC_PTR_TO_INT(user);
 
   if ((p->target_flags & ORC_TARGET_C_NOEXEC) &&
-      (p->vars[insn->src_args[0]].param_type == ORC_PARAM_TYPE_FLOAT))
+      (p->vars[insn->src_args[0]].param_type == ORC_PARAM_TYPE_FLOAT ||
+       p->vars[insn->src_args[0]].param_type == ORC_PARAM_TYPE_DOUBLE))
     c_get_name_float (dest, p, insn, insn->dest_args[0]);
   else
     c_get_name_int (dest, p, insn, insn->dest_args[0]);
