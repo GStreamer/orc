@@ -189,6 +189,7 @@ orc/Makefile
 orc-test/Makefile
 testsuite/Makefile
 testsuite/orcc/Makefile
+testsuite/benchmorc/Makefile
 examples/Makefile
 tools/Makefile
 orc-uninstalled.pc

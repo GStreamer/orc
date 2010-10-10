@@ -1,7 +1,7 @@
 
-DIST_SUBDIRS = orcc
+DIST_SUBDIRS = orcc benchmorc
 
-SUBDIRS = orcc
+SUBDIRS = orcc benchmorc
 
 TESTS_ENVIRONMENT = \
         testfile="$(srcdir)/test.orc"
