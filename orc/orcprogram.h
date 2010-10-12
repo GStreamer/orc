@@ -99,7 +99,8 @@ enum {
 };
 
 enum {
-  ORC_TARGET_ARM_EDSP = (1<<2)
+  ORC_TARGET_ARM_EDSP = (1<<2),
+  ORC_TARGET_ARM_ARM6 = (1<<3)
 };
 
 typedef enum {

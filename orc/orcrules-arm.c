@@ -1644,30 +1644,18 @@ orc_compiler_orc_arm_register_rules (OrcTarget *target)
       ORC_TARGET_ARM_EDSP);
 
   FAIL orc_rule_register (rule_set, "absb", arm_rule_absX, (void *)0);
-  orc_rule_register (rule_set, "addb", arm_rule_addb, NULL);
-  orc_rule_register (rule_set, "addssb", arm_rule_addssb, NULL);
-  orc_rule_register (rule_set, "addusb", arm_rule_addusb, NULL);
   orc_rule_register (rule_set, "cmpeqb", arm_rule_cmpeqX, (void *)1);
   orc_rule_register (rule_set, "cmpgtsb", arm_rule_cmpgtsX, (void *)1);
   FAIL orc_rule_register (rule_set, "maxsb", arm_rule_maxsb, NULL);
   FAIL orc_rule_register (rule_set, "maxub", arm_rule_maxub, NULL);
   FAIL orc_rule_register (rule_set, "minsb", arm_rule_minsb, NULL);
   FAIL orc_rule_register (rule_set, "minub", arm_rule_minub, NULL);
-  orc_rule_register (rule_set, "mullb", arm_rule_mullb, NULL);
   orc_rule_register (rule_set, "shlb", arm_rule_shlX, (void *)1);
   FAIL orc_rule_register (rule_set, "shrsb", arm_rule_shrsX, (void *)1);
   FAIL orc_rule_register (rule_set, "shrub", arm_rule_shruX, (void *)1);
   FAIL orc_rule_register (rule_set, "signb", arm_rule_signX, (void *)0);
-  orc_rule_register (rule_set, "subb", arm_rule_subb, NULL);
-  orc_rule_register (rule_set, "subssb", arm_rule_subssb, NULL);
-  orc_rule_register (rule_set, "subusb", arm_rule_subusb, NULL);
-  orc_rule_register (rule_set, "mulhsb", arm_rule_mulhsb, NULL);
-  FAIL orc_rule_register (rule_set, "mulhub", arm_rule_mulhub, NULL);
 
   FAIL orc_rule_register (rule_set, "absw", arm_rule_absX, (void *)1);
-  orc_rule_register (rule_set, "addssw", arm_rule_addssw, NULL);
-  orc_rule_register (rule_set, "addusw", arm_rule_addusw, NULL);
-  orc_rule_register (rule_set, "addw", arm_rule_addw, NULL);
   orc_rule_register (rule_set, "cmpeqw", arm_rule_cmpeqX, (void *)2);
   orc_rule_register (rule_set, "cmpgtsw", arm_rule_cmpgtsX, (void *)2);
   FAIL orc_rule_register (rule_set, "maxsw", arm_rule_maxsw, NULL);
@@ -1679,9 +1667,6 @@ orc_compiler_orc_arm_register_rules (OrcTarget *target)
   FAIL orc_rule_register (rule_set, "shrsw", arm_rule_shrsX, (void *)2);
   orc_rule_register (rule_set, "shruw", arm_rule_shruX, (void *)2);
   FAIL orc_rule_register (rule_set, "signw", arm_rule_signX, (void *)1);
-  orc_rule_register (rule_set, "subssw", arm_rule_subssw, NULL);
-  orc_rule_register (rule_set, "subusw", arm_rule_subusw, NULL);
-  orc_rule_register (rule_set, "subw", arm_rule_subw, NULL);
   orc_rule_register (rule_set, "mulhsw", arm_rule_mulhsw, NULL);
   FAIL orc_rule_register (rule_set, "mulhuw", arm_rule_mulhuw, NULL);
 
@@ -1692,14 +1677,6 @@ orc_compiler_orc_arm_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "shrul", arm_rule_shruX, (void *)4);
 
   orc_rule_register (rule_set, "convsbw", arm_rule_convsbw, NULL);
-  orc_rule_register (rule_set, "convsuswb", arm_rule_convsuswb, NULL);
-  orc_rule_register (rule_set, "convssswb", arm_rule_convssswb, NULL);
-  FAIL orc_rule_register (rule_set, "convusswb", arm_rule_convusswb, NULL);
-  FAIL orc_rule_register (rule_set, "convuuswb", arm_rule_convuuswb, NULL);
-  FAIL orc_rule_register (rule_set, "convssslw", arm_rule_convssslw, NULL);
-  orc_rule_register (rule_set, "convsuslw", arm_rule_convsuslw, NULL);
-  FAIL orc_rule_register (rule_set, "convusslw", arm_rule_convusslw, NULL);
-  FAIL orc_rule_register (rule_set, "convuuslw", arm_rule_convuuslw, NULL);
 
   orc_rule_register (rule_set, "mergewl", arm_rule_mergewl, NULL);
   FAIL orc_rule_register (rule_set, "mergebw", arm_rule_mergebw, NULL);
@@ -1708,6 +1685,32 @@ orc_compiler_orc_arm_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "select0lw", arm_rule_select0lw, NULL);
   orc_rule_register (rule_set, "select1lw", arm_rule_select1lw, NULL);
 
+  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target,
+      ORC_TARGET_ARM_ARM6);
+
+  orc_rule_register (rule_set, "addb", arm_rule_addb, NULL);
+  orc_rule_register (rule_set, "addssb", arm_rule_addssb, NULL);
+  orc_rule_register (rule_set, "addusb", arm_rule_addusb, NULL);
+  orc_rule_register (rule_set, "subb", arm_rule_subb, NULL);
+  orc_rule_register (rule_set, "subssb", arm_rule_subssb, NULL);
+  orc_rule_register (rule_set, "subusb", arm_rule_subusb, NULL);
+  orc_rule_register (rule_set, "addw", arm_rule_addw, NULL);
+  orc_rule_register (rule_set, "addssw", arm_rule_addssw, NULL);
+  orc_rule_register (rule_set, "addusw", arm_rule_addusw, NULL);
+  orc_rule_register (rule_set, "subw", arm_rule_subw, NULL);
+  orc_rule_register (rule_set, "subssw", arm_rule_subssw, NULL);
+  orc_rule_register (rule_set, "subusw", arm_rule_subusw, NULL);
+  orc_rule_register (rule_set, "convsuswb", arm_rule_convsuswb, NULL);
+  orc_rule_register (rule_set, "convssswb", arm_rule_convssswb, NULL);
+  FAIL orc_rule_register (rule_set, "convusswb", arm_rule_convusswb, NULL);
+  FAIL orc_rule_register (rule_set, "convuuswb", arm_rule_convuuswb, NULL);
+  FAIL orc_rule_register (rule_set, "convssslw", arm_rule_convssslw, NULL);
+  orc_rule_register (rule_set, "convsuslw", arm_rule_convsuslw, NULL);
+  FAIL orc_rule_register (rule_set, "convusslw", arm_rule_convusslw, NULL);
+  FAIL orc_rule_register (rule_set, "convuuslw", arm_rule_convuuslw, NULL);
+  orc_rule_register (rule_set, "mullb", arm_rule_mullb, NULL);
+  orc_rule_register (rule_set, "mulhsb", arm_rule_mulhsb, NULL);
+  FAIL orc_rule_register (rule_set, "mulhub", arm_rule_mulhub, NULL);
   orc_rule_register (rule_set, "swapw", arm_rule_swapw, NULL);
   orc_rule_register (rule_set, "swapl", arm_rule_swapl, NULL);
 
