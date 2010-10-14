@@ -45,7 +45,7 @@ sse_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
           compiler->exec_reg, reg);
       orc_sse_emit_pinsrw_memoffset (compiler, 3,
           (int)ORC_STRUCT_OFFSET(OrcExecutor,
-            params[insn->src_args[0] + (ORC_VAR_T1 - ORC_VAR_P1)]) + 1,
+            params[insn->src_args[0] + (ORC_VAR_T1 - ORC_VAR_P1)]) + 2,
           compiler->exec_reg, reg);
 #ifndef MMX
       orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(1,0,1,0), reg, reg);
