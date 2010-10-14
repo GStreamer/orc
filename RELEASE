@@ -1,4 +1,19 @@
 
+0.4.11
+======
+
+This is primarily a bug fixing release.
+
+ - Fixes for CPUs that don't have backends
+ - Fix loading of double parameters
+ - mmx: Fix 64-bit parameter loading
+ - sse/mmx: Fix x2/x4 with certain opcodes
+
+There are still some issues with the ARM backend on certain
+architecture levels (especially ARMv6).  Some assistance from
+a user with access to such hardware would be useful.
+
+
 0.4.10
 ======
 
