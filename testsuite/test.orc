@@ -2266,3 +2266,34 @@ copyq d, s
 copyq d, s
 
 
+.function param64_2
+.dest 8 d
+.longparam 8 p
+.temp 8 t
+
+loadpq t, p
+copyq d, t
+
+
+.function pa_volume_s16ne_orc_2ch
+.dest 4 samples int16_t
+.longparam 8 vols
+.temp 8 v
+.temp 8 s
+.temp 8 ss
+.temp 8 m
+.temp 8 signc
+
+loadpq v, vols
+x2 convuwl s, samples
+x2 convswl ss, samples
+x4 cmpgtsw signc, 0, s
+x4 andw signc, signc, v
+x4 mulhuw m, s, v
+x2 subl m, m, signc
+x2 shrul v, v, 16
+x2 mulll ss, ss, v
+x2 addl m, m, ss
+x2 convssslw samples, m
+
+
