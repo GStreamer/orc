@@ -167,7 +167,7 @@ main (int argc, char *argv[])
     exit (1);
   }
 
-  if (orc_target_get_by_name (target) == NULL) {
+  if (mode == MODE_ASSEMBLY && orc_target_get_by_name (target) == NULL) {
     printf("Unknown target \"%s\"\n", target);
     exit (1);
   }
@@ -1153,7 +1153,7 @@ output_code_assembly (OrcProgram *p, FILE *output)
     OrcCompileResult result;
     OrcTarget *t = orc_target_get_by_name(target);
 
-    result = orc_program_compile_full (p, orc_target_get_by_name(target),
+    result = orc_program_compile_full (p, t,
         orc_target_get_default_flags (t));
     if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
       fprintf(output, "%s\n", orc_program_get_asm_code (p));
