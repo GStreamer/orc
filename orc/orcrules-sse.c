@@ -1508,7 +1508,7 @@ sse_rule_mulll_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_x86_emit_mov_sse_memoffset (p, 16, p->vars[insn->src_args[1]].alloc,
       offset + 16, p->exec_reg, FALSE, FALSE);
 
-  for(i=0;i<(1<<p->loop_shift);i++) {
+  for(i=0;i<(1<<p->insn_shift);i++) {
     orc_x86_emit_mov_memoffset_reg (p, 4, offset + 4*i, p->exec_reg,
         p->gp_tmpreg);
     orc_x86_emit_imul_memoffset_reg (p, 4, offset + 16+4*i, p->exec_reg,
@@ -1556,7 +1556,7 @@ sse_rule_mulhsl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_x86_emit_mov_reg_memoffset (p, regsize, X86_EDX, offset + 40,
       p->exec_reg);
 
-  for(i=0;i<(1<<p->loop_shift);i++) {
+  for(i=0;i<(1<<p->insn_shift);i++) {
     orc_x86_emit_mov_memoffset_reg (p, 4, offset + 4*i, p->exec_reg, X86_EAX);
     ORC_ASM_CODE(p,"  imull %d(%%%s)\n", offset + 16 + 4*i,
         orc_x86_get_regname_ptr(p, p->exec_reg));

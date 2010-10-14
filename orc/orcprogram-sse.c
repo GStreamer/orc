@@ -1006,6 +1006,14 @@ orc_sse_emit_loop (OrcCompiler *compiler, int offset, int update)
 
     compiler->min_temp_reg = ORC_VEC_REG_BASE;
 
+    compiler->insn_shift = compiler->loop_shift;
+    if (insn->flags & ORC_INSTRUCTION_FLAG_X2) {
+      compiler->insn_shift += 1;
+    }
+    if (insn->flags & ORC_INSTRUCTION_FLAG_X4) {
+      compiler->insn_shift += 2;
+    }
+
     rule = insn->rule;
     if (rule && rule->emit) {
       if (!(insn->opcode->flags & (ORC_STATIC_OPCODE_ACCUMULATOR|ORC_STATIC_OPCODE_LOAD|ORC_STATIC_OPCODE_STORE)) &&
@@ -1069,6 +1077,14 @@ orc_sse_emit_invariants (OrcCompiler *compiler)
     if (!(insn->flags & ORC_INSN_FLAG_INVARIANT)) continue;
 
     ORC_ASM_CODE(compiler,"# %d: %s\n", j, insn->opcode->name);
+
+    compiler->insn_shift = compiler->loop_shift;
+    if (insn->flags & ORC_INSTRUCTION_FLAG_X2) {
+      compiler->insn_shift += 1;
+    }
+    if (insn->flags & ORC_INSTRUCTION_FLAG_X4) {
+      compiler->insn_shift += 2;
+    }
 
     rule = insn->rule;
     if (rule && rule->emit) {
