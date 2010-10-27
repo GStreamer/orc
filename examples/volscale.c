@@ -55,7 +55,7 @@ sse_rule_mulhslw (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_movdqa (p, src2, tmp2);
   orc_sse_emit_pmulhw (p, src1, src2);    /* .. |    0  | vl*p0 | */
   orc_sse_emit_paddw (p, tmp1, src2);     /* .. |    0  | vl*p0 | + sign correct */
-  orc_sse_emit_psrld (p, 16, dest);       /* .. |    0  |   vh  | */
+  orc_sse_emit_psrld_imm (p, 16, dest);       /* .. |    0  |   vh  | */
   orc_sse_emit_pmaddwd (p, tmp2, dest);   /* .. |    p0 * vh    | */
   orc_sse_emit_paddd (p, src2, dest);     /* .. |    p0 * v0    | */
 }

@@ -30,7 +30,7 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 
 if ENABLE_BACKEND_SSE
 liborc_@ORC_MAJORMINOR@_la_SOURCES += orcsse.c orcrules-sse.c orcprogram-sse.c
-liborc_@ORC_MAJORMINOR@_la_SOURCES += orcx86.c
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orcx86.c orcx86insn.c
 endif
 if ENABLE_BACKEND_MMX
 liborc_@ORC_MAJORMINOR@_la_SOURCES += orcmmx.c orcrules-mmx.c orcprogram-mmx.c 
@@ -86,7 +86,8 @@ pkginclude_HEADERS = \
 	orcneon.h \
 	orcx86.h \
 	orcpowerpc.h \
-	orcarm.h
+	orcarm.h \
+	orcx86insn.h
 
 nodist_pkginclude_HEADERS = orc-stdint.h
 

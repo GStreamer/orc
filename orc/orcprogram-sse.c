@@ -402,13 +402,13 @@ orc_sse_load_constant (OrcCompiler *compiler, int reg, int size, orc_uint64 valu
     v = (0xffffffff<<i);
     if (value == v) {
       orc_sse_emit_pcmpeqb (compiler, reg, reg);
-      orc_sse_emit_pslld (compiler, i, reg);
+      orc_sse_emit_pslld_imm (compiler, i, reg);
       return;
     }
     v = (0xffffffff>>i);
     if (value == v) {
       orc_sse_emit_pcmpeqb (compiler, reg, reg);
-      orc_sse_emit_psrld (compiler, i, reg);
+      orc_sse_emit_psrld_imm (compiler, i, reg);
       return;
     }
   }
@@ -417,13 +417,13 @@ orc_sse_load_constant (OrcCompiler *compiler, int reg, int size, orc_uint64 valu
     v = (0xffff & (0xffff<<i)) | (0xffff0000 & (0xffff0000<<i));
     if (value == v) {
       orc_sse_emit_pcmpeqb (compiler, reg, reg);
-      orc_sse_emit_psllw (compiler, i, reg);
+      orc_sse_emit_psllw_imm (compiler, i, reg);
       return;
     }
     v = (0xffff & (0xffff>>i)) | (0xffff0000 & (0xffff0000>>i));
     if (value == v) {
       orc_sse_emit_pcmpeqb (compiler, reg, reg);
-      orc_sse_emit_psrlw (compiler, i, reg);
+      orc_sse_emit_psrlw_imm (compiler, i, reg);
       return;
     }
   }
