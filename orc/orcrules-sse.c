@@ -864,12 +864,12 @@ sse_rule_signX_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   tmpc = orc_compiler_get_temp_constant (p, 1<<type, 1);
   if (src == dest) {
-    orc_sse_emit_sysinsn (p, opcodes[type], src, tmpc);
+    orc_sse_emit_sysinsn (p, opcodes[type], src, tmpc, 0);
     orc_sse_emit_movdqa (p, tmpc, dest);
   } else {
     /* FIXME this would be a good opportunity to not chain src to dest */
     orc_sse_emit_movdqa (p, tmpc, dest);
-    orc_sse_emit_sysinsn (p, opcodes[type], src, dest);
+    orc_sse_emit_sysinsn (p, opcodes[type], src, dest, 0);
   }
 }
 
@@ -955,9 +955,9 @@ sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
     ORC_X86_psrad_imm, ORC_X86_psllq_imm, ORC_X86_psrlq_imm };
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
-    orc_sse_emit_sysinsn (p, opcodes_imm[type],
-        p->vars[insn->src_args[1]].value.i,
-        p->vars[insn->dest_args[0]].alloc);
+    orc_sse_emit_sysinsn (p, opcodes_imm[type], 0,
+        p->vars[insn->dest_args[0]].alloc,
+        p->vars[insn->src_args[1]].value.i);
   } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
     int tmp = orc_compiler_get_temp_reg (p);
 
@@ -968,7 +968,7 @@ sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
         p->exec_reg, tmp, FALSE);
 
     orc_sse_emit_sysinsn (p, opcodes[type], tmp,
-        p->vars[insn->dest_args[0]].alloc);
+        p->vars[insn->dest_args[0]].alloc, 0);
   } else {
     ORC_COMPILER_ERROR(p,"rule only works with constants or params");
     p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;

@@ -292,18 +292,18 @@ sse_save_accumulators (OrcCompiler *compiler)
 #endif
 
         if (compiler->vars[i].size == 2) {
-          orc_sse_emit_660f (compiler, "paddw", 0xfd, tmp, src);
+          orc_sse_emit_paddw (compiler, tmp, src);
         } else {
-          orc_sse_emit_660f (compiler, "paddd", 0xfe, tmp, src);
+          orc_sse_emit_paddd (compiler, tmp, src);
         }
 
 #ifndef MMX
         orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(1,1,1,1), src, tmp);
 
         if (compiler->vars[i].size == 2) {
-          orc_sse_emit_660f (compiler, "paddw", 0xfd, tmp, src);
+          orc_sse_emit_paddw (compiler, tmp, src);
         } else {
-          orc_sse_emit_660f (compiler, "paddd", 0xfe, tmp, src);
+          orc_sse_emit_paddd (compiler, tmp, src);
         }
 #endif
 
@@ -314,7 +314,7 @@ sse_save_accumulators (OrcCompiler *compiler)
           orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(1,1,1,1), src, tmp);
 #endif
 
-          orc_sse_emit_660f (compiler, "paddw", 0xfd, tmp, src);
+          orc_sse_emit_paddw (compiler, tmp, src);
         }
 
         if (compiler->vars[i].size == 2) {

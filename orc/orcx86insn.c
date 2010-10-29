@@ -146,15 +146,15 @@ OrcSysOpcode orc_x86_opcodes[] = {
   { "psllq", ORC_X86_INSN_TYPE_SHIFTIMM, 0, 0x660f73, 6 },
   { "psrldq", ORC_X86_INSN_TYPE_SHIFTIMM, 0, 0x660f73, 3 },
   { "pslldq", ORC_X86_INSN_TYPE_SHIFTIMM, 0, 0x660f73, 7 },
-
-  //{ "", ORC_X86_INSN_TYPE_SD, 0, 0x660f58 },
-  //{ "", ORC_X86_INSN_TYPE_SD, 0, 0x660f58 },
-  //{ "addps", ORC_X86_INSN_TYPE_SD, 0, 0x660f58 },
+  { "pshufd", ORC_X86_INSN_TYPE_SDI, 0, 0x660f70 },
+  { "pshuflw", ORC_X86_INSN_TYPE_SDI, 0, 0xf20f70 },
+  { "pshufhw", ORC_X86_INSN_TYPE_SDI, 0, 0xf30f70 },
+  { "palignr", ORC_X86_INSN_TYPE_SDI, 0, 0x660f3a0f },
 };
 
 
 void
-orc_sse_emit_sysinsn (OrcCompiler *p, int index, int src, int dest)
+orc_sse_emit_sysinsn (OrcCompiler *p, int index, int src, int dest, int imm)
 {
   OrcSysOpcode *opcode = orc_x86_opcodes + index;
 
@@ -167,7 +167,13 @@ orc_sse_emit_sysinsn (OrcCompiler *p, int index, int src, int dest)
       break;
     case ORC_X86_INSN_TYPE_SHIFTIMM:
       ORC_ASM_CODE(p,"  %s $%d, %%%s\n", opcode->name,
-          src,
+          imm,
+          orc_x86_get_regname_sse(dest));
+      break;
+    case ORC_X86_INSN_TYPE_SDI:
+      ORC_ASM_CODE(p,"  %s $%d, %%%s, %%%s\n", opcode->name,
+          imm,
+          orc_x86_get_regname_sse(src),
           orc_x86_get_regname_sse(dest));
       break;
   }
@@ -195,7 +201,11 @@ orc_sse_emit_sysinsn (OrcCompiler *p, int index, int src, int dest)
       break;
     case ORC_X86_INSN_TYPE_SHIFTIMM:
       orc_x86_emit_modrm_reg (p, dest, opcode->code2);
-      *p->codeptr++ = src;
+      *p->codeptr++ = imm;
+      break;
+    case ORC_X86_INSN_TYPE_SDI:
+      orc_x86_emit_modrm_reg (p, src, dest);
+      *p->codeptr++ = imm;
       break;
     case ORC_X86_INSN_TYPE_SD2:
       orc_x86_emit_modrm_reg (p, src, dest);
