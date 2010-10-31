@@ -160,6 +160,12 @@ enum {
   ORC_X86_movdqa_load,
   ORC_X86_movdqu_load,
   ORC_X86_movhps_load,
+  ORC_X86_pextrw,
+  ORC_X86_movd_store,
+  ORC_X86_movq_store,
+  ORC_X86_movdqa_store,
+  ORC_X86_movdqu_store,
+  ORC_X86_movntdq_store,
 };
 
 
@@ -306,13 +312,21 @@ enum {
 #define orc_sse_emit_pshuflw(p,imm,a,b) orc_sse_emit_sysinsn(p, ORC_X86_pshuflw, imm, a, b)
 #define orc_sse_emit_pshufhw(p,imm,a,b) orc_sse_emit_sysinsn(p, ORC_X86_pshufhw, imm, a, b)
 #define orc_sse_emit_palignr(p,imm,a,b) orc_sse_emit_sysinsn(p, ORC_X86_psalignr, imm, a, b)
+#define orc_sse_emit_movdqu(p,offset,a,b) orc_sse_emit_sysinsn(p, ORC_X86_movdqu_load, 0, a, b)
 
-#define orc_sse_emit_pinsrw_memoffset(p,imm,offset,a,b) orc_sse_emit_sysinsn_memoffset(p, ORC_X86_pinsrw, imm, offset, a, b)
-#define orc_sse_emit_movd_load_memoffset(p,offset,a,b) orc_sse_emit_sysinsn_memoffset(p, ORC_X86_movd_load, 0, offset, a, b)
-#define orc_sse_emit_movq_load_memoffset(p,offset,a,b) orc_sse_emit_sysinsn_memoffset(p, ORC_X86_movq_load, 0, offset, a, b)
-#define orc_sse_emit_movdqa_load_memoffset(p,offset,a,b) orc_sse_emit_sysinsn_memoffset(p, ORC_X86_movdqa_load, 0, offset, a, b)
-#define orc_sse_emit_movdqu_load_memoffset(p,offset,a,b) orc_sse_emit_sysinsn_memoffset(p, ORC_X86_movdqu_load, 0, offset, a, b)
-#define orc_sse_emit_movhps_load_memoffset(p,offset,a,b) orc_sse_emit_sysinsn_memoffset(p, ORC_X86_movhps_load, 0, offset, a, b)
+#define orc_sse_emit_pinsrw_memoffset(p,imm,offset,a,b) orc_sse_emit_sysinsn_load_memoffset(p, ORC_X86_pinsrw, imm, offset, a, b)
+#define orc_sse_emit_movd_load_memoffset(p,offset,a,b) orc_sse_emit_sysinsn_load_memoffset(p, ORC_X86_movd_load, 0, offset, a, b)
+#define orc_sse_emit_movq_load_memoffset(p,offset,a,b) orc_sse_emit_sysinsn_load_memoffset(p, ORC_X86_movq_load, 0, offset, a, b)
+#define orc_sse_emit_movdqa_load_memoffset(p,offset,a,b) orc_sse_emit_sysinsn_load_memoffset(p, ORC_X86_movdqa_load, 0, offset, a, b)
+#define orc_sse_emit_movdqu_load_memoffset(p,offset,a,b) orc_sse_emit_sysinsn_load_memoffset(p, ORC_X86_movdqu_load, 0, offset, a, b)
+#define orc_sse_emit_movhps_load_memoffset(p,offset,a,b) orc_sse_emit_sysinsn_load_memoffset(p, ORC_X86_movhps_load, 0, offset, a, b)
+
+#define orc_sse_emit_pextrw_memoffset(p,imm,a,offset,b) orc_sse_emit_sysinsn_store_memoffset(p, ORC_X86_pextrw, imm, a, offset, b)
+#define orc_sse_emit_movd_store_memoffset(p,a,offset,b) orc_sse_emit_sysinsn_store_memoffset(p, ORC_X86_movd_store, 0, a, offset, b)
+#define orc_sse_emit_movq_store_memoffset(p,a,offset,b) orc_sse_emit_sysinsn_store_memoffset(p, ORC_X86_movq_store, 0, a, offset, b)
+#define orc_sse_emit_movdqa_store_memoffset(p,a,offset,b) orc_sse_emit_sysinsn_store_memoffset(p, ORC_X86_movdqa_store, 0, a, offset, b)
+#define orc_sse_emit_movdqu_store_memoffset(p,a,offset,b) orc_sse_emit_sysinsn_store_memoffset(p, ORC_X86_movdqu_store, 0, a, offset, b)
+#define orc_sse_emit_movntdq_store_memoffset(p,a,offset,b) orc_sse_emit_sysinsn_store_memoffset(p, ORC_X86_movntdq_store, 0, a, offset, b)
 
 #endif
 

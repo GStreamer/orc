@@ -59,7 +59,6 @@ void orc_sse_emit_loadpw (OrcCompiler *p, int reg, int value);
 void orc_sse_emit_loadpl (OrcCompiler *p, int reg, int value);
 void orc_sse_emit_loadpq (OrcCompiler *p, int reg, int value);
 
-void orc_sse_emit_pextrw_memoffset (OrcCompiler *p, int imm, int src, int offset, int dest);
 
 void orc_sse_set_mxcsr (OrcCompiler *compiler);
 void orc_sse_restore_mxcsr (OrcCompiler *compiler);
@@ -69,8 +68,10 @@ void orc_sse_load_constant (OrcCompiler *compiler, int reg, int size,
 
 void orc_sse_emit_sysinsn (OrcCompiler *p, int opcode, int src, int dest,
     int imm);
-void orc_sse_emit_sysinsn_memoffset (OrcCompiler *p, int index, int offset,
+void orc_sse_emit_sysinsn_load_memoffset (OrcCompiler *p, int index, int offset,
     int src, int dest, int imm);
+void orc_sse_emit_sysinsn_store_memoffset (OrcCompiler *p, int index, int src,
+    int offset, int dest, int imm);
 
 unsigned int orc_sse_get_cpu_flags (void);
 
