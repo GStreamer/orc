@@ -1567,7 +1567,7 @@ sse_rule_mulhsl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
         orc_x86_get_regname_ptr(p, p->exec_reg));
     orc_x86_emit_rex(p, 4, 0, 0, p->exec_reg);
     *p->codeptr++ = 0xf7;
-    orc_x86_emit_modrm_memoffset (p, 5, offset + 16 + 4*i, p->exec_reg);
+    orc_x86_emit_modrm_memoffset_old (p, 5, offset + 16 + 4*i, p->exec_reg);
     orc_x86_emit_mov_reg_memoffset (p, 4, X86_EDX, offset + 4*i, p->exec_reg);
   }
 

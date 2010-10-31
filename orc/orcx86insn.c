@@ -151,18 +151,18 @@ static const OrcSysOpcode orc_x86_opcodes[] = {
   { "pshuflw", ORC_X86_INSN_TYPE_SDI, 0, 0xf20f70 },
   { "pshufhw", ORC_X86_INSN_TYPE_SDI, 0, 0xf30f70 },
   { "palignr", ORC_X86_INSN_TYPE_SDI, 0, 0x660f3a0f },
-  { "pinsrw", ORC_X86_INSN_TYPE_SDI_REV, 0, 0x660fc4 },
-  { "movd", ORC_X86_INSN_TYPE_SD_REV, 0, 0x660f6e },
-  { "movq", ORC_X86_INSN_TYPE_SD_REV, 0, 0xf30f7e },
-  { "movdqa", ORC_X86_INSN_TYPE_SD_REV, 0, 0x660f6f },
-  { "movdqu", ORC_X86_INSN_TYPE_SD_REV, 0, 0xf30f6f },
-  { "movhps", ORC_X86_INSN_TYPE_SD_REV, 0, 0x0f16 },
-  { "pextrw", ORC_X86_INSN_TYPE_SDI, 0, 0x660f3a15 },
-  { "movd", ORC_X86_INSN_TYPE_SD, 0, 0x660f7e },
-  { "movq", ORC_X86_INSN_TYPE_SD, 0, 0x660fd6 },
-  { "movdqa", ORC_X86_INSN_TYPE_SD, 0, 0x660f7f },
-  { "movdqu", ORC_X86_INSN_TYPE_SD, 0, 0xf30f7f },
-  { "movntdq", ORC_X86_INSN_TYPE_SD, 0, 0x660fe7 },
+  { "pinsrw", ORC_X86_INSN_TYPE_SDI, 0, 0x660fc4 },
+  { "movd", ORC_X86_INSN_TYPE_SD, 0, 0x660f6e },
+  { "movq", ORC_X86_INSN_TYPE_SD, 0, 0xf30f7e },
+  { "movdqa", ORC_X86_INSN_TYPE_SD, 0, 0x660f6f },
+  { "movdqu", ORC_X86_INSN_TYPE_SD, 0, 0xf30f6f },
+  { "movhps", ORC_X86_INSN_TYPE_SD, 0, 0x0f16 },
+  { "pextrw", ORC_X86_INSN_TYPE_SDI_REV, 0, 0x660f3a15 },
+  { "movd", ORC_X86_INSN_TYPE_SD_REV, 0, 0x660f7e },
+  { "movq", ORC_X86_INSN_TYPE_SD_REV, 0, 0x660fd6 },
+  { "movdqa", ORC_X86_INSN_TYPE_SD_REV, 0, 0x660f7f },
+  { "movdqu", ORC_X86_INSN_TYPE_SD_REV, 0, 0xf30f7f },
+  { "movntdq", ORC_X86_INSN_TYPE_SD_REV, 0, 0x660fe7 },
 
 };
 
@@ -283,21 +283,21 @@ orc_sse_emit_sysinsn_load_memoffset (OrcCompiler *p, int index, int imm, int off
 
   switch (opcode->type) {
     case ORC_X86_INSN_TYPE_SD:
-      orc_x86_emit_modrm_memoffset (p, src, offset, dest);
+      orc_x86_emit_modrm_memoffset (p, offset, src, dest);
       break;
     case ORC_X86_INSN_TYPE_SDI:
-      orc_x86_emit_modrm_memoffset (p, src, offset, dest);
+      orc_x86_emit_modrm_memoffset (p, offset, src, dest);
       *p->codeptr++ = imm;
       break;
     case ORC_X86_INSN_TYPE_SDI_REV:
-      orc_x86_emit_modrm_memoffset (p, dest, offset, src);
+      orc_x86_emit_modrm_memoffset (p, offset, dest, src);
       *p->codeptr++ = imm;
       break;
     case ORC_X86_INSN_TYPE_SD_REV:
-      orc_x86_emit_modrm_memoffset (p, dest, offset, src);
+      orc_x86_emit_modrm_memoffset (p, offset, dest, src);
       break;
     case ORC_X86_INSN_TYPE_SD2:
-      orc_x86_emit_modrm_memoffset (p, src, offset, dest);
+      orc_x86_emit_modrm_memoffset (p, offset, src, dest);
       *p->codeptr++ = opcode->code2;
       break;
     default:
@@ -352,25 +352,23 @@ orc_sse_emit_sysinsn_store_memoffset (OrcCompiler *p, int index, int imm, int of
 
   switch (opcode->type) {
     case ORC_X86_INSN_TYPE_SD:
-      orc_x86_emit_modrm_memoffset (p, src, offset, dest);
+      orc_x86_emit_modrm_memoffset (p, offset, src, dest);
       break;
     case ORC_X86_INSN_TYPE_SDI:
-      orc_x86_emit_modrm_memoffset (p, src, offset, dest);
+      orc_x86_emit_modrm_memoffset (p, offset, src, dest);
       *p->codeptr++ = imm;
       break;
-#if 0
     case ORC_X86_INSN_TYPE_SDI_REV:
-      orc_x86_emit_modrm_memoffset (p, dest, offset, src);
+      orc_x86_emit_modrm_memoffset (p, offset, dest, src);
       *p->codeptr++ = imm;
       break;
     case ORC_X86_INSN_TYPE_SD_REV:
-      orc_x86_emit_modrm_memoffset (p, dest, offset, src);
+      orc_x86_emit_modrm_memoffset (p, offset, dest, src);
       break;
     case ORC_X86_INSN_TYPE_SD2:
-      orc_x86_emit_modrm_memoffset (p, src, offset, dest);
+      orc_x86_emit_modrm_memoffset (p, offset, src, dest);
       *p->codeptr++ = opcode->code2;
       break;
-#endif
     default:
       ORC_ASSERT(0);
       break;

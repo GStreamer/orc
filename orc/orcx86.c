@@ -141,7 +141,7 @@ orc_x86_emit_pop (OrcCompiler *compiler, int size, int reg)
 #define X86_SIB(ss, ind, reg) ((((ss)&3)<<6)|(((ind)&7)<<3)|((reg)&7))
 
 void
-orc_x86_emit_modrm_memoffset (OrcCompiler *compiler, int reg1, int offset, int reg2)
+orc_x86_emit_modrm_memoffset_old (OrcCompiler *compiler, int reg1, int offset, int reg2)
 {
   if (offset == 0 && reg2 != compiler->exec_reg) {
     if (reg2 == X86_ESP) {
@@ -160,6 +160,34 @@ orc_x86_emit_modrm_memoffset (OrcCompiler *compiler, int reg1, int offset, int r
     *compiler->codeptr++ = X86_MODRM(2, reg2, reg1);
     if (reg2 == X86_ESP) {
       *compiler->codeptr++ = X86_SIB(0, 4, reg2);
+    }
+    *compiler->codeptr++ = (offset & 0xff);
+    *compiler->codeptr++ = ((offset>>8) & 0xff);
+    *compiler->codeptr++ = ((offset>>16) & 0xff);
+    *compiler->codeptr++ = ((offset>>24) & 0xff);
+  }
+}
+
+void
+orc_x86_emit_modrm_memoffset (OrcCompiler *compiler, int offset, int src, int dest)
+{
+  if (offset == 0 && src != compiler->exec_reg) {
+    if (src == X86_ESP) {
+      *compiler->codeptr++ = X86_MODRM(0, 4, dest);
+      *compiler->codeptr++ = X86_SIB(0, 4, src);
+    } else {
+      *compiler->codeptr++ = X86_MODRM(0, src, dest);
+    }
+  } else if (offset >= -128 && offset < 128) {
+    *compiler->codeptr++ = X86_MODRM(1, src, dest);
+    if (src == X86_ESP) {
+      *compiler->codeptr++ = X86_SIB(0, 4, src);
+    }
+    *compiler->codeptr++ = (offset & 0xff);
+  } else {
+    *compiler->codeptr++ = X86_MODRM(2, src, dest);
+    if (src == X86_ESP) {
+      *compiler->codeptr++ = X86_SIB(0, 4, src);
     }
     *compiler->codeptr++ = (offset & 0xff);
     *compiler->codeptr++ = ((offset>>8) & 0xff);
@@ -222,7 +250,7 @@ orc_x86_emit_mov_memoffset_reg (OrcCompiler *compiler, int size, int offset,
       orc_x86_emit_rex(compiler, size, reg2, 0, reg1);
       *compiler->codeptr++ = 0x0f;
       *compiler->codeptr++ = 0xb6;
-      orc_x86_emit_modrm_memoffset (compiler, reg2, offset, reg1);
+      orc_x86_emit_modrm_memoffset_old (compiler, reg2, offset, reg1);
       return;
     case 2:
       ORC_ASM_CODE(compiler,"  movw %d(%%%s), %%%s\n", offset, orc_x86_get_regname_ptr(compiler, reg1),
@@ -244,7 +272,7 @@ orc_x86_emit_mov_memoffset_reg (OrcCompiler *compiler, int size, int offset,
 
   orc_x86_emit_rex(compiler, size, reg2, 0, reg1);
   *compiler->codeptr++ = 0x8b;
-  orc_x86_emit_modrm_memoffset (compiler, reg2, offset, reg1);
+  orc_x86_emit_modrm_memoffset_old (compiler, reg2, offset, reg1);
 }
 
 void
@@ -257,7 +285,7 @@ orc_x86_emit_mov_reg_memoffset (OrcCompiler *compiler, int size, int reg1, int o
           orc_x86_get_regname_ptr(compiler, reg2));
       orc_x86_emit_rex(compiler, size, reg1, 0, reg2);
       *compiler->codeptr++ = 0x88;
-      orc_x86_emit_modrm_memoffset (compiler, reg1, offset, reg2);
+      orc_x86_emit_modrm_memoffset_old (compiler, reg1, offset, reg2);
       return;
     case 2:
       ORC_ASM_CODE(compiler,"  movw %%%s, %d(%%%s)\n", orc_x86_get_regname_16(reg1), offset,
@@ -279,7 +307,7 @@ orc_x86_emit_mov_reg_memoffset (OrcCompiler *compiler, int size, int reg1, int o
 
   orc_x86_emit_rex(compiler, size, reg1, 0, reg2);
   *compiler->codeptr++ = 0x89;
-  orc_x86_emit_modrm_memoffset (compiler, reg1, offset, reg2);
+  orc_x86_emit_modrm_memoffset_old (compiler, reg1, offset, reg2);
 }
 
 void
@@ -389,12 +417,12 @@ orc_x86_emit_and_imm_memoffset (OrcCompiler *compiler, int size, int value,
   if (value >= -128 && value < 128) {
     *compiler->codeptr++ = 0x83;
     /* FIXME */
-    orc_x86_emit_modrm_memoffset (compiler, 0, offset, reg);
+    orc_x86_emit_modrm_memoffset_old (compiler, 0, offset, reg);
     *compiler->codeptr++ = (value & 0xff);
   } else {
     *compiler->codeptr++ = 0x81;
     /* FIXME */
-    orc_x86_emit_modrm_memoffset (compiler, 0, offset, reg);
+    orc_x86_emit_modrm_memoffset_old (compiler, 0, offset, reg);
     *compiler->codeptr++ = (value & 0xff);
     *compiler->codeptr++ = ((value>>8) & 0xff);
     if (size == 4) {
@@ -456,11 +484,11 @@ orc_x86_emit_add_imm_memoffset (OrcCompiler *compiler, int size, int value,
   orc_x86_emit_rex(compiler, size, 0, 0, reg);
   if (value >= -128 && value < 128) {
     *compiler->codeptr++ = 0x83;
-    orc_x86_emit_modrm_memoffset (compiler, 0, offset, reg);
+    orc_x86_emit_modrm_memoffset_old (compiler, 0, offset, reg);
     *compiler->codeptr++ = (value & 0xff);
   } else {
     *compiler->codeptr++ = 0x81;
-    orc_x86_emit_modrm_memoffset (compiler, 0, offset, reg);
+    orc_x86_emit_modrm_memoffset_old (compiler, 0, offset, reg);
     *compiler->codeptr++ = (value & 0xff);
     *compiler->codeptr++ = ((value>>8) & 0xff);
     if (size == 4 || size == 8) {
@@ -491,7 +519,7 @@ orc_x86_emit_add_reg_memoffset (OrcCompiler *compiler, int size, int reg1,
 
   orc_x86_emit_rex(compiler, size, reg1, 0, reg);
   *compiler->codeptr++ = 0x01;
-  orc_x86_emit_modrm_memoffset (compiler, reg1, offset, reg);
+  orc_x86_emit_modrm_memoffset_old (compiler, reg1, offset, reg);
 }
 
 void
@@ -503,7 +531,7 @@ orc_x86_emit_add_imm_reg (OrcCompiler *compiler, int size, int value, int reg, o
           orc_x86_get_regname(reg), orc_x86_get_regname(reg));
       orc_x86_emit_rex(compiler, size, 0, 0, reg);
       *compiler->codeptr++ = 0x8d;
-      orc_x86_emit_modrm_memoffset (compiler, reg, value, reg);
+      orc_x86_emit_modrm_memoffset_old (compiler, reg, value, reg);
       return;
     }
     if (size == 8 && compiler->is_64bit) {
@@ -511,7 +539,7 @@ orc_x86_emit_add_imm_reg (OrcCompiler *compiler, int size, int value, int reg, o
           orc_x86_get_regname_64(reg), orc_x86_get_regname_64(reg));
       orc_x86_emit_rex(compiler, size, reg, 0, reg);
       *compiler->codeptr++ = 0x8d;
-      orc_x86_emit_modrm_memoffset (compiler, reg, value, reg);
+      orc_x86_emit_modrm_memoffset_old (compiler, reg, value, reg);
       return;
     }
   }
@@ -614,7 +642,7 @@ orc_x86_emit_imul_memoffset_reg (OrcCompiler *compiler, int size,
   orc_x86_emit_rex(compiler, size, 0, 0, reg);
   *compiler->codeptr++ = 0x0f;
   *compiler->codeptr++ = 0xaf;
-  orc_x86_emit_modrm_memoffset (compiler, destreg, offset, reg);
+  orc_x86_emit_modrm_memoffset_old (compiler, destreg, offset, reg);
 }
 
 void
@@ -638,7 +666,7 @@ orc_x86_emit_add_memoffset_reg (OrcCompiler *compiler, int size,
 
   orc_x86_emit_rex(compiler, size, destreg, 0, reg);
   *compiler->codeptr++ = 0x03;
-  orc_x86_emit_modrm_memoffset (compiler, destreg, offset, reg);
+  orc_x86_emit_modrm_memoffset_old (compiler, destreg, offset, reg);
 }
 
 void
@@ -662,7 +690,7 @@ orc_x86_emit_sub_memoffset_reg (OrcCompiler *compiler, int size,
 
   orc_x86_emit_rex(compiler, size, 0, 0, reg);
   *compiler->codeptr++ = 0x2b;
-  orc_x86_emit_modrm_memoffset (compiler, destreg, offset, reg);
+  orc_x86_emit_modrm_memoffset_old (compiler, destreg, offset, reg);
 }
 
 void
@@ -683,7 +711,7 @@ orc_x86_emit_cmp_reg_memoffset (OrcCompiler *compiler, int size, int reg1,
 
   orc_x86_emit_rex(compiler, size, 0, 0, reg);
   *compiler->codeptr++ = 0x39;
-  orc_x86_emit_modrm_memoffset (compiler, reg1, offset, reg);
+  orc_x86_emit_modrm_memoffset_old (compiler, reg1, offset, reg);
 }
 
 void
@@ -737,11 +765,11 @@ orc_x86_emit_cmp_imm_memoffset (OrcCompiler *compiler, int size, int value,
   orc_x86_emit_rex(compiler, size, 0, 0, reg);
   if (value >= -128 && value < 128) {
     *compiler->codeptr++ = 0x83;
-    orc_x86_emit_modrm_memoffset (compiler, 7, offset, reg);
+    orc_x86_emit_modrm_memoffset_old (compiler, 7, offset, reg);
     *compiler->codeptr++ = (value & 0xff);
   } else {
     *compiler->codeptr++ = 0x81;
-    orc_x86_emit_modrm_memoffset (compiler, 7, offset, reg);
+    orc_x86_emit_modrm_memoffset_old (compiler, 7, offset, reg);
     *compiler->codeptr++ = (value & 0xff);
     *compiler->codeptr++ = ((value>>8) & 0xff);
     if (size == 4) {
@@ -770,7 +798,7 @@ orc_x86_emit_test_imm_memoffset (OrcCompiler *compiler, int size, int value,
   orc_x86_emit_rex(compiler, size, 0, 0, reg);
 
   *compiler->codeptr++ = 0xf7;
-  orc_x86_emit_modrm_memoffset (compiler, 0, offset, reg);
+  orc_x86_emit_modrm_memoffset_old (compiler, 0, offset, reg);
   *compiler->codeptr++ = (value & 0xff);
   *compiler->codeptr++ = ((value>>8) & 0xff);
   if (size == 4) {
@@ -790,7 +818,7 @@ orc_x86_emit_dec_memoffset (OrcCompiler *compiler, int size,
     ORC_ASM_CODE(compiler,"  addl $-1, %d(%%%s)\n", offset, orc_x86_get_regname_ptr(compiler, reg));
     orc_x86_emit_rex(compiler, size, 0, 0, reg);
     *compiler->codeptr++ = 0x83;
-    orc_x86_emit_modrm_memoffset (compiler, 0, offset, reg);
+    orc_x86_emit_modrm_memoffset_old (compiler, 0, offset, reg);
     *compiler->codeptr++ = 0xff;
     return;
   } else {
@@ -799,7 +827,7 @@ orc_x86_emit_dec_memoffset (OrcCompiler *compiler, int size,
 
   orc_x86_emit_rex(compiler, size, 0, 0, reg);
   *compiler->codeptr++ = 0xff;
-  orc_x86_emit_modrm_memoffset (compiler, 1, offset, reg);
+  orc_x86_emit_modrm_memoffset_old (compiler, 1, offset, reg);
 }
 
 void orc_x86_emit_ret (OrcCompiler *compiler)

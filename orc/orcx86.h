@@ -92,7 +92,8 @@ void orc_x86_emit_prologue (OrcCompiler *compiler);
 void orc_x86_emit_epilogue (OrcCompiler *compiler);
 
 void orc_x86_emit_rex (OrcCompiler *compiler, int size, int reg1, int reg2, int reg3);
-void orc_x86_emit_modrm_memoffset (OrcCompiler *compiler, int reg1, int offset, int reg2);
+void orc_x86_emit_modrm_memoffset_old (OrcCompiler *compiler, int reg1, int offset, int reg2);
+void orc_x86_emit_modrm_memoffset (OrcCompiler *compiler, int offset, int reg1, int reg2);
 void orc_x86_emit_modrm_reg (OrcCompiler *compiler, int reg1, int reg2);
 void orc_x86_emit_modrm_memindex (OrcCompiler *compiler, int reg1, int offset,
     int reg2, int regindex, int shift);
