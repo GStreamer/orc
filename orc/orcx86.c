@@ -216,6 +216,26 @@ void orc_x86_emit_modrm_memindex (OrcCompiler *compiler, int reg1, int offset,
   }
 }
 
+void orc_x86_emit_modrm_memindex2 (OrcCompiler *compiler, int offset,
+    int src, int src_index, int shift, int dest)
+{
+  if (offset == 0) {
+    *compiler->codeptr++ = X86_MODRM(0, 4, dest);
+    *compiler->codeptr++ = X86_SIB(shift, src_index, src);
+  } else if (offset >= -128 && offset < 128) {
+    *compiler->codeptr++ = X86_MODRM(1, 4, dest);
+    *compiler->codeptr++ = X86_SIB(shift, src_index, src);
+    *compiler->codeptr++ = (offset & 0xff);
+  } else {
+    *compiler->codeptr++ = X86_MODRM(2, 4, dest);
+    *compiler->codeptr++ = X86_SIB(shift, src_index, src);
+    *compiler->codeptr++ = (offset & 0xff);
+    *compiler->codeptr++ = ((offset>>8) & 0xff);
+    *compiler->codeptr++ = ((offset>>16) & 0xff);
+    *compiler->codeptr++ = ((offset>>24) & 0xff);
+  }
+}
+
 void
 orc_x86_emit_modrm_reg (OrcCompiler *compiler, int reg1, int reg2)
 {
