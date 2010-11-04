@@ -269,19 +269,12 @@ orc_x86_emit_mov_reg_memoffset (OrcCompiler *compiler, int size, int reg1, int o
 {
   switch (size) {
     case 1:
-      ORC_ASM_CODE(compiler,"  movb %%%s, %d(%%%s)\n", orc_x86_get_regname_8(reg1), offset,
-          orc_x86_get_regname_ptr(compiler, reg2));
-      orc_x86_emit_rex(compiler, size, reg1, 0, reg2);
-      *compiler->codeptr++ = 0x88;
-      orc_x86_emit_modrm_memoffset_old (compiler, reg1, offset, reg2);
-      return;
+      orc_sse_emit_sysinsn_reg_memoffset (compiler, ORC_X86_movb_r_rm,
+          reg1, offset, reg2);
+      break;
     case 2:
-      ORC_ASM_CODE(compiler,"  movw %%%s, %d(%%%s)\n", orc_x86_get_regname_16(reg1), offset,
-          orc_x86_get_regname_ptr(compiler, reg2));
-      *compiler->codeptr++ = 0x66;
-      orc_x86_emit_rex(compiler, size, reg1, 0, reg2);
-      *compiler->codeptr++ = 0x89;
-      orc_x86_emit_modrm_memoffset_old (compiler, reg1, offset, reg2);
+      orc_sse_emit_sysinsn_reg_memoffset (compiler, ORC_X86_movw_r_rm,
+          reg1, offset, reg2);
       break;
     case 4:
       orc_sse_emit_sysinsn_reg_memoffset (compiler, ORC_X86_movl_r_rm,
@@ -320,22 +313,10 @@ orc_x86_emit_sar_imm_reg (OrcCompiler *compiler, int size, int value, int reg)
 {
   if (value == 0) return;
 
-  if (size == 2) {
-    ORC_ASM_CODE(compiler,"  sarw $%d, %%%s\n", value, orc_x86_get_regname_16(reg));
-  } else if (size == 4) {
-    ORC_ASM_CODE(compiler,"  sarl $%d, %%%s\n", value, orc_x86_get_regname(reg));
-  } else {
-    ORC_ASM_CODE(compiler,"  sar $%d, %%%s\n", value, orc_x86_get_regname_64(reg));
-  }
-
-  orc_x86_emit_rex(compiler, size, reg, 0, 0);
   if (value == 1) {
-    *compiler->codeptr++ = 0xd1;
-    orc_x86_emit_modrm_reg (compiler, reg, 7);
+    orc_sse_emit_sysinsn_imm_reg (compiler, ORC_X86_sar, value, reg);
   } else {
-    *compiler->codeptr++ = 0xc1;
-    orc_x86_emit_modrm_reg (compiler, reg, 7);
-    *compiler->codeptr++ = value;
+    orc_sse_emit_sysinsn_imm_reg (compiler, ORC_X86_sar_imm, value, reg);
   }
 }
 
@@ -497,20 +478,13 @@ void
 orc_x86_emit_dec_memoffset (OrcCompiler *compiler, int size,
     int offset, int reg)
 {
-  if (size == 2) {
-    ORC_ASM_CODE(compiler,"  decw %d(%%%s)\n", offset, orc_x86_get_regname_ptr(compiler, reg));
-    *compiler->codeptr++ = 0x66;
-  } else if (size == 4) {
+  if (size == 4) {
     orc_sse_emit_sysinsn_imm_memoffset (compiler, ORC_X86_add_imm8_rm,
         -1, offset, reg);
-    return;
   } else {
-    ORC_ASM_CODE(compiler,"  dec %d(%%%s)\n", offset, orc_x86_get_regname_ptr(compiler, reg));
+    orc_sse_emit_sysinsn_load_memoffset (compiler, ORC_X86_dec,
+        0, offset, reg, -1);
   }
-
-  orc_x86_emit_rex(compiler, size, 0, 0, reg);
-  *compiler->codeptr++ = 0xff;
-  orc_x86_emit_modrm_memoffset_old (compiler, 1, offset, reg);
 }
 
 void orc_x86_emit_ret (OrcCompiler *compiler)

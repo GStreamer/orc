@@ -230,6 +230,8 @@ static const OrcSysOpcode orc_x86_opcodes[] = {
   { "movl", ORC_X86_INSN_TYPE_rm_r, 0, 0x8b },
   { "mov", ORC_X86_INSN_TYPE_rm_r, 0, 0x8b },
   { "mov", ORC_X86_INSN_TYPE_mov_imm32, 0, 0xb8 },
+  { "movb", ORC_X86_INSN_TYPE_r_rm_byte, 0, 0x88 },
+  { "movw", ORC_X86_INSN_TYPE_r_rm_word, 0, 0x6689 },
   { "movl", ORC_X86_INSN_TYPE_r_rm, 0, 0x89 },
   { "mov", ORC_X86_INSN_TYPE_r_rm, 0, 0x89 },
   { "test", ORC_X86_INSN_TYPE_rm_r, 0, 0x85 },
@@ -238,6 +240,10 @@ static const OrcSysOpcode orc_x86_opcodes[] = {
   { "leaq", ORC_X86_INSN_TYPE_rm_r, 0, 0x8d },
   { "imul", ORC_X86_INSN_TYPE_rm_r, 0, 0x0faf },
   { "imul", ORC_X86_INSN_TYPE_MEM, 0, 0xf7, 5 },
+  { "incl", ORC_X86_INSN_TYPE_MEM, 0, 0xff, 0 },
+  { "decl", ORC_X86_INSN_TYPE_MEM, 0, 0xff, 1 },
+  { "sar", ORC_X86_INSN_TYPE_imm8_rm, 0, 0xc1, 7 },
+  { "sar", ORC_X86_INSN_TYPE_MEM, 0, 0xd1, 7 },
 
 };
 
@@ -574,6 +580,15 @@ orc_sse_emit_sysinsn_imm_reg (OrcCompiler *p, int index, int imm, int dest)
             orc_x86_get_regname_64(dest));
       }
       break;
+    case ORC_X86_INSN_TYPE_MEM:
+      if (size == 4) {
+        ORC_ASM_CODE(p,"  %s %%%s\n", opcode->name,
+            orc_x86_get_regname(dest));
+      } else {
+        ORC_ASM_CODE(p,"  %s %%%s\n", opcode->name,
+            orc_x86_get_regname_64(dest));
+      }
+      break;
     default:
       ORC_ASSERT(0);
       break;
@@ -601,6 +616,9 @@ orc_sse_emit_sysinsn_imm_reg (OrcCompiler *p, int index, int imm, int dest)
       *p->codeptr++ = (imm>>8)&0xff;
       *p->codeptr++ = (imm>>16)&0xff;
       *p->codeptr++ = (imm>>24)&0xff;
+      break;
+    case ORC_X86_INSN_TYPE_MEM:
+      orc_x86_emit_modrm_reg (p, dest, opcode->code2);
       break;
     default:
       ORC_ASSERT(0);
@@ -672,6 +690,16 @@ orc_sse_emit_sysinsn_reg_memoffset (OrcCompiler *p, int index, int src,
             orc_x86_get_regname_64(dest));
       }
       break;
+    case ORC_X86_INSN_TYPE_r_rm_byte:
+      ORC_ASM_CODE(p,"  %s %%%s, %d(%%%s)\n", opcode->name,
+          orc_x86_get_regname_8(src), offset,
+          orc_x86_get_regname(dest));
+      break;
+    case ORC_X86_INSN_TYPE_r_rm_word:
+      ORC_ASM_CODE(p,"  %s %%%s, %d(%%%s)\n", opcode->name,
+          orc_x86_get_regname_16(src), offset,
+          orc_x86_get_regname(dest));
+      break;
     default:
       ORC_ASSERT(0);
       break;
@@ -681,6 +709,8 @@ orc_sse_emit_sysinsn_reg_memoffset (OrcCompiler *p, int index, int src,
 
   switch (opcode->type) {
     case ORC_X86_INSN_TYPE_r_rm:
+    case ORC_X86_INSN_TYPE_r_rm_byte:
+    case ORC_X86_INSN_TYPE_r_rm_word:
       orc_x86_emit_modrm_memoffset (p, offset, dest, src);
       break;
     default:

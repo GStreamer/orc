@@ -42,6 +42,7 @@ enum {
 
 const char * orc_x86_get_regname(int i);
 int orc_x86_get_regnum(int i);
+const char * orc_x86_get_regname_8(int i);
 const char * orc_x86_get_regname_16(int i);
 const char * orc_x86_get_regname_64(int i);
 const char * orc_x86_get_regname_ptr(OrcCompiler *compiler, int i);
