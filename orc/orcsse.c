@@ -149,8 +149,6 @@ void orc_x86_emit_mov_sse_reg (OrcCompiler *compiler, int reg1, int reg2)
 void
 orc_sse_set_mxcsr (OrcCompiler *compiler)
 {
-  int value;
-
   orc_sse_emit_sysinsn_load_memoffset (compiler, ORC_X86_stmxcsr, 0,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A4]),
       compiler->exec_reg, -1);
@@ -163,16 +161,8 @@ orc_sse_set_mxcsr (OrcCompiler *compiler)
       (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_C1]),
       compiler->exec_reg);
 
-  value = 0x8040;
-  ORC_ASM_CODE(compiler,"  orl $%d, %%%s\n", value,
-      orc_x86_get_regname(compiler->gp_tmpreg));
-  orc_x86_emit_rex(compiler, 4, 0, 0, compiler->gp_tmpreg);
-  *compiler->codeptr++ = 0x81;
-  orc_x86_emit_modrm_reg (compiler, compiler->gp_tmpreg, 1);
-  *compiler->codeptr++ = (value & 0xff);
-  *compiler->codeptr++ = ((value>>8) & 0xff);
-  *compiler->codeptr++ = ((value>>16) & 0xff);
-  *compiler->codeptr++ = ((value>>24) & 0xff);
+  orc_sse_emit_sysinsn_imm_reg (compiler, ORC_X86_or_imm32_rm,
+      0x8040, compiler->gp_tmpreg);
 
   orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A4]),

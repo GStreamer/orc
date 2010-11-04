@@ -17,7 +17,9 @@ enum {
   ORC_X86_INSN_TYPE_rm_r,
   ORC_X86_INSN_TYPE_r_rm,
   ORC_X86_INSN_TYPE_LABEL,
-  ORC_X86_INSN_TYPE_NONE
+  ORC_X86_INSN_TYPE_NONE,
+  ORC_X86_INSN_TYPE_STACK,
+  ORC_X86_INSN_TYPE_mov_imm32,
 };
 
 enum {
@@ -231,9 +233,25 @@ enum {
   ORC_X86_retq,
   ORC_X86_emms,
   ORC_X86_rdtsc,
+  ORC_X86_nop,
   ORC_X86_rep_movsb,
   ORC_X86_rep_movsw,
   ORC_X86_rep_movsl,
+  ORC_X86_push,
+  ORC_X86_pop,
+  ORC_X86_movzx_rm_r,
+  ORC_X86_movw_rm_r,
+  ORC_X86_movl_rm_r,
+  ORC_X86_mov_rm_r,
+  ORC_X86_mov_imm32_r,
+  ORC_X86_movl_r_rm,
+  ORC_X86_mov_r_rm,
+  ORC_X86_test,
+  ORC_X86_test_imm,
+  ORC_X86_leal,
+  ORC_X86_leaq,
+  ORC_X86_imul_rm_r,
+  ORC_X86_imul_rm,
 
 };
 

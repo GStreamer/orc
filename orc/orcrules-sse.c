@@ -1547,11 +1547,8 @@ sse_rule_mulhsl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   for(i=0;i<(1<<p->insn_shift);i++) {
     orc_x86_emit_mov_memoffset_reg (p, 4, offset + 4*i, p->exec_reg, X86_EAX);
-    ORC_ASM_CODE(p,"  imull %d(%%%s)\n", offset + 16 + 4*i,
-        orc_x86_get_regname_ptr(p, p->exec_reg));
-    orc_x86_emit_rex(p, 4, 0, 0, p->exec_reg);
-    *p->codeptr++ = 0xf7;
-    orc_x86_emit_modrm_memoffset_old (p, 5, offset + 16 + 4*i, p->exec_reg);
+    orc_sse_emit_sysinsn_load_memoffset (p, ORC_X86_imul_rm, 0,
+        offset + 16 + 4*i, p->exec_reg, -1);
     orc_x86_emit_mov_reg_memoffset (p, 4, X86_EDX, offset + 4*i, p->exec_reg);
   }
 
