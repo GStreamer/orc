@@ -197,6 +197,24 @@ static const OrcSysOpcode orc_x86_opcodes[] = {
   { "cmp", ORC_X86_INSN_TYPE_imm32_rm, 0, 0x81, 7 },
   { "cmp", ORC_X86_INSN_TYPE_rm_r, 0, 0x3b },
   { "cmp", ORC_X86_INSN_TYPE_r_rm, 0, 0x39 },
+  { "jo", ORC_X86_INSN_TYPE_LABEL, 0, 0x70 },
+  { "jno", ORC_X86_INSN_TYPE_LABEL, 0, 0x71 },
+  { "jc", ORC_X86_INSN_TYPE_LABEL, 0, 0x72 },
+  { "jnc", ORC_X86_INSN_TYPE_LABEL, 0, 0x73 },
+  { "jz", ORC_X86_INSN_TYPE_LABEL, 0, 0x74 },
+  { "jnz", ORC_X86_INSN_TYPE_LABEL, 0, 0x75 },
+  { "jbe", ORC_X86_INSN_TYPE_LABEL, 0, 0x76 },
+  { "ja", ORC_X86_INSN_TYPE_LABEL, 0, 0x77 },
+  { "js", ORC_X86_INSN_TYPE_LABEL, 0, 0x78 },
+  { "jns", ORC_X86_INSN_TYPE_LABEL, 0, 0x79 },
+  { "jp", ORC_X86_INSN_TYPE_LABEL, 0, 0x7a },
+  { "jnp", ORC_X86_INSN_TYPE_LABEL, 0, 0x7b },
+  { "jl", ORC_X86_INSN_TYPE_LABEL, 0, 0x7c },
+  { "jge", ORC_X86_INSN_TYPE_LABEL, 0, 0x7d },
+  { "jle", ORC_X86_INSN_TYPE_LABEL, 0, 0x7e },
+  { "jg", ORC_X86_INSN_TYPE_LABEL, 0, 0x7f },
+  { "jmp", ORC_X86_INSN_TYPE_LABEL, 0, 0xeb },
+  { "", ORC_X86_INSN_TYPE_LABEL, 0, 0x00 },
 
 };
 
@@ -644,6 +662,75 @@ orc_sse_emit_sysinsn_memoffset_reg (OrcCompiler *p, int index, int offset,
   switch (opcode->type) {
     case ORC_X86_INSN_TYPE_rm_r:
       orc_x86_emit_modrm_memoffset (p, offset, src, dest);
+      break;
+    default:
+      ORC_ASSERT(0);
+      break;
+  }
+}
+
+void
+orc_sse_emit_sysinsn_branch (OrcCompiler *p, int index, int label)
+{
+  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+
+  switch (opcode->type) {
+    case ORC_X86_INSN_TYPE_LABEL:
+      ORC_ASM_CODE(p,"  %s %d%c\n", opcode->name, label,
+          (p->labels[label]!=NULL) ? 'b' : 'f');
+      break;
+    default:
+      ORC_ASSERT(0);
+      break;
+  }
+
+  if (p->long_jumps) {
+    if (index == ORC_X86_jmp) {
+      *p->codeptr++ = 0xe9;
+    } else {
+      *p->codeptr++ = 0x0f;
+      *p->codeptr++ = opcode->code + 0x10;
+    }
+  } else {
+    *p->codeptr++ = opcode->code;
+  }
+
+  switch (opcode->type) {
+    case ORC_X86_INSN_TYPE_LABEL:
+      if (p->long_jumps) {
+        x86_add_fixup (p, p->codeptr, label, 1);
+        *p->codeptr++ = 0xfc;
+        *p->codeptr++ = 0xff;
+        *p->codeptr++ = 0xff;
+        *p->codeptr++ = 0xff;
+      } else {
+        x86_add_fixup (p, p->codeptr, label, 0);
+        *p->codeptr++ = 0xff;
+      }
+      break;
+    default:
+      ORC_ASSERT(0);
+      break;
+  }
+}
+
+void
+orc_sse_emit_sysinsn_label (OrcCompiler *p, int index, int label)
+{
+  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+
+  switch (opcode->type) {
+    case ORC_X86_INSN_TYPE_LABEL:
+      ORC_ASM_CODE(p,"%d:\n", label);
+      break;
+    default:
+      ORC_ASSERT(0);
+      break;
+  }
+
+  switch (opcode->type) {
+    case ORC_X86_INSN_TYPE_LABEL:
+      x86_add_label (p, p->codeptr, label);
       break;
     default:
       ORC_ASSERT(0);

@@ -15,7 +15,8 @@ enum {
   ORC_X86_INSN_TYPE_imm8_rm,
   ORC_X86_INSN_TYPE_imm32_rm,
   ORC_X86_INSN_TYPE_rm_r,
-  ORC_X86_INSN_TYPE_r_rm
+  ORC_X86_INSN_TYPE_r_rm,
+  ORC_X86_INSN_TYPE_LABEL
 };
 
 enum {
@@ -207,6 +208,24 @@ enum {
   ORC_X86_cmp_imm32_rm,
   ORC_X86_cmp_rm_r,
   ORC_X86_cmp_r_rm,
+  ORC_X86_jo,
+  ORC_X86_jno,
+  ORC_X86_jc,
+  ORC_X86_jnc,
+  ORC_X86_jz,
+  ORC_X86_jnz,
+  ORC_X86_jbe,
+  ORC_X86_ja,
+  ORC_X86_js,
+  ORC_X86_jns,
+  ORC_X86_jp,
+  ORC_X86_jnp,
+  ORC_X86_jl,
+  ORC_X86_jge,
+  ORC_X86_jle,
+  ORC_X86_jg,
+  ORC_X86_jmp,
+  ORC_X86_LABEL,
 };
 
 

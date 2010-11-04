@@ -700,108 +700,32 @@ x86_add_label (OrcCompiler *compiler, unsigned char *ptr, int label)
 
 void orc_x86_emit_jmp (OrcCompiler *compiler, int label)
 {
-  ORC_ASM_CODE(compiler,"  jmp %d%c\n", label,
-      (compiler->labels[label]!=NULL) ? 'b' : 'f');
-
-  if (compiler->long_jumps) {
-    *compiler->codeptr++ = 0xe9;
-    x86_add_fixup (compiler, compiler->codeptr, label, 1);
-    *compiler->codeptr++ = 0xfc;
-    *compiler->codeptr++ = 0xff;
-    *compiler->codeptr++ = 0xff;
-    *compiler->codeptr++ = 0xff;
-  } else {
-    *compiler->codeptr++ = 0xeb;
-    x86_add_fixup (compiler, compiler->codeptr, label, 0);
-    *compiler->codeptr++ = 0xff;
-  }
+  orc_sse_emit_sysinsn_branch (compiler, ORC_X86_jmp, label);
 }
 
 void orc_x86_emit_jg (OrcCompiler *compiler, int label)
 {
-  ORC_ASM_CODE(compiler,"  jg %d%c\n", label,
-      (compiler->labels[label]!=NULL) ? 'b' : 'f');
-
-  if (compiler->long_jumps) {
-    *compiler->codeptr++ = 0x0f;
-    *compiler->codeptr++ = 0x8f;
-    x86_add_fixup (compiler, compiler->codeptr, label, 1);
-    *compiler->codeptr++ = 0xfc;
-    *compiler->codeptr++ = 0xff;
-    *compiler->codeptr++ = 0xff;
-    *compiler->codeptr++ = 0xff;
-  } else {
-    *compiler->codeptr++ = 0x7f;
-    x86_add_fixup (compiler, compiler->codeptr, label, 0);
-    *compiler->codeptr++ = 0xff;
-  }
+  orc_sse_emit_sysinsn_branch (compiler, ORC_X86_jg, label);
 }
 
 void orc_x86_emit_jle (OrcCompiler *compiler, int label)
 {
-  ORC_ASM_CODE(compiler,"  jle %d%c\n", label,
-      (compiler->labels[label]!=NULL) ? 'b' : 'f');
-
-  if (compiler->long_jumps) {
-    *compiler->codeptr++ = 0x0f;
-    *compiler->codeptr++ = 0x8e;
-    x86_add_fixup (compiler, compiler->codeptr, label, 1);
-    *compiler->codeptr++ = 0xfc;
-    *compiler->codeptr++ = 0xff;
-    *compiler->codeptr++ = 0xff;
-    *compiler->codeptr++ = 0xff;
-  } else {
-    *compiler->codeptr++ = 0x7e;
-    x86_add_fixup (compiler, compiler->codeptr, label, 0);
-    *compiler->codeptr++ = 0xff;
-  }
+  orc_sse_emit_sysinsn_branch (compiler, ORC_X86_jle, label);
 }
 
 void orc_x86_emit_je (OrcCompiler *compiler, int label)
 {
-  ORC_ASM_CODE(compiler,"  je %d%c\n", label,
-      (compiler->labels[label]!=NULL) ? 'b' : 'f');
-
-  if (compiler->long_jumps) {
-    *compiler->codeptr++ = 0x0f;
-    *compiler->codeptr++ = 0x84;
-    x86_add_fixup (compiler, compiler->codeptr, label, 1);
-    *compiler->codeptr++ = 0xfc;
-    *compiler->codeptr++ = 0xff;
-    *compiler->codeptr++ = 0xff;
-    *compiler->codeptr++ = 0xff;
-  } else {
-    *compiler->codeptr++ = 0x74;
-    x86_add_fixup (compiler, compiler->codeptr, label, 0);
-    *compiler->codeptr++ = 0xff;
-  }
+  orc_sse_emit_sysinsn_branch (compiler, ORC_X86_jz, label);
 }
 
 void orc_x86_emit_jne (OrcCompiler *compiler, int label)
 {
-  ORC_ASM_CODE(compiler,"  jne %d%c\n", label,
-      (compiler->labels[label]!=NULL) ? 'b' : 'f');
-
-  if (compiler->long_jumps) {
-    *compiler->codeptr++ = 0x0f;
-    *compiler->codeptr++ = 0x85;
-    x86_add_fixup (compiler, compiler->codeptr, label, 1);
-    *compiler->codeptr++ = 0xfc;
-    *compiler->codeptr++ = 0xff;
-    *compiler->codeptr++ = 0xff;
-    *compiler->codeptr++ = 0xff;
-  } else {
-    *compiler->codeptr++ = 0x75;
-    x86_add_fixup (compiler, compiler->codeptr, label, 0);
-    *compiler->codeptr++ = 0xff;
-  }
+  orc_sse_emit_sysinsn_branch (compiler, ORC_X86_jnz, label);
 }
 
 void orc_x86_emit_label (OrcCompiler *compiler, int label)
 {
-  ORC_ASM_CODE(compiler,"%d:\n", label);
-
-  x86_add_label (compiler, compiler->codeptr, label);
+  orc_sse_emit_sysinsn_label (compiler, ORC_X86_LABEL, label);
 }
 
 void

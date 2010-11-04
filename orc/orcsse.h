@@ -84,6 +84,8 @@ void orc_sse_emit_sysinsn_reg_memoffset (OrcCompiler *p, int index, int src,
     int offset, int dest);
 void orc_sse_emit_sysinsn_memoffset_reg (OrcCompiler *p, int index, int offset,
     int src, int dest);
+void orc_sse_emit_sysinsn_branch (OrcCompiler *p, int index, int label);
+void orc_sse_emit_sysinsn_label (OrcCompiler *p, int index, int label);
 
 unsigned int orc_sse_get_cpu_flags (void);
 

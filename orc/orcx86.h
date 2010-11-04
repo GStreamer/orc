@@ -100,6 +100,8 @@ void orc_x86_emit_modrm_memindex (OrcCompiler *compiler, int reg1, int offset,
 void orc_x86_emit_modrm_memindex2 (OrcCompiler *compiler, int offset,
     int src, int src_index, int shift, int dest);
 
+void x86_add_fixup (OrcCompiler *compiler, unsigned char *ptr, int label, int type);
+void x86_add_label (OrcCompiler *compiler, unsigned char *ptr, int label);
 void orc_x86_do_fixups (OrcCompiler *compiler);
 
 int orc_x86_assemble_copy_check (OrcCompiler *compiler);
