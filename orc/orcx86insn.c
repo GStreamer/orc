@@ -215,6 +215,13 @@ static const OrcSysOpcode orc_x86_opcodes[] = {
   { "jg", ORC_X86_INSN_TYPE_LABEL, 0, 0x7f },
   { "jmp", ORC_X86_INSN_TYPE_LABEL, 0, 0xeb },
   { "", ORC_X86_INSN_TYPE_LABEL, 0, 0x00 },
+  { "ret", ORC_X86_INSN_TYPE_NONE, 0, 0xc3 },
+  { "retq", ORC_X86_INSN_TYPE_NONE, 0, 0xc3 },
+  { "emms", ORC_X86_INSN_TYPE_NONE, 0, 0x0f77 },
+  { "rdtsc", ORC_X86_INSN_TYPE_NONE, 0, 0x0f31 },
+  { "rep movsb", ORC_X86_INSN_TYPE_NONE, 0, 0xf3a4 },
+  { "rep movsw", ORC_X86_INSN_TYPE_NONE, 0, 0x66f3a5 },
+  { "rep movsl", ORC_X86_INSN_TYPE_NONE, 0, 0xf3a5 },
 
 };
 
@@ -736,5 +743,23 @@ orc_sse_emit_sysinsn_label (OrcCompiler *p, int index, int label)
       ORC_ASSERT(0);
       break;
   }
+}
+
+void
+orc_sse_emit_sysinsn_none (OrcCompiler *p, int index)
+{
+  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  int size = 4;
+
+  switch (opcode->type) {
+    case ORC_X86_INSN_TYPE_NONE:
+      ORC_ASM_CODE(p,"  %s\n", opcode->name);
+      break;
+    default:
+      ORC_ASSERT(0);
+      break;
+  }
+
+  output_opcode (p, opcode, size, 0, 0);
 }
 

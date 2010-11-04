@@ -640,45 +640,33 @@ orc_x86_emit_dec_memoffset (OrcCompiler *compiler, int size,
 void orc_x86_emit_ret (OrcCompiler *compiler)
 {
   if (compiler->is_64bit) {
-    ORC_ASM_CODE(compiler,"  retq\n");
+    orc_sse_emit_sysinsn_none (compiler, ORC_X86_retq);
   } else {
-    ORC_ASM_CODE(compiler,"  ret\n");
+    orc_sse_emit_sysinsn_none (compiler, ORC_X86_ret);
   }
-  *compiler->codeptr++ = 0xc3;
 }
 
 void orc_x86_emit_emms (OrcCompiler *compiler)
 {
-  ORC_ASM_CODE(compiler,"  emms\n");
-  *compiler->codeptr++ = 0x0f;
-  *compiler->codeptr++ = 0x77;
+  orc_sse_emit_sysinsn_none (compiler, ORC_X86_emms);
 }
 
 void orc_x86_emit_rdtsc (OrcCompiler *compiler)
 {
-  ORC_ASM_CODE(compiler,"  rdtsc\n");
-  *compiler->codeptr++ = 0x0f;
-  *compiler->codeptr++ = 0x31;
+  orc_sse_emit_sysinsn_none (compiler, ORC_X86_rdtsc);
 }
 
 void orc_x86_emit_rep_movs (OrcCompiler *compiler, int size)
 {
   switch (size) {
     case 1:
-      ORC_ASM_CODE(compiler,"  rep movsb\n");
-      *compiler->codeptr++ = 0xf3;
-      *compiler->codeptr++ = 0xa4;
+      orc_sse_emit_sysinsn_none (compiler, ORC_X86_rep_movsb);
       break;
     case 2:
-      ORC_ASM_CODE(compiler,"  rep movsw\n");
-      *compiler->codeptr++ = 0x66;
-      *compiler->codeptr++ = 0xf3;
-      *compiler->codeptr++ = 0xa5;
+      orc_sse_emit_sysinsn_none (compiler, ORC_X86_rep_movsw);
       break;
     case 4:
-      ORC_ASM_CODE(compiler,"  rep movsl\n");
-      *compiler->codeptr++ = 0xf3;
-      *compiler->codeptr++ = 0xa5;
+      orc_sse_emit_sysinsn_none (compiler, ORC_X86_rep_movsl);
       break;
   }
 }

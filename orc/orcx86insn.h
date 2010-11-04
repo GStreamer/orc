@@ -16,7 +16,8 @@ enum {
   ORC_X86_INSN_TYPE_imm32_rm,
   ORC_X86_INSN_TYPE_rm_r,
   ORC_X86_INSN_TYPE_r_rm,
-  ORC_X86_INSN_TYPE_LABEL
+  ORC_X86_INSN_TYPE_LABEL,
+  ORC_X86_INSN_TYPE_NONE
 };
 
 enum {
@@ -226,6 +227,14 @@ enum {
   ORC_X86_jg,
   ORC_X86_jmp,
   ORC_X86_LABEL,
+  ORC_X86_ret,
+  ORC_X86_retq,
+  ORC_X86_emms,
+  ORC_X86_rdtsc,
+  ORC_X86_rep_movsb,
+  ORC_X86_rep_movsw,
+  ORC_X86_rep_movsl,
+
 };
 
 
