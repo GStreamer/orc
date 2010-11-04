@@ -381,16 +381,8 @@ sse_rule_ldresnearl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   orc_x86_emit_mov_sse_reg (compiler, X86_XMM6, compiler->gp_tmpreg);
   orc_x86_emit_sar_imm_reg (compiler, 4, 16, compiler->gp_tmpreg);
 
-  ORC_ASM_CODE(compiler,"  movdqu 0(%%%s,%%%s,4), %%%s\n",
-      orc_x86_get_regname_ptr(compiler, src->ptr_register),
-      orc_x86_get_regname_ptr(compiler, compiler->gp_tmpreg),
-      orc_x86_get_regname_sse(dest->alloc));
-  *compiler->codeptr++ = 0xf3;
-  orc_x86_emit_rex(compiler, 0, dest->ptr_register, 0, dest->alloc);
-  *compiler->codeptr++ = 0x0f;
-  *compiler->codeptr++ = 0x6f;
-  orc_x86_emit_modrm_memindex (compiler, dest->alloc, 0,
-      src->ptr_register, compiler->gp_tmpreg, 2);
+  orc_sse_emit_movdqu_load_memindex (compiler, 0, src->ptr_register,
+      compiler->gp_tmpreg, 4, dest->alloc);
 
 #if 0
   orc_sse_emit_movdqa (compiler, X86_XMM6, tmp);
@@ -564,15 +556,7 @@ sse_rule_ldreslinl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 
       orc_sse_emit_psubw (compiler, tmp, tmp2);
 
-      ORC_ASM_CODE(compiler,"  pinsrw $%d, %%%s, %%%s\n", 1,
-          orc_x86_get_regname (src->ptr_offset),
-          orc_x86_get_regname_sse(tmp4));
-      *compiler->codeptr++ = 0x66;
-      orc_x86_emit_rex (compiler, 0, tmp4, 0, src->ptr_offset);
-      *compiler->codeptr++ = 0x0f;
-      *compiler->codeptr++ = 0xc4;
-      orc_x86_emit_modrm_reg (compiler, src->ptr_offset, tmp4);
-      *compiler->codeptr++ = 1;
+      orc_sse_emit_pinsrw_register (compiler, 1, src->ptr_offset, tmp4);
 
 #if 0
       orc_sse_emit_punpcklwd (compiler, tmp4, tmp4);

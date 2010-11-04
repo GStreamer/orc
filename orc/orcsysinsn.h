@@ -17,6 +17,7 @@ struct _OrcSysInsn {
   int memoffset;
   int indexreg;
   int shift;
+  int size;
 };
 
 struct _OrcSysOpcode {

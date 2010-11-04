@@ -11,7 +11,11 @@ enum {
   ORC_X86_INSN_TYPE_SD_REV,
   ORC_X86_INSN_TYPE_ED,
   ORC_X86_INSN_TYPE_ED_REV,
-  ORC_X86_INSN_TYPE_MEM
+  ORC_X86_INSN_TYPE_MEM,
+  ORC_X86_INSN_TYPE_imm8_rm,
+  ORC_X86_INSN_TYPE_imm32_rm,
+  ORC_X86_INSN_TYPE_rm_r,
+  ORC_X86_INSN_TYPE_r_rm
 };
 
 enum {
@@ -171,6 +175,38 @@ enum {
   ORC_X86_movntdq_store,
   ORC_X86_ldmxcsr,
   ORC_X86_stmxcsr,
+  ORC_X86_add_imm8_rm,
+  ORC_X86_add_imm32_rm,
+  ORC_X86_add_rm_r,
+  ORC_X86_add_r_rm,
+  ORC_X86_or_imm8_rm,
+  ORC_X86_or_imm32_rm,
+  ORC_X86_or_rm_r,
+  ORC_X86_or_r_rm,
+  ORC_X86_adc_imm8_rm,
+  ORC_X86_adc_imm32_rm,
+  ORC_X86_adc_rm_r,
+  ORC_X86_adc_r_rm,
+  ORC_X86_sbb_imm8_rm,
+  ORC_X86_sbb_imm32_rm,
+  ORC_X86_sbb_rm_r,
+  ORC_X86_sbb_r_rm,
+  ORC_X86_and_imm8_rm,
+  ORC_X86_and_imm32_rm,
+  ORC_X86_and_rm_r,
+  ORC_X86_and_r_rm,
+  ORC_X86_sub_imm8_rm,
+  ORC_X86_sub_imm32_rm,
+  ORC_X86_sub_rm_r,
+  ORC_X86_sub_r_rm,
+  ORC_X86_xor_imm8_rm,
+  ORC_X86_xor_imm32_rm,
+  ORC_X86_xor_rm_r,
+  ORC_X86_xor_r_rm,
+  ORC_X86_cmp_imm8_rm,
+  ORC_X86_cmp_imm32_rm,
+  ORC_X86_cmp_rm_r,
+  ORC_X86_cmp_r_rm,
 };
 
 
