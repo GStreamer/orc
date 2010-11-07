@@ -4,7 +4,7 @@
 #endif
 
 #include <orc/orc.h>
-#include <orc/orcsysinsn.h>
+#include <orc/orccpuinsn.h>
 #include <stdlib.h>
 
 
@@ -293,7 +293,7 @@ output_opcode (OrcCompiler *p, const OrcSysOpcode *opcode, int size,
 }
 
 void
-orc_sse_emit_sysinsn (OrcCompiler *p, int index, int imm, int src, int dest)
+orc_x86_emit_cpuinsn (OrcCompiler *p, int index, int imm, int src, int dest)
 {
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
 
@@ -383,7 +383,7 @@ orc_sse_emit_sysinsn (OrcCompiler *p, int index, int imm, int src, int dest)
 }
 
 void
-orc_sse_emit_sysinsn_load_memoffset (OrcCompiler *p, int index, int size,
+orc_x86_emit_cpuinsn_load_memoffset (OrcCompiler *p, int index, int size,
     int imm, int offset, int src, int dest)
 {
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
@@ -455,7 +455,7 @@ orc_sse_emit_sysinsn_load_memoffset (OrcCompiler *p, int index, int size,
 }
 
 void
-orc_sse_emit_sysinsn_store_memoffset (OrcCompiler *p, int index, int size,
+orc_x86_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index, int size,
     int imm, int offset, int src, int dest)
 {
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
@@ -513,7 +513,7 @@ orc_sse_emit_sysinsn_store_memoffset (OrcCompiler *p, int index, int size,
 }
 
 void
-orc_sse_emit_sysinsn_load_memindex (OrcCompiler *p, int index, int size,
+orc_x86_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int size,
     int imm, int offset, int src, int src_index, int shift, int dest)
 {
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
@@ -581,7 +581,7 @@ orc_sse_emit_sysinsn_load_memindex (OrcCompiler *p, int index, int size,
 }
 
 void
-orc_sse_emit_sysinsn_imm_reg (OrcCompiler *p, int index, int size, int imm,
+orc_x86_emit_cpuinsn_imm_reg (OrcCompiler *p, int index, int size, int imm,
     int dest)
 {
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
@@ -647,7 +647,7 @@ orc_sse_emit_sysinsn_imm_reg (OrcCompiler *p, int index, int size, int imm,
 }
 
 void
-orc_sse_emit_sysinsn_imm_memoffset (OrcCompiler *p, int index, int size,
+orc_x86_emit_cpuinsn_imm_memoffset (OrcCompiler *p, int index, int size,
     int imm, int offset, int dest)
 {
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
@@ -685,7 +685,7 @@ orc_sse_emit_sysinsn_imm_memoffset (OrcCompiler *p, int index, int size,
 }
 
 void
-orc_sse_emit_sysinsn_reg_memoffset (OrcCompiler *p, int index, int src,
+orc_x86_emit_cpuinsn_reg_memoffset (OrcCompiler *p, int index, int src,
     int offset, int dest)
 {
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
@@ -733,7 +733,7 @@ orc_sse_emit_sysinsn_reg_memoffset (OrcCompiler *p, int index, int src,
 }
 
 void
-orc_sse_emit_sysinsn_memoffset_reg (OrcCompiler *p, int index, int size,
+orc_x86_emit_cpuinsn_memoffset_reg (OrcCompiler *p, int index, int size,
     int offset, int src, int dest)
 {
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
@@ -762,7 +762,7 @@ orc_sse_emit_sysinsn_memoffset_reg (OrcCompiler *p, int index, int size,
 }
 
 void
-orc_sse_emit_sysinsn_branch (OrcCompiler *p, int index, int label)
+orc_x86_emit_cpuinsn_branch (OrcCompiler *p, int index, int label)
 {
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
 
@@ -807,7 +807,7 @@ orc_sse_emit_sysinsn_branch (OrcCompiler *p, int index, int label)
 }
 
 void
-orc_sse_emit_sysinsn_label (OrcCompiler *p, int index, int label)
+orc_x86_emit_cpuinsn_label (OrcCompiler *p, int index, int label)
 {
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
 
@@ -831,7 +831,7 @@ orc_sse_emit_sysinsn_label (OrcCompiler *p, int index, int label)
 }
 
 void
-orc_sse_emit_sysinsn_none (OrcCompiler *p, int index)
+orc_x86_emit_cpuinsn_none (OrcCompiler *p, int index)
 {
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
   int size = 4;

@@ -126,13 +126,13 @@ orc_x86_get_regname_size(int i, int size)
 void
 orc_x86_emit_push (OrcCompiler *compiler, int size, int reg)
 {
-  orc_sse_emit_sysinsn (compiler, ORC_X86_push, 0, reg, reg);
+  orc_x86_emit_cpuinsn (compiler, ORC_X86_push, 0, reg, reg);
 }
 
 void
 orc_x86_emit_pop (OrcCompiler *compiler, int size, int reg)
 {
-  orc_sse_emit_sysinsn (compiler, ORC_X86_pop, 0, reg, reg);
+  orc_x86_emit_cpuinsn (compiler, ORC_X86_pop, 0, reg, reg);
 }
 
 #define X86_MODRM(mod, rm, reg) ((((mod)&3)<<6)|(((rm)&7)<<0)|(((reg)&7)<<3))
@@ -262,16 +262,16 @@ orc_x86_emit_mov_memoffset_reg (OrcCompiler *compiler, int size, int offset,
 
   switch (size) {
     case 1:
-      orc_sse_emit_sysinsn_memoffset_reg (compiler, ORC_X86_movzx_rm_r, 4, offset, reg1, reg2);
+      orc_x86_emit_cpuinsn_memoffset_reg (compiler, ORC_X86_movzx_rm_r, 4, offset, reg1, reg2);
       return;
     case 2:
-      orc_sse_emit_sysinsn_memoffset_reg (compiler, ORC_X86_movw_rm_r, size, offset, reg1, reg2);
+      orc_x86_emit_cpuinsn_memoffset_reg (compiler, ORC_X86_movw_rm_r, size, offset, reg1, reg2);
       break;
     case 4:
-      orc_sse_emit_sysinsn_memoffset_reg (compiler, ORC_X86_movl_rm_r, size, offset, reg1, reg2);
+      orc_x86_emit_cpuinsn_memoffset_reg (compiler, ORC_X86_movl_rm_r, size, offset, reg1, reg2);
       break;
     case 8:
-      orc_sse_emit_sysinsn_memoffset_reg (compiler, ORC_X86_mov_rm_r, size, offset, reg1, reg2);
+      orc_x86_emit_cpuinsn_memoffset_reg (compiler, ORC_X86_mov_rm_r, size, offset, reg1, reg2);
       break;
     default:
       ORC_COMPILER_ERROR(compiler, "bad size");
@@ -285,19 +285,19 @@ orc_x86_emit_mov_reg_memoffset (OrcCompiler *compiler, int size, int reg1, int o
 {
   switch (size) {
     case 1:
-      orc_sse_emit_sysinsn_reg_memoffset (compiler, ORC_X86_movb_r_rm,
+      orc_x86_emit_cpuinsn_reg_memoffset (compiler, ORC_X86_movb_r_rm,
           reg1, offset, reg2);
       break;
     case 2:
-      orc_sse_emit_sysinsn_reg_memoffset (compiler, ORC_X86_movw_r_rm,
+      orc_x86_emit_cpuinsn_reg_memoffset (compiler, ORC_X86_movw_r_rm,
           reg1, offset, reg2);
       break;
     case 4:
-      orc_sse_emit_sysinsn_reg_memoffset (compiler, ORC_X86_movl_r_rm,
+      orc_x86_emit_cpuinsn_reg_memoffset (compiler, ORC_X86_movl_r_rm,
           reg1, offset, reg2);
       break;
     case 8:
-      orc_sse_emit_sysinsn_reg_memoffset (compiler, ORC_X86_mov_r_rm,
+      orc_x86_emit_cpuinsn_reg_memoffset (compiler, ORC_X86_mov_r_rm,
           reg1, offset, reg2);
       break;
     default:
@@ -310,18 +310,18 @@ orc_x86_emit_mov_reg_memoffset (OrcCompiler *compiler, int size, int reg1, int o
 void
 orc_x86_emit_mov_imm_reg (OrcCompiler *compiler, int size, int value, int reg1)
 {
-  orc_sse_emit_sysinsn_imm_reg (compiler, ORC_X86_mov_imm32_r, 4, value, reg1);
+  orc_x86_emit_cpuinsn_imm_reg (compiler, ORC_X86_mov_imm32_r, 4, value, reg1);
 }
 
 void orc_x86_emit_mov_reg_reg (OrcCompiler *compiler, int size, int reg1, int reg2)
 {
-  orc_sse_emit_sysinsn (compiler, ORC_X86_mov_r_rm, 0, reg1, reg2);
+  orc_x86_emit_cpuinsn (compiler, ORC_X86_mov_r_rm, 0, reg1, reg2);
 }
 
 void
 orc_x86_emit_test_reg_reg (OrcCompiler *compiler, int size, int reg1, int reg2)
 {
-  orc_sse_emit_sysinsn (compiler, ORC_X86_test, 0, reg1, reg2);
+  orc_x86_emit_cpuinsn (compiler, ORC_X86_test, 0, reg1, reg2);
 }
 
 void
@@ -330,9 +330,9 @@ orc_x86_emit_sar_imm_reg (OrcCompiler *compiler, int size, int value, int reg)
   if (value == 0) return;
 
   if (value == 1) {
-    orc_sse_emit_sysinsn_imm_reg (compiler, ORC_X86_sar, 4, value, reg);
+    orc_x86_emit_cpuinsn_imm_reg (compiler, ORC_X86_sar, 4, value, reg);
   } else {
-    orc_sse_emit_sysinsn_imm_reg (compiler, ORC_X86_sar_imm, 4, value, reg);
+    orc_x86_emit_cpuinsn_imm_reg (compiler, ORC_X86_sar_imm, 4, value, reg);
   }
 }
 
@@ -341,10 +341,10 @@ orc_x86_emit_and_imm_memoffset (OrcCompiler *compiler, int size, int value,
     int offset, int reg)
 {
   if (value >= -128 && value < 128) {
-    orc_sse_emit_sysinsn_imm_memoffset (compiler, ORC_X86_and_imm8_rm, size,
+    orc_x86_emit_cpuinsn_imm_memoffset (compiler, ORC_X86_and_imm8_rm, size,
         value, offset, reg);
   } else {
-    orc_sse_emit_sysinsn_imm_memoffset (compiler, ORC_X86_and_imm32_rm, size,
+    orc_x86_emit_cpuinsn_imm_memoffset (compiler, ORC_X86_and_imm32_rm, size,
         value, offset, reg);
   }
 }
@@ -353,9 +353,9 @@ void
 orc_x86_emit_and_imm_reg (OrcCompiler *compiler, int size, int value, int reg)
 {
   if (value >= -128 && value < 128) {
-    orc_sse_emit_sysinsn_imm_reg (compiler, ORC_X86_and_imm8_rm, size, value, reg);
+    orc_x86_emit_cpuinsn_imm_reg (compiler, ORC_X86_and_imm8_rm, size, value, reg);
   } else {
-    orc_sse_emit_sysinsn_imm_reg (compiler, ORC_X86_and_imm32_rm, size, value, reg);
+    orc_x86_emit_cpuinsn_imm_reg (compiler, ORC_X86_and_imm32_rm, size, value, reg);
   }
 }
 
@@ -364,10 +364,10 @@ orc_x86_emit_add_imm_memoffset (OrcCompiler *compiler, int size, int value,
     int offset, int reg)
 {
   if (value >= -128 && value < 128) {
-    orc_sse_emit_sysinsn_imm_memoffset (compiler, ORC_X86_add_imm8_rm, size,
+    orc_x86_emit_cpuinsn_imm_memoffset (compiler, ORC_X86_add_imm8_rm, size,
         value, offset, reg);
   } else {
-    orc_sse_emit_sysinsn_imm_memoffset (compiler, ORC_X86_add_imm32_rm, size,
+    orc_x86_emit_cpuinsn_imm_memoffset (compiler, ORC_X86_add_imm32_rm, size,
         value, offset, reg);
   }
 }
@@ -376,7 +376,7 @@ void
 orc_x86_emit_add_reg_memoffset (OrcCompiler *compiler, int size, int reg1,
     int offset, int reg)
 {
-  orc_sse_emit_sysinsn_reg_memoffset (compiler, ORC_X86_add_r_rm,
+  orc_x86_emit_cpuinsn_reg_memoffset (compiler, ORC_X86_add_r_rm,
       reg1, offset, reg);
 }
 
@@ -385,22 +385,22 @@ orc_x86_emit_add_imm_reg (OrcCompiler *compiler, int size, int value, int reg, o
 {
   if (!record) {
     if (size == 4 && !compiler->is_64bit) {
-      orc_sse_emit_sysinsn_memoffset_reg (compiler, ORC_X86_leal, size,
+      orc_x86_emit_cpuinsn_memoffset_reg (compiler, ORC_X86_leal, size,
           value, reg, reg);
       return;
     }
     if (size == 8 && compiler->is_64bit) {
-      orc_sse_emit_sysinsn_memoffset_reg (compiler, ORC_X86_leaq, size,
+      orc_x86_emit_cpuinsn_memoffset_reg (compiler, ORC_X86_leaq, size,
           value, reg, reg);
       return;
     }
   }
 
   if (value >= -128 && value < 128) {
-    orc_sse_emit_sysinsn_imm_reg (compiler, ORC_X86_add_imm8_rm, size,
+    orc_x86_emit_cpuinsn_imm_reg (compiler, ORC_X86_add_imm8_rm, size,
         value, reg);
   } else {
-    orc_sse_emit_sysinsn_imm_reg (compiler, ORC_X86_add_imm32_rm, size,
+    orc_x86_emit_cpuinsn_imm_reg (compiler, ORC_X86_add_imm32_rm, size,
         value, reg);
   }
 }
@@ -410,10 +410,10 @@ orc_x86_emit_add_reg_reg_shift (OrcCompiler *compiler, int size, int reg1,
     int reg2, int shift)
 {
   if (size == 4) {
-    orc_sse_emit_sysinsn_load_memindex (compiler, ORC_X86_leal, size, 0,
+    orc_x86_emit_cpuinsn_load_memindex (compiler, ORC_X86_leal, size, 0,
         0, reg2, reg1, shift, reg2);
   } else {
-    orc_sse_emit_sysinsn_load_memindex (compiler, ORC_X86_leaq, size, 0,
+    orc_x86_emit_cpuinsn_load_memindex (compiler, ORC_X86_leaq, size, 0,
         0, reg2, reg1, shift, reg2);
   }
 }
@@ -421,20 +421,20 @@ orc_x86_emit_add_reg_reg_shift (OrcCompiler *compiler, int size, int reg1,
 void
 orc_x86_emit_add_reg_reg (OrcCompiler *compiler, int size, int reg1, int reg2)
 {
-  orc_sse_emit_sysinsn (compiler, ORC_X86_add_r_rm, 0, reg1, reg2);
+  orc_x86_emit_cpuinsn (compiler, ORC_X86_add_r_rm, 0, reg1, reg2);
 }
 
 void
 orc_x86_emit_sub_reg_reg (OrcCompiler *compiler, int size, int reg1, int reg2)
 {
-  orc_sse_emit_sysinsn (compiler, ORC_X86_sub_r_rm, 0, reg1, reg2);
+  orc_x86_emit_cpuinsn (compiler, ORC_X86_sub_r_rm, 0, reg1, reg2);
 }
 
 void
 orc_x86_emit_imul_memoffset_reg (OrcCompiler *compiler, int size,
     int offset, int reg, int destreg)
 {
-  orc_sse_emit_sysinsn_load_memoffset (compiler, ORC_X86_imul_rm_r, size, 0,
+  orc_x86_emit_cpuinsn_load_memoffset (compiler, ORC_X86_imul_rm_r, size, 0,
       offset, reg, destreg);
 }
 
@@ -442,7 +442,7 @@ void
 orc_x86_emit_add_memoffset_reg (OrcCompiler *compiler, int size,
     int offset, int reg, int destreg)
 {
-  orc_sse_emit_sysinsn_memoffset_reg (compiler, ORC_X86_add_rm_r, size,
+  orc_x86_emit_cpuinsn_memoffset_reg (compiler, ORC_X86_add_rm_r, size,
       offset, reg, destreg);
 }
 
@@ -450,7 +450,7 @@ void
 orc_x86_emit_sub_memoffset_reg (OrcCompiler *compiler, int size,
     int offset, int reg, int destreg)
 {
-  orc_sse_emit_sysinsn_memoffset_reg (compiler, ORC_X86_sub_rm_r, size,
+  orc_x86_emit_cpuinsn_memoffset_reg (compiler, ORC_X86_sub_rm_r, size,
       offset, reg, destreg);
 }
 
@@ -458,7 +458,7 @@ void
 orc_x86_emit_cmp_reg_memoffset (OrcCompiler *compiler, int size, int reg1,
     int offset, int reg)
 {
-  orc_sse_emit_sysinsn_reg_memoffset (compiler, ORC_X86_cmp_r_rm, reg1,
+  orc_x86_emit_cpuinsn_reg_memoffset (compiler, ORC_X86_cmp_r_rm, reg1,
       offset, reg);
 }
 
@@ -466,9 +466,9 @@ void
 orc_x86_emit_cmp_imm_reg (OrcCompiler *compiler, int size, int value, int reg)
 {
   if (value >= -128 && value < 128) {
-    orc_sse_emit_sysinsn_imm_reg (compiler, ORC_X86_cmp_imm8_rm, size, value, reg);
+    orc_x86_emit_cpuinsn_imm_reg (compiler, ORC_X86_cmp_imm8_rm, size, value, reg);
   } else {
-    orc_sse_emit_sysinsn_imm_reg (compiler, ORC_X86_cmp_imm32_rm, size, value, reg);
+    orc_x86_emit_cpuinsn_imm_reg (compiler, ORC_X86_cmp_imm32_rm, size, value, reg);
   }
 }
 
@@ -477,10 +477,10 @@ orc_x86_emit_cmp_imm_memoffset (OrcCompiler *compiler, int size, int value,
     int offset, int reg)
 {
   if (value >= -128 && value < 128) {
-    orc_sse_emit_sysinsn_imm_memoffset (compiler, ORC_X86_cmp_imm8_rm, size,
+    orc_x86_emit_cpuinsn_imm_memoffset (compiler, ORC_X86_cmp_imm8_rm, size,
         value, offset, reg);
   } else {
-    orc_sse_emit_sysinsn_imm_memoffset (compiler, ORC_X86_cmp_imm32_rm, size,
+    orc_x86_emit_cpuinsn_imm_memoffset (compiler, ORC_X86_cmp_imm32_rm, size,
         value, offset, reg);
   }
 }
@@ -489,7 +489,7 @@ void
 orc_x86_emit_test_imm_memoffset (OrcCompiler *compiler, int size, int value,
     int offset, int reg)
 {
-  orc_sse_emit_sysinsn_imm_memoffset (compiler, ORC_X86_test_imm, size,
+  orc_x86_emit_cpuinsn_imm_memoffset (compiler, ORC_X86_test_imm, size,
       value, offset, reg);
 }
 
@@ -498,10 +498,10 @@ orc_x86_emit_dec_memoffset (OrcCompiler *compiler, int size,
     int offset, int reg)
 {
   if (size == 4) {
-    orc_sse_emit_sysinsn_imm_memoffset (compiler, ORC_X86_add_imm8_rm, size,
+    orc_x86_emit_cpuinsn_imm_memoffset (compiler, ORC_X86_add_imm8_rm, size,
         -1, offset, reg);
   } else {
-    orc_sse_emit_sysinsn_load_memoffset (compiler, ORC_X86_dec, size,
+    orc_x86_emit_cpuinsn_load_memoffset (compiler, ORC_X86_dec, size,
         0, offset, reg, -1);
   }
 }
@@ -509,33 +509,33 @@ orc_x86_emit_dec_memoffset (OrcCompiler *compiler, int size,
 void orc_x86_emit_ret (OrcCompiler *compiler)
 {
   if (compiler->is_64bit) {
-    orc_sse_emit_sysinsn_none (compiler, ORC_X86_retq);
+    orc_x86_emit_cpuinsn_none (compiler, ORC_X86_retq);
   } else {
-    orc_sse_emit_sysinsn_none (compiler, ORC_X86_ret);
+    orc_x86_emit_cpuinsn_none (compiler, ORC_X86_ret);
   }
 }
 
 void orc_x86_emit_emms (OrcCompiler *compiler)
 {
-  orc_sse_emit_sysinsn_none (compiler, ORC_X86_emms);
+  orc_x86_emit_cpuinsn_none (compiler, ORC_X86_emms);
 }
 
 void orc_x86_emit_rdtsc (OrcCompiler *compiler)
 {
-  orc_sse_emit_sysinsn_none (compiler, ORC_X86_rdtsc);
+  orc_x86_emit_cpuinsn_none (compiler, ORC_X86_rdtsc);
 }
 
 void orc_x86_emit_rep_movs (OrcCompiler *compiler, int size)
 {
   switch (size) {
     case 1:
-      orc_sse_emit_sysinsn_none (compiler, ORC_X86_rep_movsb);
+      orc_x86_emit_cpuinsn_none (compiler, ORC_X86_rep_movsb);
       break;
     case 2:
-      orc_sse_emit_sysinsn_none (compiler, ORC_X86_rep_movsw);
+      orc_x86_emit_cpuinsn_none (compiler, ORC_X86_rep_movsw);
       break;
     case 4:
-      orc_sse_emit_sysinsn_none (compiler, ORC_X86_rep_movsl);
+      orc_x86_emit_cpuinsn_none (compiler, ORC_X86_rep_movsl);
       break;
   }
 }
@@ -557,32 +557,32 @@ x86_add_label (OrcCompiler *compiler, unsigned char *ptr, int label)
 
 void orc_x86_emit_jmp (OrcCompiler *compiler, int label)
 {
-  orc_sse_emit_sysinsn_branch (compiler, ORC_X86_jmp, label);
+  orc_x86_emit_cpuinsn_branch (compiler, ORC_X86_jmp, label);
 }
 
 void orc_x86_emit_jg (OrcCompiler *compiler, int label)
 {
-  orc_sse_emit_sysinsn_branch (compiler, ORC_X86_jg, label);
+  orc_x86_emit_cpuinsn_branch (compiler, ORC_X86_jg, label);
 }
 
 void orc_x86_emit_jle (OrcCompiler *compiler, int label)
 {
-  orc_sse_emit_sysinsn_branch (compiler, ORC_X86_jle, label);
+  orc_x86_emit_cpuinsn_branch (compiler, ORC_X86_jle, label);
 }
 
 void orc_x86_emit_je (OrcCompiler *compiler, int label)
 {
-  orc_sse_emit_sysinsn_branch (compiler, ORC_X86_jz, label);
+  orc_x86_emit_cpuinsn_branch (compiler, ORC_X86_jz, label);
 }
 
 void orc_x86_emit_jne (OrcCompiler *compiler, int label)
 {
-  orc_sse_emit_sysinsn_branch (compiler, ORC_X86_jnz, label);
+  orc_x86_emit_cpuinsn_branch (compiler, ORC_X86_jnz, label);
 }
 
 void orc_x86_emit_label (OrcCompiler *compiler, int label)
 {
-  orc_sse_emit_sysinsn_label (compiler, ORC_X86_LABEL, label);
+  orc_x86_emit_cpuinsn_label (compiler, ORC_X86_LABEL, label);
 }
 
 void
@@ -690,7 +690,7 @@ orc_x86_emit_align (OrcCompiler *compiler)
 
   diff = (compiler->code - compiler->codeptr)&((1<<align_shift) - 1);
   while (diff) {
-    orc_sse_emit_sysinsn_none (compiler, ORC_X86_nop);
+    orc_x86_emit_cpuinsn_none (compiler, ORC_X86_nop);
     diff--;
   }
 }

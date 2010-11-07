@@ -66,27 +66,27 @@ void orc_sse_restore_mxcsr (OrcCompiler *compiler);
 void orc_sse_load_constant (OrcCompiler *compiler, int reg, int size,
     orc_uint64 value);
 
-void orc_sse_emit_sysinsn (OrcCompiler *p, int opcode, int src, int dest,
+void orc_x86_emit_cpuinsn (OrcCompiler *p, int opcode, int src, int dest,
     int imm);
-void orc_sse_emit_sysinsn_load_memoffset (OrcCompiler *p, int size, int index,
+void orc_x86_emit_cpuinsn_load_memoffset (OrcCompiler *p, int size, int index,
     int offset, int src, int dest, int imm);
-void orc_sse_emit_sysinsn_store_memoffset (OrcCompiler *p, int size, int index,
+void orc_x86_emit_cpuinsn_store_memoffset (OrcCompiler *p, int size, int index,
     int src, int offset, int dest, int imm);
-void orc_sse_emit_sysinsn_load_memindex (OrcCompiler *p, int index, int size,
+void orc_x86_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int size,
     int imm, int offset, int src, int src_index, int shift, int dest);
-void orc_sse_emit_sysinsn_load_register (OrcCompiler *p, int index, int imm,
+void orc_x86_emit_cpuinsn_load_register (OrcCompiler *p, int index, int imm,
     int src, int dest);
-void orc_sse_emit_sysinsn_imm_reg (OrcCompiler *p, int index, int size, int imm,
+void orc_x86_emit_cpuinsn_imm_reg (OrcCompiler *p, int index, int size, int imm,
     int dest);
-void orc_sse_emit_sysinsn_imm_memoffset (OrcCompiler *p, int index, int size,
+void orc_x86_emit_cpuinsn_imm_memoffset (OrcCompiler *p, int index, int size,
     int imm, int offset, int dest);
-void orc_sse_emit_sysinsn_reg_memoffset (OrcCompiler *p, int index, int src,
+void orc_x86_emit_cpuinsn_reg_memoffset (OrcCompiler *p, int index, int src,
     int offset, int dest);
-void orc_sse_emit_sysinsn_memoffset_reg (OrcCompiler *p, int index, int size,
+void orc_x86_emit_cpuinsn_memoffset_reg (OrcCompiler *p, int index, int size,
     int offset, int src, int dest);
-void orc_sse_emit_sysinsn_branch (OrcCompiler *p, int index, int label);
-void orc_sse_emit_sysinsn_label (OrcCompiler *p, int index, int label);
-void orc_sse_emit_sysinsn_none (OrcCompiler *p, int index);
+void orc_x86_emit_cpuinsn_branch (OrcCompiler *p, int index, int label);
+void orc_x86_emit_cpuinsn_label (OrcCompiler *p, int index, int label);
+void orc_x86_emit_cpuinsn_none (OrcCompiler *p, int index);
 
 unsigned int orc_sse_get_cpu_flags (void);
 

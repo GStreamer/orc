@@ -87,7 +87,8 @@ pkginclude_HEADERS = \
 	orcx86.h \
 	orcpowerpc.h \
 	orcarm.h \
-	orcx86insn.h
+	orcx86insn.h \
+	orccpuinsn.h
 
 nodist_pkginclude_HEADERS = orc-stdint.h
 
