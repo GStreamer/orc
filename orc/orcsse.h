@@ -68,22 +68,22 @@ void orc_sse_load_constant (OrcCompiler *compiler, int reg, int size,
 
 void orc_sse_emit_sysinsn (OrcCompiler *p, int opcode, int src, int dest,
     int imm);
-void orc_sse_emit_sysinsn_load_memoffset (OrcCompiler *p, int index, int offset,
-    int src, int dest, int imm);
-void orc_sse_emit_sysinsn_store_memoffset (OrcCompiler *p, int index, int src,
-    int offset, int dest, int imm);
-void orc_sse_emit_sysinsn_load_memindex (OrcCompiler *p, int index, int imm,
-    int offset, int src, int src_index, int shift, int dest);
+void orc_sse_emit_sysinsn_load_memoffset (OrcCompiler *p, int size, int index,
+    int offset, int src, int dest, int imm);
+void orc_sse_emit_sysinsn_store_memoffset (OrcCompiler *p, int size, int index,
+    int src, int offset, int dest, int imm);
+void orc_sse_emit_sysinsn_load_memindex (OrcCompiler *p, int index, int size,
+    int imm, int offset, int src, int src_index, int shift, int dest);
 void orc_sse_emit_sysinsn_load_register (OrcCompiler *p, int index, int imm,
     int src, int dest);
-void orc_sse_emit_sysinsn_imm_reg (OrcCompiler *p, int index, int imm,
+void orc_sse_emit_sysinsn_imm_reg (OrcCompiler *p, int index, int size, int imm,
     int dest);
-void orc_sse_emit_sysinsn_imm_memoffset (OrcCompiler *p, int index, int imm,
-    int offset, int dest);
+void orc_sse_emit_sysinsn_imm_memoffset (OrcCompiler *p, int index, int size,
+    int imm, int offset, int dest);
 void orc_sse_emit_sysinsn_reg_memoffset (OrcCompiler *p, int index, int src,
     int offset, int dest);
-void orc_sse_emit_sysinsn_memoffset_reg (OrcCompiler *p, int index, int offset,
-    int src, int dest);
+void orc_sse_emit_sysinsn_memoffset_reg (OrcCompiler *p, int index, int size,
+    int offset, int src, int dest);
 void orc_sse_emit_sysinsn_branch (OrcCompiler *p, int index, int label);
 void orc_sse_emit_sysinsn_label (OrcCompiler *p, int index, int label);
 void orc_sse_emit_sysinsn_none (OrcCompiler *p, int index);

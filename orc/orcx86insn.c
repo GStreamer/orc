@@ -254,22 +254,40 @@ output_opcode (OrcCompiler *p, const OrcSysOpcode *opcode, int size,
   ORC_ASSERT(opcode->code != 0);
 
   if (opcode->code & 0xff000000) {
-    *p->codeptr++ = (opcode->code >> 24) & 0xff;
-    orc_x86_emit_rex (p, size, dest, 0, 0);
+    if ((opcode->code & 0xff000000) == 0x66000000 ||
+        (opcode->code & 0xff000000) == 0xf3000000) {
+      *p->codeptr++ = (opcode->code >> 24) & 0xff;
+      orc_x86_emit_rex (p, size, dest, 0, src);
+    } else {
+      *p->codeptr++ = (opcode->code >> 24) & 0xff;
+      orc_x86_emit_rex (p, size, dest, 0, src);
+    }
     *p->codeptr++ = (opcode->code >> 16) & 0xff;
     *p->codeptr++ = (opcode->code >> 8) & 0xff;
     *p->codeptr++ = (opcode->code >> 0) & 0xff;
   } else if (opcode->code & 0xff0000) {
-    *p->codeptr++ = (opcode->code >> 16) & 0xff;
-    orc_x86_emit_rex (p, size, dest, 0, 0);
+    if ((opcode->code & 0xff0000) == 0x660000 ||
+        (opcode->code & 0xff0000) == 0xf30000) {
+      *p->codeptr++ = (opcode->code >> 16) & 0xff;
+      orc_x86_emit_rex (p, size, dest, 0, src);
+    } else {
+      orc_x86_emit_rex (p, size, dest, 0, src);
+      *p->codeptr++ = (opcode->code >> 16) & 0xff;
+    }
     *p->codeptr++ = (opcode->code >> 8) & 0xff;
     *p->codeptr++ = (opcode->code >> 0) & 0xff;
   } else if (opcode->code & 0xff00) {
-    *p->codeptr++ = (opcode->code >> 8) & 0xff;
-    orc_x86_emit_rex (p, size, dest, 0, 0);
+    if ((opcode->code & 0xff00) == 0x6600 ||
+        (opcode->code & 0xff00) == 0xf300) {
+      *p->codeptr++ = (opcode->code >> 8) & 0xff;
+      orc_x86_emit_rex (p, size, dest, 0, src);
+    } else {
+      orc_x86_emit_rex (p, size, dest, 0, src);
+      *p->codeptr++ = (opcode->code >> 8) & 0xff;
+    }
     *p->codeptr++ = (opcode->code >> 0) & 0xff;
   } else {
-    orc_x86_emit_rex (p, size, dest, 0, 0);
+    orc_x86_emit_rex (p, size, dest, 0, src);
     *p->codeptr++ = (opcode->code >> 0) & 0xff;
   }
 }
@@ -324,7 +342,9 @@ orc_sse_emit_sysinsn (OrcCompiler *p, int index, int imm, int src, int dest)
       break;
   }
 
-  if (opcode->type != ORC_X86_INSN_TYPE_STACK) {
+  if (opcode->type == ORC_X86_INSN_TYPE_SHIFTIMM) {
+    output_opcode (p, opcode, 4, dest, 0);
+  } else if (opcode->type != ORC_X86_INSN_TYPE_STACK) {
     output_opcode (p, opcode, 4, src, dest);
   }
 
@@ -363,8 +383,8 @@ orc_sse_emit_sysinsn (OrcCompiler *p, int index, int imm, int src, int dest)
 }
 
 void
-orc_sse_emit_sysinsn_load_memoffset (OrcCompiler *p, int index, int imm, int offset,
-    int src, int dest)
+orc_sse_emit_sysinsn_load_memoffset (OrcCompiler *p, int index, int size,
+    int imm, int offset, int src, int dest)
 {
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
 
@@ -394,14 +414,14 @@ orc_sse_emit_sysinsn_load_memoffset (OrcCompiler *p, int index, int imm, int off
     case ORC_X86_INSN_TYPE_rm_r:
       ORC_ASM_CODE(p,"  %s %d(%%%s), %%%s\n", opcode->name,
           offset, orc_x86_get_regname_ptr(p, src),
-          orc_x86_get_regname(src));
+          orc_x86_get_regname_size(src,size));
       break;
     default:
       ORC_ASSERT(0);
       break;
   }
 
-  output_opcode (p, opcode, 4, src, dest);
+  output_opcode (p, opcode, size, src, dest);
 
   switch (opcode->type) {
     case ORC_X86_INSN_TYPE_SD:
@@ -435,8 +455,8 @@ orc_sse_emit_sysinsn_load_memoffset (OrcCompiler *p, int index, int imm, int off
 }
 
 void
-orc_sse_emit_sysinsn_store_memoffset (OrcCompiler *p, int index, int imm, int offset,
-    int src, int dest)
+orc_sse_emit_sysinsn_store_memoffset (OrcCompiler *p, int index, int size,
+    int imm, int offset, int src, int dest)
 {
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
 
@@ -493,8 +513,8 @@ orc_sse_emit_sysinsn_store_memoffset (OrcCompiler *p, int index, int imm, int of
 }
 
 void
-orc_sse_emit_sysinsn_load_memindex (OrcCompiler *p, int index, int imm,
-    int offset, int src, int src_index, int shift, int dest)
+orc_sse_emit_sysinsn_load_memindex (OrcCompiler *p, int index, int size,
+    int imm, int offset, int src, int src_index, int shift, int dest)
 {
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
 
@@ -523,14 +543,14 @@ orc_sse_emit_sysinsn_load_memindex (OrcCompiler *p, int index, int imm,
           offset,
           orc_x86_get_regname_ptr(p, src),
           orc_x86_get_regname_ptr(p, src_index), 1<<shift,
-          orc_x86_get_regname(dest));
+          orc_x86_get_regname_size(dest,size));
       break;
     default:
       ORC_ASSERT(0);
       break;
   }
 
-  output_opcode (p, opcode, 4, src, dest);
+  output_opcode (p, opcode, size, src, dest);
 
   switch (opcode->type) {
     case ORC_X86_INSN_TYPE_SD:
@@ -561,10 +581,10 @@ orc_sse_emit_sysinsn_load_memindex (OrcCompiler *p, int index, int imm,
 }
 
 void
-orc_sse_emit_sysinsn_imm_reg (OrcCompiler *p, int index, int imm, int dest)
+orc_sse_emit_sysinsn_imm_reg (OrcCompiler *p, int index, int size, int imm,
+    int dest)
 {
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
-  int size = 4;
 
   switch (opcode->type) {
     case ORC_X86_INSN_TYPE_imm8_rm:
@@ -595,7 +615,7 @@ orc_sse_emit_sysinsn_imm_reg (OrcCompiler *p, int index, int imm, int dest)
   }
 
   if (opcode->type != ORC_X86_INSN_TYPE_mov_imm32) {
-    output_opcode (p, opcode, size, 0, dest);
+    output_opcode (p, opcode, size, dest, 0);
   }
 
   switch (opcode->type) {
@@ -627,31 +647,24 @@ orc_sse_emit_sysinsn_imm_reg (OrcCompiler *p, int index, int imm, int dest)
 }
 
 void
-orc_sse_emit_sysinsn_imm_memoffset (OrcCompiler *p, int index, int imm,
-    int offset, int dest)
+orc_sse_emit_sysinsn_imm_memoffset (OrcCompiler *p, int index, int size,
+    int imm, int offset, int dest)
 {
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
-  int size = 4;
 
   switch (opcode->type) {
     case ORC_X86_INSN_TYPE_imm8_rm:
     case ORC_X86_INSN_TYPE_imm32_rm:
-      if (size == 4) {
-        ORC_ASM_CODE(p,"  %s $%d, %d(%%%s)\n", opcode->name,
-            imm, offset,
-            orc_x86_get_regname(dest));
-      } else {
-        ORC_ASM_CODE(p,"  %s $%d, %d(%%%s)\n", opcode->name,
-            imm, offset,
-            orc_x86_get_regname_64(dest));
-      }
+      ORC_ASM_CODE(p,"  %s $%d, %d(%%%s)\n", opcode->name,
+          imm, offset,
+          orc_x86_get_regname_ptr(p,dest));
       break;
     default:
       ORC_ASSERT(0);
       break;
   }
 
-  output_opcode (p, opcode, size, 0, dest);
+  output_opcode (p, opcode, size, dest, 0);
 
   switch (opcode->type) {
     case ORC_X86_INSN_TYPE_imm8_rm:
@@ -683,22 +696,22 @@ orc_sse_emit_sysinsn_reg_memoffset (OrcCompiler *p, int index, int src,
       if (size == 4) {
         ORC_ASM_CODE(p,"  %s %%%s, %d(%%%s)\n", opcode->name,
             orc_x86_get_regname(src), offset,
-            orc_x86_get_regname(dest));
+            orc_x86_get_regname_ptr(p,dest));
       } else {
         ORC_ASM_CODE(p,"  %s %%%s, %d(%%%s)\n", opcode->name,
-            orc_x86_get_regname(src), offset,
-            orc_x86_get_regname_64(dest));
+            orc_x86_get_regname_64(src), offset,
+            orc_x86_get_regname_ptr(p,dest));
       }
       break;
     case ORC_X86_INSN_TYPE_r_rm_byte:
       ORC_ASM_CODE(p,"  %s %%%s, %d(%%%s)\n", opcode->name,
           orc_x86_get_regname_8(src), offset,
-          orc_x86_get_regname(dest));
+          orc_x86_get_regname_ptr(p,dest));
       break;
     case ORC_X86_INSN_TYPE_r_rm_word:
       ORC_ASM_CODE(p,"  %s %%%s, %d(%%%s)\n", opcode->name,
           orc_x86_get_regname_16(src), offset,
-          orc_x86_get_regname(dest));
+          orc_x86_get_regname_ptr(p,dest));
       break;
     default:
       ORC_ASSERT(0);
@@ -720,23 +733,16 @@ orc_sse_emit_sysinsn_reg_memoffset (OrcCompiler *p, int index, int src,
 }
 
 void
-orc_sse_emit_sysinsn_memoffset_reg (OrcCompiler *p, int index, int offset,
-    int src, int dest)
+orc_sse_emit_sysinsn_memoffset_reg (OrcCompiler *p, int index, int size,
+    int offset, int src, int dest)
 {
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
-  int size = 4;
 
   switch (opcode->type) {
     case ORC_X86_INSN_TYPE_rm_r:
-      if (size == 4) {
-        ORC_ASM_CODE(p,"  %s %d(%%%s), %%%s\n", opcode->name,
-            offset, orc_x86_get_regname(src),
-            orc_x86_get_regname(dest));
-      } else {
-        ORC_ASM_CODE(p,"  %s %d(%%%s), %%%s\n", opcode->name,
-            offset, orc_x86_get_regname(src),
-            orc_x86_get_regname_64(dest));
-      }
+      ORC_ASM_CODE(p,"  %s %d(%%%s), %%%s\n", opcode->name,
+          offset, orc_x86_get_regname_ptr(p,src),
+          orc_x86_get_regname_size(dest,size));
       break;
     default:
       ORC_ASSERT(0);

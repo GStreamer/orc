@@ -46,6 +46,7 @@ const char * orc_x86_get_regname_8(int i);
 const char * orc_x86_get_regname_16(int i);
 const char * orc_x86_get_regname_64(int i);
 const char * orc_x86_get_regname_ptr(OrcCompiler *compiler, int i);
+const char * orc_x86_get_regname_size(int i, int size);
 
 void orc_x86_emit_push (OrcCompiler *compiler, int size, int reg);
 void orc_x86_emit_pop (OrcCompiler *compiler, int size, int reg);
