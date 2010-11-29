@@ -137,7 +137,8 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
         parser->n_programs++;
         parser->creg_index = 1;
       } else if (strcmp (token[0], ".init") == 0) {
-        if (init_function) free (init_function);
+        free (init_function);
+        init_function = NULL;
         if (n_tokens < 2) {
           orc_parse_log (parser, "error: line %d: .init without function name\n",
               parser->line_number);
@@ -267,6 +268,8 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
   }
   if (parser->programs[0]) {
     parser->programs[0]->init_function = init_function;
+  } else {
+    free (init_function);
   }
   *programs = parser->programs;
   return parser->n_programs;
