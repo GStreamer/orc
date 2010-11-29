@@ -90,7 +90,7 @@ main(int argc, char *argv[])
   orc_get_data_cache_sizes (&level1, &level2, &level3);
   if (level3 > 0) {
     max = (log(level3)/M_LN2 - 6.0) * 10 + 20;
-  } else if (level3 > 0) {
+  } else if (level2 > 0) {
     max = (log(level2)/M_LN2 - 6.0) * 10 + 20;
   } else {
     max = 140;
