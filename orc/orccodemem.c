@@ -201,6 +201,7 @@ orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
   fd = mkstemp (filename);
   if (fd == -1) {
     ORC_WARNING ("failed to create temp file");
+    free (filename);
     return FALSE;
   }
   if (force_unlink || !_orc_compiler_flag_debug) {
