@@ -318,7 +318,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     if (!rule) {
       ORC_COMPILER_ERROR(compiler, "No rule for: %s on target %s", opcode->name,
           compiler->target->name);
-      compiler->error = TRUE;
+      continue;
     }
     ORC_ASM_CODE(compiler,"%*s", prefix, "");
     if (insn->flags & (ORC_INSTRUCTION_FLAG_X2|ORC_INSTRUCTION_FLAG_X4)) {
@@ -356,7 +356,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     if (!rule) {
       ORC_COMPILER_ERROR(compiler, "No rule for: %s on target %s", opcode->name,
           compiler->target->name);
-      compiler->error = TRUE;
+      continue;
     }
 
     if (insn->flags & (ORC_INSTRUCTION_FLAG_X2|ORC_INSTRUCTION_FLAG_X4)) {
