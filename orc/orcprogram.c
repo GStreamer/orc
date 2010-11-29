@@ -651,19 +651,20 @@ orc_program_append_2 (OrcProgram *program, const char *name, unsigned int flags,
   insn->flags = flags;
   i = 0;
   insn->dest_args[0] = args[i++];
-  if (insn->opcode->dest_size[1] != 0) {
-    insn->dest_args[1] = args[i++];
+  if (insn->opcode) {
+    if (insn->opcode->dest_size[1] != 0) {
+      insn->dest_args[1] = args[i++];
+    }
+    if (insn->opcode->src_size[0] != 0) {
+      insn->src_args[0] = args[i++];
+    }
+    if (insn->opcode->src_size[1] != 0) {
+      insn->src_args[1] = args[i++];
+    }
+    if (insn->opcode->src_size[2] != 0) {
+      insn->src_args[2] = args[i++];
+    }
   }
-  if (insn->opcode->src_size[0] != 0) {
-    insn->src_args[0] = args[i++];
-  }
-  if (insn->opcode->src_size[1] != 0) {
-    insn->src_args[1] = args[i++];
-  }
-  if (insn->opcode->src_size[2] != 0) {
-    insn->src_args[2] = args[i++];
-  }
-  
   program->n_insns++;
 }
 
@@ -763,19 +764,20 @@ orc_program_append_str_2 (OrcProgram *program, const char *name,
   insn->flags = flags;
   i = 0;
   insn->dest_args[0] = args[i++];
-  if (insn->opcode->dest_size[1] != 0) {
-    insn->dest_args[1] = args[i++];
+  if (insn->opcode) {
+    if (insn->opcode->dest_size[1] != 0) {
+      insn->dest_args[1] = args[i++];
+    }
+    if (insn->opcode->src_size[0] != 0) {
+      insn->src_args[0] = args[i++];
+    }
+    if (insn->opcode->src_size[1] != 0) {
+      insn->src_args[1] = args[i++];
+    }
+    if (insn->opcode->src_size[2] != 0) {
+      insn->src_args[2] = args[i++];
+    }
   }
-  if (insn->opcode->src_size[0] != 0) {
-    insn->src_args[0] = args[i++];
-  }
-  if (insn->opcode->src_size[1] != 0) {
-    insn->src_args[1] = args[i++];
-  }
-  if (insn->opcode->src_size[2] != 0) {
-    insn->src_args[2] = args[i++];
-  }
-  
   program->n_insns++;
 }
 
