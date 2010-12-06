@@ -30,6 +30,7 @@ OrcProgram **programs;
 
 int use_inline = FALSE;
 int use_code = FALSE;
+int use_lazy_init = FALSE;
 
 const char *init_function = NULL;
 
@@ -72,6 +73,7 @@ void help (void)
   printf("  --inline                Generate inline functions in header\n");
   printf("  --no-inline             Do not generate inline functions in header\n");
   printf("  --init-function FUNCTION  Generate initialization function\n");
+  printf("  --lazy-init             Do Orc compile at function execution\n");
   printf("\n");
 
   exit (0);
@@ -150,6 +152,8 @@ main (int argc, char *argv[])
       } else {
         help();
       }
+    } else if (strcmp(argv[i], "--lazy-init") == 0) {
+      use_lazy_init = TRUE;
     } else if (strncmp(argv[i], "-", 1) == 0) {
       printf("Unknown option: %s\n", argv[i]);
       exit (1);
@@ -224,6 +228,10 @@ main (int argc, char *argv[])
 
   if (init_function == NULL) {
     init_function = orc_parse_get_init_function (programs[0]);
+  }
+
+  if (init_function == NULL) {
+    use_lazy_init = TRUE;
   }
 
   output = fopen (output_file, "w");
@@ -659,7 +667,7 @@ output_code_execute (OrcProgram *p, FILE *output, int is_inline)
   OrcVariable *var;
   int i;
 
-  if (init_function) {
+  if (!use_lazy_init) {
     const char *storage;
     if (is_inline) {
       storage = "extern ";
@@ -685,7 +693,7 @@ output_code_execute (OrcProgram *p, FILE *output, int is_inline)
   fprintf(output, "\n");
   fprintf(output, "{\n");
   fprintf(output, "  OrcExecutor _ex, *ex = &_ex;\n");
-  if (init_function) {
+  if (!use_lazy_init) {
     if (use_code) {
       fprintf(output, "  OrcCode *c = _orc_code_%s;\n", p->name);
     } else {
@@ -705,7 +713,7 @@ output_code_execute (OrcProgram *p, FILE *output, int is_inline)
   }
   fprintf(output, "  void (*func) (OrcExecutor *);\n");
   fprintf(output, "\n");
-  if (init_function == NULL) {
+  if (use_lazy_init) {
     fprintf(output, "  if (!p_inited) {\n");
     fprintf(output, "    orc_once_mutex_lock ();\n");
     fprintf(output, "    if (!p_inited) {\n");
@@ -975,27 +983,29 @@ output_init_function (FILE *output)
   fprintf(output, "void\n");
   fprintf(output, "%s (void)\n", init_function);
   fprintf(output, "{\n");
-  fprintf(output, "#ifndef DISABLE_ORC\n");
-  for(i=0;i<n_programs;i++){
-    fprintf(output, "  {\n");
-    fprintf(output, "    /* %s */\n", programs[i]->name);
-    fprintf(output, "    OrcProgram *p;\n");
-    fprintf(output, "    OrcCompileResult result;\n");
-    fprintf(output, "    \n");
-    output_program_generation (programs[i], output, FALSE);
-    fprintf(output, "\n");
-    fprintf(output, "      result = orc_program_compile (p);\n");
-    fprintf(output, "\n");
-    if (use_code) {
-      fprintf(output, "    _orc_code_%s = orc_program_take_code (p);\n",
-          programs[i]->name);
-      fprintf(output, "    orc_program_free (p);\n");
-    } else {
-      fprintf(output, "    _orc_program_%s = p;\n", programs[i]->name);
+  if (!use_lazy_init) {
+    fprintf(output, "#ifndef DISABLE_ORC\n");
+    for(i=0;i<n_programs;i++){
+      fprintf(output, "  {\n");
+      fprintf(output, "    /* %s */\n", programs[i]->name);
+      fprintf(output, "    OrcProgram *p;\n");
+      fprintf(output, "    OrcCompileResult result;\n");
+      fprintf(output, "    \n");
+      output_program_generation (programs[i], output, FALSE);
+      fprintf(output, "\n");
+      fprintf(output, "      result = orc_program_compile (p);\n");
+      fprintf(output, "\n");
+      if (use_code) {
+        fprintf(output, "    _orc_code_%s = orc_program_take_code (p);\n",
+            programs[i]->name);
+        fprintf(output, "    orc_program_free (p);\n");
+      } else {
+        fprintf(output, "    _orc_program_%s = p;\n", programs[i]->name);
+      }
+      fprintf(output, "  }\n");
     }
-    fprintf(output, "  }\n");
+    fprintf(output, "#endif\n");
   }
-  fprintf(output, "#endif\n");
   fprintf(output, "}\n");
   fprintf(output, "\n");
 }
