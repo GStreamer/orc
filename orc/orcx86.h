@@ -70,7 +70,8 @@ void orc_x86_emit_pop (OrcCompiler *compiler, int size, int reg);
       ORC_X86_and_imm8_rm : ORC_X86_and_imm32_rm, size, value, offset, reg)
 #define orc_x86_emit_and_imm_reg(p,size,value,reg) \
   orc_x86_emit_cpuinsn_imm_reg (p, (value >= -128 && value < 128) ? \
-      ORC_X86_and_imm8_rm : ORC_X86_and_imm32_rm, size, value, reg)
+      ORC_X86_and_imm8_rm : \
+      (reg == X86_EAX ? ORC_X86_and_imm32_a : ORC_X86_and_imm32_rm), size, value, reg)
 #define orc_x86_emit_add_imm_memoffset(p,size,value,offset,reg) \
   orc_x86_emit_cpuinsn_imm_memoffset (p, (value >= -128 && value < 128) ? \
       ORC_X86_add_imm8_rm : ORC_X86_add_imm32_rm, size, value, offset, reg)

@@ -22,6 +22,7 @@ enum {
   ORC_X86_INSN_TYPE_mov_imm32,
   ORC_X86_INSN_TYPE_r_rm_byte,
   ORC_X86_INSN_TYPE_r_rm_word,
+  ORC_X86_INSN_TYPE_imm32_a,
 };
 
 enum {
@@ -260,6 +261,7 @@ enum {
   ORC_X86_dec,
   ORC_X86_sar_imm,
   ORC_X86_sar,
+  ORC_X86_and_imm32_a,
 
 };
 
