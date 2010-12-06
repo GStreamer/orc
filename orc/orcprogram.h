@@ -525,6 +525,7 @@ struct _OrcExecutor {
   int params[ORC_N_VARIABLES];
   int accumulators[4];
   /* exec pointer is stored in arrays[ORC_VAR_A1] */
+  /* OrcCode pointer is stored in arrays[ORC_VAR_A2] */
   /* row pointers are stored in arrays[i+ORC_VAR_C1] */
   /* the stride for arrays[x] is stored in params[x] */
   /* m is stored in params[ORC_VAR_A1] */
@@ -544,7 +545,8 @@ struct _OrcExecutorAlt {
 
   void *arrays[ORC_N_ARRAYS];
   OrcExecutorFunc exec;
-  void *unused1[ORC_N_VARIABLES - ORC_N_ARRAYS - 1];
+  OrcCode *code;
+  void *unused1[ORC_N_VARIABLES - ORC_N_ARRAYS - 2];
   int strides[ORC_N_ARRAYS];
   int m;
   int m_index;
@@ -570,12 +572,14 @@ struct _OrcCodeVariable {
 };
 
 struct _OrcCode {
+  /*< public >*/
+  OrcExecutorFunc exec;
+
   /*< private >*/
   OrcCompileResult result;
   char *name;
 
   /* for execution */
-  OrcExecutorFunc exec;
   unsigned char *code;
   int code_size;
   void *chunk;

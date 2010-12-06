@@ -29,6 +29,7 @@ int n_programs;
 OrcProgram **programs;
 
 int use_inline = FALSE;
+int use_code = FALSE;
 
 const char *init_function = NULL;
 
@@ -189,6 +190,9 @@ main (int argc, char *argv[])
           compat_version);
       exit (1);
     }
+  }
+  if (compat >= ORC_VERSION(0,4,11,1)) {
+    use_code = TRUE;
   }
 
   if (output_file == NULL) {
@@ -656,14 +660,20 @@ output_code_execute (OrcProgram *p, FILE *output, int is_inline)
   int i;
 
   if (init_function) {
+    const char *storage;
     if (is_inline) {
-      fprintf(output, "extern OrcProgram *_orc_program_%s;\n", p->name);
+      storage = "extern ";
     } else {
       if (use_inline) {
-        fprintf(output, "OrcProgram *_orc_program_%s;\n", p->name);
+        storage = "";
       } else {
-        fprintf(output, "static OrcProgram *_orc_program_%s;\n", p->name);
+        storage = "static ";
       }
+    }
+    if (use_code) {
+      fprintf(output, "%sOrcCode *_orc_code_%s;\n", storage, p->name);
+    } else {
+      fprintf(output, "%sOrcProgram *_orc_program_%s;\n", storage, p->name);
     }
   }
   if (is_inline) {
@@ -676,10 +686,22 @@ output_code_execute (OrcProgram *p, FILE *output, int is_inline)
   fprintf(output, "{\n");
   fprintf(output, "  OrcExecutor _ex, *ex = &_ex;\n");
   if (init_function) {
-    fprintf(output, "  OrcProgram *p = _orc_program_%s;\n", p->name);
+    if (use_code) {
+      fprintf(output, "  OrcCode *c = _orc_code_%s;\n", p->name);
+    } else {
+      if (use_code) {
+        fprintf(output, "  OrcCode *c = _orc_code_%s;\n", p->name);
+      } else {
+        fprintf(output, "  OrcProgram *p = _orc_program_%s;\n", p->name);
+      }
+    }
   } else {
     fprintf(output, "  static int p_inited = 0;\n");
-    fprintf(output, "  static OrcProgram *p = 0;\n");
+    if (use_code) {
+      fprintf(output, "  static OrcCode *c = 0;\n");
+    } else {
+      fprintf(output, "  static OrcProgram *p = 0;\n");
+    }
   }
   fprintf(output, "  void (*func) (OrcExecutor *);\n");
   fprintf(output, "\n");
@@ -688,16 +710,28 @@ output_code_execute (OrcProgram *p, FILE *output, int is_inline)
     fprintf(output, "    orc_once_mutex_lock ();\n");
     fprintf(output, "    if (!p_inited) {\n");
     fprintf(output, "      OrcCompileResult result;\n");
+    if (use_code) {
+      fprintf(output, "      OrcProgram *p;\n");
+    }
     fprintf(output, "\n");
     output_program_generation (p, output, is_inline);
     fprintf(output, "\n");
     fprintf(output, "      result = orc_program_compile (p);\n");
+    if (use_code) {
+      fprintf(output, "      c = orc_program_take_code (p);\n");
+      fprintf(output, "      orc_program_free (p);\n");
+    }
     fprintf(output, "    }\n");
     fprintf(output, "    p_inited = TRUE;\n");
     fprintf(output, "    orc_once_mutex_unlock ();\n");
     fprintf(output, "  }\n");
   }
-  fprintf(output, "  ex->program = p;\n");
+  if (use_code) {
+    fprintf(output, "  ex->arrays[ORC_VAR_A2] = c;\n");
+    fprintf(output, "  ex->program = 0;\n");
+  } else {
+    fprintf(output, "  ex->program = p;\n");
+  }
   fprintf(output, "\n");
   if (p->constant_n) {
     fprintf(output, "  ex->n = %d;\n", p->constant_n);
@@ -778,7 +812,11 @@ output_code_execute (OrcProgram *p, FILE *output, int is_inline)
     }
   }
   fprintf(output, "\n");
-  fprintf(output, "  func = p->code_exec;\n");
+  if (use_code) {
+    fprintf(output, "  func = c->exec;\n");
+  } else {
+    fprintf(output, "  func = p->code_exec;\n");
+  }
   fprintf(output, "  func (ex);\n");
   for(i=0;i<4;i++){
     var = &p->vars[ORC_VAR_A1 + i];
@@ -948,7 +986,13 @@ output_init_function (FILE *output)
     fprintf(output, "\n");
     fprintf(output, "      result = orc_program_compile (p);\n");
     fprintf(output, "\n");
-    fprintf(output, "    _orc_program_%s = p;\n", programs[i]->name);
+    if (use_code) {
+      fprintf(output, "    _orc_code_%s = orc_program_take_code (p);\n",
+          programs[i]->name);
+      fprintf(output, "    orc_program_free (p);\n");
+    } else {
+      fprintf(output, "    _orc_program_%s = p;\n", programs[i]->name);
+    }
     fprintf(output, "  }\n");
   }
   fprintf(output, "#endif\n");

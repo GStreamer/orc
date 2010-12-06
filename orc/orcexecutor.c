@@ -40,7 +40,12 @@ orc_executor_run (OrcExecutor *ex)
 {
   void (*func) (OrcExecutor *);
 
-  func = ex->program->code_exec;
+  if (ex->program) {
+    func = ex->program->code_exec;
+  } else {
+    OrcCode *code = (OrcCode *)ex->arrays[ORC_VAR_A2];
+    func = code->exec;
+  }
   if (func) {
     func (ex);
     //ORC_ERROR("counters %d %d %d", ex->counter1, ex->counter2, ex->counter3);
@@ -54,7 +59,12 @@ orc_executor_run_backup (OrcExecutor *ex)
 {
   void (*func) (OrcExecutor *);
 
-  func = ex->program->backup_func;
+  if (ex->program) {
+    func = ex->program->backup_func;
+  } else {
+    OrcCode *code = (OrcCode *)ex->arrays[ORC_VAR_A2];
+    func = code->exec;
+  }
   if (func) {
     func (ex);
     //ORC_ERROR("counters %d %d %d", ex->counter1, ex->counter2, ex->counter3);
@@ -214,11 +224,17 @@ orc_executor_emulate (OrcExecutor *ex)
   int j;
   int k;
   int m, m_index;
-  OrcCode *code = ex->program->orccode;
+  OrcCode *code;
   OrcInstruction *insn;
   OrcStaticOpcode *opcode;
   OrcOpcodeExecutor *opcode_ex;
   void *tmpspace[ORC_N_COMPILER_VARIABLES] = { 0 };
+
+  if (ex->program) {
+    code = ex->program->orccode;
+  } else {
+    code = (OrcCode *)ex->arrays[ORC_VAR_A2];
+  }
 
   ex->accumulators[0] = 0;
   ex->accumulators[1] = 0;

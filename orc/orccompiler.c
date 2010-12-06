@@ -202,12 +202,6 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   compiler->target = target;
   compiler->target_flags = flags;
 
-  if (program->backup_func && _orc_compiler_flag_backup) {
-    ORC_COMPILER_ERROR(compiler, "Compilation disabled");
-    compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
-    goto error;
-  }
-
   {
     ORC_LOG("variables");
     for(i=0;i<ORC_N_VARIABLES;i++){
@@ -297,6 +291,7 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   program->orccode->is_2d = program->is_2d;
   program->orccode->constant_n = program->constant_n;
   program->orccode->constant_m = program->constant_m;
+  program->orccode->exec = program->code_exec;
 
   program->orccode->n_insns = compiler->n_insns;
   program->orccode->insns = malloc(sizeof(OrcInstruction) * compiler->n_insns);
@@ -312,8 +307,15 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
     program->orccode->vars[i].value = compiler->vars[i].value;
   }
 
+  if (program->backup_func && _orc_compiler_flag_backup) {
+    ORC_COMPILER_ERROR(compiler, "Compilation disabled");
+    compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
+    goto error;
+  }
+
   if (_orc_compiler_flag_emulate || target == NULL) {
     program->code_exec = (void *)orc_executor_emulate;
+    program->orccode->exec = (void *)orc_executor_emulate;
     compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
     goto error;
   }
