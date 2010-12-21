@@ -23,7 +23,7 @@ AC_DEFUN([AS_HOST_DEFINES],
       HAVE_POWERPC=yes
       AC_DEFINE(HAVE_POWERPC, 1, [Defined if host is powerpc])
       ;;
-    xarm)
+    xarm*)
       HAVE_ARM=yes
       AC_DEFINE(HAVE_ARM, 1, [Defined if host is arm])
       ;;
