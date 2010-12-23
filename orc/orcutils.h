@@ -30,7 +30,7 @@
 
 #ifndef _ORC_INTEGER_TYPEDEFS_
 #define _ORC_INTEGER_TYPEDEFS_
-#if defined(_x_STDC__) && __STDC__ && __STDC_VERSION__ >= 199901L
+#if defined(__STDC__) && __STDC__ && __STDC_VERSION__ >= 199901L
 #include <stdint.h>
 typedef int8_t orc_int8;
 typedef int16_t orc_int16;
@@ -40,6 +40,7 @@ typedef uint8_t orc_uint8;
 typedef uint16_t orc_uint16;
 typedef uint32_t orc_uint32;
 typedef uint64_t orc_uint64;
+typedef intptr_t orc_intptr;
 #define ORC_UINT64_C(x) UINT64_C(x)
 #elif defined(_MSC_VER)
 typedef signed __int8 orc_int8;
@@ -50,6 +51,11 @@ typedef unsigned __int8 orc_uint8;
 typedef unsigned __int16 orc_uint16;
 typedef unsigned __int32 orc_uint32;
 typedef unsigned __int64 orc_uint64;
+#ifdef _WIN64
+typedef unsigned __int64 orc_intptr;
+#else
+typedef unsigned long orc_intptr;
+#endif
 #define ORC_UINT64_C(x) (x##Ui64)
 #else
 #include <limits.h>
@@ -68,6 +74,11 @@ typedef long orc_int64;
 typedef unsigned long orc_uint64;
 #define ORC_UINT64_C(x) (x##UL)
 #endif
+#ifdef _WIN64
+typedef unsigned __int64 orc_intptr;
+#else
+typedef unsigned long orc_intptr;
+#endif
 #endif
 typedef union { orc_int16 i; orc_int8 x2[2]; } orc_union16;
 typedef union { orc_int32 i; float f; orc_int16 x2[2]; orc_int8 x4[4]; } orc_union32;
@@ -83,6 +94,11 @@ typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 
 
 typedef unsigned int orc_bool;
 
+#define ORC_PTR_TO_INT(x) ((int)(orc_intptr)(x))
+#define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
+#define ORC_STRUCT_OFFSET(struct_type, member)    \
+      (ORC_PTR_TO_INT((unsigned char *) &((struct_type*) 0)->member))
+
 #ifdef ORC_ENABLE_UNSTABLE_API
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
@@ -95,8 +111,6 @@ typedef unsigned int orc_bool;
 #ifndef ORC_CLAMP
 #define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
 #endif
-#define ORC_PTR_TO_INT(x) ((int)(long)(x))
-#define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
 
 #define ORC_READ_UINT32_LE(ptr) \
   ((orc_uint32)( \

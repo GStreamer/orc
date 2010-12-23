@@ -297,13 +297,13 @@ orc_executor_emulate (OrcExecutor *ex)
       } else if (var->vartype == ORC_VAR_TYPE_TEMP) {
         opcode_ex[j].src_ptrs[k] = tmpspace[insn->src_args[k]];
       } else if (var->vartype == ORC_VAR_TYPE_SRC) {
-        if (((unsigned long)ex->arrays[insn->src_args[k]]) & (var->size - 1)) {
+        if (ORC_PTR_TO_INT(ex->arrays[insn->src_args[k]]) & (var->size - 1)) {
           ORC_ERROR("Unaligned array for src%d, program %s",
               (insn->src_args[k]-ORC_VAR_S1), ex->program->name);
         }
         opcode_ex[j].src_ptrs[k] = ex->arrays[insn->src_args[k]];
       } else if (var->vartype == ORC_VAR_TYPE_DEST) {
-        if (((unsigned long)ex->arrays[insn->src_args[k]]) & (var->size - 1)) {
+        if (ORC_PTR_TO_INT(ex->arrays[insn->src_args[k]]) & (var->size - 1)) {
           ORC_ERROR("Unaligned array for dest%d, program %s",
               (insn->src_args[k]-ORC_VAR_D1), ex->program->name);
         }
@@ -321,7 +321,7 @@ orc_executor_emulate (OrcExecutor *ex)
         opcode_ex[j].dest_ptrs[k] =
           &ex->accumulators[insn->dest_args[k] - ORC_VAR_A1];
       } else if (var->vartype == ORC_VAR_TYPE_DEST) {
-        if (((unsigned long)ex->arrays[insn->dest_args[k]]) & (var->size - 1)) {
+        if (ORC_PTR_TO_INT(ex->arrays[insn->dest_args[k]]) & (var->size - 1)) {
           ORC_ERROR("Unaligned array for dest%d, program %s",
               (insn->dest_args[k]-ORC_VAR_D1), ex->program->name);
         }

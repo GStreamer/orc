@@ -1456,7 +1456,7 @@ ShiftInfo regshift_info[] = {
 static void
 orc_neon_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int type = (unsigned long)user;
+  int type = ORC_PTR_TO_INT(user);
   orc_uint32 code;
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
@@ -1602,7 +1602,7 @@ orc_neon_rule_shrsl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 orc_neon_rule_andn (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int max_shift = (long)user;
+  int max_shift = ORC_PTR_TO_INT(user);
 
   /* this is special because the operand order is reversed */
   if (p->insn_shift <= max_shift) { \

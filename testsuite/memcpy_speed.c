@@ -11,7 +11,7 @@
 #include <orc-test/orcprofile.h>
 
 
-#define ALIGN(ptr,n) ((void *)((unsigned long)(ptr) & (~(unsigned long)(n-1))))
+#define ALIGN(ptr,n) ((void *)((orc_intptr)(ptr) & (~(orc_intptr)(n-1))))
 
 int hot_src = TRUE;
 int hot_dest = TRUE;

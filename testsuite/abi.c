@@ -14,7 +14,7 @@ int main (int argc, char *argv[])
   int expected_offset;
   int error = 0;
 
-  offset = ((long) ((unsigned char *) &((OrcProgram*) 0)->code_exec));
+  offset = ORC_STRUCT_OFFSET (OrcProgram, code_exec);
 
   if (sizeof(void *) == 4) {
     expected_offset = 8360;

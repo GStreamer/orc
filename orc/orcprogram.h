@@ -50,9 +50,6 @@ typedef void (*OrcExecutorFunc)(OrcExecutor *ex);
 
 #define ORC_MAX_VAR_SIZE 8
 
-#define ORC_STRUCT_OFFSET(struct_type, member)    \
-      ((long) ((unsigned int *) &((struct_type*) 0)->member))
-
 #ifndef TRUE
 #define TRUE 1
 #endif
