@@ -52,6 +52,7 @@ orc_target_c_get_typedefs (void)
     "typedef unsigned __int32 orc_uint32;\n"
     "typedef unsigned __int64 orc_uint64;\n"
     "#define ORC_UINT64_C(x) (x##Ui64)\n"
+    "#define inline __inline\n"
     "#else\n"
     "#include <limits.h>\n"
     "typedef signed char orc_int8;\n"
