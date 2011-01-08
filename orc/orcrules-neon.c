@@ -1790,7 +1790,7 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
         p->vars[insn->dest_args[0]].alloc+1, \
         p->vars[insn->src_args[0]].alloc+1, \
         p->vars[insn->src_args[1]].alloc+1); \
-  } else { \
+  } else if (p->insn_shift > vec_shift + 1) { \
     ORC_COMPILER_ERROR(p, "shift too large"); \
   } \
 }
