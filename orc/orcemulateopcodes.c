@@ -1347,7 +1347,7 @@ emulate_div255w (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadw */
     var32 = ptr4[i];
     /* 1: div255w */
-    var33.i = ((uint16_t)(((orc_uint16)(var32.i+128)) + (((orc_uint16)(var32.i+128))>>8)))>>8;
+    var33.i = ((orc_uint16)(((orc_uint16)(var32.i+128)) + (((orc_uint16)(var32.i+128))>>8)))>>8;
     /* 2: storew */
     ptr0[i] = var33;
   }
@@ -1376,7 +1376,7 @@ emulate_divluw (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadw */
     var33 = ptr5[i];
     /* 2: divluw */
-    var34.i = ((var33.i&0xff) == 0) ? 255 : ORC_CLAMP_UB(((uint16_t)var32.i)/((uint16_t)var33.i&0xff));
+    var34.i = ((var33.i&0xff) == 0) ? 255 : ORC_CLAMP_UB(((orc_uint16)var32.i)/((orc_uint16)var33.i&0xff));
     /* 3: storew */
     ptr0[i] = var34;
   }
