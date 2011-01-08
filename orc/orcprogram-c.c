@@ -1079,7 +1079,7 @@ c_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
   c_get_name_int (src, p, insn, insn->src_args[0]);
 
   ORC_ASM_CODE(p,
-      "    %s = ((uint16_t)(((orc_uint16)(%s+128)) + (((orc_uint16)(%s+128))>>8)))>>8;\n",
+      "    %s = ((orc_uint16)(((orc_uint16)(%s+128)) + (((orc_uint16)(%s+128))>>8)))>>8;\n",
       dest, src, src);
 }
 
@@ -1093,7 +1093,7 @@ c_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
   c_get_name_int (src2, p, insn, insn->src_args[1]);
 
   ORC_ASM_CODE(p,
-      "    %s = ((%s&0xff) == 0) ? 255 : ORC_CLAMP_UB(((uint16_t)%s)/((uint16_t)%s&0xff));\n",
+      "    %s = ((%s&0xff) == 0) ? 255 : ORC_CLAMP_UB(((orc_uint16)%s)/((orc_uint16)%s&0xff));\n",
       dest, src2, src1, src2);
 }
 
