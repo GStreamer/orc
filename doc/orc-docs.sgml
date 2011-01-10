@@ -17,6 +17,7 @@
   <chapter>
     <title>Overview</title>
     <xi:include href="building.xml"/>
+    <xi:include href="running.xml"/>
     <xi:include href="concepts.xml"/>
     <xi:include href="tutorial.xml"/>
   </chapter>

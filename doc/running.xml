@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+<!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+]>
+<refentry id="orc-runninging" revision="10 jan 2011">
+<refmeta>
+<refentrytitle>Running Orc Applications</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>Orc</refmiscinfo>
+</refmeta>
+
+<refnamediv>
+<refname>Running Orc Applications</refname>
+<refpurpose>
+How to run applications using ORC.
+</refpurpose>
+</refnamediv>
+
+<refsect1>
+<title>Running Orc Applications</title>
+
+<para>
+At runtime several environment variables can be used to control ORC.
+</para>
+
+<formalpara id="ORC_DEBUG">
+  <title><envar>ORC_DEBUG</envar></title>
+
+  <para>
+    This environment variable can be set to a number indicating the level for
+    debug logging. A value of 0 (default) results in no debug logging. The
+    higher the value to more detail is logged.
+  </para>
+</formalpara>
+
+<formalpara id="ORC_CODE">
+  <title><envar>ORC_CODE</envar></title>
+
+  <para>
+    This variable can be set to a comma separated list of flags to control the
+    code selection and execution. Supported values are: backup, emulate and
+    debug. 'Backup' would instruct ORC to select the C based backup functions.
+    'Emulate' will run the ORC code through an interpreter.
+  </para>
+</formalpara>
+
+<formalpara id="ORC_CPU_FLAGS">
+  <title><envar>ORC_CPU_FLAGS</envar></title>
+    This environment variable can be used to manually specify cpu capabilities.
+  <para>
+  </para>
+</formalpara>
+
+</refsect1>
+
+</refentry>
