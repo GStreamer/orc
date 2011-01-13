@@ -157,6 +157,8 @@ orc_compiler_neon_init (OrcCompiler *compiler)
   compiler->valid_regs[compiler->gp_tmpreg] = 0;
   compiler->tmpreg = ORC_VEC_REG_BASE + 0;
   compiler->valid_regs[compiler->tmpreg] = 0;
+  compiler->tmpreg2 = ORC_VEC_REG_BASE + 2;
+  compiler->valid_regs[compiler->tmpreg2] = 0;
 
   loop_shift = 0;
   switch (compiler->max_var_size) {

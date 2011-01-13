@@ -460,6 +460,7 @@ struct _OrcCompiler {
 
   int is_64bit;
   int tmpreg;
+  int tmpreg2;
   int exec_reg;
   int gp_tmpreg;
 

@@ -1798,39 +1798,144 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 BINARY_VFP(addd,"vadd.f64",0xee300b00, 0)
 BINARY_VFP(subd,"vsub.f64",0xee300b40, 0)
 BINARY_VFP(muld,"vmul.f64",0xee200b00, 0)
+BINARY_VFP(divd,"vdiv.f64",0xee800b00, 0)
+UNARY_VFP(sqrtd,"vsqrt.f64",0xeeb10b00, 0)
 //BINARY_VFP(cmpeqd,"vcmpe.f64",0xee000000, 0)
 UNARY_VFP(convdf,"vcvt.f64.f32",0xee200b00, 0)
 UNARY_VFP(convfd,"vcvt.f32.f64",0xee200b00, 0)
 
-
-#if 0
+#if 1
+#define NUM_ITERS_DIVF 2
 static void
 orc_neon_rule_divf (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  orc_neon_emit_binary_single (p, "vdiv.f32", 0xee800a00,
+  int vec_shift = 1;
+  if (p->insn_shift <= vec_shift) {
+    orc_neon_emit_unary (p, "vrecpe.f32", 0xf3bb0500,
+      p->tmpreg,
+      p->vars[insn->src_args[1]].alloc);
+    int i = 0;
+    for(i = 0; i < NUM_ITERS_DIVF; i++) {
+      orc_neon_emit_binary (p, "vrecps.f32", 0xf2000f10,
+        p->tmpreg2, //correction factor
+        p->tmpreg, //the last estimate
+        p->vars[insn->src_args[1]].alloc); //the original number
+      orc_neon_emit_binary (p, "vmul.f32", 0xf3000d10,
+        p->tmpreg, //revised estimate
+        p->tmpreg,  //last estimate
+        p->tmpreg2); //correction factor
+    }
+
+    orc_neon_emit_binary (p, "vmul.f32", 0xf3000d10,
       p->vars[insn->dest_args[0]].alloc,
       p->vars[insn->src_args[0]].alloc,
+      p->tmpreg);
+
+  } else if (p->insn_shift == vec_shift + 1) {
+    orc_neon_emit_unary_quad (p, "vrecpe.f32", 0xf3bb0500,
+      p->tmpreg,
       p->vars[insn->src_args[1]].alloc);
-  if (p->insn_shift > 1) {
-    orc_neon_emit_binary_single (p, "vdiv.f32", 0xee800a00,
-        p->vars[insn->dest_args[0]].alloc + 1,
-        p->vars[insn->src_args[0]].alloc + 1,
-        p->vars[insn->src_args[1]].alloc + 1);
+    int i = 0;
+    for(i = 0; i < NUM_ITERS_DIVF; i++) {
+      orc_neon_emit_binary_quad (p, "vrecps.f32", 0xf2000f10,
+        p->tmpreg2, //correction factor
+        p->tmpreg, //the last estimate
+        p->vars[insn->src_args[1]].alloc); //the original number
+      orc_neon_emit_binary_quad (p, "vmul.f32", 0xf3000d10,
+        p->tmpreg, //revised estimate
+        p->tmpreg,  //last estimate
+        p->tmpreg2); //correction factor
+    }
+
+    orc_neon_emit_binary_quad (p, "vmul.f32", 0xf3000d10,
+      p->vars[insn->dest_args[0]].alloc,
+      p->vars[insn->src_args[0]].alloc,
+      p->tmpreg);
+
+  } else {
+    ORC_COMPILER_ERROR(p, "shift too large");
   }
 }
+#endif
 
+#if 1
+#define NUM_ITERS_SQRTF 2
 static void
 orc_neon_rule_sqrtf (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  orc_neon_emit_binary_single (p, "vsqrt.f32", 0xeeb00a40,
+  int vec_shift = 1;
+  if (p->insn_shift <= vec_shift) {
+    orc_neon_emit_unary (p, "vrsqrte.f32", 0xf3bb0580,
+      p->tmpreg,
+      p->vars[insn->src_args[0]].alloc);
+    int i = 0;
+    for(i = 0; i < NUM_ITERS_SQRTF; i++) {
+      orc_neon_emit_binary (p, "vmul.f32", 0xf3000d10,
+        p->tmpreg2,
+        p->tmpreg,
+        p->vars[insn->src_args[0]].alloc);
+      orc_neon_emit_binary (p, "vrsqrts.f32", 0xf2200f10,
+        p->tmpreg2,
+        p->tmpreg,
+        p->tmpreg2);
+      orc_neon_emit_binary (p, "vmul.f32", 0xf3000d10,
+        p->tmpreg,
+        p->tmpreg,
+        p->tmpreg2);
+    }
+
+    orc_neon_emit_unary(p, "vrecpe.f32", 0xf3bb0500,
       p->vars[insn->dest_args[0]].alloc,
-      p->vars[insn->src_args[0]].alloc,
-      p->vars[insn->src_args[1]].alloc);
-  if (p->insn_shift > 1) {
-    orc_neon_emit_binary_single (p, "vsqrt.f32", 0xeeb00a40,
-        p->vars[insn->dest_args[0]].alloc + 1,
-        p->vars[insn->src_args[0]].alloc + 1,
-        p->vars[insn->src_args[1]].alloc + 1);
+      p->tmpreg);
+
+    for(i=0; i < NUM_ITERS_DIVF; i++) {
+      orc_neon_emit_binary (p, "vrecps.f32", 0xf2000f10,
+        p->tmpreg2, //correction factor
+        p->vars[insn->dest_args[0]].alloc, //the last estimate
+        p->tmpreg); //the original number
+      orc_neon_emit_binary (p, "vmul.f32", 0xf3000d10,
+        p->vars[insn->dest_args[0]].alloc, //revised estimate
+        p->vars[insn->dest_args[0]].alloc,  //last estimate
+        p->tmpreg2); //correction factor
+    }
+
+  } else if (p->insn_shift == vec_shift + 1) {
+    orc_neon_emit_unary_quad (p, "vrsqrte.f32", 0xf3bb0580,
+      p->tmpreg,
+      p->vars[insn->src_args[0]].alloc);
+    int i = 0;
+    for(i = 0; i < NUM_ITERS_SQRTF; i++) {
+      orc_neon_emit_binary_quad (p, "vmul.f32", 0xf3000d10,
+        p->tmpreg2,
+        p->tmpreg,
+        p->vars[insn->src_args[0]].alloc);
+      orc_neon_emit_binary_quad (p, "vrsqrts.f32", 0xf2200f10,
+        p->tmpreg2,
+        p->tmpreg,
+        p->tmpreg2);
+      orc_neon_emit_binary_quad (p, "vmul.f32", 0xf3000d10,
+        p->tmpreg,
+        p->tmpreg,
+        p->tmpreg2);
+    }
+
+    orc_neon_emit_unary_quad(p, "vrecpe.f32", 0xf3bb0500,
+      p->vars[insn->dest_args[0]].alloc,
+      p->tmpreg);
+
+    for(i=0; i < NUM_ITERS_DIVF; i++) {
+      orc_neon_emit_binary_quad (p, "vrecps.f32", 0xf2000f10,
+        p->tmpreg2, //correction factor
+        p->vars[insn->dest_args[0]].alloc, //the last estimate
+        p->tmpreg); //the original number
+      orc_neon_emit_binary_quad (p, "vmul.f32", 0xf3000d10,
+        p->vars[insn->dest_args[0]].alloc, //revised estimate
+        p->vars[insn->dest_args[0]].alloc,  //last estimate
+        p->tmpreg2); //correction factor
+    }
+
+  } else {
+    ORC_COMPILER_ERROR(p, "shift too large");
   }
 }
 #endif
@@ -2755,8 +2860,8 @@ orc_compiler_neon_register_rules (OrcTarget *target)
   REG(addf);
   REG(subf);
   REG(mulf);
-  //REG(divf);
-  //REG(sqrtf);
+  REG(divf);
+  REG(sqrtf);
   REG(maxf);
   REG(minf);
   REG(cmpeqf);
@@ -2768,6 +2873,8 @@ orc_compiler_neon_register_rules (OrcTarget *target)
   REG(addd);
   REG(subd);
   REG(muld);
+  REG(divd);
+  REG(sqrtd);
   //REG(cmpeqd);
   REG(convdf);
   REG(convfd);
