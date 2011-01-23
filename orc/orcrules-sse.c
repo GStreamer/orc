@@ -336,7 +336,7 @@ sse_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
       break;
     case 2:
       if (compiler->target_flags & ORC_TARGET_SSE_SSE4_1) {
-        orc_sse_emit_pextrw_memoffset (compiler, 0, src->alloc, offset,
+        orc_sse_emit_pextrw_memoffset (compiler, 0, offset, src->alloc,
             ptr_reg);
       } else {
         /* FIXME we might be using ecx twice here */
