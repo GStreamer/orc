@@ -68,10 +68,17 @@ void orc_x86_emit_pop (OrcCompiler *compiler, int size, int reg);
 #define orc_x86_emit_and_imm_memoffset(p,size,value,offset,reg) \
   orc_x86_emit_cpuinsn_imm_memoffset (p, (value >= -128 && value < 128) ? \
       ORC_X86_and_imm8_rm : ORC_X86_and_imm32_rm, size, value, offset, reg)
-#define orc_x86_emit_and_imm_reg(p,size,value,reg) \
-  orc_x86_emit_cpuinsn_imm_reg (p, (value >= -128 && value < 128) ? \
-      ORC_X86_and_imm8_rm : \
-      (reg == X86_EAX ? ORC_X86_and_imm32_a : ORC_X86_and_imm32_rm), size, value, reg)
+#define orc_x86_emit_and_imm_reg(p,size,value,reg) do { \
+  if ((value) >= -128 && (value) < 128) { \
+    orc_x86_emit_cpuinsn_imm_reg (p, ORC_X86_and_imm8_rm, size, value, reg); \
+  } else { \
+    if ((reg) == X86_EAX) { \
+      orc_x86_emit_cpuinsn_imm_reg (p, ORC_X86_and_imm32_a, size, value, reg); \
+    } else { \
+      orc_x86_emit_cpuinsn_imm_reg (p, ORC_X86_and_imm32_rm, size, value, reg); \
+    } \
+  } \
+} while (0)
 #define orc_x86_emit_add_imm_memoffset(p,size,value,offset,reg) \
   orc_x86_emit_cpuinsn_imm_memoffset (p, (value >= -128 && value < 128) ? \
       ORC_X86_add_imm8_rm : ORC_X86_add_imm32_rm, size, value, offset, reg)
