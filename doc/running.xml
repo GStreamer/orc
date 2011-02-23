@@ -42,8 +42,10 @@ At runtime several environment variables can be used to control ORC.
   <para>
     This variable can be set to a comma separated list of flags to control the
     code selection and execution. Supported values are: backup, emulate and
-    debug. 'Backup' would instruct ORC to select the C based backup functions.
-    'Emulate' will run the ORC code through an interpreter.
+    debug. The value 'backup' would instruct ORC to select the C based backup
+    functions. Selecting 'emulate' will run the ORC code through an interpreter.
+    Using 'debug' enables debuggers such as gdb to create useful backtraces from
+    ORC-generated code
   </para>
 </formalpara>
 
