@@ -252,24 +252,24 @@ orc_code_region_allocate_codemem_anon_map (OrcCodeRegion *region)
 void
 orc_code_region_allocate_codemem (OrcCodeRegion *region)
 {
-  int ret;
   const char *tmpdir;
 
   tmpdir = getenv ("TMPDIR");
-  ret = orc_code_region_allocate_codemem_dual_map (region,
-      tmpdir ? tmpdir : "/tmp", FALSE);
-  if (!ret) {
-    ret = orc_code_region_allocate_codemem_dual_map (region,
-        getenv ("HOME"), TRUE);
-  }
-  if (!ret) {
-    ret = orc_code_region_allocate_codemem_anon_map (region);
-  }
-  if (!ret) {
-    ORC_ERROR("Failed to create write and exec mmap regions.  This "
-        "is probably because SELinux execmem check is enabled (good) "
-        "and $TMPDIR and $HOME are mounted noexec (bad).");
-  }
+  if (tmpdir && orc_code_region_allocate_codemem_dual_map (region,
+        tmpdir, FALSE)) return;
+
+  tmpdir = getenv ("HOME");
+  if (tmpdir && orc_code_region_allocate_codemem_dual_map (region,
+        tmpdir, FALSE)) return;
+
+  if (orc_code_region_allocate_codemem_dual_map (region, "/tmp", FALSE))
+    return;
+
+  if (orc_code_region_allocate_codemem_anon_map (region)) return;
+  
+  ORC_ERROR("Failed to create write and exec mmap regions.  This "
+      "is probably because SELinux execmem check is enabled (good) "
+      "and $TMPDIR and $HOME are mounted noexec (bad).");
 }
 
 #endif
