@@ -399,7 +399,7 @@ powerpc_load_constant (OrcCompiler *p, int i, int reg)
 {
   int j;
   int value = p->constants[i].value;
-  int greg = POWERPC_R31;
+  int greg = p->gp_tmpreg;
   int label_skip, label_data;
 
   switch (p->constants[i].type) {
