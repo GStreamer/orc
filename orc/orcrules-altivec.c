@@ -388,17 +388,6 @@ powerpc_rule_mulhub (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
-powerpc_rule_mullw (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  int src1 = ORC_SRC_ARG (p, insn, 0);
-  int src2 = ORC_SRC_ARG (p, insn, 1);
-  int dest = ORC_DEST_ARG (p, insn, 0);
-
-  powerpc_emit_vmulesh (p, dest, src1, src2);
-  powerpc_emit_vsldoi (p, dest, dest, dest, 2);
-}
-
-static void
 powerpc_rule_mulhsw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src1 = ORC_SRC_ARG (p, insn, 0);
@@ -418,7 +407,6 @@ powerpc_rule_mulhuw (OrcCompiler *p, void *user, OrcInstruction *insn)
   powerpc_emit_vmuleuh (p, dest, src1, src2);
 }
 
-#ifdef alternate
 static void
 powerpc_rule_mullw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -430,7 +418,6 @@ powerpc_rule_mullw (OrcCompiler *p, void *user, OrcInstruction *insn)
   powerpc_emit_vxor (p, tmp, tmp, tmp);
   powerpc_emit_vmladduhm (p, dest, src1, src2, POWERPC_V0);
 }
-#endif
 
 static void
 powerpc_rule_convsbw (OrcCompiler *p, void *user, OrcInstruction *insn)
