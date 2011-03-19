@@ -382,13 +382,13 @@ orc_powerpc_flush_cache (OrcCode *code)
 
   ptr = code->code;
   for (i=0;i<size;i+=cache_line_size) {
-    __asm__ __volatile__ ("dcbst %0,%1" :: "r" (ptr), "r" (i));
+    __asm__ __volatile__ ("dcbst %0,%1" :: "b" (ptr), "r" (i));
   }
   __asm__ __volatile ("sync");
 
   ptr = (void *)code->exec;
   for (i=0;i<size;i+=cache_line_size) {
-    __asm__ __volatile__ ("icbi %0,%1" :: "r" (ptr), "r" (i));
+    __asm__ __volatile__ ("icbi %0,%1" :: "b" (ptr), "r" (i));
   }
   __asm__ __volatile ("isync");
 #endif
