@@ -1015,9 +1015,9 @@ powerpc_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
   ORC_ASM_CODE(p,"  vspltish %s, 8\n", powerpc_get_regname(tmp2));
   powerpc_emit_VX(p, 0x1000034c, powerpc_regnum(tmp2), 8, 0);
 
-  powerpc_emit_VX_2 (p, "vsrw", 0x10000284, tmp, dest, tmp2);
+  powerpc_emit_VX_2 (p, "vsrh", 0x10000244, tmp, dest, tmp2);
   powerpc_emit_VX_2 (p, "vadduhm", 0x10000040, dest, dest, tmp);
-  powerpc_emit_VX_2 (p, "vsrw", 0x10000284, dest, dest, tmp2);
+  powerpc_emit_VX_2 (p, "vsrh", 0x10000244, dest, dest, tmp2);
 }
 
 void
