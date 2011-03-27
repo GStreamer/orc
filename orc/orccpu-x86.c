@@ -64,12 +64,19 @@ get_cpuid (orc_uint32 op, orc_uint32 *a, orc_uint32 *b, orc_uint32 *c, orc_uint3
 static void
 get_cpuid_ecx (orc_uint32 op, orc_uint32 init_ecx, orc_uint32 *a, orc_uint32 *b, orc_uint32 *c, orc_uint32 *d)
 {
+#if _MSC_VER >= 1500
   int tmp[4];
   __cpuidex(tmp, op, init_ecx);
   *a = tmp[0];
   *b = tmp[1];
   *c = tmp[2];
   *d = tmp[3];
+#else
+  *a = 0;
+  *b = 0;
+  *c = 0;
+  *d = 0;
+#endif
 }
 #elif defined(__GNUC__) || defined (__SUNPRO_C)
 
