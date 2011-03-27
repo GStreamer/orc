@@ -1811,10 +1811,10 @@ orc_neon_rule_divf (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int vec_shift = 1;
   if (p->insn_shift <= vec_shift) {
+    int i;
     orc_neon_emit_unary (p, "vrecpe.f32", 0xf3bb0500,
       p->tmpreg,
       p->vars[insn->src_args[1]].alloc);
-    int i = 0;
     for(i = 0; i < NUM_ITERS_DIVF; i++) {
       orc_neon_emit_binary (p, "vrecps.f32", 0xf2000f10,
         p->tmpreg2, //correction factor
@@ -1832,10 +1832,10 @@ orc_neon_rule_divf (OrcCompiler *p, void *user, OrcInstruction *insn)
       p->tmpreg);
 
   } else if (p->insn_shift == vec_shift + 1) {
+    int i;
     orc_neon_emit_unary_quad (p, "vrecpe.f32", 0xf3bb0500,
       p->tmpreg,
       p->vars[insn->src_args[1]].alloc);
-    int i = 0;
     for(i = 0; i < NUM_ITERS_DIVF; i++) {
       orc_neon_emit_binary_quad (p, "vrecps.f32", 0xf2000f10,
         p->tmpreg2, //correction factor
@@ -1865,10 +1865,10 @@ orc_neon_rule_sqrtf (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int vec_shift = 1;
   if (p->insn_shift <= vec_shift) {
+    int i;
     orc_neon_emit_unary (p, "vrsqrte.f32", 0xf3bb0580,
       p->tmpreg,
       p->vars[insn->src_args[0]].alloc);
-    int i = 0;
     for(i = 0; i < NUM_ITERS_SQRTF; i++) {
       orc_neon_emit_binary (p, "vmul.f32", 0xf3000d10,
         p->tmpreg2,
@@ -1900,10 +1900,10 @@ orc_neon_rule_sqrtf (OrcCompiler *p, void *user, OrcInstruction *insn)
     }
 
   } else if (p->insn_shift == vec_shift + 1) {
+    int i;
     orc_neon_emit_unary_quad (p, "vrsqrte.f32", 0xf3bb0580,
       p->tmpreg,
       p->vars[insn->src_args[0]].alloc);
-    int i = 0;
     for(i = 0; i < NUM_ITERS_SQRTF; i++) {
       orc_neon_emit_binary_quad (p, "vmul.f32", 0xf3000d10,
         p->tmpreg2,
