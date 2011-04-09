@@ -19,5 +19,5 @@ BUILT_SOURCES=orc-$(ORC_MAJORMINOR)-uninstalled.pc
 
 CLEANFILES = orc-$(ORC_MAJORMINOR).pc orc-$(ORC_MAJORMINOR)-uninstalled.pc
 
-ACLOCAL_FLAGS = -I m4
+ACLOCAL_AMFLAGS = -I m4
 
