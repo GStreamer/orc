@@ -717,14 +717,13 @@ output_code_execute (OrcProgram *p, FILE *output, int is_inline)
     fprintf(output, "  if (!p_inited) {\n");
     fprintf(output, "    orc_once_mutex_lock ();\n");
     fprintf(output, "    if (!p_inited) {\n");
-    fprintf(output, "      OrcCompileResult result;\n");
     if (use_code) {
       fprintf(output, "      OrcProgram *p;\n");
     }
     fprintf(output, "\n");
     output_program_generation (p, output, is_inline);
     fprintf(output, "\n");
-    fprintf(output, "      result = orc_program_compile (p);\n");
+    fprintf(output, "      orc_program_compile (p);\n");
     if (use_code) {
       fprintf(output, "      c = orc_program_take_code (p);\n");
       fprintf(output, "      orc_program_free (p);\n");
@@ -989,11 +988,10 @@ output_init_function (FILE *output)
       fprintf(output, "  {\n");
       fprintf(output, "    /* %s */\n", programs[i]->name);
       fprintf(output, "    OrcProgram *p;\n");
-      fprintf(output, "    OrcCompileResult result;\n");
       fprintf(output, "    \n");
       output_program_generation (programs[i], output, FALSE);
       fprintf(output, "\n");
-      fprintf(output, "      result = orc_program_compile (p);\n");
+      fprintf(output, "      orc_program_compile (p);\n");
       fprintf(output, "\n");
       if (use_code) {
         fprintf(output, "    _orc_code_%s = orc_program_take_code (p);\n",
