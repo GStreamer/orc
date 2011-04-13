@@ -506,10 +506,10 @@ output_prototype (OrcProgram *p, FILE *output)
     if (var->size) {
       if (need_comma) fprintf(output, ", ");
       if (var->type_name) {
-        fprintf(output, "%s * %s", var->type_name,
+        fprintf(output, "%s * ORC_RESTRICT %s", var->type_name,
             varnames[ORC_VAR_D1 + i]);
       } else {
-        fprintf(output, "orc_uint%d * %s", var->size*8,
+        fprintf(output, "orc_uint%d * ORC_RESTRICT %s", var->size*8,
             varnames[ORC_VAR_D1 + i]);
       }
       if (p->is_2d) {
@@ -523,10 +523,10 @@ output_prototype (OrcProgram *p, FILE *output)
     if (var->size) {
       if (need_comma) fprintf(output, ", ");
       if (var->type_name) {
-        fprintf(output, "%s * %s", var->type_name,
+        fprintf(output, "%s * ORC_RESTRICT %s", var->type_name,
             varnames[ORC_VAR_A1 + i]);
       } else {
-        fprintf(output, "orc_uint%d * %s", var->size*8,
+        fprintf(output, "orc_uint%d * ORC_RESTRICT %s", var->size*8,
             varnames[ORC_VAR_A1 + i]);
       }
       need_comma = TRUE;
@@ -537,10 +537,10 @@ output_prototype (OrcProgram *p, FILE *output)
     if (var->size) {
       if (need_comma) fprintf(output, ", ");
       if (var->type_name) {
-        fprintf(output, "const %s * %s", var->type_name,
+        fprintf(output, "const %s * ORC_RESTRICT %s", var->type_name,
             varnames[ORC_VAR_S1 + i]);
       } else {
-        fprintf(output, "const orc_uint%d * %s", var->size*8,
+        fprintf(output, "const orc_uint%d * ORC_RESTRICT %s", var->size*8,
             varnames[ORC_VAR_S1 + i]);
       }
       if (p->is_2d) {

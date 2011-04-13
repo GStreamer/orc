@@ -74,6 +74,15 @@ orc_target_c_get_typedefs (void)
     "typedef union { orc_int16 i; orc_int8 x2[2]; } orc_union16;\n"
     "typedef union { orc_int32 i; float f; orc_int16 x2[2]; orc_int8 x4[4]; } orc_union32;\n"
     "typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 x4[4]; } orc_union64;\n"
+    "#endif\n"
+    "#ifndef ORC_RESTRICT\n"
+    "#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L\n"
+    "#define ORC_RESTRICT restrict\n"
+    "#elif defined(__GNUC__) && __GNUC__ >= 4\n"
+    "#define ORC_RESTRICT __restrict__\n"
+    "#else\n"
+    "#define ORC_RESTRICT\n"
+    "#endif\n"
     "#endif\n";
 }
 
@@ -112,12 +121,14 @@ orc_target_c_get_asm_preamble (void)
     "#define ORC_ISNAN(x) ((((x)&0x7f800000) == 0x7f800000) && (((x)&0x007fffff) != 0))\n"
     "#define ORC_DENORMAL_DOUBLE(x) ((x) & ((((x)&ORC_UINT64_C(0x7ff0000000000000)) == 0) ? ORC_UINT64_C(0xfff0000000000000) : ORC_UINT64_C(0xffffffffffffffff)))\n"
     "#define ORC_ISNAN_DOUBLE(x) ((((x)&ORC_UINT64_C(0x7ff0000000000000)) == ORC_UINT64_C(0x7ff0000000000000)) && (((x)&ORC_UINT64_C(0x000fffffffffffff)) != 0))\n"
+    "#ifndef ORC_RESTRICT\n"
     "#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L\n"
     "#define ORC_RESTRICT restrict\n"
     "#elif defined(__GNUC__) && __GNUC__ >= 4\n"
     "#define ORC_RESTRICT __restrict__\n"
     "#else\n"
     "#define ORC_RESTRICT\n"
+    "#endif\n"
     "#endif\n"
     "/* end Orc C target preamble */\n\n";
 }

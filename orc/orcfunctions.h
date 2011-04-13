@@ -57,8 +57,17 @@ typedef union { orc_int16 i; orc_int8 x2[2]; } orc_union16;
 typedef union { orc_int32 i; float f; orc_int16 x2[2]; orc_int8 x4[4]; } orc_union32;
 typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 x4[4]; } orc_union64;
 #endif
-void orc_memcpy (void * d1, const void * s1, int n);
-void orc_memset (void * d1, int p1, int n);
+#ifndef ORC_RESTRICT
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define ORC_RESTRICT restrict
+#elif defined(__GNUC__) && __GNUC__ >= 4
+#define ORC_RESTRICT __restrict__
+#else
+#define ORC_RESTRICT
+#endif
+#endif
+void orc_memcpy (void * ORC_RESTRICT d1, const void * s1, int n);
+void orc_memset (void * ORC_RESTRICT d1, int p1, int n);
 
 #ifdef __cplusplus
 }
