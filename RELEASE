@@ -1,4 +1,24 @@
 
+0.4.12
+======
+
+This is primarily a bug fixing release.
+
+ - Fix gcc-4.6 warnings in generated code
+ - Codegen fixes for Altivec.  Passes regression tests again.
+ - More error checking for code allocation.
+ - NEON: floating point improvements
+ - Removed stdint.h from API.  This could theoretically cause
+   breakage if you depended on orc to include stdint.h.
+
+One new feature is the OrcCode structure, which keeps track of
+compiled code.  This now allows applications to free unused code.
+
+Internally, x86 code generation was completely refactored to add
+an intermediate stage, which will later be used for instruction
+reordering.  None of this is useful yet.
+
+
 0.4.11
 ======
 
