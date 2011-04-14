@@ -1,9 +1,9 @@
 
 .function orc_add2_rshift_add_s16_22_op
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
-.source 2 s3 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
+.source 2 s3 orc_int16
 .temp 2 t1
 
 addw t1, s2, s3
@@ -13,9 +13,9 @@ addw d1, s1, t1
 
 
 .function orc_add2_rshift_add_s16_22
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 .temp 2 t1
 
 addw t1, s1, s2
@@ -25,10 +25,10 @@ addw d1, d1, t1
 
 
 .function orc_add2_rshift_sub_s16_22_op
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
-.source 2 s3 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
+.source 2 s3 orc_int16
 .temp 2 t1
 
 addw t1, s2, s3
@@ -38,9 +38,9 @@ subw d1, s1, t1
 
 
 .function orc_add2_rshift_sub_s16_22
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 .temp 2 t1
 
 addw t1, s1, s2
@@ -50,10 +50,10 @@ subw d1, d1, t1
 
 
 .function orc_add2_rshift_add_s16_11_op
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
-.source 2 s3 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
+.source 2 s3 orc_int16
 .temp 2 t1
 
 avgsw t1, s2, s3
@@ -61,9 +61,9 @@ addw d1, s1, t1
 
 
 .function orc_add2_rshift_add_s16_11
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 .temp 2 t1
 
 avgsw t1, s1, s2
@@ -71,10 +71,10 @@ addw d1, d1, t1
 
 
 .function orc_add2_rshift_sub_s16_11_op
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
-.source 2 s3 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
+.source 2 s3 orc_int16
 .temp 2 t1
 
 avgsw t1, s2, s3
@@ -82,9 +82,9 @@ subw d1, s1, t1
 
 
 .function orc_add2_rshift_sub_s16_11
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 .temp 2 t1
 
 avgsw t1, s1, s2
@@ -92,8 +92,8 @@ subw d1, d1, t1
 
 
 .function orc_add_const_rshift_s16_11
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
 .temp 2 t1
 
 addw t1, s1, 1
@@ -101,7 +101,7 @@ shrsw d1, t1, 1
 
 
 .function orc_add_const_rshift_s16
-.dest 2 d1 int16_t
+.dest 2 d1 orc_int16
 .param 2 p1
 .param 2 p2
 .temp 2 t1
@@ -111,25 +111,25 @@ shrsw d1, t1, p2
 
 
 .function orc_add_s16
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 
 addw d1, s1, s2
 
 
 .function orc_add_s16_2d
 .flags 2d
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
 
 addw d1, d1, s1
 
 
 .function orc_addc_rshift_s16
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 .temp 2 t1
 .param 2 p1
 
@@ -138,31 +138,31 @@ shrsw d1, t1, p1
 
 
 .function orc_lshift1_s16
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
 
 shlw d1, s1, 1
 
 
 .function orc_lshift2_s16
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
 
 shlw d1, s1, 2
 
 
 .function orc_lshift_s16_ip
-.dest 2 d1 int16_t
+.dest 2 d1 orc_int16
 .param 2 p1
 
 shlw d1, d1, p1
 
 
 .function orc_mas2_add_s16_op
-.dest 2 d1 int16_t
-.source 2 s0 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 2 d1 orc_int16
+.source 2 s0 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 .temp 2 t1
 .temp 4 t2
 .param 2 p1
@@ -178,9 +178,9 @@ addw d1, s0, t1
 
 
 .function orc_mas2_add_s16_ip
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 .temp 2 t1
 .temp 4 t2
 .param 2 p1
@@ -196,10 +196,10 @@ addw d1, d1, t1
 
 
 .function orc_mas2_sub_s16_op
-.dest 2 d1 int16_t
-.source 2 s0 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 2 d1 orc_int16
+.source 2 s0 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 .temp 2 t1
 .temp 4 t2
 .param 2 p1
@@ -215,9 +215,9 @@ subw d1, s0, t1
 
 
 .function orc_mas2_sub_s16_ip
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 .temp 2 t1
 .temp 4 t2
 .param 2 p1
@@ -233,12 +233,12 @@ subw d1, d1, t1
 
 
 .function orc_mas4_across_add_s16_1991_op
-.dest 2 d1 int16_t
-.source 2 s0 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
-.source 2 s3 int16_t
-.source 2 s4 int16_t
+.dest 2 d1 orc_int16
+.source 2 s0 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
+.source 2 s3 orc_int16
+.source 2 s4 orc_int16
 .param 4 p1
 .param 4 p2
 .temp 2 t1
@@ -258,11 +258,11 @@ addw d1, s0, t1
 
 
 .function orc_mas4_across_add_s16_1991_ip
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
-.source 2 s3 int16_t
-.source 2 s4 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
+.source 2 s3 orc_int16
+.source 2 s4 orc_int16
 .param 4 p1
 .param 4 p2
 .temp 2 t1
@@ -282,12 +282,12 @@ addw d1, d1, t1
 
 
 .function orc_mas4_across_sub_s16_1991_op
-.dest 2 d1 int16_t
-.source 2 s0 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
-.source 2 s3 int16_t
-.source 2 s4 int16_t
+.dest 2 d1 orc_int16
+.source 2 s0 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
+.source 2 s3 orc_int16
+.source 2 s4 orc_int16
 .param 4 p1
 .param 4 p2
 .temp 2 t1
@@ -307,11 +307,11 @@ subw d1, s0, t1
 
 
 .function orc_mas4_across_sub_s16_1991_ip
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
-.source 2 s3 int16_t
-.source 2 s4 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
+.source 2 s3 orc_int16
+.source 2 s4 orc_int16
 .param 4 p1
 .param 4 p2
 .temp 2 t1
@@ -331,16 +331,16 @@ subw d1, d1, t1
 
 
 .function orc_subtract_s16
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 
 subw d1, s1, s2
 
 
 .function orc_add_s16_u8
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
 .source 1 s2
 .temp 2 t1
 
@@ -350,7 +350,7 @@ addw d1, t1, s1
 
 .function orc_add_s16_u8_2d
 .flags 2d
-.dest 2 d1 int16_t
+.dest 2 d1 orc_int16
 .source 1 s1
 .temp 2 t1
 
@@ -367,14 +367,14 @@ convubw d1, s1
 
 .function orc_convert_u8_s16
 .dest 1 d1
-.source 2 s1 int16_t
+.source 2 s1 orc_int16
 
 convsuswb d1, s1
 
 
 .function orc_offsetconvert_u8_s16
 .dest 1 d1
-.source 2 s1 int16_t
+.source 2 s1 orc_int16
 .temp 2 t1
 
 addw t1, s1, 128
@@ -382,7 +382,7 @@ convsuswb d1, t1
 
 
 .function orc_offsetconvert_s16_u8
-.dest 2 d1 int16_t
+.dest 2 d1 orc_int16
 .source 1 s1
 .temp 2 t1
 
@@ -391,8 +391,8 @@ subw d1, t1, 128
 
 
 .function orc_subtract_s16_u8
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
 .source 1 s2
 .temp 2 t1
 
@@ -401,8 +401,8 @@ subw d1, s1, t1
 
 
 .function orc_multiply_and_add_s16_u8
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
 .source 1 s2
 .temp 2 t1
 
@@ -412,7 +412,7 @@ addw d1, d1, t1
 
 
 .function orc_splat_s16_ns
-.dest 2 d1 int16_t
+.dest 2 d1 orc_int16
 .param 2 p1
 
 copyw d1, p1
@@ -421,7 +421,7 @@ copyw d1, p1
 .function orc_splat_s16_2d_4xn
 .n 4
 .flags 2d
-.dest 2 d1 int16_t
+.dest 2 d1 orc_int16
 .param 2 p1
 
 copyw d1, p1
@@ -430,7 +430,7 @@ copyw d1, p1
 .function orc_splat_s16_2d_8xn
 .n 8
 .flags 2d
-.dest 2 d1 int16_t
+.dest 2 d1 orc_int16
 .param 2 p1
 
 copyw d1, p1
@@ -438,7 +438,7 @@ copyw d1, p1
 
 .function orc_splat_s16_2d
 .flags 2d
-.dest 2 d1 int16_t
+.dest 2 d1 orc_int16
 .param 2 p1
 
 copyw d1, p1
@@ -469,9 +469,9 @@ avgub d1, s1, s2
 
 .function orc_rrshift6_add_s16_2d
 .flags 2d
-.dest 1 d1 uint8_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 1 d1 orc_uint8
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 .temp 2 t1
 
 addw t1, s2, 32
@@ -482,8 +482,8 @@ convsuswb d1, t1
 
 .function orc_rrshift6_sub_s16_2d
 .flags 2d
-.dest 2 d1 int16_t
-.dest 2 d2 int16_t
+.dest 2 d1 orc_int16
+.dest 2 d2 orc_int16
 .temp 2 t1
 
 subw t1, d2, 8160
@@ -494,7 +494,7 @@ subw d1, d1, t1
 
 .function orc_rrshift6_s16_ip_2d
 .flags 2d
-.dest 2 d1 int16_t
+.dest 2 d1 orc_int16
 .temp 2 t1
 
 subw t1, d1, 8160
@@ -502,7 +502,7 @@ shrsw d1, t1, 6
 
 
 .function orc_rrshift6_s16_ip
-.dest 2 d1 int16_t
+.dest 2 d1 orc_int16
 .temp 2 t1
 
 subw t1, d1, 8160
@@ -536,7 +536,7 @@ select1wb d1, t1
 
 .function orc_packyuyv
 .dest 4 d1
-.source 2 s1 uint8_t
+.source 2 s1 orc_uint8
 .source 1 s2
 .source 1 s3
 .temp 1 t1
@@ -579,17 +579,17 @@ select0wb d1, t1
 
 
 .function orc_interleave2_s16
-.dest 4 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 4 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 
 mergewl d1, s1, s2
 
 
 .function orc_interleave2_rrshift1_s16
-.dest 4 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 4 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 .temp 2 t1
 .temp 2 t2
 
@@ -601,9 +601,9 @@ mergewl d1, t1, t2
 
 
 .function orc_deinterleave2_s16
-.dest 2 d1 int16_t
-.dest 2 d2 int16_t
-.source 4 s1 int16_t
+.dest 2 d1 orc_int16
+.dest 2 d2 orc_int16
+.source 4 s1 orc_int16
 .temp 4 t1
 
 copyl t1, s1
@@ -612,9 +612,9 @@ select1lw d2, t1
 
 
 .function orc_deinterleave2_lshift1_s16
-.dest 2 d1 int16_t
-.dest 2 d2 int16_t
-.source 4 s1 int16_t
+.dest 2 d1 orc_int16
+.dest 2 d2 orc_int16
+.source 4 s1 orc_int16
 .temp 4 t1
 .temp 2 t2
 .temp 2 t3
@@ -627,9 +627,9 @@ shlw d2, t3, 1
 
 
 .function orc_haar_deint_lshift1_split_s16
-.dest 2 d1 int16_t
-.dest 2 d2 int16_t
-.source 4 s1 int16_t
+.dest 2 d1 orc_int16
+.dest 2 d2 orc_int16
+.source 4 s1 orc_int16
 .temp 2 t1
 .temp 2 t2
 .temp 4 t3
@@ -646,9 +646,9 @@ addw d1, t1, t2
 
 
 .function orc_haar_deint_split_s16
-.dest 2 d1 int16_t
-.dest 2 d2 int16_t
-.source 4 s1 int16_t
+.dest 2 d1 orc_int16
+.dest 2 d2 orc_int16
+.source 4 s1 orc_int16
 .temp 2 t1
 .temp 2 t2
 .temp 4 t3
@@ -663,9 +663,9 @@ addw d1, t1, t2
 
 
 .function orc_haar_split_s16_lo
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 .temp 2 t1
 .temp 2 t2
 
@@ -676,18 +676,18 @@ addw d1, t1, t2
 
 
 .function orc_haar_split_s16_hi
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 
 subw d1, s2, s1
 
 
 .function orc_haar_split_s16_op
-.dest 2 d1 int16_t
-.dest 2 d2 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 2 d1 orc_int16
+.dest 2 d2 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 .temp 2 t1
 .temp 2 t2
 
@@ -699,8 +699,8 @@ addw d1, t1, t2
 
 
 .function orc_haar_split_s16
-.dest 2 d1 int16_t
-.dest 2 d2 int16_t
+.dest 2 d1 orc_int16
+.dest 2 d2 orc_int16
 .temp 2 t1
 .temp 2 t2
 
@@ -713,9 +713,9 @@ addw d1, t1, t2
 
 
 .function orc_haar_synth_s16_lo
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 .temp 2 t1
 
 avgsw t1, s2, 0
@@ -723,9 +723,9 @@ subw d1, s1, t1
 
 
 .function orc_haar_synth_s16_hi
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 .temp 2 t1
 .temp 2 t2
 .temp 2 t3
@@ -737,10 +737,10 @@ addw d1, t2, t1
 
 
 .function orc_haar_synth_s16_op
-.dest 2 d1 int16_t
-.dest 2 d2 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 2 d1 orc_int16
+.dest 2 d2 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 .temp 2 t1
 .temp 2 t2
 .temp 2 t3
@@ -753,8 +753,8 @@ addw d2, t2, t1
 
 
 .function orc_haar_synth_s16
-.dest 2 d1 int16_t
-.dest 2 d2 int16_t
+.dest 2 d1 orc_int16
+.dest 2 d2 orc_int16
 .temp 2 t1
 .temp 2 t2
 .temp 2 t3
@@ -768,9 +768,9 @@ addw d2, t2, t1
 
 
 .function orc_haar_synth_rrshift1_int_s16
-.dest 4 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 4 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 .temp 2 t1
 .temp 2 t2
 
@@ -784,9 +784,9 @@ mergewl d1, t1, t2
 
 
 .function orc_haar_synth_int_s16
-.dest 4 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 4 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 .temp 2 t1
 .temp 2 t2
 
@@ -798,15 +798,15 @@ mergewl d1, t1, t2
 
 
 .function orc_haar_sub_s16
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
 
 subw d1, d1, s1
 
 
 .function orc_haar_add_half_s16
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
 .temp 2 t1
 
 avgsw t1, s1, 0
@@ -814,15 +814,15 @@ addw d1, d1, t1
 
 
 .function orc_haar_add_s16
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
 
 addw d1, d1, s1
 
 
 .function orc_haar_sub_half_s16
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
 .temp 2 t1
 
 avgsw t1, s1, 0
@@ -830,7 +830,7 @@ subw d1, d1, t1
 
 
 .function orc_sum_u8
-.accumulator 4 a1 int32_t
+.accumulator 4 a1 orc_int32
 .source 1 s1
 .temp 2 t1
 .temp 4 t2
@@ -841,8 +841,8 @@ accl a1, t2
 
 
 .function orc_sum_s16
-.accumulator 4 a1 int32_t
-.source 2 s1 int16_t
+.accumulator 4 a1 orc_int32
+.source 2 s1 orc_int16
 .temp 4 t1
 
 convswl t1, s1
@@ -850,7 +850,7 @@ accl a1, t1
 
 
 .function orc_sum_square_diff_u8
-.accumulator 4 a1 int32_t
+.accumulator 4 a1 orc_int32
 .source 1 s1
 .source 1 s2
 .temp 2 t1
@@ -868,8 +868,8 @@ accl a1, t3
 .function orc_dequantise_s16_2d_4xn
 .n 4
 .flags 2d
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
 .param 2 p1
 .param 2 p2
 .temp 2 t1
@@ -887,8 +887,8 @@ mullw d1, t1, t2
 .function orc_dequantise_s16_2d_8xn
 .n 8
 .flags 2d
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
 .param 2 p1
 .param 2 p2
 .temp 2 t1
@@ -906,7 +906,7 @@ mullw d1, t1, t2
 .function orc_dequantise_s16_ip_2d_8xn
 .n 8
 .flags 2d
-.dest 2 d1 int16_t
+.dest 2 d1 orc_int16
 .param 2 p1
 .param 2 p2
 .temp 2 t1
@@ -923,7 +923,7 @@ mullw d1, t1, t2
 
 .function orc_dequantise_s16_ip_2d
 .flags 2d
-.dest 2 d1 int16_t
+.dest 2 d1 orc_int16
 .param 2 p1
 .param 2 p2
 .temp 2 t1
@@ -939,7 +939,7 @@ mullw d1, t1, t2
 
 
 .function orc_dequantise_s16_ip
-.dest 2 d1 int16_t
+.dest 2 d1 orc_int16
 .param 2 p1
 .param 2 p2
 .temp 2 t1
@@ -955,8 +955,8 @@ mullw d1, t1, t2
 
 
 .function orc_dequantise_s16
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
 .param 2 p1
 .param 2 p2
 .temp 2 t1
@@ -972,9 +972,9 @@ mullw d1, t1, t2
 
 
 .function orc_dequantise_var_s16_ip
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
-.source 2 s2 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
+.source 2 s2 orc_int16
 .temp 2 t1
 .temp 2 t2
 
@@ -989,8 +989,8 @@ mullw d1, t1, t2
 
 # only works for values between -16384 and 16384
 .function orc_quantise1_s16
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -1009,8 +1009,8 @@ mullw d1, t1, t2
 
 # only works for values between -16384 and 16384
 .function orc_quantise2_s16
-.dest 2 d1 int16_t
-.source 2 s1 int16_t
+.dest 2 d1 orc_int16
+.source 2 s1 orc_int16
 .param 2 p1
 .param 2 p2
 .temp 2 t1
@@ -1027,8 +1027,8 @@ mullw d1, t1, t2
 
 # only works for values between -16384 and 16384
 .function orc_quantdequant1_s16
-.dest 2 d1 int16_t
-.dest 2 d2 int16_t
+.dest 2 d1 orc_int16
+.dest 2 d2 orc_int16
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -1055,8 +1055,8 @@ mullw d2, t1, t2
 
 # only works for values between -16384 and 16384
 .function orc_quantdequant3_s16
-.dest 2 d1 int16_t
-.dest 2 d2 int16_t
+.dest 2 d1 orc_int16
+.dest 2 d2 orc_int16
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -1087,8 +1087,8 @@ mullw d2, t1, t2
 
 # only works for values between -16384 and 16384
 .function orc_quantdequant2_s16
-.dest 2 d1 int16_t
-.dest 2 d2 int16_t
+.dest 2 d1 orc_int16
+.dest 2 d2 orc_int16
 .param 2 p1
 .param 2 p2
 .param 2 p4
@@ -1138,8 +1138,8 @@ convwb d1, t2
 
 .function orc_downsample_horiz_u8
 .dest 1 d1
-.source 2 s1 uint8_t
-.source 2 s2 uint8_t
+.source 2 s1 orc_uint8
+.source 2 s2 orc_uint8
 .temp 2 t1
 .temp 2 t2
 .temp 1 t3
@@ -1168,8 +1168,8 @@ convwb d1, t4
 
 
 .function orc_stats_moment_s16
-.source 2 s1 int16_t
-.accumulator 4 a1 int32_t
+.source 2 s1 orc_int16
+.accumulator 4 a1 orc_int32
 .temp 2 t1
 .temp 4 t2
 
@@ -1181,8 +1181,8 @@ accl a1, t2
 
 
 .function orc_stats_above_s16
-.source 2 s1 int16_t
-.accumulator 4 a1 int32_t
+.source 2 s1 orc_int16
+.accumulator 4 a1 orc_int32
 .temp 2 t1
 .temp 4 t2
 
@@ -1196,7 +1196,7 @@ accl a1, t2
 
 .function orc_accw
 .accumulator 2 a1 int
-.source 2 s1 int16_t
+.source 2 s1 orc_int16
 .temp 2 t1
 
 absw t1, s1
@@ -1206,9 +1206,9 @@ accw a1, t1
 .function orc_avg2_8xn_u8
 .flags 2d
 .n 8
-.dest 1 d1 uint8_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
+.dest 1 d1 orc_uint8
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
 
 avgub d1, s1, s2
 
@@ -1216,9 +1216,9 @@ avgub d1, s1, s2
 .function orc_avg2_12xn_u8
 .flags 2d
 .n 12
-.dest 1 d1 uint8_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
+.dest 1 d1 orc_uint8
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
 
 avgub d1, s1, s2
 
@@ -1226,9 +1226,9 @@ avgub d1, s1, s2
 .function orc_avg2_16xn_u8
 .flags 2d
 .n 16
-.dest 1 d1 uint8_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
+.dest 1 d1 orc_uint8
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
 
 avgub d1, s1, s2
 
@@ -1236,18 +1236,18 @@ avgub d1, s1, s2
 .function orc_avg2_32xn_u8
 .flags 2d
 .n 32
-.dest 1 d1 uint8_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
+.dest 1 d1 orc_uint8
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
 
 avgub d1, s1, s2
 
 
 .function orc_avg2_nxm_u8
 .flags 2d
-.dest 1 d1 uint8_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
+.dest 1 d1 orc_uint8
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
 
 avgub d1, s1, s2
 
@@ -1255,11 +1255,11 @@ avgub d1, s1, s2
 .function orc_combine4_8xn_u8
 .flags 2d
 .n 8
-.dest 1 d1 uint8_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
-.source 1 s3 uint8_t
-.source 1 s4 uint8_t
+.dest 1 d1 orc_uint8
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
+.source 1 s3 orc_uint8
+.source 1 s4 orc_uint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -1285,11 +1285,11 @@ convsuswb d1, t2
 .function orc_combine4_12xn_u8
 .flags 2d
 .n 12
-.dest 1 d1 uint8_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
-.source 1 s3 uint8_t
-.source 1 s4 uint8_t
+.dest 1 d1 orc_uint8
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
+.source 1 s3 orc_uint8
+.source 1 s4 orc_uint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -1315,11 +1315,11 @@ convsuswb d1, t2
 .function orc_combine4_16xn_u8
 .flags 2d
 .n 16
-.dest 1 d1 uint8_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
-.source 1 s3 uint8_t
-.source 1 s4 uint8_t
+.dest 1 d1 orc_uint8
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
+.source 1 s3 orc_uint8
+.source 1 s4 orc_uint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -1345,11 +1345,11 @@ convsuswb d1, t2
 .function orc_combine4_24xn_u8
 .flags 2d
 .n 24
-.dest 1 d1 uint8_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
-.source 1 s3 uint8_t
-.source 1 s4 uint8_t
+.dest 1 d1 orc_uint8
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
+.source 1 s3 orc_uint8
+.source 1 s4 orc_uint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -1375,11 +1375,11 @@ convsuswb d1, t2
 .function orc_combine4_32xn_u8
 .flags 2d
 .n 32
-.dest 1 d1 uint8_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
-.source 1 s3 uint8_t
-.source 1 s4 uint8_t
+.dest 1 d1 orc_uint8
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
+.source 1 s3 orc_uint8
+.source 1 s4 orc_uint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -1404,11 +1404,11 @@ convsuswb d1, t2
 
 .function orc_combine4_nxm_u8
 .flags 2d
-.dest 1 d1 uint8_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
-.source 1 s3 uint8_t
-.source 1 s4 uint8_t
+.dest 1 d1 orc_uint8
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
+.source 1 s3 orc_uint8
+.source 1 s4 orc_uint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -1435,9 +1435,9 @@ convsuswb d1, t2
 .function orc_combine2_8xn_u8
 .flags 2d
 .n 8
-.dest 1 d1 uint8_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
+.dest 1 d1 orc_uint8
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -1459,9 +1459,9 @@ convsuswb d1, t1
 .function orc_combine2_12xn_u8
 .flags 2d
 .n 12
-.dest 1 d1 uint8_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
+.dest 1 d1 orc_uint8
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -1483,9 +1483,9 @@ convsuswb d1, t1
 .function orc_combine2_16xn_u8
 .flags 2d
 .n 16
-.dest 1 d1 uint8_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
+.dest 1 d1 orc_uint8
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -1506,9 +1506,9 @@ convsuswb d1, t1
 
 .function orc_combine2_nxm_u8
 .flags 2d
-.dest 1 d1 uint8_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
+.dest 1 d1 orc_uint8
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -1529,9 +1529,9 @@ convsuswb d1, t1
 
 .function orc_sad_nxm_u8
 .flags 2d
-.accumulator 4 a1 uint32_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
+.accumulator 4 a1 orc_uint32
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
 
 accsadubl a1, s1, s2
 
@@ -1540,9 +1540,9 @@ accsadubl a1, s1, s2
 .flags 2d
 .n 8
 .m 8
-.accumulator 4 a1 uint32_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
+.accumulator 4 a1 orc_uint32
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
 
 accsadubl a1, s1, s2
 
@@ -1552,9 +1552,9 @@ accsadubl a1, s1, s2
 .flags 2d
 .n 12
 .m 12
-.accumulator 4 a1 uint32_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
+.accumulator 4 a1 orc_uint32
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
 
 accsadubl a1, s1, s2
 
@@ -1563,9 +1563,9 @@ accsadubl a1, s1, s2
 .function orc_sad_16xn_u8
 .flags 2d
 .n 16
-.accumulator 4 a1 uint32_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
+.accumulator 4 a1 orc_uint32
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
 
 accsadubl a1, s1, s2
 
@@ -1574,9 +1574,9 @@ accsadubl a1, s1, s2
 .function orc_sad_32xn_u8
 .flags 2d
 .n 32
-.accumulator 4 a1 uint32_t
-.source 1 s1 uint8_t
-.source 1 s2 uint8_t
+.accumulator 4 a1 orc_uint32
+.source 1 s1 orc_uint8
+.source 1 s2 orc_uint8
 
 accsadubl a1, s1, s2
 
@@ -1618,9 +1618,9 @@ select1wb d1, l_gray2
 
 
 .function canny_calc_delta_x
-.dest 4 d1 int32_t
-.source 4 s1 uint8_t
-.source 4 s2 uint8_t
+.dest 4 d1 orc_int32
+.source 4 s1 orc_uint8
+.source 4 s2 orc_uint8
 .temp 2 t1
 .temp 2 t2
 .temp 1 t3
@@ -1701,21 +1701,21 @@ x4 addusb d1, s1, p1
 
 
 .function orc_splat_u16
-.dest 2 d1 uint16_t
+.dest 2 d1 orc_uint16
 .param 2 p1
 
 copyw d1, p1
 
 
 .function orc_splat_u32
-.dest 4 d1 uint32_t
+.dest 4 d1 orc_uint32
 .param 4 p1
 
 copyl d1, p1
 
 
 .function orc_splat_u16_2d
-.dest 2 d1 uint16_t
+.dest 2 d1 orc_uint16
 .param 2 p1
 .flags 2d
 
@@ -1723,7 +1723,7 @@ copyw d1, p1
 
 
 .function orc_splat_u32_2d
-.dest 4 d1 uint32_t
+.dest 4 d1 orc_uint32
 .param 4 p1
 .flags 2d
 
@@ -2276,7 +2276,7 @@ copyq d, t
 
 
 .function pa_volume_s16ne_orc_2ch
-.dest 4 samples int16_t
+.dest 4 samples orc_int16
 .longparam 8 vols
 .temp 8 v
 .temp 8 s
