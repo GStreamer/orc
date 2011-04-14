@@ -27,7 +27,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
 </row>
@@ -36,7 +36,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
 </row>
@@ -45,7 +45,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
 </row>
@@ -234,7 +234,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
 </row>
@@ -243,7 +243,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
 </row>
@@ -315,7 +315,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
 </row>
@@ -324,7 +324,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
 </row>
@@ -333,7 +333,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
 </row>
@@ -360,7 +360,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
 </row>
@@ -369,7 +369,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
 </row>
@@ -378,7 +378,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
 </row>
@@ -612,7 +612,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
 </row>
@@ -621,7 +621,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
 </row>
@@ -630,7 +630,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
 </row>
@@ -964,7 +964,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -991,7 +991,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -1000,7 +1000,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -1009,7 +1009,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -1018,7 +1018,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -1027,7 +1027,7 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -1036,7 +1036,7 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -1161,7 +1161,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
 </row>
@@ -1170,7 +1170,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
 </row>
@@ -1224,7 +1224,7 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
 </row>
@@ -1328,6 +1328,24 @@
 <entry>no</entry>
 </row>
 <row>
+<entry>mulslq</entry>
+<entry>no</entry>
+<entry>no</entry>
+<entry>no</entry>
+<entry>no</entry>
+<entry>no</entry>
+<entry>no</entry>
+</row>
+<row>
+<entry>mululq</entry>
+<entry>yes</entry>
+<entry>no</entry>
+<entry>no</entry>
+<entry>no</entry>
+<entry>no</entry>
+<entry>no</entry>
+</row>
+<row>
 <entry>accw</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -1359,7 +1377,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
 </row>
@@ -1368,7 +1386,7 @@
 <entry>yes</entry>
 <entry>yes</entry>
 <entry>yes</entry>
-<entry>yes</entry>
+<entry>no</entry>
 <entry>yes</entry>
 <entry>no</entry>
 </row>
@@ -1378,7 +1396,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -1387,7 +1405,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -1396,7 +1414,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -1436,6 +1454,33 @@
 <entry>no</entry>
 </row>
 <row>
+<entry>select0ql</entry>
+<entry>yes</entry>
+<entry>yes</entry>
+<entry>no</entry>
+<entry>no</entry>
+<entry>yes</entry>
+<entry>no</entry>
+</row>
+<row>
+<entry>select1ql</entry>
+<entry>yes</entry>
+<entry>yes</entry>
+<entry>no</entry>
+<entry>no</entry>
+<entry>no</entry>
+<entry>no</entry>
+</row>
+<row>
+<entry>mergelq</entry>
+<entry>yes</entry>
+<entry>yes</entry>
+<entry>no</entry>
+<entry>no</entry>
+<entry>yes</entry>
+<entry>no</entry>
+</row>
+<row>
 <entry>mergewl</entry>
 <entry>yes</entry>
 <entry>yes</entry>
@@ -1459,7 +1504,7 @@
 <entry>yes</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -1513,7 +1558,7 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -1522,7 +1567,7 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -1594,7 +1639,7 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -1603,7 +1648,7 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -1612,7 +1657,7 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
@@ -1621,7 +1666,7 @@
 <entry>no</entry>
 <entry>no</entry>
 <entry>no</entry>
-<entry>no</entry>
+<entry>yes</entry>
 <entry>no</entry>
 </row>
 <row>
