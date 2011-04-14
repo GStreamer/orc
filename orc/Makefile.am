@@ -88,11 +88,8 @@ pkginclude_HEADERS = \
 	orcpowerpc.h \
 	orcarm.h \
 	orcx86insn.h \
-	orccpuinsn.h
-
-nodist_pkginclude_HEADERS = orc-stdint.h
-
-DISTCLEANFILES = orc-stdint.h
+	orccpuinsn.h \
+	orc-stdint.h
 
 noinst_PROGRAMS = generate-emulation
 

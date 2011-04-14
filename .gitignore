@@ -29,8 +29,6 @@ libtool
 ltmain.sh
 autom4te.cache
 
-orc-stdint.h
-
 /doc/orc-decl-list.txt
 /doc/orc-decl.txt
 /doc/orc-undeclared.txt
