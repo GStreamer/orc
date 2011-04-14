@@ -46,8 +46,19 @@ autom4te.cache
 /doc/xml/
 
 /examples/example1
+/examples/example1orc.c
+/examples/example1orc.h
+/examples/example2
+/examples/example2orc.c
+/examples/example2orc.h
+/examples/example3
+/examples/example3orc.c
+/examples/example3orc.h
 /examples/mt19937ar
+/examples/mt19937arorc.c
+/examples/mt19937arorc.h
 /examples/volscale
+
 
 /m4/libtool.m4
 /m4/ltoptions.m4
@@ -72,11 +83,17 @@ autom4te.cache
 /testsuite/memcpy_speed
 /testsuite/perf_opcodes_sys
 /testsuite/perf_parse
+/testsuite/perf_opcodes_sys_compare
+/testsuite/perf_parse_compare
+/testsuite/show_parse
 /testsuite/test-schro
 /testsuite/test_accsadubl
 /testsuite/orcc/orc_test.c
 /testsuite/orcc/testorc.c
 /testsuite/orcc/testorc.h
+/testsuite/orcc/orc_test
+/testsuite/orcc/test2
+/testsuite/orcc/test3
 
 /tools/orcc
 /tools/orc-bugreport
