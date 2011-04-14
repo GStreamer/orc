@@ -39,7 +39,7 @@ char *target = "sse";
 #define ORC_VERSION(a,b,c,d) ((a)*1000000 + (b)*10000 + (c)*100 + (d))
 #define REQUIRE(a,b,c,d) do { \
   if (ORC_VERSION((a),(b),(c),(d)) > compat) { \
-    fprintf(stderr, "Feature used that is incompatible with --compat\n"); \
+    fprintf(stderr, "Feature used that is incompatible with --compat in program %s\n", p->name); \
     exit (1); \
   } \
 } while (0)
@@ -248,15 +248,15 @@ main (int argc, char *argv[])
     fprintf(output, "#ifdef HAVE_CONFIG_H\n");
     fprintf(output, "#include \"config.h\"\n");
     fprintf(output, "#endif\n");
-    fprintf(output, "#ifndef DISABLE_ORC\n");
-    fprintf(output, "#include <orc/orc.h>\n");
-    fprintf(output, "#endif\n");
     if (include_file) {
       fprintf(output, "#include <%s>\n", include_file);
     }
     fprintf(output, "\n");
     fprintf(output, "%s", orc_target_c_get_typedefs ());
     fprintf(output, "\n");
+    fprintf(output, "#ifndef DISABLE_ORC\n");
+    fprintf(output, "#include <orc/orc.h>\n");
+    fprintf(output, "#endif\n");
     for(i=0;i<n;i++){
       output_code_header (programs[i], output);
     }
@@ -317,8 +317,6 @@ main (int argc, char *argv[])
     fprintf(output, "#endif\n");
     fprintf(output, "\n");
   } else if (mode == MODE_TEST) {
-    fprintf(output, "#include <orc/orc.h>\n");
-    fprintf(output, "#include <orc-test/orctest.h>\n");
     fprintf(output, "#include <stdio.h>\n");
     fprintf(output, "#include <string.h>\n");
     fprintf(output, "#include <stdlib.h>\n");
@@ -328,6 +326,8 @@ main (int argc, char *argv[])
     }
     fprintf(output, "\n");
     fprintf(output, "%s", orc_target_c_get_typedefs ());
+    fprintf(output, "#include <orc/orc.h>\n");
+    fprintf(output, "#include <orc-test/orctest.h>\n");
     fprintf(output, "%s", orc_target_get_asm_preamble ("c"));
     fprintf(output, "\n");
     for(i=0;i<n;i++){
@@ -1170,11 +1170,13 @@ output_code_test (OrcProgram *p, FILE *output)
   fprintf(output, "      printf (\"    backup function  :   PASSED\\n\");\n");
   fprintf(output, "    }\n");
   fprintf(output, "\n");
-  fprintf(output, "    if (benchmark) {\n");
-  fprintf(output, "      printf (\"    cycles (backup)  :   %%g\\n\",\n");
-  fprintf(output, "          orc_test_performance_full (p, ORC_TEST_FLAGS_BACKUP, NULL));\n");
-  fprintf(output, "    }\n");
-  fprintf(output, "\n");
+  if (compat >= ORC_VERSION(0,4,7,1)) {
+    fprintf(output, "    if (benchmark) {\n");
+    fprintf(output, "      printf (\"    cycles (backup)  :   %%g\\n\",\n");
+    fprintf(output, "          orc_test_performance_full (p, ORC_TEST_FLAGS_BACKUP, NULL));\n");
+    fprintf(output, "    }\n");
+    fprintf(output, "\n");
+  }
   fprintf(output, "    ret = orc_test_compare_output (p);\n");
   fprintf(output, "    if (ret == ORC_TEST_INDETERMINATE && !quiet) {\n");
   fprintf(output, "      printf (\"    compiled function:   COMPILE FAILED\\n\");\n");
@@ -1184,10 +1186,12 @@ output_code_test (OrcProgram *p, FILE *output)
   fprintf(output, "      printf (\"    compiled function:   PASSED\\n\");\n");
   fprintf(output, "    }\n");
   fprintf(output, "\n");
-  fprintf(output, "    if (benchmark) {\n");
-  fprintf(output, "      printf (\"    cycles (compiled):   %%g\\n\",\n");
-  fprintf(output, "          orc_test_performance_full (p, 0, NULL));\n");
-  fprintf(output, "    }\n");
+  if (compat >= ORC_VERSION(0,4,7,1)) {
+    fprintf(output, "    if (benchmark) {\n");
+    fprintf(output, "      printf (\"    cycles (compiled):   %%g\\n\",\n");
+    fprintf(output, "          orc_test_performance_full (p, 0, NULL));\n");
+    fprintf(output, "    }\n");
+  }
   fprintf(output, "\n");
   fprintf(output, "    orc_program_free (p);\n");
   fprintf(output, "  }\n");
