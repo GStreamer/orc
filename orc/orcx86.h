@@ -5,6 +5,10 @@
 #include <orc/orcprogram.h>
 #include <orc/orcx86insn.h>
 
+ORC_BEGIN_DECLS
+
+#ifdef ORC_ENABLE_UNSTABLE_API
+
 enum {
   X86_EAX = ORC_GP_REG_BASE,
   X86_ECX,
@@ -174,6 +178,9 @@ void orc_x86_emit_cpuinsn_branch (OrcCompiler *p, int index, int label);
 void orc_x86_emit_cpuinsn_label (OrcCompiler *p, int index, int label);
 void orc_x86_emit_cpuinsn_none (OrcCompiler *p, int index);
 
+#endif
+
+ORC_END_DECLS
 
 
 #endif

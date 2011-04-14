@@ -5,6 +5,10 @@
 #include <orc/orc.h>
 #include <orc/orcarm.h>
 
+ORC_BEGIN_DECLS
+
+#ifdef ORC_ENABLE_UNSTABLE_API
+
 const char *orc_neon_reg_name (int reg);
 const char *orc_neon_reg_name_quad (int reg);
 
@@ -31,6 +35,9 @@ void orc_neon_emit_loadpl (OrcCompiler *p, int reg, int param);
 void orc_neon_preload (OrcCompiler *compiler, OrcVariable *var, int write,
     int offset);
 
+#endif
+
+ORC_END_DECLS
 
 #endif
 

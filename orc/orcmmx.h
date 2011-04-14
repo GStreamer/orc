@@ -4,6 +4,8 @@
 
 #include <orc/orcx86.h>
 
+ORC_BEGIN_DECLS
+
 typedef enum {
   ORC_TARGET_MMX_MMX = (1<<0),
   ORC_TARGET_MMX_MMXEXT = (1<<1),
@@ -16,6 +18,8 @@ typedef enum {
   ORC_TARGET_MMX_SHORT_JUMPS = (1<<8),
   ORC_TARGET_MMX_64BIT = (1<<9)
 } OrcTargetMMXFlags;
+
+#ifdef ORC_ENABLE_UNSTABLE_API
 
 typedef enum {
   X86_MM0 = ORC_VEC_REG_BASE,
@@ -206,6 +210,9 @@ void orc_mmx_load_constant (OrcCompiler *compiler, int reg, int size,
 /* SSE4.2 instructions */
 #define orc_mmx_emit_pcmpgtq(p,a,b)    orc_mmx_emit_660f (p, "pcmpgtq", 0x3837, a, b)
 
+#endif
+
+ORC_END_DECLS
 
 #endif
 

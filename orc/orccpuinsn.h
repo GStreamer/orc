@@ -1,6 +1,8 @@
 
-#ifndef _ORC_ORC_SYSINSN_H_
-#define _ORC_ORC_SYSINSN_H_
+#ifndef _ORC_ORC_CPUINSN_H_
+#define _ORC_ORC_CPUINSN_H_
+
+#ifdef ORC_ENABLE_UNSTABLE_API
 
 typedef struct _OrcSysInsn OrcSysInsn;
 typedef struct _OrcSysOpcode OrcSysOpcode;
@@ -31,6 +33,7 @@ struct _OrcSysOpcode {
 
 #define ORC_SYS_OPCODE_FLAG_FIXED (1<<0)
 
+#endif
 
 #endif
 

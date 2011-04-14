@@ -5,6 +5,8 @@
 #include <orc/orcx86.h>
 #include <orc/orcx86insn.h>
 
+ORC_BEGIN_DECLS
+
 typedef enum {
   ORC_TARGET_SSE_SSE2 = (1<<0),
   ORC_TARGET_SSE_SSE3 = (1<<1),
@@ -17,6 +19,8 @@ typedef enum {
   ORC_TARGET_SSE_SHORT_JUMPS = (1<<8),
   ORC_TARGET_SSE_64BIT = (1<<9)
 }OrcTargetSSEFlags;
+
+#ifdef ORC_ENABLE_UNSTABLE_API
 
 typedef enum {
   X86_XMM0 = ORC_VEC_REG_BASE,
@@ -66,8 +70,11 @@ void orc_sse_restore_mxcsr (OrcCompiler *compiler);
 void orc_sse_load_constant (OrcCompiler *compiler, int reg, int size,
     orc_uint64 value);
 
+#endif
+
 unsigned int orc_sse_get_cpu_flags (void);
 
+ORC_END_DECLS
 
 #endif
 

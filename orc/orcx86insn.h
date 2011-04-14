@@ -2,6 +2,10 @@
 #ifndef ORC_ORC_X86_INSN_H_
 #define ORC_ORC_X86_INSN_H_
 
+ORC_BEGIN_DECLS
+
+#ifdef ORC_ENABLE_UNSTABLE_API
+
 enum {
   ORC_X86_INSN_TYPE_SD,
   ORC_X86_INSN_TYPE_SHIFTIMM,
@@ -446,6 +450,10 @@ enum {
 #define orc_sse_emit_pextrw_register(p,imm,a,b) orc_x86_emit_cpuinsn(p, ORC_X86_pextrw, imm, a, b)
 #define orc_sse_emit_movd_store_register(p,a,b) orc_x86_emit_cpuinsn(p, ORC_X86_movd_store, 0, a, b)
 #define orc_sse_emit_movq_store_register(p,a,b) orc_x86_emit_cpuinsn(p, ORC_X86_movq_store, 0, a, b)
+
+#endif
+
+ORC_END_DECLS
 
 #endif
 

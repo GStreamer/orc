@@ -4,6 +4,9 @@
 
 #include <orc/orcprogram.h>
 
+ORC_BEGIN_DECLS
+
+#ifdef ORC_ENABLE_UNSTABLE_API
 
 typedef enum {
   ORC_ARM_A1 = ORC_GP_REG_BASE+0,
@@ -317,6 +320,10 @@ void orc_arm_flush_cache (OrcCode *code);
 /* reversing */
 #define orc_arm_emit_rev(p,cond,Rd,Rm)                orc_arm_emit_rv (p,0,cond,Rd,Rm)
 #define orc_arm_emit_rev16(p,cond,Rd,Rm)              orc_arm_emit_rv (p,1,cond,Rd,Rm)
+
+#endif
+
+ORC_END_DECLS
 
 #endif
 

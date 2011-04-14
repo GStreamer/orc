@@ -4,6 +4,8 @@
 
 #include <orc/orcutils.h>
 
+ORC_BEGIN_DECLS
+
 typedef struct _OrcOpcodeExecutor OrcOpcodeExecutor;
 typedef struct _OrcExecutor OrcExecutor;
 typedef struct _OrcExecutorAlt OrcExecutorAlt;
@@ -775,6 +777,8 @@ extern int _orc_compiler_flag_debug;
 void orc_code_chunk_free (OrcCodeChunk *chunk);
 
 #endif
+
+ORC_END_DECLS
 
 #endif
 
