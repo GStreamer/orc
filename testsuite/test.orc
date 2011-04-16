@@ -2297,3 +2297,53 @@ x2 addl m, m, ss
 x2 convssslw samples, m
 
 
+
+.function cogorc_convert_YUY2_I420
+.dest 2 y1
+.dest 2 y2
+.dest 1 u
+.dest 1 v
+.source 4 yuv1
+.source 4 yuv2
+.temp 2 t1
+.temp 2 t2
+.temp 2 ty
+
+x2 splitwb t1, ty, yuv1
+storew y1, ty
+x2 splitwb t2, ty, yuv2
+storew y2, ty
+x2 avgub t1, t1, t2
+splitwb v, u, t1
+
+
+.function cogorc_convert_AYUV_I420
+.flags 2d
+.dest 2 y1
+.dest 2 y2
+.dest 1 u
+.dest 1 v
+.source 8 ayuv1
+.source 8 ayuv2
+.temp 4 ay
+.temp 4 uv1
+.temp 4 uv2
+.temp 4 uv
+.temp 2 uu
+.temp 2 vv
+.temp 1 t1
+.temp 1 t2
+
+x2 splitlw uv1, ay, ayuv1
+x2 select1wb y1, ay
+x2 splitlw uv2, ay, ayuv2
+x2 select1wb y2, ay
+x4 avgub uv, uv1, uv2
+x2 splitwb vv, uu, uv
+splitwb t1, t2, uu
+avgub u, t1, t2
+splitwb t1, t2, vv
+avgub v, t1, t2
+
+
+
