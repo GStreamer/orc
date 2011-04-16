@@ -489,6 +489,7 @@ orc_x86_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index, int size,
   }
 
   if (opcode->type == ORC_X86_INSN_TYPE_SD_REV ||
+      opcode->type == ORC_X86_INSN_TYPE_SDI_REV ||
       opcode->type == ORC_X86_INSN_TYPE_ED_REV) {
     output_opcode (p, opcode, 4, dest, src);
   } else {
