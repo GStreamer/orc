@@ -663,8 +663,8 @@ powerpc_rule_select1wb (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest = ORC_DEST_ARG (p, insn, 0);
   int perm;
 
-  perm = powerpc_get_constant_full (p, 0x00010405, 0x08090c0d,
-		  0x10111415, 0x18191c1d);
+  perm = powerpc_get_constant_full (p, 0x00020406, 0x080a0c0e,
+      0x00020406, 0x080a0c0e);
   powerpc_emit_vperm (p, dest, src1, src1, perm);
 }
 
