@@ -492,6 +492,19 @@ const char *enumnames[] = {
   "47"
 };
 
+static const char *orcify_typename (const char *s)
+{
+  if (strcmp (s, "int8_t") == 0) return "orc_int8";
+  if (strcmp (s, "int16_t") == 0) return "orc_int16";
+  if (strcmp (s, "int32_t") == 0) return "orc_int32";
+  if (strcmp (s, "int64_t") == 0) return "orc_int64";
+  if (strcmp (s, "uint8_t") == 0) return "orc_uint8";
+  if (strcmp (s, "uint16_t") == 0) return "orc_uint16";
+  if (strcmp (s, "uint32_t") == 0) return "orc_uint32";
+  if (strcmp (s, "uint64_t") == 0) return "orc_uint64";
+  return s;
+}
+
 void
 output_prototype (OrcProgram *p, FILE *output)
 {
@@ -506,7 +519,7 @@ output_prototype (OrcProgram *p, FILE *output)
     if (var->size) {
       if (need_comma) fprintf(output, ", ");
       if (var->type_name) {
-        fprintf(output, "%s * ORC_RESTRICT %s", var->type_name,
+        fprintf(output, "%s * ORC_RESTRICT %s", orcify_typename(var->type_name),
             varnames[ORC_VAR_D1 + i]);
       } else {
         fprintf(output, "orc_uint%d * ORC_RESTRICT %s", var->size*8,
@@ -523,7 +536,7 @@ output_prototype (OrcProgram *p, FILE *output)
     if (var->size) {
       if (need_comma) fprintf(output, ", ");
       if (var->type_name) {
-        fprintf(output, "%s * ORC_RESTRICT %s", var->type_name,
+        fprintf(output, "%s * ORC_RESTRICT %s", orcify_typename(var->type_name),
             varnames[ORC_VAR_A1 + i]);
       } else {
         fprintf(output, "orc_uint%d * ORC_RESTRICT %s", var->size*8,
@@ -537,7 +550,8 @@ output_prototype (OrcProgram *p, FILE *output)
     if (var->size) {
       if (need_comma) fprintf(output, ", ");
       if (var->type_name) {
-        fprintf(output, "const %s * ORC_RESTRICT %s", var->type_name,
+        fprintf(output, "const %s * ORC_RESTRICT %s",
+            orcify_typename(var->type_name),
             varnames[ORC_VAR_S1 + i]);
       } else {
         fprintf(output, "const orc_uint%d * ORC_RESTRICT %s", var->size*8,
