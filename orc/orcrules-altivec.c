@@ -986,9 +986,22 @@ powerpc_rule_convfl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int dest = ORC_DEST_ARG (p, insn, 0);
+  int tmp = orc_compiler_get_temp_reg (p);
+  int tmpc;
+  int tmpc2;
 
-  //powerpc_emit_VX_db (p, "vrfin", 0x1000020a, dest, src1);
-  powerpc_emit_VX_dbi (p, "vctsxs", 0x100003ca, dest, src1, 0);
+  if (p->target_flags & ORC_TARGET_FAST_NAN) {
+    powerpc_emit_VX_dbi (p, "vctsxs", 0x100003ca, dest, src1, 0);
+  } else {
+    /* This changes NANs into infinities of the same sign */
+    tmpc = powerpc_get_constant (p, ORC_CONST_SPLAT_L, 0x7f800000);
+    tmpc2 = powerpc_get_constant (p, ORC_CONST_SPLAT_L, 0x007fffff);
+    powerpc_emit_VX_2 (p, "vand", 0x10000404, tmp, tmpc, src1);
+    powerpc_emit_VX_2 (p, "vcmpequw", 0x10000086, tmp, tmp, tmpc);
+    powerpc_emit_VX_2 (p, "vand", 0x10000404, tmp, tmp, tmpc2);
+    powerpc_emit_vandc (p, tmp, src1, tmp);
+    powerpc_emit_VX_dbi (p, "vctsxs", 0x100003ca, dest, tmp, 0);
+  }
 }
 
 static void
