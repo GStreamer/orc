@@ -4,9 +4,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#ifndef DISABLE_ORC
-#include <orc/orc.h>
-#endif
 
 #ifndef _ORC_INTEGER_TYPEDEFS_
 #define _ORC_INTEGER_TYPEDEFS_
@@ -64,7 +61,10 @@ typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 
 #endif
 #endif
 
-void orc_memcpy (void * ORC_RESTRICT d1, const void * s1, int n);
+#ifndef DISABLE_ORC
+#include <orc/orc.h>
+#endif
+void orc_memcpy (void * ORC_RESTRICT d1, const void * ORC_RESTRICT s1, int n);
 void orc_memset (void * ORC_RESTRICT d1, int p1, int n);
 
 
@@ -115,7 +115,7 @@ void orc_memset (void * ORC_RESTRICT d1, int p1, int n);
 /* orc_memcpy */
 #ifdef DISABLE_ORC
 void
-orc_memcpy (void * ORC_RESTRICT d1, const void * s1, int n){
+orc_memcpy (void * ORC_RESTRICT d1, const void * ORC_RESTRICT s1, int n){
   int i;
   orc_int8 * ORC_RESTRICT ptr0;
   const orc_int8 * ORC_RESTRICT ptr4;
@@ -164,7 +164,7 @@ _backup_orc_memcpy (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_memcpy (void * ORC_RESTRICT d1, const void * s1, int n)
+orc_memcpy (void * ORC_RESTRICT d1, const void * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
