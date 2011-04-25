@@ -837,26 +837,27 @@ mmx_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_mmx_emit_paddd (p, tmp, dest);
 }
 
+#ifndef MMX
 static void
 mmx_rule_signX_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[0]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
-  const char * names[] = { "psignb", "psignw", "psignd" };
-  int codes[] = { 0x3808, 0x3809, 0x380a };
+  int opcodes[] = { ORC_X86_psignb, ORC_X86_psignw, ORC_X86_psignd };
   int type = ORC_PTR_TO_INT(user);
   int tmpc;
 
   tmpc = orc_compiler_get_temp_constant (p, 1<<type, 1);
   if (src == dest) {
-    orc_mmx_emit_660f (p, names[type], codes[type], src, tmpc);
+    orc_x86_emit_cpuinsn (p, opcodes[type], 0, src, tmpc);
     orc_mmx_emit_movq (p, tmpc, dest);
   } else {
     /* FIXME this would be a good opportunity to not chain src to dest */
     orc_mmx_emit_movq (p, tmpc, dest);
-    orc_mmx_emit_660f (p, names[type], codes[type], src, dest);
+    orc_x86_emit_cpuinsn (p, opcodes[type], 0, src, dest);
   }
 }
+#endif
 
 static void
 mmx_rule_signw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -924,6 +925,7 @@ mmx_rule_absl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 
 }
 
+#ifdef MMX
 static void
 mmx_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -953,6 +955,43 @@ mmx_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
     p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
 }
+#else
+static void
+mmx_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int type = ORC_PTR_TO_INT(user);
+  //int imm_code1[] = { 0x71, 0x71, 0x71, 0x72, 0x72, 0x72, 0x73, 0x73 };
+  //int imm_code2[] = { 6, 2, 4, 6, 2, 4, 6, 2 };
+  //int reg_code[] = { 0xf1, 0xd1, 0xe1, 0xf2, 0xd2, 0xe2, 0xf3, 0xd3 };
+  //const char *code[] = { "psllw", "psrlw", "psraw", "pslld", "psrld", "psrad", "psllq", "psrlq" };
+  const int opcodes[] = { ORC_X86_psllw, ORC_X86_psrlw, ORC_X86_psraw,
+    ORC_X86_pslld, ORC_X86_psrld, ORC_X86_psrad, ORC_X86_psllq,
+    ORC_X86_psrlq };
+  const int opcodes_imm[] = { ORC_X86_psllw_imm, ORC_X86_psrlw_imm,
+    ORC_X86_psraw_imm, ORC_X86_pslld_imm, ORC_X86_psrld_imm,
+    ORC_X86_psrad_imm, ORC_X86_psllq_imm, ORC_X86_psrlq_imm };
+
+  if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
+    orc_x86_emit_cpuinsn (p, opcodes_imm[type],
+        p->vars[insn->src_args[1]].value.i, 0,
+        p->vars[insn->dest_args[0]].alloc);
+  } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
+    int tmp = orc_compiler_get_temp_reg (p);
+
+    /* FIXME this is a gross hack to reload the register with a
+     * 64-bit version of the parameter. */
+    orc_x86_emit_mov_memoffset_mmx (p, 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[1]]),
+        p->exec_reg, tmp, FALSE);
+
+    orc_x86_emit_cpuinsn (p, opcodes[type], 0, tmp,
+        p->vars[insn->dest_args[0]].alloc);
+  } else {
+    ORC_COMPILER_ERROR(p,"rule only works with constants or params");
+    p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
+  }
+}
+#endif
 
 static void
 mmx_rule_shlb (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -1524,6 +1563,7 @@ mmx_rule_mulhsl (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 #endif
 
+#ifndef MMX
 static void
 mmx_rule_mulhsl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -1552,6 +1592,7 @@ mmx_rule_mulhsl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_x86_emit_mov_memoffset_reg (p, 8, offset + 32, p->exec_reg, X86_EAX);
   orc_x86_emit_mov_memoffset_reg (p, 8, offset + 40, p->exec_reg, X86_EDX);
 }
+#endif
 
 #ifndef MMX
 static void
@@ -2845,8 +2886,8 @@ orc_compiler_mmx_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "shrsb", mmx_rule_shrsb, NULL);
   orc_rule_register (rule_set, "shrub", mmx_rule_shrub, NULL);
   orc_rule_register (rule_set, "mulll", mmx_rule_mulll_slow, NULL);
-  orc_rule_register (rule_set, "mulhsl", mmx_rule_mulhsl_slow, NULL);
 #ifndef MMX
+  orc_rule_register (rule_set, "mulhsl", mmx_rule_mulhsl_slow, NULL);
   orc_rule_register (rule_set, "mulhul", mmx_rule_mulhul, NULL);
 #endif
   orc_rule_register (rule_set, "mullb", mmx_rule_mullb, NULL);
@@ -2870,9 +2911,11 @@ orc_compiler_mmx_register_rules (OrcTarget *target)
   rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target,
       ORC_TARGET_MMX_SSSE3);
 
+#ifndef MMX
   orc_rule_register (rule_set, "signb", mmx_rule_signX_ssse3, (void *)0);
   orc_rule_register (rule_set, "signw", mmx_rule_signX_ssse3, (void *)1);
   orc_rule_register (rule_set, "signl", mmx_rule_signX_ssse3, (void *)2);
+#endif
   REG(absb);
   REG(absw);
   REG(absl);

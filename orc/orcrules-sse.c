@@ -837,6 +837,7 @@ sse_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_paddd (p, tmp, dest);
 }
 
+#ifndef MMX
 static void
 sse_rule_signX_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -856,6 +857,7 @@ sse_rule_signX_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_x86_emit_cpuinsn (p, opcodes[type], 0, src, dest);
   }
 }
+#endif
 
 static void
 sse_rule_signw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -923,6 +925,37 @@ sse_rule_absl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 
 }
 
+#ifdef MMX
+static void
+sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int type = ORC_PTR_TO_INT(user);
+  int imm_code1[] = { 0x71, 0x71, 0x71, 0x72, 0x72, 0x72, 0x73, 0x73 };
+  int imm_code2[] = { 6, 2, 4, 6, 2, 4, 6, 2 };
+  int reg_code[] = { 0xf1, 0xd1, 0xe1, 0xf2, 0xd2, 0xe2, 0xf3, 0xd3 };
+  const char *code[] = { "psllw", "psrlw", "psraw", "pslld", "psrld", "psrad", "psllq", "psrlq" };
+
+  if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
+    orc_mmx_emit_shiftimm (p, code[type], imm_code1[type], imm_code2[type],
+        p->vars[insn->src_args[1]].value.i,
+        p->vars[insn->dest_args[0]].alloc);
+  } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
+    int tmp = orc_compiler_get_temp_reg (p);
+
+    /* FIXME this is a gross hack to reload the register with a
+     * 64-bit version of the parameter. */
+    orc_x86_emit_mov_memoffset_sse (p, 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[1]]),
+        p->exec_reg, tmp, FALSE);
+
+    orc_mmx_emit_660f (p, code[type], reg_code[type], tmp,
+        p->vars[insn->dest_args[0]].alloc);
+  } else {
+    ORC_COMPILER_ERROR(p,"rule only works with constants or params");
+    p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
+  }
+}
+#else
 static void
 sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -958,6 +991,7 @@ sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
     p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
 }
+#endif
 
 static void
 sse_rule_shlb (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -1529,6 +1563,7 @@ sse_rule_mulhsl (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 #endif
 
+#ifndef MMX
 static void
 sse_rule_mulhsl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -1557,6 +1592,7 @@ sse_rule_mulhsl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_x86_emit_mov_memoffset_reg (p, 8, offset + 32, p->exec_reg, X86_EAX);
   orc_x86_emit_mov_memoffset_reg (p, 8, offset + 40, p->exec_reg, X86_EDX);
 }
+#endif
 
 #ifndef MMX
 static void
@@ -2850,8 +2886,8 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "shrsb", sse_rule_shrsb, NULL);
   orc_rule_register (rule_set, "shrub", sse_rule_shrub, NULL);
   orc_rule_register (rule_set, "mulll", sse_rule_mulll_slow, NULL);
-  orc_rule_register (rule_set, "mulhsl", sse_rule_mulhsl_slow, NULL);
 #ifndef MMX
+  orc_rule_register (rule_set, "mulhsl", sse_rule_mulhsl_slow, NULL);
   orc_rule_register (rule_set, "mulhul", sse_rule_mulhul, NULL);
 #endif
   orc_rule_register (rule_set, "mullb", sse_rule_mullb, NULL);
@@ -2875,9 +2911,11 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target,
       ORC_TARGET_SSE_SSSE3);
 
+#ifndef MMX
   orc_rule_register (rule_set, "signb", sse_rule_signX_ssse3, (void *)0);
   orc_rule_register (rule_set, "signw", sse_rule_signX_ssse3, (void *)1);
   orc_rule_register (rule_set, "signl", sse_rule_signX_ssse3, (void *)2);
+#endif
   REG(absb);
   REG(absw);
   REG(absl);
