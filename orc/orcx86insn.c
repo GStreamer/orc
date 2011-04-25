@@ -151,7 +151,7 @@ static const OrcSysOpcode orc_x86_opcodes[] = {
   { "pshuflw", ORC_X86_INSN_TYPE_SDI, 0, 0xf20f70 },
   { "pshufhw", ORC_X86_INSN_TYPE_SDI, 0, 0xf30f70 },
   { "palignr", ORC_X86_INSN_TYPE_SDI, 0, 0x660f3a0f },
-  { "pinsrw", ORC_X86_INSN_TYPE_SDI, 0, 0x660fc4 },
+  { "pinsrw", ORC_X86_INSN_TYPE_EDI, 0, 0x660fc4 },
   { "movd", ORC_X86_INSN_TYPE_ED, 0, 0x660f6e },
   { "movq", ORC_X86_INSN_TYPE_SD, 0, 0xf30f7e },
   { "movdqa", ORC_X86_INSN_TYPE_SD, 0, 0x660f6f },
@@ -329,6 +329,12 @@ orc_x86_emit_cpuinsn (OrcCompiler *p, int index, int imm, int src, int dest)
           orc_x86_get_regname_sse(src),
           orc_x86_get_regname_sse(dest));
       break;
+    case ORC_X86_INSN_TYPE_EDI:
+      ORC_ASM_CODE(p,"  %s $%d, %%%s, %%%s\n", opcode->name,
+          imm,
+          orc_x86_get_regname(src),
+          orc_x86_get_regname_sse(dest));
+      break;
     case ORC_X86_INSN_TYPE_rm_r:
     case ORC_X86_INSN_TYPE_r_rm:
       ORC_ASM_CODE(p,"  %s %%%s, %%%s\n", opcode->name,
@@ -347,7 +353,8 @@ orc_x86_emit_cpuinsn (OrcCompiler *p, int index, int imm, int src, int dest)
 
   if (opcode->type == ORC_X86_INSN_TYPE_SHIFTIMM) {
     output_opcode (p, opcode, 4, dest, 0);
-  } else if (opcode->type == ORC_X86_INSN_TYPE_ED_REV) {
+  } else if (opcode->type == ORC_X86_INSN_TYPE_ED_REV ||
+      opcode->type == ORC_X86_INSN_TYPE_r_rm) {
     output_opcode (p, opcode, 4, dest, src);
   } else if (opcode->type != ORC_X86_INSN_TYPE_STACK) {
     output_opcode (p, opcode, 4, src, dest);
@@ -368,6 +375,7 @@ orc_x86_emit_cpuinsn (OrcCompiler *p, int index, int imm, int src, int dest)
       orc_x86_emit_modrm_reg (p, dest, opcode->code2);
       *p->codeptr++ = imm;
       break;
+    case ORC_X86_INSN_TYPE_EDI:
     case ORC_X86_INSN_TYPE_SDI:
       orc_x86_emit_modrm_reg (p, src, dest);
       *p->codeptr++ = imm;
@@ -404,6 +412,7 @@ orc_x86_emit_cpuinsn_load_memoffset (OrcCompiler *p, int index, int size,
           orc_x86_get_regname_ptr(p, src),
           orc_x86_get_regname_sse(dest));
       break;
+    case ORC_X86_INSN_TYPE_EDI:
     case ORC_X86_INSN_TYPE_SDI:
     case ORC_X86_INSN_TYPE_SDI_REV:
       ORC_ASM_CODE(p,"  %s $%d, %d(%%%s), %%%s\n", opcode->name,
@@ -434,6 +443,7 @@ orc_x86_emit_cpuinsn_load_memoffset (OrcCompiler *p, int index, int size,
     case ORC_X86_INSN_TYPE_rm_r:
       orc_x86_emit_modrm_memoffset (p, offset, src, dest);
       break;
+    case ORC_X86_INSN_TYPE_EDI:
     case ORC_X86_INSN_TYPE_SDI:
       orc_x86_emit_modrm_memoffset (p, offset, src, dest);
       *p->codeptr++ = imm;
@@ -475,6 +485,7 @@ orc_x86_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index, int size,
           offset,
           orc_x86_get_regname_ptr(p, dest));
       break;
+    case ORC_X86_INSN_TYPE_EDI:
     case ORC_X86_INSN_TYPE_SDI:
     case ORC_X86_INSN_TYPE_SDI_REV:
       ORC_ASM_CODE(p,"  %s $%d, %%%s, %d(%%%s)\n", opcode->name,
@@ -500,6 +511,7 @@ orc_x86_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index, int size,
     case ORC_X86_INSN_TYPE_SD:
       orc_x86_emit_modrm_memoffset (p, offset, src, dest);
       break;
+    case ORC_X86_INSN_TYPE_EDI:
     case ORC_X86_INSN_TYPE_SDI:
       orc_x86_emit_modrm_memoffset (p, offset, src, dest);
       *p->codeptr++ = imm;
@@ -541,6 +553,7 @@ orc_x86_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int size,
           orc_x86_get_regname_ptr(p, src_index), 1<<shift,
           orc_x86_get_regname_sse(dest));
       break;
+    case ORC_X86_INSN_TYPE_EDI:
     case ORC_X86_INSN_TYPE_SDI:
     case ORC_X86_INSN_TYPE_SDI_REV:
       ORC_ASM_CODE(p,"  %s $%d, %d(%%%s,%%%s,%d), %%%s\n", opcode->name,
@@ -570,6 +583,7 @@ orc_x86_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int size,
     case ORC_X86_INSN_TYPE_rm_r:
       orc_x86_emit_modrm_memindex2 (p, offset, src, src_index, shift, dest);
       break;
+    case ORC_X86_INSN_TYPE_EDI:
     case ORC_X86_INSN_TYPE_SDI:
       orc_x86_emit_modrm_memindex2 (p, offset, src, src_index, shift, dest);
       *p->codeptr++ = imm;

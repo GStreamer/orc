@@ -27,6 +27,7 @@ enum {
   ORC_X86_INSN_TYPE_r_rm_byte,
   ORC_X86_INSN_TYPE_r_rm_word,
   ORC_X86_INSN_TYPE_imm32_a,
+  ORC_X86_INSN_TYPE_EDI,
 };
 
 enum {
