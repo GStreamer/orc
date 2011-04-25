@@ -89,16 +89,16 @@ void orc_mmx_load_constant (OrcCompiler *compiler, int reg, int size,
 
 #define orc_mmx_emit_movq(p,a,b)       orc_mmx_emit_660f (p, "movq", 0x6f, a, b)
 
-#define orc_mmx_emit_psraw(p,a,b)      orc_mmx_emit_shiftimm (p, "psraw", 0x71, 4, a, b)
-#define orc_mmx_emit_psrlw(p,a,b)      orc_mmx_emit_shiftimm (p, "psrlw", 0x71, 2, a, b)
-#define orc_mmx_emit_psllw(p,a,b)      orc_mmx_emit_shiftimm (p, "psllw", 0x71, 6, a, b)
+#define orc_mmx_emit_psraw_imm(p,a,b)      orc_mmx_emit_shiftimm (p, "psraw", 0x71, 4, a, b)
+#define orc_mmx_emit_psrlw_imm(p,a,b)      orc_mmx_emit_shiftimm (p, "psrlw", 0x71, 2, a, b)
+#define orc_mmx_emit_psllw_imm(p,a,b)      orc_mmx_emit_shiftimm (p, "psllw", 0x71, 6, a, b)
 
-#define orc_mmx_emit_psrad(p,a,b)      orc_mmx_emit_shiftimm (p, "psrad", 0x72, 4, a, b)
-#define orc_mmx_emit_psrld(p,a,b)      orc_mmx_emit_shiftimm (p, "psrld", 0x72, 2, a, b)
-#define orc_mmx_emit_pslld(p,a,b)      orc_mmx_emit_shiftimm (p, "pslld", 0x72, 6, a, b)
+#define orc_mmx_emit_psrad_imm(p,a,b)      orc_mmx_emit_shiftimm (p, "psrad", 0x72, 4, a, b)
+#define orc_mmx_emit_psrld_imm(p,a,b)      orc_mmx_emit_shiftimm (p, "psrld", 0x72, 2, a, b)
+#define orc_mmx_emit_pslld_imm(p,a,b)      orc_mmx_emit_shiftimm (p, "pslld", 0x72, 6, a, b)
 
-#define orc_mmx_emit_psrlq(p,a,b)      orc_mmx_emit_shiftimm (p, "psrlq", 0x73, 2, a, b)
-#define orc_mmx_emit_psllq(p,a,b)      orc_mmx_emit_shiftimm (p, "psllq", 0x73, 6, a, b)
+#define orc_mmx_emit_psrlq_imm(p,a,b)      orc_mmx_emit_shiftimm (p, "psrlq", 0x73, 2, a, b)
+#define orc_mmx_emit_psllq_imm(p,a,b)      orc_mmx_emit_shiftimm (p, "psllq", 0x73, 6, a, b)
 
 #define orc_mmx_emit_pcmpeqb(p,a,b)    orc_mmx_emit_660f (p, "pcmpeqb", 0x74, a, b)
 #define orc_mmx_emit_pcmpeqw(p,a,b)    orc_mmx_emit_660f (p, "pcmpeqw", 0x75, a, b)

@@ -30,7 +30,7 @@ mmx_rule_mulhslw (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_mmx_emit_movq (p, src2, tmp2);
   orc_mmx_emit_pmulhw (p, src1, src2);    /* .. |    0  | vl*p0 | */
   orc_mmx_emit_paddw (p, tmp1, src2);     /* .. |    0  | vl*p0 | + sign correct */
-  orc_mmx_emit_psrld (p, 16, dest);       /* .. |    0  |   vh  | */
+  orc_mmx_emit_psrld_imm (p, 16, dest);       /* .. |    0  |   vh  | */
   orc_mmx_emit_pmaddwd (p, tmp2, dest);   /* .. |    p0 * vh    | */
   orc_mmx_emit_paddd (p, src2, dest);     /* .. |    p0 * v0    | */
 }

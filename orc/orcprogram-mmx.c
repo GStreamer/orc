@@ -292,18 +292,18 @@ mmx_save_accumulators (OrcCompiler *compiler)
 #endif
 
         if (compiler->vars[i].size == 2) {
-          orc_mmx_emit_660f (compiler, "paddw", 0xfd, tmp, src);
+          orc_mmx_emit_paddw (compiler, tmp, src);
         } else {
-          orc_mmx_emit_660f (compiler, "paddd", 0xfe, tmp, src);
+          orc_mmx_emit_paddd (compiler, tmp, src);
         }
 
 #ifndef MMX
         orc_mmx_emit_pshufd (compiler, ORC_MMX_SHUF(1,1,1,1), src, tmp);
 
         if (compiler->vars[i].size == 2) {
-          orc_mmx_emit_660f (compiler, "paddw", 0xfd, tmp, src);
+          orc_mmx_emit_paddw (compiler, tmp, src);
         } else {
-          orc_mmx_emit_660f (compiler, "paddd", 0xfe, tmp, src);
+          orc_mmx_emit_paddd (compiler, tmp, src);
         }
 #endif
 
@@ -314,7 +314,7 @@ mmx_save_accumulators (OrcCompiler *compiler)
           orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(1,1,1,1), src, tmp);
 #endif
 
-          orc_mmx_emit_660f (compiler, "paddw", 0xfd, tmp, src);
+          orc_mmx_emit_paddw (compiler, tmp, src);
         }
 
         if (compiler->vars[i].size == 2) {
@@ -402,13 +402,13 @@ orc_mmx_load_constant (OrcCompiler *compiler, int reg, int size, orc_uint64 valu
     v = (0xffffffff<<i);
     if (value == v) {
       orc_mmx_emit_pcmpeqb (compiler, reg, reg);
-      orc_mmx_emit_pslld (compiler, i, reg);
+      orc_mmx_emit_pslld_imm (compiler, i, reg);
       return;
     }
     v = (0xffffffff>>i);
     if (value == v) {
       orc_mmx_emit_pcmpeqb (compiler, reg, reg);
-      orc_mmx_emit_psrld (compiler, i, reg);
+      orc_mmx_emit_psrld_imm (compiler, i, reg);
       return;
     }
   }
@@ -417,13 +417,13 @@ orc_mmx_load_constant (OrcCompiler *compiler, int reg, int size, orc_uint64 valu
     v = (0xffff & (0xffff<<i)) | (0xffff0000 & (0xffff0000<<i));
     if (value == v) {
       orc_mmx_emit_pcmpeqb (compiler, reg, reg);
-      orc_mmx_emit_psllw (compiler, i, reg);
+      orc_mmx_emit_psllw_imm (compiler, i, reg);
       return;
     }
     v = (0xffff & (0xffff>>i)) | (0xffff0000 & (0xffff0000>>i));
     if (value == v) {
       orc_mmx_emit_pcmpeqb (compiler, reg, reg);
-      orc_mmx_emit_psrlw (compiler, i, reg);
+      orc_mmx_emit_psrlw_imm (compiler, i, reg);
       return;
     }
   }
