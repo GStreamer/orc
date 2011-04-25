@@ -210,6 +210,11 @@ orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
   free (filename);
 
   n = ftruncate (fd, SIZE);
+  if (n < 0) {
+    ORC_WARNING("failed to expand file to size");
+    close (fd);
+    return FALSE;
+  }
 
   region->exec_ptr = mmap (NULL, SIZE, PROT_READ|PROT_EXEC,
       MAP_SHARED, fd, 0);
