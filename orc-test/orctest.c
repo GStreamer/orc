@@ -39,7 +39,7 @@ orc_test_init (void)
 OrcTestResult
 orc_test_gcc_compile (OrcProgram *p)
 {
-  char cmd[200];
+  char cmd[300];
   char *base;
   char source_filename[100];
   char obj_filename[100];
@@ -51,14 +51,20 @@ orc_test_gcc_compile (OrcProgram *p)
   OrcCompileResult result;
   OrcTarget *target;
   unsigned int flags;
+  int n;
 
   base = "temp-orc-test";
 
-  sprintf(source_filename, "%s-source.s", base);
-  sprintf(obj_filename, "%s.o", base);
-  sprintf(dis_filename, "%s-source.dis", base);
-  sprintf(dump_filename, "%s-dump.bin", base);
-  sprintf(dump_dis_filename, "%s-dump.dis", base);
+  n = snprintf(source_filename, sizeof(source_filename), "%s-source.s", base);
+  ORC_ASSERT(n < sizeof(source_filename));
+  n = snprintf(obj_filename, sizeof(obj_filename), "%s.o", base);
+  ORC_ASSERT(n < sizeof(obj_filename));
+  n = snprintf(dis_filename, sizeof(dis_filename), "%s-source.dis", base);
+  ORC_ASSERT(n < sizeof(dis_filename));
+  n = snprintf(dump_filename, sizeof(dump_filename), "%s-dump.bin", base);
+  ORC_ASSERT(n < sizeof(dump_filename));
+  n = snprintf(dump_dis_filename, sizeof(dump_dis_filename), "%s-dump.dis", base);
+  ORC_ASSERT(n < sizeof(dump_dis_filename));
 
   target = orc_target_get_default ();
   flags = orc_target_get_default_flags (target);
@@ -89,12 +95,13 @@ orc_test_gcc_compile (OrcProgram *p)
   fclose (file);
 
 #if defined(HAVE_POWERPC)
-  sprintf (cmd, "gcc -Wa,-mregnames -Wall -c %s -o %s", source_filename,
+  n = snprintf (cmd, sizeof(cmd), "gcc -Wa,-mregnames -Wall -c %s -o %s", source_filename,
       obj_filename);
 #else
-  sprintf (cmd, "gcc -Wall -c %s -o %s", source_filename,
+  n = snprintf (cmd, sizeof(cmd), "gcc -Wall -c %s -o %s", source_filename,
       obj_filename);
 #endif
+  ORC_ASSERT(n < sizeof(cmd));
   ret = system (cmd);
   if (ret != 0) {
     ORC_ERROR ("gcc failed");
@@ -103,17 +110,18 @@ orc_test_gcc_compile (OrcProgram *p)
   }
 
 #if 1
-  sprintf (cmd, "objdump -dr %s | sed 's/^[ 0-9a-f]*:/XXX:/' >%s", obj_filename, dis_filename);
+  n = snprintf (cmd, sizeof(cmd), "objdump -dr %s | sed 's/^[ 0-9a-f]*:/XXX:/' >%s", obj_filename, dis_filename);
 #else
-  sprintf (cmd, "objdump -dr %s >%s", obj_filename, dis_filename);
+  n = snprintf (cmd, sizeof(cmd), "objdump -dr %s >%s", obj_filename, dis_filename);
 #endif
+  ORC_ASSERT(n < sizeof(cmd));
   ret = system (cmd);
   if (ret != 0) {
     ORC_ERROR ("objdump failed");
     return ORC_TEST_FAILED;
   }
 
-  sprintf (cmd, "objcopy -I binary "
+  n = snprintf (cmd, sizeof(cmd), "objcopy -I binary "
 #ifdef HAVE_I386
       "-O elf32-i386 -B i386 "
 #elif defined(HAVE_AMD64)
@@ -126,6 +134,7 @@ orc_test_gcc_compile (OrcProgram *p)
       "--rename-section .data=.text "
       "--redefine-sym _binary_temp_orc_test_dump_bin_start=%s "
       "%s %s", p->name, dump_filename, obj_filename);
+  ORC_ASSERT(n < sizeof(cmd));
   ret = system (cmd);
   if (ret != 0) {
     printf("objcopy failed\n");
@@ -133,17 +142,19 @@ orc_test_gcc_compile (OrcProgram *p)
   }
 
 #if 1
-  sprintf (cmd, "objdump -Dr %s | sed 's/^[ 0-9a-f]*:/XXX:/' >%s", obj_filename, dump_dis_filename);
+  n = snprintf (cmd, sizeof(cmd), "objdump -Dr %s | sed 's/^[ 0-9a-f]*:/XXX:/' >%s", obj_filename, dump_dis_filename);
 #else
-  sprintf (cmd, "objdump -Dr %s >%s", obj_filename, dump_dis_filename);
+  n = snprintf (cmd, sizeof(cmd), "objdump -Dr %s >%s", obj_filename, dump_dis_filename);
 #endif
+  ORC_ASSERT(n < sizeof(cmd));
   ret = system (cmd);
   if (ret != 0) {
     printf("objdump failed\n");
     return ORC_TEST_FAILED;
   }
 
-  sprintf (cmd, "diff -u %s %s", dis_filename, dump_dis_filename);
+  n = snprintf (cmd, sizeof(cmd), "diff -u %s %s", dis_filename, dump_dis_filename);
+  ORC_ASSERT(n < sizeof(cmd));
   ret = system (cmd);
   if (ret != 0) {
     printf("diff failed\n");
