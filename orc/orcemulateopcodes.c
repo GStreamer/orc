@@ -4287,7 +4287,12 @@ emulate_mergelq (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadl */
     var33 = ptr5[i];
     /* 2: mergelq */
-    var34.i = ((orc_uint64)var32.i & ORC_UINT64_C(0xffffffff)) | ((orc_uint64)var33.i << 32);
+    {
+       orc_union64 _dest;
+       _dest.x2[0] = var32.i;
+       _dest.x2[1] = var33.i;
+       var34.i = _dest.i;
+    }
     /* 3: storeq */
     ptr0[i] = var34;
   }
@@ -4316,7 +4321,12 @@ emulate_mergewl (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadw */
     var33 = ptr5[i];
     /* 2: mergewl */
-    var34.i = ((orc_uint16)var32.i & 0x0000ffff) | ((orc_uint16)var33.i << 16);
+    {
+       orc_union32 _dest;
+       _dest.x2[0] = var32.i;
+       _dest.x2[1] = var33.i;
+       var34.i = _dest.i;
+    }
     /* 3: storel */
     ptr0[i] = var34;
   }
@@ -4345,7 +4355,12 @@ emulate_mergebw (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: loadb */
     var33 = ptr5[i];
     /* 2: mergebw */
-    var34.i = ((orc_uint8)var32 & 0x00ff) | ((orc_uint8)var33 << 8);
+    {
+       orc_union16 _dest;
+       _dest.x2[0] = var32;
+       _dest.x2[1] = var33;
+       var34.i = _dest.i;
+    }
     /* 3: storew */
     ptr0[i] = var34;
   }
@@ -4372,8 +4387,12 @@ emulate_splitql (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadq */
     var32 = ptr4[i];
     /* 1: splitql */
-    var33.i = (var32.i >> 32) & 0xffffffff;
-    var34.i = var32.i & 0xffffffff;
+    {
+       orc_union64 _src;
+       _src.i = var32.i;
+       var33.i = _src.x2[1];
+       var34.i = _src.x2[0];
+    }
     /* 2: storel */
     ptr0[i] = var33;
     /* 3: storel */
@@ -4402,8 +4421,12 @@ emulate_splitlw (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadl */
     var32 = ptr4[i];
     /* 1: splitlw */
-    var33.i = (var32.i >> 16) & 0xffff;
-    var34.i = var32.i & 0xffff;
+    {
+       orc_union32 _src;
+       _src.i = var32.i;
+       var33.i = _src.x2[1];
+       var34.i = _src.x2[0];
+    }
     /* 2: storew */
     ptr0[i] = var33;
     /* 3: storew */
@@ -4432,8 +4455,12 @@ emulate_splitwb (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadw */
     var32 = ptr4[i];
     /* 1: splitwb */
-    var33 = (var32.i >> 8) & 0xff;
-    var34 = var32.i & 0xff;
+    {
+       orc_union16 _src;
+       _src.i = var32.i;
+       var33 = _src.x2[1];
+       var34 = _src.x2[0];
+    }
     /* 2: storeb */
     ptr0[i] = var33;
     /* 3: storeb */

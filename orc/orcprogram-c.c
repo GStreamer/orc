@@ -1011,8 +1011,12 @@ c_rule_splitql (OrcCompiler *p, void *user, OrcInstruction *insn)
   c_get_name_int (dest2, p, insn, insn->dest_args[1]);
   c_get_name_int (src, p, insn, insn->src_args[0]);
 
-  ORC_ASM_CODE(p,"    %s = (%s >> 32) & 0xffffffff;\n", dest1, src);
-  ORC_ASM_CODE(p,"    %s = %s & 0xffffffff;\n", dest2, src);
+  ORC_ASM_CODE(p, "    {\n");
+  ORC_ASM_CODE(p,"       orc_union64 _src;\n");
+  ORC_ASM_CODE(p,"       _src.i = %s;\n", src);
+  ORC_ASM_CODE(p,"       %s = _src.x2[1];\n", dest1);
+  ORC_ASM_CODE(p,"       %s = _src.x2[0];\n", dest2);
+  ORC_ASM_CODE(p, "    }\n");
 }
 
 static void
@@ -1024,8 +1028,12 @@ c_rule_splitlw (OrcCompiler *p, void *user, OrcInstruction *insn)
   c_get_name_int (dest2, p, insn, insn->dest_args[1]);
   c_get_name_int (src, p, insn, insn->src_args[0]);
 
-  ORC_ASM_CODE(p,"    %s = (%s >> 16) & 0xffff;\n", dest1, src);
-  ORC_ASM_CODE(p,"    %s = %s & 0xffff;\n", dest2, src);
+  ORC_ASM_CODE(p, "    {\n");
+  ORC_ASM_CODE(p,"       orc_union32 _src;\n");
+  ORC_ASM_CODE(p,"       _src.i = %s;\n", src);
+  ORC_ASM_CODE(p,"       %s = _src.x2[1];\n", dest1);
+  ORC_ASM_CODE(p,"       %s = _src.x2[0];\n", dest2);
+  ORC_ASM_CODE(p, "    }\n");
 }
 
 static void
@@ -1037,8 +1045,12 @@ c_rule_splitwb (OrcCompiler *p, void *user, OrcInstruction *insn)
   c_get_name_int (dest2, p, insn, insn->dest_args[1]);
   c_get_name_int (src, p, insn, insn->src_args[0]);
 
-  ORC_ASM_CODE(p,"    %s = (%s >> 8) & 0xff;\n", dest1, src);
-  ORC_ASM_CODE(p,"    %s = %s & 0xff;\n", dest2, src);
+  ORC_ASM_CODE(p, "    {\n");
+  ORC_ASM_CODE(p,"       orc_union16 _src;\n");
+  ORC_ASM_CODE(p,"       _src.i = %s;\n", src);
+  ORC_ASM_CODE(p,"       %s = _src.x2[1];\n", dest1);
+  ORC_ASM_CODE(p,"       %s = _src.x2[0];\n", dest2);
+  ORC_ASM_CODE(p, "    }\n");
 }
 
 static void
@@ -1300,6 +1312,58 @@ c_rule_swaplq (OrcCompiler *p, void *user, OrcInstruction *insn)
       dest, src, src);
 }
 
+static void
+c_rule_mergelq (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src1[40], src2[40];
+
+  c_get_name_int (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src1, p, insn, insn->src_args[0]);
+  c_get_name_int (src2, p, insn, insn->src_args[1]);
+
+  ORC_ASM_CODE(p, "    {\n");
+  ORC_ASM_CODE(p,"       orc_union64 _dest;\n");
+  ORC_ASM_CODE(p,"       _dest.x2[0] = %s;\n", src1);
+  ORC_ASM_CODE(p,"       _dest.x2[1] = %s;\n", src2);
+  ORC_ASM_CODE(p,"       %s = _dest.i;\n", dest);
+  ORC_ASM_CODE(p, "    }\n");
+}
+
+static void
+c_rule_mergewl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src1[40], src2[40];
+
+  c_get_name_int (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src1, p, insn, insn->src_args[0]);
+  c_get_name_int (src2, p, insn, insn->src_args[1]);
+
+  ORC_ASM_CODE(p, "    {\n");
+  ORC_ASM_CODE(p,"       orc_union32 _dest;\n");
+  ORC_ASM_CODE(p,"       _dest.x2[0] = %s;\n", src1);
+  ORC_ASM_CODE(p,"       _dest.x2[1] = %s;\n", src2);
+  ORC_ASM_CODE(p,"       %s = _dest.i;\n", dest);
+  ORC_ASM_CODE(p, "    }\n");
+}
+
+static void
+c_rule_mergebw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src1[40], src2[40];
+
+  c_get_name_int (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src1, p, insn, insn->src_args[0]);
+  c_get_name_int (src2, p, insn, insn->src_args[1]);
+
+  ORC_ASM_CODE(p, "    {\n");
+  ORC_ASM_CODE(p,"       orc_union16 _dest;\n");
+  ORC_ASM_CODE(p,"       _dest.x2[0] = %s;\n", src1);
+  ORC_ASM_CODE(p,"       _dest.x2[1] = %s;\n", src2);
+  ORC_ASM_CODE(p,"       %s = _dest.i;\n", dest);
+  ORC_ASM_CODE(p, "    }\n");
+}
+
+
 static OrcTarget c_target = {
   "c",
   FALSE,
@@ -1411,5 +1475,8 @@ orc_c_init (void)
   orc_rule_register (rule_set, "maxd", c_rule_maxd, NULL);
   orc_rule_register (rule_set, "swapwl", c_rule_swapwl, NULL);
   orc_rule_register (rule_set, "swaplq", c_rule_swaplq, NULL);
+  orc_rule_register (rule_set, "mergebw", c_rule_mergebw, NULL);
+  orc_rule_register (rule_set, "mergewl", c_rule_mergewl, NULL);
+  orc_rule_register (rule_set, "mergelq", c_rule_mergelq, NULL);
 }
 
