@@ -4138,7 +4138,11 @@ emulate_select0wb (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadw */
     var32 = ptr4[i];
     /* 1: select0wb */
-    var33 = (orc_uint16)var32.i & 0xff;
+    {
+       orc_union16 _src;
+       _src.i = var32.i;
+       var33 = _src.x2[0];
+    }
     /* 2: storeb */
     ptr0[i] = var33;
   }
@@ -4162,7 +4166,11 @@ emulate_select1wb (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadw */
     var32 = ptr4[i];
     /* 1: select1wb */
-    var33 = ((orc_uint16)var32.i >> 8)&0xff;
+    {
+       orc_union16 _src;
+       _src.i = var32.i;
+       var33 = _src.x2[1];
+    }
     /* 2: storeb */
     ptr0[i] = var33;
   }
@@ -4186,7 +4194,11 @@ emulate_select0lw (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadl */
     var32 = ptr4[i];
     /* 1: select0lw */
-    var33.i = (orc_uint32)var32.i & 0xffff;
+    {
+       orc_union32 _src;
+       _src.i = var32.i;
+       var33.i = _src.x2[0];
+    }
     /* 2: storew */
     ptr0[i] = var33;
   }
@@ -4210,7 +4222,11 @@ emulate_select1lw (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadl */
     var32 = ptr4[i];
     /* 1: select1lw */
-    var33.i = ((orc_uint32)var32.i >> 16)&0xffff;
+    {
+       orc_union32 _src;
+       _src.i = var32.i;
+       var33.i = _src.x2[1];
+    }
     /* 2: storew */
     ptr0[i] = var33;
   }
@@ -4234,7 +4250,11 @@ emulate_select0ql (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadq */
     var32 = ptr4[i];
     /* 1: select0ql */
-    var33.i = (orc_uint64)var32.i & 0xffffffff;
+    {
+       orc_union64 _src;
+       _src.i = var32.i;
+       var33.i = _src.x2[0];
+    }
     /* 2: storel */
     ptr0[i] = var33;
   }
@@ -4258,7 +4278,11 @@ emulate_select1ql (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadq */
     var32 = ptr4[i];
     /* 1: select1ql */
-    var33.i = ((orc_uint64)var32.i >> 32)&0xffffffff;
+    {
+       orc_union64 _src;
+       _src.i = var32.i;
+       var33.i = _src.x2[1];
+    }
     /* 2: storel */
     ptr0[i] = var33;
   }

@@ -1054,6 +1054,96 @@ c_rule_splitwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+c_rule_select0ql (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src[40];
+
+  c_get_name_int (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src, p, insn, insn->src_args[0]);
+
+  ORC_ASM_CODE(p, "    {\n");
+  ORC_ASM_CODE(p,"       orc_union64 _src;\n");
+  ORC_ASM_CODE(p,"       _src.i = %s;\n", src);
+  ORC_ASM_CODE(p,"       %s = _src.x2[0];\n", dest);
+  ORC_ASM_CODE(p, "    }\n");
+}
+
+static void
+c_rule_select1ql (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src[40];
+
+  c_get_name_int (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src, p, insn, insn->src_args[0]);
+
+  ORC_ASM_CODE(p, "    {\n");
+  ORC_ASM_CODE(p,"       orc_union64 _src;\n");
+  ORC_ASM_CODE(p,"       _src.i = %s;\n", src);
+  ORC_ASM_CODE(p,"       %s = _src.x2[1];\n", dest);
+  ORC_ASM_CODE(p, "    }\n");
+}
+
+static void
+c_rule_select0lw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src[40];
+
+  c_get_name_int (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src, p, insn, insn->src_args[0]);
+
+  ORC_ASM_CODE(p, "    {\n");
+  ORC_ASM_CODE(p,"       orc_union32 _src;\n");
+  ORC_ASM_CODE(p,"       _src.i = %s;\n", src);
+  ORC_ASM_CODE(p,"       %s = _src.x2[0];\n", dest);
+  ORC_ASM_CODE(p, "    }\n");
+}
+
+static void
+c_rule_select1lw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src[40];
+
+  c_get_name_int (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src, p, insn, insn->src_args[0]);
+
+  ORC_ASM_CODE(p, "    {\n");
+  ORC_ASM_CODE(p,"       orc_union32 _src;\n");
+  ORC_ASM_CODE(p,"       _src.i = %s;\n", src);
+  ORC_ASM_CODE(p,"       %s = _src.x2[1];\n", dest);
+  ORC_ASM_CODE(p, "    }\n");
+}
+
+static void
+c_rule_select0wb (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src[40];
+
+  c_get_name_int (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src, p, insn, insn->src_args[0]);
+
+  ORC_ASM_CODE(p, "    {\n");
+  ORC_ASM_CODE(p,"       orc_union16 _src;\n");
+  ORC_ASM_CODE(p,"       _src.i = %s;\n", src);
+  ORC_ASM_CODE(p,"       %s = _src.x2[0];\n", dest);
+  ORC_ASM_CODE(p, "    }\n");
+}
+
+static void
+c_rule_select1wb (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src[40];
+
+  c_get_name_int (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src, p, insn, insn->src_args[0]);
+
+  ORC_ASM_CODE(p, "    {\n");
+  ORC_ASM_CODE(p,"       orc_union16 _src;\n");
+  ORC_ASM_CODE(p,"       _src.i = %s;\n", src);
+  ORC_ASM_CODE(p,"       %s = _src.x2[1];\n", dest);
+  ORC_ASM_CODE(p, "    }\n");
+}
+
+static void
 c_rule_splatbw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   char dest[40], src[40];
@@ -1458,6 +1548,12 @@ orc_c_init (void)
   orc_rule_register (rule_set, "splitql", c_rule_splitql, NULL);
   orc_rule_register (rule_set, "splitlw", c_rule_splitlw, NULL);
   orc_rule_register (rule_set, "splitwb", c_rule_splitwb, NULL);
+  orc_rule_register (rule_set, "select0ql", c_rule_select0ql, NULL);
+  orc_rule_register (rule_set, "select1ql", c_rule_select1ql, NULL);
+  orc_rule_register (rule_set, "select0lw", c_rule_select0lw, NULL);
+  orc_rule_register (rule_set, "select1lw", c_rule_select1lw, NULL);
+  orc_rule_register (rule_set, "select0wb", c_rule_select0wb, NULL);
+  orc_rule_register (rule_set, "select1wb", c_rule_select1wb, NULL);
   orc_rule_register (rule_set, "splatbw", c_rule_splatbw, NULL);
   orc_rule_register (rule_set, "splatbl", c_rule_splatbl, NULL);
   orc_rule_register (rule_set, "splatw3q", c_rule_splatw3q, NULL);
