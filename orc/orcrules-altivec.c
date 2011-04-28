@@ -648,7 +648,7 @@ powerpc_rule_signl (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
-powerpc_rule_select0wb (OrcCompiler *p, void *user, OrcInstruction *insn)
+powerpc_rule_select1wb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int dest = ORC_DEST_ARG (p, insn, 0);
@@ -657,7 +657,7 @@ powerpc_rule_select0wb (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
-powerpc_rule_select1wb (OrcCompiler *p, void *user, OrcInstruction *insn)
+powerpc_rule_select0wb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int dest = ORC_DEST_ARG (p, insn, 0);
@@ -669,7 +669,7 @@ powerpc_rule_select1wb (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
-powerpc_rule_select0lw (OrcCompiler *p, void *user, OrcInstruction *insn)
+powerpc_rule_select1lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int dest = ORC_DEST_ARG (p, insn, 0);
@@ -678,7 +678,7 @@ powerpc_rule_select0lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
-powerpc_rule_select1lw (OrcCompiler *p, void *user, OrcInstruction *insn)
+powerpc_rule_select0lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int dest = ORC_DEST_ARG (p, insn, 0);
@@ -686,6 +686,30 @@ powerpc_rule_select1lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   perm = powerpc_get_constant_full (p, 0x00010405, 0x08090c0d,
       0x10111415, 0x18191c1d);
+  powerpc_emit_vperm (p, dest, src1, src1, perm);
+}
+
+static void
+powerpc_rule_select1ql (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+  int perm;
+
+  perm = powerpc_get_constant_full (p, 0x04050607, 0x0c0d0e0f,
+		  0x14151617, 0x1c1d1e1f);
+  powerpc_emit_vperm (p, dest, src1, src1, perm);
+}
+
+static void
+powerpc_rule_select0ql (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+  int perm;
+
+  perm = powerpc_get_constant_full (p, 0x00010203, 0x08090a0b,
+		  0x10111213, 0x18191a1b);
   powerpc_emit_vperm (p, dest, src1, src1, perm);
 }
 
@@ -1172,6 +1196,8 @@ orc_compiler_powerpc_register_rules (OrcTarget *target)
   REG(select1wb);
   REG(select0lw);
   REG(select1lw);
+  REG(select0ql);
+  REG(select1ql);
   REG(mergebw);
   REG(mergewl);
   REG(mergelq);
