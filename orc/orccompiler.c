@@ -528,9 +528,12 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
         OrcVariable *var;
 
         if (opcode->src_size[i] == 0) continue;
-        if (i > 0 && (opcode->flags & ORC_STATIC_OPCODE_SCALAR)) continue;
-
         var = compiler->vars + insn.src_args[i];
+
+        if (i > 0 && (opcode->flags & ORC_STATIC_OPCODE_SCALAR) &&
+            (!compiler->load_params || var->vartype != ORC_VAR_TYPE_PARAM))
+          continue;
+
         if (var->vartype == ORC_VAR_TYPE_SRC ||
             var->vartype == ORC_VAR_TYPE_DEST) {
           OrcInstruction *cinsn;

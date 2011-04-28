@@ -483,6 +483,7 @@ struct _OrcCompiler {
 
   int insn_shift; /* used when emitting rules */
   int max_var_size; /* size of largest var */
+  int load_params;
 };
 
 #define ORC_SRC_ARG(p,i,n) ((p)->vars[(i)->src_args[(n)]].alloc)

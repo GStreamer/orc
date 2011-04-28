@@ -125,6 +125,8 @@ void powerpc_emit_VX_4 (OrcCompiler *p, const char *name, unsigned int insn,
     int d, int a);
 int powerpc_get_constant (OrcCompiler *p, int type, int value);
 int powerpc_get_constant_full (OrcCompiler *p, int value0, int value1, int value2, int value3);
+void powerpc_load_long_constant (OrcCompiler *p, int reg, orc_uint32 a,
+    orc_uint32 b, orc_uint32 c, orc_uint32 d);
 
 /* instructions */
 #define powerpc_emit_vand(p,a,b,c)         powerpc_emit_VX_2 (p, "vand", 0x10000404, a, b, c)

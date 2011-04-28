@@ -113,6 +113,7 @@ orc_compiler_powerpc_init (OrcCompiler *compiler)
   }
 
   compiler->loop_shift = 0;
+  compiler->load_params = TRUE;
 }
 
 void

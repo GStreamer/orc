@@ -76,7 +76,11 @@ powerpc_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
           powerpc_emit_VX(compiler, 0x1000030c,
               powerpc_regnum(dest->alloc), value & 0x1f, 0);
         } else {
-          ORC_COMPILER_ERROR(compiler,"can't load constant");
+          value &= 0xff;
+          value |= value << 8;
+          value |= value << 16;
+          powerpc_load_long_constant (compiler, dest->alloc, value, value,
+              value, value);
         }
         break;
       case 2:
@@ -86,7 +90,10 @@ powerpc_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
           powerpc_emit_VX(compiler, 0x1000034c,
               powerpc_regnum(dest->alloc), value & 0x1f, 0);
         } else {
-          ORC_COMPILER_ERROR(compiler,"can't load constant");
+          value &= 0xffff;
+          value |= value << 16;
+          powerpc_load_long_constant (compiler, dest->alloc, value, value,
+              value, value);
         }
         break;
       case 4:
@@ -96,7 +103,8 @@ powerpc_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
           powerpc_emit_VX(compiler, 0x1000038c,
               powerpc_regnum(dest->alloc), value & 0x1f, 0);
         } else {
-          ORC_COMPILER_ERROR(compiler,"can't load constant");
+          powerpc_load_long_constant (compiler, dest->alloc, value, value,
+              value, value);
         }
         break;
     }
@@ -326,11 +334,8 @@ powerpc_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
     powerpc_emit_VX(p, 0x1000030c, \
         powerpc_regnum(p->tmpreg), (int)p->vars[insn->src_args[1]].value.i, 0); \
     powerpc_emit_VX_2 (p, opcode, code , dest, src1, p->tmpreg);\
-  } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) { \
-    ORC_COMPILER_ERROR(p,"rule only works with constants"); \
-    powerpc_emit_VX_2 (p, opcode, code , dest, src1, src2);\
   } else { \
-    ORC_COMPILER_ERROR(p,"rule only works with constants or params"); \
+    powerpc_emit_VX_2 (p, opcode, code , dest, src1, src2);\
   } \
 }
 

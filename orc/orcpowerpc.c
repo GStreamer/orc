@@ -399,8 +399,6 @@ powerpc_load_constant (OrcCompiler *p, int i, int reg)
 {
   int j;
   int value = p->constants[i].value;
-  int greg = p->gp_tmpreg;
-  int label_skip, label_data;
 
   switch (p->constants[i].type) {
     case ORC_CONST_ZERO:
@@ -467,6 +465,20 @@ powerpc_load_constant (OrcCompiler *p, int i, int reg)
       break;
   }
 
+  powerpc_load_long_constant (p, reg,
+    p->constants[i].full_value[0],
+    p->constants[i].full_value[1],
+    p->constants[i].full_value[2],
+    p->constants[i].full_value[3]);
+}
+
+void
+powerpc_load_long_constant (OrcCompiler *p, int reg, orc_uint32 a,
+    orc_uint32 b, orc_uint32 c, orc_uint32 d)
+{
+  int label_skip, label_data;
+  int greg = p->gp_tmpreg;
+
   label_skip = orc_compiler_label_new (p);
   label_data = orc_compiler_label_new (p);
 
@@ -478,10 +490,14 @@ powerpc_load_constant (OrcCompiler *p, int i, int reg)
   }
 
   powerpc_emit_label (p, label_data);
-  for(j=0;j<4;j++){
-    ORC_ASM_CODE(p,"  .long 0x%08x\n", p->constants[i].full_value[j]);
-    powerpc_emit (p, p->constants[i].full_value[j]);
-  }
+  ORC_ASM_CODE(p,"  .long 0x%08x\n", a);
+  powerpc_emit (p, a);
+  ORC_ASM_CODE(p,"  .long 0x%08x\n", b);
+  powerpc_emit (p, b);
+  ORC_ASM_CODE(p,"  .long 0x%08x\n", c);
+  powerpc_emit (p, c);
+  ORC_ASM_CODE(p,"  .long 0x%08x\n", d);
+  powerpc_emit (p, d);
 
   powerpc_emit_label (p, label_skip);
   powerpc_emit_lwz (p,
