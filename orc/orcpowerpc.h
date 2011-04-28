@@ -127,6 +127,7 @@ int powerpc_get_constant (OrcCompiler *p, int type, int value);
 int powerpc_get_constant_full (OrcCompiler *p, int value0, int value1, int value2, int value3);
 
 /* instructions */
+#define powerpc_emit_vand(p,a,b,c)         powerpc_emit_VX_2 (p, "vand", 0x10000404, a, b, c)
 #define powerpc_emit_vandc(p,a,b,c)        powerpc_emit_VX_2 (p, "vandc", 0x10000444, a, b, c)
 
 #define powerpc_emit_vor(p,a,b,c)          powerpc_emit_VX_2 (p, "vor", 0x10000484, a, b, c)

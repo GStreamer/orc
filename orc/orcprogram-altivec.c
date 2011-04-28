@@ -359,11 +359,8 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
         (int)ORC_STRUCT_OFFSET(OrcExecutor, accumulators[k]));
 
     if (var->size == 2) {
-      powerpc_emit_vxor (compiler,
-          POWERPC_V0, POWERPC_V0, POWERPC_V0);
-      powerpc_emit_VX_2 (compiler, "vsum4shs", 0x10000648,
-          POWERPC_V0, var->alloc, POWERPC_V0);
-      powerpc_emit_vor (compiler, var->alloc, POWERPC_V0, POWERPC_V0);
+      powerpc_emit_vxor (compiler, POWERPC_V0, POWERPC_V0, POWERPC_V0);
+      powerpc_emit_vmrghh (compiler, var->alloc, POWERPC_V0, var->alloc);
     }
 
     ORC_ASM_CODE(compiler,"  lvsr %s, 0, %s\n", 
@@ -376,8 +373,8 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
         POWERPC_V0);
 
     ORC_ASM_CODE(compiler,"  stvewx %s, 0, %s\n", 
-        powerpc_get_regname (var->alloc),
-        powerpc_get_regname (POWERPC_R0));
+      powerpc_get_regname (var->alloc),
+      powerpc_get_regname (POWERPC_R0));
     powerpc_emit_X (compiler, 0x7c00018e,
         powerpc_regnum(var->alloc),
         0, powerpc_regnum(POWERPC_R0));

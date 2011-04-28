@@ -156,6 +156,75 @@ powerpc_rule_loadX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 }
 
 static void
+powerpc_rule_loadoffX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  OrcVariable *src = compiler->vars + insn->src_args[0];
+  OrcVariable *dest = compiler->vars + insn->dest_args[0];
+  int size = src->size << compiler->loop_shift;
+  int perm = orc_compiler_get_temp_reg (compiler);
+  int offset;
+
+  if (compiler->vars[insn->src_args[1]].vartype != ORC_VAR_TYPE_CONST) {
+    ORC_COMPILER_ERROR(compiler, "Rule only works with consts");
+    return;
+  }
+
+  offset = compiler->vars[insn->src_args[1]].value.i * src->size;
+  powerpc_emit_addi (compiler, compiler->gp_tmpreg, POWERPC_R0, offset);
+  switch (size) {
+    case 1:
+      ORC_ASM_CODE(compiler,"  lvebx %s, %s, %s\n",
+          powerpc_get_regname (dest->alloc),
+          powerpc_get_regname (compiler->gp_tmpreg),
+          powerpc_get_regname (src->ptr_register));
+      powerpc_emit_X (compiler, 0x7c00000e, powerpc_regnum(dest->alloc),
+          powerpc_regnum(compiler->gp_tmpreg),
+          powerpc_regnum(src->ptr_register));
+      break;
+    case 2:
+      ORC_ASM_CODE(compiler,"  lvehx %s, %s, %s\n",
+          powerpc_get_regname (dest->alloc),
+          powerpc_get_regname (compiler->gp_tmpreg),
+          powerpc_get_regname (src->ptr_register));
+      powerpc_emit_X (compiler, 0x7c00004e, powerpc_regnum(dest->alloc),
+          powerpc_regnum(compiler->gp_tmpreg),
+          powerpc_regnum(src->ptr_register));
+      break;
+    case 4:
+      ORC_ASM_CODE(compiler,"  lvewx %s, %s, %s\n",
+          powerpc_get_regname (dest->alloc),
+          powerpc_get_regname (compiler->gp_tmpreg),
+          powerpc_get_regname (src->ptr_register));
+      powerpc_emit_X (compiler, 0x7c00008e, powerpc_regnum(dest->alloc),
+          powerpc_regnum(compiler->gp_tmpreg),
+          powerpc_regnum(src->ptr_register));
+      break;
+    case 8:
+    case 16:
+      ORC_ASM_CODE(compiler,"  lvx %s, %s, %s\n",
+          powerpc_get_regname (dest->alloc),
+          powerpc_get_regname (compiler->gp_tmpreg),
+          powerpc_get_regname (src->ptr_register));
+      powerpc_emit_X (compiler, 0x7c0000ce, powerpc_regnum(dest->alloc),
+          powerpc_regnum(compiler->gp_tmpreg),
+          powerpc_regnum(src->ptr_register));
+      break;
+    default:
+      ORC_COMPILER_ERROR(compiler,"bad load size %d",
+          src->size << compiler->loop_shift);
+      break;
+  }
+  ORC_ASM_CODE(compiler,"  lvsl %s, %s, %s\n",
+      powerpc_get_regname (perm),
+      powerpc_get_regname (compiler->gp_tmpreg),
+      powerpc_get_regname (src->ptr_register));
+  powerpc_emit_X (compiler, 0x7c00000c, powerpc_regnum(perm),
+      powerpc_regnum(compiler->gp_tmpreg),
+      powerpc_regnum(src->ptr_register));
+  powerpc_emit_vperm (compiler, dest->alloc, dest->alloc, dest->alloc, perm);
+}
+
+static void
 powerpc_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
   OrcVariable *src = compiler->vars + insn->src_args[0];
@@ -330,6 +399,10 @@ RULE(subl, "vsubuwm", 0x10000480)
 RULE(subssl, "vsubsws", 0x10000780)
 RULE(subusl, "vsubuws", 0x10000680)
 RULE(xorl, "vxor", 0x100004c4)
+
+RULE(andq, "vand", 0x10000404)
+RULE(orq, "vor", 0x10000484)
+RULE(xorq, "vxor", 0x100004c4)
 
 RULE(addf, "vaddfp", 0x1000000a)
 RULE(subf, "vsubfp", 0x1000004a)
@@ -569,8 +642,6 @@ powerpc_rule_muluwl (OrcCompiler *p, void *user, OrcInstruction *insn)
   powerpc_emit_vmuleuh (p, dest, src1, src2);
 }
 
-#if 0
-/* doesn't work */
 static void
 powerpc_rule_accw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -579,7 +650,6 @@ powerpc_rule_accw (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   powerpc_emit_vadduhm (p, dest, dest, src1);
 }
-#endif
 
 static void
 powerpc_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -590,8 +660,6 @@ powerpc_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
   powerpc_emit_vadduwm (p, dest, dest, src1);
 }
 
-#if 0
-/* doesn't work */
 static void
 powerpc_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -603,10 +671,21 @@ powerpc_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   powerpc_emit_vmaxub (p, tmp1, src1, src2);
   powerpc_emit_vminub (p, tmp2, src1, src2);
+
   powerpc_emit_vsububm (p, tmp1, tmp1, tmp2);
-  powerpc_emit_vsum4ubs (p, dest, dest, tmp1);
+  if (p->loop_shift == 0) {
+    powerpc_emit_vxor (p, tmp2, tmp2, tmp2);
+    powerpc_emit_vmrghb (p, tmp1, tmp2, tmp1);
+    powerpc_emit_vmrghh (p, tmp1, tmp2, tmp1);
+    powerpc_emit_vadduwm (p, dest, dest, tmp1);
+  } else if (p->loop_shift == 1) {
+    powerpc_emit_vxor (p, tmp2, tmp2, tmp2);
+    powerpc_emit_vmrghh (p, tmp1, tmp2, tmp1);
+    powerpc_emit_vsum4ubs (p, dest, dest, tmp1);
+  } else {
+    powerpc_emit_vsum4ubs (p, dest, dest, tmp1);
+  }
 }
-#endif
 
 static void
 powerpc_rule_signb (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -937,6 +1016,42 @@ powerpc_rule_swapl (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+powerpc_rule_swapwl (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+  int perm;
+
+  perm = powerpc_get_constant_full (p, 0x02030001, 0x06070405,
+      0x0a0b0809, 0x0e0f0c0d);
+  powerpc_emit_vperm (p, dest, src1, src1, perm);
+}
+
+static void
+powerpc_rule_swaplq (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+  int perm;
+
+  perm = powerpc_get_constant_full (p, 0x04050607, 0x00010203,
+      0x0c0d0e0f, 0x08090a0b);
+  powerpc_emit_vperm (p, dest, src1, src1, perm);
+}
+
+static void
+powerpc_rule_swapq (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+  int perm;
+
+  perm = powerpc_get_constant_full (p, 0x07060504, 0x03020100,
+      0x0f0e0d0c, 0x0b0a0908);
+  powerpc_emit_vperm (p, dest, src1, src1, perm);
+}
+
+static void
 powerpc_rule_splitql (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src1 = ORC_SRC_ARG (p, insn, 0);
@@ -1159,6 +1274,10 @@ orc_compiler_powerpc_register_rules (OrcTarget *target)
   REG(subusl);
   REG(xorl);
 
+  REG(andq);
+  REG(orq);
+  REG(xorq);
+
   REG(mullb);
   REG(mulhsb);
   REG(mulhub);
@@ -1184,9 +1303,9 @@ orc_compiler_powerpc_register_rules (OrcTarget *target)
   REG(mulswl);
   REG(muluwl);
 
-  //REG(accw);
+  REG(accw);
   REG(accl);
-  //REG(accsadubl);
+  REG(accsadubl);
 
   REG(signb);
   REG(signw);
@@ -1215,6 +1334,9 @@ orc_compiler_powerpc_register_rules (OrcTarget *target)
   REG(convql);
   REG(swapw);
   REG(swapl);
+  REG(swapwl);
+  REG(swapq);
+  REG(swaplq);
   if (0) REG(splitql);
   REG(splitlw);
   REG(splitwb);
@@ -1239,6 +1361,9 @@ orc_compiler_powerpc_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "loadw", powerpc_rule_loadX, NULL);
   orc_rule_register (rule_set, "loadl", powerpc_rule_loadX, NULL);
   orc_rule_register (rule_set, "loadq", powerpc_rule_loadX, NULL);
+  orc_rule_register (rule_set, "loadoffb", powerpc_rule_loadoffX, NULL);
+  orc_rule_register (rule_set, "loadoffw", powerpc_rule_loadoffX, NULL);
+  orc_rule_register (rule_set, "loadoffl", powerpc_rule_loadoffX, NULL);
   orc_rule_register (rule_set, "storeb", powerpc_rule_storeX, NULL);
   orc_rule_register (rule_set, "storew", powerpc_rule_storeX, NULL);
   orc_rule_register (rule_set, "storel", powerpc_rule_storeX, NULL);
@@ -1247,10 +1372,12 @@ orc_compiler_powerpc_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "andnb", powerpc_rule_andnX, NULL);
   orc_rule_register (rule_set, "andnw", powerpc_rule_andnX, NULL);
   orc_rule_register (rule_set, "andnl", powerpc_rule_andnX, NULL);
+  orc_rule_register (rule_set, "andnq", powerpc_rule_andnX, NULL);
 
   orc_rule_register (rule_set, "copyb", powerpc_rule_copyX, NULL);
   orc_rule_register (rule_set, "copyw", powerpc_rule_copyX, NULL);
   orc_rule_register (rule_set, "copyl", powerpc_rule_copyX, NULL);
+  orc_rule_register (rule_set, "copyq", powerpc_rule_copyX, NULL);
 
 }
 

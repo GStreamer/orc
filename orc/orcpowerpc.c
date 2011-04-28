@@ -487,10 +487,10 @@ powerpc_load_constant (OrcCompiler *p, int i, int reg)
   powerpc_emit_lwz (p,
       greg,
       POWERPC_R3,
-      (int)ORC_STRUCT_OFFSET(OrcExecutor, program));
+      (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[ORC_VAR_A2]));
   powerpc_emit_lwz (p,
       greg, greg,
-      (int)ORC_STRUCT_OFFSET(OrcProgram, code_exec));
+      (int)ORC_STRUCT_OFFSET(OrcCode, exec));
 
   powerpc_add_fixup (p, 1, p->codeptr, label_data);
   {
