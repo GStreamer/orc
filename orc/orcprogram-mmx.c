@@ -88,7 +88,7 @@ orc_compiler_mmx_get_default_flags (void)
 {
   unsigned int flags = 0;
 
-#ifdef HAVE_AMD64
+#ifdef __amd64__
   flags |= ORC_TARGET_MMX_64BIT;
 #endif
   if (_orc_compiler_flag_debug) {
