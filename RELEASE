@@ -2,6 +2,14 @@
 0.4.13
 ======
 
+Yet more bug fixing.  Altivec should work again, OS/X should
+work again.  MMX should work again.  Another codegen bug on
+SSE fixed.
+
+
+0.4.13
+======
+
 Fixes two serious code generation bugs in 0.4.12 on SSE and
 Altivec.  Also added some compatibility code to mitigate
 the previous automatic inclusion of stdint.h.
