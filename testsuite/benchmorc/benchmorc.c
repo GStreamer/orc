@@ -14,6 +14,7 @@ void output_code_test (OrcProgram *p, FILE *output);
 int error = FALSE;
 
 double weights_ginger[];
+double weights_feathers[];
 //double weights_preston[];
 double weights_n900[];
 
@@ -50,7 +51,7 @@ main (int argc, char *argv[])
     if (perf == 0) {
       weight = 0;
     } else {
-      weight = 1.0/perf/241.0;
+      weight = 1.0/perf/281.0;
       sum++;
     }
     printf(" %g, /* %s */\n", weight, programs[i]->name);
@@ -64,7 +65,8 @@ main (int argc, char *argv[])
 
     perf = orc_test_performance_full (programs[i], 0, NULL);
     //weight = weights_ginger[i];
-    weight = weights_n900[i];
+    weight = weights_feathers[i];
+    //weight = weights_n900[i];
 
     sum += weight * perf;
   }
@@ -403,6 +405,292 @@ double weights_ginger[] = {
  0.00171215, /* orc_sad_12x12_u8 */
  0.00228437, /* orc_sad_16xn_u8 */
  0.00310406, /* orc_sad_32xn_u8 */
+};
+
+double weights_feathers[] = {
+ 0.00176674, /* orc_scalarmultiply_f32_ns */
+ 0.000896403, /* orc_process_int16 */
+ 0.00102409, /* orc_process_int16_clamp */
+ 0.00175739, /* orc_process_int8 */
+ 0.00199928, /* orc_process_int8_clamp */
+ 0.00128416, /* orc_audio_convert_unpack_u8 */
+ 0.00124322, /* orc_audio_convert_unpack_s8 */
+ 0.00124922, /* orc_audio_convert_unpack_u16 */
+ 0.000936916, /* orc_audio_convert_unpack_s16 */
+ 0.000697959, /* orc_audio_convert_unpack_u16_swap */
+ 0.000734324, /* orc_audio_convert_unpack_s16_swap */
+ 0.000839816, /* orc_audio_convert_unpack_u32 */
+ 0.000816487, /* orc_audio_convert_unpack_s32 */
+ 0.000634514, /* orc_audio_convert_unpack_u32_swap */
+ 0.000595246, /* orc_audio_convert_unpack_s32_swap */
+ 0.000487162, /* orc_audio_convert_unpack_float_s32 */
+ 0.000428761, /* orc_audio_convert_unpack_float_s32_swap */
+ 0.000618504, /* orc_audio_convert_unpack_float_double */
+ 0.000436194, /* orc_audio_convert_unpack_float_double_swap */
+ 0.000732247, /* orc_audio_convert_unpack_double_double */
+ 0.000467868, /* orc_audio_convert_unpack_double_double_swap */
+ 0.000278073, /* orc_audio_convert_unpack_u8_double */
+ 0.000401095, /* orc_audio_convert_unpack_s8_double */
+ 0.00034272, /* orc_audio_convert_unpack_u16_double */
+ 0.000389783, /* orc_audio_convert_unpack_s16_double */
+ 0.000251722, /* orc_audio_convert_unpack_u16_double_swap */
+ 0.000287167, /* orc_audio_convert_unpack_s16_double_swap */
+ 0.000300853, /* orc_audio_convert_unpack_u32_double */
+ 0.000451471, /* orc_audio_convert_unpack_s32_double */
+ 0.000260903, /* orc_audio_convert_unpack_u32_double_swap */
+ 0.000299304, /* orc_audio_convert_unpack_s32_double_swap */
+ 0.00102965, /* orc_audio_convert_pack_u8 */
+ 0.00077765, /* orc_audio_convert_pack_s8 */
+ 0.00122714, /* orc_audio_convert_pack_u16 */
+ 0.00130956, /* orc_audio_convert_pack_s16 */
+ 0.000746063, /* orc_audio_convert_pack_u16_swap */
+ 0.000710323, /* orc_audio_convert_pack_s16_swap */
+ 0.000892469, /* orc_audio_convert_pack_u32 */
+ 0.000816487, /* orc_audio_convert_pack_s32 */
+ 0.000664095, /* orc_audio_convert_pack_u32_swap */
+ 0.000595103, /* orc_audio_convert_pack_s32_swap */
+ 0.000182346, /* orc_audio_convert_pack_s32_float */
+ 0.000173448, /* orc_audio_convert_pack_s32_float_swap */
+ 0.000426486, /* orc_audio_convert_pack_double_float */
+ 0.000385769, /* orc_audio_convert_pack_double_float_swap */
+ 0.000191034, /* orc_audio_convert_pack_double_s8 */
+ 0.000282214, /* orc_audio_convert_pack_double_s16 */
+ 0.000176126, /* orc_audio_convert_pack_double_s16_swap */
+ 0.000307117, /* orc_audio_convert_pack_double_s32 */
+ 0.00025851, /* orc_audio_convert_pack_double_s32_swap */
+ 0.0111646, /* gst_orc_splat_u8 */
+ 0.00699502, /* gst_orc_splat_s16 */
+ 0.00691013, /* gst_orc_splat_u16 */
+ 0.00413805, /* gst_orc_splat_u32 */
+ 0.001056, /* orc_merge_linear_u8 */
+ 0.000460378, /* orc_merge_linear_u16 */
+ 0.00480908, /* orc_splat_u16 */
+ 0.00413805, /* orc_splat_u32 */
+ 0.00247563, /* orc_downsample_u8 */
+ 0.0012043, /* orc_downsample_u16 */
+ 0.000941771, /* gst_videoscale_orc_downsample_u32 */
+ 0.000243822, /* gst_videoscale_orc_downsample_yuyv */
+ 0, /* gst_videoscale_orc_resample_nearest_u8 */
+ 0, /* gst_videoscale_orc_resample_bilinear_u8 */
+ 0.000419784, /* gst_videoscale_orc_resample_nearest_u32 */
+ 0.000205113, /* gst_videoscale_orc_resample_bilinear_u32 */
+ 9.11178e-05, /* gst_videoscale_orc_resample_merge_bilinear_u32 */
+ 0.000559767, /* gst_videoscale_orc_merge_bicubic_u8 */
+ 0.000731494, /* add_int32 */
+ 0.00227032, /* add_int16 */
+ 0.00425557, /* add_int8 */
+ 0.000843298, /* add_uint32 */
+ 0.00228123, /* add_uint16 */
+ 0.00429408, /* add_uint8 */
+ 0.000779444, /* add_float32 */
+ 0.00287573, /* orc_splat_u32 */
+ 0.00143497, /* orc_memcpy_u32 */
+ 0.00156706, /* orc_blend_u8 */
+ 0.000170433, /* orc_blend_argb */
+ 0.000155691, /* orc_blend_bgra */
+ 0.00416224, /* orc_splat_u32 */
+ 0.000828572, /* deinterlace_line_vfir */
+ 0.00311485, /* deinterlace_line_linear */
+ 0.00141079, /* deinterlace_line_linear_blend */
+ 0.00111036, /* deinterlace_line_greedy */
+ 0.0047578, /* cogorc_memcpy_2d */
+ 0.00336522, /* cogorc_downsample_horiz_cosite_1tap */
+ 0.000725899, /* cogorc_downsample_horiz_cosite_3tap */
+ 0.00103451, /* cogorc_downsample_420_jpeg */
+ 0.00312168, /* cogorc_downsample_vert_halfsite_2tap */
+ 0.00117741, /* cogorc_downsample_vert_cosite_3tap */
+ 0.000738761, /* cogorc_downsample_vert_halfsite_4tap */
+ 0.00351851, /* cogorc_upsample_horiz_cosite_1tap */
+ 0.00271658, /* cogorc_upsample_horiz_cosite */
+ 0.00310466, /* cogorc_upsample_vert_avgub */
+ 0.00338926, /* orc_unpack_yuyv_y */
+ 0.00159584, /* orc_unpack_yuyv_u */
+ 0.00177936, /* orc_unpack_yuyv_v */
+ 0.000771956, /* orc_pack_yuyv */
+ 0.00385247, /* orc_unpack_uyvy_y */
+ 0.00143714, /* orc_unpack_uyvy_u */
+ 0.00127476, /* orc_unpack_uyvy_v */
+ 0.000771956, /* orc_pack_uyvy */
+ 0.00136874, /* orc_matrix2_u8 */
+ 0.001006, /* orc_matrix2_11_u8 */
+ 0.000972328, /* orc_matrix2_12_u8 */
+ 0.000732435, /* orc_matrix3_u8 */
+ 0.000748613, /* orc_matrix3_100_u8 */
+ 0.000790826, /* orc_matrix3_100_offset_u8 */
+ 0.000787763, /* orc_matrix3_000_u8 */
+ 0.00123352, /* orc_pack_123x */
+ 0.00117449, /* orc_pack_x123 */
+ 0.00143859, /* cogorc_combine2_u8 */
+ 0.000452955, /* cogorc_convert_I420_UYVY */
+ 0.000638478, /* cogorc_convert_I420_YUY2 */
+ 0.000578653, /* cogorc_convert_I420_AYUV */
+ 0.000415819, /* cogorc_convert_YUY2_I420 */
+ 0.000881131, /* cogorc_convert_UYVY_YUY2 */
+ 0.00143278, /* cogorc_planar_chroma_420_422 */
+ 0.00123156, /* cogorc_planar_chroma_420_444 */
+ 0.00356485, /* cogorc_planar_chroma_422_444 */
+ 0.0021052, /* cogorc_planar_chroma_444_422 */
+ 0.000850432, /* cogorc_planar_chroma_444_420 */
+ 0.00254714, /* cogorc_planar_chroma_422_420 */
+ 0.000500952, /* cogorc_convert_YUY2_AYUV */
+ 0.000435128, /* cogorc_convert_UYVY_AYUV */
+ 0.000608873, /* cogorc_convert_YUY2_Y42B */
+ 0.000608782, /* cogorc_convert_UYVY_Y42B */
+ 0.000502715, /* cogorc_convert_YUY2_Y444 */
+ 0.000504197, /* cogorc_convert_UYVY_Y444 */
+ 0.000418321, /* cogorc_convert_UYVY_I420 */
+ 0.000121437, /* cogorc_convert_AYUV_I420 */
+ 0.000337226, /* cogorc_convert_AYUV_YUY2 */
+ 0.000339164, /* cogorc_convert_AYUV_UYVY */
+ 0.000191338, /* cogorc_convert_AYUV_Y42B */
+ 0.00054473, /* cogorc_convert_AYUV_Y444 */
+ 0.000889045, /* cogorc_convert_Y42B_YUY2 */
+ 0.000758637, /* cogorc_convert_Y42B_UYVY */
+ 0.000500151, /* cogorc_convert_Y42B_AYUV */
+ 0.000582774, /* cogorc_convert_Y444_YUY2 */
+ 0.000573941, /* cogorc_convert_Y444_UYVY */
+ 0.000992513, /* cogorc_convert_Y444_AYUV */
+ 0.000179624, /* cogorc_convert_AYUV_ARGB */
+ 0.000179536, /* cogorc_convert_AYUV_BGRA */
+ 0.000162291, /* cogorc_convert_AYUV_ABGR */
+ 0.000179611, /* cogorc_convert_AYUV_RGBA */
+ 0.000202502, /* cogorc_convert_I420_BGRA */
+ 0.000147072, /* cogorc_convert_I420_BGRA_avg */
+ 0.00068815, /* cogorc_getline_I420 */
+ 0.000571616, /* cogorc_getline_YUY2 */
+ 0.000571911, /* cogorc_getline_UYVY */
+ 0.000572026, /* cogorc_getline_YVYU */
+ 0.000602279, /* cogorc_getline_Y42B */
+ 0.00121666, /* cogorc_getline_Y444 */
+ 0.00170376, /* cogorc_getline_Y800 */
+ 0.000914838, /* cogorc_getline_BGRA */
+ 0.000548762, /* cogorc_getline_ABGR */
+ 0.000391498, /* cogorc_getline_RGBA */
+ 0.000538565, /* cogorc_getline_NV12 */
+ 0.0003665, /* cogorc_getline_NV21 */
+ 0.000185278, /* cogorc_putline_I420 */
+ 0.00038307, /* cogorc_putline_YUY2 */
+ 0.000296066, /* cogorc_putline_YVYU */
+ 0.000286583, /* cogorc_putline_UYVY */
+ 0.000181013, /* cogorc_putline_Y42B */
+ 0.000619042, /* cogorc_putline_Y444 */
+ 0.00159584, /* cogorc_putline_Y800 */
+ 0.000914838, /* cogorc_putline_BGRA */
+ 0.000393664, /* cogorc_putline_ABGR */
+ 0.000548656, /* cogorc_putline_RGBA */
+ 0.000371959, /* cogorc_putline_NV12 */
+ 0.000260259, /* cogorc_putline_NV21 */
+ 0.00103791, /* orc_add2_rshift_add_s16_22_op */
+ 0.000941737, /* orc_add2_rshift_add_s16_22 */
+ 0.0010417, /* orc_add2_rshift_sub_s16_22_op */
+ 0.00132172, /* orc_add2_rshift_sub_s16_22 */
+ 0.00103151, /* orc_add2_rshift_add_s16_11_op */
+ 0.00134482, /* orc_add2_rshift_add_s16_11 */
+ 0.000684662, /* orc_add2_rshift_sub_s16_11_op */
+ 0.00134291, /* orc_add2_rshift_sub_s16_11 */
+ 0.00249079, /* orc_add_const_rshift_s16_11 */
+ 0.00321329, /* orc_add_const_rshift_s16 */
+ 0.00163619, /* orc_add_s16 */
+ 0.00183164, /* orc_add_s16_2d */
+ 0.00124922, /* orc_addc_rshift_s16 */
+ 0.00269892, /* orc_lshift1_s16 */
+ 0.00271658, /* orc_lshift2_s16 */
+ 0.00247133, /* orc_lshift_s16_ip */
+ 0.000504783, /* orc_mas2_add_s16_op */
+ 0.000547495, /* orc_mas2_add_s16_ip */
+ 0.000506219, /* orc_mas2_sub_s16_op */
+ 0.000487229, /* orc_mas2_sub_s16_ip */
+ 0.000380612, /* orc_mas4_across_add_s16_1991_op */
+ 0.000422149, /* orc_mas4_across_add_s16_1991_ip */
+ 0.000378889, /* orc_mas4_across_sub_s16_1991_op */
+ 0.000422149, /* orc_mas4_across_sub_s16_1991_ip */
+ 0.0016287, /* orc_subtract_s16 */
+ 0.00143819, /* orc_add_s16_u8 */
+ 0.00187371, /* orc_add_s16_u8_2d */
+ 0.00423657, /* orc_convert_s16_u8 */
+ 0.00432671, /* orc_convert_u8_s16 */
+ 0.00381121, /* orc_offsetconvert_u8_s16 */
+ 0.00376584, /* orc_offsetconvert_s16_u8 */
+ 0.00194732, /* orc_subtract_s16_u8 */
+ 0.00145254, /* orc_multiply_and_add_s16_u8 */
+ 0.00692695, /* orc_splat_s16_ns */
+ 0.00120295, /* orc_splat_s16_2d_4xn */
+ 0.00166652, /* orc_splat_s16_2d_8xn */
+ 0.00691493, /* orc_splat_s16_2d */
+ 0.0109922, /* orc_splat_u8_ns */
+ 0.0134864, /* orc_splat_u8_2d */
+ 0.00233906, /* orc_average_u8 */
+ 0.00133175, /* orc_rrshift6_add_s16_2d */
+ 0.0010021, /* orc_rrshift6_sub_s16_2d */
+ 0.00353507, /* orc_rrshift6_s16_ip_2d */
+ 0.00519521, /* orc_rrshift6_s16_ip */
+ 0.00338926, /* orc_unpack_yuyv_y */
+ 0.00159049, /* orc_unpack_yuyv_u */
+ 0.0017883, /* orc_unpack_yuyv_v */
+ 0.000770842, /* orc_packyuyv */
+ 0.00385247, /* orc_unpack_uyvy_y */
+ 0.00113925, /* orc_unpack_uyvy_u */
+ 0.0015896, /* orc_unpack_uyvy_v */
+ 0.00156858, /* orc_interleave2_s16 */
+ 0.00108746, /* orc_interleave2_rrshift1_s16 */
+ 0.00100422, /* orc_deinterleave2_s16 */
+ 0.000880871, /* orc_deinterleave2_lshift1_s16 */
+ 0.00041741, /* orc_haar_deint_lshift1_split_s16 */
+ 0.000608953, /* orc_haar_deint_split_s16 */
+ 0.00132912, /* orc_haar_split_s16_lo */
+ 0.00163244, /* orc_haar_split_s16_hi */
+ 0.000910158, /* orc_haar_split_s16_op */
+ 0.00113425, /* orc_haar_split_s16 */
+ 0.00135829, /* orc_haar_synth_s16_lo */
+ 0.00091821, /* orc_haar_synth_s16_hi */
+ 0.00090192, /* orc_haar_synth_s16_op */
+ 0.00102011, /* orc_haar_synth_s16 */
+ 0.0007121, /* orc_haar_synth_rrshift1_int_s16 */
+ 0.00102262, /* orc_haar_synth_int_s16 */
+ 0.0022667, /* orc_haar_sub_s16 */
+ 0.00210575, /* orc_haar_add_half_s16 */
+ 0.0022631, /* orc_haar_add_s16 */
+ 0.00140176, /* orc_haar_sub_half_s16 */
+ 0.0018942, /* orc_sum_u8 */
+ 0.0031881, /* orc_sum_s16 */
+ 0.000997539, /* orc_sum_square_diff_u8 */
+ 0.000465676, /* orc_dequantise_s16_2d_4xn */
+ 0.00084084, /* orc_dequantise_s16_2d_8xn */
+ 0.000933434, /* orc_dequantise_s16_ip_2d_8xn */
+ 0.00136717, /* orc_dequantise_s16_ip_2d */
+ 0.00146449, /* orc_dequantise_s16_ip */
+ 0.00112042, /* orc_dequantise_s16 */
+ 0.000680877, /* orc_dequantise_var_s16_ip */
+ 0.00107718, /* orc_quantise1_s16 */
+ 0.00126364, /* orc_quantise2_s16 */
+ 0.000513894, /* orc_quantdequant1_s16 */
+ 0.00025293, /* orc_quantdequant3_s16 */
+ 0.000552596, /* orc_quantdequant2_s16 */
+ 0.000792588, /* orc_downsample_vert_u8 */
+ 0.000323814, /* orc_downsample_horiz_u8 */
+ 0.00221382, /* orc_stats_moment_s16 */
+ 0.00191974, /* orc_stats_above_s16 */
+ 0.00711744, /* orc_accw */
+ 0.00151278, /* orc_avg2_8xn_u8 */
+ 0.00141727, /* orc_avg2_12xn_u8 */
+ 0.000921564, /* orc_avg2_16xn_u8 */
+ 0.00156177, /* orc_avg2_32xn_u8 */
+ 0.00249193, /* orc_avg2_nxm_u8 */
+ 0.000512749, /* orc_combine4_8xn_u8 */
+ 0.000500305, /* orc_combine4_12xn_u8 */
+ 0.00049487, /* orc_combine4_16xn_u8 */
+ 0.000754166, /* orc_combine4_24xn_u8 */
+ 0.00065116, /* orc_combine4_32xn_u8 */
+ 0.000597022, /* orc_combine4_nxm_u8 */
+ 0.00086426, /* orc_combine2_8xn_u8 */
+ 0.000841659, /* orc_combine2_12xn_u8 */
+ 0.000783526, /* orc_combine2_16xn_u8 */
+ 0.00115409, /* orc_combine2_nxm_u8 */
+ 0.00116772, /* orc_sad_nxm_u8 */
+ 0.000875992, /* orc_sad_8x8_u8 */
+ 0.00107602, /* orc_sad_12x12_u8 */
+ 0.000814229, /* orc_sad_16xn_u8 */
+ 0.00116016, /* orc_sad_32xn_u8 */
 };
 
 double weights_n900[] = {
