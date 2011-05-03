@@ -2,11 +2,13 @@
 #ifndef ORC_ORC_X86_INSN_H_
 #define ORC_ORC_X86_INSN_H_
 
+#include <orc/orccpuinsn.h>
+
 ORC_BEGIN_DECLS
 
 #ifdef ORC_ENABLE_UNSTABLE_API
 
-enum {
+typedef enum {
   ORC_X86_INSN_TYPE_MMXM_MMX,        	/* mem/mmx, mmx */
   ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT,	/* $shift, mmx.  opcode in src */
   ORC_X86_INSN_TYPE_SSEM_SSE,		/* mem/mmx, sse */
@@ -15,12 +17,14 @@ enum {
   ORC_X86_INSN_TYPE_MMXM_MMX_REV,
   ORC_X86_INSN_TYPE_REGM_MMX,
   ORC_X86_INSN_TYPE_MMX_REGM_REV,
+  ORC_X86_INSN_TYPE_REGM,
   ORC_X86_INSN_TYPE_MEM,
   ORC_X86_INSN_TYPE_IMM8_REGM,
   ORC_X86_INSN_TYPE_IMM32_REGM,
   ORC_X86_INSN_TYPE_REGM_REG,
   ORC_X86_INSN_TYPE_REG_REGM,
   ORC_X86_INSN_TYPE_LABEL,
+  ORC_X86_INSN_TYPE_BRANCH,
   ORC_X86_INSN_TYPE_NONE,
   ORC_X86_INSN_TYPE_STACK,
   ORC_X86_INSN_TYPE_IMM32_REGM_MOV,
@@ -28,7 +32,7 @@ enum {
   ORC_X86_INSN_TYPE_REG16_REGM,
   ORC_X86_INSN_TYPE_IMM32_A,
   ORC_X86_INSN_TYPE_IMM8_REGM_MMX,
-};
+} OrcX86InsnType;
 
 enum {
   ORC_X86_punpcklbw,
@@ -268,6 +272,27 @@ enum {
   ORC_X86_sar,
   ORC_X86_and_imm32_a,
 
+};
+
+enum {
+  ORC_X86_RM_REG,
+  ORC_X86_RM_MEMOFFSET,
+  ORC_X86_RM_MEMINDEX
+};
+
+typedef struct _OrcX86Insn OrcX86Insn;
+struct _OrcX86Insn {
+  const OrcSysOpcode *opcode;
+  int imm;
+  int src;
+  int dest;
+  int size;
+  int label;
+
+  int type;
+  int offset;
+  int index_reg;
+  int shift;
 };
 
 
