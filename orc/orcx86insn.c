@@ -499,7 +499,7 @@ orc_x86_insn_output_opcode (OrcCompiler *p, OrcX86Insn *xinsn)
       output_opcode (p, xinsn->opcode, xinsn->size, xinsn->src, xinsn->dest);
       break;
     case ORC_X86_INSN_TYPE_IMM32_REGM_MOV:
-      orc_x86_emit_rex (p, xinsn->size, xinsn->dest, 0, xinsn->src);
+      orc_x86_emit_rex (p, xinsn->size, 0, 0, xinsn->dest);
       *p->codeptr++ = xinsn->opcode->code + (xinsn->dest&7);
       break;
     case ORC_X86_INSN_TYPE_NONE:
