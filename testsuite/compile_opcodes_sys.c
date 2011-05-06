@@ -7,6 +7,8 @@
 #include <orc/orc.h>
 #include <orc-test/orctest.h>
 
+#include <time.h>
+
 
 int error = FALSE;
 
@@ -20,6 +22,7 @@ main (int argc, char *argv[])
   int i;
   OrcOpcodeSet *opcode_set;
 
+  srand(time(NULL));
   orc_init();
   orc_test_init();
 

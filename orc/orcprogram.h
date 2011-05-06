@@ -783,6 +783,7 @@ extern const char *_orc_cpu_name;
 extern int _orc_compiler_flag_backup;
 extern int _orc_compiler_flag_emulate;
 extern int _orc_compiler_flag_debug;
+extern int _orc_compiler_flag_randomize;
 
 void orc_code_chunk_free (OrcCodeChunk *chunk);
 

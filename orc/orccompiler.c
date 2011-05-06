@@ -45,6 +45,7 @@ static char **_orc_compiler_flag_list;
 int _orc_compiler_flag_backup;
 int _orc_compiler_flag_emulate;
 int _orc_compiler_flag_debug;
+int _orc_compiler_flag_randomize;
 
 void
 _orc_compiler_init (void)
@@ -59,6 +60,7 @@ _orc_compiler_init (void)
   _orc_compiler_flag_backup = orc_compiler_flag_check ("backup");
   _orc_compiler_flag_emulate = orc_compiler_flag_check ("emulate");
   _orc_compiler_flag_debug = orc_compiler_flag_check ("debug");
+  _orc_compiler_flag_randomize = orc_compiler_flag_check ("randomize");
 }
 
 int
@@ -89,10 +91,10 @@ orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
   }
 
   roff = 0;
-#if 0
-  /* for testing */
-  roff = rand()&0xf;
-#endif
+  if (_orc_compiler_flag_randomize) {
+    /* for testing */
+    roff = rand()&0x1f;
+  }
 
   for(i=0;i<32;i++){
     reg = offset + ((roff + i)&0x1f);
