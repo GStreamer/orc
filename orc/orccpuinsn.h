@@ -26,6 +26,7 @@ struct _OrcSysOpcode {
   char name[16];
   int type;
   int flags;
+  orc_uint8 prefix;
   orc_uint32 code;
   int code2;
 };
