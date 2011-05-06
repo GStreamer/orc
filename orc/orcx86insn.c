@@ -362,6 +362,7 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
     case ORC_X86_INSN_TYPE_BRANCH:
     case ORC_X86_INSN_TYPE_NONE:
     case ORC_X86_INSN_TYPE_LABEL:
+    case ORC_X86_INSN_TYPE_IMM32_A:
       op1_str[0] = 0;
       break;
     case ORC_X86_INSN_TYPE_REG_REGM:
@@ -373,7 +374,6 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
     case ORC_X86_INSN_TYPE_REG16_REGM:
       sprintf(op1_str, "%%%s, ", orc_x86_get_regname_16 (xinsn->src));
       break;
-    case ORC_X86_INSN_TYPE_IMM32_A:
     default:
       ORC_ERROR("%d", xinsn->opcode->type);
       ORC_ASSERT(0);
@@ -452,6 +452,8 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
       op2_str[0] = 0;
       break;
     case ORC_X86_INSN_TYPE_IMM32_A:
+      sprintf(op2_str, "%%%s", orc_x86_get_regname_size (X86_EAX, xinsn->size));
+      break;
     default:
       ORC_ERROR("%d", xinsn->opcode->type);
       ORC_ASSERT(0);
@@ -471,6 +473,7 @@ orc_x86_insn_output_opcode (OrcCompiler *p, OrcX86Insn *xinsn)
       output_opcode (p, xinsn->opcode, 4, xinsn->dest, 0);
       break;
     case ORC_X86_INSN_TYPE_MMX_REGM_REV:
+    case ORC_X86_INSN_TYPE_MMXM_MMX_REV:
       output_opcode (p, xinsn->opcode, 4, xinsn->dest, xinsn->src);
       break;
     case ORC_X86_INSN_TYPE_REG_REGM:
@@ -480,7 +483,6 @@ orc_x86_insn_output_opcode (OrcCompiler *p, OrcX86Insn *xinsn)
     case ORC_X86_INSN_TYPE_REG16_REGM:
       output_opcode (p, xinsn->opcode, xinsn->size, xinsn->dest, xinsn->src);
       break;
-    case ORC_X86_INSN_TYPE_MMXM_MMX_REV:
     case ORC_X86_INSN_TYPE_IMM8_MMXM_MMX:
     case ORC_X86_INSN_TYPE_MMXM_MMX:
     case ORC_X86_INSN_TYPE_SSEM_SSE:
@@ -502,6 +504,9 @@ orc_x86_insn_output_opcode (OrcCompiler *p, OrcX86Insn *xinsn)
       break;
     case ORC_X86_INSN_TYPE_NONE:
       output_opcode (p, xinsn->opcode, 4, 0, 0);
+      break;
+    case ORC_X86_INSN_TYPE_IMM32_A:
+      output_opcode (p, xinsn->opcode, xinsn->size, 0, 0);
       break;
     case ORC_X86_INSN_TYPE_BRANCH:
     case ORC_X86_INSN_TYPE_LABEL:
