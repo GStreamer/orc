@@ -34,7 +34,7 @@ typedef enum {
   ORC_X86_INSN_TYPE_IMM8_REGM_MMX,
 } OrcX86InsnType;
 
-enum {
+typedef enum {
   ORC_X86_punpcklbw,
   ORC_X86_punpcklwd,
   ORC_X86_punpckldq,
@@ -272,7 +272,7 @@ enum {
   ORC_X86_sar,
   ORC_X86_and_imm32_a,
 
-};
+} OrcX86Opcode;
 
 enum {
   ORC_X86_RM_REG,
@@ -282,6 +282,7 @@ enum {
 
 typedef struct _OrcX86Insn OrcX86Insn;
 struct _OrcX86Insn {
+  OrcX86Opcode opcode_index;
   const OrcSysOpcode *opcode;
   int imm;
   int src;
