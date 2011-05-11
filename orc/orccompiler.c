@@ -361,6 +361,7 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   }
   free (compiler->code);
   compiler->code = NULL;
+  if (compiler->output_insns) free (compiler->output_insns);
   free (compiler);
   ORC_INFO("finished compiling (success)");
 
@@ -383,6 +384,7 @@ error:
   }
   free (compiler->code);
   compiler->code = NULL;
+  if (compiler->output_insns) free (compiler->output_insns);
   free (compiler);
   ORC_INFO("finished compiling (fail)");
   return result;

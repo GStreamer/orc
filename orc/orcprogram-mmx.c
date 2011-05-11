@@ -694,7 +694,7 @@ orc_emit_split_3_regions (OrcCompiler *compiler)
   orc_x86_emit_jmp (compiler, 7);
 
   /* else, iterations are all unaligned: n1=n, n2=0, n3=0 */
-  orc_x86_emit_label (compiler, 6);
+  orc_x86_emit_label (compiler, 6, 0);
 
   orc_x86_emit_mov_memoffset_reg (compiler, 4,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,n), compiler->exec_reg, X86_EAX);
@@ -706,7 +706,7 @@ orc_emit_split_3_regions (OrcCompiler *compiler)
   orc_x86_emit_mov_reg_memoffset (compiler, 4, X86_EAX,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3), compiler->exec_reg);
 
-  orc_x86_emit_label (compiler, 7);
+  orc_x86_emit_label (compiler, 7, 0);
 }
 
 static void
@@ -788,6 +788,7 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
     compiler->asm_code_len = 0;
     memset (compiler->labels, 0, sizeof (compiler->labels));
     compiler->n_fixups = 0;
+    compiler->n_output_insns = 0;
   }
 
   if (compiler->error) return;
@@ -821,7 +822,7 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
           compiler->exec_reg);
     }
 
-    orc_x86_emit_label (compiler, LABEL_OUTER_LOOP);
+    orc_x86_emit_label (compiler, LABEL_OUTER_LOOP, 0);
   }
 
   if (compiler->program->constant_n > 0 &&
@@ -900,14 +901,14 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
             (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1), compiler->exec_reg);
         orc_x86_emit_je (compiler, LABEL_STEP_UP(compiler->loop_shift));
         orc_mmx_emit_loop (compiler, 0, 1<<compiler->loop_shift);
-        orc_x86_emit_label (compiler, LABEL_STEP_UP(compiler->loop_shift));
+        orc_x86_emit_label (compiler, LABEL_STEP_UP(compiler->loop_shift), 0);
       }
 
       compiler->loop_shift = save_loop_shift;
       compiler->vars[align_var].is_aligned = TRUE;
     }
 
-    orc_x86_emit_label (compiler, LABEL_REGION1_SKIP);
+    orc_x86_emit_label (compiler, LABEL_REGION1_SKIP, 0);
 
     orc_x86_emit_cmp_imm_memoffset (compiler, 4, 0,
         (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2), compiler->exec_reg);
@@ -920,8 +921,7 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
     }
 
     ORC_ASM_CODE(compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
-    orc_x86_emit_align (compiler);
-    orc_x86_emit_label (compiler, LABEL_INNER_LOOP_START);
+    orc_x86_emit_label (compiler, LABEL_INNER_LOOP_START, 0);
     ui_max = 1<<compiler->unroll_shift;
     for(ui=0;ui<ui_max;ui++) {
       compiler->offset = ui<<compiler->loop_shift;
@@ -937,7 +937,7 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
           compiler->exec_reg);
     }
     orc_x86_emit_jne (compiler, LABEL_INNER_LOOP_START);
-    orc_x86_emit_label (compiler, LABEL_REGION2_SKIP);
+    orc_x86_emit_label (compiler, LABEL_REGION2_SKIP, 0);
 
     if (emit_region3) {
       int save_loop_shift;
@@ -954,7 +954,7 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
             (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3), compiler->exec_reg);
         orc_x86_emit_je (compiler, LABEL_STEP_DOWN(compiler->loop_shift));
         orc_mmx_emit_loop (compiler, 0, 1<<compiler->loop_shift);
-        orc_x86_emit_label (compiler, LABEL_STEP_DOWN(compiler->loop_shift));
+        orc_x86_emit_label (compiler, LABEL_STEP_DOWN(compiler->loop_shift), 0);
       }
 
       compiler->loop_shift = save_loop_shift;
@@ -968,7 +968,7 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
         (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]),
         compiler->exec_reg);
     orc_x86_emit_jne (compiler, LABEL_OUTER_LOOP);
-    orc_x86_emit_label (compiler, LABEL_OUTER_LOOP_SKIP);
+    orc_x86_emit_label (compiler, LABEL_OUTER_LOOP_SKIP, 0);
   }
 
   mmx_save_accumulators (compiler);
@@ -981,6 +981,8 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
   orc_x86_emit_emms (compiler);
 #endif
   orc_x86_emit_epilogue (compiler);
+
+  orc_x86_output_insns (compiler);
 
   orc_x86_do_fixups (compiler);
 }

@@ -275,6 +275,7 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
   char op2_str[40] = { 0 };
 
   if (xinsn->opcode->type == ORC_X86_INSN_TYPE_LABEL) {
+    if (xinsn->size > 0) ORC_ASM_CODE(p,".p2align %d\n", xinsn->size);
     ORC_ASM_CODE(p,"%d:\n", xinsn->label);
     return;
   }
@@ -465,6 +466,29 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
 
 }
 
+orc_uint8 nop_codes[][16] = {
+  { },
+  { 0x90 },
+  { 0x66, 0x90 }, /* xchg %ax,%ax */
+  { 0x0f, 0x1f, 0x00 }, /*  nopl (%rax) */
+  { 0x0f, 0x1f, 0x40, 0x00 }, /* nopl 0x0(%rax) */
+  { 0x0f, 0x1f, 0x44, 0x00, 0x00 }, /* nopl 0x0(%rax,%rax,1) */
+  { 0x66, 0x0f, 0x1f, 0x44, 0x00, 0x00 }, /* nopw 0x0(%rax,%rax,1) */
+  { 0x0f, 0x1f, 0x80, 0x00, 0x00, 0x00, 0x00 }, /* nopl 0x0(%rax) */
+  { 0x0f, 0x1f, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00 }, /* nopl 0x0(%rax,%rax,1) */
+  { 0x66, 0x0f, 0x1f, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00 }, /* nopw   0x0(%rax,%rax,1) */
+  /* Forms of nopw %cs:0x0(%rax,%rax,1) */
+  { 0x66, 0x2e, 0x0f, 0x1f, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00 },
+  { 0x66, 0x66, 0x2e, 0x0f, 0x1f, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00 },
+  { 0x66, 0x66, 0x66, 0x2e, 0x0f, 0x1f, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00 },
+  { 0x66, 0x66, 0x66, 0x66, 0x2e, 0x0f, 0x1f, 0x84, 0x00, 0x00, 0x00, 0x00,
+    0x00 },
+  { 0x66, 0x66, 0x66, 0x66, 0x66, 0x2e, 0x0f, 0x1f, 0x84, 0x00, 0x00, 0x00,
+    0x00, 0x00 },
+  { 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x2e, 0x0f, 0x1f, 0x84, 0x00, 0x00,
+    0x00, 0x00, 0x00 },
+};
+
 void
 orc_x86_insn_output_opcode (OrcCompiler *p, OrcX86Insn *xinsn)
 {
@@ -508,8 +532,17 @@ orc_x86_insn_output_opcode (OrcCompiler *p, OrcX86Insn *xinsn)
     case ORC_X86_INSN_TYPE_IMM32_A:
       output_opcode (p, xinsn->opcode, xinsn->size, 0, 0);
       break;
-    case ORC_X86_INSN_TYPE_BRANCH:
     case ORC_X86_INSN_TYPE_LABEL:
+      {
+        int diff;
+        int i;
+        diff = (p->code - p->codeptr)&((1<<xinsn->size) - 1);
+        for(i=0;i<diff;i++){
+          *p->codeptr++ = nop_codes[diff][i];
+        }
+      }
+      break;
+    case ORC_X86_INSN_TYPE_BRANCH:
       break;
     default:
       ORC_ERROR("%d", xinsn->opcode->type);
@@ -607,7 +640,7 @@ orc_x86_insn_output_modrm (OrcCompiler *p, OrcX86Insn *xinsn)
       *p->codeptr++ = xinsn->opcode->code + (xinsn->dest&0x7);
       break;
     case ORC_X86_INSN_TYPE_BRANCH:
-      if (p->long_jumps) {
+      if (xinsn->size == 4) {
         if (xinsn->opcode_index == ORC_X86_jmp) {
           *p->codeptr++ = 0xe9;
         } else {
@@ -618,7 +651,7 @@ orc_x86_insn_output_modrm (OrcCompiler *p, OrcX86Insn *xinsn)
         *p->codeptr++ = xinsn->opcode->code;
       }
 
-      if (p->long_jumps) {
+      if (xinsn->size == 4) {
         x86_add_fixup (p, p->codeptr, xinsn->label, 1);
         *p->codeptr++ = 0xfc;
         *p->codeptr++ = 0xff;
@@ -681,238 +714,204 @@ orc_x86_insn_output_immediate (OrcCompiler *p, OrcX86Insn *xinsn)
   }
 }
 
+OrcX86Insn *
+orc_x86_get_output_insn (OrcCompiler *p)
+{
+  if (p->n_output_insns >= p->n_output_insns_alloc) {
+    p->n_output_insns_alloc += 10;
+    p->output_insns = realloc (p->output_insns,
+        sizeof(OrcX86Insn) * p->n_output_insns_alloc);
+  }
+
+  p->n_output_insns++;
+  return ((OrcX86Insn *)p->output_insns) + (p->n_output_insns - 1);
+}
+
+void
+orc_x86_output_insns (OrcCompiler *p)
+{
+  OrcX86Insn *xinsn;
+  int i;
+
+  for(i=0;i<p->n_output_insns;i++){
+    xinsn = ((OrcX86Insn *)p->output_insns) + i;
+
+    orc_x86_insn_output_asm (p, xinsn);
+
+    orc_x86_insn_output_opcode (p, xinsn);
+    orc_x86_insn_output_modrm (p, xinsn);
+    orc_x86_insn_output_immediate (p, xinsn);
+  }
+}
+
 void
 orc_x86_emit_cpuinsn (OrcCompiler *p, int index, int imm, int src, int dest)
 {
-  OrcX86Insn xinsn = { 0 };
+  OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
 
-  xinsn.opcode_index = index;
-  xinsn.opcode = opcode;
-  xinsn.imm = imm;
-  xinsn.src = src;
-  xinsn.dest = dest;
-  xinsn.type = ORC_X86_RM_REG;
-  xinsn.size = 4;
-
-  orc_x86_insn_output_asm (p, &xinsn);
-
-  orc_x86_insn_output_opcode (p, &xinsn);
-  orc_x86_insn_output_modrm (p, &xinsn);
-  orc_x86_insn_output_immediate (p, &xinsn);
-
+  xinsn->opcode_index = index;
+  xinsn->opcode = opcode;
+  xinsn->imm = imm;
+  xinsn->src = src;
+  xinsn->dest = dest;
+  xinsn->type = ORC_X86_RM_REG;
+  xinsn->size = 4;
 }
 
 void
 orc_x86_emit_cpuinsn_load_memoffset (OrcCompiler *p, int index, int size,
     int imm, int offset, int src, int dest)
 {
-  OrcX86Insn xinsn = { 0 };
+  OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
 
-  xinsn.opcode_index = index;
-  xinsn.opcode = opcode;
-  xinsn.imm = imm;
-  xinsn.src = src;
-  xinsn.dest = dest;
-  xinsn.type = ORC_X86_RM_MEMOFFSET;
-  xinsn.offset = offset;
-  xinsn.size = size;
-
-  orc_x86_insn_output_asm (p, &xinsn);
-
-  orc_x86_insn_output_opcode (p, &xinsn);
-  orc_x86_insn_output_modrm (p, &xinsn);
-  orc_x86_insn_output_immediate (p, &xinsn);
+  xinsn->opcode_index = index;
+  xinsn->opcode = opcode;
+  xinsn->imm = imm;
+  xinsn->src = src;
+  xinsn->dest = dest;
+  xinsn->type = ORC_X86_RM_MEMOFFSET;
+  xinsn->offset = offset;
+  xinsn->size = size;
 }
 
 void
 orc_x86_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index, int size,
     int imm, int offset, int src, int dest)
 {
-  OrcX86Insn xinsn = { 0 };
+  OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
 
-  xinsn.opcode_index = index;
-  xinsn.opcode = opcode;
-  xinsn.imm = imm;
-  xinsn.src = src;
-  xinsn.dest = dest;
-  xinsn.type = ORC_X86_RM_MEMOFFSET;
-  xinsn.offset = offset;
-  xinsn.size = size;
-
-  orc_x86_insn_output_asm (p, &xinsn);
-
-  orc_x86_insn_output_opcode (p, &xinsn);
-  orc_x86_insn_output_modrm (p, &xinsn);
-  orc_x86_insn_output_immediate (p, &xinsn);
+  xinsn->opcode_index = index;
+  xinsn->opcode = opcode;
+  xinsn->imm = imm;
+  xinsn->src = src;
+  xinsn->dest = dest;
+  xinsn->type = ORC_X86_RM_MEMOFFSET;
+  xinsn->offset = offset;
+  xinsn->size = size;
 }
 
 void
 orc_x86_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int size,
     int imm, int offset, int src, int src_index, int shift, int dest)
 {
-  OrcX86Insn xinsn = { 0 };
+  OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
 
-  xinsn.opcode_index = index;
-  xinsn.opcode = opcode;
-  xinsn.imm = imm;
-  xinsn.src = src;
-  xinsn.dest = dest;
-  xinsn.type = ORC_X86_RM_MEMINDEX;
-  xinsn.offset = offset;
-  xinsn.index_reg = src_index;
-  xinsn.shift = shift;
-  xinsn.size = size;
-
-  orc_x86_insn_output_asm (p, &xinsn);
-
-  orc_x86_insn_output_opcode (p, &xinsn);
-  orc_x86_insn_output_modrm (p, &xinsn);
-  orc_x86_insn_output_immediate (p, &xinsn);
+  xinsn->opcode_index = index;
+  xinsn->opcode = opcode;
+  xinsn->imm = imm;
+  xinsn->src = src;
+  xinsn->dest = dest;
+  xinsn->type = ORC_X86_RM_MEMINDEX;
+  xinsn->offset = offset;
+  xinsn->index_reg = src_index;
+  xinsn->shift = shift;
+  xinsn->size = size;
 }
 
 void
 orc_x86_emit_cpuinsn_imm_reg (OrcCompiler *p, int index, int size, int imm,
     int dest)
 {
-  OrcX86Insn xinsn = { 0 };
+  OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
 
-  xinsn.opcode_index = index;
-  xinsn.opcode = opcode;
-  xinsn.imm = imm;
-  xinsn.src = 0;
-  xinsn.dest = dest;
-  xinsn.type = ORC_X86_RM_REG;
-  xinsn.size = size;
-
-  orc_x86_insn_output_asm (p, &xinsn);
-
-  orc_x86_insn_output_opcode (p, &xinsn);
-  orc_x86_insn_output_modrm (p, &xinsn);
-  orc_x86_insn_output_immediate (p, &xinsn);
+  xinsn->opcode_index = index;
+  xinsn->opcode = opcode;
+  xinsn->imm = imm;
+  xinsn->src = 0;
+  xinsn->dest = dest;
+  xinsn->type = ORC_X86_RM_REG;
+  xinsn->size = size;
 }
 
 void
 orc_x86_emit_cpuinsn_imm_memoffset (OrcCompiler *p, int index, int size,
     int imm, int offset, int dest)
 {
-  OrcX86Insn xinsn = { 0 };
+  OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
 
-  xinsn.opcode_index = index;
-  xinsn.opcode = opcode;
-  xinsn.imm = imm;
-  xinsn.src = 0;
-  xinsn.dest = dest;
-  xinsn.type = ORC_X86_RM_MEMOFFSET;
-  xinsn.offset = offset;
-  xinsn.size = size;
-
-  orc_x86_insn_output_asm (p, &xinsn);
-
-  orc_x86_insn_output_opcode (p, &xinsn);
-  orc_x86_insn_output_modrm (p, &xinsn);
-  orc_x86_insn_output_immediate (p, &xinsn);
+  xinsn->opcode_index = index;
+  xinsn->opcode = opcode;
+  xinsn->imm = imm;
+  xinsn->src = 0;
+  xinsn->dest = dest;
+  xinsn->type = ORC_X86_RM_MEMOFFSET;
+  xinsn->offset = offset;
+  xinsn->size = size;
 }
 
 void
 orc_x86_emit_cpuinsn_reg_memoffset (OrcCompiler *p, int index, int src,
     int offset, int dest)
 {
-  OrcX86Insn xinsn = { 0 };
+  OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
   int size = 4;
 
-  xinsn.opcode_index = index;
-  xinsn.opcode = opcode;
-  xinsn.src = src;
-  xinsn.dest = dest;
-  xinsn.type = ORC_X86_RM_MEMOFFSET;
-  xinsn.offset = offset;
-  xinsn.size = size;
-
-  orc_x86_insn_output_asm (p, &xinsn);
-
-  orc_x86_insn_output_opcode (p, &xinsn);
-  orc_x86_insn_output_modrm (p, &xinsn);
-  orc_x86_insn_output_immediate (p, &xinsn);
+  xinsn->opcode_index = index;
+  xinsn->opcode = opcode;
+  xinsn->src = src;
+  xinsn->dest = dest;
+  xinsn->type = ORC_X86_RM_MEMOFFSET;
+  xinsn->offset = offset;
+  xinsn->size = size;
 }
 
 void
 orc_x86_emit_cpuinsn_memoffset_reg (OrcCompiler *p, int index, int size,
     int offset, int src, int dest)
 {
-  OrcX86Insn xinsn = { 0 };
+  OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
 
-  xinsn.opcode_index = index;
-  xinsn.opcode = opcode;
-  xinsn.src = src;
-  xinsn.dest = dest;
-  xinsn.type = ORC_X86_RM_MEMOFFSET;
-  xinsn.offset = offset;
-  xinsn.size = size;
-
-  orc_x86_insn_output_asm (p, &xinsn);
-
-  orc_x86_insn_output_opcode (p, &xinsn);
-  orc_x86_insn_output_modrm (p, &xinsn);
-  orc_x86_insn_output_immediate (p, &xinsn);
+  xinsn->opcode_index = index;
+  xinsn->opcode = opcode;
+  xinsn->src = src;
+  xinsn->dest = dest;
+  xinsn->type = ORC_X86_RM_MEMOFFSET;
+  xinsn->offset = offset;
+  xinsn->size = size;
 }
 
 void
 orc_x86_emit_cpuinsn_branch (OrcCompiler *p, int index, int label)
 {
-  OrcX86Insn xinsn = { 0 };
+  OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
 
-  xinsn.opcode_index = index;
-  xinsn.opcode = opcode;
-  xinsn.label = label;
-
-  orc_x86_insn_output_asm (p, &xinsn);
-
-  orc_x86_insn_output_opcode (p, &xinsn);
-  orc_x86_insn_output_modrm (p, &xinsn);
-  orc_x86_insn_output_immediate (p, &xinsn);
+  xinsn->opcode_index = index;
+  xinsn->opcode = opcode;
+  xinsn->label = label;
+  xinsn->size = p->long_jumps ? 4 : 1;
 }
 
 void
-orc_x86_emit_cpuinsn_label (OrcCompiler *p, int index, int label)
+orc_x86_emit_cpuinsn_label (OrcCompiler *p, int index, int label,
+    int align_shift)
 {
-  OrcX86Insn xinsn = { 0 };
+  OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
 
-  xinsn.opcode_index = index;
-  xinsn.opcode = opcode;
-  xinsn.label = label;
-
-  orc_x86_insn_output_asm (p, &xinsn);
-
-  orc_x86_insn_output_opcode (p, &xinsn);
-  orc_x86_insn_output_modrm (p, &xinsn);
-  orc_x86_insn_output_immediate (p, &xinsn);
+  xinsn->opcode_index = index;
+  xinsn->opcode = opcode;
+  xinsn->label = label;
+  xinsn->size = align_shift;
 }
 
 void
 orc_x86_emit_cpuinsn_none (OrcCompiler *p, int index)
 {
-  OrcX86Insn xinsn = { 0 };
+  OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
   int size = 4;
 
-  xinsn.opcode_index = index;
-  xinsn.opcode = opcode;
-  xinsn.size = size;
-
-  orc_x86_insn_output_asm (p, &xinsn);
-
-  orc_x86_insn_output_opcode (p, &xinsn);
-  orc_x86_insn_output_modrm (p, &xinsn);
-  orc_x86_insn_output_immediate (p, &xinsn);
+  xinsn->opcode_index = index;
+  xinsn->opcode = opcode;
+  xinsn->size = size;
 }
 

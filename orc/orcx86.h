@@ -113,8 +113,8 @@ void orc_x86_emit_pop (OrcCompiler *compiler, int size, int reg);
 #define orc_x86_emit_jne(p,label) \
   orc_x86_emit_cpuinsn_branch (p, ORC_X86_jnz, label)
 
-#define orc_x86_emit_label(p,label) \
-  orc_x86_emit_cpuinsn_label (p, ORC_X86_LABEL, label)
+#define orc_x86_emit_label(p,label, alignment) \
+  orc_x86_emit_cpuinsn_label (p, ORC_X86_LABEL, label, alignment)
 
 #define orc_x86_emit_emms(p) \
   orc_x86_emit_cpuinsn_none (p, ORC_X86_emms)
@@ -175,7 +175,7 @@ void orc_x86_emit_cpuinsn_reg_memoffset (OrcCompiler *p, int index, int src,
 void orc_x86_emit_cpuinsn_memoffset_reg (OrcCompiler *p, int index, int size,
     int offset, int src, int dest);
 void orc_x86_emit_cpuinsn_branch (OrcCompiler *p, int index, int label);
-void orc_x86_emit_cpuinsn_label (OrcCompiler *p, int index, int label);
+void orc_x86_emit_cpuinsn_label (OrcCompiler *p, int index, int label, int align_shift);
 void orc_x86_emit_cpuinsn_none (OrcCompiler *p, int index);
 
 #endif

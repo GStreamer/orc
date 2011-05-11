@@ -296,6 +296,9 @@ struct _OrcX86Insn {
   int shift;
 };
 
+OrcX86Insn * orc_x86_get_output_insn (OrcCompiler *p);
+void orc_x86_output_insns (OrcCompiler *p);
+
 
 
 #define orc_sse_emit_punpcklbw(p,a,b) orc_x86_emit_cpuinsn(p, ORC_X86_punpcklbw, 0, a, b)
