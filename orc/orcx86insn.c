@@ -240,7 +240,7 @@ static const OrcSysOpcode orc_x86_opcodes[] = {
   { "leal", ORC_X86_INSN_TYPE_REGM_REG, 0, 0x00, 0x8d },
   { "leaq", ORC_X86_INSN_TYPE_REGM_REG, 0, 0x00, 0x8d },
   { "imul", ORC_X86_INSN_TYPE_REGM_REG, 0, 0x00, 0x0faf },
-  { "imul", ORC_X86_INSN_TYPE_REGM, 0, 0x00, 0xf7, 5 },
+  { "imull", ORC_X86_INSN_TYPE_REGM, 0, 0x00, 0xf7, 5 },
   { "incl", ORC_X86_INSN_TYPE_REGM, 0, 0x00, 0xff, 0 },
   { "decl", ORC_X86_INSN_TYPE_REGM, 0, 0x00, 0xff, 1 },
   { "sar", ORC_X86_INSN_TYPE_IMM8_REGM, 0, 0x00, 0xc1, 7 },
@@ -912,6 +912,22 @@ orc_x86_emit_cpuinsn_none (OrcCompiler *p, int index)
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
+  xinsn->size = size;
+}
+
+void
+orc_x86_emit_cpuinsn_memoffset (OrcCompiler *p, int index, int size,
+    int offset, int srcdest)
+{
+  OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
+  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+
+  xinsn->opcode_index = index;
+  xinsn->opcode = opcode;
+  xinsn->src = srcdest;
+  xinsn->dest = srcdest;
+  xinsn->type = ORC_X86_RM_MEMOFFSET;
+  xinsn->offset = offset;
   xinsn->size = size;
 }
 

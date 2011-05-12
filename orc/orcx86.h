@@ -174,6 +174,8 @@ void orc_x86_emit_cpuinsn_reg_memoffset (OrcCompiler *p, int index, int src,
     int offset, int dest);
 void orc_x86_emit_cpuinsn_memoffset_reg (OrcCompiler *p, int index, int size,
     int offset, int src, int dest);
+void orc_x86_emit_cpuinsn_memoffset (OrcCompiler *p, int index, int size,
+    int offset, int srcdest);
 void orc_x86_emit_cpuinsn_branch (OrcCompiler *p, int index, int label);
 void orc_x86_emit_cpuinsn_label (OrcCompiler *p, int index, int label, int align_shift);
 void orc_x86_emit_cpuinsn_none (OrcCompiler *p, int index);

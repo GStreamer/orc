@@ -1582,8 +1582,8 @@ sse_rule_mulhsl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   for(i=0;i<(1<<p->insn_shift);i++) {
     orc_x86_emit_mov_memoffset_reg (p, 4, offset + 4*i, p->exec_reg, X86_EAX);
-    orc_x86_emit_cpuinsn_load_memoffset (p, ORC_X86_imul_rm, 4, 0,
-        offset + 16 + 4*i, p->exec_reg, -1);
+    orc_x86_emit_cpuinsn_memoffset (p, ORC_X86_imul_rm, 4,
+        offset + 16 + 4*i, p->exec_reg);
     orc_x86_emit_mov_reg_memoffset (p, 4, X86_EDX, offset + 4*i, p->exec_reg);
   }
 
@@ -1625,6 +1625,38 @@ sse_rule_mulslq (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_punpckldq (p, tmp, tmp);
   orc_sse_emit_pmuldq (p, tmp, dest);
 }
+
+#ifndef MMX
+static void
+sse_rule_mulslq_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int i;
+  int regsize = p->is_64bit ? 8 : 4;
+  int offset = ORC_STRUCT_OFFSET(OrcExecutor,arrays[ORC_VAR_T1]);
+
+  orc_x86_emit_mov_sse_memoffset (p, 8, p->vars[insn->src_args[0]].alloc,
+      offset, p->exec_reg, FALSE, FALSE);
+  orc_x86_emit_mov_sse_memoffset (p, 8, p->vars[insn->src_args[1]].alloc,
+      offset + 8, p->exec_reg, FALSE, FALSE);
+  orc_x86_emit_mov_reg_memoffset (p, regsize, X86_EAX, offset + 32,
+      p->exec_reg);
+  orc_x86_emit_mov_reg_memoffset (p, regsize, X86_EDX, offset + 40,
+      p->exec_reg);
+
+  for(i=0;i<(1<<p->insn_shift);i++) {
+    orc_x86_emit_mov_memoffset_reg (p, 4, offset + 4*i, p->exec_reg, X86_EAX);
+    orc_x86_emit_cpuinsn_memoffset (p, ORC_X86_imul_rm, 4,
+        offset + 8 + 4*i, p->exec_reg);
+    orc_x86_emit_mov_reg_memoffset (p, 4, X86_EAX, offset + 16 + 8*i, p->exec_reg);
+    orc_x86_emit_mov_reg_memoffset (p, 4, X86_EDX, offset + 16 + 8*i + 4, p->exec_reg);
+  }
+
+  orc_x86_emit_mov_memoffset_sse (p, 16, offset + 16, p->exec_reg,
+      p->vars[insn->dest_args[0]].alloc, FALSE);
+  orc_x86_emit_mov_memoffset_reg (p, 8, offset + 32, p->exec_reg, X86_EAX);
+  orc_x86_emit_mov_memoffset_reg (p, 8, offset + 40, p->exec_reg, X86_EDX);
+}
+#endif
 
 #ifndef MMX
 static void
@@ -2889,6 +2921,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
 #ifndef MMX
   orc_rule_register (rule_set, "mulhsl", sse_rule_mulhsl_slow, NULL);
   orc_rule_register (rule_set, "mulhul", sse_rule_mulhul, NULL);
+  orc_rule_register (rule_set, "mulslq", sse_rule_mulslq_slow, NULL);
 #endif
   orc_rule_register (rule_set, "mullb", sse_rule_mullb, NULL);
   orc_rule_register (rule_set, "mulhsb", sse_rule_mulhsb, NULL);
