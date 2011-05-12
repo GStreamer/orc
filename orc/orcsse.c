@@ -64,13 +64,6 @@ orc_x86_emit_mov_memoffset_sse (OrcCompiler *compiler, int size, int offset,
 }
 
 void
-orc_x86_emit_movhps_memoffset_sse (OrcCompiler *compiler, int offset,
-    int reg1, int reg2)
-{
-  orc_sse_emit_movhps_load_memoffset (compiler, offset, reg1, reg2);
-}
-
-void
 orc_x86_emit_mov_memindex_sse (OrcCompiler *compiler, int size, int offset,
     int reg1, int regindex, int shift, int reg2, int is_aligned)
 {
@@ -125,25 +118,6 @@ orc_x86_emit_mov_sse_memoffset (OrcCompiler *compiler, int size, int reg1, int o
       break;
   }
 
-}
-
-void orc_x86_emit_mov_sse_reg_reg (OrcCompiler *compiler, int reg1, int reg2)
-{
-  if (reg1 == reg2) {
-    return;
-  }
-
-  orc_sse_emit_movdqu (compiler, offset, reg1, reg2);
-}
-
-void orc_x86_emit_mov_reg_sse (OrcCompiler *compiler, int reg1, int reg2)
-{
-  orc_sse_emit_movd_load_register (compiler, reg1, reg2);
-}
-
-void orc_x86_emit_mov_sse_reg (OrcCompiler *compiler, int reg1, int reg2)
-{
-  orc_sse_emit_movd_store_register (compiler, reg1, reg2);
 }
 
 void

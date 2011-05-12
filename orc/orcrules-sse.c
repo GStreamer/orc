@@ -32,7 +32,7 @@ sse_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
           (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[0]]),
           compiler->exec_reg, reg, FALSE);
 #ifndef MMX
-      orc_x86_emit_movhps_memoffset_sse (compiler,
+      orc_sse_emit_movhps_load_memoffset (compiler,
           (int)ORC_STRUCT_OFFSET(OrcExecutor,
             params[insn->src_args[0] + (ORC_VAR_T1 - ORC_VAR_P1)]),
           compiler->exec_reg, reg);
@@ -106,7 +106,7 @@ sse_rule_loadX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     case 1:
       orc_x86_emit_mov_memoffset_reg (compiler, 1, offset, ptr_reg,
           compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, dest->alloc);
+      orc_sse_emit_movd_load_register (compiler, compiler->gp_tmpreg, dest->alloc);
       break;
     case 2:
       orc_sse_emit_pxor (compiler, dest->alloc, dest->alloc);
@@ -161,7 +161,7 @@ sse_rule_loadoffX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     case 1:
       orc_x86_emit_mov_memoffset_reg (compiler, 1, offset, ptr_reg,
           compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, dest->alloc);
+      orc_sse_emit_movd_load_register (compiler, compiler->gp_tmpreg, dest->alloc);
       break;
     case 2:
       orc_sse_emit_pxor (compiler, dest->alloc, dest->alloc);
@@ -271,7 +271,7 @@ sse_rule_loadupdb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     case 2:
       orc_x86_emit_mov_memoffset_reg (compiler, 1, offset, ptr_reg,
           compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_sse (compiler, compiler->gp_tmpreg, dest->alloc);
+      orc_sse_emit_movd_load_register (compiler, compiler->gp_tmpreg, dest->alloc);
       break;
     case 4:
       orc_sse_emit_pinsrw_memoffset (compiler, 0, offset, ptr_reg, dest->alloc);
@@ -330,7 +330,7 @@ sse_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
       if (ptr_reg == compiler->gp_tmpreg) {
         ORC_COMPILER_ERROR(compiler,"unimplemented");
       }
-      orc_x86_emit_mov_sse_reg (compiler, src->alloc, compiler->gp_tmpreg);
+      orc_sse_emit_movd_store_register (compiler, src->alloc, compiler->gp_tmpreg);
       orc_x86_emit_mov_reg_memoffset (compiler, 1, compiler->gp_tmpreg,
           offset, ptr_reg);
       break;
@@ -343,7 +343,7 @@ sse_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
         if (ptr_reg == compiler->gp_tmpreg) {
           ORC_COMPILER_ERROR(compiler,"unimplemented");
         } 
-        orc_x86_emit_mov_sse_reg (compiler, src->alloc, compiler->gp_tmpreg);
+        orc_sse_emit_movd_store_register (compiler, src->alloc, compiler->gp_tmpreg);
         orc_x86_emit_mov_reg_memoffset (compiler, 2, compiler->gp_tmpreg,
             offset, ptr_reg);
       }
@@ -378,7 +378,7 @@ sse_rule_ldresnearl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int tmp2 = orc_compiler_get_temp_reg (compiler);
   int tmpc;
 
-  orc_x86_emit_mov_sse_reg (compiler, X86_XMM6, compiler->gp_tmpreg);
+  orc_sse_emit_movd_store_register (compiler, X86_XMM6, compiler->gp_tmpreg);
   orc_x86_emit_sar_imm_reg (compiler, 4, 16, compiler->gp_tmpreg);
 
   orc_sse_emit_movdqu_load_memindex (compiler, 0, src->ptr_register,
@@ -490,7 +490,7 @@ sse_rule_ldreslinl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(3,2,3,2), tmp, tmp2);
     orc_sse_emit_psubw (compiler, tmp, tmp2);
 
-    orc_x86_emit_mov_reg_sse (compiler, src->ptr_offset, tmp);
+    orc_sse_emit_movd_load_register (compiler, src->ptr_offset, tmp);
     orc_sse_emit_pshuflw (compiler, ORC_SSE_SHUF(0,0,0,0), tmp, tmp);
     orc_sse_emit_psrlw_imm (compiler, 8, tmp);
     orc_sse_emit_pmullw (compiler, tmp2, tmp);
@@ -525,7 +525,7 @@ sse_rule_ldreslinl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     for(i=0;i<(1<<compiler->loop_shift);i+=2){
       orc_x86_emit_mov_memoffset_sse (compiler, 8, 0,
           src->ptr_register, tmp, FALSE);
-      orc_x86_emit_mov_reg_sse (compiler, src->ptr_offset, tmp4);
+      orc_sse_emit_movd_load_register (compiler, src->ptr_offset, tmp4);
 
       if (compiler->vars[increment_var].vartype == ORC_VAR_TYPE_PARAM) {
         orc_x86_emit_add_memoffset_reg (compiler, 4,

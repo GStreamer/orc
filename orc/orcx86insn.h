@@ -445,7 +445,7 @@ void orc_x86_calculate_offsets (OrcCompiler *p);
 #define orc_sse_emit_pshuflw(p,imm,a,b) orc_x86_emit_cpuinsn_imm(p, ORC_X86_pshuflw, imm, a, b)
 #define orc_sse_emit_pshufhw(p,imm,a,b) orc_x86_emit_cpuinsn_imm(p, ORC_X86_pshufhw, imm, a, b)
 #define orc_sse_emit_palignr(p,imm,a,b) orc_x86_emit_cpuinsn_imm(p, ORC_X86_psalignr, imm, a, b)
-#define orc_sse_emit_movdqu(p,offset,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_movdqu_load, 16, a, b)
+#define orc_sse_emit_movdqu(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_movdqu_load, 16, a, b)
 
 #define orc_sse_emit_pinsrw_memoffset(p,imm,offset,a,b) orc_x86_emit_cpuinsn_load_memoffset(p, ORC_X86_pinsrw, 4, imm, offset, a, b)
 #define orc_sse_emit_movd_load_memoffset(p,offset,a,b) orc_x86_emit_cpuinsn_load_memoffset(p, ORC_X86_movd_load, 4, 0, offset, a, b)

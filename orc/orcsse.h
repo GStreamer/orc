@@ -46,23 +46,10 @@ typedef enum {
 const char * orc_x86_get_regname_sse(int i);
 void orc_x86_emit_mov_memoffset_sse (OrcCompiler *compiler, int size, int offset,
     int reg1, int reg2, int is_aligned);
-void orc_x86_emit_movhps_memoffset_sse (OrcCompiler *compiler, int offset,
-    int reg1, int reg2);
 void orc_x86_emit_mov_memindex_sse (OrcCompiler *compiler, int size, int offset,
     int reg1, int regindex, int shift, int reg2, int is_aligned);
 void orc_x86_emit_mov_sse_memoffset (OrcCompiler *compiler, int size, int reg1, int offset,
     int reg2, int aligned, int uncached);
-void orc_x86_emit_mov_sse_reg_reg (OrcCompiler *compiler, int reg1, int reg2);
-void orc_x86_emit_mov_reg_sse (OrcCompiler *compiler, int reg1, int reg2);
-void orc_x86_emit_mov_sse_reg (OrcCompiler *compiler, int reg1, int reg2);
-void orc_sse_emit_loadib (OrcCompiler *p, int reg, int value);
-void orc_sse_emit_loadiw (OrcCompiler *p, int reg, int value);
-void orc_sse_emit_loadil (OrcCompiler *p, int reg, int value);
-void orc_sse_emit_loadpb (OrcCompiler *p, int reg, int value);
-void orc_sse_emit_loadpw (OrcCompiler *p, int reg, int value);
-void orc_sse_emit_loadpl (OrcCompiler *p, int reg, int value);
-void orc_sse_emit_loadpq (OrcCompiler *p, int reg, int value);
-
 
 void orc_sse_set_mxcsr (OrcCompiler *compiler);
 void orc_sse_restore_mxcsr (OrcCompiler *compiler);
