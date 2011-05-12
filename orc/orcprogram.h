@@ -443,6 +443,7 @@ struct _OrcCompiler {
   OrcFixup fixups[ORC_N_FIXUPS];
   int n_fixups;
   unsigned char *labels[ORC_N_LABELS];
+  int labels_int[ORC_N_LABELS];
   int n_labels;
 
   int error;

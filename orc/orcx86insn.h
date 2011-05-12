@@ -24,6 +24,7 @@ typedef enum {
   ORC_X86_INSN_TYPE_REGM_REG,
   ORC_X86_INSN_TYPE_REG_REGM,
   ORC_X86_INSN_TYPE_LABEL,
+  ORC_X86_INSN_TYPE_ALIGN,
   ORC_X86_INSN_TYPE_BRANCH,
   ORC_X86_INSN_TYPE_NONE,
   ORC_X86_INSN_TYPE_STACK,
@@ -271,7 +272,7 @@ typedef enum {
   ORC_X86_sar_imm,
   ORC_X86_sar,
   ORC_X86_and_imm32_a,
-
+  ORC_X86_ALIGN,
 } OrcX86Opcode;
 
 enum {
@@ -289,15 +290,16 @@ struct _OrcX86Insn {
   int dest;
   int size;
   int label;
-
   int type;
   int offset;
   int index_reg;
   int shift;
+  int code_offset;
 };
 
 OrcX86Insn * orc_x86_get_output_insn (OrcCompiler *p);
 void orc_x86_output_insns (OrcCompiler *p);
+void orc_x86_calculate_offsets (OrcCompiler *p);
 
 
 

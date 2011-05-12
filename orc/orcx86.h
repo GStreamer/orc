@@ -113,8 +113,10 @@ void orc_x86_emit_pop (OrcCompiler *compiler, int size, int reg);
 #define orc_x86_emit_jne(p,label) \
   orc_x86_emit_cpuinsn_branch (p, ORC_X86_jnz, label)
 
-#define orc_x86_emit_label(p,label, alignment) \
-  orc_x86_emit_cpuinsn_label (p, ORC_X86_LABEL, label, alignment)
+#define orc_x86_emit_align(p,align_shift) \
+  orc_x86_emit_cpuinsn_align (p, ORC_X86_ALIGN, align_shift)
+#define orc_x86_emit_label(p,label) \
+  orc_x86_emit_cpuinsn_label (p, ORC_X86_LABEL, label)
 
 #define orc_x86_emit_emms(p) \
   orc_x86_emit_cpuinsn_none (p, ORC_X86_emms)
@@ -136,7 +138,6 @@ void orc_x86_emit_cmp_imm_memoffset (OrcCompiler *compiler, int size, int value,
     int offset, int reg);
 void orc_x86_emit_cmp_imm_reg (OrcCompiler *compiler, int size, int value, int reg);
 void orc_x86_emit_rep_movs (OrcCompiler *compiler, int size);
-void orc_x86_emit_align (OrcCompiler *compiler);
 void orc_x86_emit_prologue (OrcCompiler *compiler);
 void orc_x86_emit_epilogue (OrcCompiler *compiler);
 
@@ -151,6 +152,7 @@ void orc_x86_emit_modrm_memindex2 (OrcCompiler *compiler, int offset,
 
 void x86_add_fixup (OrcCompiler *compiler, unsigned char *ptr, int label, int type);
 void x86_add_label (OrcCompiler *compiler, unsigned char *ptr, int label);
+void x86_add_label2 (OrcCompiler *compiler, int index, int label);
 void orc_x86_do_fixups (OrcCompiler *compiler);
 
 int orc_x86_assemble_copy_check (OrcCompiler *compiler);
@@ -177,8 +179,9 @@ void orc_x86_emit_cpuinsn_memoffset_reg (OrcCompiler *p, int index, int size,
 void orc_x86_emit_cpuinsn_memoffset (OrcCompiler *p, int index, int size,
     int offset, int srcdest);
 void orc_x86_emit_cpuinsn_branch (OrcCompiler *p, int index, int label);
-void orc_x86_emit_cpuinsn_label (OrcCompiler *p, int index, int label, int align_shift);
+void orc_x86_emit_cpuinsn_label (OrcCompiler *p, int index, int label);
 void orc_x86_emit_cpuinsn_none (OrcCompiler *p, int index);
+void orc_x86_emit_cpuinsn_align (OrcCompiler *p, int index, int align_shift);
 
 #endif
 

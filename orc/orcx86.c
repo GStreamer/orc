@@ -412,6 +412,12 @@ x86_add_label (OrcCompiler *compiler, unsigned char *ptr, int label)
 }
 
 void
+x86_add_label2 (OrcCompiler *compiler, int index, int label)
+{
+  compiler->labels_int[label] = index;
+}
+
+void
 orc_x86_do_fixups (OrcCompiler *compiler)
 {
   int i;
@@ -423,7 +429,7 @@ orc_x86_do_fixups (OrcCompiler *compiler)
 
       diff = ((orc_int8)ptr[0]) + (label - ptr);
       if (diff != (orc_int8)diff) {
-        ORC_COMPILER_ERROR(compiler, "short jump too long");
+        ORC_COMPILER_ERROR(compiler, "short jump too long %d", diff);
       }
 
       ptr[0] = diff;
@@ -506,19 +512,6 @@ orc_x86_emit_epilogue (OrcCompiler *compiler)
     orc_x86_emit_pop (compiler, 4, X86_EBP);
   }
   orc_x86_emit_ret (compiler);
-}
-
-void
-orc_x86_emit_align (OrcCompiler *compiler)
-{
-  int diff;
-  int align_shift = 4;
-
-  diff = (compiler->code - compiler->codeptr)&((1<<align_shift) - 1);
-  while (diff) {
-    orc_x86_emit_cpuinsn_none (compiler, ORC_X86_nop);
-    diff--;
-  }
 }
 
 /* memcpy implementation based on rep movs */

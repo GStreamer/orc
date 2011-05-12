@@ -246,6 +246,7 @@ static const OrcSysOpcode orc_x86_opcodes[] = {
   { "sar", ORC_X86_INSN_TYPE_IMM8_REGM, 0, 0x00, 0xc1, 7 },
   { "sar", ORC_X86_INSN_TYPE_REGM, 0, 0x00, 0xd1, 7 },
   { "and", ORC_X86_INSN_TYPE_IMM32_A, 0, 0x00, 0x25, 4 },
+  { "", ORC_X86_INSN_TYPE_ALIGN, 0, 0x00, 0x00 },
 };
 
 static void
@@ -274,8 +275,11 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
   char op1_str[40] = { 0 };
   char op2_str[40] = { 0 };
 
-  if (xinsn->opcode->type == ORC_X86_INSN_TYPE_LABEL) {
+  if (xinsn->opcode->type == ORC_X86_INSN_TYPE_ALIGN) {
     if (xinsn->size > 0) ORC_ASM_CODE(p,".p2align %d\n", xinsn->size);
+    return;
+  }
+  if (xinsn->opcode->type == ORC_X86_INSN_TYPE_LABEL) {
     ORC_ASM_CODE(p,"%d:\n", xinsn->label);
     return;
   }
@@ -295,6 +299,7 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
     case ORC_X86_INSN_TYPE_REG16_REGM:
     case ORC_X86_INSN_TYPE_BRANCH:
     case ORC_X86_INSN_TYPE_LABEL:
+    case ORC_X86_INSN_TYPE_ALIGN:
     case ORC_X86_INSN_TYPE_NONE:
       imm_str[0] = 0;
       break;
@@ -363,6 +368,7 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
     case ORC_X86_INSN_TYPE_BRANCH:
     case ORC_X86_INSN_TYPE_NONE:
     case ORC_X86_INSN_TYPE_LABEL:
+    case ORC_X86_INSN_TYPE_ALIGN:
     case ORC_X86_INSN_TYPE_IMM32_A:
       op1_str[0] = 0;
       break;
@@ -446,9 +452,11 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
       break;
     case ORC_X86_INSN_TYPE_BRANCH:
       sprintf (op2_str, "%d%c", xinsn->label,
-          (p->labels[xinsn->label]!=NULL) ? 'b' : 'f');
+          (p->labels_int[xinsn->label] <
+           xinsn - ((OrcX86Insn *)p->output_insns)) ? 'b' : 'f');
       break;
     case ORC_X86_INSN_TYPE_LABEL:
+    case ORC_X86_INSN_TYPE_ALIGN:
     case ORC_X86_INSN_TYPE_NONE:
       op2_str[0] = 0;
       break;
@@ -532,7 +540,7 @@ orc_x86_insn_output_opcode (OrcCompiler *p, OrcX86Insn *xinsn)
     case ORC_X86_INSN_TYPE_IMM32_A:
       output_opcode (p, xinsn->opcode, xinsn->size, 0, 0);
       break;
-    case ORC_X86_INSN_TYPE_LABEL:
+    case ORC_X86_INSN_TYPE_ALIGN:
       {
         int diff;
         int i;
@@ -542,6 +550,7 @@ orc_x86_insn_output_opcode (OrcCompiler *p, OrcX86Insn *xinsn)
         }
       }
       break;
+    case ORC_X86_INSN_TYPE_LABEL:
     case ORC_X86_INSN_TYPE_BRANCH:
       break;
     default:
@@ -605,6 +614,7 @@ orc_x86_insn_output_modrm (OrcCompiler *p, OrcX86Insn *xinsn)
     case ORC_X86_INSN_TYPE_IMM32_REGM_MOV:
     case ORC_X86_INSN_TYPE_IMM32_A:
     case ORC_X86_INSN_TYPE_NONE:
+    case ORC_X86_INSN_TYPE_ALIGN:
       break;
     case ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT:
     case ORC_X86_INSN_TYPE_IMM8_REGM:
@@ -705,6 +715,7 @@ orc_x86_insn_output_immediate (OrcCompiler *p, OrcX86Insn *xinsn)
     case ORC_X86_INSN_TYPE_MEM:
     case ORC_X86_INSN_TYPE_BRANCH:
     case ORC_X86_INSN_TYPE_LABEL:
+    case ORC_X86_INSN_TYPE_ALIGN:
     case ORC_X86_INSN_TYPE_NONE:
       break;
     default:
@@ -725,6 +736,93 @@ orc_x86_get_output_insn (OrcCompiler *p)
 
   p->n_output_insns++;
   return ((OrcX86Insn *)p->output_insns) + (p->n_output_insns - 1);
+}
+
+void
+orc_x86_recalc_offsets (OrcCompiler *p)
+{
+  OrcX86Insn *xinsn;
+  int i;
+  unsigned char *minptr;
+
+  minptr = p->code;
+  p->codeptr = p->code;
+  for(i=0;i<p->n_output_insns;i++){
+    unsigned char *ptr;
+
+    xinsn = ((OrcX86Insn *)p->output_insns) + i;
+
+    xinsn->code_offset = p->codeptr - p->code;
+
+    ptr = p->codeptr;
+    orc_x86_insn_output_opcode (p, xinsn);
+    orc_x86_insn_output_modrm (p, xinsn);
+    orc_x86_insn_output_immediate (p, xinsn);
+
+    if (xinsn->opcode->type == ORC_X86_INSN_TYPE_ALIGN) {
+      if (xinsn->size > 0) {
+        minptr += ((p->code - minptr)&((1<<xinsn->size) - 1));
+      }
+    } else {
+      minptr += p->codeptr - ptr;
+      if (xinsn->opcode->type == ORC_X86_INSN_TYPE_BRANCH) {
+        if (xinsn->size == 4) minptr -= 4;
+      }
+    }
+
+  }
+
+  p->codeptr = p->code;
+  p->n_fixups = 0;
+}
+
+void
+orc_x86_calculate_offsets (OrcCompiler *p)
+{
+  OrcX86Insn *xinsn;
+  int i;
+  int j;
+
+  orc_x86_recalc_offsets (p);
+
+  for(j=0;j<3;j++){
+    int change = FALSE;
+
+    for(i=0;i<p->n_output_insns;i++){
+      OrcX86Insn *dinsn;
+      int diff;
+
+      xinsn = ((OrcX86Insn *)p->output_insns) + i;
+      if (xinsn->opcode->type != ORC_X86_INSN_TYPE_BRANCH) {
+        continue;
+      }
+
+      dinsn = ((OrcX86Insn *)p->output_insns) + p->labels_int[xinsn->label];
+
+      if (xinsn->size == 1) {
+        diff = dinsn->code_offset - (xinsn->code_offset + 2);
+        if (diff < -128 || diff > 127) {
+          xinsn->size = 4;
+          ORC_DEBUG("%d: relaxing at %d,%04x diff %d",
+              j, i, xinsn->code_offset, diff);
+          change = TRUE;
+        } else {
+        }
+      } else {
+        diff = dinsn->code_offset - (xinsn->code_offset + 2);
+        if (diff >= -128 && diff <= 127) {
+          ORC_DEBUG("%d: unrelaxing at %d,%04x diff %d",
+              j, i, xinsn->code_offset, diff);
+          xinsn->size = 1;
+          change = TRUE;
+        }
+      }
+    }
+
+    if (!change) break;
+
+    orc_x86_recalc_offsets (p);
+  }
 }
 
 void
@@ -887,12 +985,22 @@ orc_x86_emit_cpuinsn_branch (OrcCompiler *p, int index, int label)
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
   xinsn->label = label;
-  xinsn->size = p->long_jumps ? 4 : 1;
+  xinsn->size = 1;
 }
 
 void
-orc_x86_emit_cpuinsn_label (OrcCompiler *p, int index, int label,
-    int align_shift)
+orc_x86_emit_cpuinsn_align (OrcCompiler *p, int index, int align_shift)
+{
+  OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
+  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+
+  xinsn->opcode_index = index;
+  xinsn->opcode = opcode;
+  xinsn->size = align_shift;
+}
+
+void
+orc_x86_emit_cpuinsn_label (OrcCompiler *p, int index, int label)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;
@@ -900,7 +1008,7 @@ orc_x86_emit_cpuinsn_label (OrcCompiler *p, int index, int label,
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
   xinsn->label = label;
-  xinsn->size = align_shift;
+  x86_add_label2 (p, p->n_output_insns - 1, label);
 }
 
 void
