@@ -59,9 +59,9 @@ void orc_x86_emit_pop (OrcCompiler *compiler, int size, int reg);
 #define orc_x86_emit_mov_imm_reg(p,size,value,reg) \
   orc_x86_emit_cpuinsn_imm_reg (p, ORC_X86_mov_imm32_r, size, value, reg)
 #define orc_x86_emit_mov_reg_reg(p,size,src,dest) \
-  orc_x86_emit_cpuinsn (p, ORC_X86_mov_r_rm, size, src, dest)
+  orc_x86_emit_cpuinsn_size (p, ORC_X86_mov_r_rm, size, src, dest)
 #define orc_x86_emit_test_reg_reg(p,size,src,dest) \
-  orc_x86_emit_cpuinsn (p, ORC_X86_test, size, src, dest)
+  orc_x86_emit_cpuinsn_size (p, ORC_X86_test, size, src, dest)
 #define orc_x86_emit_sar_imm_reg(p,size,value,reg) do { \
     if (value == 1) { \
       orc_x86_emit_cpuinsn_imm_reg (p, ORC_X86_sar, size, value, reg); \
@@ -89,11 +89,11 @@ void orc_x86_emit_pop (OrcCompiler *compiler, int size, int reg);
 #define orc_x86_emit_add_reg_memoffset(p,size,src,offset,dest) \
   orc_x86_emit_cpuinsn_reg_memoffset(p, ORC_X86_add_r_rm, src, offset, dest)
 #define orc_x86_emit_add_reg_reg(p,size,src,dest) \
-  orc_x86_emit_cpuinsn(p, ORC_X86_add_r_rm, size, src, dest)
+  orc_x86_emit_cpuinsn_size(p, ORC_X86_add_r_rm, size, src, dest)
 #define orc_x86_emit_add_memoffset_reg(p,size,offset,src,dest) \
   orc_x86_emit_cpuinsn_memoffset_reg(p, ORC_X86_add_rm_r, size, offset, src, dest)
 #define orc_x86_emit_sub_reg_reg(p,size,src,dest) \
-  orc_x86_emit_cpuinsn(p, ORC_X86_sub_r_rm, size, src, dest)
+  orc_x86_emit_cpuinsn_size(p, ORC_X86_sub_r_rm, size, src, dest)
 #define orc_x86_emit_sub_memoffset_reg(p,size,offset,src,dest) \
   orc_x86_emit_cpuinsn_memoffset_reg(p, ORC_X86_sub_rm_r, size, offset, src, dest)
 #define orc_x86_emit_imul_memoffset_reg(p,size,offset,src,dest) \
@@ -158,8 +158,10 @@ void orc_x86_do_fixups (OrcCompiler *compiler);
 int orc_x86_assemble_copy_check (OrcCompiler *compiler);
 void orc_x86_assemble_copy (OrcCompiler *compiler);
 
-void orc_x86_emit_cpuinsn (OrcCompiler *p, int opcode, int src, int dest,
-    int imm);
+void orc_x86_emit_cpuinsn_size (OrcCompiler *p, int opcode, int size,
+    int src, int dest);
+void orc_x86_emit_cpuinsn_imm (OrcCompiler *p, int opcode, int imm,
+    int src, int dest);
 void orc_x86_emit_cpuinsn_load_memoffset (OrcCompiler *p, int size, int index,
     int offset, int src, int dest, int imm);
 void orc_x86_emit_cpuinsn_store_memoffset (OrcCompiler *p, int size, int index,

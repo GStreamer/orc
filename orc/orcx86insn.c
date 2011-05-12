@@ -843,7 +843,21 @@ orc_x86_output_insns (OrcCompiler *p)
 }
 
 void
-orc_x86_emit_cpuinsn (OrcCompiler *p, int index, int imm, int src, int dest)
+orc_x86_emit_cpuinsn_size (OrcCompiler *p, int index, int size, int src, int dest)
+{
+  OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
+  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+
+  xinsn->opcode_index = index;
+  xinsn->opcode = opcode;
+  xinsn->src = src;
+  xinsn->dest = dest;
+  xinsn->type = ORC_X86_RM_REG;
+  xinsn->size = size;
+}
+
+void
+orc_x86_emit_cpuinsn_imm (OrcCompiler *p, int index, int imm, int src, int dest)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
   const OrcSysOpcode *opcode = orc_x86_opcodes + index;

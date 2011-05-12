@@ -849,12 +849,12 @@ sse_rule_signX_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   tmpc = orc_compiler_get_temp_constant (p, 1<<type, 1);
   if (src == dest) {
-    orc_x86_emit_cpuinsn (p, opcodes[type], 0, src, tmpc);
+    orc_x86_emit_cpuinsn_size (p, opcodes[type], 16, src, tmpc);
     orc_sse_emit_movdqa (p, tmpc, dest);
   } else {
     /* FIXME this would be a good opportunity to not chain src to dest */
     orc_sse_emit_movdqa (p, tmpc, dest);
-    orc_x86_emit_cpuinsn (p, opcodes[type], 0, src, dest);
+    orc_x86_emit_cpuinsn_size (p, opcodes[type], 16, src, dest);
   }
 }
 #endif
@@ -972,8 +972,8 @@ sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
     ORC_X86_psrad_imm, ORC_X86_psllq_imm, ORC_X86_psrlq_imm };
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
-    orc_x86_emit_cpuinsn (p, opcodes_imm[type],
-        p->vars[insn->src_args[1]].value.i, 0,
+    orc_x86_emit_cpuinsn_imm (p, opcodes_imm[type],
+        p->vars[insn->src_args[1]].value.i, 16,
         p->vars[insn->dest_args[0]].alloc);
   } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
     int tmp = orc_compiler_get_temp_reg (p);
@@ -984,7 +984,7 @@ sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
         (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[1]]),
         p->exec_reg, tmp, FALSE);
 
-    orc_x86_emit_cpuinsn (p, opcodes[type], 0, tmp,
+    orc_x86_emit_cpuinsn_size (p, opcodes[type], 16, tmp,
         p->vars[insn->dest_args[0]].alloc);
   } else {
     ORC_COMPILER_ERROR(p,"rule only works with constants or params");

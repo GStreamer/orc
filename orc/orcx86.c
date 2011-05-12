@@ -126,13 +126,13 @@ orc_x86_get_regname_size(int i, int size)
 void
 orc_x86_emit_push (OrcCompiler *compiler, int size, int reg)
 {
-  orc_x86_emit_cpuinsn (compiler, ORC_X86_push, 0, reg, reg);
+  orc_x86_emit_cpuinsn_size (compiler, ORC_X86_push, 0, reg, reg);
 }
 
 void
 orc_x86_emit_pop (OrcCompiler *compiler, int size, int reg)
 {
-  orc_x86_emit_cpuinsn (compiler, ORC_X86_pop, 0, reg, reg);
+  orc_x86_emit_cpuinsn_size (compiler, ORC_X86_pop, 0, reg, reg);
 }
 
 #define X86_MODRM(mod, rm, reg) ((((mod)&3)<<6)|(((rm)&7)<<0)|(((reg)&7)<<3))
