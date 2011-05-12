@@ -23,7 +23,7 @@ typedef enum {
 #ifdef ORC_ENABLE_UNSTABLE_API
 
 typedef enum {
-  X86_XMM0 = ORC_VEC_REG_BASE,
+  X86_XMM0 = ORC_VEC_REG_BASE + 16,
   X86_XMM1,
   X86_XMM2,
   X86_XMM3,

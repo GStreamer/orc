@@ -318,7 +318,7 @@ mmx_save_accumulators (OrcCompiler *compiler)
         }
 
         if (compiler->vars[i].size == 2) {
-          orc_x86_emit_mov_mmx_reg (compiler, src, compiler->gp_tmpreg);
+          orc_mmx_emit_movd_store_register (compiler, src, compiler->gp_tmpreg);
           orc_x86_emit_and_imm_reg (compiler, 4, 0xffff, compiler->gp_tmpreg);
           orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
               (int)ORC_STRUCT_OFFSET(OrcExecutor, accumulators[i-ORC_VAR_A1]),
@@ -429,7 +429,7 @@ orc_mmx_load_constant (OrcCompiler *compiler, int reg, int size, orc_uint64 valu
   }
 
   orc_x86_emit_mov_imm_reg (compiler, 4, value, compiler->gp_tmpreg);
-  orc_x86_emit_mov_reg_mmx (compiler, compiler->gp_tmpreg, reg);
+  orc_mmx_emit_movd_load_register (compiler, compiler->gp_tmpreg, reg);
 #ifndef MMX
   orc_mmx_emit_pshufd (compiler, ORC_MMX_SHUF(0,0,0,0), reg, reg);
 #else
@@ -1024,9 +1024,15 @@ orc_mmx_emit_loop (OrcCompiler *compiler, int offset, int update)
       if (!(insn->opcode->flags & (ORC_STATIC_OPCODE_ACCUMULATOR|ORC_STATIC_OPCODE_LOAD|ORC_STATIC_OPCODE_STORE)) &&
           compiler->vars[insn->dest_args[0]].alloc !=
           compiler->vars[insn->src_args[0]].alloc) {
-        orc_x86_emit_mov_mmx_reg_reg (compiler,
+#ifdef MMX
+        orc_mmx_emit_movq (compiler,
             compiler->vars[insn->src_args[0]].alloc,
             compiler->vars[insn->dest_args[0]].alloc);
+#else
+        orc_mmx_emit_movdqu (compiler,
+            compiler->vars[insn->src_args[0]].alloc,
+            compiler->vars[insn->dest_args[0]].alloc);
+#endif
       }
       rule->emit (compiler, rule->emit_user, insn);
     } else {

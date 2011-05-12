@@ -10,108 +10,108 @@
 
 
 static const OrcSysOpcode orc_x86_opcodes[] = {
-  { "punpcklbw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f60 },
-  { "punpcklwd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f61 },
-  { "punpckldq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f62 },
-  { "packsswb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f63 },
-  { "pcmpgtb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f64 },
-  { "pcmpgtw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f65 },
-  { "pcmpgtd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f66 },
-  { "packuswb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f67 },
-  { "punpckhbw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f68 },
-  { "punpckhwd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f69 },
-  { "punpckhdq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f6a },
-  { "packssdw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f6b },
-  { "punpcklqdq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f6c },
-  { "punpckhqdq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f6d },
-  { "movdqa", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f6f },
-  { "psraw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fe1 },
-  { "psrlw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fd1 },
-  { "psllw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0ff1 },
-  { "psrad", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fe2 },
-  { "psrld", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fd2 },
-  { "pslld", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0ff2 },
-  { "psrlq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fd3 },
-  { "psllq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0ff3 },
-  { "psrldq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f73 },
-  { "pslldq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f73 },
-  { "psrlq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fd3 },
-  { "pcmpeqb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f74 },
-  { "pcmpeqw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f75 },
-  { "pcmpeqd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f76 },
-  { "paddq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fd4 },
-  { "pmullw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fd5 },
-  { "psubusb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fd8 },
-  { "psubusw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fd9 },
-  { "pminub", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fda },
-  { "pand", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fdb },
-  { "paddusb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fdc },
-  { "paddusw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fdd },
-  { "pmaxub", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fde },
-  { "pandn", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fdf },
-  { "pavgb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fe0 },
-  { "pavgw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fe3 },
-  { "pmulhuw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fe4 },
-  { "pmulhw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fe5 },
-  { "psubsb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fe8 },
-  { "psubsw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fe9 },
-  { "pminsw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fea },
-  { "por", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0feb },
-  { "paddsb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fec },
-  { "paddsw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fed },
-  { "pmaxsw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fee },
-  { "pxor", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0fef },
-  { "pmuludq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0ff4 },
-  { "pmaddwd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0ff5 },
-  { "psadbw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0ff6 },
-  { "psubb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0ff8 },
-  { "psubw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0ff9 },
-  { "psubd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0ffa },
-  { "psubq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0ffb },
-  { "paddb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0ffc },
-  { "paddw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0ffd },
-  { "paddd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0ffe },
-  { "pshufb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3800 },
-  { "phaddw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3801 },
-  { "phaddd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3802 },
-  { "phaddsw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3803 },
-  { "pmaddubsw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3804 },
-  { "phsubw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3805 },
-  { "phsubd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3806 },
-  { "phsubsw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3807 },
-  { "psignb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3808 },
-  { "psignw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3809 },
-  { "psignd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f380a },
-  { "pmulhrsw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f380b },
-  { "pabsb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f381c },
-  { "pabsw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f381d },
-  { "pabsd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f381e },
-  { "pmovsxbw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3820 },
-  { "pmovsxbd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3821 },
-  { "pmovsxbq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3822 },
-  { "pmovsxwd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3823 },
-  { "pmovsxwq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3824 },
-  { "pmovsxdq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3825 },
-  { "pmuldq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3828 },
-  { "pcmpeqq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3829 },
-  { "packusdw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f382b },
-  { "pmovzxbw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3830 },
-  { "pmovzxbd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3831 },
-  { "pmovzxbq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3832 },
-  { "pmovzxwd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3833 },
-  { "pmovzxwq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3834 },
-  { "pmovzxdq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3835 },
-  { "pmulld", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3840 },
-  { "phminposuw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3841 },
-  { "pminsb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3838 },
-  { "pminsd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3839 },
-  { "pminuw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f383a },
-  { "pminud", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f383b },
-  { "pmaxsb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f383c },
-  { "pmaxsd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f383d },
-  { "pmaxuw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f383e },
-  { "pmaxud", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f383f },
-  { "pcmpgtq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f3837 },
+  { "punpcklbw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f60 },
+  { "punpcklwd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f61 },
+  { "punpckldq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f62 },
+  { "packsswb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f63 },
+  { "pcmpgtb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f64 },
+  { "pcmpgtw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f65 },
+  { "pcmpgtd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f66 },
+  { "packuswb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f67 },
+  { "punpckhbw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f68 },
+  { "punpckhwd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f69 },
+  { "punpckhdq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f6a },
+  { "packssdw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f6b },
+  { "punpcklqdq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f6c },
+  { "punpckhqdq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f6d },
+  { "movdqa", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f6f },
+  { "psraw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fe1 },
+  { "psrlw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fd1 },
+  { "psllw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0ff1 },
+  { "psrad", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fe2 },
+  { "psrld", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fd2 },
+  { "pslld", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0ff2 },
+  { "psrlq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fd3 },
+  { "psllq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0ff3 },
+  { "psrldq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f73 },
+  { "pslldq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f73 },
+  { "psrlq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fd3 },
+  { "pcmpeqb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f74 },
+  { "pcmpeqw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f75 },
+  { "pcmpeqd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f76 },
+  { "paddq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fd4 },
+  { "pmullw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fd5 },
+  { "psubusb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fd8 },
+  { "psubusw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fd9 },
+  { "pminub", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fda },
+  { "pand", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fdb },
+  { "paddusb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fdc },
+  { "paddusw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fdd },
+  { "pmaxub", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fde },
+  { "pandn", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fdf },
+  { "pavgb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fe0 },
+  { "pavgw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fe3 },
+  { "pmulhuw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fe4 },
+  { "pmulhw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fe5 },
+  { "psubsb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fe8 },
+  { "psubsw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fe9 },
+  { "pminsw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fea },
+  { "por", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0feb },
+  { "paddsb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fec },
+  { "paddsw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fed },
+  { "pmaxsw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fee },
+  { "pxor", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0fef },
+  { "pmuludq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0ff4 },
+  { "pmaddwd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0ff5 },
+  { "psadbw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0ff6 },
+  { "psubb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0ff8 },
+  { "psubw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0ff9 },
+  { "psubd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0ffa },
+  { "psubq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0ffb },
+  { "paddb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0ffc },
+  { "paddw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0ffd },
+  { "paddd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0ffe },
+  { "pshufb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3800 },
+  { "phaddw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3801 },
+  { "phaddd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3802 },
+  { "phaddsw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3803 },
+  { "pmaddubsw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3804 },
+  { "phsubw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3805 },
+  { "phsubd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3806 },
+  { "phsubsw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3807 },
+  { "psignb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3808 },
+  { "psignw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3809 },
+  { "psignd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f380a },
+  { "pmulhrsw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f380b },
+  { "pabsb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f381c },
+  { "pabsw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f381d },
+  { "pabsd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f381e },
+  { "pmovsxbw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3820 },
+  { "pmovsxbd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3821 },
+  { "pmovsxbq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3822 },
+  { "pmovsxwd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3823 },
+  { "pmovsxwq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3824 },
+  { "pmovsxdq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3825 },
+  { "pmuldq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3828 },
+  { "pcmpeqq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3829 },
+  { "packusdw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f382b },
+  { "pmovzxbw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3830 },
+  { "pmovzxbd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3831 },
+  { "pmovzxbq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3832 },
+  { "pmovzxwd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3833 },
+  { "pmovzxwq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3834 },
+  { "pmovzxdq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3835 },
+  { "pmulld", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3840 },
+  { "phminposuw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3841 },
+  { "pminsb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3838 },
+  { "pminsd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3839 },
+  { "pminuw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f383a },
+  { "pminud", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f383b },
+  { "pmaxsb", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f383c },
+  { "pmaxsd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f383d },
+  { "pmaxuw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f383e },
+  { "pmaxud", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f383f },
+  { "pcmpgtq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x01, 0x0f3837 },
   { "addps", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x00, 0x0f58 },
   { "subps", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x00, 0x0f5c },
   { "mulps", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x00, 0x0f59 },
@@ -138,29 +138,29 @@ static const OrcSysOpcode orc_x86_opcodes[] = {
   { "minpd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f5d },
   { "maxps", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x00, 0x0f5f },
   { "maxpd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f5f },
-  { "psraw", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x66, 0x0f71, 4 },
-  { "psrlw", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x66, 0x0f71, 2 },
-  { "psllw", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x66, 0x0f71, 6 },
-  { "psrad", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x66, 0x0f72, 4 },
-  { "psrld", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x66, 0x0f72, 2 },
-  { "pslld", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x66, 0x0f72, 6 },
-  { "psrlq", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x66, 0x0f73, 2 },
-  { "psllq", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x66, 0x0f73, 6 },
-  { "psrldq", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x66, 0x0f73, 3 },
-  { "pslldq", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x66, 0x0f73, 7 },
+  { "psraw", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x01, 0x0f71, 4 },
+  { "psrlw", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x01, 0x0f71, 2 },
+  { "psllw", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x01, 0x0f71, 6 },
+  { "psrad", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x01, 0x0f72, 4 },
+  { "psrld", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x01, 0x0f72, 2 },
+  { "pslld", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x01, 0x0f72, 6 },
+  { "psrlq", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x01, 0x0f73, 2 },
+  { "psllq", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x01, 0x0f73, 6 },
+  { "psrldq", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x01, 0x0f73, 3 },
+  { "pslldq", ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT, 0, 0x01, 0x0f73, 7 },
   { "pshufd", ORC_X86_INSN_TYPE_IMM8_MMXM_MMX, 0, 0x66, 0x0f70 },
   { "pshuflw", ORC_X86_INSN_TYPE_IMM8_MMXM_MMX, 0, 0xf2, 0x0f70 },
   { "pshufhw", ORC_X86_INSN_TYPE_IMM8_MMXM_MMX, 0, 0xf3, 0x0f70 },
   { "palignr", ORC_X86_INSN_TYPE_IMM8_MMXM_MMX, 0, 0x66, 0x0f3a0f },
-  { "pinsrw", ORC_X86_INSN_TYPE_IMM8_REGM_MMX, 0, 0x66, 0x0fc4 },
-  { "movd", ORC_X86_INSN_TYPE_REGM_MMX, 0, 0x66, 0x0f6e },
-  { "movq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0xf3, 0x0f7e },
+  { "pinsrw", ORC_X86_INSN_TYPE_IMM8_REGM_MMX, 0, 0x01, 0x0fc4 },
+  { "movd", ORC_X86_INSN_TYPE_REGM_MMX, 0, 0x01, 0x0f6e },
+  { "movq", ORC_X86_INSN_TYPE_SSEM_SSE, 0, 0xf3, 0x0f7e },
   { "movdqa", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f6f },
   { "movdqu", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0xf3, 0x0f6f },
   { "movhps", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x00, 0x0f16 },
-  { "pextrw", ORC_X86_INSN_TYPE_IMM8_MMX_REG_REV, 0, 0x66, 0x0f3a15 },
-  { "movd", ORC_X86_INSN_TYPE_MMX_REGM_REV, 0, 0x66, 0x0f7e },
-  { "movq", ORC_X86_INSN_TYPE_MMXM_MMX_REV, 0, 0x66, 0x0fd6 },
+  { "pextrw", ORC_X86_INSN_TYPE_IMM8_MMX_REG_REV, 0, 0x01, 0x0f3a15 },
+  { "movd", ORC_X86_INSN_TYPE_MMX_REGM_REV, 0, 0x01, 0x0f7e },
+  { "movq", ORC_X86_INSN_TYPE_SSEM_SSE_REV, 0, 0x66, 0x0fd6 },
   { "movdqa", ORC_X86_INSN_TYPE_MMXM_MMX_REV, 0, 0x66, 0x0f7f },
   { "movdqu", ORC_X86_INSN_TYPE_MMXM_MMX_REV, 0, 0xf3, 0x0f7f },
   { "movntdq", ORC_X86_INSN_TYPE_MMXM_MMX_REV, 0, 0x66, 0x0fe7 },
@@ -247,16 +247,25 @@ static const OrcSysOpcode orc_x86_opcodes[] = {
   { "sar", ORC_X86_INSN_TYPE_REGM, 0, 0x00, 0xd1, 7 },
   { "and", ORC_X86_INSN_TYPE_IMM32_A, 0, 0x00, 0x25, 4 },
   { "", ORC_X86_INSN_TYPE_ALIGN, 0, 0x00, 0x00 },
+  { "pshufw", ORC_X86_INSN_TYPE_IMM8_MMXM_MMX, 0, 0x00, 0x0f70 },
+  { "movq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x00, 0x0f6f },
+  { "movq", ORC_X86_INSN_TYPE_MMXM_MMX_REV, 0, 0x00, 0x0f7f },
 };
 
 static void
 output_opcode (OrcCompiler *p, const OrcSysOpcode *opcode, int size,
-    int src, int dest)
+    int src, int dest, int is_sse)
 {
   ORC_ASSERT(opcode->code != 0);
 
   if (opcode->prefix != 0) {
-    *p->codeptr++ = opcode->prefix;
+    if (opcode->prefix == 0x01) {
+      if (is_sse) {
+        *p->codeptr++ = 0x66;
+      }
+    } else {
+      *p->codeptr++ = opcode->prefix;
+    }
   }
   orc_x86_emit_rex (p, size, dest, 0, src);
   if (opcode->code & 0xff0000) {
@@ -268,12 +277,29 @@ output_opcode (OrcCompiler *p, const OrcSysOpcode *opcode, int size,
   *p->codeptr++ = (opcode->code >> 0) & 0xff;
 }
 
+const char *
+orc_x86_get_regname_mmxsse (int reg, int is_sse)
+{
+  if (is_sse) {
+    return orc_x86_get_regname_sse (reg);
+  } else {
+    return orc_x86_get_regname_mmx (reg);
+  }
+}
+
+int
+is_sse_reg (int reg)
+{
+  return (reg >= X86_XMM0) && (reg <= X86_XMM15);
+}
+
 void
 orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
 {
   char imm_str[40] = { 0 };
   char op1_str[40] = { 0 };
   char op2_str[40] = { 0 };
+  int is_sse;
 
   if (xinsn->opcode->type == ORC_X86_INSN_TYPE_ALIGN) {
     if (xinsn->size > 0) ORC_ASM_CODE(p,".p2align %d\n", xinsn->size);
@@ -284,10 +310,16 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
     return;
   }
 
+  is_sse = FALSE;
+  if (is_sse_reg (xinsn->src) || is_sse_reg (xinsn->dest)) {
+    is_sse = TRUE;
+  }
+
   switch (xinsn->opcode->type) {
     case ORC_X86_INSN_TYPE_MMXM_MMX:
     case ORC_X86_INSN_TYPE_SSEM_SSE:
     case ORC_X86_INSN_TYPE_MMXM_MMX_REV:
+    case ORC_X86_INSN_TYPE_SSEM_SSE_REV:
     case ORC_X86_INSN_TYPE_REGM_MMX:
     case ORC_X86_INSN_TYPE_MMX_REGM_REV:
     case ORC_X86_INSN_TYPE_REGM_REG:
@@ -323,7 +355,8 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
     case ORC_X86_INSN_TYPE_SSEM_SSE:
     case ORC_X86_INSN_TYPE_IMM8_MMXM_MMX:
       if (xinsn->type == ORC_X86_RM_REG) {
-        sprintf(op1_str, "%%%s, ", orc_x86_get_regname_sse (xinsn->src));
+        sprintf(op1_str, "%%%s, ",
+            orc_x86_get_regname_mmxsse (xinsn->src, is_sse));
       } else if (xinsn->type == ORC_X86_RM_MEMOFFSET) {
         sprintf(op1_str, "%d(%%%s), ", xinsn->offset,
             orc_x86_get_regname_ptr (p, xinsn->src));
@@ -337,8 +370,10 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
       }
       break;
     case ORC_X86_INSN_TYPE_MMXM_MMX_REV: /* FIXME misnamed */
+    case ORC_X86_INSN_TYPE_SSEM_SSE_REV:
     case ORC_X86_INSN_TYPE_MMX_REGM_REV:
-      sprintf(op1_str, "%%%s, ", orc_x86_get_regname_sse (xinsn->src));
+      sprintf(op1_str, "%%%s, ",
+            orc_x86_get_regname_mmxsse (xinsn->src, is_sse));
       break;
     case ORC_X86_INSN_TYPE_REGM_MMX:
     case ORC_X86_INSN_TYPE_REGM_REG:
@@ -394,11 +429,14 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
     case ORC_X86_INSN_TYPE_IMM8_REGM_MMX:
     case ORC_X86_INSN_TYPE_REGM_MMX:
     case ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT:
-      sprintf(op2_str, "%%%s", orc_x86_get_regname_sse (xinsn->dest));
+      sprintf(op2_str, "%%%s",
+            orc_x86_get_regname_mmxsse (xinsn->dest, is_sse));
       break;
     case ORC_X86_INSN_TYPE_MMXM_MMX_REV:
+    case ORC_X86_INSN_TYPE_SSEM_SSE_REV:
       if (xinsn->type == ORC_X86_RM_REG) {
-        sprintf(op2_str, "%%%s", orc_x86_get_regname_sse (xinsn->dest));
+        sprintf(op2_str, "%%%s",
+            orc_x86_get_regname_mmxsse (xinsn->dest, is_sse));
       } else if (xinsn->type == ORC_X86_RM_MEMOFFSET) {
         sprintf(op2_str, "%d(%%%s)", xinsn->offset,
             orc_x86_get_regname_ptr (p, xinsn->dest));
@@ -500,45 +538,53 @@ orc_uint8 nop_codes[][16] = {
 void
 orc_x86_insn_output_opcode (OrcCompiler *p, OrcX86Insn *xinsn)
 {
+  int is_sse;
+
+  is_sse = FALSE;
+  if (is_sse_reg (xinsn->src) || is_sse_reg (xinsn->dest)) {
+    is_sse = TRUE;
+  }
+
   switch (xinsn->opcode->type) {
     case ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT:
-      output_opcode (p, xinsn->opcode, 4, xinsn->dest, 0);
+      output_opcode (p, xinsn->opcode, 4, xinsn->dest, 0, is_sse);
       break;
     case ORC_X86_INSN_TYPE_MMX_REGM_REV:
     case ORC_X86_INSN_TYPE_MMXM_MMX_REV:
-      output_opcode (p, xinsn->opcode, 4, xinsn->dest, xinsn->src);
+    case ORC_X86_INSN_TYPE_SSEM_SSE_REV:
+      output_opcode (p, xinsn->opcode, 4, xinsn->dest, xinsn->src, is_sse);
       break;
     case ORC_X86_INSN_TYPE_REG_REGM:
     case ORC_X86_INSN_TYPE_IMM8_REGM:
     case ORC_X86_INSN_TYPE_IMM32_REGM:
     case ORC_X86_INSN_TYPE_REG8_REGM:
     case ORC_X86_INSN_TYPE_REG16_REGM:
-      output_opcode (p, xinsn->opcode, xinsn->size, xinsn->dest, xinsn->src);
+      output_opcode (p, xinsn->opcode, xinsn->size, xinsn->dest, xinsn->src, FALSE);
       break;
     case ORC_X86_INSN_TYPE_IMM8_MMXM_MMX:
     case ORC_X86_INSN_TYPE_MMXM_MMX:
     case ORC_X86_INSN_TYPE_SSEM_SSE:
     case ORC_X86_INSN_TYPE_REGM_MMX:
-      output_opcode (p, xinsn->opcode, 4, xinsn->src, xinsn->dest);
+      output_opcode (p, xinsn->opcode, 4, xinsn->src, xinsn->dest, is_sse);
       break;
     case ORC_X86_INSN_TYPE_IMM8_REGM_MMX:
     case ORC_X86_INSN_TYPE_MEM:
     case ORC_X86_INSN_TYPE_REGM_REG:
     case ORC_X86_INSN_TYPE_STACK:
-      output_opcode (p, xinsn->opcode, xinsn->size, xinsn->src, xinsn->dest);
+      output_opcode (p, xinsn->opcode, xinsn->size, xinsn->src, xinsn->dest, FALSE);
       break;
     case ORC_X86_INSN_TYPE_REGM:
-      output_opcode (p, xinsn->opcode, xinsn->size, xinsn->src, xinsn->dest);
+      output_opcode (p, xinsn->opcode, xinsn->size, xinsn->src, xinsn->dest, FALSE);
       break;
     case ORC_X86_INSN_TYPE_IMM32_REGM_MOV:
       orc_x86_emit_rex (p, xinsn->size, 0, 0, xinsn->dest);
       *p->codeptr++ = xinsn->opcode->code + (xinsn->dest&7);
       break;
     case ORC_X86_INSN_TYPE_NONE:
-      output_opcode (p, xinsn->opcode, 4, 0, 0);
+      output_opcode (p, xinsn->opcode, 4, 0, 0, FALSE);
       break;
     case ORC_X86_INSN_TYPE_IMM32_A:
-      output_opcode (p, xinsn->opcode, xinsn->size, 0, 0);
+      output_opcode (p, xinsn->opcode, xinsn->size, 0, 0, FALSE);
       break;
     case ORC_X86_INSN_TYPE_ALIGN:
       {
@@ -583,6 +629,7 @@ orc_x86_insn_output_modrm (OrcCompiler *p, OrcX86Insn *xinsn)
       break;
     case ORC_X86_INSN_TYPE_REG_REGM:
     case ORC_X86_INSN_TYPE_MMXM_MMX_REV:
+    case ORC_X86_INSN_TYPE_SSEM_SSE_REV:
     case ORC_X86_INSN_TYPE_MMX_REGM_REV:
     case ORC_X86_INSN_TYPE_REG8_REGM:
     case ORC_X86_INSN_TYPE_REG16_REGM:
@@ -691,6 +738,7 @@ orc_x86_insn_output_immediate (OrcCompiler *p, OrcX86Insn *xinsn)
     case ORC_X86_INSN_TYPE_MMXM_MMX:
     case ORC_X86_INSN_TYPE_REG_REGM:
     case ORC_X86_INSN_TYPE_MMXM_MMX_REV:
+    case ORC_X86_INSN_TYPE_SSEM_SSE_REV:
     case ORC_X86_INSN_TYPE_MMX_REGM_REV:
     case ORC_X86_INSN_TYPE_REG8_REGM:
     case ORC_X86_INSN_TYPE_REG16_REGM:

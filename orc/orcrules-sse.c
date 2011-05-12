@@ -621,7 +621,7 @@ mmx_rule_ldreslinl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     orc_mmx_emit_punpcklbw (compiler, zero, tmp2);
     orc_mmx_emit_psubw (compiler, tmp, tmp2);
 
-    orc_x86_emit_mov_reg_mmx (compiler, src->ptr_offset, tmp);
+    orc_sse_emit_movd_load_register (compiler, src->ptr_offset, tmp);
     orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(0,0,0,0), tmp, tmp);
     orc_mmx_emit_psrlw_imm (compiler, 8, tmp);
     orc_mmx_emit_pmullw (compiler, tmp2, tmp);
@@ -925,37 +925,6 @@ sse_rule_absl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 
 }
 
-#ifdef MMX
-static void
-sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
-{
-  int type = ORC_PTR_TO_INT(user);
-  int imm_code1[] = { 0x71, 0x71, 0x71, 0x72, 0x72, 0x72, 0x73, 0x73 };
-  int imm_code2[] = { 6, 2, 4, 6, 2, 4, 6, 2 };
-  int reg_code[] = { 0xf1, 0xd1, 0xe1, 0xf2, 0xd2, 0xe2, 0xf3, 0xd3 };
-  const char *code[] = { "psllw", "psrlw", "psraw", "pslld", "psrld", "psrad", "psllq", "psrlq" };
-
-  if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
-    orc_mmx_emit_shiftimm (p, code[type], imm_code1[type], imm_code2[type],
-        p->vars[insn->src_args[1]].value.i,
-        p->vars[insn->dest_args[0]].alloc);
-  } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
-    int tmp = orc_compiler_get_temp_reg (p);
-
-    /* FIXME this is a gross hack to reload the register with a
-     * 64-bit version of the parameter. */
-    orc_x86_emit_mov_memoffset_sse (p, 4,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[1]]),
-        p->exec_reg, tmp, FALSE);
-
-    orc_mmx_emit_660f (p, code[type], reg_code[type], tmp,
-        p->vars[insn->dest_args[0]].alloc);
-  } else {
-    ORC_COMPILER_ERROR(p,"rule only works with constants or params");
-    p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
-  }
-}
-#else
 static void
 sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -991,7 +960,6 @@ sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
     p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
 }
-#endif
 
 static void
 sse_rule_shlb (OrcCompiler *p, void *user, OrcInstruction *insn)

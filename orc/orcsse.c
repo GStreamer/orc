@@ -10,6 +10,7 @@
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
 #include <orc/orcsse.h>
+#include <orc/orcmmx.h>
 #include <orc/orcx86insn.h>
 
 /**
@@ -28,6 +29,7 @@ orc_x86_get_regname_sse(int i)
   };
 
   if (i>=X86_XMM0 && i<X86_XMM0 + 16) return x86_regs[i - X86_XMM0];
+  if (i>=X86_MM0 && i<X86_MM0 + 8) return "ERROR_MMX";
   switch (i) {
     case 0:
       return "UNALLOCATED";
