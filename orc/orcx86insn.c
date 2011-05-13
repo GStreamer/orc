@@ -154,13 +154,13 @@ static const OrcSysOpcode orc_x86_opcodes[] = {
   { "palignr", ORC_X86_INSN_TYPE_IMM8_MMXM_MMX, 0, 0x66, 0x0f3a0f },
   { "pinsrw", ORC_X86_INSN_TYPE_IMM8_REGM_MMX, 0, 0x01, 0x0fc4 },
   { "movd", ORC_X86_INSN_TYPE_REGM_MMX, 0, 0x01, 0x0f6e },
-  { "movq", ORC_X86_INSN_TYPE_SSEM_SSE, 0, 0xf3, 0x0f7e },
+  { "movq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0xf3, 0x0f7e },
   { "movdqa", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f6f },
   { "movdqu", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0xf3, 0x0f6f },
   { "movhps", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x00, 0x0f16 },
   { "pextrw", ORC_X86_INSN_TYPE_IMM8_MMX_REG_REV, 0, 0x01, 0x0f3a15 },
   { "movd", ORC_X86_INSN_TYPE_MMX_REGM_REV, 0, 0x01, 0x0f7e },
-  { "movq", ORC_X86_INSN_TYPE_SSEM_SSE_REV, 0, 0x66, 0x0fd6 },
+  { "movq", ORC_X86_INSN_TYPE_MMXM_MMX_REV, 0, 0x66, 0x0fd6 },
   { "movdqa", ORC_X86_INSN_TYPE_MMXM_MMX_REV, 0, 0x66, 0x0f7f },
   { "movdqu", ORC_X86_INSN_TYPE_MMXM_MMX_REV, 0, 0xf3, 0x0f7f },
   { "movntdq", ORC_X86_INSN_TYPE_MMXM_MMX_REV, 0, 0x66, 0x0fe7 },
@@ -568,6 +568,9 @@ orc_x86_insn_output_opcode (OrcCompiler *p, OrcX86Insn *xinsn)
       output_opcode (p, xinsn->opcode, 4, xinsn->src, xinsn->dest, is_sse);
       break;
     case ORC_X86_INSN_TYPE_IMM8_REGM_MMX:
+      output_opcode (p, xinsn->opcode, xinsn->size, xinsn->src, xinsn->dest,
+          is_sse);
+      break;
     case ORC_X86_INSN_TYPE_MEM:
     case ORC_X86_INSN_TYPE_REGM_REG:
     case ORC_X86_INSN_TYPE_STACK:
