@@ -26,27 +26,15 @@ main (int argc, char *argv[])
   opcode_set = orc_opcode_set_get ("sys");
 
   for(i=0;i<opcode_set->n_opcodes;i++){
-    printf("/* %s %d,%d,%d */\n",
-        opcode_set->opcodes[i].name,
-        opcode_set->opcodes[i].dest_size[0],
-        opcode_set->opcodes[i].src_size[0],
-        opcode_set->opcodes[i].src_size[1]);
+    printf("%s:\n", opcode_set->opcodes[i].name);
     test_opcode (opcode_set->opcodes + i);
   }
   for(i=0;i<opcode_set->n_opcodes;i++){
-    printf("/* %s const %d,%d,%d */\n",
-        opcode_set->opcodes[i].name,
-        opcode_set->opcodes[i].dest_size[0],
-        opcode_set->opcodes[i].src_size[0],
-        opcode_set->opcodes[i].src_size[1]);
+    printf("%s_const:\n", opcode_set->opcodes[i].name);
     test_opcode_const (opcode_set->opcodes + i);
   }
   for(i=0;i<opcode_set->n_opcodes;i++){
-    printf("/* %s param %d,%d,%d */\n",
-        opcode_set->opcodes[i].name,
-        opcode_set->opcodes[i].dest_size[0],
-        opcode_set->opcodes[i].src_size[0],
-        opcode_set->opcodes[i].src_size[1]);
+    printf("%s_param:\n", opcode_set->opcodes[i].name);
     test_opcode_param (opcode_set->opcodes + i);
   }
 
