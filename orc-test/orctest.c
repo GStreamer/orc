@@ -78,9 +78,11 @@ orc_test_gcc_compile (OrcProgram *p)
 
   result = orc_program_compile_full (p, target, flags);
   if (ORC_COMPILE_RESULT_IS_FATAL(result)) {
+    printf ("  error: %s\n", orc_program_get_error (p));
     return ORC_TEST_FAILED;
   }
   if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
+    printf ("  no code generated: %s\n", orc_program_get_error (p));
     return ORC_TEST_INDETERMINATE;
   }
 
@@ -203,6 +205,7 @@ orc_test_gcc_compile_neon (OrcProgram *p)
 
   result = orc_program_compile_full (p, target, flags);
   if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
+    printf ("  no code generated: %s\n", orc_program_get_error (p));
     return ORC_TEST_INDETERMINATE;
   }
 
@@ -296,6 +299,7 @@ orc_test_gcc_compile_c64x (OrcProgram *p)
 
   result = orc_program_compile_full (p, target, flags);
   if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
+    printf ("  no code generated: %s\n", orc_program_get_error (p));
     return ORC_TEST_INDETERMINATE;
   }
 
@@ -553,6 +557,7 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
       goto out;
     }
     if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
+      printf ("  no code generated: %s\n", orc_program_get_error (program));
       ret = ORC_TEST_INDETERMINATE;
       goto out;
     }
