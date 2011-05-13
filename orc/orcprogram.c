@@ -160,6 +160,10 @@ orc_program_free (OrcProgram *program)
     free (program->name);
     program->name = NULL;
   }
+  if (program->error_msg) {
+    free (program->error_msg);
+    program->error_msg = NULL;
+  }
   free (program);
 }
 
@@ -842,6 +846,23 @@ const char *
 orc_program_get_asm_code (OrcProgram *program)
 {
   return program->asm_code;
+}
+
+/**
+ * orc_program_get_error:
+ * @program: a pointer to an OrcProgram structure
+ *
+ * Returns a character string containing the error message from
+ * compilation.  This string is valid until the program
+ * is compiled again or the program is freed.
+ * 
+ * Returns: a character string
+ */
+const char *
+orc_program_get_error (OrcProgram *program)
+{
+  if (program->error_msg) return program->error_msg;
+  return "";
 }
 
 /**

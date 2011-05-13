@@ -482,7 +482,7 @@ mmx_load_constants_outer (OrcCompiler *compiler)
       case ORC_VAR_TYPE_TEMP:
         break;
       default:
-        ORC_COMPILER_ERROR(compiler,"bad vartype");
+        orc_compiler_error(compiler,"bad vartype");
         break;
     }
   }
@@ -555,7 +555,7 @@ mmx_load_constants_inner (OrcCompiler *compiler)
       case ORC_VAR_TYPE_TEMP:
         break;
       default:
-        ORC_COMPILER_ERROR(compiler,"bad vartype");
+        orc_compiler_error(compiler,"bad vartype");
         break;
     }
   }
@@ -583,7 +583,7 @@ mmx_add_strides (OrcCompiler *compiler)
             (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]), compiler->exec_reg);
 
         if (compiler->vars[i].ptr_register == 0) {
-          ORC_COMPILER_ERROR(compiler, "unimplemented: stride on mem pointer");
+          orc_compiler_error (compiler, "unimplemented: stride on pointer stored in memory");
         }
         break;
       case ORC_VAR_TYPE_ACCUMULATOR:
@@ -591,7 +591,7 @@ mmx_add_strides (OrcCompiler *compiler)
       case ORC_VAR_TYPE_TEMP:
         break;
       default:
-        ORC_COMPILER_ERROR(compiler,"bad vartype");
+        orc_compiler_error(compiler,"bad vartype");
         break;
     }
   }
@@ -618,7 +618,7 @@ get_align_var (OrcCompiler *compiler)
     return i;
   }
 
-  ORC_COMPILER_ERROR(compiler, "could not find alignment variable");
+  orc_compiler_error(compiler, "could not find alignment variable");
 
   return -1;
 }
@@ -1036,7 +1036,8 @@ orc_mmx_emit_loop (OrcCompiler *compiler, int offset, int update)
       }
       rule->emit (compiler, rule->emit_user, insn);
     } else {
-      ORC_COMPILER_ERROR(compiler,"No rule for: %s", opcode->name);
+      orc_compiler_error (compiler, "no code generation rule for %s",
+          opcode->name);
     }
   }
 
@@ -1101,7 +1102,8 @@ orc_mmx_emit_invariants (OrcCompiler *compiler)
     if (rule && rule->emit) {
       rule->emit (compiler, rule->emit_user, insn);
     } else {
-      ORC_COMPILER_ERROR(compiler,"No rule for: %s", opcode->name);
+      orc_compiler_error (compiler, "no code generation rule for %s",
+          opcode->name);
     }
   }
 }

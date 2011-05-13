@@ -413,6 +413,7 @@ struct _OrcProgram {
 
   /* Hide this here.  Belongs in a Parser object */
   char *init_function;
+  char *error_msg;
 };
 
 /**
@@ -447,6 +448,7 @@ struct _OrcCompiler {
   int n_labels;
 
   int error;
+  char *error_msg;
   OrcCompileResult result;
 
   int valid_regs[ORC_N_REGS];
@@ -739,6 +741,7 @@ int orc_compiler_try_get_constant_long (OrcCompiler *compiler, orc_uint32 a,
 int orc_compiler_get_temp_constant (OrcCompiler *compiler, int size, int value);
 int orc_compiler_get_temp_reg (OrcCompiler *compiler);
 int orc_compiler_get_constant_reg (OrcCompiler *compiler);
+void orc_compiler_error (OrcCompiler *compiler, const char *fmt, ...);
 
 void orc_program_reset (OrcProgram *program);
 OrcCode *orc_program_take_code (OrcProgram *program);
@@ -747,6 +750,7 @@ const char *orc_program_get_asm_code (OrcProgram *program);
 const char *orc_target_get_asm_preamble (const char *target);
 const char * orc_target_get_preamble (OrcTarget *target);
 const char * orc_target_c_get_typedefs (void);
+const char * orc_program_get_error (OrcProgram *program);
 
 void orc_compiler_append_code (OrcCompiler *p, const char *fmt, ...)
   ORC_GNU_PRINTF(2,3);

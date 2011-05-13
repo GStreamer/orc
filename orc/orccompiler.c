@@ -115,7 +115,7 @@ orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
   }
 
   if (data_reg || !compiler->allow_gp_on_stack) {
-    ORC_COMPILER_ERROR (compiler, "register overflow for %s reg",
+    orc_compiler_error (compiler, "register overflow for %s reg",
         data_reg ? "vector" : "gp");
     compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
@@ -308,7 +308,7 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   }
 
   if (program->backup_func && _orc_compiler_flag_backup) {
-    ORC_COMPILER_ERROR(compiler, "Compilation disabled");
+    orc_compiler_error (compiler, "Compilation disabled");
     compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
     goto error;
   }
@@ -368,9 +368,16 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   return result;
 error:
 
-  ORC_WARNING("program %s failed to compile, reason %d",
-      program->name, compiler->result);
+  if (compiler->error_msg) {
+    ORC_WARNING ("program %s failed to compile, reason: %s",
+        program->name, compiler->error_msg);
+  } else {
+    ORC_WARNING("program %s failed to compile, reason %d",
+        program->name, compiler->result);
+  }
   result = compiler->result;
+  if (program->error_msg) free (program->error_msg);
+  program->error_msg = compiler->error_msg;
   if (result == 0) {
     result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
@@ -412,7 +419,7 @@ orc_compiler_check_sizes (OrcCompiler *compiler)
       if (opcode->dest_size[j] == 0) continue;
       if (multiplier * opcode->dest_size[j] !=
           compiler->vars[insn->dest_args[j]].size) {
-        ORC_COMPILER_ERROR(compiler, "size mismatch, opcode %s dest[%d] is %d should be %d",
+        ORC_COMPILER_ERROR (compiler, "size mismatch, opcode %s dest[%d] is %d should be %d",
             opcode->name, j, compiler->vars[insn->dest_args[j]].size,
             multiplier * opcode->dest_size[j]);
         compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE;
@@ -622,8 +629,8 @@ orc_compiler_assign_rules (OrcCompiler *compiler)
         compiler->target_flags);
 
     if (insn->rule == NULL || insn->rule->emit == NULL) {
-      ORC_COMPILER_ERROR(compiler, "No rule for: %s on target %s",
-          insn->opcode->name, compiler->target->name);
+      orc_compiler_error (compiler, "no code generation rule for %s on "
+          "target %s", insn->opcode->name, compiler->target->name);
       compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
       return;
     }
@@ -669,7 +676,7 @@ orc_compiler_get_temp_reg (OrcCompiler *compiler)
     }
   }
 
-  ORC_COMPILER_ERROR(compiler,"no temporary register available");
+  orc_compiler_error (compiler, "no temporary register available");
   compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
 
   return 0;
@@ -823,7 +830,7 @@ orc_compiler_global_reg_alloc (OrcCompiler *compiler)
       case ORC_VAR_TYPE_TEMP:
         break;
       default:
-        ORC_COMPILER_ERROR(compiler, "bad vartype");
+        orc_compiler_error (compiler, "bad vartype");
         compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE;
         break;
     }
@@ -1165,5 +1172,32 @@ orc_compiler_get_constant_reg (OrcCompiler *compiler)
   }
 
   return 0;
+}
+
+#define ORC_COMPILER_ERROR_BUFFER_SIZE 200
+
+void
+orc_compiler_error_valist (OrcCompiler *compiler, const char *fmt,
+    va_list args)
+{
+  char *s;
+
+  if (compiler->error_msg) return;
+
+  s = malloc (ORC_COMPILER_ERROR_BUFFER_SIZE);
+  vsprintf (s, fmt, args);
+  compiler->error_msg = s;
+  compiler->error = TRUE;
+  compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
+}
+
+void
+orc_compiler_error (OrcCompiler *compiler, const char *fmt, ...)
+{
+  va_list var_args;
+
+  va_start (var_args, fmt);
+  orc_compiler_error_valist (compiler, fmt, var_args);
+  va_end (var_args);
 }
 
