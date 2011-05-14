@@ -156,8 +156,8 @@ main(int argc, char *argv[])
     orc_profile_get_ave_std (&prof, &ave, &std);
     orc_profile_get_ave_std (&prof_libc, &ave_libc, &std_libc);
 
-    ave -= null + 65 + 20;
-    ave_libc -= null + 40;
+    ave -= null;
+    ave_libc -= null;
 
     //printf("%d: %10.4g %10.4g %10.4g %10.4g (libc %10.4g)\n", i, ave, std,
     //    ave/(1<<i), cpufreq/(ave/(1<<i)),
