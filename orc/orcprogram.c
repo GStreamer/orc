@@ -305,6 +305,7 @@ orc_program_add_source (OrcProgram *program, int size, const char *name)
 
   program->vars[i].vartype = ORC_VAR_TYPE_SRC;
   program->vars[i].size = size;
+  program->vars[i].alignment = size;
   program->vars[i].name = strdup(name);
   program->n_src_vars++;
 
@@ -328,6 +329,7 @@ orc_program_add_destination (OrcProgram *program, int size, const char *name)
 
   program->vars[i].vartype = ORC_VAR_TYPE_DEST;
   program->vars[i].size = size;
+  program->vars[i].alignment = size;
   program->vars[i].name = strdup(name);
   program->n_dest_vars++;
 
@@ -554,6 +556,15 @@ void
 orc_program_set_type_name (OrcProgram *program, int var, const char *type_name)
 {
   program->vars[var].type_name = strdup(type_name);
+}
+
+void
+orc_program_set_var_alignment (OrcProgram *program, int var, int alignment)
+{
+  program->vars[var].alignment = alignment;
+  if (alignment >= 16) {
+    program->vars[var].is_aligned = TRUE;
+  }
 }
 
 void

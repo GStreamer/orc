@@ -161,16 +161,40 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
       } else if (strcmp (token[0], ".source") == 0) {
         int size = strtol (token[1], NULL, 0);
         int var;
+        int i;
         var = orc_program_add_source (parser->program, size, token[2]);
-        if (n_tokens > 3) {
-          orc_program_set_type_name (parser->program, var, token[3]);
+        for(i=3;i<n_tokens;i++){
+          if (strcmp (token[i], "align") == 0) {
+            if (i == n_tokens - 1) {
+              orc_parse_log (parser, "error: line %d: .source align requires alignment value\n",
+                  parser->line_number);
+            } else {
+              int alignment = strtol (token[i+1], NULL, 0);
+              orc_program_set_var_alignment (parser->program, var, alignment);
+              i++;
+            }
+          } else {
+            orc_program_set_type_name (parser->program, var, token[i]);
+          }
         }
       } else if (strcmp (token[0], ".dest") == 0) {
         int size = strtol (token[1], NULL, 0);
         int var;
+        int i;
         var = orc_program_add_destination (parser->program, size, token[2]);
-        if (n_tokens > 3) {
-          orc_program_set_type_name (parser->program, var, token[3]);
+        for(i=3;i<n_tokens;i++){
+          if (strcmp (token[i], "align") == 0) {
+            if (i == n_tokens - 1) {
+              orc_parse_log (parser, "error: line %d: .source align requires alignment value\n",
+                  parser->line_number);
+            } else {
+              int alignment = strtol (token[i+1], NULL, 0);
+              orc_program_set_var_alignment (parser->program, var, alignment);
+              i++;
+            }
+          } else {
+            orc_program_set_type_name (parser->program, var, token[i]);
+          }
         }
       } else if (strcmp (token[0], ".accumulator") == 0) {
         int size = strtol (token[1], NULL, 0);

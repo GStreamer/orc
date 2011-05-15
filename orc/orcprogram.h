@@ -222,6 +222,7 @@ struct _OrcVariable {
   int alloc;
   int is_chained;
   int is_aligned;
+  int alignment;
   int is_uncached;
 
   orc_union64 value;
@@ -692,6 +693,7 @@ int orc_program_add_parameter_double (OrcProgram *program, int size, const char 
 int orc_program_add_parameter_int64 (OrcProgram *program, int size, const char *name);
 int orc_program_add_accumulator (OrcProgram *program, int size, const char *name);
 void orc_program_set_type_name (OrcProgram *program, int var, const char *type_name);
+void orc_program_set_var_alignment (OrcProgram *program, int var, int alignment);
 void orc_program_set_sampling_type (OrcProgram *program, int var, int sampling_type);
 
 OrcExecutor * orc_executor_new (OrcProgram *program);
