@@ -893,7 +893,7 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
     if (var->size) {
       if (var->alignment != var->size) {
         REQUIRE(0,4,14,1);
-        fprintf(output, "      orc_program_add_destination_full (p, %d, \"%s\", NULL, %d);\n",
+        fprintf(output, "      orc_program_add_destination_full (p, %d, \"%s\", 0, %d);\n",
             var->size, varnames[ORC_VAR_D1 + i], var->alignment);
       } else {
         fprintf(output, "      orc_program_add_destination (p, %d, \"%s\");\n",
@@ -906,7 +906,7 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
     if (var->size) {
       if (var->alignment != var->size) {
         REQUIRE(0,4,14,1);
-        fprintf(output, "      orc_program_add_source_full (p, %d, \"%s\", NULL, %d);\n",
+        fprintf(output, "      orc_program_add_source_full (p, %d, \"%s\", 0, %d);\n",
             var->size, varnames[ORC_VAR_S1 + i],
             var->alignment);
       } else {
