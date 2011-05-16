@@ -153,8 +153,40 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
           }
         }
       } else if (strcmp (token[0], ".n") == 0) {
-        int size = strtol (token[1], NULL, 0);
-        orc_program_set_constant_n (parser->program, size);
+        int i;
+        for(i=1;i<n_tokens;i++){
+          if (strcmp (token[i], "mult") == 0) {
+            if (i == n_tokens - 1) {
+              orc_parse_log (parser, "error: line %d: .n mult requires multiple value\n",
+                  parser->line_number);
+            } else {
+              orc_program_set_n_multiple (parser->program,
+                  strtol (token[1], NULL, 0));
+              i++;
+            }
+          } else if (strcmp (token[i], "min") == 0) {
+            if (i == n_tokens - 1) {
+              orc_parse_log (parser, "error: line %d: .n mult requires multiple value\n",
+                  parser->line_number);
+            } else {
+              orc_program_set_n_minimum (parser->program,
+                  strtol (token[1], NULL, 0));
+              i++;
+            }
+          } else if (strcmp (token[i], "max") == 0) {
+            if (i == n_tokens - 1) {
+              orc_parse_log (parser, "error: line %d: .n mult requires multiple value\n",
+                  parser->line_number);
+            } else {
+              orc_program_set_n_maximum (parser->program,
+                  strtol (token[1], NULL, 0));
+              i++;
+            }
+          } else {
+            orc_program_set_constant_n (parser->program,
+                strtol (token[1], NULL, 0));
+          }
+        }
       } else if (strcmp (token[0], ".m") == 0) {
         int size = strtol (token[1], NULL, 0);
         orc_program_set_constant_m (parser->program, size);

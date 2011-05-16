@@ -408,6 +408,9 @@ struct _OrcProgram {
   void *backup_func;
   int is_2d;
   int constant_n;
+  int n_multiple;
+  int n_minimum;
+  int n_maximum;
   int constant_m;
 
   OrcCode *orccode;
@@ -643,6 +646,9 @@ const char * orc_program_get_name (OrcProgram *program);
 void orc_program_set_name (OrcProgram *program, const char *name);
 void orc_program_set_2d (OrcProgram *program);
 void orc_program_set_constant_n (OrcProgram *program, int n);
+void orc_program_set_n_multiple (OrcProgram *ex, int n);
+void orc_program_set_n_minimum (OrcProgram *ex, int n);
+void orc_program_set_n_maximum (OrcProgram *ex, int n);
 void orc_program_set_constant_m (OrcProgram *program, int m);
 
 void orc_program_append (OrcProgram *p, const char *opcode, int arg0, int arg1, int arg2);
@@ -681,7 +687,11 @@ int orc_program_find_var_by_name (OrcProgram *program, const char *name);
 int orc_program_add_temporary (OrcProgram *program, int size, const char *name);
 int orc_program_dup_temporary (OrcProgram *program, int i, int j);
 int orc_program_add_source (OrcProgram *program, int size, const char *name);
+int orc_program_add_source_full (OrcProgram *program, int size, const char *name,
+    const char *type_name, int alignment);
 int orc_program_add_destination (OrcProgram *program, int size, const char *name);
+int orc_program_add_destination_full (OrcProgram *program, int size, const char *name,
+    const char *type_name, int alignment);
 int orc_program_add_constant (OrcProgram *program, int size, int value, const char *name);
 int orc_program_add_constant_int64 (OrcProgram *program, int size, orc_int64 value, const char *name);
 int orc_program_add_constant_float (OrcProgram *program, int size, float value, const char *name);

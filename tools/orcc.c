@@ -861,6 +861,21 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
     fprintf(output, "      orc_program_set_constant_n (p, %d);\n",
         p->constant_n);
   }
+  if (p->n_multiple != 0) {
+    REQUIRE(0,4,14,1);
+    fprintf(output, "      orc_program_set_n_multiple (p, %d);\n",
+        p->constant_n);
+  }
+  if (p->n_minimum != 0) {
+    REQUIRE(0,4,14,1);
+    fprintf(output, "      orc_program_set_n_minimum (p, %d);\n",
+        p->constant_n);
+  }
+  if (p->n_maximum != 0) {
+    REQUIRE(0,4,14,1);
+    fprintf(output, "      orc_program_set_n_maximum (p, %d);\n",
+        p->constant_n);
+  }
   if (p->is_2d) {
     fprintf(output, "      orc_program_set_2d (p);\n");
     if (p->constant_m != 0) {
@@ -876,15 +891,28 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
   for(i=0;i<4;i++){
     var = &p->vars[ORC_VAR_D1 + i];
     if (var->size) {
-      fprintf(output, "      orc_program_add_destination (p, %d, \"%s\");\n",
-          var->size, varnames[ORC_VAR_D1 + i]);
+      if (var->alignment != var->size) {
+        REQUIRE(0,4,14,1);
+        fprintf(output, "      orc_program_add_destination_full (p, %d, \"%s\", NULL, %d);\n",
+            var->size, varnames[ORC_VAR_D1 + i], var->alignment);
+      } else {
+        fprintf(output, "      orc_program_add_destination (p, %d, \"%s\");\n",
+            var->size, varnames[ORC_VAR_D1 + i]);
+      }
     }
   }
   for(i=0;i<8;i++){
     var = &p->vars[ORC_VAR_S1 + i];
     if (var->size) {
-      fprintf(output, "      orc_program_add_source (p, %d, \"%s\");\n",
-          var->size, varnames[ORC_VAR_S1 + i]);
+      if (var->alignment != var->size) {
+        REQUIRE(0,4,14,1);
+        fprintf(output, "      orc_program_add_source_full (p, %d, \"%s\", NULL, %d);\n",
+            var->size, varnames[ORC_VAR_S1 + i],
+            var->alignment);
+      } else {
+        fprintf(output, "      orc_program_add_source (p, %d, \"%s\");\n",
+            var->size, varnames[ORC_VAR_S1 + i]);
+      }
     }
   }
   for(i=0;i<4;i++){

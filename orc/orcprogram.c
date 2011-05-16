@@ -202,6 +202,21 @@ void orc_program_set_constant_n (OrcProgram *program, int n)
   program->constant_n = n;
 }
 
+void orc_program_set_n_multiple (OrcProgram *program, int n)
+{
+  program->n_multiple = n;
+}
+
+void orc_program_set_n_minimum (OrcProgram *program, int n)
+{
+  program->n_minimum = n;
+}
+
+void orc_program_set_n_maximum (OrcProgram *program, int n)
+{
+  program->n_maximum = n;
+}
+
 void orc_program_set_constant_m (OrcProgram *program, int m)
 {
   program->constant_m = m;
@@ -289,6 +304,37 @@ orc_program_dup_temporary (OrcProgram *program, int var, int j)
 }
 
 /**
+ * orc_program_add_source_full:
+ * @program: a pointer to an OrcProgram structure
+ * @size: size of data values
+ * @name: name of variable
+ * @type_name: name of type, or NULL
+ * @alignment: alignment in bytes, or 0
+ *
+ * Creates a new variable representing a source array.
+ *
+ * Returns: the index of the new variable
+ */
+int
+orc_program_add_source_full (OrcProgram *program, int size, const char *name,
+    const char *type_name, int alignment)
+{
+  int i = ORC_VAR_S1 + program->n_src_vars;
+
+  program->vars[i].vartype = ORC_VAR_TYPE_SRC;
+  program->vars[i].size = size;
+  if (alignment == 0) alignment = size;
+  program->vars[i].alignment = alignment;
+  program->vars[i].name = strdup(name);
+  if (type_name) {
+    program->vars[i].type_name = strdup(type_name);
+  }
+  program->n_src_vars++;
+
+  return i;
+}
+
+/**
  * orc_program_add_source:
  * @program: a pointer to an OrcProgram structure
  * @size: size of data values
@@ -301,13 +347,34 @@ orc_program_dup_temporary (OrcProgram *program, int var, int j)
 int
 orc_program_add_source (OrcProgram *program, int size, const char *name)
 {
-  int i = ORC_VAR_S1 + program->n_src_vars;
+  return orc_program_add_source_full (program, size, name, NULL, 0);
+}
 
-  program->vars[i].vartype = ORC_VAR_TYPE_SRC;
+/**
+ * orc_program_add_destination_full:
+ * @program: a pointer to an OrcProgram structure
+ * @size: size of data values
+ * @name: name of variable
+ *
+ * Creates a new variable representing a destination array.
+ *
+ * Returns: the index of the new variable
+ */
+int
+orc_program_add_destination_full (OrcProgram *program, int size, const char *name,
+    const char *type_name, int alignment)
+{
+  int i = ORC_VAR_D1 + program->n_dest_vars;
+
+  program->vars[i].vartype = ORC_VAR_TYPE_DEST;
   program->vars[i].size = size;
-  program->vars[i].alignment = size;
+  if (alignment == 0) alignment = size;
+  program->vars[i].alignment = alignment;
   program->vars[i].name = strdup(name);
-  program->n_src_vars++;
+  if (type_name) {
+    program->vars[i].type_name = strdup(type_name);
+  }
+  program->n_dest_vars++;
 
   return i;
 }
@@ -325,15 +392,7 @@ orc_program_add_source (OrcProgram *program, int size, const char *name)
 int
 orc_program_add_destination (OrcProgram *program, int size, const char *name)
 {
-  int i = ORC_VAR_D1 + program->n_dest_vars;
-
-  program->vars[i].vartype = ORC_VAR_TYPE_DEST;
-  program->vars[i].size = size;
-  program->vars[i].alignment = size;
-  program->vars[i].name = strdup(name);
-  program->n_dest_vars++;
-
-  return i;
+  return orc_program_add_destination_full (program, size, name, NULL, 0);
 }
 
 /**
