@@ -286,10 +286,10 @@ show (OrcProgram *program)
     if (program->vars[i].name == NULL) continue;
 
     if (program->vars[i].vartype == ORC_VAR_TYPE_SRC) {
-      src[i-ORC_VAR_S1] = orc_array_new (n, m, program->vars[i].size, 0);
+      src[i-ORC_VAR_S1] = orc_array_new (n, m, program->vars[i].size, 0, 0);
       orc_array_set_random (src[i-ORC_VAR_S1], &rand_context);
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
-      dest[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size, 0);
+      dest[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size, 0, 0);
       orc_array_set_pattern (dest[i], ORC_OOB_VALUE);
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_PARAM) {
       switch (program->vars[i].param_type) {

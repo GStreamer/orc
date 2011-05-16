@@ -2346,4 +2346,35 @@ splitwb t1, t2, vv
 avgub v, t1, t2
 
 
+.function memcpy_aligned
+.dest 1 d1 align 16 void
+.source 1 s1 align 16 void
+
+copyb d1, s1
+
+
+.function memcpy_large
+.n minimum 4096
+.dest 1 d1 void
+.source 1 s1 void
+
+copyb d1, s1
+
+
+.function memcpy_small
+.n maximum 4096
+.dest 1 d1 void
+.source 1 s1 void
+
+copyb d1, s1
+
+
+.function memcpy_aligned_n16
+.n multiple 16
+.dest 1 d1 align 16 void
+.source 1 s1 align 16 void
+
+copyb d1, s1
+
+
 

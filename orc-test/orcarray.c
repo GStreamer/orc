@@ -22,13 +22,15 @@
 #define MISALIGNMENT 0
 
 OrcArray *
-orc_array_new (int n, int m, int element_size, int misalignment)
+orc_array_new (int n, int m, int element_size, int misalignment,
+    int alignment)
 {
   OrcArray *ar;
   void *data;
 #ifdef HAVE_POSIX_MEMALIGN
   int ret;
 #endif
+  int offset;
 
   ar = malloc (sizeof(OrcArray));
   memset (ar, 0, sizeof(OrcArray));
@@ -48,8 +50,11 @@ orc_array_new (int n, int m, int element_size, int misalignment)
 #endif
   ar->alloc_data = data;
 
+  if (alignment == 0) alignment = element_size;
+  offset = (alignment * misalignment) & (ALIGNMENT - 1);
+
   ar->data = ORC_PTR_OFFSET (ar->alloc_data,
-      ar->stride * EXTEND_ROWS + element_size * misalignment);
+      ar->stride * EXTEND_ROWS + offset);
   
   return ar;
 }

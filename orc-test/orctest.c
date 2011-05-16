@@ -589,15 +589,15 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
 
     if (program->vars[i].vartype == ORC_VAR_TYPE_SRC) {
       src[i-ORC_VAR_S1] = orc_array_new (n, m, program->vars[i].size,
-          misalignment);
+          misalignment, program->vars[i].alignment);
       orc_array_set_random (src[i-ORC_VAR_S1], &rand_context);
       misalignment++;
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
       dest_exec[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size,
-          misalignment);
+          misalignment, program->vars[i].alignment);
       orc_array_set_pattern (dest_exec[i], ORC_OOB_VALUE);
       dest_emul[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size,
-          misalignment);
+          misalignment, program->vars[i].alignment);
       orc_array_set_pattern (dest_emul[i], ORC_OOB_VALUE);
       misalignment++;
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_PARAM) {
@@ -990,15 +990,15 @@ orc_test_performance_full (OrcProgram *program, int flags,
 
     if (program->vars[i].vartype == ORC_VAR_TYPE_SRC) {
       src[i-ORC_VAR_S1] = orc_array_new (n, m, program->vars[i].size,
-          misalignment);
+          misalignment, program->vars[i].alignment);
       orc_array_set_random (src[i-ORC_VAR_S1], &rand_context);
       misalignment++;
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
       dest_exec[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size,
-          misalignment);
+          misalignment, program->vars[i].alignment);
       orc_array_set_pattern (dest_exec[i], ORC_OOB_VALUE);
       dest_emul[i-ORC_VAR_D1] = orc_array_new (n, m, program->vars[i].size,
-          misalignment);
+          misalignment, program->vars[i].alignment);
       orc_array_set_pattern (dest_emul[i], ORC_OOB_VALUE);
       misalignment++;
     } else if (program->vars[i].vartype == ORC_VAR_TYPE_PARAM) {

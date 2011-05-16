@@ -27,7 +27,8 @@ enum {
   ORC_PATTERN_FLOAT_DENORMAL
 };
 
-OrcArray *orc_array_new (int n, int m, int element_size, int misalignment);
+OrcArray *orc_array_new (int n, int m, int element_size, int misalignment,
+    int alignment);
 void orc_array_free (OrcArray *array);
 
 void orc_array_set_pattern (OrcArray *array, int value);
