@@ -339,6 +339,7 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
     case ORC_X86_INSN_TYPE_IMM8_MMXM_MMX:
     case ORC_X86_INSN_TYPE_IMM8_REGM_MMX:
     case ORC_X86_INSN_TYPE_IMM8_REGM:
+    case ORC_X86_INSN_TYPE_IMM8_MMX_REG_REV:
     case ORC_X86_INSN_TYPE_IMM32_REGM:
     case ORC_X86_INSN_TYPE_IMM32_REGM_MOV:
     case ORC_X86_INSN_TYPE_IMM32_A:
@@ -372,6 +373,7 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
     case ORC_X86_INSN_TYPE_MMXM_MMX_REV: /* FIXME misnamed */
     case ORC_X86_INSN_TYPE_SSEM_SSE_REV:
     case ORC_X86_INSN_TYPE_MMX_REGM_REV:
+    case ORC_X86_INSN_TYPE_IMM8_MMX_REG_REV:
       sprintf(op1_str, "%%%s, ",
             orc_x86_get_regname_mmxsse (xinsn->src, is_sse));
       break;
@@ -457,6 +459,7 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
     case ORC_X86_INSN_TYPE_REG8_REGM:
     case ORC_X86_INSN_TYPE_REG16_REGM:
     case ORC_X86_INSN_TYPE_REG_REGM:
+    case ORC_X86_INSN_TYPE_IMM8_MMX_REG_REV:
       if (xinsn->type == ORC_X86_RM_REG) {
         sprintf(op2_str, "%%%s", orc_x86_get_regname (xinsn->dest));
       } else if (xinsn->type == ORC_X86_RM_MEMOFFSET) {
@@ -571,6 +574,10 @@ orc_x86_insn_output_opcode (OrcCompiler *p, OrcX86Insn *xinsn)
       output_opcode (p, xinsn->opcode, xinsn->size, xinsn->src, xinsn->dest,
           is_sse);
       break;
+    case ORC_X86_INSN_TYPE_IMM8_MMX_REG_REV:
+      output_opcode (p, xinsn->opcode, 4, xinsn->dest, xinsn->src,
+          is_sse);
+      break;
     case ORC_X86_INSN_TYPE_MEM:
     case ORC_X86_INSN_TYPE_REGM_REG:
     case ORC_X86_INSN_TYPE_STACK:
@@ -634,6 +641,7 @@ orc_x86_insn_output_modrm (OrcCompiler *p, OrcX86Insn *xinsn)
     case ORC_X86_INSN_TYPE_MMXM_MMX_REV:
     case ORC_X86_INSN_TYPE_SSEM_SSE_REV:
     case ORC_X86_INSN_TYPE_MMX_REGM_REV:
+    case ORC_X86_INSN_TYPE_IMM8_MMX_REG_REV:
     case ORC_X86_INSN_TYPE_REG8_REGM:
     case ORC_X86_INSN_TYPE_REG16_REGM:
       if (xinsn->type == ORC_X86_RM_REG) {
@@ -748,6 +756,7 @@ orc_x86_insn_output_immediate (OrcCompiler *p, OrcX86Insn *xinsn)
       break;
     case ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT:
     case ORC_X86_INSN_TYPE_IMM8_REGM_MMX:
+    case ORC_X86_INSN_TYPE_IMM8_MMX_REG_REV:
     case ORC_X86_INSN_TYPE_IMM8_MMXM_MMX:
     case ORC_X86_INSN_TYPE_IMM8_REGM:
       *p->codeptr++ = xinsn->imm;
