@@ -274,7 +274,7 @@ orc_x86_emit_mov_memoffset_reg (OrcCompiler *compiler, int size, int offset,
       orc_x86_emit_cpuinsn_memoffset_reg (compiler, ORC_X86_mov_rm_r, size, offset, reg1, reg2);
       break;
     default:
-      ORC_COMPILER_ERROR(compiler, "bad size");
+      orc_compiler_error(compiler, "bad size");
       break;
   }
 }
@@ -301,7 +301,7 @@ orc_x86_emit_mov_reg_memoffset (OrcCompiler *compiler, int size, int reg1, int o
           reg1, offset, reg2);
       break;
     default:
-      ORC_COMPILER_ERROR(compiler, "bad size");
+      orc_compiler_error(compiler, "bad size");
       break;
   }
 
@@ -429,7 +429,7 @@ orc_x86_do_fixups (OrcCompiler *compiler)
 
       diff = ((orc_int8)ptr[0]) + (label - ptr);
       if (diff != (orc_int8)diff) {
-        ORC_COMPILER_ERROR(compiler, "short jump too long %d", diff);
+        orc_compiler_error (compiler, "short jump too long %d", diff);
       }
 
       ptr[0] = diff;
