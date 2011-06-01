@@ -516,7 +516,7 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
 }
 
 orc_uint8 nop_codes[][16] = {
-  { },
+  { 0 /* MSVC wants something here */ },
   { 0x90 },
   { 0x66, 0x90 }, /* xchg %ax,%ax */
   { 0x0f, 0x1f, 0x00 }, /*  nopl (%rax) */
