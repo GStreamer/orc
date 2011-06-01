@@ -7,6 +7,7 @@
 #include <orc/orccpuinsn.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 
 static const OrcSysOpcode orc_x86_opcodes[] = {
@@ -788,14 +789,17 @@ orc_x86_insn_output_immediate (OrcCompiler *p, OrcX86Insn *xinsn)
 OrcX86Insn *
 orc_x86_get_output_insn (OrcCompiler *p)
 {
+  OrcX86Insn *xinsn;
   if (p->n_output_insns >= p->n_output_insns_alloc) {
     p->n_output_insns_alloc += 10;
     p->output_insns = realloc (p->output_insns,
         sizeof(OrcX86Insn) * p->n_output_insns_alloc);
   }
 
+  xinsn = ((OrcX86Insn *)p->output_insns) + p->n_output_insns;
+  memset (xinsn, 0, sizeof(OrcX86Insn));
   p->n_output_insns++;
-  return ((OrcX86Insn *)p->output_insns) + (p->n_output_insns - 1);
+  return xinsn;
 }
 
 void
