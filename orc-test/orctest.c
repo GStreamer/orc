@@ -16,6 +16,7 @@
 
 #ifdef _MSC_VER
 #define isnan(x) _isnan(x)
+#define snprintf _snprintf
 #endif
 
 #define MIN_NONDENORMAL (1.1754944909521339405e-38)
