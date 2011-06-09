@@ -263,12 +263,12 @@ orc_code_region_allocate_codemem (OrcCodeRegion *region)
   if (tmpdir && orc_code_region_allocate_codemem_dual_map (region,
         tmpdir, FALSE)) return;
 
+  if (orc_code_region_allocate_codemem_dual_map (region,
+        "/tmp", FALSE)) return;
+
   tmpdir = getenv ("HOME");
   if (tmpdir && orc_code_region_allocate_codemem_dual_map (region,
         tmpdir, FALSE)) return;
-
-  if (orc_code_region_allocate_codemem_dual_map (region, "/tmp", FALSE))
-    return;
 
   if (orc_code_region_allocate_codemem_anon_map (region)) return;
   
