@@ -2,7 +2,7 @@ AC_PREREQ([2.58])
 AC_INIT(orc,0.4.14.1)
 dnl don't forget to update libversion
 
-AS_NANO(ORC_CVS=no,ORC_CVS=yes)
+AS_NANO(ORC_GIT=no,ORC_GIT=yes)
 
 AC_CANONICAL_HOST([])
 AM_INIT_AUTOMAKE(1.6)
@@ -85,7 +85,7 @@ fi
 AC_CHECK_HEADERS([valgrind/valgrind.h])
 
 AS_COMPILER_FLAG(-Wall, ORC_CFLAGS="$ORC_CFLAGS -Wall")
-if test "x$ORC_CVS" = "xyes"
+if test "x$ORC_GIT" = "xyes"
 then
   AS_COMPILER_FLAG(-Werror, ERROR_CFLAGS="-Werror")
 fi
