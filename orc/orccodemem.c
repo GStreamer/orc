@@ -266,6 +266,10 @@ orc_code_region_allocate_codemem (OrcCodeRegion *region)
   if (orc_code_region_allocate_codemem_dual_map (region,
         "/tmp", FALSE)) return;
 
+  tmpdir = getenv ("XDG_RUNTIME_DIR");
+  if (tmpdir && orc_code_region_allocate_codemem_dual_map (region,
+        tmpdir, FALSE)) return;
+
   tmpdir = getenv ("HOME");
   if (tmpdir && orc_code_region_allocate_codemem_dual_map (region,
         tmpdir, FALSE)) return;
