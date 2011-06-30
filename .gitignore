@@ -69,6 +69,7 @@ autom4te.cache
 /orc/generate-emulation
 
 /testsuite/abi
+/testsuite/benchmorc/benchmorc
 /testsuite/compile_opcodes_sys
 /testsuite/compile_opcodes_sys_c
 /testsuite/compile_opcodes_sys_neon
