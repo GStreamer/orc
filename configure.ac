@@ -87,7 +87,7 @@ AC_CHECK_HEADERS([valgrind/valgrind.h])
 AS_COMPILER_FLAG(-Wall, ORC_CFLAGS="$ORC_CFLAGS -Wall")
 if test "x$ORC_CVS" = "xyes"
 then
-  AS_COMPILER_FLAG(-Werror, ORC_CFLAGS="$ORC_CFLAGS -Werror")
+  AS_COMPILER_FLAG(-Werror, ERROR_CFLAGS="-Werror")
 fi
 
 case "${host_os}" in
@@ -167,7 +167,8 @@ AM_CONDITIONAL(ENABLE_BACKEND_C64X, test "x$ENABLE_BACKEND_C64X" = "xyes")
 
 AC_DEFINE(ORC_EXPORTS, 1, [Defined for compiling internal code])
 
-ORC_CFLAGS="$ORC_CFLAGS -I\$(top_srcdir)"
+ORC_CFLAGS="$ORC_CFLAGS \$(ERROR_CFLAGS) -I\$(top_srcdir)"
+AC_SUBST(ERROR_CFLAGS)
 AC_SUBST(ORC_CFLAGS)
 
 ORC_LIBS="\$(top_builddir)/orc/liborc-$ORC_MAJORMINOR.la $LIBM $LIBRT"
