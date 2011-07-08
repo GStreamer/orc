@@ -82,6 +82,11 @@ main(int argc, char *argv[])
     orc_program_append (p, "copyb", ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1);
 
     result = orc_program_compile (p);
+
+    if (ORC_COMPILE_RESULT_IS_FATAL (result)) {
+      fprintf (stderr, "Failed to compile orc_memcpy\n");
+      return -1;
+    }
   }
 
 #ifndef M_LN2

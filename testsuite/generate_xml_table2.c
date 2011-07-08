@@ -19,29 +19,9 @@ main (int argc, char *argv[])
 {
   int i;
   OrcOpcodeSet *opcode_set;
-  OrcTarget *targets[10];
-  unsigned int target_flags[10];
-  int n_targets;
 
   orc_init();
   orc_test_init();
-
-  targets[0] = orc_target_get_by_name("sse");
-  target_flags[0] = orc_target_get_default_flags(targets[0]);
-
-  targets[1] = orc_target_get_by_name("mmx");
-  target_flags[1] = orc_target_get_default_flags(targets[1]);
-
-  targets[2] = orc_target_get_by_name("altivec");
-  target_flags[2] = orc_target_get_default_flags(targets[2]);
-
-  targets[3] = orc_target_get_by_name("arm");
-  target_flags[3] = orc_target_get_default_flags(targets[3]);
-
-  targets[4] = orc_target_get_by_name("c64x-c");
-  target_flags[4] = orc_target_get_default_flags(targets[4]);
-
-  n_targets=5;
   
   printf(
 "<table frame=\"all\" id=\"table-basictypes\" xreflabel=\"Table of Opcodes\">\n"

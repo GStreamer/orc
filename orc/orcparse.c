@@ -285,8 +285,8 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
 
         for(i=offset+1;i<n_tokens;i++){
           char *end;
-          double d;
-          d = strtod (token[i], &end);
+
+          (void) strtod (token[i], &end);
           if (end != token[i]) {
             orc_program_add_constant_str (parser->program, 0, token[i],
                 token[i]);

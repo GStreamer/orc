@@ -21,6 +21,12 @@
 
 #define MIN_NONDENORMAL (1.1754944909521339405e-38)
 
+#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
+#define ORC_GNUC_UNUSED __attribute__((__unused__))
+#else
+#define ORC_GNUC_UNUSED
+#endif
+
 void _orc_profile_init(void);
 
 OrcRandomContext rand_context;
@@ -535,7 +541,7 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
   int i;
   int j;
   int k;
-  int have_dest = FALSE;
+  int have_dest ORC_GNUC_UNUSED = FALSE;
   OrcCompileResult result;
   int have_acc = FALSE;
   int acc_exec = 0, acc_emul = 0;
@@ -776,7 +782,7 @@ orc_test_get_program_for_opcode (OrcStaticOpcode *opcode)
 {
   OrcProgram *p;
   char s[40];
-  int flags = 0;
+  int flags ORC_GNUC_UNUSED = 0;
   int args[4] = { -1, -1, -1, -1 };
   int n_args = 0;
 
@@ -833,7 +839,7 @@ orc_test_get_program_for_opcode_const (OrcStaticOpcode *opcode)
   OrcProgram *p;
   char s[40];
   int args[4] = { -1, -1, -1, -1 };
-  int flags;
+  int flags ORC_GNUC_UNUSED;
   int n_args = 0;
 
   p = orc_program_new ();
@@ -882,7 +888,7 @@ orc_test_get_program_for_opcode_param (OrcStaticOpcode *opcode)
   OrcProgram *p;
   char s[40];
   int args[4] = { -1, -1, -1, -1 };
-  int flags;
+  int flags ORC_GNUC_UNUSED;
   int n_args = 0;
 
   if (opcode->src_size[1] == 0) {
