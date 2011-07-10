@@ -21,12 +21,6 @@
 
 #define MIN_NONDENORMAL (1.1754944909521339405e-38)
 
-#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
-#define ORC_GNUC_UNUSED __attribute__((__unused__))
-#else
-#define ORC_GNUC_UNUSED
-#endif
-
 void _orc_profile_init(void);
 
 OrcRandomContext rand_context;

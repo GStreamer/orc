@@ -148,6 +148,12 @@ typedef unsigned int orc_bool;
 #define ORC_GNU_PRINTF(a,b)
 #endif
 
+#if ORC_GNUC_PREREQ(2,4)
+#define ORC_GNUC_UNUSED __attribute__((__unused__))
+#else
+#define ORC_GNUC_UNUSED
+#endif
+
 #ifdef __cplusplus
 #define ORC_BEGIN_DECLS extern "C" {
 #define ORC_END_DECLS }
