@@ -1172,7 +1172,7 @@ orc_neon_emit_loadiq (OrcCompiler *compiler, int reg, int value)
 {
   //orc_uint32 code;
   //int shift;
-  int neg = FALSE;
+  //int neg = FALSE;
 
   if (value == 0) {
     orc_neon_emit_binary_quad (compiler, "veor", 0xf3000110, reg, reg, reg);
@@ -1180,7 +1180,7 @@ orc_neon_emit_loadiq (OrcCompiler *compiler, int reg, int value)
   }
 
   if (value < 0) {
-    neg = TRUE;
+    //neg = TRUE;
     value = ~value;
   }
 #if 0

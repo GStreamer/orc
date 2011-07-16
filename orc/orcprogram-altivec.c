@@ -119,12 +119,9 @@ orc_compiler_powerpc_init (OrcCompiler *compiler)
 void
 powerpc_load_inner_constants (OrcCompiler *compiler)
 {
-  OrcVariable *var;
   int i;
 
   for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
-    var = compiler->vars + i;
-
     if (compiler->vars[i].name == NULL) continue;
     switch (compiler->vars[i].vartype) {
       case ORC_VAR_TYPE_SRC:

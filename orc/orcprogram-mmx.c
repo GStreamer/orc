@@ -713,7 +713,7 @@ static void
 orc_emit_split_2_regions (OrcCompiler *compiler)
 {
   int align_var;
-  int align_shift;
+  int align_shift ORC_GNUC_UNUSED;
   int var_size_shift;
 
   align_var = get_align_var (compiler);
