@@ -71,6 +71,7 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
   parser->log = malloc(100);
   parser->log_alloc = 100;
   parser->log_size = 0;
+  parser->log[0] = 0;
 
   while (parser->p[0] != 0) {
     char *p;
