@@ -14,12 +14,6 @@
 static pthread_mutex_t once_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void
-_orc_once_init (void)
-{
-  
-}
-
-void
 orc_once_mutex_lock (void)
 {
   pthread_mutex_lock (&once_mutex);
@@ -36,11 +30,6 @@ orc_once_mutex_unlock (void)
 #include <windows.h>
 
 static CRITICAL_SECTION once_mutex;
-
-void
-_orc_once_init (void)
-{
-}
 
 void
 orc_once_mutex_lock (void)
@@ -93,11 +82,6 @@ DllMain (HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 #endif
 
 #else
-
-void
-_orc_once_init (void)
-{
-}
 
 void
 orc_once_mutex_lock (void)
