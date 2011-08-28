@@ -120,10 +120,12 @@ orc_code_region_get_free_chunk (int size)
   OrcCodeRegion *region;
   OrcCodeChunk *chunk;
 
+  orc_global_mutex_lock ();
   for(i=0;i<orc_code_n_regions;i++){
     region = orc_code_regions[i];
     for(chunk = region->chunks; chunk; chunk = chunk->next) {
       if (!chunk->used && size <= chunk->size) {
+        orc_global_mutex_unlock ();
         return chunk;
       }
     }
@@ -137,9 +139,11 @@ orc_code_region_get_free_chunk (int size)
 
   for(chunk = region->chunks; chunk; chunk = chunk->next) {
     if (!chunk->used && size <= chunk->size){
+      orc_global_mutex_unlock ();
       return chunk;
     }
   }
+  orc_global_mutex_unlock ();
 
   ORC_ASSERT(0);
 

@@ -185,6 +185,9 @@ char * get_tag_value (char *s, const char *tag);
 
 orc_int64 _strtoll (const char *nptr, char **endptr, int base);
 
+void orc_global_mutex_lock (void);
+void orc_global_mutex_unlock (void);
+
 #endif
 
 ORC_END_DECLS
