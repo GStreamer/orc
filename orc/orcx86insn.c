@@ -581,7 +581,6 @@ orc_x86_insn_output_opcode (OrcCompiler *p, OrcX86Insn *xinsn)
       break;
     case ORC_X86_INSN_TYPE_MEM:
     case ORC_X86_INSN_TYPE_REGM_REG:
-    case ORC_X86_INSN_TYPE_STACK:
       output_opcode (p, xinsn->opcode, xinsn->size, xinsn->src, xinsn->dest, FALSE);
       break;
     case ORC_X86_INSN_TYPE_REGM:
@@ -609,6 +608,7 @@ orc_x86_insn_output_opcode (OrcCompiler *p, OrcX86Insn *xinsn)
       break;
     case ORC_X86_INSN_TYPE_LABEL:
     case ORC_X86_INSN_TYPE_BRANCH:
+    case ORC_X86_INSN_TYPE_STACK:
       break;
     default:
       ORC_ERROR("%d", xinsn->opcode->type);
