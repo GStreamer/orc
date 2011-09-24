@@ -289,13 +289,13 @@ orc_test_gcc_compile_c64x (OrcProgram *p)
 
   base = "temp-orc-test";
 
-  sprintf(source_filename, "%s-source.s", base);
+  sprintf(source_filename, "%s-source.c", base);
   sprintf(obj_filename, "%s-source.obj", base);
   sprintf(dis_filename, "%s-source.dis", base);
   sprintf(dump_filename, "%s-dump.bin", base);
   sprintf(dump_dis_filename, "%s-dump.dis", base);
 
-  target = orc_target_get_by_name ("c64x");
+  target = orc_target_get_by_name ("c64x-c");
   flags = orc_target_get_default_flags (target);
 
   result = orc_program_compile_full (p, target, flags);
@@ -307,6 +307,7 @@ orc_test_gcc_compile_c64x (OrcProgram *p)
   fflush (stdout);
 
   file = fopen (source_filename, "w");
+  fprintf(file, "%s", orc_target_get_preamble (target));
   fprintf(file, "%s", orc_program_get_asm_code (p));
   fclose (file);
 

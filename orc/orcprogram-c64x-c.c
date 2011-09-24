@@ -285,10 +285,10 @@ orc_compiler_c64x_c_assemble (OrcCompiler *compiler)
         ORC_ASM_CODE(compiler,"  int var%d;\n", i);
         break;
       case ORC_VAR_TYPE_SRC:
-        ORC_ASM_CODE(compiler,"  const unsigned char * restrict var%d;\n", i);
+        ORC_ASM_CODE(compiler,"  const unsigned char * restrict ptr%d;\n", i);
         break;
       case ORC_VAR_TYPE_DEST:
-        ORC_ASM_CODE(compiler,"  unsigned char * restrict var%d;\n", i);
+        ORC_ASM_CODE(compiler,"  unsigned char * restrict ptr%d;\n", i);
         break;
       case ORC_VAR_TYPE_ACCUMULATOR:
         ORC_ASM_CODE(compiler,"  int var%d = 0;\n", i);
@@ -335,19 +335,19 @@ orc_compiler_c64x_c_assemble (OrcCompiler *compiler)
       switch (var->vartype) {
         case ORC_VAR_TYPE_SRC:
           if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-            ORC_ASM_CODE(compiler,"    var%d = ORC_PTR_OFFSET(ex->arrays[%d], ex->params[%d] * j);\n",
+            ORC_ASM_CODE(compiler,"    ptr%d = ORC_PTR_OFFSET(ex->arrays[%d], ex->params[%d] * j);\n",
                 i, i, i);
           } else {
-            ORC_ASM_CODE(compiler,"    var%d = ORC_PTR_OFFSET(%s, %s_stride * j);\n",
+            ORC_ASM_CODE(compiler,"    ptr%d = ORC_PTR_OFFSET(%s, %s_stride * j);\n",
                 i, varnames[i], varnames[i]);
           }
           break;
         case ORC_VAR_TYPE_DEST:
           if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-            ORC_ASM_CODE(compiler,"    var%d = ORC_PTR_OFFSET(ex->arrays[%d], ex->params[%d] * j);\n",
+            ORC_ASM_CODE(compiler,"    ptr%d = ORC_PTR_OFFSET(ex->arrays[%d], ex->params[%d] * j);\n",
                 i, i, i);
           } else {
-            ORC_ASM_CODE(compiler,"    var%d = ORC_PTR_OFFSET(%s, %s_stride * j);\n",
+            ORC_ASM_CODE(compiler,"    ptr%d = ORC_PTR_OFFSET(%s, %s_stride * j);\n",
                 i, varnames[i], varnames[i]);
           }
           break;
@@ -362,16 +362,16 @@ orc_compiler_c64x_c_assemble (OrcCompiler *compiler)
       switch (var->vartype) {
         case ORC_VAR_TYPE_SRC:
           if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-            ORC_ASM_CODE(compiler,"  var%d = ex->arrays[%d];\n", i, i);
+            ORC_ASM_CODE(compiler,"  ptr%d = ex->arrays[%d];\n", i, i);
           } else {
-            ORC_ASM_CODE(compiler,"  var%d = (void *)%s;\n", i, varnames[i]);
+            ORC_ASM_CODE(compiler,"  ptr%d = (void *)%s;\n", i, varnames[i]);
           }
           break;
         case ORC_VAR_TYPE_DEST:
           if (!(compiler->target_flags & ORC_TARGET_C_NOEXEC)) {
-            ORC_ASM_CODE(compiler,"  var%d = ex->arrays[%d];\n", i, i);
+            ORC_ASM_CODE(compiler,"  ptr%d = ex->arrays[%d];\n", i, i);
           } else {
-            ORC_ASM_CODE(compiler,"  var%d = (void *)%s;\n", i, varnames[i]);
+            ORC_ASM_CODE(compiler,"  ptr%d = (void *)%s;\n", i, varnames[i]);
           }
           break;
         default:
@@ -386,7 +386,7 @@ orc_compiler_c64x_c_assemble (OrcCompiler *compiler)
     }
   }
   if (loop_shift > 0) {
-    ORC_ASM_CODE(compiler,"%*s  n1 = ((4 - (int)var%d)&0x3) >> %d;\n",
+    ORC_ASM_CODE(compiler,"%*s  n1 = ((4 - (int)ptr%d)&0x3) >> %d;\n",
         prefix, "", align_var, get_shift(compiler->vars[align_var].size));
     ORC_ASM_CODE(compiler,"%*s  n2 = (n - n1) >> %d;\n",
         prefix, "", loop_shift);
@@ -491,7 +491,7 @@ emit_loop (OrcCompiler *compiler, int prefix)
     switch (var->vartype) {
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
-        ORC_ASM_CODE(compiler,"%*s    var%d += %d;\n", prefix, "",
+        ORC_ASM_CODE(compiler,"%*s    ptr%d += %d;\n", prefix, "",
             i, var->size << compiler->loop_shift);
         break;
       default:
@@ -941,7 +941,22 @@ c_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
       dest, dest, src1, src2);
 }
 
-static OrcTarget c_target = {
+static void
+c_rule_loadX (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  ORC_ASM_CODE(p,"    var%d = ptr%d[i];\n", insn->dest_args[0],
+      insn->src_args[0]);
+}
+
+static void
+c_rule_storeX (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  ORC_ASM_CODE(p,"    ptr%d[i] = var%d;\n", insn->dest_args[0],
+      insn->src_args[0]);
+}
+
+
+static OrcTarget c64x_c_target = {
   "c64x-c",
   FALSE,
   ORC_GP_REG_BASE,
@@ -959,11 +974,21 @@ orc_c64x_c_init (void)
 {
   OrcRuleSet *rule_set;
 
-  orc_target_register (&c_target);
+  orc_target_register (&c64x_c_target);
 
-  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), &c_target, 0);
+  rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), &c64x_c_target, 0);
 
 #define REG(a) orc_rule_register (rule_set, #a , c_rule_ ## a, NULL);
+
+  orc_rule_register (rule_set, "loadb", c_rule_loadX, NULL);
+  orc_rule_register (rule_set, "loadw", c_rule_loadX, NULL);
+  orc_rule_register (rule_set, "loadl", c_rule_loadX, NULL);
+  orc_rule_register (rule_set, "loadq", c_rule_loadX, NULL);
+
+  orc_rule_register (rule_set, "storeb", c_rule_storeX, NULL);
+  orc_rule_register (rule_set, "storew", c_rule_storeX, NULL);
+  orc_rule_register (rule_set, "storel", c_rule_storeX, NULL);
+  orc_rule_register (rule_set, "storeq", c_rule_storeX, NULL);
 
   REG(absb);
   REG(addb);
