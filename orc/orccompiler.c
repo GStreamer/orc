@@ -310,7 +310,7 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   }
 
   if (program->backup_func && _orc_compiler_flag_backup) {
-    orc_compiler_error (compiler, "Compilation disabled");
+    orc_compiler_error (compiler, "Compilation disabled, using backup");
     compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
     goto error;
   }
@@ -318,6 +318,7 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   if (_orc_compiler_flag_emulate || target == NULL) {
     program->code_exec = (void *)orc_executor_emulate;
     program->orccode->exec = (void *)orc_executor_emulate;
+    orc_compiler_error (compiler, "Compilation disabled, using emulation");
     compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
     goto error;
   }
