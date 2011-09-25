@@ -1,4 +1,16 @@
 
+0.4.15
+======
+
+This should have been release much earlier.
+
+ - Protect global resources with mutexes.  Duh.  This solves a bunch
+   of bug reports.
+ - Restore c64x-c backend.  Untested.
+ - Convert MMX and SSE backends to a new instruction scheduler.
+ - Add alignment and size hints to parser.
+
+
 0.4.14
 ======
 
