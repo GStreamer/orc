@@ -124,6 +124,7 @@ main (int argc, char *argv[])
         target = argv[i+1];
         i++;
       } else {
+        help();
       }
     } else if (strcmp(argv[i], "--inline") == 0) {
       use_inline = TRUE;
@@ -711,11 +712,7 @@ output_code_execute (OrcProgram *p, FILE *output, int is_inline)
     if (use_code) {
       fprintf(output, "  OrcCode *c = _orc_code_%s;\n", p->name);
     } else {
-      if (use_code) {
-        fprintf(output, "  OrcCode *c = _orc_code_%s;\n", p->name);
-      } else {
-        fprintf(output, "  OrcProgram *p = _orc_program_%s;\n", p->name);
-      }
+      fprintf(output, "  OrcProgram *p = _orc_program_%s;\n", p->name);
     }
   } else {
     fprintf(output, "  static volatile int p_inited = 0;\n");
@@ -1030,10 +1027,10 @@ output_init_function (FILE *output)
       fprintf(output, "  {\n");
       fprintf(output, "    /* %s */\n", programs[i]->name);
       fprintf(output, "    OrcProgram *p;\n");
-      fprintf(output, "    \n");
+      fprintf(output, "\n");
       output_program_generation (programs[i], output, FALSE);
       fprintf(output, "\n");
-      fprintf(output, "      orc_program_compile (p);\n");
+      fprintf(output, "    orc_program_compile (p);\n");
       fprintf(output, "\n");
       if (use_code) {
         fprintf(output, "    _orc_code_%s = orc_program_take_code (p);\n",
