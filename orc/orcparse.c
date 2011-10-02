@@ -99,7 +99,7 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
     n_tokens = 0;
 
     while (p < end) {
-      if (p[0] == ' ' || p[0] == '\t' || p[0] == ',') p++;
+      while (p[0] != 0 && (p[0] == ' ' || p[0] == '\t')) p++;
       if (p[0] == 0 || p[0] == '#') break;
 
       token[n_tokens] = p;
