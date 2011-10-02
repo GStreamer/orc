@@ -227,6 +227,11 @@ main (int argc, char *argv[])
   n_programs = n;
   printf("%s", log);
 
+  if (programs == NULL) {
+    printf("no programs\n");
+    exit(1);
+  }
+
   if (init_function == NULL) {
     init_function = orc_parse_get_init_function (programs[0]);
   }

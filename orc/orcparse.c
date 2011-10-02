@@ -324,7 +324,7 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
   } else {
     free (parser->log);
   }
-  if (parser->programs[0]) {
+  if (parser->programs && parser->programs[0]) {
     parser->programs[0]->init_function = init_function;
   } else {
     free (init_function);
