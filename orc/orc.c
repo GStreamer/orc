@@ -29,10 +29,10 @@ void _orc_compiler_init(void);
 void
 orc_init (void)
 {
-  static int inited = FALSE;
+  static volatile int inited = FALSE;
 
   if (!inited) {
-    orc_once_mutex_lock ();
+    orc_global_mutex_lock ();
     if (!inited) {
       ORC_ASSERT(sizeof(OrcExecutor) == sizeof(OrcExecutorAlt));
 
@@ -61,7 +61,7 @@ orc_init (void)
 
       inited = TRUE;
     }
-    orc_once_mutex_unlock ();
+    orc_global_mutex_unlock ();
   }
 }
 

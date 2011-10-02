@@ -718,7 +718,7 @@ output_code_execute (OrcProgram *p, FILE *output, int is_inline)
       }
     }
   } else {
-    fprintf(output, "  static int p_inited = 0;\n");
+    fprintf(output, "  static volatile int p_inited = 0;\n");
     if (use_code) {
       fprintf(output, "  static OrcCode *c = 0;\n");
     } else {
