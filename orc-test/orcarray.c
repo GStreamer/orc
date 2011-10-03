@@ -1,4 +1,8 @@
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <orc-test/orctest.h>
 #include <orc-test/orcarray.h>
 #include <orc-test/orcrandom.h>
@@ -10,6 +14,15 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+
+#ifdef HAVE_MMAP
+#include <sys/mman.h>
+#endif
+
+#ifdef HAVE_MMAP
+/* This can be used to test non-zero high-32-bits of pointers. */
+//#define USE_MMAP
+#endif
 
 #define EXTEND_ROWS 16
 #define EXTEND_STRIDE 256
@@ -27,10 +40,15 @@ orc_array_new (int n, int m, int element_size, int misalignment,
 {
   OrcArray *ar;
   void *data;
+#ifndef USE_MMAP
 #ifdef HAVE_POSIX_MEMALIGN
   int ret;
 #endif
+#endif
   int offset;
+#ifdef USE_MMAP
+  static unsigned long idx = 1;
+#endif
 
   ar = malloc (sizeof(OrcArray));
   memset (ar, 0, sizeof(OrcArray));
@@ -42,11 +60,18 @@ orc_array_new (int n, int m, int element_size, int misalignment,
   ar->stride = (n*element_size + EXTEND_STRIDE);
   ar->stride = (ar->stride + (ALIGNMENT-1)) & (~(ALIGNMENT-1));
   ar->alloc_len = ar->stride * (m+2*EXTEND_ROWS) + (ALIGNMENT * element_size);
+  ar->alloc_len = (ar->alloc_len + 4095) & (~4095);
 
+#ifdef USE_MMAP
+  data = mmap ((void *)(idx<<32), ar->alloc_len, PROT_READ|PROT_WRITE,
+      MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+  idx++;
+#else
 #ifdef HAVE_POSIX_MEMALIGN
   ret = posix_memalign (&data, ALIGNMENT, ar->alloc_len);
 #else
   data = malloc (ar->alloc_len);
+#endif
 #endif
   ar->alloc_data = data;
 
@@ -55,14 +80,18 @@ orc_array_new (int n, int m, int element_size, int misalignment,
 
   ar->data = ORC_PTR_OFFSET (ar->alloc_data,
       ar->stride * EXTEND_ROWS + offset);
-  
+
   return ar;
 }
 
 void
 orc_array_free (OrcArray *array)
 {
+#ifdef USE_MMAP
+  munmap (array->alloc_data, array->alloc_len);
+#else
   free (array->alloc_data);
+#endif
   free (array);
 }
 
