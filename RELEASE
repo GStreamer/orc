@@ -1,4 +1,14 @@
 
+0.4.16
+======
+
+Fix a few bugs people noticed in 0.4.15.
+
+ - orc_init() tried to take the same mutex as generated C code that
+   calls (indirectly) orc_init().
+ - sse: Fixes for 64 bit pointers with any of the upper 32 bits set.
+
+
 0.4.15
 ======
 
