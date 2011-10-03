@@ -1039,6 +1039,23 @@ orc_x86_emit_cpuinsn_reg_memoffset (OrcCompiler *p, int index, int src,
 }
 
 void
+orc_x86_emit_cpuinsn_reg_memoffset_8 (OrcCompiler *p, int index, int src,
+    int offset, int dest)
+{
+  OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
+  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  int size = 8;
+
+  xinsn->opcode_index = index;
+  xinsn->opcode = opcode;
+  xinsn->src = src;
+  xinsn->dest = dest;
+  xinsn->type = ORC_X86_RM_MEMOFFSET;
+  xinsn->offset = offset;
+  xinsn->size = size;
+}
+
+void
 orc_x86_emit_cpuinsn_memoffset_reg (OrcCompiler *p, int index, int size,
     int offset, int src, int dest)
 {

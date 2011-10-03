@@ -297,7 +297,7 @@ orc_x86_emit_mov_reg_memoffset (OrcCompiler *compiler, int size, int reg1, int o
           reg1, offset, reg2);
       break;
     case 8:
-      orc_x86_emit_cpuinsn_reg_memoffset (compiler, ORC_X86_mov_r_rm,
+      orc_x86_emit_cpuinsn_reg_memoffset_8 (compiler, ORC_X86_mov_r_rm,
           reg1, offset, reg2);
       break;
     default:
