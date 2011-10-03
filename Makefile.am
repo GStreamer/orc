@@ -21,3 +21,7 @@ CLEANFILES = orc-$(ORC_MAJORMINOR).pc orc-$(ORC_MAJORMINOR)-uninstalled.pc
 
 ACLOCAL_AMFLAGS = -I m4
 
+aclocaldir = $(datadir)/aclocal
+aclocal_DATA = orc.m4
+
+
