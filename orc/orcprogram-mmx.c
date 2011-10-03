@@ -768,6 +768,7 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
   int set_mxcsr = FALSE;
 #endif
   int align_var;
+  int is_aligned;
 
   if (0 && orc_x86_assemble_copy_check (compiler)) {
     /* The rep movs implementation isn't faster most of the time */
@@ -776,8 +777,7 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
   }
 
   align_var = get_align_var (compiler);
-
-  compiler->vars[align_var].is_aligned = FALSE;
+  is_aligned = compiler->vars[align_var].is_aligned;
 
   {
     orc_mmx_emit_loop (compiler, 0, 0);
@@ -830,11 +830,11 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
       compiler->program->constant_n <= ORC_MMX_ALIGNED_DEST_CUTOFF) {
     /* don't need to load n */
   } else if (compiler->loop_shift > 0) {
-    if (!compiler->has_iterator_opcode) {
+    if (compiler->has_iterator_opcode || is_aligned) {
+      orc_emit_split_2_regions (compiler);
+    } else {
       /* split n into three regions, with center region being aligned */
       orc_emit_split_3_regions (compiler);
-    } else {
-      orc_emit_split_2_regions (compiler);
     }
   } else {
     /* loop shift is 0, no need to split */
@@ -879,7 +879,7 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
     int emit_region1 = TRUE;
     int emit_region3 = TRUE;
 
-    if (compiler->has_iterator_opcode) {
+    if (compiler->has_iterator_opcode || is_aligned) {
       emit_region1 = FALSE;
     }
     if (compiler->loop_shift == 0) {
