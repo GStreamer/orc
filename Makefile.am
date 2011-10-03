@@ -3,7 +3,7 @@ AUTOMAKE_OPTIONS = foreign
 
 SUBDIRS = orc orc-test tools examples doc testsuite
 
-EXTRA_DIST = COPYING autogen.sh gtk-doc.make
+EXTRA_DIST = COPYING autogen.sh gtk-doc.make orc.m4
 
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
