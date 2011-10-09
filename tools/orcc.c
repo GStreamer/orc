@@ -866,17 +866,17 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
   if (p->n_multiple != 0) {
     REQUIRE(0,4,14,1);
     fprintf(output, "      orc_program_set_n_multiple (p, %d);\n",
-        p->constant_n);
+        p->n_multiple);
   }
   if (p->n_minimum != 0) {
     REQUIRE(0,4,14,1);
     fprintf(output, "      orc_program_set_n_minimum (p, %d);\n",
-        p->constant_n);
+        p->n_minimum);
   }
   if (p->n_maximum != 0) {
     REQUIRE(0,4,14,1);
     fprintf(output, "      orc_program_set_n_maximum (p, %d);\n",
-        p->constant_n);
+        p->n_maximum);
   }
   if (p->is_2d) {
     fprintf(output, "      orc_program_set_2d (p);\n");
