@@ -30,6 +30,7 @@
 
 #include <stdarg.h>
 #include <orc/orcutils.h>
+#include <stdlib.h>
 
 ORC_BEGIN_DECLS
 
