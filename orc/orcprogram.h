@@ -22,6 +22,7 @@ typedef struct _OrcFixup OrcFixup;
 typedef struct _OrcTarget OrcTarget;
 typedef struct _OrcCode OrcCode;
 typedef struct _OrcCodeChunk OrcCodeChunk;
+typedef struct _OrcBytecode OrcBytecode;
 
 typedef void (*OrcOpcodeEmulateFunc)(OrcOpcodeExecutor *ex, void *user);
 typedef void (*OrcOpcodeEmulateNFunc)(OrcOpcodeExecutor *ex, int index, int n);
@@ -631,6 +632,12 @@ struct _OrcTarget {
   void *_unused[5];
 };
 
+struct _OrcBytecode {
+  orc_uint8 *bytecode;
+  int length;
+  int alloc_len;
+};
+
 
 void orc_init (void);
 
@@ -779,7 +786,6 @@ const char * orc_get_cpu_name (void);
 OrcCode * orc_code_new (void);
 void orc_code_free (OrcCode *code);
 
-
 #ifdef ORC_ENABLE_UNSTABLE_API
 
 int orc_compiler_flag_check (const char *flag);
@@ -798,6 +804,11 @@ extern int _orc_compiler_flag_debug;
 extern int _orc_compiler_flag_randomize;
 
 void orc_code_chunk_free (OrcCodeChunk *chunk);
+
+OrcBytecode * orc_bytecode_new (void);
+void orc_bytecode_free (OrcBytecode *bytecode);
+OrcBytecode * orc_bytecode_from_program (OrcProgram *p);
+
 
 #endif
 

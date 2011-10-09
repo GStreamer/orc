@@ -12,6 +12,7 @@ liborc_@ORC_MAJORMINOR@_la_CFLAGS = $(ORC_CFLAGS) \
 
 liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orc.c \
+	orcbytecode.c \
 	orcemulateopcodes.c \
 	orcexecutor.c \
 	orcfunctions.c \
@@ -91,15 +92,20 @@ pkginclude_HEADERS = \
 	orccpuinsn.h \
 	orc-stdint.h
 
-noinst_PROGRAMS = generate-emulation
+noinst_PROGRAMS = generate-emulation generate-bytecode
 
 generate_emulation_LDADD = $(ORC_LIBS)
 generate_emulation_CFLAGS = $(ORC_CFLAGS)
 generate_emulation_DEPENDENCIES = liborc-0.4.la
 
-update: generate-emulation
+generate_bytecode_LDADD = $(ORC_LIBS)
+generate_bytecode_CFLAGS = $(ORC_CFLAGS)
+generate_bytecode_DEPENDENCIES = liborc-0.4.la
+
+update: generate-emulation generate-bytecode
 	$(top_builddir)/tools/orcc$(EXEEXT) --implementation -o orcfunctions.c orcfunctions.orc
 	$(top_builddir)/tools/orcc$(EXEEXT) --header -o orcfunctions.h orcfunctions.orc
 	./generate-emulation$(EXEEXT) -o orcemulateopcodes.c
 	./generate-emulation$(EXEEXT) --header -o orcemulateopcodes.h
+	./generate-bytecode$(EXEEXT) --header -o orcbytecode.h
 	
