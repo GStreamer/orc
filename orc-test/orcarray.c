@@ -42,7 +42,7 @@ orc_array_new (int n, int m, int element_size, int misalignment,
   void *data;
 #ifndef USE_MMAP
 #ifdef HAVE_POSIX_MEMALIGN
-  int ret;
+  int ret ORC_GNUC_UNUSED;
 #endif
 #endif
   int offset;
