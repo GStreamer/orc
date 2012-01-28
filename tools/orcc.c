@@ -1,8 +1,11 @@
 
 #include "config.h"
 
+#define ORC_ENABLE_UNSTABLE_API
+
 #include <orc/orc.h>
 #include <orc/orcparse.h>
+#include <orc/orcbytecode.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -858,6 +861,65 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
   OrcVariable *var;
   int i;
 
+  if (ORC_VERSION(0,4,16,1) <= compat) {
+    OrcBytecode *bytecode;
+    int i;
+
+    bytecode = orc_bytecode_from_program (p);
+
+    fprintf(output, "#if 1\n");
+    //fprintf(output, "#ifdef bytecode\n");
+    fprintf(output, "    static const orc_uint8 bc[] = {\n");
+    for(i=0;i<bytecode->length;i++) {
+      if ((i&0xf) == 0) {
+        fprintf(output, "      ");
+      }
+      fprintf(output, "%d, ", bytecode->bytecode[i]);
+      if ((i&0xf) == 15) {
+        fprintf(output, "\n");
+      }
+    }
+    if ((i&0xf) != 15) {
+      fprintf(output, "\n");
+    }
+    fprintf(output, "    };\n");
+    fprintf(output, "    p = orc_program_new_from_static_bytecode (bc);\n");
+    //fprintf(output, "   orc_program_set_name (p, \"%s\");\n", p->name);
+    if (!is_inline) {
+      fprintf(output, "    orc_program_set_backup_function (p, _backup_%s);\n",
+          p->name);
+    }
+
+#if 0
+    /* CHECK */
+    {
+      OrcProgram *p2 = orc_program_new_from_static_bytecode (bytecode->bytecode);
+      OrcBytecode *bytecode2 = bytecode2 = orc_bytecode_from_program (p2);
+
+      fprintf(output, "#ifdef badbytecode\n");
+      fprintf(output, "    static const orc_uint8 bc[] = {\n");
+      for(i=0;i<bytecode2->length;i++) {
+        if ((i&0xf) == 0) {
+          fprintf(output, "      ");
+        }
+        fprintf(output, "%s%d, ",
+            (bytecode->bytecode[i] == bytecode2->bytecode[i]) ? "" : "/* */",
+            bytecode2->bytecode[i]);
+        if ((i&0xf) == 15) {
+          fprintf(output, "\n");
+        }
+      }
+      if ((i&0xf) != 15) {
+        fprintf(output, "\n");
+      }
+      fprintf(output, "    };\n");
+      fprintf(output, "#endif\n");
+    }
+#endif
+
+    fprintf(output, "#else\n");
+  }
+
   fprintf(output, "      p = orc_program_new ();\n");
   if (p->constant_n != 0) {
     fprintf(output, "      orc_program_set_constant_n (p, %d);\n",
@@ -1015,6 +1077,10 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
           enumnames[args[1]], enumnames[args[2]],
           enumnames[args[3]]);
     }
+  }
+
+  if (ORC_VERSION(0,4,16,1) <= compat) {
+    fprintf(output, "#endif\n");
   }
 }
 

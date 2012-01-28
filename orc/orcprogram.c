@@ -136,6 +136,17 @@ orc_program_new_as (int size1, int size2)
   return p;
 }
 
+OrcProgram *
+orc_program_new_from_static_bytecode (const orc_uint8 *bytecode)
+{
+  OrcProgram *p;
+
+  p = orc_program_new ();
+  orc_bytecode_parse_function (p, bytecode);
+
+  return p;
+}
+
 /**
  * orc_program_free:
  * @program: a pointer to an OrcProgram structure

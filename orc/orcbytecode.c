@@ -292,3 +292,211 @@ bytecode_append_string (OrcBytecode *bytecode, char *s)
   }
 }
 
+typedef struct _OrcBytecodeParse OrcBytecodeParse;
+struct _OrcBytecodeParse {
+  const orc_uint8 *bytecode;
+  int parse_offset;
+  int function_start;
+  int code_start;
+};
+
+int
+orc_bytecode_parse_get_byte (OrcBytecodeParse *parse)
+{
+  int value;
+  value = parse->bytecode[parse->parse_offset];
+  parse->parse_offset++;
+  return value;
+}
+
+int
+orc_bytecode_parse_get_int (OrcBytecodeParse *parse)
+{
+  int value;
+
+  value = orc_bytecode_parse_get_byte(parse);
+  if (value == 255) {
+    value = orc_bytecode_parse_get_byte(parse);
+    value |= orc_bytecode_parse_get_byte(parse) << 8;
+  }
+
+  return value;
+}
+
+char *
+orc_bytecode_parse_get_string (OrcBytecodeParse *parse)
+{
+  int len;
+  int i;
+  char *s;
+
+  len = orc_bytecode_parse_get_int (parse);
+  s = malloc (len + 1);
+  for(i=0;i<len;i++){
+    s[i] = orc_bytecode_parse_get_byte (parse);
+  }
+  s[i] = 0;
+
+  return s;
+}
+
+orc_uint32
+orc_bytecode_parse_get_uint32 (OrcBytecodeParse *parse)
+{
+  orc_uint32 value;
+  value = orc_bytecode_parse_get_byte (parse);
+  value |= orc_bytecode_parse_get_byte (parse) << 8;
+  value |= orc_bytecode_parse_get_byte (parse) << 16;
+  value |= orc_bytecode_parse_get_byte (parse) << 24;
+  return value;
+}
+
+orc_uint64
+orc_bytecode_parse_get_uint64 (OrcBytecodeParse *parse)
+{
+  orc_uint64 value;
+  value = orc_bytecode_parse_get_byte (parse);
+  value |= orc_bytecode_parse_get_byte (parse) << 8;
+  value |= orc_bytecode_parse_get_byte (parse) << 16;
+  value |= orc_bytecode_parse_get_byte (parse) << 24;
+  value |= (orc_uint64)orc_bytecode_parse_get_byte (parse) << 32;
+  value |= (orc_uint64)orc_bytecode_parse_get_byte (parse) << 40;
+  value |= (orc_uint64)orc_bytecode_parse_get_byte (parse) << 48;
+  value |= (orc_uint64)orc_bytecode_parse_get_byte (parse) << 56;
+  return value;
+}
+
+int
+orc_bytecode_parse_function (OrcProgram *program, const orc_uint8 *bytecode)
+{
+  OrcBytecodeParse _parse;
+  OrcBytecodeParse *parse = &_parse;
+  //int in_function = FALSE;
+  int bc;
+  int size;
+  int alignment;
+  OrcOpcodeSet *opcode_set;
+
+  memset (parse, 0, sizeof(*parse));
+  parse->bytecode = bytecode;
+
+  opcode_set = orc_opcode_set_get ("sys");
+
+  while (1) {
+    bc = orc_bytecode_parse_get_int (parse);
+    if (bc < ORC_BC_absb) {
+      switch (bc) {
+        case ORC_BC_END:
+          /* FIXME this is technically an error */
+          return 0;
+        case ORC_BC_BEGIN_FUNCTION:
+          //in_function = TRUE;
+          break;
+        case ORC_BC_END_FUNCTION:
+          return 0;
+        case ORC_BC_SET_CONSTANT_N:
+          program->constant_n = orc_bytecode_parse_get_int (parse);
+          break;
+        case ORC_BC_SET_N_MULTIPLE:
+          program->n_multiple = orc_bytecode_parse_get_int (parse);
+          break;
+        case ORC_BC_SET_N_MINIMUM:
+          program->n_minimum = orc_bytecode_parse_get_int (parse);
+          break;
+        case ORC_BC_SET_N_MAXIMUM:
+          program->n_maximum = orc_bytecode_parse_get_int (parse);
+          break;
+        case ORC_BC_SET_2D:
+          program->is_2d = TRUE;
+          break;
+        case ORC_BC_SET_CONSTANT_M:
+          program->constant_m = orc_bytecode_parse_get_int (parse);
+          break;
+        case ORC_BC_SET_NAME:
+          program->name = orc_bytecode_parse_get_string (parse);
+          break;
+        case ORC_BC_SET_BACKUP_FUNCTION:
+          /* FIXME error */
+          break;
+        case ORC_BC_ADD_DESTINATION:
+          size = orc_bytecode_parse_get_int (parse);
+          alignment = orc_bytecode_parse_get_int (parse);
+          orc_program_add_destination_full (program, size, "d", "unknown",
+              alignment);
+          break;
+        case ORC_BC_ADD_SOURCE:
+          size = orc_bytecode_parse_get_int (parse);
+          alignment = orc_bytecode_parse_get_int (parse);
+          orc_program_add_source_full (program, size, "s", "unknown",
+              alignment);
+          break;
+        case ORC_BC_ADD_ACCUMULATOR:
+          size = orc_bytecode_parse_get_int (parse);
+          orc_program_add_accumulator (program, size, "a");
+          break;
+        case ORC_BC_ADD_CONSTANT:
+          {
+            orc_uint32 value;
+            size = orc_bytecode_parse_get_int (parse);
+            value = orc_bytecode_parse_get_uint32 (parse);
+            orc_program_add_constant (program, size, value, "c");
+          }
+          break;
+        case ORC_BC_ADD_CONSTANT_INT64:
+          {
+            orc_uint64 value;
+            size = orc_bytecode_parse_get_int (parse);
+            value = orc_bytecode_parse_get_uint64 (parse);
+            orc_program_add_constant_int64 (program, size, value, "c");
+          }
+          break;
+        case ORC_BC_ADD_PARAMETER:
+          size = orc_bytecode_parse_get_int (parse);
+          orc_program_add_parameter (program, size, "p");
+          break;
+        case ORC_BC_ADD_PARAMETER_FLOAT:
+          size = orc_bytecode_parse_get_int (parse);
+          orc_program_add_parameter_float (program, size, "p");
+          break;
+        case ORC_BC_ADD_PARAMETER_INT64:
+          size = orc_bytecode_parse_get_int (parse);
+          orc_program_add_parameter_int64 (program, size, "p");
+          break;
+        case ORC_BC_ADD_PARAMETER_DOUBLE:
+          size = orc_bytecode_parse_get_int (parse);
+          orc_program_add_parameter_double (program, size, "p");
+          break;
+        case ORC_BC_ADD_TEMPORARY:
+          size = orc_bytecode_parse_get_int (parse);
+          orc_program_add_temporary (program, size, "t");
+          break;
+        default:
+          break;
+      }
+    } else {
+      OrcInstruction *insn;
+
+      insn = program->insns + program->n_insns;
+
+      insn->opcode = opcode_set->opcodes + (bc - 32);
+      if (insn->opcode->dest_size[0] != 0) {
+        insn->dest_args[0] = orc_bytecode_parse_get_int (parse);
+      }
+      if (insn->opcode->dest_size[1] != 0) {
+        insn->dest_args[1] = orc_bytecode_parse_get_int (parse);
+      }
+      if (insn->opcode->src_size[0] != 0) {
+        insn->src_args[0] = orc_bytecode_parse_get_int (parse);
+      }
+      if (insn->opcode->src_size[1] != 0) {
+        insn->src_args[1] = orc_bytecode_parse_get_int (parse);
+      }
+      if (insn->opcode->src_size[2] != 0) {
+        insn->src_args[2] = orc_bytecode_parse_get_int (parse);
+      }
+
+      program->n_insns++;
+    }
+  }
+}
+

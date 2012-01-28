@@ -646,6 +646,7 @@ OrcProgram * orc_program_new_ds (int size1, int size2);
 OrcProgram * orc_program_new_dss (int size1, int size2, int size3);
 OrcProgram * orc_program_new_as (int size1, int size2);
 OrcProgram * orc_program_new_ass (int size1, int size2, int size3);
+OrcProgram * orc_program_new_from_static_bytecode (const orc_uint8 *bytecode);
 OrcStaticOpcode * orc_opcode_find_by_name (const char *name);
 void orc_opcode_init (void);
 
@@ -808,6 +809,7 @@ void orc_code_chunk_free (OrcCodeChunk *chunk);
 OrcBytecode * orc_bytecode_new (void);
 void orc_bytecode_free (OrcBytecode *bytecode);
 OrcBytecode * orc_bytecode_from_program (OrcProgram *p);
+int orc_bytecode_parse_function (OrcProgram *program, const orc_uint8 *bytecode);
 
 
 #endif
