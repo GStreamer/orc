@@ -155,6 +155,10 @@ orc_bytecode_from_program (OrcProgram *p)
   for(i=0;i<p->n_insns;i++){
     OrcInstruction *insn = p->insns + i;
 
+    if (insn->flags) {
+      bytecode_append_code (bytecode, ORC_BC_INSTRUCTION_FLAGS);
+      bytecode_append_int (bytecode, insn->flags);
+    }
     bytecode_append_code (bytecode, (insn->opcode - opcode_set->opcodes) + 32);
     if (insn->opcode->dest_size[0] != 0) {
       bytecode_append_int (bytecode, insn->dest_args[0]);
@@ -376,6 +380,7 @@ orc_bytecode_parse_function (OrcProgram *program, const orc_uint8 *bytecode)
   int size;
   int alignment;
   OrcOpcodeSet *opcode_set;
+  int instruction_flags = 0;
 
   memset (parse, 0, sizeof(*parse));
   parse->bytecode = bytecode;
@@ -470,6 +475,9 @@ orc_bytecode_parse_function (OrcProgram *program, const orc_uint8 *bytecode)
           size = orc_bytecode_parse_get_int (parse);
           orc_program_add_temporary (program, size, "t");
           break;
+        case ORC_BC_INSTRUCTION_FLAGS:
+          instruction_flags = orc_bytecode_parse_get_int (parse);
+          break;
         default:
           break;
       }
@@ -494,6 +502,8 @@ orc_bytecode_parse_function (OrcProgram *program, const orc_uint8 *bytecode)
       if (insn->opcode->src_size[2] != 0) {
         insn->src_args[2] = orc_bytecode_parse_get_int (parse);
       }
+      insn->flags = instruction_flags;
+      instruction_flags = 0;
 
       program->n_insns++;
     }
