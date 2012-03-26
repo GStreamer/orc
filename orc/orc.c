@@ -9,6 +9,8 @@
 #include <orc/orcdebug.h>
 #include <orc/orconce.h>
 
+#include "orcinternal.h"
+
 /**
  * SECTION:orc
  * @title: Orc

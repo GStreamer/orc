@@ -5,6 +5,9 @@
 
 #include <orc/orc.h>
 #include <orc/orccpuinsn.h>
+#include <orc/orcx86.h>
+#include <orc/orcsse.h>
+#include <orc/orcmmx.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

@@ -34,6 +34,8 @@
 #include <orc/orcprogram.h>
 #include <orc/orcutils.h>
 
+#include "orcinternal.h"
+
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>

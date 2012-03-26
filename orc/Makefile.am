@@ -73,24 +73,40 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-arm.c
 endif
 
 pkginclude_HEADERS = \
+	orc-stdint.h \
 	orc.h \
+	orcarm.h \
+	orcbytecode.h \
+	orcbytecodes.h \
+	orccode.h \
+	orccompiler.h \
+	orcconstant.h \
+	orccpu.h \
+	orccpuinsn.h \
 	orcdebug.h \
-	orcprogram.h \
 	orcemulateopcodes.h \
+	orcexecutor.h \
 	orcfunctions.h \
-	orcutils.h \
-	orcparse.h \
-	opcodes.h \
-	orconce.h \
-	orcsse.h \
+	orcinstruction.h \
+	orcinternal.h \
+	orclimits.h \
 	orcmmx.h \
 	orcneon.h \
-	orcx86.h \
+	orconce.h \
+	orcopcode.h \
+	orcparse.h \
 	orcpowerpc.h \
-	orcarm.h \
-	orcx86insn.h \
-	orccpuinsn.h \
-	orc-stdint.h
+	orcprogram.h \
+	orcrule.h \
+	orcsse.h \
+	orctarget.h \
+	orcutils.h \
+	orcvariable.h \
+	orcx86.h \
+	orcx86insn.h
+
+noinst_HEADERS = \
+	opcodes.h
 
 noinst_PROGRAMS = generate-emulation generate-bytecode
 

@@ -7,6 +7,8 @@
 #define ORC_ENABLE_UNSTABLE_API
 
 #include <orc/orc.h>
+#include <orc/orcmmx.h>
+#include <orc/orcsse.h>
 
 static OrcProgram *p = NULL;
 
