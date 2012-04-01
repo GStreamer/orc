@@ -67,13 +67,15 @@ orc_array_new (int n, int m, int element_size, int misalignment,
       MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
   idx++;
 #else
-#ifdef HAVE_POSIX_MEMALIGN
+#ifdef HAVE_POSIX_MEMALIGNx
   ret = posix_memalign (&data, ALIGNMENT, ar->alloc_len);
-#else
-  data = malloc (ar->alloc_len);
-#endif
-#endif
   ar->alloc_data = data;
+#else
+  data = malloc (ar->alloc_len + ALIGNMENT);
+  ar->alloc_data = data;
+  data = (void *)((((unsigned long)data) + (ALIGNMENT-1))&(~(ALIGNMENT-1)));
+#endif
+#endif
 
   if (alignment == 0) alignment = element_size;
   offset = (alignment * misalignment) & (ALIGNMENT - 1);
