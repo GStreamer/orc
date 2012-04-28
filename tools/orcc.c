@@ -643,7 +643,7 @@ output_code_backup (OrcProgram *p, FILE *output)
     if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
       fprintf(output, "%s\n", orc_program_get_asm_code (p));
     } else {
-      printf("Failed to compile %s\n", p->name);
+      printf("Failed to compile backup code for '%s'\n", p->name);
       error = TRUE;
     }
   }
@@ -667,7 +667,7 @@ output_code_no_orc (OrcProgram *p, FILE *output)
     if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
       fprintf(output, "%s\n", orc_program_get_asm_code (p));
     } else {
-      printf("Failed to compile %s\n", p->name);
+      printf("Failed to compile no orc for '%s'\n", p->name);
       error = TRUE;
     }
   }
@@ -1336,7 +1336,7 @@ output_code_assembly (OrcProgram *p, FILE *output)
     if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
       fprintf(output, "%s\n", orc_program_get_asm_code (p));
     } else {
-      printf("Failed to compile %s\n", p->name);
+      printf("Failed to compile assembly for '%s'\n", p->name);
       error = TRUE;
     }
   }

@@ -19,7 +19,6 @@ ORC_BEGIN_DECLS
   orc_debug_print(ORC_DEBUG_WARNING, __FILE__, ORC_FUNCTION, __LINE__, __VA_ARGS__); \
 } while (0)
 
-
 /**
  * OrcProgram:
  *
@@ -94,6 +93,7 @@ struct _OrcProgram {
   /* Hide this here.  Belongs in a Parser object */
   char *init_function;
   char *error_msg;
+  unsigned int current_line;
 };
 
 #define ORC_SRC_ARG(p,i,n) ((p)->vars[(i)->src_args[(n)]].alloc)
@@ -115,6 +115,7 @@ OrcProgram * orc_program_new_from_static_bytecode (const orc_uint8 *bytecode);
 
 const char * orc_program_get_name (OrcProgram *program);
 void orc_program_set_name (OrcProgram *program, const char *name);
+void orc_program_set_line (OrcProgram *program, unsigned int line);
 void orc_program_set_2d (OrcProgram *program);
 void orc_program_set_constant_n (OrcProgram *program, int n);
 void orc_program_set_n_multiple (OrcProgram *ex, int n);

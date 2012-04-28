@@ -195,6 +195,19 @@ orc_program_set_name (OrcProgram *program, const char *name)
 }
 
 /**
+ * orc_program_set_line:
+ * @program: a pointer to an OrcProgram structure
+ * @name: define where we are in the source
+ *
+ * Sets the current line of the program.
+ */
+void
+orc_program_set_line (OrcProgram *program, unsigned int line)
+{
+  program->current_line = line;
+}
+
+/**
  * orc_program_set_2d:
  * @program: a pointer to an OrcProgram structure
  *
@@ -838,9 +851,10 @@ orc_program_append_str_2 (OrcProgram *program, const char *name,
 
   insn = program->insns + program->n_insns;
 
+  insn->line = program->current_line;
   insn->opcode = orc_opcode_find_by_name (name);
   if (!insn->opcode) {
-    ORC_ERROR ("unknown opcode: %s", name);
+    ORC_ERROR ("unknown opcode: %s at line %d", name, insn->line);
   }
   args[0] = orc_program_find_var_by_name (program, arg1);
   args[1] = orc_program_find_var_by_name (program, arg2);

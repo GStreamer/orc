@@ -24,6 +24,8 @@ struct _OrcInstruction {
 
   OrcRule *rule;
   unsigned int flags;
+  /* Source line number this instruction came from */
+  int line;
 };
 
 #define ORC_INSTRUCTION_FLAG_X2 (1<<0)

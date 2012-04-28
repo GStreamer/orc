@@ -80,6 +80,7 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
     int n_tokens;
 
     orc_parse_get_line (parser);
+    if (parser->program) orc_program_set_line (parser->program, parser->line_number);
 
     p = parser->line;
     end = p + strlen (p);

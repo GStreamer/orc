@@ -726,7 +726,7 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
 
       if (!compiler->vars[var].used) {
         if (compiler->vars[var].vartype == ORC_VAR_TYPE_TEMP) {
-          ORC_COMPILER_ERROR(compiler, "using uninitialized temp var");
+          ORC_COMPILER_ERROR(compiler, "using uninitialized temp var at line %d", insn->line);
           compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE;
         }
         compiler->vars[var].used = TRUE;
@@ -744,25 +744,25 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
         continue;
       }
       if (compiler->vars[var].vartype == ORC_VAR_TYPE_SRC) {
-        ORC_COMPILER_ERROR(compiler,"using src var as dest");
+        ORC_COMPILER_ERROR(compiler,"using src var as dest at line %d", insn->line);
         compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE;
       }
       if (compiler->vars[var].vartype == ORC_VAR_TYPE_CONST) {
-        ORC_COMPILER_ERROR(compiler,"using const var as dest");
+        ORC_COMPILER_ERROR(compiler,"using const var as dest at line %d", insn->line);
         compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE;
       }
       if (compiler->vars[var].vartype == ORC_VAR_TYPE_PARAM) {
-        ORC_COMPILER_ERROR(compiler,"using param var as dest");
+        ORC_COMPILER_ERROR(compiler,"using param var as dest at line %d", insn->line);
         compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE;
       }
       if (opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR) {
         if (compiler->vars[var].vartype != ORC_VAR_TYPE_ACCUMULATOR) {
-          ORC_COMPILER_ERROR(compiler,"accumulating opcode to non-accumulator dest");
+          ORC_COMPILER_ERROR(compiler,"accumulating opcode to non-accumulator dest at line %d", insn->line);
           compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE;
         }
       } else {
         if (compiler->vars[var].vartype == ORC_VAR_TYPE_ACCUMULATOR) {
-          ORC_COMPILER_ERROR(compiler,"non-accumulating opcode to accumulator dest");
+          ORC_COMPILER_ERROR(compiler,"non-accumulating opcode to accumulator dest at line %d", insn->line);
           compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE;
         }
       }
@@ -779,7 +779,7 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
       } else {
 #if 0
         if (compiler->vars[var].vartype == ORC_VAR_TYPE_DEST) {
-          ORC_COMPILER_ERROR(compiler,"writing dest more than once");
+          ORC_COMPILER_ERROR(compiler,"writing dest more than once at line %d", insn->line);
           compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE;
         }
 #endif
