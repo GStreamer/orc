@@ -111,8 +111,12 @@ case "${host_os}" in
     ;;
   *)
     AC_DEFINE(HAVE_THREAD_PTHREAD, 1, [Use pthread thread code])
+    PTHREAD_CFLAGS=
+    PTHREAD_LIBS=-lpthread
     ;;
 esac
+AC_SUBST(PTHREAD_CFLAGS)
+AC_SUBST(PTHREAD_LIBS)
 
 AC_ARG_ENABLE(backend,
   AC_HELP_STRING([--enable-backend],[sse,mmx,neon,arm,all (default all)]),

@@ -9,7 +9,7 @@ Name: orc-@ORC_MAJORMINOR@
 Description: Library of Optimized Inner Loops Runtime Compiler
 Version: @VERSION@
 Libs: -L${libdir} -lorc-@ORC_MAJORMINOR@
-Libs.private: @LIBM@ @LIBRT@
+Libs.private: @LIBM@ @LIBRT@ @PTHREAD_LIBS@
 Cflags: -I${includedir}
 
 orcc=${toolsdir}/orcc@EXEEXT@
