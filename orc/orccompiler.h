@@ -139,7 +139,6 @@ struct _OrcCompiler {
 };
 
 
-void orc_code_allocate_codemem (OrcCode *code, int size);
 int orc_compiler_label_new (OrcCompiler *compiler);
 int orc_compiler_get_constant (OrcCompiler *compiler, int size, int value);
 int orc_compiler_get_constant_long (OrcCompiler *compiler, orc_uint32 a,
