@@ -194,11 +194,6 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   compiler = malloc (sizeof(OrcCompiler));
   memset (compiler, 0, sizeof(OrcCompiler));
 
-  if (program->backup_func) {
-    program->code_exec = program->backup_func;
-  } else {
-    program->code_exec = (void *)orc_executor_emulate;
-  }
 
   compiler->program = program;
   compiler->target = target;
@@ -293,7 +288,11 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   program->orccode->is_2d = program->is_2d;
   program->orccode->constant_n = program->constant_n;
   program->orccode->constant_m = program->constant_m;
-  program->orccode->exec = program->code_exec;
+  if (program->backup_func) {
+    program->orccode->exec = program->backup_func;
+  } else {
+    program->orccode->exec = (void *)orc_executor_emulate;
+  }
 
   program->orccode->n_insns = compiler->n_insns;
   program->orccode->insns = malloc(sizeof(OrcInstruction) * compiler->n_insns);
@@ -316,7 +315,6 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   }
 
   if (_orc_compiler_flag_emulate || target == NULL) {
-    program->code_exec = (void *)orc_executor_emulate;
     program->orccode->exec = (void *)orc_executor_emulate;
     orc_compiler_error (compiler, "Compilation disabled, using emulation");
     compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
@@ -352,8 +350,6 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   if (compiler->target->flush_cache) {
     compiler->target->flush_cache (program->orccode);
   }
-
-  program->code_exec = program->orccode->exec;
 
   program->asm_code = compiler->asm_code;
 

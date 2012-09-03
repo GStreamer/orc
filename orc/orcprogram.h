@@ -26,43 +26,6 @@ ORC_BEGIN_DECLS
  */
 struct _OrcProgram {
   /*< private >*/
-  struct {
-    OrcStaticOpcode *opcode;
-    int dest_args[ORC_STATIC_OPCODE_N_DEST];
-    int src_args[ORC_STATIC_OPCODE_N_SRC];
-
-    OrcRule *rule;
-  } _unused[ORC_N_INSNS]; /* needed for ABI compatibility */
-  int n_insns;
-
-  struct {
-    char *name;
-    char *type_name;
-
-    int size;
-    OrcVarType vartype;
-
-    int used;
-    int first_use;
-    int last_use;
-    int replaced;
-    int replacement;
-
-    int alloc;
-    int is_chained;
-    int is_aligned;
-    int is_uncached;
-
-    int value;
-
-    int ptr_register;
-    int ptr_offset;
-    int mask_alloc;
-    int aligned_data;
-    int param_type;
-    int load_dest;
-  } _unused3[ORC_N_VARIABLES]; /* needed for ABI compatibility */
-
   int n_src_vars;
   int n_dest_vars;
   int n_param_vars;
@@ -73,10 +36,7 @@ struct _OrcProgram {
   char *name;
   char *asm_code;
 
-  unsigned char *_unused2;
-  /* The offset of code_exec in this structure is part of the ABI */
-  void *code_exec;
-
+  int n_insns;
   OrcInstruction insns[ORC_N_INSNS];
   OrcVariable vars[ORC_N_VARIABLES];
 

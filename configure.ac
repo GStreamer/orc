@@ -1,5 +1,5 @@
 AC_PREREQ([2.58])
-AC_INIT(orc,0.4.16.1)
+AC_INIT(orc,0.5.0.1)
 dnl don't forget to update libversion
 
 AS_NANO(ORC_GIT=no,ORC_GIT=yes)
@@ -7,7 +7,7 @@ AS_NANO(ORC_GIT=no,ORC_GIT=yes)
 AC_CANONICAL_HOST([])
 AM_INIT_AUTOMAKE(1.6)
 
-ORC_MAJORMINOR=0.4
+ORC_MAJORMINOR=0.6
 AC_SUBST(ORC_MAJORMINOR)
 
 AM_CONFIG_HEADER(config.h)

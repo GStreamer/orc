@@ -44,6 +44,7 @@ main(int argc, char *argv[])
   OrcProgram *p;
   int level1, level2, level3;
   int max;
+  OrcCode *code;
   //const uint8_t zero = 0;
 
   orc_init ();
@@ -87,6 +88,8 @@ main(int argc, char *argv[])
       fprintf (stderr, "Failed to compile orc_memcpy\n");
       return -1;
     }
+    
+    code = orc_program_take_code (p);
   }
 
 #ifndef M_LN2
@@ -122,12 +125,11 @@ main(int argc, char *argv[])
 
       orc_profile_start(&prof);
       //orc_memcpy (dest, src, size);
-      ex->program = p;
       ex->n = size;
       ex->arrays[ORC_VAR_D1] = dest;
       ex->arrays[ORC_VAR_S1] = (void *)src;
 
-      func = p->code_exec;
+      func = code->exec;
       func (ex);
 
       orc_profile_stop(&prof);

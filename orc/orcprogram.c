@@ -260,9 +260,6 @@ void
 orc_program_set_backup_function (OrcProgram *program, OrcExecutorFunc func)
 {
   program->backup_func = func;
-  if (program->code_exec == NULL) {
-    program->code_exec = func;
-  }
 }
 
 /**
