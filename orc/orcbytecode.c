@@ -10,11 +10,11 @@
 #include <string.h>
 
 
-void bytecode_append_code (OrcBytecode *bytecode, int code);
-void bytecode_append_int (OrcBytecode *bytecode, int value);
-void bytecode_append_uint32 (OrcBytecode *bytecode, orc_uint32 value);
-void bytecode_append_uint64 (OrcBytecode *bytecode, orc_uint64 value);
-void bytecode_append_string (OrcBytecode *bytecode, char *s);
+void bytecode_append_code (OrcBytecode * bytecode, int code);
+void bytecode_append_int (OrcBytecode * bytecode, int value);
+void bytecode_append_uint32 (OrcBytecode * bytecode, orc_uint32 value);
+void bytecode_append_uint64 (OrcBytecode * bytecode, orc_uint64 value);
+void bytecode_append_string (OrcBytecode * bytecode, char *s);
 
 
 OrcBytecode *
@@ -22,24 +22,24 @@ orc_bytecode_new (void)
 {
   OrcBytecode *bytecode;
 
-  bytecode = malloc (sizeof(OrcBytecode));
-  memset (bytecode, 0, sizeof(OrcBytecode));
+  bytecode = malloc (sizeof (OrcBytecode));
+  memset (bytecode, 0, sizeof (OrcBytecode));
 
   bytecode->alloc_len = 256;
-  bytecode->bytecode = malloc(bytecode->alloc_len);
+  bytecode->bytecode = malloc (bytecode->alloc_len);
 
   return bytecode;
 }
 
 void
-orc_bytecode_free (OrcBytecode *bytecode)
+orc_bytecode_free (OrcBytecode * bytecode)
 {
   free (bytecode->bytecode);
   free (bytecode);
 }
 
 OrcBytecode *
-orc_bytecode_from_program (OrcProgram *p)
+orc_bytecode_from_program (OrcProgram * p)
 {
   OrcBytecode *bytecode = orc_bytecode_new ();
   int i;
@@ -84,7 +84,7 @@ orc_bytecode_from_program (OrcProgram *p)
     bytecode_pointer (bytecode, p->backup_function);
   }
 #endif
-  for(i=0;i<4;i++){
+  for (i = 0; i < 4; i++) {
     var = &p->vars[ORC_VAR_D1 + i];
     if (var->size) {
       bytecode_append_code (bytecode, ORC_BC_ADD_DESTINATION);
@@ -92,7 +92,7 @@ orc_bytecode_from_program (OrcProgram *p)
       bytecode_append_int (bytecode, var->alignment);
     }
   }
-  for(i=0;i<8;i++){
+  for (i = 0; i < 8; i++) {
     var = &p->vars[ORC_VAR_S1 + i];
     if (var->size) {
       bytecode_append_code (bytecode, ORC_BC_ADD_SOURCE);
@@ -100,7 +100,7 @@ orc_bytecode_from_program (OrcProgram *p)
       bytecode_append_int (bytecode, var->alignment);
     }
   }
-  for(i=0;i<4;i++){
+  for (i = 0; i < 4; i++) {
     var = &p->vars[ORC_VAR_A1 + i];
     if (var->size) {
       bytecode_append_code (bytecode, ORC_BC_ADD_ACCUMULATOR);
@@ -108,20 +108,21 @@ orc_bytecode_from_program (OrcProgram *p)
       //bytecode_append_int (bytecode, var->alignment);
     }
   }
-  for(i=0;i<8;i++){
+  for (i = 0; i < 8; i++) {
     var = &p->vars[ORC_VAR_C1 + i];
-    if (var->size == 0) continue;
+    if (var->size == 0)
+      continue;
     if (var->size <= 4) {
       bytecode_append_code (bytecode, ORC_BC_ADD_CONSTANT);
       bytecode_append_int (bytecode, var->size);
-      bytecode_append_uint32 (bytecode, (orc_uint32)var->value.i);
+      bytecode_append_uint32 (bytecode, (orc_uint32) var->value.i);
     } else if (var->size > 4) {
       bytecode_append_code (bytecode, ORC_BC_ADD_CONSTANT_INT64);
       bytecode_append_int (bytecode, var->size);
-      bytecode_append_uint64 (bytecode, (orc_uint64)var->value.i);
+      bytecode_append_uint64 (bytecode, (orc_uint64) var->value.i);
     }
   }
-  for(i=0;i<8;i++){
+  for (i = 0; i < 8; i++) {
     var = &p->vars[ORC_VAR_P1 + i];
     if (var->size) {
       switch (var->param_type) {
@@ -138,13 +139,13 @@ orc_bytecode_from_program (OrcProgram *p)
           bytecode_append_code (bytecode, ORC_BC_ADD_PARAMETER_INT64);
           break;
         default:
-          ORC_ASSERT(0);
+          ORC_ASSERT (0);
           break;
       }
       bytecode_append_int (bytecode, var->size);
     }
   }
-  for(i=0;i<16;i++){
+  for (i = 0; i < 16; i++) {
     var = &p->vars[ORC_VAR_T1 + i];
     if (var->size) {
       bytecode_append_code (bytecode, ORC_BC_ADD_TEMPORARY);
@@ -152,7 +153,7 @@ orc_bytecode_from_program (OrcProgram *p)
     }
   }
 
-  for(i=0;i<p->n_insns;i++){
+  for (i = 0; i < p->n_insns; i++) {
     OrcInstruction *insn = p->insns + i;
 
     if (insn->flags) {
@@ -184,7 +185,7 @@ orc_bytecode_from_program (OrcProgram *p)
 }
 
 void
-bytecode_append_byte (OrcBytecode *bytecode, int byte)
+bytecode_append_byte (OrcBytecode * bytecode, int byte)
 {
   if (bytecode->length >= bytecode->alloc_len) {
     bytecode->alloc_len += 256;
@@ -195,15 +196,15 @@ bytecode_append_byte (OrcBytecode *bytecode, int byte)
 }
 
 void
-bytecode_append_code (OrcBytecode *bytecode, int code)
+bytecode_append_code (OrcBytecode * bytecode, int code)
 {
   bytecode_append_byte (bytecode, code);
 #if 0
   OrcOpcodeSet *opcode_set = orc_opcode_set_get ("sys");
 
-  fprintf(bytecode, "\n  ");
+  fprintf (bytecode, "\n  ");
   if (code >= 32) {
-    fprintf(bytecode, "ORC_BC_%s, ", opcode_set->opcodes[code-32].name);
+    fprintf (bytecode, "ORC_BC_%s, ", opcode_set->opcodes[code - 32].name);
   } else {
     static char *codes[32] = {
       "END",
@@ -240,15 +241,15 @@ bytecode_append_code (OrcBytecode *bytecode, int code)
       "RESERVED_31"
     };
 
-    fprintf(bytecode, "ORC_BC_%s, ", codes[code]);
+    fprintf (bytecode, "ORC_BC_%s, ", codes[code]);
   }
 #endif
 }
 
 void
-bytecode_append_int (OrcBytecode *bytecode, int value)
+bytecode_append_int (OrcBytecode * bytecode, int value)
 {
-  ORC_ASSERT(value >= 0);
+  ORC_ASSERT (value >= 0);
 
   if (value < 255) {
     bytecode_append_byte (bytecode, value);
@@ -257,12 +258,12 @@ bytecode_append_int (OrcBytecode *bytecode, int value)
     bytecode_append_byte (bytecode, value & 0xff);
     bytecode_append_byte (bytecode, value >> 8);
   } else {
-    ORC_ASSERT(0);
+    ORC_ASSERT (0);
   }
 }
 
 void
-bytecode_append_uint32 (OrcBytecode *bytecode, orc_uint32 value)
+bytecode_append_uint32 (OrcBytecode * bytecode, orc_uint32 value)
 {
   bytecode_append_byte (bytecode, value & 0xff);
   bytecode_append_byte (bytecode, (value >> 8) & 0xff);
@@ -272,7 +273,7 @@ bytecode_append_uint32 (OrcBytecode *bytecode, orc_uint32 value)
 }
 
 void
-bytecode_append_uint64 (OrcBytecode *bytecode, orc_uint64 value)
+bytecode_append_uint64 (OrcBytecode * bytecode, orc_uint64 value)
 {
   bytecode_append_byte (bytecode, value & 0xff);
   bytecode_append_byte (bytecode, (value >> 8) & 0xff);
@@ -286,18 +287,19 @@ bytecode_append_uint64 (OrcBytecode *bytecode, orc_uint64 value)
 }
 
 void
-bytecode_append_string (OrcBytecode *bytecode, char *s)
+bytecode_append_string (OrcBytecode * bytecode, char *s)
 {
   int i;
-  int len = strlen(s);
+  int len = strlen (s);
   bytecode_append_int (bytecode, len);
-  for(i=0;i<len;i++){
+  for (i = 0; i < len; i++) {
     bytecode_append_byte (bytecode, s[i]);
   }
 }
 
 typedef struct _OrcBytecodeParse OrcBytecodeParse;
-struct _OrcBytecodeParse {
+struct _OrcBytecodeParse
+{
   const orc_uint8 *bytecode;
   int parse_offset;
   int function_start;
@@ -305,7 +307,7 @@ struct _OrcBytecodeParse {
 };
 
 int
-orc_bytecode_parse_get_byte (OrcBytecodeParse *parse)
+orc_bytecode_parse_get_byte (OrcBytecodeParse * parse)
 {
   int value;
   value = parse->bytecode[parse->parse_offset];
@@ -314,21 +316,21 @@ orc_bytecode_parse_get_byte (OrcBytecodeParse *parse)
 }
 
 int
-orc_bytecode_parse_get_int (OrcBytecodeParse *parse)
+orc_bytecode_parse_get_int (OrcBytecodeParse * parse)
 {
   int value;
 
-  value = orc_bytecode_parse_get_byte(parse);
+  value = orc_bytecode_parse_get_byte (parse);
   if (value == 255) {
-    value = orc_bytecode_parse_get_byte(parse);
-    value |= orc_bytecode_parse_get_byte(parse) << 8;
+    value = orc_bytecode_parse_get_byte (parse);
+    value |= orc_bytecode_parse_get_byte (parse) << 8;
   }
 
   return value;
 }
 
 char *
-orc_bytecode_parse_get_string (OrcBytecodeParse *parse)
+orc_bytecode_parse_get_string (OrcBytecodeParse * parse)
 {
   int len;
   int i;
@@ -336,7 +338,7 @@ orc_bytecode_parse_get_string (OrcBytecodeParse *parse)
 
   len = orc_bytecode_parse_get_int (parse);
   s = malloc (len + 1);
-  for(i=0;i<len;i++){
+  for (i = 0; i < len; i++) {
     s[i] = orc_bytecode_parse_get_byte (parse);
   }
   s[i] = 0;
@@ -345,7 +347,7 @@ orc_bytecode_parse_get_string (OrcBytecodeParse *parse)
 }
 
 orc_uint32
-orc_bytecode_parse_get_uint32 (OrcBytecodeParse *parse)
+orc_bytecode_parse_get_uint32 (OrcBytecodeParse * parse)
 {
   orc_uint32 value;
   value = orc_bytecode_parse_get_byte (parse);
@@ -356,22 +358,22 @@ orc_bytecode_parse_get_uint32 (OrcBytecodeParse *parse)
 }
 
 orc_uint64
-orc_bytecode_parse_get_uint64 (OrcBytecodeParse *parse)
+orc_bytecode_parse_get_uint64 (OrcBytecodeParse * parse)
 {
   orc_uint64 value;
   value = orc_bytecode_parse_get_byte (parse);
   value |= orc_bytecode_parse_get_byte (parse) << 8;
   value |= orc_bytecode_parse_get_byte (parse) << 16;
   value |= orc_bytecode_parse_get_byte (parse) << 24;
-  value |= (orc_uint64)orc_bytecode_parse_get_byte (parse) << 32;
-  value |= (orc_uint64)orc_bytecode_parse_get_byte (parse) << 40;
-  value |= (orc_uint64)orc_bytecode_parse_get_byte (parse) << 48;
-  value |= (orc_uint64)orc_bytecode_parse_get_byte (parse) << 56;
+  value |= (orc_uint64) orc_bytecode_parse_get_byte (parse) << 32;
+  value |= (orc_uint64) orc_bytecode_parse_get_byte (parse) << 40;
+  value |= (orc_uint64) orc_bytecode_parse_get_byte (parse) << 48;
+  value |= (orc_uint64) orc_bytecode_parse_get_byte (parse) << 56;
   return value;
 }
 
 int
-orc_bytecode_parse_function (OrcProgram *program, const orc_uint8 *bytecode)
+orc_bytecode_parse_function (OrcProgram * program, const orc_uint8 * bytecode)
 {
   OrcBytecodeParse _parse;
   OrcBytecodeParse *parse = &_parse;
@@ -382,7 +384,7 @@ orc_bytecode_parse_function (OrcProgram *program, const orc_uint8 *bytecode)
   OrcOpcodeSet *opcode_set;
   int instruction_flags = 0;
 
-  memset (parse, 0, sizeof(*parse));
+  memset (parse, 0, sizeof (*parse));
   parse->bytecode = bytecode;
 
   opcode_set = orc_opcode_set_get ("sys");
@@ -440,20 +442,20 @@ orc_bytecode_parse_function (OrcProgram *program, const orc_uint8 *bytecode)
           orc_program_add_accumulator (program, size, "a");
           break;
         case ORC_BC_ADD_CONSTANT:
-          {
-            orc_uint32 value;
-            size = orc_bytecode_parse_get_int (parse);
-            value = orc_bytecode_parse_get_uint32 (parse);
-            orc_program_add_constant (program, size, value, "c");
-          }
+        {
+          orc_uint32 value;
+          size = orc_bytecode_parse_get_int (parse);
+          value = orc_bytecode_parse_get_uint32 (parse);
+          orc_program_add_constant (program, size, value, "c");
+        }
           break;
         case ORC_BC_ADD_CONSTANT_INT64:
-          {
-            orc_uint64 value;
-            size = orc_bytecode_parse_get_int (parse);
-            value = orc_bytecode_parse_get_uint64 (parse);
-            orc_program_add_constant_int64 (program, size, value, "c");
-          }
+        {
+          orc_uint64 value;
+          size = orc_bytecode_parse_get_int (parse);
+          value = orc_bytecode_parse_get_uint64 (parse);
+          orc_program_add_constant_int64 (program, size, value, "c");
+        }
           break;
         case ORC_BC_ADD_PARAMETER:
           size = orc_bytecode_parse_get_int (parse);
@@ -509,4 +511,3 @@ orc_bytecode_parse_function (OrcProgram *program, const orc_uint8 *bytecode)
     }
   }
 }
-

@@ -17,9 +17,9 @@
  * @short_description: Library Initialization
  */
 
-void _orc_debug_init(void);
-void _orc_once_init(void);
-void _orc_compiler_init(void);
+void _orc_debug_init (void);
+void _orc_once_init (void);
+void _orc_compiler_init (void);
 
 /**
  * orc_init:
@@ -36,29 +36,29 @@ orc_init (void)
   if (!inited) {
     orc_global_mutex_lock ();
     if (!inited) {
-      ORC_ASSERT(sizeof(OrcExecutor) == sizeof(OrcExecutorAlt));
+      ORC_ASSERT (sizeof (OrcExecutor) == sizeof (OrcExecutorAlt));
 
-      _orc_debug_init();
-      _orc_compiler_init();
-      orc_opcode_init();
-      orc_c_init();
+      _orc_debug_init ();
+      _orc_compiler_init ();
+      orc_opcode_init ();
+      orc_c_init ();
 #ifdef ENABLE_BACKEND_C64X
-      orc_c64x_c_init();
+      orc_c64x_c_init ();
 #endif
 #ifdef ENABLE_BACKEND_MMX
-      orc_mmx_init();
+      orc_mmx_init ();
 #endif
 #ifdef ENABLE_BACKEND_SSE
-      orc_sse_init();
+      orc_sse_init ();
 #endif
 #ifdef ENABLE_BACKEND_ALTIVEC
-      orc_powerpc_init();
+      orc_powerpc_init ();
 #endif
 #ifdef ENABLE_BACKEND_ARM
-      orc_arm_init();
+      orc_arm_init ();
 #endif
 #ifdef ENABLE_BACKEND_NEON
-      orc_neon_init();
+      orc_neon_init ();
 #endif
 
       inited = TRUE;
@@ -66,4 +66,3 @@ orc_init (void)
     orc_global_mutex_unlock ();
   }
 }
-

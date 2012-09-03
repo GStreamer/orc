@@ -46,9 +46,9 @@ char *
 _strndup (const char *s, int n)
 {
   char *r;
-  r = malloc (n+1);
-  memcpy(r,s,n);
-  r[n]=0;
+  r = malloc (n + 1);
+  memcpy (r, s, n);
+  r[n] = 0;
 
   return r;
 }
@@ -60,16 +60,19 @@ strsplit (const char *s, char delimiter)
   const char *tok;
   int n = 0;
 
-  while (*s == ' ') s++;
+  while (*s == ' ')
+    s++;
 
-  list = malloc (1 * sizeof(char *));
+  list = malloc (1 * sizeof (char *));
   while (*s) {
     tok = s;
-    while (*s && *s != delimiter) s++;
+    while (*s && *s != delimiter)
+      s++;
 
     list[n] = _strndup (tok, s - tok);
-    while (*s && *s == delimiter) s++;
-    list = realloc (list, (n + 2) * sizeof(char *));
+    while (*s && *s == delimiter)
+      s++;
+    list = realloc (list, (n + 2) * sizeof (char *));
     n++;
   }
 
@@ -84,17 +87,21 @@ get_tag_value (char *s, const char *tag)
   char *end;
   char *colon;
 
-  flags = strstr(s,tag);
-  if (flags == NULL) return NULL;
+  flags = strstr (s, tag);
+  if (flags == NULL)
+    return NULL;
 
-  end = strchr(flags, '\n');
-  if (end == NULL) return NULL;
+  end = strchr (flags, '\n');
+  if (end == NULL)
+    return NULL;
   colon = strchr (flags, ':');
-  if (colon == NULL) return NULL;
+  if (colon == NULL)
+    return NULL;
   colon++;
-  if(colon >= end) return NULL;
+  if (colon >= end)
+    return NULL;
 
-  return _strndup (colon, end-colon);
+  return _strndup (colon, end - colon);
 }
 
 orc_int64
@@ -102,7 +109,7 @@ _strtoll (const char *nptr, char **endptr, int base)
 {
   int neg = 0;
   orc_int64 val = 0;
-  
+
   /* Skip all spaces */
   while (isspace (*nptr))
     nptr++;
@@ -155,20 +162,19 @@ _strtoll (const char *nptr, char **endptr, int base)
     if (c >= base)
       break;
 
-    if ((orc_uint64) val > ORC_UINT64_C(0xffffffffffffffff) / base ||
-        (orc_uint64) (val * base) > ORC_UINT64_C(0xffffffffffffffff) - c) {
-      val = ORC_UINT64_C(0xffffffffffffffff);
+    if ((orc_uint64) val > ORC_UINT64_C (0xffffffffffffffff) / base ||
+        (orc_uint64) (val * base) > ORC_UINT64_C (0xffffffffffffffff) - c) {
+      val = ORC_UINT64_C (0xffffffffffffffff);
       break;
     }
 
     val = val * base + c;
-    
+
     nptr++;
   }
 
   if (endptr)
     *endptr = (char *) nptr;
 
-  return (neg) ? - val : val;
+  return (neg) ? -val : val;
 }
-

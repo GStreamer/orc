@@ -49,7 +49,7 @@ static int _orc_debug_level = ORC_DEBUG_ERROR;
 static OrcDebugPrintFunc _orc_debug_print_func = orc_debug_print_valist;
 
 void
-_orc_debug_init(void)
+_orc_debug_init (void)
 {
   const char *envvar;
 
@@ -68,18 +68,20 @@ _orc_debug_init(void)
 
 static void
 orc_debug_print_valist (int level, const char *file, const char *func,
-        int line, const char *format, va_list args)
+    int line, const char *format, va_list args)
 {
   static const char *level_names[] = { "NONE", "ERROR", "WARNING", "INFO",
-    "DEBUG", "LOG" };
+    "DEBUG", "LOG"
+  };
   const char *level_name = "unknown";
 
-  if (level > _orc_debug_level) return;
+  if (level > _orc_debug_level)
+    return;
 
-  if(level>=ORC_DEBUG_NONE && level<=ORC_DEBUG_LOG){
+  if (level >= ORC_DEBUG_NONE && level <= ORC_DEBUG_LOG) {
     level_name = level_names[level];
   }
-  
+
   fprintf (stderr, "ORC: %s: %s(%d): %s(): ", level_name, file, line, func);
   vfprintf (stderr, format, args);
   fprintf (stderr, "\n");
@@ -87,7 +89,7 @@ orc_debug_print_valist (int level, const char *file, const char *func,
 
 void
 orc_debug_print (int level, const char *file, const char *func,
-        int line, const char *format, ...)
+    int line, const char *format, ...)
 {
   va_list var_args;
 
@@ -138,4 +140,3 @@ orc_debug_set_print_function (OrcDebugPrintFunc func)
     _orc_debug_print_func = orc_debug_print_valist;
   }
 }
-

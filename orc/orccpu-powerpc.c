@@ -60,17 +60,17 @@
 
 #if 0
 static unsigned long
-orc_profile_stamp_tb(void)
+orc_profile_stamp_tb (void)
 {
   unsigned long ts;
-  __asm__ __volatile__("mftb %0\n" : "=r" (ts));
+  __asm__ __volatile__ ("mftb %0\n":"=r" (ts));
   return ts;
 }
 #endif
 
 #if !defined(__FreeBSD__) && !defined(__FreeBSD_kernel__) && !defined(__OpenBSD__) && !defined(__APPLE__) && !defined(__linux__)
 static void
-test_altivec (void * ignored)
+test_altivec (void *ignored)
 {
   asm volatile ("vor v0, v0, v0\n");
 }
@@ -90,8 +90,8 @@ orc_check_altivec_sysctl_bsd (void)
   int ret, vu;
   size_t len;
 
-  len = sizeof(vu);
-  ret = sysctlbyname(SYSCTL, &vu, &len, NULL, 0);
+  len = sizeof (vu);
+  ret = sysctlbyname (SYSCTL, &vu, &len, NULL, 0);
   if (!ret && vu) {
     cpu_flags |= ORC_TARGET_ALTIVEC_ALTIVEC;
   }
@@ -111,8 +111,8 @@ orc_check_altivec_sysctl_openbsd (void)
   mib[0] = CTL_MACHDEP;
   mib[1] = CPU_ALTIVEC;
 
-  len = sizeof(vu);
-  ret = sysctl(mib, 2, &vu, &len, NULL, 0);
+  len = sizeof (vu);
+  ret = sysctl (mib, 2, &vu, &len, NULL, 0);
   if (!ret && vu) {
     cpu_flags |= ORC_TARGET_ALTIVEC_ALTIVEC;
   }
@@ -137,32 +137,32 @@ orc_check_altivec_proc_auxv (void)
     return 0;
   }
 
-  fd = open("/proc/self/auxv", O_RDONLY);
+  fd = open ("/proc/self/auxv", O_RDONLY);
   if (fd < 0) {
     goto out;
   }
 
 more:
-  count = read(fd, buf, sizeof(buf));
+  count = read (fd, buf, sizeof (buf));
   if (count < 0) {
     goto out_close;
   }
 
-  for (i=0; i < (count / sizeof(unsigned long)); i += 2) {
+  for (i = 0; i < (count / sizeof (unsigned long)); i += 2) {
     if (buf[i] == AT_HWCAP) {
-      new_avail = !!(buf[i+1] & PPC_FEATURE_HAS_ALTIVEC);
+      new_avail = ! !(buf[i + 1] & PPC_FEATURE_HAS_ALTIVEC);
       goto out_close;
     } else if (buf[i] == AT_NULL) {
       goto out_close;
     }
   }
 
-  if (count == sizeof(buf)) {
+  if (count == sizeof (buf)) {
     goto more;
   }
 
 out_close:
-  close(fd);
+  close (fd);
 
 out:
   available = new_avail;
@@ -179,7 +179,7 @@ static void
 orc_check_altivec_fault (void)
 {
   orc_fault_check_enable ();
-  if (orc_fault_check_try(test_altivec, NULL)) {
+  if (orc_fault_check_try (test_altivec, NULL)) {
     ORC_DEBUG ("cpu flag altivec");
     orc_cpu_flags |= ORC_IMPL_FLAG_ALTIVEC;
   }
@@ -188,20 +188,17 @@ orc_check_altivec_fault (void)
 #endif
 
 void
-orc_cpu_detect_arch(void)
+orc_cpu_detect_arch (void)
 {
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__APPLE__)
-  orc_check_altivec_sysctl_bsd();
+  orc_check_altivec_sysctl_bsd ();
 #elif defined(__OpenBSD__)
-  orc_check_altivec_sysctl_openbsd();
+  orc_check_altivec_sysctl_openbsd ();
 #elif defined(__linux__)
-  orc_check_altivec_proc_auxv();
+  orc_check_altivec_proc_auxv ();
 #else
-  orc_check_altivec_fault();
+  orc_check_altivec_fault ();
 #endif
 
   //_orc_profile_stamp = orc_profile_stamp_tb;
 }
-
-
-

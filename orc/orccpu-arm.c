@@ -50,12 +50,10 @@
 #ifdef __arm__
 #if 0
 static unsigned long
-orc_profile_stamp_xscale(void)
+orc_profile_stamp_xscale (void)
 {
   unsigned int ts;
-  __asm__ __volatile__ (
-      "  mrc p14, 0, %0, c1, c0, 0 \n"
-      : "=r" (ts));
+  __asm__ __volatile__ ("  mrc p14, 0, %0, c1, c0, 0 \n":"=r" (ts));
   return ts;
 }
 #endif
@@ -69,31 +67,34 @@ orc_check_neon_proc_auxv (void)
   ssize_t count;
   int fd;
 
-  fd = open("/proc/self/auxv", O_RDONLY);
+  fd = open ("/proc/self/auxv", O_RDONLY);
   if (fd < 0) {
     return 0;
   }
 
   while (1) {
-    count = read(fd, aux, sizeof(aux));
-    if (count < sizeof(aux)) {
+    count = read (fd, aux, sizeof (aux));
+    if (count < sizeof (aux)) {
       break;
     }
 
     if (aux[0] == AT_HWCAP) {
       //if (aux[1] & 64) flags |= ORC_TARGET_NEON_VFP;
       //if (aux[1] & 512) flags |= ORC_TARGET_NEON_IWMMXT;
-      if (aux[1] & 4096) flags |= ORC_TARGET_NEON_NEON;
-      if (aux[1] & 128) flags |= ORC_TARGET_ARM_EDSP;
-      ORC_INFO("arm hwcap %08x", aux[1]);
-    } if (aux[0] == AT_PLATFORM) {
-      ORC_INFO("arm platform %s", (char *)aux[1]);
+      if (aux[1] & 4096)
+        flags |= ORC_TARGET_NEON_NEON;
+      if (aux[1] & 128)
+        flags |= ORC_TARGET_ARM_EDSP;
+      ORC_INFO ("arm hwcap %08x", aux[1]);
+    }
+    if (aux[0] == AT_PLATFORM) {
+      ORC_INFO ("arm platform %s", (char *) aux[1]);
     } else if (aux[0] == AT_NULL) {
       break;
     }
   }
 
-  close(fd);
+  close (fd);
 
   return flags;
 }
@@ -107,13 +108,13 @@ orc_cpu_arm_getflags_cpuinfo (char *cpuinfo)
   char **flags;
   char **f;
 
-  cpuinfo_flags = get_cpuinfo_line(cpuinfo, "Features");
+  cpuinfo_flags = get_cpuinfo_line (cpuinfo, "Features");
   if (cpuinfo_flags == NULL) {
     free (cpuinfo);
     return;
   }
 
-  flags = strsplit(cpuinfo_flags, ' ');
+  flags = strsplit (cpuinfo_flags, ' ');
   for (f = flags; *f; f++) {
 #if 0
     if (strcmp (*f, "edsp") == 0) {
@@ -139,16 +140,17 @@ get_proc_cpuinfo (void)
   int fd;
   int n;
 
-  cpuinfo = malloc(4096);
-  if (cpuinfo == NULL) return NULL;
+  cpuinfo = malloc (4096);
+  if (cpuinfo == NULL)
+    return NULL;
 
-  fd = open("/proc/cpuinfo", O_RDONLY);
+  fd = open ("/proc/cpuinfo", O_RDONLY);
   if (fd < 0) {
     free (cpuinfo);
     return NULL;
   }
 
-  n = read(fd, cpuinfo, 4095);
+  n = read (fd, cpuinfo, 4095);
   if (n < 0) {
     free (cpuinfo);
     close (fd);
@@ -176,18 +178,19 @@ orc_arm_get_cpu_flags (void)
   char *cpuinfo;
   char *s;
 
-  cpuinfo = get_proc_cpuinfo();
-  if (cpuinfo == NULL) return;
+  cpuinfo = get_proc_cpuinfo ();
+  if (cpuinfo == NULL)
+    return;
 
-  s = get_cpuinfo_line(cpuinfo, "CPU implementer");
+  s = get_cpuinfo_line (cpuinfo, "CPU implementer");
   if (s) {
     arm_implementer = strtoul (s, NULL, 0);
-    free(s);
+    free (s);
   }
 
-  switch(arm_implementer) {
-    case 0x69: /* Intel */
-    case 0x41: /* ARM */
+  switch (arm_implementer) {
+    case 0x69:                 /* Intel */
+    case 0x41:                 /* ARM */
       /* ARM chips are known to not have timestamping available from 
        * user space */
       break;
@@ -196,13 +199,13 @@ orc_arm_get_cpu_flags (void)
   }
 
 #if 0
-  s = get_cpuinfo_line(cpuinfo, "CPU architecture");
+  s = get_cpuinfo_line (cpuinfo, "CPU architecture");
   if (s) {
     int arm_arch;
     arm_arch = strtoul (s, NULL, 0);
     if (arm_arch >= 6)
       orc_cpu_flags |= ORC_CPU_FLAG_ARM6;
-    free(s);
+    free (s);
   }
 #endif
 
@@ -217,5 +220,3 @@ orc_arm_get_cpu_flags (void)
   return neon_flags;
 }
 #endif
-
-

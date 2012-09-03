@@ -23,13 +23,13 @@ touch (unsigned char *ptr, int n)
 {
   static int sum;
   int i;
-  for(i=0;i<n;i++){
+  for (i = 0; i < n; i++) {
     sum += ptr[i];
   }
 }
 
 int
-main(int argc, char *argv[])
+main (int argc, char *argv[])
 {
   char *s, *d;
   orc_uint8 *src, *dest;
@@ -38,7 +38,7 @@ main(int argc, char *argv[])
   double ave, std;
   double ave_libc, std_libc;
   double null;
-  int i,j;
+  int i, j;
   double cpufreq;
   int unalign;
   OrcProgram *p;
@@ -58,18 +58,18 @@ main(int argc, char *argv[])
     unalign = 0;
   }
 
-  s = malloc(1024*1024*64+1024);
-  d = malloc(1024*1024*64+1024);
-  src = ORC_PTR_OFFSET(ALIGN(s,128),unalign);
-  dest = ALIGN(d,128);
+  s = malloc (1024 * 1024 * 64 + 1024);
+  d = malloc (1024 * 1024 * 64 + 1024);
+  src = ORC_PTR_OFFSET (ALIGN (s, 128), unalign);
+  dest = ALIGN (d, 128);
 
   orc_profile_init (&prof);
-  for(j=0;j<10;j++){
-    orc_profile_start(&prof);
-    orc_profile_stop(&prof);
+  for (j = 0; j < 10; j++) {
+    orc_profile_start (&prof);
+    orc_profile_stop (&prof);
   }
   orc_profile_get_ave_std (&prof, &null, &std);
-  
+
   {
     OrcCompileResult result;
 
@@ -88,7 +88,7 @@ main(int argc, char *argv[])
       fprintf (stderr, "Failed to compile orc_memcpy\n");
       return -1;
     }
-    
+
     code = orc_program_take_code (p);
   }
 
@@ -97,19 +97,19 @@ main(int argc, char *argv[])
 #endif
   orc_get_data_cache_sizes (&level1, &level2, &level3);
   if (level3 > 0) {
-    max = (log(level3)/M_LN2 - 6.0) * 10 + 20;
+    max = (log (level3) / M_LN2 - 6.0) * 10 + 20;
   } else if (level2 > 0) {
-    max = (log(level2)/M_LN2 - 6.0) * 10 + 20;
+    max = (log (level2) / M_LN2 - 6.0) * 10 + 20;
   } else {
     max = 140;
   }
 
-  for(i=0;i<max;i++){
-    double x = i*0.1 + 6.0;
-    int size = pow(2.0, x);
+  for (i = 0; i < max; i++) {
+    double x = i * 0.1 + 6.0;
+    int size = pow (2.0, x);
 
     if (flush_cache) {
-      touch (src, (1<<18));
+      touch (src, (1 << 18));
     }
     if (hot_src) {
       touch (src, size);
@@ -119,22 +119,22 @@ main(int argc, char *argv[])
     }
 
     orc_profile_init (&prof);
-    for(j=0;j<10;j++){
+    for (j = 0; j < 10; j++) {
       OrcExecutor _ex, *ex = &_ex;
       void (*func) (OrcExecutor *);
 
-      orc_profile_start(&prof);
+      orc_profile_start (&prof);
       //orc_memcpy (dest, src, size);
       ex->n = size;
       ex->arrays[ORC_VAR_D1] = dest;
-      ex->arrays[ORC_VAR_S1] = (void *)src;
+      ex->arrays[ORC_VAR_S1] = (void *) src;
 
       func = code->exec;
       func (ex);
 
-      orc_profile_stop(&prof);
+      orc_profile_stop (&prof);
       if (flush_cache) {
-        touch (src, (1<<18));
+        touch (src, (1 << 18));
       }
       if (hot_src) {
         touch (src, size);
@@ -145,12 +145,12 @@ main(int argc, char *argv[])
     }
 
     orc_profile_init (&prof_libc);
-    for(j=0;j<10;j++){
-      orc_profile_start(&prof_libc);
+    for (j = 0; j < 10; j++) {
+      orc_profile_start (&prof_libc);
       memcpy (dest, src, size);
-      orc_profile_stop(&prof_libc);
+      orc_profile_stop (&prof_libc);
       if (flush_cache) {
-        touch (src, (1<<18));
+        touch (src, (1 << 18));
       }
       if (hot_src) {
         touch (src, size);
@@ -169,8 +169,8 @@ main(int argc, char *argv[])
     //printf("%d: %10.4g %10.4g %10.4g %10.4g (libc %10.4g)\n", i, ave, std,
     //    ave/(1<<i), cpufreq/(ave/(1<<i)),
     //    cpufreq/(ave_libc/(1<<i)));
-    printf("%g %10.4g %10.4g\n", x,
-        cpufreq/(ave/size), cpufreq/(ave_libc/size));
+    printf ("%g %10.4g %10.4g\n", x,
+        cpufreq / (ave / size), cpufreq / (ave_libc / size));
     //printf("%g %10.4g %10.4g\n", x,
     //    32*(ave/(size)), 32*(ave_libc/(size)));
     fflush (stdout);
@@ -178,4 +178,3 @@ main(int argc, char *argv[])
 
   return 0;
 }
-

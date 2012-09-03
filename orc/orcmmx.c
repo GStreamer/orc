@@ -19,14 +19,15 @@
 
 
 const char *
-orc_x86_get_regname_mmx(int i)
+orc_x86_get_regname_mmx (int i)
 {
   static const char *x86_regs[] = {
     "mm0", "mm1", "mm2", "mm3", "mm4", "mm5", "mm6", "mm7",
     "mm8", "mm9", "mm10", "mm11", "mm12", "mm13", "mm14", "mm15"
   };
 
-  if (i>=X86_MM0 && i<X86_MM0 + 16) return x86_regs[i - X86_MM0];
+  if (i >= X86_MM0 && i < X86_MM0 + 16)
+    return x86_regs[i - X86_MM0];
   switch (i) {
     case 0:
       return "UNALLOCATED";
@@ -39,81 +40,86 @@ orc_x86_get_regname_mmx(int i)
 
 #if 0
 void
-orc_x86_emit_mov_memindex_mmx (OrcCompiler *compiler, int size, int offset,
+orc_x86_emit_mov_memindex_mmx (OrcCompiler * compiler, int size, int offset,
     int reg1, int regindex, int shift, int reg2, int is_aligned)
 {
   switch (size) {
     case 4:
-      ORC_ASM_CODE(compiler,"  movd %d(%%%s,%%%s,%d), %%%s\n", offset,
-          orc_x86_get_regname_ptr(compiler, reg1),
-          orc_x86_get_regname_ptr(compiler, regindex), 1<<shift,
-          orc_x86_get_regname_mmx(reg2));
-      orc_x86_emit_rex(compiler, 0, reg2, 0, reg1);
+      ORC_ASM_CODE (compiler, "  movd %d(%%%s,%%%s,%d), %%%s\n", offset,
+          orc_x86_get_regname_ptr (compiler, reg1),
+          orc_x86_get_regname_ptr (compiler, regindex), 1 << shift,
+          orc_x86_get_regname_mmx (reg2));
+      orc_x86_emit_rex (compiler, 0, reg2, 0, reg1);
       *compiler->codeptr++ = 0x0f;
       *compiler->codeptr++ = 0x6e;
       break;
     case 8:
-      ORC_ASM_CODE(compiler,"  movq %d(%%%s,%%%s,%d), %%%s\n", offset, orc_x86_get_regname_ptr(compiler, reg1),
-          orc_x86_get_regname_ptr(compiler, regindex), 1<<shift,
-          orc_x86_get_regname_mmx(reg2));
-      orc_x86_emit_rex(compiler, 0, reg2, 0, reg1);
+      ORC_ASM_CODE (compiler, "  movq %d(%%%s,%%%s,%d), %%%s\n", offset,
+          orc_x86_get_regname_ptr (compiler, reg1),
+          orc_x86_get_regname_ptr (compiler, regindex), 1 << shift,
+          orc_x86_get_regname_mmx (reg2));
+      orc_x86_emit_rex (compiler, 0, reg2, 0, reg1);
       *compiler->codeptr++ = 0x0f;
       *compiler->codeptr++ = 0x7e;
       break;
     default:
-      ORC_COMPILER_ERROR(compiler, "bad size");
+      ORC_COMPILER_ERROR (compiler, "bad size");
       break;
   }
   orc_x86_emit_modrm_memindex (compiler, reg2, offset, reg1, regindex, shift);
 }
 
 void
-orc_x86_emit_mov_memoffset_mmx (OrcCompiler *compiler, int size, int offset,
+orc_x86_emit_mov_memoffset_mmx (OrcCompiler * compiler, int size, int offset,
     int reg1, int reg2, int is_aligned)
 {
   switch (size) {
     case 4:
-      ORC_ASM_CODE(compiler,"  movd %d(%%%s), %%%s\n", offset, orc_x86_get_regname_ptr(compiler, reg1),
-          orc_x86_get_regname_mmx(reg2));
-      orc_x86_emit_rex(compiler, 0, reg2, 0, reg1);
+      ORC_ASM_CODE (compiler, "  movd %d(%%%s), %%%s\n", offset,
+          orc_x86_get_regname_ptr (compiler, reg1),
+          orc_x86_get_regname_mmx (reg2));
+      orc_x86_emit_rex (compiler, 0, reg2, 0, reg1);
       *compiler->codeptr++ = 0x0f;
       *compiler->codeptr++ = 0x6e;
       break;
     case 8:
-      ORC_ASM_CODE(compiler,"  movq %d(%%%s), %%%s\n", offset, orc_x86_get_regname_ptr(compiler, reg1),
-          orc_x86_get_regname_mmx(reg2));
-      orc_x86_emit_rex(compiler, 0, reg2, 0, reg1);
+      ORC_ASM_CODE (compiler, "  movq %d(%%%s), %%%s\n", offset,
+          orc_x86_get_regname_ptr (compiler, reg1),
+          orc_x86_get_regname_mmx (reg2));
+      orc_x86_emit_rex (compiler, 0, reg2, 0, reg1);
       *compiler->codeptr++ = 0x0f;
       *compiler->codeptr++ = 0x6f;
       break;
     default:
-      ORC_COMPILER_ERROR(compiler, "bad size");
+      ORC_COMPILER_ERROR (compiler, "bad size");
       break;
   }
   orc_x86_emit_modrm_memoffset (compiler, offset, reg1, reg2);
 }
 
 void
-orc_x86_emit_mov_mmx_memoffset (OrcCompiler *compiler, int size, int reg1, int offset,
-    int reg2, int aligned, int uncached)
+orc_x86_emit_mov_mmx_memoffset (OrcCompiler * compiler, int size, int reg1,
+    int offset, int reg2, int aligned, int uncached)
 {
   switch (size) {
     case 4:
-      ORC_ASM_CODE(compiler,"  movd %%%s, %d(%%%s)\n", orc_x86_get_regname_mmx(reg1), offset,
-          orc_x86_get_regname_ptr(compiler, reg2));
-      orc_x86_emit_rex(compiler, 0, reg1, 0, reg2);
+      ORC_ASM_CODE (compiler, "  movd %%%s, %d(%%%s)\n",
+          orc_x86_get_regname_mmx (reg1), offset,
+          orc_x86_get_regname_ptr (compiler, reg2));
+      orc_x86_emit_rex (compiler, 0, reg1, 0, reg2);
       *compiler->codeptr++ = 0x0f;
       *compiler->codeptr++ = 0x7e;
       break;
     case 8:
-      ORC_ASM_CODE(compiler,"  movq %%%s, %d(%%%s)\n", orc_x86_get_regname_mmx(reg1), offset,
-          orc_x86_get_regname_ptr(compiler, reg2));
-      orc_x86_emit_rex(compiler, 0, reg1, 0, reg2);
+      ORC_ASM_CODE (compiler, "  movq %%%s, %d(%%%s)\n",
+          orc_x86_get_regname_mmx (reg1), offset,
+          orc_x86_get_regname_ptr (compiler, reg2));
+      orc_x86_emit_rex (compiler, 0, reg1, 0, reg2);
       *compiler->codeptr++ = 0x0f;
       *compiler->codeptr++ = 0x7f;
       break;
     default:
-      ORC_COMPILER_ERROR(compiler, "bad size");
+      ORC_COMPILER_ERROR (compiler, "bad size");
       break;
   }
 
@@ -122,7 +128,7 @@ orc_x86_emit_mov_mmx_memoffset (OrcCompiler *compiler, int size, int reg1, int o
 #endif
 
 void
-orc_x86_emit_mov_memoffset_mmx (OrcCompiler *compiler, int size, int offset,
+orc_x86_emit_mov_memoffset_mmx (OrcCompiler * compiler, int size, int offset,
     int reg1, int reg2, int is_aligned)
 {
   switch (size) {
@@ -133,13 +139,13 @@ orc_x86_emit_mov_memoffset_mmx (OrcCompiler *compiler, int size, int offset,
       orc_mmx_emit_movq_load_memoffset (compiler, offset, reg1, reg2);
       break;
     default:
-      ORC_COMPILER_ERROR(compiler, "bad size");
+      ORC_COMPILER_ERROR (compiler, "bad size");
       break;
   }
 }
 
 void
-orc_x86_emit_mov_memindex_mmx (OrcCompiler *compiler, int size, int offset,
+orc_x86_emit_mov_memindex_mmx (OrcCompiler * compiler, int size, int offset,
     int reg1, int regindex, int shift, int reg2, int is_aligned)
 {
   switch (size) {
@@ -152,13 +158,13 @@ orc_x86_emit_mov_memindex_mmx (OrcCompiler *compiler, int size, int offset,
           reg1, regindex, shift, reg2);
       break;
     default:
-      ORC_COMPILER_ERROR(compiler, "bad size");
+      ORC_COMPILER_ERROR (compiler, "bad size");
       break;
   }
 }
 
 void
-orc_x86_emit_mov_mmx_memoffset (OrcCompiler *compiler, int size, int reg1,
+orc_x86_emit_mov_mmx_memoffset (OrcCompiler * compiler, int size, int reg1,
     int offset, int reg2, int aligned, int uncached)
 {
   switch (size) {
@@ -169,9 +175,8 @@ orc_x86_emit_mov_mmx_memoffset (OrcCompiler *compiler, int size, int reg1,
       orc_mmx_emit_movq_store_memoffset (compiler, offset, reg1, reg2);
       break;
     default:
-      ORC_COMPILER_ERROR(compiler, "bad size");
+      ORC_COMPILER_ERROR (compiler, "bad size");
       break;
   }
 
 }
-

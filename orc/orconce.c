@@ -80,15 +80,15 @@ orc_once_cs_init (void)
   InitializeCriticalSection (&global_mutex);
 }
 
-__declspec(allocate(".CRT$XCU"))
-void (__cdecl * orc_once_cs_init_constructor)(void) = orc_once_cs_init;
+__declspec (allocate (".CRT$XCU"))
+     void (__cdecl * orc_once_cs_init_constructor) (void) = orc_once_cs_init;
 
 #elif defined(__GNUC__)
 
-static void orc_once_cs_init (void) __attribute__((constructor));
+static void orc_once_cs_init (void) __attribute__ ((constructor));
 
 static void
-orc_once_cs_init (void) 
+orc_once_cs_init (void)
 {
   InitializeCriticalSection (&once_mutex);
   InitializeCriticalSection (&global_mutex);
@@ -122,5 +122,3 @@ orc_once_mutex_unlock (void)
 }
 
 #endif
-
-

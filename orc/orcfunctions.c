@@ -47,9 +47,26 @@ typedef unsigned long orc_uint64;
 #define ORC_UINT64_C(x) (x##UL)
 #endif
 #endif
-typedef union { orc_int16 i; orc_int8 x2[2]; } orc_union16;
-typedef union { orc_int32 i; float f; orc_int16 x2[2]; orc_int8 x4[4]; } orc_union32;
-typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 x4[4]; } orc_union64;
+typedef union
+{
+  orc_int16 i;
+  orc_int8 x2[2];
+} orc_union16;
+typedef union
+{
+  orc_int32 i;
+  float f;
+  orc_int16 x2[2];
+  orc_int8 x4[4];
+} orc_union32;
+typedef union
+{
+  orc_int64 i;
+  double f;
+  orc_int32 x2[2];
+  float x2f[2];
+  orc_int16 x4[4];
+} orc_union64;
 #endif
 #ifndef ORC_RESTRICT
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
@@ -64,8 +81,8 @@ typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
 #endif
-void orc_memcpy (void * ORC_RESTRICT d1, const void * ORC_RESTRICT s1, int n);
-void orc_memset (void * ORC_RESTRICT d1, int p1, int n);
+void orc_memcpy (void *ORC_RESTRICT d1, const void *ORC_RESTRICT s1, int n);
+void orc_memset (void *ORC_RESTRICT d1, int p1, int n);
 
 
 /* begin Orc C target preamble */
@@ -115,15 +132,16 @@ void orc_memset (void * ORC_RESTRICT d1, int p1, int n);
 /* orc_memcpy */
 #ifdef DISABLE_ORC
 void
-orc_memcpy (void * ORC_RESTRICT d1, const void * ORC_RESTRICT s1, int n){
+orc_memcpy (void *ORC_RESTRICT d1, const void *ORC_RESTRICT s1, int n)
+{
   int i;
-  orc_int8 * ORC_RESTRICT ptr0;
-  const orc_int8 * ORC_RESTRICT ptr4;
+  orc_int8 *ORC_RESTRICT ptr0;
+  const orc_int8 *ORC_RESTRICT ptr4;
   orc_int8 var32;
   orc_int8 var33;
 
-  ptr0 = (orc_int8 *)d1;
-  ptr4 = (orc_int8 *)s1;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
 
 
   for (i = 0; i < n; i++) {
@@ -143,13 +161,13 @@ _backup_orc_memcpy (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_int8 * ORC_RESTRICT ptr0;
-  const orc_int8 * ORC_RESTRICT ptr4;
+  orc_int8 *ORC_RESTRICT ptr0;
+  const orc_int8 *ORC_RESTRICT ptr4;
   orc_int8 var32;
   orc_int8 var33;
 
-  ptr0 = (orc_int8 *)ex->arrays[0];
-  ptr4 = (orc_int8 *)ex->arrays[4];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
 
 
   for (i = 0; i < n; i++) {
@@ -164,7 +182,7 @@ _backup_orc_memcpy (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_memcpy (void * ORC_RESTRICT d1, const void * ORC_RESTRICT s1, int n)
+orc_memcpy (void *ORC_RESTRICT d1, const void *ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -182,7 +200,8 @@ orc_memcpy (void * ORC_RESTRICT d1, const void * ORC_RESTRICT s1, int n)
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 1, "s1");
 
-      orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1, ORC_VAR_D1);
+      orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -196,7 +215,7 @@ orc_memcpy (void * ORC_RESTRICT d1, const void * ORC_RESTRICT s1, int n)
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
-  ex->arrays[ORC_VAR_S1] = (void *)s1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
 
   func = c->exec;
   func (ex);
@@ -207,16 +226,17 @@ orc_memcpy (void * ORC_RESTRICT d1, const void * ORC_RESTRICT s1, int n)
 /* orc_memset */
 #ifdef DISABLE_ORC
 void
-orc_memset (void * ORC_RESTRICT d1, int p1, int n){
+orc_memset (void *ORC_RESTRICT d1, int p1, int n)
+{
   int i;
-  orc_int8 * ORC_RESTRICT ptr0;
+  orc_int8 *ORC_RESTRICT ptr0;
   orc_int8 var32;
   orc_int8 var33;
 
-  ptr0 = (orc_int8 *)d1;
+  ptr0 = (orc_int8 *) d1;
 
-    /* 0: loadpb */
-    var32 = p1;
+  /* 0: loadpb */
+  var32 = p1;
 
   for (i = 0; i < n; i++) {
     /* 1: copyb */
@@ -233,14 +253,14 @@ _backup_orc_memset (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_int8 * ORC_RESTRICT ptr0;
+  orc_int8 *ORC_RESTRICT ptr0;
   orc_int8 var32;
   orc_int8 var33;
 
-  ptr0 = (orc_int8 *)ex->arrays[0];
+  ptr0 = (orc_int8 *) ex->arrays[0];
 
-    /* 0: loadpb */
-    var32 = ex->params[24];
+  /* 0: loadpb */
+  var32 = ex->params[24];
 
   for (i = 0; i < n; i++) {
     /* 1: copyb */
@@ -252,7 +272,7 @@ _backup_orc_memset (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_memset (void * ORC_RESTRICT d1, int p1, int n)
+orc_memset (void *ORC_RESTRICT d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -270,7 +290,8 @@ orc_memset (void * ORC_RESTRICT d1, int p1, int n)
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_parameter (p, 1, "p1");
 
-      orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1, ORC_VAR_D1);
+      orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
+          ORC_VAR_D1);
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -290,5 +311,3 @@ orc_memset (void * ORC_RESTRICT d1, int p1, int n)
   func (ex);
 }
 #endif
-
-

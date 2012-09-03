@@ -31,11 +31,11 @@ orc_program_new (void)
 
   orc_init ();
 
-  p = malloc(sizeof(OrcProgram));
-  memset (p, 0, sizeof(OrcProgram));
+  p = malloc (sizeof (OrcProgram));
+  memset (p, 0, sizeof (OrcProgram));
 
   p->name = malloc (40);
-  sprintf(p->name, "func_%p", p);
+  sprintf (p->name, "func_%p", p);
 
   return p;
 }
@@ -137,7 +137,7 @@ orc_program_new_as (int size1, int size2)
 }
 
 OrcProgram *
-orc_program_new_from_static_bytecode (const orc_uint8 *bytecode)
+orc_program_new_from_static_bytecode (const orc_uint8 * bytecode)
 {
   OrcProgram *p;
 
@@ -154,10 +154,10 @@ orc_program_new_from_static_bytecode (const orc_uint8 *bytecode)
  * Frees an OrcProgram.
  */
 void
-orc_program_free (OrcProgram *program)
+orc_program_free (OrcProgram * program)
 {
   int i;
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for (i = 0; i < ORC_N_VARIABLES; i++) {
     if (program->vars[i].name) {
       free (program->vars[i].name);
       program->vars[i].name = NULL;
@@ -186,7 +186,7 @@ orc_program_free (OrcProgram *program)
  * Sets the name of the program.  The string is copied.
  */
 void
-orc_program_set_name (OrcProgram *program, const char *name)
+orc_program_set_name (OrcProgram * program, const char *name)
 {
   if (program->name) {
     free (program->name);
@@ -202,7 +202,7 @@ orc_program_set_name (OrcProgram *program, const char *name)
  * Sets the current line of the program.
  */
 void
-orc_program_set_line (OrcProgram *program, unsigned int line)
+orc_program_set_line (OrcProgram * program, unsigned int line)
 {
   program->current_line = line;
 }
@@ -216,32 +216,37 @@ orc_program_set_line (OrcProgram *program, unsigned int line)
  * an OrcExec2D executor.
  */
 void
-orc_program_set_2d (OrcProgram *program)
+orc_program_set_2d (OrcProgram * program)
 {
   program->is_2d = TRUE;
 }
 
-void orc_program_set_constant_n (OrcProgram *program, int n)
+void
+orc_program_set_constant_n (OrcProgram * program, int n)
 {
   program->constant_n = n;
 }
 
-void orc_program_set_n_multiple (OrcProgram *program, int n)
+void
+orc_program_set_n_multiple (OrcProgram * program, int n)
 {
   program->n_multiple = n;
 }
 
-void orc_program_set_n_minimum (OrcProgram *program, int n)
+void
+orc_program_set_n_minimum (OrcProgram * program, int n)
 {
   program->n_minimum = n;
 }
 
-void orc_program_set_n_maximum (OrcProgram *program, int n)
+void
+orc_program_set_n_maximum (OrcProgram * program, int n)
 {
   program->n_maximum = n;
 }
 
-void orc_program_set_constant_m (OrcProgram *program, int m)
+void
+orc_program_set_constant_m (OrcProgram * program, int m)
 {
   program->constant_m = m;
 }
@@ -257,7 +262,7 @@ void orc_program_set_constant_m (OrcProgram *program, int m)
  * instead of resorting to emulation.
  */
 void
-orc_program_set_backup_function (OrcProgram *program, OrcExecutorFunc func)
+orc_program_set_backup_function (OrcProgram * program, OrcExecutorFunc func)
 {
   program->backup_func = func;
 }
@@ -272,7 +277,7 @@ orc_program_set_backup_function (OrcProgram *program, OrcExecutorFunc func)
  * Returns: a character string
  */
 const char *
-orc_program_get_name (OrcProgram *program)
+orc_program_get_name (OrcProgram * program)
 {
   return program->name;
 }
@@ -288,13 +293,13 @@ orc_program_get_name (OrcProgram *program)
  * Returns: the index of the new variable
  */
 int
-orc_program_add_temporary (OrcProgram *program, int size, const char *name)
+orc_program_add_temporary (OrcProgram * program, int size, const char *name)
 {
   int i = ORC_VAR_T1 + program->n_temp_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_TEMP;
   program->vars[i].size = size;
-  program->vars[i].name = strdup(name);
+  program->vars[i].name = strdup (name);
   program->n_temp_vars++;
 
   return i;
@@ -311,14 +316,14 @@ orc_program_add_temporary (OrcProgram *program, int size, const char *name)
  * Returns: the index of the new variable
  */
 int
-orc_program_dup_temporary (OrcProgram *program, int var, int j)
+orc_program_dup_temporary (OrcProgram * program, int var, int j)
 {
   int i = ORC_VAR_T1 + program->n_temp_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_TEMP;
   program->vars[i].size = program->vars[var].size;
-  program->vars[i].name = malloc (strlen(program->vars[var].name) + 10);
-  sprintf(program->vars[i].name, "%s.dup%d", program->vars[var].name, j);
+  program->vars[i].name = malloc (strlen (program->vars[var].name) + 10);
+  sprintf (program->vars[i].name, "%s.dup%d", program->vars[var].name, j);
   program->n_temp_vars++;
 
   return i;
@@ -337,18 +342,19 @@ orc_program_dup_temporary (OrcProgram *program, int var, int j)
  * Returns: the index of the new variable
  */
 int
-orc_program_add_source_full (OrcProgram *program, int size, const char *name,
+orc_program_add_source_full (OrcProgram * program, int size, const char *name,
     const char *type_name, int alignment)
 {
   int i = ORC_VAR_S1 + program->n_src_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_SRC;
   program->vars[i].size = size;
-  if (alignment == 0) alignment = size;
+  if (alignment == 0)
+    alignment = size;
   program->vars[i].alignment = alignment;
-  program->vars[i].name = strdup(name);
+  program->vars[i].name = strdup (name);
   if (type_name) {
-    program->vars[i].type_name = strdup(type_name);
+    program->vars[i].type_name = strdup (type_name);
   }
   program->n_src_vars++;
 
@@ -366,7 +372,7 @@ orc_program_add_source_full (OrcProgram *program, int size, const char *name,
  * Returns: the index of the new variable
  */
 int
-orc_program_add_source (OrcProgram *program, int size, const char *name)
+orc_program_add_source (OrcProgram * program, int size, const char *name)
 {
   return orc_program_add_source_full (program, size, name, NULL, 0);
 }
@@ -382,18 +388,19 @@ orc_program_add_source (OrcProgram *program, int size, const char *name)
  * Returns: the index of the new variable
  */
 int
-orc_program_add_destination_full (OrcProgram *program, int size, const char *name,
-    const char *type_name, int alignment)
+orc_program_add_destination_full (OrcProgram * program, int size,
+    const char *name, const char *type_name, int alignment)
 {
   int i = ORC_VAR_D1 + program->n_dest_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_DEST;
   program->vars[i].size = size;
-  if (alignment == 0) alignment = size;
+  if (alignment == 0)
+    alignment = size;
   program->vars[i].alignment = alignment;
-  program->vars[i].name = strdup(name);
+  program->vars[i].name = strdup (name);
   if (type_name) {
-    program->vars[i].type_name = strdup(type_name);
+    program->vars[i].type_name = strdup (type_name);
   }
   program->n_dest_vars++;
 
@@ -411,7 +418,7 @@ orc_program_add_destination_full (OrcProgram *program, int size, const char *nam
  * Returns: the index of the new variable
  */
 int
-orc_program_add_destination (OrcProgram *program, int size, const char *name)
+orc_program_add_destination (OrcProgram * program, int size, const char *name)
 {
   return orc_program_add_destination_full (program, size, name, NULL, 0);
 }
@@ -428,40 +435,41 @@ orc_program_add_destination (OrcProgram *program, int size, const char *name)
  * Returns: the index of the new variable
  */
 int
-orc_program_add_constant (OrcProgram *program, int size, int value, const char *name)
+orc_program_add_constant (OrcProgram * program, int size, int value,
+    const char *name)
 {
   int i;
-  
+
   i = ORC_VAR_C1 + program->n_const_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_CONST;
   program->vars[i].size = size;
   program->vars[i].value.i = value;
-  program->vars[i].name = strdup(name);
+  program->vars[i].name = strdup (name);
   program->n_const_vars++;
 
   return i;
 }
 
 int
-orc_program_add_constant_int64 (OrcProgram *program, int size,
+orc_program_add_constant_int64 (OrcProgram * program, int size,
     orc_int64 value, const char *name)
 {
   int i;
-  
+
   i = ORC_VAR_C1 + program->n_const_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_CONST;
   program->vars[i].size = size;
   program->vars[i].value.i = value;
-  program->vars[i].name = strdup(name);
+  program->vars[i].name = strdup (name);
   program->n_const_vars++;
 
   return i;
 }
 
 int
-orc_program_add_constant_float (OrcProgram *program, int size,
+orc_program_add_constant_float (OrcProgram * program, int size,
     float value, const char *name)
 {
   orc_union32 u;
@@ -470,7 +478,7 @@ orc_program_add_constant_float (OrcProgram *program, int size,
 }
 
 int
-orc_program_add_constant_double (OrcProgram *program, int size,
+orc_program_add_constant_double (OrcProgram * program, int size,
     double value, const char *name)
 {
   orc_union64 u;
@@ -479,7 +487,7 @@ orc_program_add_constant_double (OrcProgram *program, int size,
 }
 
 int
-orc_program_add_constant_str (OrcProgram *program, int size,
+orc_program_add_constant_str (OrcProgram * program, int size,
     const char *value, const char *name)
 {
   int i;
@@ -517,7 +525,7 @@ orc_program_add_constant_str (OrcProgram *program, int size,
     }
   }
 
-  for(j=0;j<program->n_const_vars;j++){
+  for (j = 0; j < program->n_const_vars; j++) {
     if (program->vars[ORC_VAR_C1 + j].value.i == program->vars[i].value.i) {
       return ORC_VAR_C1 + j;
     }
@@ -525,7 +533,7 @@ orc_program_add_constant_str (OrcProgram *program, int size,
 
   program->vars[i].vartype = ORC_VAR_TYPE_CONST;
   program->vars[i].size = size;
-  program->vars[i].name = strdup(name);
+  program->vars[i].name = strdup (name);
   program->n_const_vars++;
 
   return i;
@@ -542,14 +550,14 @@ orc_program_add_constant_str (OrcProgram *program, int size,
  * Returns: the index of the new variable
  */
 int
-orc_program_add_parameter (OrcProgram *program, int size, const char *name)
+orc_program_add_parameter (OrcProgram * program, int size, const char *name)
 {
   int i = ORC_VAR_P1 + program->n_param_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_PARAM;
   program->vars[i].param_type = ORC_PARAM_TYPE_INT;
   program->vars[i].size = size;
-  program->vars[i].name = strdup(name);
+  program->vars[i].name = strdup (name);
   program->n_param_vars++;
 
   return i;
@@ -566,21 +574,22 @@ orc_program_add_parameter (OrcProgram *program, int size, const char *name)
  * Returns: the index of the new variable
  */
 int
-orc_program_add_parameter_float (OrcProgram *program, int size, const char *name)
+orc_program_add_parameter_float (OrcProgram * program, int size,
+    const char *name)
 {
   int i = ORC_VAR_P1 + program->n_param_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_PARAM;
   program->vars[i].param_type = ORC_PARAM_TYPE_FLOAT;
   program->vars[i].size = size;
-  program->vars[i].name = strdup(name);
+  program->vars[i].name = strdup (name);
   program->n_param_vars++;
 
   return i;
 }
 
 int
-orc_program_add_parameter_double (OrcProgram *program, int size,
+orc_program_add_parameter_double (OrcProgram * program, int size,
     const char *name)
 {
   int i = ORC_VAR_P1 + program->n_param_vars;
@@ -588,14 +597,14 @@ orc_program_add_parameter_double (OrcProgram *program, int size,
   program->vars[i].vartype = ORC_VAR_TYPE_PARAM;
   program->vars[i].param_type = ORC_PARAM_TYPE_DOUBLE;
   program->vars[i].size = size;
-  program->vars[i].name = strdup(name);
+  program->vars[i].name = strdup (name);
   program->n_param_vars++;
 
   return i;
 }
 
 int
-orc_program_add_parameter_int64 (OrcProgram *program, int size,
+orc_program_add_parameter_int64 (OrcProgram * program, int size,
     const char *name)
 {
   int i = ORC_VAR_P1 + program->n_param_vars;
@@ -603,7 +612,7 @@ orc_program_add_parameter_int64 (OrcProgram *program, int size,
   program->vars[i].vartype = ORC_VAR_TYPE_PARAM;
   program->vars[i].param_type = ORC_PARAM_TYPE_INT64;
   program->vars[i].size = size;
-  program->vars[i].name = strdup(name);
+  program->vars[i].name = strdup (name);
   program->n_param_vars++;
 
   return i;
@@ -620,26 +629,26 @@ orc_program_add_parameter_int64 (OrcProgram *program, int size,
  * Returns: the index of the new variable
  */
 int
-orc_program_add_accumulator (OrcProgram *program, int size, const char *name)
+orc_program_add_accumulator (OrcProgram * program, int size, const char *name)
 {
   int i = ORC_VAR_A1 + program->n_accum_vars;
 
   program->vars[i].vartype = ORC_VAR_TYPE_ACCUMULATOR;
   program->vars[i].size = size;
-  program->vars[i].name = strdup(name);
+  program->vars[i].name = strdup (name);
   program->n_param_vars++;
 
   return i;
 }
 
 void
-orc_program_set_type_name (OrcProgram *program, int var, const char *type_name)
+orc_program_set_type_name (OrcProgram * program, int var, const char *type_name)
 {
-  program->vars[var].type_name = strdup(type_name);
+  program->vars[var].type_name = strdup (type_name);
 }
 
 void
-orc_program_set_var_alignment (OrcProgram *program, int var, int alignment)
+orc_program_set_var_alignment (OrcProgram * program, int var, int alignment)
 {
   program->vars[var].alignment = alignment;
   if (alignment >= 16) {
@@ -648,8 +657,7 @@ orc_program_set_var_alignment (OrcProgram *program, int var, int alignment)
 }
 
 void
-orc_program_set_sampling_type (OrcProgram *program, int var,
-    int sampling_type)
+orc_program_set_sampling_type (OrcProgram * program, int var, int sampling_type)
 {
   /* This doesn't do anything yet */
 }
@@ -665,7 +673,7 @@ orc_program_set_sampling_type (OrcProgram *program, int var,
  * @arg1.  The instruction must take 2 operands.
  */
 void
-orc_program_append_ds (OrcProgram *program, const char *name, int arg0,
+orc_program_append_ds (OrcProgram * program, const char *name, int arg0,
     int arg1)
 {
   OrcInstruction *insn;
@@ -678,7 +686,7 @@ orc_program_append_ds (OrcProgram *program, const char *name, int arg0,
   }
   insn->dest_args[0] = arg0;
   insn->src_args[0] = arg1;
-  
+
   program->n_insns++;
 }
 
@@ -694,7 +702,7 @@ orc_program_append_ds (OrcProgram *program, const char *name, int arg0,
  * @arg1, and @arg2.  The instruction must take 3 operands.
  */
 void
-orc_program_append (OrcProgram *program, const char *name, int arg0,
+orc_program_append (OrcProgram * program, const char *name, int arg0,
     int arg1, int arg2)
 {
   OrcInstruction *insn;
@@ -708,7 +716,7 @@ orc_program_append (OrcProgram *program, const char *name, int arg0,
   insn->dest_args[0] = arg0;
   insn->src_args[0] = arg1;
   insn->src_args[1] = arg2;
-  
+
   program->n_insns++;
 }
 
@@ -725,8 +733,8 @@ orc_program_append (OrcProgram *program, const char *name, int arg0,
  * @arg1, @arg2, and @arg3.
  */
 void
-orc_program_append_2 (OrcProgram *program, const char *name, unsigned int flags,
-    int arg0, int arg1, int arg2, int arg3)
+orc_program_append_2 (OrcProgram * program, const char *name,
+    unsigned int flags, int arg0, int arg1, int arg2, int arg3)
 {
   OrcInstruction *insn;
   int args[4];
@@ -774,13 +782,14 @@ orc_program_append_2 (OrcProgram *program, const char *name, unsigned int flags,
  * Returns: the index of the variable
  */
 int
-orc_program_find_var_by_name (OrcProgram *program, const char *name)
+orc_program_find_var_by_name (OrcProgram * program, const char *name)
 {
   int i;
 
-  if (name == NULL) return -1;
+  if (name == NULL)
+    return -1;
 
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for (i = 0; i < ORC_N_VARIABLES; i++) {
     if (program->vars[i].name && strcmp (program->vars[i].name, name) == 0) {
       return i;
     }
@@ -801,7 +810,7 @@ orc_program_find_var_by_name (OrcProgram *program, const char *name)
  * @arg1, and @arg2.  The instruction must take 3 operands.
  */
 void
-orc_program_append_str (OrcProgram *program, const char *name,
+orc_program_append_str (OrcProgram * program, const char *name,
     const char *arg1, const char *arg2, const char *arg3)
 {
   OrcInstruction *insn;
@@ -820,7 +829,7 @@ orc_program_append_str (OrcProgram *program, const char *name,
     insn->src_args[0] = orc_program_find_var_by_name (program, arg2);
     insn->src_args[1] = orc_program_find_var_by_name (program, arg3);
   }
-  
+
   program->n_insns++;
 }
 
@@ -838,7 +847,7 @@ orc_program_append_str (OrcProgram *program, const char *name,
  * @arg1, @arg2, and @arg3.
  */
 void
-orc_program_append_str_2 (OrcProgram *program, const char *name,
+orc_program_append_str_2 (OrcProgram * program, const char *name,
     unsigned int flags, const char *arg1, const char *arg2, const char *arg3,
     const char *arg4)
 {
@@ -888,7 +897,7 @@ orc_program_append_str_2 (OrcProgram *program, const char *name,
  * @arg2.  The instruction must take 2 operands.
  */
 void
-orc_program_append_ds_str (OrcProgram *program, const char *name,
+orc_program_append_ds_str (OrcProgram * program, const char *name,
     const char *arg1, const char *arg2)
 {
   OrcInstruction *insn;
@@ -901,12 +910,12 @@ orc_program_append_ds_str (OrcProgram *program, const char *name,
   }
   insn->dest_args[0] = orc_program_find_var_by_name (program, arg1);
   insn->src_args[0] = orc_program_find_var_by_name (program, arg2);
-  
+
   program->n_insns++;
 }
 
 void
-orc_program_append_dds_str (OrcProgram *program, const char *name,
+orc_program_append_dds_str (OrcProgram * program, const char *name,
     const char *arg1, const char *arg2, const char *arg3)
 {
   OrcInstruction *insn;
@@ -920,7 +929,7 @@ orc_program_append_dds_str (OrcProgram *program, const char *name,
   insn->dest_args[0] = orc_program_find_var_by_name (program, arg1);
   insn->dest_args[1] = orc_program_find_var_by_name (program, arg2);
   insn->src_args[0] = orc_program_find_var_by_name (program, arg3);
-  
+
   program->n_insns++;
 }
 
@@ -935,7 +944,7 @@ orc_program_append_dds_str (OrcProgram *program, const char *name,
  * Returns: a character string
  */
 const char *
-orc_program_get_asm_code (OrcProgram *program)
+orc_program_get_asm_code (OrcProgram * program)
 {
   return program->asm_code;
 }
@@ -951,9 +960,10 @@ orc_program_get_asm_code (OrcProgram *program)
  * Returns: a character string
  */
 const char *
-orc_program_get_error (OrcProgram *program)
+orc_program_get_error (OrcProgram * program)
 {
-  if (program->error_msg) return program->error_msg;
+  if (program->error_msg)
+    return program->error_msg;
   return "";
 }
 
@@ -966,17 +976,17 @@ orc_program_get_error (OrcProgram *program)
  * Returns: the number of bytes
  */
 int
-orc_program_get_max_array_size (OrcProgram *program)
+orc_program_get_max_array_size (OrcProgram * program)
 {
   int i;
   int max;
 
   max = 0;
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for (i = 0; i < ORC_N_VARIABLES; i++) {
     if (program->vars[i].size) {
       if (program->vars[i].vartype == ORC_VAR_TYPE_SRC ||
           program->vars[i].vartype == ORC_VAR_TYPE_DEST) {
-        max = MAX(max, program->vars[i].size);
+        max = MAX (max, program->vars[i].size);
       }
     }
   }
@@ -993,16 +1003,16 @@ orc_program_get_max_array_size (OrcProgram *program)
  * Returns: the number of bytes
  */
 int
-orc_program_get_max_accumulator_size (OrcProgram *program)
+orc_program_get_max_accumulator_size (OrcProgram * program)
 {
   int i;
   int max;
 
   max = 0;
-  for(i=0;i<ORC_N_VARIABLES;i++){
+  for (i = 0; i < ORC_N_VARIABLES; i++) {
     if (program->vars[i].size) {
       if (program->vars[i].vartype == ORC_VAR_TYPE_ACCUMULATOR) {
-        max = MAX(max, program->vars[i].size);
+        max = MAX (max, program->vars[i].size);
       }
     }
   }
@@ -1054,23 +1064,22 @@ orc_get_cpu_name (void)
 }
 
 void
-orc_program_reset (OrcProgram *program)
+orc_program_reset (OrcProgram * program)
 {
   if (program->orccode) {
     orc_code_free (program->orccode);
     program->orccode = NULL;
   }
   if (program->asm_code) {
-    free(program->asm_code);
+    free (program->asm_code);
     program->asm_code = NULL;
   }
 }
 
 OrcCode *
-orc_program_take_code (OrcProgram *program)
+orc_program_take_code (OrcProgram * program)
 {
   OrcCode *code = program->orccode;
   program->orccode = NULL;
   return code;
 }
-

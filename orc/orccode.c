@@ -13,13 +13,13 @@ OrcCode *
 orc_code_new (void)
 {
   OrcCode *code;
-  code = malloc(sizeof(OrcCode));
-  memset (code, 0, sizeof(OrcCode));
+  code = malloc (sizeof (OrcCode));
+  memset (code, 0, sizeof (OrcCode));
   return code;
 }
 
 void
-orc_code_free (OrcCode *code)
+orc_code_free (OrcCode * code)
 {
   if (code->insns) {
     free (code->insns);
@@ -36,6 +36,3 @@ orc_code_free (OrcCode *code)
 
   free (code);
 }
-
-
-

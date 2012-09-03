@@ -9,7 +9,7 @@
 
 int error = FALSE;
 
-void test_opcode_src (OrcStaticOpcode *opcode);
+void test_opcode_src (OrcStaticOpcode * opcode);
 
 int
 main (int argc, char *argv[])
@@ -17,22 +17,23 @@ main (int argc, char *argv[])
   int i;
   OrcOpcodeSet *opcode_set;
 
-  orc_test_init();
-  orc_init();
+  orc_test_init ();
+  orc_init ();
 
   opcode_set = orc_opcode_set_get ("sys");
 
-  for(i=0;i<opcode_set->n_opcodes;i++){
+  for (i = 0; i < opcode_set->n_opcodes; i++) {
     //printf("opcode_%-20s ", opcode_set->opcodes[i].name);
     test_opcode_src (opcode_set->opcodes + i);
   }
 
-  if (error) return 1;
+  if (error)
+    return 1;
   return 0;
 }
 
 void
-test_opcode_src (OrcStaticOpcode *opcode)
+test_opcode_src (OrcStaticOpcode * opcode)
 {
   OrcProgram *p;
   char s[40];
@@ -62,7 +63,7 @@ test_opcode_src (OrcStaticOpcode *opcode)
     flags = ORC_TEST_FLAGS_FLOAT;
   }
 
-  sprintf(s, "test_s_%s ", opcode->name);
+  sprintf (s, "test_s_%s ", opcode->name);
   orc_program_set_name (p, s);
 
   if (opcode->dest_size[1] != 0) {
@@ -74,8 +75,7 @@ test_opcode_src (OrcStaticOpcode *opcode)
   perf_mmx = orc_test_performance_full (p, flags, "mmx");
   perf_sse = orc_test_performance_full (p, flags, "sse");
 
-  printf("%g %g\n", perf_mmx, perf_sse);
+  printf ("%g %g\n", perf_mmx, perf_sse);
 
   orc_program_free (p);
 }
-
