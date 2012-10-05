@@ -17,6 +17,7 @@ void orc_c_init (void);
 void orc_neon_init (void);
 void orc_c64x_init (void);
 void orc_c64x_c_init (void);
+void orc_mips_init (void);
 
 extern int _orc_data_cache_size_level1;
 extern int _orc_data_cache_size_level2;

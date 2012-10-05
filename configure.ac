@@ -119,7 +119,7 @@ AC_SUBST(PTHREAD_CFLAGS)
 AC_SUBST(PTHREAD_LIBS)
 
 AC_ARG_ENABLE(backend,
-  AC_HELP_STRING([--enable-backend],[sse,mmx,neon,arm,all (default all)]),
+  AC_HELP_STRING([--enable-backend],[sse,mmx,neon,arm,mips,all (default all)]),
     [], [enable_backend=all])
 case "${enable_backend}" in
   sse)
@@ -146,6 +146,10 @@ case "${enable_backend}" in
     ENABLE_BACKEND_C64X=yes
     AC_DEFINE(ENABLE_BACKEND_C64X, 1, [Enable c64x backend])
     ;;
+  mips)
+    ENABLE_BACKEND_MIPS=yes
+    AC_DEFINE(ENABLE_BACKEND_MIPS, 1, [Enable MIPS backend])
+    ;;
   all|auto)
     ENABLE_BACKEND_SSE=yes
     AC_DEFINE(ENABLE_BACKEND_SSE, 1, [Enable SSE backend])
@@ -159,6 +163,8 @@ case "${enable_backend}" in
     AC_DEFINE(ENABLE_BACKEND_ARM, 1, [Enable Arm backend])
     ENABLE_BACKEND_C64X=yes
     AC_DEFINE(ENABLE_BACKEND_C64X, 1, [Enable c64x backend])
+    ENABLE_BACKEND_MIPS=yes
+    AC_DEFINE(ENABLE_BACKEND_MIPS, 1, [Enable MIPS backend])
     ;;
 esac
 AM_CONDITIONAL(ENABLE_BACKEND_SSE, test "x$ENABLE_BACKEND_SSE" = "xyes")
@@ -167,6 +173,7 @@ AM_CONDITIONAL(ENABLE_BACKEND_ALTIVEC, test "x$ENABLE_BACKEND_ALTIVEC" = "xyes")
 AM_CONDITIONAL(ENABLE_BACKEND_NEON, test "x$ENABLE_BACKEND_NEON" = "xyes")
 AM_CONDITIONAL(ENABLE_BACKEND_ARM, test "x$ENABLE_BACKEND_ARM" = "xyes")
 AM_CONDITIONAL(ENABLE_BACKEND_C64X, test "x$ENABLE_BACKEND_C64X" = "xyes")
+AM_CONDITIONAL(ENABLE_BACKEND_MIPS, test "x$ENABLE_BACKEND_MIPS" = "xyes")
 
 
 AC_DEFINE(ORC_EXPORTS, 1, [Defined for compiling internal code])

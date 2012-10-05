@@ -60,6 +60,9 @@ orc_init (void)
 #ifdef ENABLE_BACKEND_NEON
       orc_neon_init();
 #endif
+#ifdef ENABLE_BACKEND_MIPS
+      orc_mips_init();
+#endif
 
       inited = TRUE;
     }

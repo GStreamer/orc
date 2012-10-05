@@ -58,6 +58,9 @@ endif
 if ENABLE_BACKEND_C64X
 liborc_@ORC_MAJORMINOR@_la_SOURCES += orcprogram-c64x-c.c
 endif
+if ENABLE_BACKEND_MIPS
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orcmips.c orcprogram-mips.c orcrules-mips.c
+endif
 
 if HAVE_I386
 liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-x86.c
