@@ -158,9 +158,16 @@ orc_mips_load_constants_inner (OrcCompiler *compiler)
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
+
+        /* ORC_STRUCT_OFFSET is wrong when we run orc on a platform different
+         * than the target, e.g. x86_64 vs Mips32. We replace it with a dirty
+         * hand calculation for now */
+        /*orc_mips_emit_lw (compiler,
+            compiler->vars[i].ptr_register,
+            compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, arrays[i])); */
         orc_mips_emit_lw (compiler,
             compiler->vars[i].ptr_register,
-            compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
+            compiler->exec_reg, 20+4*i);
         break;
       default:
         break;
@@ -224,8 +231,13 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
   if (compiler->program->is_2d)
     ORC_PROGRAM_ERROR (compiler, "unimplemented");
 
-  orc_mips_emit_lw (compiler, ORC_MIPS_T0, compiler->exec_reg,
+  /*orc_mips_emit_lw (compiler, ORC_MIPS_T0, compiler->exec_reg,
                     (int)ORC_STRUCT_OFFSET(OrcExecutor, n));
+                    */
+  /* the above breaks when orc runs on a 64 bit machine because the calculated
+   * offset is not the same as on mips32 */
+  /* On MIPS32, executor->n is at a 4 bytes offset */
+  orc_mips_emit_lw (compiler, ORC_MIPS_T0, compiler->exec_reg, 4);
   orc_mips_emit_blez (compiler, ORC_MIPS_T0, 2);
   orc_mips_emit_nop (compiler);
   orc_mips_load_constants_inner (compiler);
