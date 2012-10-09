@@ -93,3 +93,12 @@ orc_mips_emit_add (OrcCompiler *compiler,
                 orc_mips_reg_name (source1),
                 orc_mips_reg_name (source2));
 }
+
+void
+orc_mips_emit_move (OrcCompiler *compiler,
+                    OrcMipsRegister dest, OrcMipsRegister source)
+{
+  ORC_ASM_CODE (compiler, "  move    %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source));
+}

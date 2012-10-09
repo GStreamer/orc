@@ -30,6 +30,15 @@ mips_rule_addl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 }
 
 void
+mips_rule_copyl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  int src = ORC_SRC_ARG (compiler, insn, 0);
+  int dest = ORC_DEST_ARG (compiler, insn, 0);
+
+  orc_mips_emit_move (compiler, dest, src);
+}
+
+void
 orc_compiler_orc_mips_register_rules (OrcTarget *target)
 {
   OrcRuleSet *rule_set;
@@ -39,4 +48,5 @@ orc_compiler_orc_mips_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "loadl", mips_rule_loadl, NULL);
   orc_rule_register (rule_set, "storel", mips_rule_storel, NULL);
   orc_rule_register (rule_set, "addl", mips_rule_addl, NULL);
+  orc_rule_register (rule_set, "copyl", mips_rule_copyl, NULL);
 }

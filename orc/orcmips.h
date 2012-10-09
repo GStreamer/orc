@@ -59,6 +59,7 @@ void orc_mips_emit_bnez (OrcCompiler *compiler, OrcMipsRegister reg, unsigned in
 
 void orc_mips_emit_addiu (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
 void orc_mips_emit_add (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source1, OrcMipsRegister source2);
+void orc_mips_emit_move (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source);
 
 
 #endif /* ORC_ENABLE_UNSTABLE_API */
