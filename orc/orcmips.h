@@ -49,8 +49,11 @@ void orc_mips_emit_nop (OrcCompiler *compiler);
 
 void orc_mips_emit_sw (OrcCompiler *compiler, OrcMipsRegister reg,
                        OrcMipsRegister base, unsigned int offset);
-
+void orc_mips_emit_sb (OrcCompiler *compiler, OrcMipsRegister reg,
+                       OrcMipsRegister base, unsigned int offset);
 void orc_mips_emit_lw (OrcCompiler *compiler, OrcMipsRegister dest,
+                       OrcMipsRegister base, unsigned int offset);
+void orc_mips_emit_lb (OrcCompiler *compiler, OrcMipsRegister dest,
                        OrcMipsRegister base, unsigned int offset);
 
 void orc_mips_emit_jr (OrcCompiler *compiler, OrcMipsRegister address_reg);

@@ -45,10 +45,28 @@ orc_mips_emit_sw (OrcCompiler *compiler, OrcMipsRegister reg,
 }
 
 void
+orc_mips_emit_sb (OrcCompiler *compiler, OrcMipsRegister reg,
+                  OrcMipsRegister base, unsigned int offset)
+{
+  ORC_ASM_CODE (compiler, "  sb      %s, %d(%s)\n",
+                orc_mips_reg_name (reg),
+                offset, orc_mips_reg_name (base));
+}
+
+void
 orc_mips_emit_lw (OrcCompiler *compiler, OrcMipsRegister dest,
                   OrcMipsRegister base, unsigned int offset)
 {
   ORC_ASM_CODE (compiler, "  lw      %s, %d(%s)\n",
+                orc_mips_reg_name (dest),
+                offset, orc_mips_reg_name (base));
+}
+
+void
+orc_mips_emit_lb (OrcCompiler *compiler, OrcMipsRegister dest,
+                  OrcMipsRegister base, unsigned int offset)
+{
+  ORC_ASM_CODE (compiler, "  lb      %s, %d(%s)\n",
                 orc_mips_reg_name (dest),
                 offset, orc_mips_reg_name (base));
 }

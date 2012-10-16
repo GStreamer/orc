@@ -11,6 +11,15 @@ mips_rule_loadl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 }
 
 void
+mips_rule_loadb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  int src = compiler->vars[insn->src_args[0]].ptr_register;
+  int dest = compiler->vars[insn->dest_args[0]].alloc;
+
+  orc_mips_emit_lb (compiler, dest, src, 0);
+}
+
+void
 mips_rule_storel (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
   int src = compiler->vars[insn->src_args[0]].alloc;
@@ -18,6 +27,16 @@ mips_rule_storel (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 
   orc_mips_emit_sw (compiler, src, dest, 0);
 }
+
+void
+mips_rule_storeb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  int src = compiler->vars[insn->src_args[0]].alloc;
+  int dest = compiler->vars[insn->dest_args[0]].ptr_register;
+
+  orc_mips_emit_sb (compiler, src, dest, 0);
+}
+
 
 void
 mips_rule_addl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
@@ -39,6 +58,15 @@ mips_rule_copyl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 }
 
 void
+mips_rule_copyb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  int src = ORC_SRC_ARG (compiler, insn, 0);
+  int dest = ORC_DEST_ARG (compiler, insn, 0);
+
+  orc_mips_emit_move (compiler, dest, src);
+}
+
+void
 orc_compiler_orc_mips_register_rules (OrcTarget *target)
 {
   OrcRuleSet *rule_set;
@@ -46,7 +74,10 @@ orc_compiler_orc_mips_register_rules (OrcTarget *target)
   rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target, 0);
 
   orc_rule_register (rule_set, "loadl", mips_rule_loadl, NULL);
-  orc_rule_register (rule_set, "storel", mips_rule_storel, NULL);
+  orc_rule_register (rule_set, "loadb", mips_rule_loadb, NULL);
+  orc_rule_register (rule_set, "storel", mips_rule_storeb, NULL);
+  orc_rule_register (rule_set, "storeb", mips_rule_storel, NULL);
   orc_rule_register (rule_set, "addl", mips_rule_addl, NULL);
   orc_rule_register (rule_set, "copyl", mips_rule_copyl, NULL);
+  orc_rule_register (rule_set, "copyb", mips_rule_copyb, NULL);
 }
