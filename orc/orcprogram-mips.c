@@ -13,6 +13,17 @@ const char * orc_compiler_orc_mips_get_asm_preamble (void);
 /* in orcrules-mips.c */
 void orc_compiler_orc_mips_register_rules (OrcTarget *target);
 
+/* ORC_STRUCT_OFFSET doesn't work for cross-compiling, so we use that */
+
+#define ORC_MIPS_EXECUTOR_OFFSET_PROGRAM 0
+#define ORC_MIPS_EXECUTOR_OFFSET_N 4
+#define ORC_MIPS_EXECUTOR_OFFSET_COUNTER1 8
+#define ORC_MIPS_EXECUTOR_OFFSET_COUNTER2 12
+#define ORC_MIPS_EXECUTOR_OFFSET_COUNTER3 16
+#define ORC_MIPS_EXECUTOR_OFFSET_ARRAYS(i) (20 + 4 * i)
+#define ORC_MIPS_EXECUTOR_OFFSET_PARAMS(i) (276 + 4 * i)
+#define ORC_MIPS_EXECUTOR_OFFSET_ACCUMULATORS(i) (532 + 4 * i)
+
 static OrcTarget orc_mips_target = {
   "mips",
 #ifdef HAVE_MIPS
@@ -27,6 +38,15 @@ static OrcTarget orc_mips_target = {
   { { 0 } },
   0,
   orc_compiler_orc_mips_get_asm_preamble,
+};
+
+enum {
+  LABEL_REGION0_LOOP = 1,
+  LABEL_REGION1,
+  LABEL_REGION1_LOOP,
+  LABEL_REGION2,
+  LABEL_REGION2_LOOP,
+  LABEL_END
 };
 
 void
@@ -89,6 +109,7 @@ orc_compiler_orc_mips_get_asm_preamble (void)
       "/* begin Orc MIPS target preamble */\n"
       ".abicalls\n" /* not exactly sure what this is, but linker complains
                        without it  */
+      ".set noreorder\n"
       "/* end Orc MIPS target preamble */\n\n";
 }
 
@@ -158,16 +179,9 @@ orc_mips_load_constants_inner (OrcCompiler *compiler)
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
-
-        /* ORC_STRUCT_OFFSET is wrong when we run orc on a platform different
-         * than the target, e.g. x86_64 vs Mips32. We replace it with a dirty
-         * hand calculation for now */
-        /*orc_mips_emit_lw (compiler,
-            compiler->vars[i].ptr_register,
-            compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, arrays[i])); */
         orc_mips_emit_lw (compiler,
             compiler->vars[i].ptr_register,
-            compiler->exec_reg, 20+4*i);
+            compiler->exec_reg, ORC_MIPS_EXECUTOR_OFFSET_ARRAYS(i));
         break;
       default:
         break;
@@ -212,10 +226,24 @@ orc_mips_emit_loop (OrcCompiler *compiler)
   }
 }
 
+static int
+get_align_var (OrcCompiler *compiler)
+{
+  if (compiler->vars[ORC_VAR_D1].size) return ORC_VAR_D1;
+  if (compiler->vars[ORC_VAR_S1].size) return ORC_VAR_S1;
+
+  ORC_PROGRAM_ERROR(compiler, "could not find alignment variable");
+
+  return -1;
+}
+
 void
 orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
 {
   int stack_size;
+  int align_shift = 4; /* this wouldn't work on mips64 */
+  int align_var = get_align_var (compiler);
+  int saved_loop_shift;
 
   stack_size = orc_mips_emit_prologue (compiler);
 
@@ -231,25 +259,69 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
   if (compiler->program->is_2d)
     ORC_PROGRAM_ERROR (compiler, "unimplemented");
 
-  /*orc_mips_emit_lw (compiler, ORC_MIPS_T0, compiler->exec_reg,
-                    (int)ORC_STRUCT_OFFSET(OrcExecutor, n));
-                    */
-  /* the above breaks when orc runs on a 64 bit machine because the calculated
-   * offset is not the same as on mips32 */
-  /* On MIPS32, executor->n is at a 4 bytes offset */
-  orc_mips_emit_lw (compiler, ORC_MIPS_T0, compiler->exec_reg, 4);
-  orc_mips_emit_blez (compiler, ORC_MIPS_T0, 2);
-  orc_mips_emit_nop (compiler);
+  orc_mips_emit_lw (compiler, ORC_MIPS_T3, compiler->exec_reg,
+                    ORC_MIPS_EXECUTOR_OFFSET_N);
+  orc_mips_emit_blez (compiler, ORC_MIPS_T3, LABEL_END);
+
   orc_mips_load_constants_inner (compiler);
 
-  orc_mips_emit_label (compiler, 1);
-  orc_mips_emit_loop (compiler);
+  /* $t0 = number of iterations in region0 (before alignment) */
+  orc_mips_emit_addiu (compiler, ORC_MIPS_T0, ORC_MIPS_ZERO, 1 << align_shift);
+  orc_mips_emit_lw (compiler, ORC_MIPS_T1,
+                    ORC_MIPS_EXECUTOR_OFFSET_ARRAYS(align_var));
+  orc_mips_emit_sub (compiler, ORC_MIPS_T0, ORC_MIPS_T0, ORC_MIPS_T1);
+  orc_mips_emit_andi (compiler, ORC_MIPS_T0, ORC_MIPS_T0, (1 << align_shift) - 1);
 
-  orc_mips_emit_addiu (compiler, ORC_MIPS_T0, ORC_MIPS_T0, -1);
-  orc_mips_emit_bnez (compiler, ORC_MIPS_T0, 1);
+  /* FIXME handle case n < $t0 */
+
+  /* $t1 = number of iterations in region1 (aligned)
+         = (n - $t0) / 2^loop_shift */
+  orc_mips_emit_sub (compiler, ORC_MIPS_T2, ORC_MIPS_T3, ORC_MIPS_T0);
+  orc_mips_emit_srl (compiler, ORC_MIPS_T1, ORC_MIPS_T2, compiler->loop_shift);
+
+  /* if ($t0 == 0) goto REGION1 */
+  orc_mips_emit_beqz (compiler, ORC_MIPS_T0, LABEL_REGION1);
+
+  /* $t2 = number of iterations in region2 (after aligned region)
+         = (n - $t0) % 2^loop_shift
+     note that this instruction is in the branch delay slot */
+  orc_mips_emit_andi (compiler, ORC_MIPS_T2, ORC_MIPS_T2,
+                      (1 << compiler->loop_shift) - 1);
+
+
+  orc_mips_emit_label (compiler, LABEL_REGION0_LOOP);
+  saved_loop_shift = compiler->loop_shift;
+  compiler->loop_shift = 0;
+  orc_mips_emit_loop (compiler);
+  compiler->loop_shift = saved_loop_shift;
+  orc_mips_emit_addi (compiler, ORC_MIPS_T0, ORC_MIPS_T0, -1);
+  orc_mips_emit_bnez (compiler, ORC_MIPS_T0, LABEL_REGION0_LOOP);
   orc_mips_emit_nop (compiler);
 
-  orc_mips_emit_label (compiler, 2);
+  orc_mips_emit_label (compiler, LABEL_REGION1);
+  orc_mips_emit_beqz (compiler, ORC_MIPS_T1, LABEL_REGION2);
+  orc_mips_emit_nop (compiler);
+
+  orc_mips_emit_label (compiler, LABEL_REGION1_LOOP);
+  orc_mips_emit_loop (compiler);
+  orc_mips_emit_addi (compiler, ORC_MIPS_T1, ORC_MIPS_T1, -1);
+  orc_mips_emit_bnez (compiler, ORC_MIPS_T1, LABEL_REGION1_LOOP);
+  orc_mips_emit_nop (compiler);
+
+  orc_mips_emit_label (compiler, LABEL_REGION2);
+  orc_mips_emit_beqz (compiler, ORC_MIPS_T2, LABEL_END);
+  orc_mips_emit_nop (compiler);
+
+  orc_mips_emit_label (compiler, LABEL_REGION2_LOOP);
+  saved_loop_shift = compiler->loop_shift;
+  compiler->loop_shift = 0;
+  orc_mips_emit_loop (compiler);
+  compiler->loop_shift = saved_loop_shift;
+  orc_mips_emit_addi (compiler, ORC_MIPS_T2, ORC_MIPS_T2, -1);
+  orc_mips_emit_bnez (compiler, ORC_MIPS_T2, LABEL_REGION2_LOOP);
+  orc_mips_emit_nop (compiler);
+
+  orc_mips_emit_label (compiler, LABEL_END);
 
   orc_mips_emit_epilogue (compiler, stack_size);
 }
