@@ -267,7 +267,7 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
 
   /* $t0 = number of iterations in region0 (before alignment) */
   orc_mips_emit_addiu (compiler, ORC_MIPS_T0, ORC_MIPS_ZERO, 1 << align_shift);
-  orc_mips_emit_lw (compiler, ORC_MIPS_T1,
+  orc_mips_emit_lw (compiler, ORC_MIPS_T1, ORC_MIPS_A0,
                     ORC_MIPS_EXECUTOR_OFFSET_ARRAYS(align_var));
   orc_mips_emit_sub (compiler, ORC_MIPS_T0, ORC_MIPS_T0, ORC_MIPS_T1);
   orc_mips_emit_andi (compiler, ORC_MIPS_T0, ORC_MIPS_T0, (1 << align_shift) - 1);
