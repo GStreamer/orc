@@ -94,6 +94,14 @@ orc_mips_emit_bnez (OrcCompiler *compiler,
 }
 
 void
+orc_mips_emit_beqz (OrcCompiler *compiler,
+                    OrcMipsRegister reg, unsigned int label)
+{
+  ORC_ASM_CODE (compiler, "  beqz    %s, .L%d\n",
+                orc_mips_reg_name (reg), label);
+}
+
+void
 orc_mips_emit_addiu (OrcCompiler *compiler,
                      OrcMipsRegister dest, OrcMipsRegister source, int value)
 {
@@ -101,6 +109,16 @@ orc_mips_emit_addiu (OrcCompiler *compiler,
                 orc_mips_reg_name (dest),
                 orc_mips_reg_name (source), value);
 }
+
+void
+orc_mips_emit_addi (OrcCompiler *compiler,
+                     OrcMipsRegister dest, OrcMipsRegister source, int value)
+{
+  ORC_ASM_CODE (compiler, "  addi    %s, %s, %d\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source), value);
+}
+
 void
 orc_mips_emit_add (OrcCompiler *compiler,
                    OrcMipsRegister dest,
@@ -120,3 +138,33 @@ orc_mips_emit_move (OrcCompiler *compiler,
                 orc_mips_reg_name (dest),
                 orc_mips_reg_name (source));
 }
+
+void
+orc_mips_emit_sub (OrcCompiler *compiler,
+                   OrcMipsRegister dest,
+                   OrcMipsRegister source1, OrcMipsRegister source2)
+{
+  ORC_ASM_CODE (compiler, "  sub     %s, %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source1),
+                orc_mips_reg_name (source2));
+}
+
+void
+orc_mips_emit_srl (OrcCompiler *compiler,
+                     OrcMipsRegister dest, OrcMipsRegister source, int value)
+{
+  ORC_ASM_CODE (compiler, "  srl     %s, %s, %d\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source), value);
+}
+
+void
+orc_mips_emit_andi (OrcCompiler *compiler,
+                     OrcMipsRegister dest, OrcMipsRegister source, int value)
+{
+  ORC_ASM_CODE (compiler, "  andi    %s, %s, %d\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source), value);
+}
+
