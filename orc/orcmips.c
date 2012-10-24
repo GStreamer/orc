@@ -45,6 +45,15 @@ orc_mips_emit_sw (OrcCompiler *compiler, OrcMipsRegister reg,
 }
 
 void
+orc_mips_emit_sh (OrcCompiler *compiler, OrcMipsRegister reg,
+                  OrcMipsRegister base, unsigned int offset)
+{
+  ORC_ASM_CODE (compiler, "  sh      %s, %d(%s)\n",
+                orc_mips_reg_name (reg),
+                offset, orc_mips_reg_name (base));
+}
+
+void
 orc_mips_emit_sb (OrcCompiler *compiler, OrcMipsRegister reg,
                   OrcMipsRegister base, unsigned int offset)
 {
@@ -58,6 +67,15 @@ orc_mips_emit_lw (OrcCompiler *compiler, OrcMipsRegister dest,
                   OrcMipsRegister base, unsigned int offset)
 {
   ORC_ASM_CODE (compiler, "  lw      %s, %d(%s)\n",
+                orc_mips_reg_name (dest),
+                offset, orc_mips_reg_name (base));
+}
+
+void
+orc_mips_emit_lh (OrcCompiler *compiler, OrcMipsRegister dest,
+                  OrcMipsRegister base, unsigned int offset)
+{
+  ORC_ASM_CODE (compiler, "  lh      %s, %d(%s)\n",
                 orc_mips_reg_name (dest),
                 offset, orc_mips_reg_name (base));
 }
@@ -131,6 +149,28 @@ orc_mips_emit_add (OrcCompiler *compiler,
 }
 
 void
+orc_mips_emit_addu (OrcCompiler *compiler,
+                    OrcMipsRegister dest,
+                    OrcMipsRegister source1, OrcMipsRegister source2)
+{
+  ORC_ASM_CODE (compiler, "  addu    %s, %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source1),
+                orc_mips_reg_name (source2));
+}
+
+void
+orc_mips_emit_addu_qb (OrcCompiler *compiler,
+                    OrcMipsRegister dest,
+                    OrcMipsRegister source1, OrcMipsRegister source2)
+{
+  ORC_ASM_CODE (compiler, "  addu.qb %s, %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source1),
+                orc_mips_reg_name (source2));
+}
+
+void
 orc_mips_emit_move (OrcCompiler *compiler,
                     OrcMipsRegister dest, OrcMipsRegister source)
 {
@@ -155,6 +195,15 @@ orc_mips_emit_srl (OrcCompiler *compiler,
                      OrcMipsRegister dest, OrcMipsRegister source, int value)
 {
   ORC_ASM_CODE (compiler, "  srl     %s, %s, %d\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source), value);
+}
+
+void
+orc_mips_emit_sll (OrcCompiler *compiler,
+                     OrcMipsRegister dest, OrcMipsRegister source, int value)
+{
+  ORC_ASM_CODE (compiler, "  sll     %s, %s, %d\n",
                 orc_mips_reg_name (dest),
                 orc_mips_reg_name (source), value);
 }

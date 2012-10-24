@@ -49,9 +49,13 @@ void orc_mips_emit_nop (OrcCompiler *compiler);
 
 void orc_mips_emit_sw (OrcCompiler *compiler, OrcMipsRegister reg,
                        OrcMipsRegister base, unsigned int offset);
+void orc_mips_emit_sh (OrcCompiler *compiler, OrcMipsRegister reg,
+                       OrcMipsRegister base, unsigned int offset);
 void orc_mips_emit_sb (OrcCompiler *compiler, OrcMipsRegister reg,
                        OrcMipsRegister base, unsigned int offset);
 void orc_mips_emit_lw (OrcCompiler *compiler, OrcMipsRegister dest,
+                       OrcMipsRegister base, unsigned int offset);
+void orc_mips_emit_lh (OrcCompiler *compiler, OrcMipsRegister dest,
                        OrcMipsRegister base, unsigned int offset);
 void orc_mips_emit_lb (OrcCompiler *compiler, OrcMipsRegister dest,
                        OrcMipsRegister base, unsigned int offset);
@@ -64,9 +68,12 @@ void orc_mips_emit_beqz (OrcCompiler *compiler, OrcMipsRegister reg, unsigned in
 void orc_mips_emit_addiu (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
 void orc_mips_emit_addi (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
 void orc_mips_emit_add (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source1, OrcMipsRegister source2);
+void orc_mips_emit_addu (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source1, OrcMipsRegister source2);
+void orc_mips_emit_addu_qb (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source1, OrcMipsRegister source2);
 void orc_mips_emit_move (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source);
 void orc_mips_emit_sub (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source1, OrcMipsRegister source2);
 void orc_mips_emit_srl (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
+void orc_mips_emit_sll (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
 void orc_mips_emit_andi (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
 
 
