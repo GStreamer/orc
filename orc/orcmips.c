@@ -171,6 +171,17 @@ orc_mips_emit_addu_qb (OrcCompiler *compiler,
 }
 
 void
+orc_mips_emit_addu_ph (OrcCompiler *compiler,
+                    OrcMipsRegister dest,
+                    OrcMipsRegister source1, OrcMipsRegister source2)
+{
+  ORC_ASM_CODE (compiler, "  addu.ph %s, %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source1),
+                orc_mips_reg_name (source2));
+}
+
+void
 orc_mips_emit_move (OrcCompiler *compiler,
                     OrcMipsRegister dest, OrcMipsRegister source)
 {

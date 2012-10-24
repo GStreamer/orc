@@ -61,7 +61,7 @@ mips_rule_addl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int src2 = ORC_SRC_ARG (compiler, insn, 1);
   int dest = ORC_DEST_ARG (compiler, insn, 0);
 
-  orc_mips_emit_add (compiler, dest, src1, src2);
+  orc_mips_emit_addu (compiler, dest, src1, src2);
 }
 
 void
@@ -71,7 +71,16 @@ mips_rule_addw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int src2 = ORC_SRC_ARG (compiler, insn, 1);
   int dest = ORC_DEST_ARG (compiler, insn, 0);
 
-  orc_mips_emit_add (compiler, dest, src1, src2);
+  switch (compiler->insn_shift) {
+  case 0:
+    orc_mips_emit_addu (compiler, dest, src1, src2);
+    break;
+  case 1:
+    orc_mips_emit_addu_ph (compiler, dest, src1, src2);
+    break;
+  default:
+    ORC_PROGRAM_ERROR (compiler, "Don't know how to handle that insn_shift");
+  }
 }
 
 void
