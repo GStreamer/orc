@@ -77,7 +77,9 @@ orc_compiler_orc_mips_init (OrcCompiler *compiler)
   compiler->exec_reg = ORC_MIPS_A0;
   compiler->valid_regs[ORC_MIPS_A0] = 0; /* first (and in our case only)
                                             function argument */
-  compiler->valid_regs[ORC_MIPS_T0] = 0; /* We get the arg size here */
+  compiler->valid_regs[ORC_MIPS_T0] = 0; /* $t0, $t1 and $t2 are used as loop */
+  compiler->valid_regs[ORC_MIPS_T1] = 0; /* counters */
+  compiler->valid_regs[ORC_MIPS_T2] = 0;
   compiler->valid_regs[ORC_MIPS_K0] = 0; /* for kernel/interupts */
   compiler->valid_regs[ORC_MIPS_K1] = 0; /* for kernel/interupts */
   compiler->valid_regs[ORC_MIPS_GP] = 0; /* global pointer */
@@ -100,6 +102,20 @@ orc_compiler_orc_mips_init (OrcCompiler *compiler)
     compiler->save_regs[i] = 1;
 
   /* what's compiler->gp_tmpreg? and ->tmpreg? */
+
+  switch (compiler->max_var_size) {
+  case 1:
+    compiler->loop_shift = 2;
+    break;
+  case 2:
+    compiler->loop_shift = 1;
+    break;
+  case 4:
+    compiler->loop_shift = 0;
+    break;
+  default:
+    ORC_ERROR("unhandled max var siez %d", compiler->max_var_size);
+  }
 }
 
 const char *
@@ -196,6 +212,7 @@ orc_mips_emit_loop (OrcCompiler *compiler)
   OrcInstruction *insn;
   OrcStaticOpcode *opcode;
   OrcRule *rule;
+  ORC_DEBUG ("loop_shift=%d", compiler->loop_shift);
 
   for (i=0; i<compiler->n_insns; i++) {
     insn = compiler->insns + i;
@@ -206,6 +223,7 @@ orc_mips_emit_loop (OrcCompiler *compiler)
 
     rule = insn->rule;
     if (rule && rule->emit) {
+      compiler->insn_shift = compiler->loop_shift;
       rule->emit (compiler, rule->emit_user, insn);
     } else {
       orc_compiler_append_code (compiler, "No rule for %s\n", opcode->name);
@@ -237,13 +255,33 @@ get_align_var (OrcCompiler *compiler)
   return -1;
 }
 
+static int
+get_shift (int size)
+{
+  switch (size) {
+    case 1:
+      return 0;
+    case 2:
+      return 1;
+    case 4:
+      return 2;
+    default:
+      ORC_ERROR("bad size %d", size);
+  }
+  return -1;
+}
+
+
 void
 orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
 {
   int stack_size;
-  int align_shift = 4; /* this wouldn't work on mips64 */
+  int align_shift = 2; /* this wouldn't work on mips64 */
   int align_var = get_align_var (compiler);
+  int var_size_shift;
   int saved_loop_shift;
+
+  var_size_shift = get_shift (compiler->vars[align_var].size);
 
   stack_size = orc_mips_emit_prologue (compiler);
 
@@ -259,34 +297,59 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
   if (compiler->program->is_2d)
     ORC_PROGRAM_ERROR (compiler, "unimplemented");
 
-  orc_mips_emit_lw (compiler, ORC_MIPS_T3, compiler->exec_reg,
+  orc_mips_emit_lw (compiler, ORC_MIPS_T2, compiler->exec_reg,
                     ORC_MIPS_EXECUTOR_OFFSET_N);
-  orc_mips_emit_blez (compiler, ORC_MIPS_T3, LABEL_END);
+  orc_mips_emit_blez (compiler, ORC_MIPS_T2, LABEL_END);
 
-  orc_mips_load_constants_inner (compiler);
+  /* Note: in all these counter calculations ($t0, $t1 and $t2), we assume that
+   * variables of k bytes are k-bytes aligned. */
 
   /* $t0 = number of iterations in region0 (before alignment) */
+  /* = number of bytes to get to alignment / var_size
+     = ((alignment - data_address) % alignment) / var_size
+     = (((1 << align_shift) - data_address) % (1 << align_shift)) / var_size
+     = (((1 << align_shift) - data_address) & ((1 << align_shfit) - 1)) >> var_size_shift
+   */
+  /* FIXME: we load this twice. We should call orc_mips_load_constants_inner
+   * first and use the register it uses */
+  orc_mips_load_constants_inner (compiler);
+
   orc_mips_emit_addiu (compiler, ORC_MIPS_T0, ORC_MIPS_ZERO, 1 << align_shift);
-  orc_mips_emit_lw (compiler, ORC_MIPS_T1, ORC_MIPS_A0,
-                    ORC_MIPS_EXECUTOR_OFFSET_ARRAYS(align_var));
-  orc_mips_emit_sub (compiler, ORC_MIPS_T0, ORC_MIPS_T0, ORC_MIPS_T1);
-  orc_mips_emit_andi (compiler, ORC_MIPS_T0, ORC_MIPS_T0, (1 << align_shift) - 1);
+  orc_mips_emit_sub (compiler, ORC_MIPS_T0, ORC_MIPS_T0,
+                     compiler->vars[align_var].ptr_register);
+  orc_mips_emit_andi (compiler, ORC_MIPS_T0, ORC_MIPS_T0,
+                      (1 << align_shift) - 1);
+  if (var_size_shift > 0)
+    orc_mips_emit_srl (compiler, ORC_MIPS_T0, ORC_MIPS_T0, var_size_shift);
 
   /* FIXME handle case n < $t0 */
 
   /* $t1 = number of iterations in region1 (aligned)
-         = (n - $t0) / 2^loop_shift */
-  orc_mips_emit_sub (compiler, ORC_MIPS_T2, ORC_MIPS_T3, ORC_MIPS_T0);
-  orc_mips_emit_srl (compiler, ORC_MIPS_T1, ORC_MIPS_T2, compiler->loop_shift);
+         = (n - $t0) / loop_size
+         = (n - $t0) >> loop_shift
+   */
+  orc_mips_emit_sub (compiler, ORC_MIPS_T2, ORC_MIPS_T2, ORC_MIPS_T0);
+  if (compiler->loop_shift> 0)
+    orc_mips_emit_srl (compiler, ORC_MIPS_T1, ORC_MIPS_T2,
+                       compiler->loop_shift);
+  else
+    orc_mips_emit_move (compiler, ORC_MIPS_T1, ORC_MIPS_T2);
+
 
   /* if ($t0 == 0) goto REGION1 */
   orc_mips_emit_beqz (compiler, ORC_MIPS_T0, LABEL_REGION1);
 
   /* $t2 = number of iterations in region2 (after aligned region)
-         = (n - $t0) % 2^loop_shift
-     note that this instruction is in the branch delay slot */
-  orc_mips_emit_andi (compiler, ORC_MIPS_T2, ORC_MIPS_T2,
-                      (1 << compiler->loop_shift) - 1);
+         = (n - $t0) % loop_size
+         = (previous $t2) % loop_size
+         = $t2 & ((1 << loop_shift) - 1)
+   */
+     /* note that this instruction is in the branch delay slot */
+  if (compiler->loop_shift > 0)
+    orc_mips_emit_andi (compiler, ORC_MIPS_T2, ORC_MIPS_T2,
+                        (1 << compiler->loop_shift) - 1);
+  else
+    orc_mips_emit_nop (compiler); /* fill the branch delay slot */
 
 
   orc_mips_emit_label (compiler, LABEL_REGION0_LOOP);
