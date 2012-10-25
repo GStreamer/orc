@@ -25,7 +25,7 @@ void
 orc_mips_emit_label (OrcCompiler *compiler, unsigned int label)
 {
   ORC_ASSERT (label < ORC_N_LABELS);
-  ORC_ASM_CODE(compiler,".L%d:\n", label);
+  ORC_ASM_CODE(compiler,".L%s%d:\n", compiler->program->name, label);
   //compiler->labels[label] = compiler->codeptr;
 }
 
@@ -99,24 +99,24 @@ void
 orc_mips_emit_blez (OrcCompiler *compiler,
                     OrcMipsRegister reg, unsigned int label)
 {
-  ORC_ASM_CODE (compiler, "  blez    %s, .L%d\n",
-                orc_mips_reg_name (reg), label);
+  ORC_ASM_CODE (compiler, "  blez    %s, .L%s%d\n",
+                orc_mips_reg_name (reg), compiler->program->name, label);
 }
 
 void
 orc_mips_emit_bnez (OrcCompiler *compiler,
                     OrcMipsRegister reg, unsigned int label)
 {
-  ORC_ASM_CODE (compiler, "  bnez    %s, .L%d\n",
-                orc_mips_reg_name (reg), label);
+  ORC_ASM_CODE (compiler, "  bnez    %s, .L%s%d\n",
+                orc_mips_reg_name (reg), compiler->program->name, label);
 }
 
 void
 orc_mips_emit_beqz (OrcCompiler *compiler,
                     OrcMipsRegister reg, unsigned int label)
 {
-  ORC_ASM_CODE (compiler, "  beqz    %s, .L%d\n",
-                orc_mips_reg_name (reg), label);
+  ORC_ASM_CODE (compiler, "  beqz    %s, .L%s%d\n",
+                orc_mips_reg_name (reg), compiler->program->name, label);
 }
 
 void
