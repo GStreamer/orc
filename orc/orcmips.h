@@ -69,9 +69,23 @@ void orc_mips_emit_lb (OrcCompiler *compiler, OrcMipsRegister dest,
                        OrcMipsRegister base, unsigned int offset);
 
 void orc_mips_emit_jr (OrcCompiler *compiler, OrcMipsRegister address_reg);
-void orc_mips_emit_blez (OrcCompiler *compiler, OrcMipsRegister reg, unsigned int label);
-void orc_mips_emit_bnez (OrcCompiler *compiler, OrcMipsRegister reg, unsigned int label);
-void orc_mips_emit_beqz (OrcCompiler *compiler, OrcMipsRegister reg, unsigned int label);
+void orc_mips_emit_conditional_branch (OrcCompiler *compiler, int condition,
+                                       OrcMipsRegister rs, OrcMipsRegister rt,
+                                       unsigned int label);
+
+enum {
+  ORC_MIPS_BEQ = 04,
+  ORC_MIPS_BNE,
+  ORC_MIPS_BLEZ,
+  ORC_MIPS_BGTZ
+};
+
+#define orc_mips_emit_beqz(compiler, reg, label) \
+    orc_mips_emit_conditional_branch(compiler, ORC_MIPS_BEQ, reg, ORC_MIPS_ZERO, label)
+#define orc_mips_emit_bnez(compiler, reg, label) \
+    orc_mips_emit_conditional_branch(compiler, ORC_MIPS_BNE, reg, ORC_MIPS_ZERO, label)
+#define orc_mips_emit_blez(compiler, reg, label) \
+    orc_mips_emit_conditional_branch(compiler, ORC_MIPS_BLEZ, reg, ORC_MIPS_ZERO, label)
 
 void orc_mips_emit_addiu (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
 void orc_mips_emit_addi (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
@@ -88,6 +102,10 @@ void orc_mips_emit_andi (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsReg
 void orc_mips_emit_append (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int shift_amount);
 
 void orc_mips_emit_prepend (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int shift_amount);
+
+void orc_mips_emit_align (OrcCompiler *compiler, int align_shift);
+
+void orc_mips_do_fixups (OrcCompiler *compiler);
 
 #endif /* ORC_ENABLE_UNSTABLE_API */
 

@@ -116,7 +116,7 @@ orc_compiler_orc_mips_init (OrcCompiler *compiler)
     compiler->loop_shift = 0;
     break;
   default:
-    ORC_ERROR("unhandled max var siez %d", compiler->max_var_size);
+    ORC_ERROR("unhandled variable size %d", compiler->max_var_size);
   }
 }
 
@@ -183,6 +183,12 @@ void orc_mips_emit_epilogue (OrcCompiler *compiler, int stack_size)
 
   orc_mips_emit_jr (compiler, ORC_MIPS_RA);
   orc_mips_emit_nop (compiler);
+  if (compiler->target_flags & ORC_TARGET_CLEAN_COMPILE) {
+    /* we emit some padding nops at the end to align to 16 bytes because that's
+     * what gnu as does (not sure why) and we want to generate the same code
+     * for testing purposes */
+    orc_mips_emit_align (compiler, 4);
+  }
 }
 
 void
@@ -389,6 +395,8 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
   orc_mips_emit_nop (compiler);
 
   orc_mips_emit_label (compiler, LABEL_END);
+
+  orc_mips_do_fixups (compiler);
 
   orc_mips_emit_epilogue (compiler, stack_size);
 }
