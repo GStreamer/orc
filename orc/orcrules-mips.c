@@ -9,6 +9,7 @@ mips_rule_load (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int dest = compiler->vars[insn->dest_args[0]].alloc;
   /* such that 2^total_shift is the amount to load at a time */
   int total_shift = compiler->insn_shift + ORC_PTR_TO_INT (user);
+  int is_aligned = compiler->vars[insn->src_args[0]].is_aligned;
 
   ORC_DEBUG ("insn_shift=%d", compiler->insn_shift);
   /* FIXME: Check alignment. We are assuming data is aligned here */
@@ -17,10 +18,22 @@ mips_rule_load (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     orc_mips_emit_lb (compiler, dest, src, 0);
     break;
   case 1:
-    orc_mips_emit_lh (compiler, dest, src, 0);
+    if (is_aligned) {
+      orc_mips_emit_lh (compiler, dest, src, 0);
+    } else {
+      orc_mips_emit_lb (compiler, ORC_MIPS_T3, src, 0);
+      orc_mips_emit_lb (compiler, dest, src, 1);
+      orc_mips_emit_append (compiler, dest, ORC_MIPS_T3, 8);
+    }
     break;
   case 2:
-    orc_mips_emit_lw (compiler, dest, src, 0);
+    if (is_aligned) {
+      orc_mips_emit_lw (compiler, dest, src, 0);
+    } else {
+      /* note: the code below is little endian specific */
+      orc_mips_emit_lwr (compiler, dest, src, 0);
+      orc_mips_emit_lwl (compiler, dest, src, 3);
+    }
     break;
   default:
     ORC_PROGRAM_ERROR(compiler, "Don't know how to handle that shift");
@@ -34,6 +47,7 @@ mips_rule_store (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int src = compiler->vars[insn->src_args[0]].alloc;
   int dest = compiler->vars[insn->dest_args[0]].ptr_register;
   int total_shift = compiler->insn_shift + ORC_PTR_TO_INT (user);
+  int is_aligned = compiler->vars[insn->dest_args[0]].is_aligned;
 
   ORC_DEBUG ("insn_shift=%d", compiler->insn_shift);
 
@@ -43,10 +57,22 @@ mips_rule_store (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     orc_mips_emit_sb (compiler, src, dest, 0);
     break;
   case 1:
-    orc_mips_emit_sh (compiler, src, dest, 0);
+    if (is_aligned) {
+      orc_mips_emit_sh (compiler, src, dest, 0);
+    } else {
+      /* Note: the code below is little endian specific */
+      orc_mips_emit_sb (compiler, src, dest, 0);
+      orc_mips_emit_srl (compiler, ORC_MIPS_T3, src, 8);
+      orc_mips_emit_sb (compiler, ORC_MIPS_T3, dest, 1);
+    }
     break;
   case 2:
-    orc_mips_emit_sw (compiler, src, dest, 0);
+    if (is_aligned) {
+      orc_mips_emit_sw (compiler, src, dest, 0);
+    } else {
+      orc_mips_emit_swr (compiler, src, dest, 0);
+      orc_mips_emit_swl (compiler, src, dest, 3);
+    }
     break;
   default:
     ORC_PROGRAM_ERROR(compiler, "Don't know how to handle that shift");

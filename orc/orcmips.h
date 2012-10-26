@@ -49,12 +49,20 @@ void orc_mips_emit_nop (OrcCompiler *compiler);
 
 void orc_mips_emit_sw (OrcCompiler *compiler, OrcMipsRegister reg,
                        OrcMipsRegister base, unsigned int offset);
+void orc_mips_emit_swr (OrcCompiler *compiler, OrcMipsRegister reg,
+                        OrcMipsRegister base, unsigned int offset);
+void orc_mips_emit_swl (OrcCompiler *compiler, OrcMipsRegister reg,
+                        OrcMipsRegister base, unsigned int offset);
 void orc_mips_emit_sh (OrcCompiler *compiler, OrcMipsRegister reg,
                        OrcMipsRegister base, unsigned int offset);
 void orc_mips_emit_sb (OrcCompiler *compiler, OrcMipsRegister reg,
                        OrcMipsRegister base, unsigned int offset);
 void orc_mips_emit_lw (OrcCompiler *compiler, OrcMipsRegister dest,
                        OrcMipsRegister base, unsigned int offset);
+void orc_mips_emit_lwr (OrcCompiler *compiler, OrcMipsRegister dest,
+                        OrcMipsRegister base, unsigned int offset);
+void orc_mips_emit_lwl (OrcCompiler *compiler, OrcMipsRegister dest,
+                        OrcMipsRegister base, unsigned int offset);
 void orc_mips_emit_lh (OrcCompiler *compiler, OrcMipsRegister dest,
                        OrcMipsRegister base, unsigned int offset);
 void orc_mips_emit_lb (OrcCompiler *compiler, OrcMipsRegister dest,
@@ -77,6 +85,9 @@ void orc_mips_emit_srl (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegi
 void orc_mips_emit_sll (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
 void orc_mips_emit_andi (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
 
+void orc_mips_emit_append (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int shift_amount);
+
+void orc_mips_emit_prepend (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int shift_amount);
 
 #endif /* ORC_ENABLE_UNSTABLE_API */
 

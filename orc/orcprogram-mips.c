@@ -80,6 +80,8 @@ orc_compiler_orc_mips_init (OrcCompiler *compiler)
   compiler->valid_regs[ORC_MIPS_T0] = 0; /* $t0, $t1 and $t2 are used as loop */
   compiler->valid_regs[ORC_MIPS_T1] = 0; /* counters */
   compiler->valid_regs[ORC_MIPS_T2] = 0;
+  compiler->valid_regs[ORC_MIPS_T3] = 0; /* used for unaligned load/store of 16
+                                            bit values */
   compiler->valid_regs[ORC_MIPS_K0] = 0; /* for kernel/interupts */
   compiler->valid_regs[ORC_MIPS_K1] = 0; /* for kernel/interupts */
   compiler->valid_regs[ORC_MIPS_GP] = 0; /* global pointer */
