@@ -349,8 +349,10 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
     orc_mips_emit_andi (compiler, ORC_MIPS_T2, ORC_MIPS_T2,
                         (1 << compiler->loop_shift) - 1);
   else
-    orc_mips_emit_nop (compiler); /* fill the branch delay slot */
+    /* loop_shift==0: $t2 should be 0 because we can handle all our data in region 1*/
+    orc_mips_emit_move (compiler, ORC_MIPS_T2, ORC_MIPS_ZERO);
 
+  /* FIXME: when loop_shift == 0, we only need to emit region1 */
 
   orc_mips_emit_label (compiler, LABEL_REGION0_LOOP);
   saved_loop_shift = compiler->loop_shift;
