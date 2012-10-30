@@ -11,6 +11,11 @@ mips_rule_load (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int total_shift = compiler->insn_shift + ORC_PTR_TO_INT (user);
   int is_aligned = compiler->vars[insn->src_args[0]].is_aligned;
 
+  if (compiler->vars[insn->src_args[0]].vartype == ORC_VAR_TYPE_CONST) {
+    ORC_PROGRAM_ERROR (compiler, "not implemented");
+    return;
+  }
+
   ORC_DEBUG ("insn_shift=%d", compiler->insn_shift);
   /* FIXME: Check alignment. We are assuming data is aligned here */
   switch (total_shift) {
