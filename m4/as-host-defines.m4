@@ -27,12 +27,16 @@ AC_DEFUN([AS_HOST_DEFINES],
       HAVE_ARM=yes
       AC_DEFINE(HAVE_ARM, 1, [Defined if host is arm])
       ;;
+    xmipsel*)
+      HAVE_MIPSEL=yes
+      AC_DEFINE(HAVE_MIPSEL, 1, [Defined if host is mipsel])
   esac
 
 AM_CONDITIONAL(HAVE_I386, test "x$HAVE_I386" = "xyes")
 AM_CONDITIONAL(HAVE_AMD64, test "x$HAVE_AMD64" = "xyes")
 AM_CONDITIONAL(HAVE_POWERPC, test "x$HAVE_POWERPC" = "xyes")
 AM_CONDITIONAL(HAVE_ARM, test "x$HAVE_ARM" = "xyes")
+AM_CONDITIONAL(HAVE_MIPSEL, test "x$HAVE_MIPSEL" = "xyes")
 
   case "${host_os}" in
     mingw*)
