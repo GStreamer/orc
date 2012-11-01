@@ -1,6 +1,7 @@
 #include <orc/orcmips.h>
 #include <orc/orcdebug.h>
 #include <stdlib.h>
+#include "config.h"
 
 unsigned int orc_compiler_orc_mips_get_default_flags (void);
 
@@ -26,7 +27,7 @@ void orc_compiler_orc_mips_register_rules (OrcTarget *target);
 
 static OrcTarget orc_mips_target = {
   "mips",
-#ifdef HAVE_MIPS
+#ifdef HAVE_MIPSEL
   TRUE,
 #else
   FALSE,
