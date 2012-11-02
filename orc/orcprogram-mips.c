@@ -281,38 +281,48 @@ get_shift (int size)
   return -1;
 }
 
+/* alignment is a bit field. Each bit (from least significant) corresponds to a
+ * dest or source variable in the order
+ * ORC_VAR_D1-ORC_VAR_D4,ORC_VAR_S1-ORC_VAR_S8
+ */
 void
-orc_mips_set_all_aligned (OrcCompiler *compiler)
+orc_mips_set_alignment (OrcCompiler *compiler, orc_uint16 alignment)
 {
   int i;
-  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
-    if (compiler->vars[i].name == NULL) continue;
-    switch (compiler->vars[i].vartype) {
-      case ORC_VAR_TYPE_SRC:
-      case ORC_VAR_TYPE_DEST:
-        compiler->vars[i].is_aligned = TRUE;
-        break;
-      default:
-        break;
-    }
+  for (i=ORC_VAR_D1; i<=ORC_VAR_S8; i++) {
+    compiler->vars[i].is_aligned = !!(alignment & (1<<i));
   }
 }
 
-void
-orc_mips_set_one_aligned (OrcCompiler *compiler, int align_var)
+orc_uint16
+orc_mips_get_alignment (OrcCompiler *compiler)
 {
   int i;
-  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
-    if (compiler->vars[i].name == NULL) continue;
-    switch (compiler->vars[i].vartype) {
-      case ORC_VAR_TYPE_SRC:
-      case ORC_VAR_TYPE_DEST:
-        compiler->vars[i].is_aligned = (i==align_var);
-        break;
-      default:
-        break;
-    }
+  orc_uint16 alignment=0;
+  for (i=ORC_VAR_D1; i<=ORC_VAR_S8; i++) {
+    if (compiler->vars[i].is_aligned)
+      alignment |= 1<<i;
   }
+  return alignment;
+}
+
+void
+orc_mips_emit_full_loop (OrcCompiler *compiler, OrcMipsRegister counter,
+                         int loop_shift, int loop_label, int alignment)
+{
+  int saved_loop_shift;
+  int saved_alignment;
+  orc_mips_emit_label (compiler, loop_label);
+  saved_loop_shift = compiler->loop_shift;
+  compiler->loop_shift = loop_shift;
+  saved_alignment = orc_mips_get_alignment (compiler);
+  orc_mips_set_alignment (compiler, alignment);
+  orc_mips_emit_loop (compiler);
+  orc_mips_set_alignment (compiler, saved_alignment);
+  compiler->loop_shift = saved_loop_shift;
+  orc_mips_emit_addi (compiler, counter, counter, -1);
+  orc_mips_emit_bnez (compiler, counter, loop_label);
+  orc_mips_emit_nop (compiler);
 }
 
 void
@@ -322,7 +332,6 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
   int align_shift = 2; /* this wouldn't work on mips64 */
   int align_var = get_align_var (compiler);
   int var_size_shift;
-  int saved_loop_shift;
   int i;
 
   var_size_shift = get_shift (compiler->vars[align_var].size);
@@ -398,14 +407,7 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
 
   /* FIXME: when loop_shift == 0, we only need to emit region1 */
 
-  orc_mips_emit_label (compiler, LABEL_REGION0_LOOP);
-  saved_loop_shift = compiler->loop_shift;
-  compiler->loop_shift = 0;
-  orc_mips_emit_loop (compiler);
-  compiler->loop_shift = saved_loop_shift;
-  orc_mips_emit_addi (compiler, ORC_MIPS_T0, ORC_MIPS_T0, -1);
-  orc_mips_emit_bnez (compiler, ORC_MIPS_T0, LABEL_REGION0_LOOP);
-  orc_mips_emit_nop (compiler);
+  orc_mips_emit_full_loop (compiler, ORC_MIPS_T0, 0, LABEL_REGION0_LOOP, 0);
 
   orc_mips_emit_label (compiler, LABEL_REGION1);
   orc_mips_emit_beqz (compiler, ORC_MIPS_T1, LABEL_REGION2);
@@ -440,21 +442,14 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
   /* fill the last branch delay slot */
   orc_mips_emit_nop (compiler);
 
-  orc_mips_emit_label (compiler, LABEL_REGION1_LOOP_ALL_ALIGNED);
-  orc_mips_set_all_aligned (compiler);
-  orc_mips_emit_loop (compiler);
-  orc_mips_set_one_aligned (compiler, align_var);
-  orc_mips_emit_addi (compiler, ORC_MIPS_T1, ORC_MIPS_T1, -1);
-  orc_mips_emit_bnez (compiler, ORC_MIPS_T1, LABEL_REGION1_LOOP_ALL_ALIGNED);
-  orc_mips_emit_nop (compiler);
+  orc_mips_emit_full_loop (compiler, ORC_MIPS_T1, compiler->loop_shift,
+                           LABEL_REGION1_LOOP_ALL_ALIGNED, 0xffff);
   orc_mips_emit_beqz (compiler, ORC_MIPS_ZERO, LABEL_REGION2);
   orc_mips_emit_nop (compiler);
 
-  orc_mips_emit_label (compiler, LABEL_REGION1_LOOP);
-  orc_mips_emit_loop (compiler);
-  orc_mips_emit_addi (compiler, ORC_MIPS_T1, ORC_MIPS_T1, -1);
-  orc_mips_emit_bnez (compiler, ORC_MIPS_T1, LABEL_REGION1_LOOP);
-  orc_mips_emit_nop (compiler);
+  orc_mips_emit_full_loop (compiler, ORC_MIPS_T1, compiler->loop_shift,
+                           LABEL_REGION1_LOOP, 1 << align_var);
+
 
   compiler->vars[align_var].is_aligned = FALSE;
 
@@ -462,14 +457,7 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
   orc_mips_emit_beqz (compiler, ORC_MIPS_T2, LABEL_END);
   orc_mips_emit_nop (compiler);
 
-  orc_mips_emit_label (compiler, LABEL_REGION2_LOOP);
-  saved_loop_shift = compiler->loop_shift;
-  compiler->loop_shift = 0;
-  orc_mips_emit_loop (compiler);
-  compiler->loop_shift = saved_loop_shift;
-  orc_mips_emit_addi (compiler, ORC_MIPS_T2, ORC_MIPS_T2, -1);
-  orc_mips_emit_bnez (compiler, ORC_MIPS_T2, LABEL_REGION2_LOOP);
-  orc_mips_emit_nop (compiler);
+  orc_mips_emit_full_loop (compiler, ORC_MIPS_T2, 0, LABEL_REGION2_LOOP, 0);
 
   orc_mips_emit_label (compiler, LABEL_END);
 
