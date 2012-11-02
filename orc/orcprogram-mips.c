@@ -45,6 +45,7 @@ enum {
   LABEL_REGION0_LOOP = 1,
   LABEL_REGION1,
   LABEL_REGION1_LOOP,
+  LABEL_REGION1_LOOP_ALL_ALIGNED,
   LABEL_REGION2,
   LABEL_REGION2_LOOP,
   LABEL_END
@@ -280,6 +281,39 @@ get_shift (int size)
   return -1;
 }
 
+void
+orc_mips_set_all_aligned (OrcCompiler *compiler)
+{
+  int i;
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
+    if (compiler->vars[i].name == NULL) continue;
+    switch (compiler->vars[i].vartype) {
+      case ORC_VAR_TYPE_SRC:
+      case ORC_VAR_TYPE_DEST:
+        compiler->vars[i].is_aligned = TRUE;
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+void
+orc_mips_set_one_aligned (OrcCompiler *compiler, int align_var)
+{
+  int i;
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
+    if (compiler->vars[i].name == NULL) continue;
+    switch (compiler->vars[i].vartype) {
+      case ORC_VAR_TYPE_SRC:
+      case ORC_VAR_TYPE_DEST:
+        compiler->vars[i].is_aligned = (i==align_var);
+        break;
+      default:
+        break;
+    }
+  }
+}
 
 void
 orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
@@ -289,6 +323,7 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
   int align_var = get_align_var (compiler);
   int var_size_shift;
   int saved_loop_shift;
+  int i;
 
   var_size_shift = get_shift (compiler->vars[align_var].size);
 
@@ -374,6 +409,45 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
 
   orc_mips_emit_label (compiler, LABEL_REGION1);
   orc_mips_emit_beqz (compiler, ORC_MIPS_T1, LABEL_REGION2);
+  /* branch delay slot is occupied either by the next andi in the loop below or
+   * by the nop after that loop */
+
+  /* from here on until LABEL_REGION2, align_var is known to be aligned (that's
+   * the reason why we went through region 0) */
+  compiler->vars[align_var].is_aligned = TRUE;
+
+  /* If any of our variables is not aligned now, we use the loop that only
+   * assumes that align_var is aligned (at LABEL_REGION1_LOOP). Else we
+   * continue to the version that assumes that only does aligned load/store. */
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
+    OrcVariable *var = &(compiler->vars[i]);
+    if (var->name == NULL) continue;
+    switch (var->vartype) {
+      case ORC_VAR_TYPE_SRC:
+      case ORC_VAR_TYPE_DEST:
+        if (!var->is_aligned) {
+          /* not "a priori" aligned; dynamically check if it is aligned */
+          orc_mips_emit_andi (compiler,
+                              ORC_MIPS_T0, var->ptr_register,
+                              (1 << align_shift)  - 1);
+          orc_mips_emit_bnez (compiler, ORC_MIPS_T0, LABEL_REGION1_LOOP);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+  /* fill the last branch delay slot */
+  orc_mips_emit_nop (compiler);
+
+  orc_mips_emit_label (compiler, LABEL_REGION1_LOOP_ALL_ALIGNED);
+  orc_mips_set_all_aligned (compiler);
+  orc_mips_emit_loop (compiler);
+  orc_mips_set_one_aligned (compiler, align_var);
+  orc_mips_emit_addi (compiler, ORC_MIPS_T1, ORC_MIPS_T1, -1);
+  orc_mips_emit_bnez (compiler, ORC_MIPS_T1, LABEL_REGION1_LOOP_ALL_ALIGNED);
+  orc_mips_emit_nop (compiler);
+  orc_mips_emit_beqz (compiler, ORC_MIPS_ZERO, LABEL_REGION2);
   orc_mips_emit_nop (compiler);
 
   orc_mips_emit_label (compiler, LABEL_REGION1_LOOP);
@@ -381,6 +455,8 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
   orc_mips_emit_addi (compiler, ORC_MIPS_T1, ORC_MIPS_T1, -1);
   orc_mips_emit_bnez (compiler, ORC_MIPS_T1, LABEL_REGION1_LOOP);
   orc_mips_emit_nop (compiler);
+
+  compiler->vars[align_var].is_aligned = FALSE;
 
   orc_mips_emit_label (compiler, LABEL_REGION2);
   orc_mips_emit_beqz (compiler, ORC_MIPS_T2, LABEL_END);
