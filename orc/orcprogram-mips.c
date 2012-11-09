@@ -99,9 +99,6 @@ orc_compiler_orc_mips_init (OrcCompiler *compiler)
 
   compiler->save_regs[ORC_MIPS_V0] = 1;
   compiler->save_regs[ORC_MIPS_V1] = 1;
-  compiler->save_regs[ORC_MIPS_A1] = 1;
-  compiler->save_regs[ORC_MIPS_A2] = 1;
-  compiler->save_regs[ORC_MIPS_A3] = 1;
   for (i=ORC_MIPS_S0; i<= ORC_MIPS_S7; i++)
     compiler->save_regs[i] = 1;
 
