@@ -72,6 +72,11 @@ void orc_mips_emit_jr (OrcCompiler *compiler, OrcMipsRegister address_reg);
 void orc_mips_emit_conditional_branch (OrcCompiler *compiler, int condition,
                                        OrcMipsRegister rs, OrcMipsRegister rt,
                                        unsigned int label);
+void orc_mips_emit_conditional_branch_with_offset (OrcCompiler *compiler,
+                                                   int condition,
+                                                   OrcMipsRegister rs,
+                                                   OrcMipsRegister rt,
+                                                   int offset);
 
 enum {
   ORC_MIPS_BEQ = 04,

@@ -252,6 +252,38 @@ orc_mips_emit_conditional_branch (OrcCompiler *compiler,
 }
 
 void
+orc_mips_emit_conditional_branch_with_offset (OrcCompiler *compiler,
+                                              int condition,
+                                              OrcMipsRegister rs,
+                                              OrcMipsRegister rt,
+                                              int offset)
+{
+  char *opcode_name[] = { NULL, NULL, NULL, NULL,
+    "beq ",
+    "bne ",
+    "blez",
+    "bgtz"
+  };
+  switch (condition) {
+  case ORC_MIPS_BEQ:
+  case ORC_MIPS_BNE:
+    ORC_ASM_CODE (compiler, "  %s    %s, %s, %d\n", opcode_name[condition],
+                  orc_mips_reg_name (rs), orc_mips_reg_name (rt), offset);
+    break;
+  case ORC_MIPS_BLEZ:
+  case ORC_MIPS_BGTZ:
+    ORC_ASSERT (rt == ORC_MIPS_ZERO);
+    ORC_ASM_CODE (compiler, "  %s    %s, %d\n", opcode_name[condition],
+                  orc_mips_reg_name (rs), offset);
+    break;
+  default:
+    ORC_PROGRAM_ERROR (compiler, "unknown branch type: 0x%x", condition);
+  }
+
+  orc_mips_emit (compiler, MIPS_IMMEDIATE_INSTRUCTION(condition, rs, rt, offset>>2));
+}
+
+void
 orc_mips_emit_addiu (OrcCompiler *compiler,
                      OrcMipsRegister dest, OrcMipsRegister source, int value)
 {
