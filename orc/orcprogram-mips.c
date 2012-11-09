@@ -45,11 +45,11 @@ enum {
   LABEL_REGION0_LOOP = 1,
   LABEL_REGION1,
   LABEL_REGION1_LOOP,
-  LABEL_REGION1_LOOP_ALL_ALIGNED,
   LABEL_REGION2,
   LABEL_REGION2_LOOP,
   LABEL_END
 };
+#define LAST_LABEL LABEL_END
 
 void
 orc_mips_init (void)
@@ -84,6 +84,8 @@ orc_compiler_orc_mips_init (OrcCompiler *compiler)
   compiler->valid_regs[ORC_MIPS_T2] = 0;
   compiler->valid_regs[ORC_MIPS_T3] = 0; /* used for unaligned load/store of 16
                                             bit values */
+  compiler->valid_regs[ORC_MIPS_T4] = 0; /* These two used to calculate which region 1 loop to use */
+  compiler->valid_regs[ORC_MIPS_T5] = 0;
   compiler->valid_regs[ORC_MIPS_K0] = 0; /* for kernel/interupts */
   compiler->valid_regs[ORC_MIPS_K1] = 0; /* for kernel/interupts */
   compiler->valid_regs[ORC_MIPS_GP] = 0; /* global pointer */
@@ -322,6 +324,33 @@ orc_mips_emit_full_loop (OrcCompiler *compiler, OrcMipsRegister counter,
   orc_mips_emit_nop (compiler);
 }
 
+/* FIXME: this stuff should be cached */
+int
+orc_mips_get_loop_label (OrcCompiler *compiler, int alignments)
+{
+  int i,
+      j=0,
+      bitfield=0;
+  for (i=ORC_VAR_D1; i<=ORC_VAR_S8; i++) {
+    OrcVariable *var = &(compiler->vars[i]);
+    if (var->name == NULL || var->ptr_register == 0 || var->is_aligned) {
+      if (alignments & (1 << i))
+        return -1;
+      else
+        continue;
+    }
+
+    if (alignments & (1 << i)) {
+      bitfield |= 1 << j;
+    }
+    j++;
+  }
+  if (bitfield)
+    return LAST_LABEL + bitfield;
+
+  return -1;
+}
+
 void
 orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
 {
@@ -360,8 +389,6 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
      = (((1 << align_shift) - data_address) % (1 << align_shift)) / var_size
      = (((1 << align_shift) - data_address) & ((1 << align_shfit) - 1)) >> var_size_shift
    */
-  /* FIXME: we load this twice. We should call orc_mips_load_constants_inner
-   * first and use the register it uses */
   orc_mips_load_constants_inner (compiler);
 
   orc_mips_emit_addiu (compiler, ORC_MIPS_T0, ORC_MIPS_ZERO, 1 << align_shift);
@@ -415,35 +442,65 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
    * the reason why we went through region 0) */
   compiler->vars[align_var].is_aligned = TRUE;
 
-  /* If any of our variables is not aligned now, we use the loop that only
-   * assumes that align_var is aligned (at LABEL_REGION1_LOOP). Else we
-   * continue to the version that assumes that only does aligned load/store. */
-  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
+
+  /* We need a register that contains 1 so that we easily get 2^i */
+  orc_mips_emit_ori (compiler, ORC_MIPS_T3, ORC_MIPS_ZERO, 1);
+  /* That's where we will store the bitfield of aligned vars (apart from
+   * align_var) */
+  orc_mips_emit_ori (compiler, ORC_MIPS_T5, ORC_MIPS_ZERO, 0);
+
+  for (i=ORC_VAR_D1; i<=ORC_VAR_S8; i++) {
     OrcVariable *var = &(compiler->vars[i]);
-    if (var->name == NULL) continue;
-    switch (var->vartype) {
-      case ORC_VAR_TYPE_SRC:
-      case ORC_VAR_TYPE_DEST:
-        if (!var->is_aligned) {
-          /* not "a priori" aligned; dynamically check if it is aligned */
-          orc_mips_emit_andi (compiler,
-                              ORC_MIPS_T0, var->ptr_register,
-                              (1 << align_shift)  - 1);
-          orc_mips_emit_bnez (compiler, ORC_MIPS_T0, LABEL_REGION1_LOOP);
-        }
-        break;
-      default:
-        break;
-    }
+    if (var->name == NULL || var->ptr_register == 0 || var->is_aligned) continue;
+    orc_mips_emit_andi (compiler, ORC_MIPS_T0, var->ptr_register, (1 << align_shift) - 1);
+    orc_mips_emit_conditional_branch_with_offset (compiler, ORC_MIPS_BNE,
+                                                  ORC_MIPS_T0, ORC_MIPS_ZERO,
+                                                  8 /* skipping the next two instructions */);
+    orc_mips_emit_sll (compiler, ORC_MIPS_T4, ORC_MIPS_T3, i);
+    orc_mips_emit_or (compiler, ORC_MIPS_T5, ORC_MIPS_T5, ORC_MIPS_T4);
   }
-  /* fill the last branch delay slot */
+
+  orc_mips_emit_beqz (compiler, ORC_MIPS_T5, LABEL_REGION1_LOOP);
+
+  /* Loop on all the alignment combinations we can handle and compare them to
+   * the actual alignment we have, then branch to the best loop for it*/
+  /* Note: this assumes that ORC_VAR_D1 == 0 */
+  for (i=1; i < (1 << (ORC_VAR_S8 +1)); i++) {
+    int label = orc_mips_get_loop_label (compiler, i);
+    if (label == -1) continue;
+    if (label >= ORC_N_LABELS) { /* this check works because _get_loop_label() */
+       break;                    /* is strictly monotonic and increasing */
+    }
+
+    /* This next line works to load i because ORC_VAR_S8 < 16 */
+    orc_mips_emit_ori (compiler, ORC_MIPS_T0, ORC_MIPS_ZERO, i);
+    orc_mips_emit_beq (compiler, ORC_MIPS_T5, ORC_MIPS_T0, label);
+  }
+
+  orc_mips_emit_nop (compiler);
+  /* If we reach here, it means we haven't branched to any specific loop, so we
+   * branch to the fallback one */
+  orc_mips_emit_beqz (compiler, ORC_MIPS_ZERO, LABEL_REGION1_LOOP);
   orc_mips_emit_nop (compiler);
 
-  orc_mips_emit_full_loop (compiler, ORC_MIPS_T1, compiler->loop_shift,
-                           LABEL_REGION1_LOOP_ALL_ALIGNED, 0xffff);
-  orc_mips_emit_beqz (compiler, ORC_MIPS_ZERO, LABEL_REGION2);
-  orc_mips_emit_nop (compiler);
+  /* Loop on all alignment combinations we can handle (limited by number of
+   * labels available) and emit the loop for it */
+  for (i=0; i < (1 << (ORC_VAR_S8 +1)); i++) {
+    int label = orc_mips_get_loop_label (compiler, i);
+    if (label == -1) continue;
+    if (label >= ORC_N_LABELS) /* this check works because _get_loop_label() */
+       break;                  /* is strictly monotonic and increasing */
 
+    orc_mips_emit_full_loop (compiler, ORC_MIPS_T1, compiler->loop_shift,
+                             label, i | (1 << align_var));
+
+    /* Jump the other loop versions and go to REGION2 */
+    orc_mips_emit_beqz (compiler, ORC_MIPS_ZERO, LABEL_REGION2);
+    orc_mips_emit_nop (compiler);
+  }
+
+
+  /* Fallback loop that works for any alignment combination */
   orc_mips_emit_full_loop (compiler, ORC_MIPS_T1, compiler->loop_shift,
                            LABEL_REGION1_LOOP, 1 << align_var);
 
