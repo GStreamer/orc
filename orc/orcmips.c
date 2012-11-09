@@ -320,6 +320,29 @@ orc_mips_emit_addu_ph (OrcCompiler *compiler,
 }
 
 void
+orc_mips_emit_ori (OrcCompiler *compiler,
+                     OrcMipsRegister dest, OrcMipsRegister source, int value)
+{
+  ORC_ASM_CODE (compiler, "  ori     %s, %s, %d\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source), value);
+  orc_mips_emit (compiler, MIPS_IMMEDIATE_INSTRUCTION(015, source, dest, value));
+}
+
+void
+orc_mips_emit_or (OrcCompiler *compiler,
+                   OrcMipsRegister dest,
+                   OrcMipsRegister source1, OrcMipsRegister source2)
+{
+  ORC_ASM_CODE (compiler, "  or      %s, %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source1),
+                orc_mips_reg_name (source2));
+  orc_mips_emit (compiler, MIPS_BINARY_INSTRUCTION(0, source1, source2, dest, 0, 045));
+}
+
+
+void
 orc_mips_emit_move (OrcCompiler *compiler,
                     OrcMipsRegister dest, OrcMipsRegister source)
 {

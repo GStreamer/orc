@@ -86,6 +86,8 @@ enum {
     orc_mips_emit_conditional_branch(compiler, ORC_MIPS_BNE, reg, ORC_MIPS_ZERO, label)
 #define orc_mips_emit_blez(compiler, reg, label) \
     orc_mips_emit_conditional_branch(compiler, ORC_MIPS_BLEZ, reg, ORC_MIPS_ZERO, label)
+#define orc_mips_emit_beq(compiler, reg1, reg2, label) \
+    orc_mips_emit_conditional_branch(compiler, ORC_MIPS_BEQ, reg1, reg2, label)
 
 void orc_mips_emit_addiu (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
 void orc_mips_emit_addi (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
@@ -98,6 +100,8 @@ void orc_mips_emit_sub (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegi
 void orc_mips_emit_srl (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
 void orc_mips_emit_sll (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
 void orc_mips_emit_andi (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
+void orc_mips_emit_or (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source1, OrcMipsRegister source2);
+void orc_mips_emit_ori (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
 
 void orc_mips_emit_append (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int shift_amount);
 
