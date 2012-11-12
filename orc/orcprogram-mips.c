@@ -46,7 +46,9 @@ enum {
   LABEL_REGION1,
   LABEL_REGION1_LOOP,
   LABEL_REGION2,
-  LABEL_REGION2_LOOP,
+  LABEL_REGION2_LOOP, /* 5 */
+  LABEL_REGION2_LOOP_END,
+  LABEL_OUTER_LOOP,
   LABEL_END
 };
 #define LAST_LABEL LABEL_END
@@ -352,6 +354,37 @@ orc_mips_get_loop_label (OrcCompiler *compiler, int alignments)
 }
 
 void
+orc_mips_add_strides (OrcCompiler *compiler)
+{
+  int i;
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
+    if (compiler->vars[i].name == NULL) continue;
+    switch (compiler->vars[i].vartype) {
+      case ORC_VAR_TYPE_CONST:
+        break;
+      case ORC_VAR_TYPE_PARAM:
+        break;
+      case ORC_VAR_TYPE_SRC:
+      case ORC_VAR_TYPE_DEST:
+        /* get the stride */
+        orc_mips_emit_lw (compiler, ORC_MIPS_T0, compiler->exec_reg,
+                          ORC_MIPS_EXECUTOR_OFFSET_PARAMS(i));
+        /* add it to the pointer for that var */
+        orc_mips_emit_addu (compiler, compiler->vars[i].ptr_register,
+                            compiler->vars[i].ptr_register, ORC_MIPS_T0);
+        break;
+      case ORC_VAR_TYPE_ACCUMULATOR:
+        break;
+      case ORC_VAR_TYPE_TEMP:
+        break;
+      default:
+        ORC_COMPILER_ERROR(compiler,"bad vartype");
+        break;
+    }
+  }
+}
+
+void
 orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
 {
   int stack_size;
@@ -372,13 +405,15 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
   }
 #endif
 
-  /* FIXME */
-  if (compiler->program->is_2d)
-    ORC_PROGRAM_ERROR (compiler, "unimplemented");
-
   orc_mips_emit_lw (compiler, ORC_MIPS_T2, compiler->exec_reg,
                     ORC_MIPS_EXECUTOR_OFFSET_N);
   orc_mips_emit_blez (compiler, ORC_MIPS_T2, LABEL_END);
+
+  orc_mips_load_constants_inner (compiler);
+
+  if (compiler->program->is_2d) {
+    orc_mips_emit_label (compiler, LABEL_OUTER_LOOP);
+  }
 
   /* Note: in all these counter calculations ($t0, $t1 and $t2), we assume that
    * variables of k bytes are k-bytes aligned. */
@@ -389,8 +424,6 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
      = (((1 << align_shift) - data_address) % (1 << align_shift)) / var_size
      = (((1 << align_shift) - data_address) & ((1 << align_shfit) - 1)) >> var_size_shift
    */
-  orc_mips_load_constants_inner (compiler);
-
   orc_mips_emit_addiu (compiler, ORC_MIPS_T0, ORC_MIPS_ZERO, 1 << align_shift);
   orc_mips_emit_sub (compiler, ORC_MIPS_T0, ORC_MIPS_T0,
                      compiler->vars[align_var].ptr_register);
@@ -508,10 +541,24 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
   compiler->vars[align_var].is_aligned = FALSE;
 
   orc_mips_emit_label (compiler, LABEL_REGION2);
-  orc_mips_emit_beqz (compiler, ORC_MIPS_T2, LABEL_END);
+  orc_mips_emit_beqz (compiler, ORC_MIPS_T2, LABEL_REGION2_LOOP_END);
   orc_mips_emit_nop (compiler);
 
   orc_mips_emit_full_loop (compiler, ORC_MIPS_T2, 0, LABEL_REGION2_LOOP, 0);
+  orc_mips_emit_label (compiler, LABEL_REGION2_LOOP_END);
+
+  if (compiler->program->is_2d) {
+
+    /* ex->params[ORC_VAR_A1] contains "m", the number of lines we want to treat */
+    orc_mips_emit_lw (compiler, ORC_MIPS_T1, compiler->exec_reg,
+                      ORC_MIPS_EXECUTOR_OFFSET_PARAMS(ORC_VAR_A1));
+    orc_mips_add_strides (compiler);
+    orc_mips_emit_addi (compiler, ORC_MIPS_T1, ORC_MIPS_T1, -1);
+    orc_mips_emit_sw (compiler, ORC_MIPS_T1, compiler->exec_reg,
+                      ORC_MIPS_EXECUTOR_OFFSET_PARAMS(ORC_VAR_A1));
+    orc_mips_emit_bnez (compiler, ORC_MIPS_T1, LABEL_OUTER_LOOP);
+    orc_mips_emit_nop (compiler);
+  }
 
   orc_mips_emit_label (compiler, LABEL_END);
 
