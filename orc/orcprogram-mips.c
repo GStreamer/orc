@@ -405,15 +405,16 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
   }
 #endif
 
-  orc_mips_emit_lw (compiler, ORC_MIPS_T2, compiler->exec_reg,
-                    ORC_MIPS_EXECUTOR_OFFSET_N);
-  orc_mips_emit_blez (compiler, ORC_MIPS_T2, LABEL_END);
-
   orc_mips_load_constants_inner (compiler);
 
   if (compiler->program->is_2d) {
     orc_mips_emit_label (compiler, LABEL_OUTER_LOOP);
   }
+
+  orc_mips_emit_lw (compiler, ORC_MIPS_T2, compiler->exec_reg,
+                    ORC_MIPS_EXECUTOR_OFFSET_N);
+  orc_mips_emit_blez (compiler, ORC_MIPS_T2, LABEL_END);
+
 
   /* Note: in all these counter calculations ($t0, $t1 and $t2), we assume that
    * variables of k bytes are k-bytes aligned. */
