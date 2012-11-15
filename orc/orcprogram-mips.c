@@ -433,13 +433,34 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
   if (var_size_shift > 0)
     orc_mips_emit_srl (compiler, ORC_MIPS_T0, ORC_MIPS_T0, var_size_shift);
 
-  /* FIXME handle case n < $t0 */
-
   /* $t1 = number of iterations in region1 (aligned)
          = (n - $t0) / loop_size
          = (n - $t0) >> loop_shift
    */
   orc_mips_emit_sub (compiler, ORC_MIPS_T2, ORC_MIPS_T2, ORC_MIPS_T0);
+
+  /*
+     handle the case where n < $t0. In that case, we want to handle n elements
+     in region0, and no element in the two other regions.
+
+     bgez $t2, usual_case
+     move $t1, $0
+     move $t2, $0
+     lw   $t0, OFFSET_N($a0)
+     beqz $0, LABEL_REGION0_LOOP
+usual_case:
+   */
+  orc_mips_emit_conditional_branch_with_offset (compiler, ORC_MIPS_BGEZ,
+                                                ORC_MIPS_T2, ORC_MIPS_ZERO,
+                                                16);
+  orc_mips_emit_move (compiler, ORC_MIPS_T1, ORC_MIPS_ZERO);
+  orc_mips_emit_move (compiler, ORC_MIPS_T2, ORC_MIPS_ZERO);
+  orc_mips_emit_lw (compiler, ORC_MIPS_T0, compiler->exec_reg,
+                    ORC_MIPS_EXECUTOR_OFFSET_N);
+  orc_mips_emit_beqz (compiler, ORC_MIPS_ZERO, LABEL_REGION0_LOOP);
+  orc_mips_emit_nop (compiler);
+
+
   if (compiler->loop_shift> 0)
     orc_mips_emit_srl (compiler, ORC_MIPS_T1, ORC_MIPS_T2,
                        compiler->loop_shift);
