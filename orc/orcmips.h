@@ -82,7 +82,11 @@ enum {
   ORC_MIPS_BEQ = 04,
   ORC_MIPS_BNE,
   ORC_MIPS_BLEZ,
-  ORC_MIPS_BGTZ
+  ORC_MIPS_BGTZ,
+
+  /* instructions are encoded differently from here on*/
+  ORC_MIPS_BLTZ,
+  ORC_MIPS_BGEZ,
 };
 
 #define orc_mips_emit_beqz(compiler, reg, label) \

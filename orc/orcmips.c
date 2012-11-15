@@ -2,18 +2,25 @@
 #include <orc/orcdebug.h>
 
 #define MIPS_IMMEDIATE_INSTRUCTION(opcode,rs,rt,immediate) \
-    ((opcode & 0x3f) << 26 \
-     |(rs-ORC_GP_REG_BASE) << 21 \
-     |(rt-ORC_GP_REG_BASE) << 16 \
-     |(immediate & 0xffff))
+    (((opcode) & 0x3f) << 26 \
+     |((rs)-ORC_GP_REG_BASE) << 21 \
+     |((rt)-ORC_GP_REG_BASE) << 16 \
+     |((immediate) & 0xffff))
+
+#define REGIMM 01
+#define MIPS_IMMEDIATE_REGIMM_INSTRUCTION(operation,rs,immediate) \
+    (REGIMM << 26 \
+     |((rs)-ORC_GP_REG_BASE) << 21 \
+     |((operation) & 0x1f) << 16 \
+     |((immediate) & 0xffff))
 
 #define MIPS_BINARY_INSTRUCTION(opcode,rs,rt,rd,sa,function) \
-    ((opcode & 0x3f) << 26 \
-     | (rs-ORC_GP_REG_BASE) << 21 \
-     | (rt-ORC_GP_REG_BASE) << 16 \
-     | (rd-ORC_GP_REG_BASE) << 11 \
-     | (sa & 0x1f) << 6 \
-     | (function & 0x3f))
+    (((opcode) & 0x3f) << 26 \
+     | ((rs)-ORC_GP_REG_BASE) << 21 \
+     | ((rt)-ORC_GP_REG_BASE) << 16 \
+     | ((rd)-ORC_GP_REG_BASE) << 11 \
+     | ((sa) & 0x1f) << 6 \
+     | ((function) & 0x3f))
 
 const char *
 orc_mips_reg_name (int reg)
@@ -262,7 +269,9 @@ orc_mips_emit_conditional_branch_with_offset (OrcCompiler *compiler,
     "beq ",
     "bne ",
     "blez",
-    "bgtz"
+    "bgtz",
+    "bltz",
+    "bgez"
   };
   switch (condition) {
   case ORC_MIPS_BEQ:
@@ -272,6 +281,8 @@ orc_mips_emit_conditional_branch_with_offset (OrcCompiler *compiler,
     break;
   case ORC_MIPS_BLEZ:
   case ORC_MIPS_BGTZ:
+  case ORC_MIPS_BLTZ:
+  case ORC_MIPS_BGEZ:
     ORC_ASSERT (rt == ORC_MIPS_ZERO);
     ORC_ASM_CODE (compiler, "  %s    %s, %d\n", opcode_name[condition],
                   orc_mips_reg_name (rs), offset);
@@ -280,7 +291,14 @@ orc_mips_emit_conditional_branch_with_offset (OrcCompiler *compiler,
     ORC_PROGRAM_ERROR (compiler, "unknown branch type: 0x%x", condition);
   }
 
-  orc_mips_emit (compiler, MIPS_IMMEDIATE_INSTRUCTION(condition, rs, rt, offset>>2));
+  if (condition >= ORC_MIPS_BLTZ) /* bltz and further are encoded as REGIMM */
+    orc_mips_emit (compiler,
+                   MIPS_IMMEDIATE_REGIMM_INSTRUCTION(condition - ORC_MIPS_BLTZ,
+                                                     rs, offset>>2));
+  else
+    orc_mips_emit (compiler,
+                   MIPS_IMMEDIATE_INSTRUCTION(condition, rs, rt, offset>>2));
+
 }
 
 void
