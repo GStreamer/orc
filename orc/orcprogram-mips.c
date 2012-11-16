@@ -353,10 +353,16 @@ orc_mips_get_loop_label (OrcCompiler *compiler, int alignments)
   return -1;
 }
 
+/* overwrites $t0 and $t1 */
 void
-orc_mips_add_strides (OrcCompiler *compiler)
+orc_mips_add_strides (OrcCompiler *compiler, int var_size_shift)
 {
   int i;
+  orc_mips_emit_lw (compiler, ORC_MIPS_T1, compiler->exec_reg,
+                    ORC_MIPS_EXECUTOR_OFFSET_N);
+  orc_mips_emit_sll (compiler, ORC_MIPS_T1, ORC_MIPS_T1, var_size_shift);
+  /* $t1 now contains the number of bytes that we treated (and that the var
+   * pointer registers advanced) */
   for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     if (compiler->vars[i].name == NULL) continue;
     switch (compiler->vars[i].vartype) {
@@ -366,10 +372,13 @@ orc_mips_add_strides (OrcCompiler *compiler)
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
-        /* get the stride */
+        /* get the stride (it's in bytes) */
         orc_mips_emit_lw (compiler, ORC_MIPS_T0, compiler->exec_reg,
                           ORC_MIPS_EXECUTOR_OFFSET_PARAMS(i));
-        /* add it to the pointer for that var */
+        /* $t0 = stride - bytes advanced
+           we add that to the pointer so that it points to the beginning of the
+           next stride */
+        orc_mips_emit_sub (compiler, ORC_MIPS_T0, ORC_MIPS_T0, ORC_MIPS_T1);
         orc_mips_emit_addu (compiler, compiler->vars[i].ptr_register,
                             compiler->vars[i].ptr_register, ORC_MIPS_T0);
         break;
@@ -408,6 +417,10 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
   orc_mips_load_constants_inner (compiler);
 
   if (compiler->program->is_2d) {
+    /* ex->params[ORC_VAR_A1] contains "m", the number of lines we want to treat */
+    orc_mips_emit_lw (compiler, ORC_MIPS_T0, compiler->exec_reg,
+                      ORC_MIPS_EXECUTOR_OFFSET_PARAMS(ORC_VAR_A1));
+    orc_mips_emit_beqz (compiler, ORC_MIPS_T0, LABEL_END);
     orc_mips_emit_label (compiler, LABEL_OUTER_LOOP);
   }
 
@@ -572,13 +585,13 @@ usual_case:
   if (compiler->program->is_2d) {
 
     /* ex->params[ORC_VAR_A1] contains "m", the number of lines we want to treat */
-    orc_mips_emit_lw (compiler, ORC_MIPS_T1, compiler->exec_reg,
+    orc_mips_emit_lw (compiler, ORC_MIPS_T2, compiler->exec_reg,
                       ORC_MIPS_EXECUTOR_OFFSET_PARAMS(ORC_VAR_A1));
-    orc_mips_add_strides (compiler);
-    orc_mips_emit_addi (compiler, ORC_MIPS_T1, ORC_MIPS_T1, -1);
-    orc_mips_emit_sw (compiler, ORC_MIPS_T1, compiler->exec_reg,
+    orc_mips_add_strides (compiler, var_size_shift);
+    orc_mips_emit_addi (compiler, ORC_MIPS_T2, ORC_MIPS_T2, -1);
+    orc_mips_emit_sw (compiler, ORC_MIPS_T2, compiler->exec_reg,
                       ORC_MIPS_EXECUTOR_OFFSET_PARAMS(ORC_VAR_A1));
-    orc_mips_emit_bnez (compiler, ORC_MIPS_T1, LABEL_OUTER_LOOP);
+    orc_mips_emit_bnez (compiler, ORC_MIPS_T2, LABEL_OUTER_LOOP);
     orc_mips_emit_nop (compiler);
   }
 
