@@ -370,6 +370,19 @@ orc_mips_emit_addu_ph (OrcCompiler *compiler,
 }
 
 void
+orc_mips_emit_addq_s_ph (OrcCompiler *compiler,
+                         OrcMipsRegister dest,
+                         OrcMipsRegister source1,
+                         OrcMipsRegister source2)
+{
+  ORC_ASM_CODE (compiler, "  addq_s.ph %s, %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source1),
+                orc_mips_reg_name (source2));
+  orc_mips_emit (compiler, MIPS_BINARY_INSTRUCTION(037, source1, source2, dest, 016, 020));
+}
+
+void
 orc_mips_emit_ori (OrcCompiler *compiler,
                      OrcMipsRegister dest, OrcMipsRegister source, int value)
 {
