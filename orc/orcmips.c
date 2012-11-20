@@ -432,6 +432,16 @@ orc_mips_emit_sll (OrcCompiler *compiler,
 }
 
 void
+orc_mips_emit_sra (OrcCompiler *compiler,
+                     OrcMipsRegister dest, OrcMipsRegister source, int value)
+{
+  ORC_ASM_CODE (compiler, "  sra     %s, %s, %d\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source), value);
+  orc_mips_emit (compiler, MIPS_BINARY_INSTRUCTION(0, ORC_MIPS_ZERO, source, dest, value, 03));
+}
+
+void
 orc_mips_emit_andi (OrcCompiler *compiler,
                      OrcMipsRegister dest, OrcMipsRegister source, int value)
 {
@@ -472,3 +482,46 @@ orc_mips_emit_append (OrcCompiler *compiler, OrcMipsRegister dest,
                             | 061 /* append */));
 }
 
+void
+orc_mips_emit_mul (OrcCompiler *compiler,
+                   OrcMipsRegister dest,
+                   OrcMipsRegister source1,
+                   OrcMipsRegister source2)
+{
+  ORC_ASM_CODE (compiler, "  mul     %s, %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source1),
+                orc_mips_reg_name (source2));
+  orc_mips_emit (compiler, MIPS_BINARY_INSTRUCTION(034, source1, source2, dest, 0, 02));
+}
+
+void
+orc_mips_emit_mtlo
+(OrcCompiler *compiler, OrcMipsRegister source)
+{
+  ORC_ASM_CODE (compiler, "  mtlo    %s\n",
+                orc_mips_reg_name (source));
+  orc_mips_emit (compiler,
+                 0 << 26 /* SPECIAL */
+                 | (source - ORC_GP_REG_BASE) << 21
+                 | 023); /* MTLO */
+}
+
+void
+orc_mips_emit_extr_s_h (OrcCompiler *compiler,
+                        OrcMipsRegister dest,
+                        int accumulator,
+                        int shift)
+{
+  ORC_ASM_CODE (compiler, "  extr_s.h %s, $ac%d, %d\n",
+                orc_mips_reg_name (dest),
+                accumulator,
+                shift);
+  orc_mips_emit (compiler,
+                 037 << 26 /* SPECIAL3 */
+                 | (shift & 0x1f) << 21
+                 | (dest - ORC_GP_REG_BASE) << 16
+                 | (accumulator & 0x3) << 11
+                 | 016 << 6 /* EXTR_S.H */
+                 | 070); /* EXTR.W */
+}
