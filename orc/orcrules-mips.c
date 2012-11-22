@@ -26,9 +26,9 @@ mips_rule_load (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     if (is_aligned) {
       orc_mips_emit_lh (compiler, dest, src, 0);
     } else {
-      orc_mips_emit_lb (compiler, ORC_MIPS_T3, src, 0);
+      orc_mips_emit_lb (compiler, compiler->tmpreg, src, 0);
       orc_mips_emit_lb (compiler, dest, src, 1);
-      orc_mips_emit_append (compiler, dest, ORC_MIPS_T3, 8);
+      orc_mips_emit_append (compiler, dest, compiler->tmpreg, 8);
     }
     break;
   case 2:
@@ -67,8 +67,8 @@ mips_rule_store (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     } else {
       /* Note: the code below is little endian specific */
       orc_mips_emit_sb (compiler, src, dest, 0);
-      orc_mips_emit_srl (compiler, ORC_MIPS_T3, src, 8);
-      orc_mips_emit_sb (compiler, ORC_MIPS_T3, dest, 1);
+      orc_mips_emit_srl (compiler, compiler->tmpreg, src, 8);
+      orc_mips_emit_sb (compiler, compiler->tmpreg, dest, 1);
     }
     break;
   case 2:
