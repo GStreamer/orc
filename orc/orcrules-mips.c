@@ -2,6 +2,9 @@
 #include <orc/orcdebug.h>
 #include <stdlib.h>
 
+#define ORC_SW_MAX 32767
+#define ORC_SW_MIN (-1-ORC_SW_MAX)
+
 void
 mips_rule_load (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
@@ -189,8 +192,17 @@ mips_rule_convssslw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int src = ORC_SRC_ARG (compiler, insn, 0);
   int dest = ORC_DEST_ARG (compiler, insn, 0);
 
-  orc_mips_emit_mtlo (compiler, src);
-  orc_mips_emit_extr_s_h (compiler, dest, 0, 0);
+  if (dest != src)
+    orc_mips_emit_move (compiler, dest, src);
+  orc_mips_emit_ori (compiler, ORC_MIPS_T3, ORC_MIPS_ZERO, ORC_SW_MAX);
+  orc_mips_emit_slt (compiler, ORC_MIPS_T4, ORC_MIPS_T3, src);
+  orc_mips_emit_movn (compiler, dest, ORC_MIPS_T3, ORC_MIPS_T4);
+  orc_mips_emit_lui (compiler, ORC_MIPS_T3, (ORC_SW_MIN >> 16) & 0xffff);
+  orc_mips_emit_ori (compiler, ORC_MIPS_T3, ORC_MIPS_T3, ORC_SW_MAX & 0xffff);
+  /* this still works if src == dest since in that case, its value is either
+   * the original src or ORC_SW_MAX, which works as well here */
+  orc_mips_emit_slt (compiler, ORC_MIPS_T4, src, ORC_MIPS_T3);
+  orc_mips_emit_movn (compiler, dest, ORC_MIPS_T3, ORC_MIPS_T4);
 }
 
 void
