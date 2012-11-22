@@ -14,17 +14,6 @@ const char * orc_compiler_orc_mips_get_asm_preamble (void);
 /* in orcrules-mips.c */
 void orc_compiler_orc_mips_register_rules (OrcTarget *target);
 
-/* ORC_STRUCT_OFFSET doesn't work for cross-compiling, so we use that */
-
-#define ORC_MIPS_EXECUTOR_OFFSET_PROGRAM 0
-#define ORC_MIPS_EXECUTOR_OFFSET_N 4
-#define ORC_MIPS_EXECUTOR_OFFSET_COUNTER1 8
-#define ORC_MIPS_EXECUTOR_OFFSET_COUNTER2 12
-#define ORC_MIPS_EXECUTOR_OFFSET_COUNTER3 16
-#define ORC_MIPS_EXECUTOR_OFFSET_ARRAYS(i) (20 + 4 * i)
-#define ORC_MIPS_EXECUTOR_OFFSET_PARAMS(i) (276 + 4 * i)
-#define ORC_MIPS_EXECUTOR_OFFSET_ACCUMULATORS(i) (532 + 4 * i)
-
 static OrcTarget orc_mips_target = {
   "mips",
 #ifdef HAVE_MIPSEL

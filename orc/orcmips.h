@@ -128,6 +128,17 @@ void orc_mips_emit_align (OrcCompiler *compiler, int align_shift);
 
 void orc_mips_do_fixups (OrcCompiler *compiler);
 
+/* ORC_STRUCT_OFFSET doesn't work for cross-compiling, so we use that */
+
+#define ORC_MIPS_EXECUTOR_OFFSET_PROGRAM 0
+#define ORC_MIPS_EXECUTOR_OFFSET_N 4
+#define ORC_MIPS_EXECUTOR_OFFSET_COUNTER1 8
+#define ORC_MIPS_EXECUTOR_OFFSET_COUNTER2 12
+#define ORC_MIPS_EXECUTOR_OFFSET_COUNTER3 16
+#define ORC_MIPS_EXECUTOR_OFFSET_ARRAYS(i) (20 + 4 * i)
+#define ORC_MIPS_EXECUTOR_OFFSET_PARAMS(i) (276 + 4 * i)
+#define ORC_MIPS_EXECUTOR_OFFSET_ACCUMULATORS(i) (532 + 4 * i)
+
 #endif /* ORC_ENABLE_UNSTABLE_API */
 
 ORC_END_DECLS

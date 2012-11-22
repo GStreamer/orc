@@ -216,6 +216,45 @@ mips_rule_addssw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 }
 
 void
+mips_rule_loadp (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  OrcVariable *src = compiler->vars + insn->src_args[0];
+  OrcVariable *dest = compiler->vars + insn->dest_args[0];
+  int size = ORC_PTR_TO_INT (user);
+
+  if (src->vartype == ORC_VAR_TYPE_CONST) {
+    if (size == 1 || size == 2) {
+      orc_mips_emit_ori (compiler, dest->alloc, ORC_MIPS_ZERO, src->value.i);
+    } else if (size == 4) {
+      orc_int16 high_bits;
+      high_bits = ((src->value.i >> 16) & 0xffff);
+      if (high_bits) {
+        orc_mips_emit_lui (compiler, dest->alloc, high_bits);
+        orc_mips_emit_ori (compiler, dest->alloc, dest->alloc, src->value.i & 0xffff);
+      } else {
+        orc_mips_emit_ori (compiler, dest->alloc, ORC_MIPS_ZERO, src->value.i & 0xffff);
+      }
+    } else {
+      ORC_PROGRAM_ERROR(compiler,"unimplemented");
+    }
+  } else {
+    if (size == 1) {
+      orc_mips_emit_lb (compiler, dest->alloc, compiler->exec_reg,
+                        ORC_MIPS_EXECUTOR_OFFSET_PARAMS(insn->src_args[0]));
+    } else if (size == 2) {
+      orc_mips_emit_lh (compiler, dest->alloc, compiler->exec_reg,
+                        ORC_MIPS_EXECUTOR_OFFSET_PARAMS(insn->src_args[0]));
+    } else if (size == 4) {
+      orc_mips_emit_lw (compiler, dest->alloc, compiler->exec_reg,
+                        ORC_MIPS_EXECUTOR_OFFSET_PARAMS(insn->src_args[0]));
+    } else {
+      ORC_PROGRAM_ERROR(compiler,"unimplemented");
+    }
+  }
+}
+
+
+void
 orc_compiler_orc_mips_register_rules (OrcTarget *target)
 {
   OrcRuleSet *rule_set;
@@ -225,6 +264,9 @@ orc_compiler_orc_mips_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "loadl", mips_rule_load, (void *) 2);
   orc_rule_register (rule_set, "loadw", mips_rule_load, (void *) 1);
   orc_rule_register (rule_set, "loadb", mips_rule_load, (void *) 0);
+  orc_rule_register (rule_set, "loadpl", mips_rule_loadp, (void *) 4);
+  orc_rule_register (rule_set, "loadpw", mips_rule_loadp, (void *) 2);
+  orc_rule_register (rule_set, "loadpb", mips_rule_loadp, (void *) 1);
   orc_rule_register (rule_set, "storel", mips_rule_store, (void *)2);
   orc_rule_register (rule_set, "storew", mips_rule_store, (void *)1);
   orc_rule_register (rule_set, "storeb", mips_rule_store, (void *)0);
