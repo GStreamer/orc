@@ -113,6 +113,7 @@ void orc_mips_emit_sra (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegi
 void orc_mips_emit_andi (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
 void orc_mips_emit_or (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source1, OrcMipsRegister source2);
 void orc_mips_emit_ori (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
+void orc_mips_emit_lui (OrcCompiler *compiler, OrcMipsRegister dest, int value);
 void orc_mips_emit_mul (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source1, OrcMipsRegister source2);
 
 void orc_mips_emit_append (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int shift_amount);

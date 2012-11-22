@@ -404,6 +404,16 @@ orc_mips_emit_or (OrcCompiler *compiler,
   orc_mips_emit (compiler, MIPS_BINARY_INSTRUCTION(0, source1, source2, dest, 0, 045));
 }
 
+void orc_mips_emit_lui (OrcCompiler *compiler, OrcMipsRegister dest, int value)
+{
+  ORC_ASM_CODE (compiler, "  lui     %s,  %d\n",
+                orc_mips_reg_name (dest), value);
+  orc_mips_emit (compiler,
+                 MIPS_IMMEDIATE_INSTRUCTION (017, /* LUI */
+                                             ORC_MIPS_ZERO,
+                                             dest,
+                                             value & 0xffff));
+}
 
 void
 orc_mips_emit_move (OrcCompiler *compiler,
