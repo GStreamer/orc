@@ -224,6 +224,12 @@ orc_mips_emit_loop (OrcCompiler *compiler)
     rule = insn->rule;
     if (rule && rule->emit) {
       compiler->insn_shift = compiler->loop_shift;
+      if (insn->flags & ORC_INSTRUCTION_FLAG_X2) {
+        compiler->insn_shift += 1;
+      }
+      if (insn->flags & ORC_INSTRUCTION_FLAG_X4) {
+        compiler->insn_shift += 2;
+      }
       rule->emit (compiler, rule->emit_user, insn);
     } else {
       orc_compiler_append_code (compiler, "No rule for %s\n", opcode->name);
