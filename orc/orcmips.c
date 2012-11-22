@@ -548,3 +548,35 @@ orc_mips_emit_extr_s_h (OrcCompiler *compiler,
                  | 016 << 6 /* EXTR_S.H */
                  | 070); /* EXTR.W */
 }
+
+void
+orc_mips_emit_slt (OrcCompiler *compiler,
+                   OrcMipsRegister dest,
+                   OrcMipsRegister src1,
+                   OrcMipsRegister src2)
+{
+  ORC_ASM_CODE (compiler, "  slt     %s, %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (src1),
+                orc_mips_reg_name (src2));
+  orc_mips_emit (compiler,
+                 MIPS_BINARY_INSTRUCTION (0, /* SPECIAL */
+                                          src1, src2, dest, 0,
+                                          052)); /* SLT */
+}
+
+void
+orc_mips_emit_movn (OrcCompiler *compiler,
+                    OrcMipsRegister dest,
+                    OrcMipsRegister src,
+                    OrcMipsRegister condition)
+{
+  ORC_ASM_CODE (compiler, "  movn    %s, %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (src),
+                orc_mips_reg_name (condition));
+  orc_mips_emit (compiler,
+                 MIPS_BINARY_INSTRUCTION (0, /* SPECIAL */
+                                          src, condition, dest, 0,
+                                          013)); /* MOVN */
+}

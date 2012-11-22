@@ -124,6 +124,9 @@ void orc_mips_emit_mtlo (OrcCompiler *compiler, OrcMipsRegister source);
 
 void orc_mips_emit_extr_s_h (OrcCompiler *compiler, OrcMipsRegister dest, int accumulator, int shift);
 
+void orc_mips_emit_slt (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister src1, OrcMipsRegister src2);
+void orc_mips_emit_movn (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister src, OrcMipsRegister condition);
+
 void orc_mips_emit_align (OrcCompiler *compiler, int align_shift);
 
 void orc_mips_do_fixups (OrcCompiler *compiler);
