@@ -203,6 +203,32 @@ orc_mips_load_constants_inner (OrcCompiler *compiler)
         break;
     }
   }
+
+
+  for(i=0;i<compiler->n_insns;i++){
+    OrcInstruction *insn = compiler->insns + i;
+    OrcStaticOpcode *opcode = insn->opcode;
+    OrcRule *rule;
+
+    if (!(insn->flags & ORC_INSN_FLAG_INVARIANT)) continue;
+
+    ORC_ASM_CODE(compiler,"# %d: %s\n", i, insn->opcode->name);
+
+    compiler->insn_shift = compiler->loop_shift;
+    if (insn->flags & ORC_INSTRUCTION_FLAG_X2) {
+      compiler->insn_shift += 1;
+    }
+    if (insn->flags & ORC_INSTRUCTION_FLAG_X4) {
+      compiler->insn_shift += 2;
+    }
+
+    rule = insn->rule;
+    if (rule && rule->emit) {
+      rule->emit (compiler, rule->emit_user, insn);
+    } else {
+      ORC_COMPILER_ERROR(compiler,"No rule for: %s", opcode->name);
+    }
+  }
 }
 
 void
