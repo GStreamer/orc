@@ -41,7 +41,7 @@ struct _OrcOpcodeExecutor {
  */
 struct _OrcExecutor {
   /*< private >*/
-  OrcProgram *program;
+  OrcCode *code;
   int n;
   int counter1;
   int counter2;
@@ -92,9 +92,9 @@ struct _OrcExecutorAlt {
 
 
 
-OrcExecutor * orc_executor_new (OrcProgram *program);
+OrcExecutor * orc_executor_new (OrcCode *code);
 void orc_executor_free (OrcExecutor *ex);
-void orc_executor_set_program (OrcExecutor *ex, OrcProgram *program);
+void orc_executor_set_code (OrcExecutor *ex, OrcCode *code);
 void orc_executor_set_array (OrcExecutor *ex, int var, void *ptr);
 void orc_executor_set_stride (OrcExecutor *ex, int var, int stride);
 void orc_executor_set_array_str (OrcExecutor *ex, const char *name, void *ptr);

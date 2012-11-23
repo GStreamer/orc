@@ -6,6 +6,8 @@
 #include <stdlib.h>
 
 #include <orc/orcprogram.h>
+#include <orc/orcexecutor.h>
+#include <orc/orccode.h>
 #include <orc/orcdebug.h>
 
 /**
@@ -17,15 +19,14 @@
 #define CHUNK_SIZE 16
 
 OrcExecutor *
-orc_executor_new (OrcProgram * program)
+orc_executor_new (OrcCode * code)
 {
   OrcExecutor *ex;
 
   ex = malloc (sizeof (OrcExecutor));
   memset (ex, 0, sizeof (OrcExecutor));
 
-  ex->program = program;
-  ex->arrays[ORC_VAR_A2] = program->orccode;
+  ex->code = code;
 
   return ex;
 }
@@ -56,25 +57,18 @@ orc_executor_run_backup (OrcExecutor * ex)
 {
   void (*func) (OrcExecutor *);
 
-  if (ex->program) {
-    func = ex->program->backup_func;
-  } else {
-    OrcCode *code = (OrcCode *) ex->arrays[ORC_VAR_A2];
-    func = code->exec;
-  }
+  func = ex->code->backup_func;
   if (func) {
     func (ex);
-    //ORC_ERROR("counters %d %d %d", ex->counter1, ex->counter2, ex->counter3);
   } else {
     orc_executor_emulate (ex);
   }
 }
 
 void
-orc_executor_set_program (OrcExecutor * ex, OrcProgram * program)
+orc_executor_set_code (OrcExecutor * ex, OrcCode * code)
 {
-  ex->program = program;
-  ex->arrays[ORC_VAR_A1] = (void *) orc_executor_emulate;
+  ex->code = code;
 }
 
 void
@@ -89,6 +83,7 @@ orc_executor_set_stride (OrcExecutor * ex, int var, int stride)
   ex->params[var] = stride;
 }
 
+#if 0
 void
 orc_executor_set_array_str (OrcExecutor * ex, const char *name, void *ptr)
 {
@@ -96,6 +91,7 @@ orc_executor_set_array_str (OrcExecutor * ex, const char *name, void *ptr)
   var = orc_program_find_var_by_name (ex->program, name);
   ex->arrays[var] = ptr;
 }
+#endif
 
 void
 orc_executor_set_param (OrcExecutor * ex, int var, int value)
@@ -129,6 +125,7 @@ orc_executor_set_param_double (OrcExecutor * ex, int var, double value)
   ex->params[var + (ORC_VAR_T1 - ORC_VAR_P1)] = u.x2[1];
 }
 
+#if 0
 void
 orc_executor_set_param_str (OrcExecutor * ex, const char *name, int value)
 {
@@ -136,6 +133,7 @@ orc_executor_set_param_str (OrcExecutor * ex, const char *name, int value)
   var = orc_program_find_var_by_name (ex->program, name);
   ex->params[var] = value;
 }
+#endif
 
 int
 orc_executor_get_accumulator (OrcExecutor * ex, int var)
@@ -143,6 +141,7 @@ orc_executor_get_accumulator (OrcExecutor * ex, int var)
   return ex->accumulators[var - ORC_VAR_A1];
 }
 
+#if 0
 int
 orc_executor_get_accumulator_str (OrcExecutor * ex, const char *name)
 {
@@ -150,6 +149,7 @@ orc_executor_get_accumulator_str (OrcExecutor * ex, const char *name)
   var = orc_program_find_var_by_name (ex->program, name);
   return ex->accumulators[var];
 }
+#endif
 
 void
 orc_executor_set_n (OrcExecutor * ex, int n)
@@ -223,11 +223,7 @@ orc_executor_emulate (OrcExecutor * ex)
   OrcOpcodeExecutor *opcode_ex;
   void *tmpspace[ORC_N_COMPILER_VARIABLES] = { 0 };
 
-  if (ex->program) {
-    code = ex->program->orccode;
-  } else {
-    code = (OrcCode *) ex->arrays[ORC_VAR_A2];
-  }
+  code = ex->code;
 
   ex->accumulators[0] = 0;
   ex->accumulators[1] = 0;
@@ -292,13 +288,13 @@ orc_executor_emulate (OrcExecutor * ex)
       } else if (var->vartype == ORC_VAR_TYPE_SRC) {
         if (ORC_PTR_TO_INT (ex->arrays[insn->src_args[k]]) & (var->size - 1)) {
           ORC_ERROR ("Unaligned array for src%d, program %s",
-              (insn->src_args[k] - ORC_VAR_S1), ex->program->name);
+              (insn->src_args[k] - ORC_VAR_S1), ex->code->name);
         }
         opcode_ex[j].src_ptrs[k] = ex->arrays[insn->src_args[k]];
       } else if (var->vartype == ORC_VAR_TYPE_DEST) {
         if (ORC_PTR_TO_INT (ex->arrays[insn->src_args[k]]) & (var->size - 1)) {
           ORC_ERROR ("Unaligned array for dest%d, program %s",
-              (insn->src_args[k] - ORC_VAR_D1), ex->program->name);
+              (insn->src_args[k] - ORC_VAR_D1), ex->code->name);
         }
         opcode_ex[j].src_ptrs[k] = ex->arrays[insn->src_args[k]];
       }
@@ -317,7 +313,7 @@ orc_executor_emulate (OrcExecutor * ex)
       } else if (var->vartype == ORC_VAR_TYPE_DEST) {
         if (ORC_PTR_TO_INT (ex->arrays[insn->dest_args[k]]) & (var->size - 1)) {
           ORC_ERROR ("Unaligned array for dest%d, program %s",
-              (insn->dest_args[k] - ORC_VAR_D1), ex->program->name);
+              (insn->dest_args[k] - ORC_VAR_D1), ex->code->name);
         }
         opcode_ex[j].dest_ptrs[k] = ex->arrays[insn->dest_args[k]];
       }

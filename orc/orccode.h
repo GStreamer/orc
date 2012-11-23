@@ -24,6 +24,7 @@ struct _OrcCode {
   OrcExecutorFunc exec;
 
   /*< private >*/
+  OrcExecutorFunc backup_func;
   OrcCompileResult result;
   char *name;
 

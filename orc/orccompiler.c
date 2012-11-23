@@ -287,6 +287,7 @@ orc_program_compile_full (OrcProgram * program, OrcTarget * target,
   program->orccode->is_2d = program->is_2d;
   program->orccode->constant_n = program->constant_n;
   program->orccode->constant_m = program->constant_m;
+  program->orccode->backup_func = program->backup_func;
   if (program->backup_func) {
     program->orccode->exec = program->backup_func;
   } else {

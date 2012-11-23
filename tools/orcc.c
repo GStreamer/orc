@@ -856,9 +856,7 @@ output_program_generation (OrcProgram * p, FILE * output, int is_inline)
 {
   OrcVariable *var;
   int i;
-
   OrcBytecode *bytecode;
-  int i;
 
   bytecode = orc_bytecode_from_program (p);
 

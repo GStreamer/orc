@@ -211,7 +211,6 @@ orc_memcpy (void *ORC_RESTRICT d1, const void *ORC_RESTRICT s1, int n)
     orc_once_mutex_unlock ();
   }
   ex->arrays[ORC_VAR_A2] = c;
-  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -301,7 +300,6 @@ orc_memset (void *ORC_RESTRICT d1, int p1, int n)
     orc_once_mutex_unlock ();
   }
   ex->arrays[ORC_VAR_A2] = c;
-  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;

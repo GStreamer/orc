@@ -36,8 +36,6 @@ orc_init (void)
   if (!inited) {
     orc_global_mutex_lock ();
     if (!inited) {
-      ORC_ASSERT (sizeof (OrcExecutor) == sizeof (OrcExecutorAlt));
-
       _orc_debug_init ();
       _orc_compiler_init ();
       orc_opcode_init ();
