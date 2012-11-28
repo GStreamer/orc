@@ -9,6 +9,10 @@ ORC_BEGIN_DECLS
 #ifdef ORC_ENABLE_UNSTABLE_API
 
 typedef enum {
+  ORC_TARGET_MIPS_FRAME_POINTER = (1<<0),
+} OrcTargetMipsFlags;
+
+typedef enum {
   ORC_MIPS_ZERO = ORC_GP_REG_BASE+0,
   ORC_MIPS_AT,
   ORC_MIPS_V0,

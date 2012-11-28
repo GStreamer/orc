@@ -53,13 +53,21 @@ orc_mips_init (void)
 unsigned int
 orc_compiler_orc_mips_get_default_flags (void)
 {
-  return 0;
+  unsigned int flags = 0;
+
+  if (_orc_compiler_flag_debug) {
+    flags |= ORC_TARGET_MIPS_FRAME_POINTER;
+  }
+  return flags;
 }
 
 void
 orc_compiler_orc_mips_init (OrcCompiler *compiler)
 {
   int i;
+
+  if (compiler->target_flags & ORC_TARGET_MIPS_FRAME_POINTER)
+    compiler->use_frame_pointer = TRUE;
 
   for (i=ORC_GP_REG_BASE; i<ORC_GP_REG_BASE+32; i++)
     compiler->valid_regs[i] = 1;
@@ -126,7 +134,16 @@ orc_compiler_orc_mips_get_asm_preamble (void)
 int
 orc_mips_emit_prologue (OrcCompiler *compiler)
 {
-  int i, stack_size = 0;
+  int i, stack_size;
+  unsigned int stack_increment;
+
+  if (compiler->use_frame_pointer) {
+    stack_size = 12; /* we stack at least fp and a0 and start at stack_increment 4 */
+    stack_increment = 4;
+  } else {
+    stack_size = 0;
+    stack_increment = 0;
+  }
 
   orc_compiler_append_code(compiler,".globl %s\n", compiler->program->name);
   orc_compiler_append_code(compiler,"%s:\n", compiler->program->name);
@@ -138,9 +155,16 @@ orc_mips_emit_prologue (OrcCompiler *compiler)
       stack_size += 4;
 
   if (stack_size) {
-    unsigned int stack_increment = 0;
-
     orc_mips_emit_addiu (compiler, ORC_MIPS_SP, ORC_MIPS_SP, -stack_size);
+
+    if (compiler->use_frame_pointer) {
+      orc_mips_emit_sw (compiler, ORC_MIPS_FP, ORC_MIPS_SP, stack_increment);
+      stack_increment += 4;
+      orc_mips_emit_move (compiler, ORC_MIPS_FP, ORC_MIPS_SP);
+      orc_mips_emit_sw (compiler, ORC_MIPS_A0, ORC_MIPS_SP, stack_increment);
+      stack_increment += 4;
+    }
+
 
     for(i=0; i<32; i++){
       if (compiler->used_regs[ORC_GP_REG_BASE + i] &&
@@ -162,6 +186,9 @@ void orc_mips_emit_epilogue (OrcCompiler *compiler, int stack_size)
   /* pop saved registers */
   if (stack_size) {
     unsigned int stack_increment = 0;
+    if (compiler->use_frame_pointer)
+      stack_increment = 8;
+
     for(i=0; i<32; i++){
       if (compiler->used_regs[ORC_GP_REG_BASE + i] &&
           compiler->save_regs[ORC_GP_REG_BASE + i]) {
@@ -170,6 +197,8 @@ void orc_mips_emit_epilogue (OrcCompiler *compiler, int stack_size)
             stack_increment +=4;
       }
     }
+    if (compiler->use_frame_pointer)
+      orc_mips_emit_lw (compiler, ORC_MIPS_FP, ORC_MIPS_SP, 4);
     orc_mips_emit_addiu (compiler, ORC_MIPS_SP, ORC_MIPS_SP, stack_size);
   }
 
