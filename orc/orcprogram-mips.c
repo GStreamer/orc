@@ -11,6 +11,8 @@ void orc_compiler_orc_mips_assemble (OrcCompiler *compiler);
 
 const char * orc_compiler_orc_mips_get_asm_preamble (void);
 
+void orc_mips_flush_cache (OrcCode *code);
+
 /* in orcrules-mips.c */
 void orc_compiler_orc_mips_register_rules (OrcTarget *target);
 
@@ -28,6 +30,9 @@ static OrcTarget orc_mips_target = {
   { { 0 } },
   0,
   orc_compiler_orc_mips_get_asm_preamble,
+  NULL,
+  NULL,
+  orc_mips_flush_cache,
 };
 
 enum {
@@ -652,3 +657,10 @@ usual_case:
   orc_mips_emit_epilogue (compiler, stack_size);
 }
 
+void
+orc_mips_flush_cache  (OrcCode *code)
+{
+#ifdef HAVE_MIPSEL
+  __clear_cache (code->code, code->code + code->code_size);
+#endif
+}
