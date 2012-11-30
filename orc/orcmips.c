@@ -22,6 +22,14 @@
      | ((sa) & 0x1f) << 6 \
      | ((function) & 0x3f))
 
+#define MIPS_SHLLQB_INSTRUCTION(opcode, source, dest, immediate) \
+                 (037 << 26 /* SPECIAL3 */ \
+                 | (immediate & 0xf) << 21 \
+                 | (source - ORC_GP_REG_BASE) << 16 \
+                 | (dest - ORC_GP_REG_BASE) << 11 \
+                 | (opcode & 0x1f) << 6 \
+                 | 023) /* SHLL.QB */
+
 const char *
 orc_mips_reg_name (int reg)
 {
@@ -462,6 +470,30 @@ orc_mips_emit_sra (OrcCompiler *compiler,
                 orc_mips_reg_name (dest),
                 orc_mips_reg_name (source), value);
   orc_mips_emit (compiler, MIPS_BINARY_INSTRUCTION(0, ORC_MIPS_ZERO, source, dest, value, 03));
+}
+
+void
+orc_mips_emit_shll_ph (OrcCompiler *compiler,
+                       OrcMipsRegister dest,
+                       OrcMipsRegister source,
+                       int value)
+{
+  ORC_ASM_CODE (compiler, "  shll.ph %s, %s, %d\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source), value);
+  orc_mips_emit (compiler, MIPS_SHLLQB_INSTRUCTION(010, source, dest, value));
+}
+
+void
+orc_mips_emit_shra_ph (OrcCompiler *compiler,
+                       OrcMipsRegister dest,
+                       OrcMipsRegister source,
+                       int value)
+{
+  ORC_ASM_CODE (compiler, "  shra.ph %s, %s, %d\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source), value);
+  orc_mips_emit (compiler, MIPS_SHLLQB_INSTRUCTION(011, source, dest, value));
 }
 
 void
