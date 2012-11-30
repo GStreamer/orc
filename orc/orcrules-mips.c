@@ -206,6 +206,18 @@ mips_rule_convssslw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 }
 
 void
+mips_rule_convsbw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  int src = ORC_SRC_ARG (compiler, insn, 0);
+  int dest = ORC_DEST_ARG (compiler, insn, 0);
+
+  /* left shift 8 bits, then right shift signed 8 bits, so that the sign bit
+   * gets replicated in the upper 8 bits */
+  orc_mips_emit_shll_ph (compiler, dest, src, 8);
+  orc_mips_emit_shra_ph (compiler, dest, dest, 8);
+}
+
+void
 mips_rule_mergewl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
   int src1 = ORC_SRC_ARG (compiler, insn, 0);
@@ -291,6 +303,7 @@ orc_compiler_orc_mips_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "mulswl", mips_rule_mul, NULL);
   orc_rule_register (rule_set, "shrsl", mips_rule_shrs, NULL);
   orc_rule_register (rule_set, "convssslw", mips_rule_convssslw, NULL);
+  orc_rule_register (rule_set, "convsbw", mips_rule_convsbw, NULL);
   orc_rule_register (rule_set, "mergewl", mips_rule_mergewl, NULL);
   orc_rule_register (rule_set, "addssw", mips_rule_addssw, NULL);
 }
