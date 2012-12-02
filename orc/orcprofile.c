@@ -57,21 +57,21 @@
  * Initializes a profiling structure.
  */
 void
-orc_profile_init (OrcProfile *prof)
+orc_profile_init (OrcProfile * prof)
 {
 #if defined(__GNUC__) && defined(HAVE_ARM) && defined(USE_CORTEX_A8_COUNTER)
   unsigned int flags;
 
-  __asm__ volatile ("mrc p15, 0, %0, c9, c12, 0" : "=r" (flags)); 
+  __asm__ volatile ("mrc p15, 0, %0, c9, c12, 0":"=r" (flags));
   flags |= 1;
-  __asm__ volatile ("mcr p15, 0, %0, c9, c12, 0" :: "r" (flags)); 
+  __asm__ volatile ("mcr p15, 0, %0, c9, c12, 0"::"r" (flags));
 
-  __asm__ volatile ("mcr p15, 0, %0, c9, c12, 2" :: "r"(1<<31)); 
-  __asm__ __volatile__("  mcr p15, 0, %0, c9, c13, 0" :: "r" (0));
+  __asm__ volatile ("mcr p15, 0, %0, c9, c12, 2"::"r" (1 << 31));
+  __asm__ __volatile__ ("  mcr p15, 0, %0, c9, c13, 0"::"r" (0));
 
-  __asm__ volatile ("mcr p15, 0, %0, c9, c12, 1" :: "r"(1<<31)); 
+  __asm__ volatile ("mcr p15, 0, %0, c9, c12, 1"::"r" (1 << 31));
 #endif
-  memset(prof, 0, sizeof(OrcProfile));
+  memset (prof, 0, sizeof (OrcProfile));
 
   prof->min = -1;
 
@@ -86,7 +86,7 @@ orc_profile_init (OrcProfile *prof)
  * FIXME: need more info
  */
 void
-orc_profile_stop_handle (OrcProfile *prof)
+orc_profile_stop_handle (OrcProfile * prof)
 {
   int i;
 
@@ -95,9 +95,10 @@ orc_profile_stop_handle (OrcProfile *prof)
   prof->total += prof->last;
   prof->n++;
 
-  if (prof->last < prof->min) prof->min = prof->last;
-  
-  for(i=0;i<prof->hist_n;i++) {
+  if (prof->last < prof->min)
+    prof->min = prof->last;
+
+  for (i = 0; i < prof->hist_n; i++) {
     if (prof->last == prof->hist_time[i]) {
       prof->hist_count[i]++;
       break;
@@ -122,7 +123,7 @@ orc_profile_stop_handle (OrcProfile *prof)
  * be NULL, in which case the values will not be written.
  */
 void
-orc_profile_get_ave_std (OrcProfile *prof, double *ave_p, double *std_p)
+orc_profile_get_ave_std (OrcProfile * prof, double *ave_p, double *std_p)
 {
   double ave;
   double std;
@@ -138,7 +139,7 @@ orc_profile_get_ave_std (OrcProfile *prof, double *ave_p, double *std_p)
     s = s2 = 0;
     n = 0;
     max_i = -1;
-    for(i=0;i<10;i++){
+    for (i = 0; i < 10; i++) {
       x = prof->hist_time[i];
       s2 += x * x * prof->hist_count[i];
       s += x * prof->hist_count[i];
@@ -151,16 +152,18 @@ orc_profile_get_ave_std (OrcProfile *prof, double *ave_p, double *std_p)
     }
 
     ave = s / n;
-    std = sqrt (s2 - s * s / n + n*n) / (n-1);
-    off = (prof->hist_time[max_i] - ave)/std;
+    std = sqrt (s2 - s * s / n + n * n) / (n - 1);
+    off = (prof->hist_time[max_i] - ave) / std;
 
     if (off > 4.0) {
       prof->hist_count[max_i] = 0;
     }
   } while (off > 4.0);
 
-  if (ave_p) *ave_p = ave;
-  if (std_p) *std_p = std;
+  if (ave_p)
+    *ave_p = ave;
+  if (std_p)
+    *std_p = std;
 }
 
 
@@ -169,33 +172,31 @@ oil_profile_stamp_default (void)
 {
 #if defined(__GNUC__) && (defined(HAVE_I386) || defined(HAVE_AMD64))
   unsigned long ts;
-  __asm__ __volatile__("rdtsc\n" : "=a" (ts) : : "edx");
+  __asm__ __volatile__ ("rdtsc\n":"=a" (ts)::"edx");
   return ts;
 #elif defined(__GNUC__) && defined(HAVE_ARM) && defined(USE_CORTEX_A8_COUNTER)
   unsigned int ts;
   //__asm__ __volatile__("  mrc p14, 0, %0, c1, c0, 0 \n" : "=r" (ts));
-  __asm__ __volatile__("  mrc p15, 0, %0, c9, c13, 0 \n" : "=r" (ts));
+  __asm__ __volatile__ ("  mrc p15, 0, %0, c9, c13, 0 \n":"=r" (ts));
   return ts;
 #elif defined(_MSC_VER) && defined(HAVE_I386)
   unsigned long ts;
   __asm push edx
-  __asm __emit 0fh __asm __emit 031h
-  __asm mov ts, eax
-  __asm pop edx
+      __asm __emit 0f h __asm __emit 031 h __asm mov ts, eax __asm pop edx
 #elif defined(HAVE_CLOCK_GETTIME) && defined(HAVE_MONOTONIC_CLOCK)
   struct timespec ts;
   clock_gettime (CLOCK_MONOTONIC, &ts);
-  return 1000000000*ts.tv_sec + ts.tv_nsec;
+  return 1000000000 * ts.tv_sec + ts.tv_nsec;
 #elif defined(HAVE_GETTIMEOFDAY)
   struct timeval tv;
-  gettimeofday(&tv,NULL);
-  return 1000000*(unsigned long)tv.tv_sec + (unsigned long)tv.tv_usec;
+  gettimeofday (&tv, NULL);
+  return 1000000 * (unsigned long) tv.tv_sec + (unsigned long) tv.tv_usec;
 #else
   return 0;
 #endif
 }
 
-static unsigned long (*_orc_profile_stamp)(void) = oil_profile_stamp_default;
+static unsigned long (*_orc_profile_stamp) (void) = oil_profile_stamp_default;
 
 /**
  * orc_profile_stamp:
@@ -208,7 +209,7 @@ static unsigned long (*_orc_profile_stamp)(void) = oil_profile_stamp_default;
 unsigned long
 orc_profile_stamp (void)
 {
-  return _orc_profile_stamp();
+  return _orc_profile_stamp ();
 }
 
 void
@@ -216,4 +217,3 @@ _orc_profile_init (void)
 {
 
 }
-
