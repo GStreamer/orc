@@ -112,11 +112,11 @@ noinst_PROGRAMS = generate-emulation generate-bytecode
 
 generate_emulation_LDADD = $(ORC_LIBS)
 generate_emulation_CFLAGS = $(ORC_CFLAGS)
-generate_emulation_DEPENDENCIES = liborc-0.4.la
+generate_emulation_DEPENDENCIES = liborc-@ORC_MAJORMINOR@.la
 
 generate_bytecode_LDADD = $(ORC_LIBS)
 generate_bytecode_CFLAGS = $(ORC_CFLAGS)
-generate_bytecode_DEPENDENCIES = liborc-0.4.la
+generate_bytecode_DEPENDENCIES = liborc-@ORC_MAJORMINOR@.la
 
 update: generate-emulation generate-bytecode
 	$(top_builddir)/tools/orcc$(EXEEXT) --implementation -o orcfunctions.c orcfunctions.orc
