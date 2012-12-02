@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include <orc/orc.h>
+#include <orc/orcexecutor.h>
 #include <orc/orcdebug.h>
 
 
@@ -53,12 +54,14 @@ main (int argc, char *argv[])
 int
 orc_sad_u8 (orc_uint8 * s1, orc_uint8 * s2, int n)
 {
-  static OrcProgram *p = NULL;
+  static OrcCode *c = NULL;
   OrcExecutor *ex;
   int sum;
   OrcCompileResult result;
 
-  if (p == NULL) {
+  if (c == NULL) {
+    OrcProgram *p;
+
     p = orc_program_new ();
     orc_program_add_accumulator (p, 4, "a1");
     orc_program_add_source (p, 1, "s1");
@@ -71,12 +74,16 @@ orc_sad_u8 (orc_uint8 * s1, orc_uint8 * s2, int n)
       return 0;
     }
     //printf("%s\n", orc_program_get_asm_code (p));
+
+    c = orc_program_take_code (p);
+    orc_program_free (p);
   }
 
-  ex = orc_executor_new (p);
+
+  ex = orc_executor_new (c);
   orc_executor_set_n (ex, n);
-  orc_executor_set_array_str (ex, "s1", s1);
-  orc_executor_set_array_str (ex, "s2", s2);
+  orc_executor_set_array (ex, ORC_VAR_S1, s1);
+  orc_executor_set_array (ex, ORC_VAR_S2, s2);
 
   orc_executor_run (ex);
 

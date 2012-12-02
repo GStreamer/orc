@@ -41,7 +41,7 @@ void
 orc_executor_run (OrcExecutor * ex)
 {
   void (*func) (OrcExecutor *);
-  OrcCode *code = (OrcCode *) ex->arrays[ORC_VAR_A2];
+  OrcCode *code = ex->code;
 
   func = code->exec;
   if (func) {

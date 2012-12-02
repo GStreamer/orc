@@ -249,6 +249,7 @@ void
 show (OrcProgram * program)
 {
   OrcCompileResult result;
+  OrcCode *code;
   OrcTarget *target;
   const char *target_name;
   unsigned int target_flags;
@@ -279,7 +280,8 @@ show (OrcProgram * program)
     n = array_n;
   }
 
-  ex = orc_executor_new (program);
+  code = orc_program_take_code (program);
+  ex = orc_executor_new (code);
   orc_executor_set_n (ex, n);
   if (program->is_2d) {
     if (program->constant_m > 0) {
