@@ -1141,7 +1141,7 @@ powerpc_rule_cmpltf (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
 
-  powerpc_emit_VXR (p, "vcmpgefp", 0x100001c6, dest, src2, src1, FALSE);
+  powerpc_emit_VXR (p, "vcmpgtfp", 0x100002c6, dest, src2, src1, FALSE);
 }
 
 static void
@@ -1151,7 +1151,7 @@ powerpc_rule_cmplef (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
 
-  powerpc_emit_VXR (p, "vcmpgtfp", 0x100002c6, dest, src2, src1, FALSE);
+  powerpc_emit_VXR (p, "vcmpgefp", 0x100001c6, dest, src2, src1, FALSE);
 }
 
 static void
