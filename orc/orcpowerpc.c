@@ -150,6 +150,48 @@ powerpc_emit_stwu (OrcCompiler *compiler, int regs, int rega, int offset)
 }
 
 void
+powerpc_emit_ld (OrcCompiler *compiler, int regd, int rega, int imm)
+{
+  unsigned int insn;
+
+  ORC_ASM_CODE(compiler,"  ld %s, %d(%s)\n",
+      powerpc_get_regname(regd),
+      imm, powerpc_get_regname(rega));
+  insn = (58<<26) | (powerpc_regnum (regd)<<21) | (powerpc_regnum (rega)<<16);
+  insn |= imm&0xffff;
+
+  powerpc_emit (compiler, insn);
+}
+
+void
+powerpc_emit_std (OrcCompiler *compiler, int regs, int rega, int offset)
+{
+  unsigned int insn;
+
+  ORC_ASM_CODE(compiler,"  std %s, %d(%s)\n",
+      powerpc_get_regname(regs),
+      offset, powerpc_get_regname(rega));
+  insn = (62<<26) | (powerpc_regnum (regs)<<21) | (powerpc_regnum (rega)<<16);
+  insn |= offset&0xffff;
+
+  powerpc_emit (compiler, insn);
+}
+
+void
+powerpc_emit_stdu (OrcCompiler *compiler, int regs, int rega, int offset)
+{
+  unsigned int insn;
+
+  ORC_ASM_CODE(compiler,"  stdu %s, %d(%s)\n",
+      powerpc_get_regname(regs),
+      offset, powerpc_get_regname(rega));
+  insn = (62<<26) | (powerpc_regnum (regs)<<21) | (powerpc_regnum (rega)<<16);
+  insn |= (offset&0xffff) | 1;
+
+  powerpc_emit (compiler, insn);
+}
+
+void
 powerpc_emit_srawi (OrcCompiler *compiler, int regd, int rega, int shift,
     int record)
 {
@@ -381,6 +423,9 @@ orc_powerpc_flush_cache (OrcCode *code)
   int size = code->code_size;
 
   ptr = code->code;
+#ifdef __powerpc64__
+  *(unsigned char **) ptr = (unsigned char *) code->exec + 24;
+#endif
   for (i=0;i<size;i+=cache_line_size) {
     __asm__ __volatile__ ("dcbst %0,%1" :: "b" (ptr), "r" (i));
   }
@@ -500,13 +545,23 @@ powerpc_load_long_constant (OrcCompiler *p, int reg, orc_uint32 a,
   powerpc_emit (p, d);
 
   powerpc_emit_label (p, label_skip);
-  powerpc_emit_lwz (p,
-      greg,
-      POWERPC_R3,
-      (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[ORC_VAR_A2]));
-  powerpc_emit_lwz (p,
-      greg, greg,
-      (int)ORC_STRUCT_OFFSET(OrcCode, exec));
+  if (p->is_64bit) {
+    powerpc_emit_ld (p,
+	greg,
+	POWERPC_R3,
+	(int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[ORC_VAR_A2]));
+    powerpc_emit_ld (p,
+	greg, greg,
+	(int)ORC_STRUCT_OFFSET(OrcCode, exec));
+  } else {
+    powerpc_emit_lwz (p,
+	greg,
+	POWERPC_R3,
+	(int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[ORC_VAR_A2]));
+    powerpc_emit_lwz (p,
+	greg, greg,
+	(int)ORC_STRUCT_OFFSET(OrcCode, exec));
+  }
 
   powerpc_add_fixup (p, 1, p->codeptr, label_data);
   {

@@ -26,7 +26,17 @@ powerpc_emit_prologue (OrcCompiler *compiler)
   ORC_ASM_CODE (compiler, ".global %s\n", compiler->program->name);
   ORC_ASM_CODE (compiler, "%s:\n", compiler->program->name);
 
-  powerpc_emit_stwu (compiler, POWERPC_R1, POWERPC_R1, -16);
+  if (compiler->is_64bit) {
+    ORC_ASM_CODE (compiler, " .quad .%s,.TOC.@tocbase,0\n",
+                  compiler->program->name);
+    ORC_ASM_CODE (compiler, ".%s:\n", compiler->program->name);
+    powerpc_emit (compiler, 0); powerpc_emit (compiler, 0);
+    powerpc_emit (compiler, 0); powerpc_emit (compiler, 0);
+    powerpc_emit (compiler, 0); powerpc_emit (compiler, 0);
+    powerpc_emit_stdu (compiler, POWERPC_R1, POWERPC_R1, -16);
+  } else {
+    powerpc_emit_stwu (compiler, POWERPC_R1, POWERPC_R1, -16);
+  }
 
   for(i=POWERPC_R13;i<=POWERPC_R31;i++){
     if (compiler->used_regs[i]) {
@@ -82,13 +92,23 @@ orc_powerpc_init (void)
 unsigned int
 orc_compiler_powerpc_get_default_flags (void)
 {
-  return 0;
+  unsigned int flags = 0;
+
+#ifdef __powerpc64__
+  flags |= ORC_TARGET_POWERPC_64BIT;
+#endif
+
+  return flags;
 }
 
 void
 orc_compiler_powerpc_init (OrcCompiler *compiler)
 {
   int i;
+
+  if (compiler->target_flags & ORC_TARGET_POWERPC_64BIT) {
+    compiler->is_64bit = TRUE;
+  }
 
   for(i=0;i<32;i++){
     compiler->valid_regs[POWERPC_R0+i] = 1;
@@ -127,10 +147,17 @@ powerpc_load_inner_constants (OrcCompiler *compiler)
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
         if (compiler->vars[i].ptr_register) {
-          powerpc_emit_lwz (compiler,
-              compiler->vars[i].ptr_register,
-              POWERPC_R3,
-              (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
+          if (compiler->is_64bit) {
+            powerpc_emit_ld (compiler,
+                compiler->vars[i].ptr_register,
+                POWERPC_R3,
+                (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
+          } else {
+            powerpc_emit_lwz (compiler,
+                compiler->vars[i].ptr_register,
+                POWERPC_R3,
+                (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
+          }
         } else {
           /* FIXME */
           ORC_ASM_CODE(compiler,"ERROR");
@@ -319,10 +346,17 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
       if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
           compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
         if (compiler->vars[k].ptr_register) {
-          powerpc_emit_lwz (compiler,
-              compiler->vars[k].ptr_register,
-              POWERPC_R3,
-              (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]));
+          if (compiler->is_64bit) {
+            powerpc_emit_ld (compiler,
+                compiler->vars[k].ptr_register,
+                POWERPC_R3,
+                (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]));
+          } else {
+            powerpc_emit_lwz (compiler,
+                compiler->vars[k].ptr_register,
+                POWERPC_R3,
+                (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]));
+          }
           powerpc_emit_lwz (compiler,
               POWERPC_R0,
               POWERPC_R3,
@@ -331,10 +365,17 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
               compiler->vars[k].ptr_register,
               compiler->vars[k].ptr_register,
 	      POWERPC_R0);
-          powerpc_emit_stw (compiler,
-              compiler->vars[k].ptr_register,
-              POWERPC_R3,
-              (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]));
+          if (compiler->is_64bit) {
+            powerpc_emit_std (compiler,
+                compiler->vars[k].ptr_register,
+                POWERPC_R3,
+                (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]));
+          } else {
+            powerpc_emit_stw (compiler,
+                compiler->vars[k].ptr_register,
+                POWERPC_R3,
+                (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]));
+          }
         } else {
           ORC_ASM_CODE(compiler,"ERROR\n");
         }

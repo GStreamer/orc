@@ -6,6 +6,10 @@
 
 ORC_BEGIN_DECLS
 
+typedef enum {
+  ORC_TARGET_POWERPC_64BIT = (1<<0)
+} OrcTargetPowerPCFlags;
+
 #ifdef ORC_ENABLE_UNSTABLE_API
 
 enum {
@@ -86,6 +90,9 @@ void powerpc_emit_addi (OrcCompiler *compiler, int regd, int rega, int imm);
 void powerpc_emit_lwz (OrcCompiler *compiler, int regd, int rega, int imm);
 void powerpc_emit_stw (OrcCompiler *compiler, int regs, int rega, int offset);
 void powerpc_emit_stwu (OrcCompiler *compiler, int regs, int rega, int offset);
+void powerpc_emit_ld (OrcCompiler *compiler, int regd, int rega, int imm);
+void powerpc_emit_std (OrcCompiler *compiler, int regs, int rega, int offset);
+void powerpc_emit_stdu (OrcCompiler *compiler, int regs, int rega, int offset);
 
 void powerpc_emit_ret (OrcCompiler *compiler);
 void powerpc_emit_b (OrcCompiler *compiler, int label);
