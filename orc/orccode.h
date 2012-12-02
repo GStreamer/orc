@@ -42,14 +42,12 @@ struct _OrcCode {
   int constant_m;
 };
 
-
-void orc_code_allocate_codemem (OrcCode *code, int size);
-
 OrcCode * orc_code_new (void);
 void orc_code_free (OrcCode *code);
 
 #ifdef ORC_ENABLE_UNSTABLE_API
 
+void orc_code_allocate_codemem (OrcCode *code, int size);
 void orc_code_chunk_free (OrcCodeChunk *chunk);
 
 #endif

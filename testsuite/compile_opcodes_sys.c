@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #include <orc/orc.h>
-#include <orc-test/orctest.h>
+#include <orc/orctest.h>
 
 #include <time.h>
 

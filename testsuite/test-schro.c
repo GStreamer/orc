@@ -7,7 +7,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <orc-test/orctest.h>
+#include <orc/orctest.h>
 
 
 int error = FALSE;

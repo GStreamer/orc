@@ -6,7 +6,7 @@
 #include <string.h>
 
 #include <orc/orc.h>
-#include <orc-test/orctest.h>
+#include <orc/orctest.h>
 
 
 int error = FALSE;

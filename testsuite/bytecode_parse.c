@@ -1,7 +1,7 @@
 
 #define ORC_ENABLE_UNSTABLE_API
 #include <orc/orc.h>
-#include <orc-test/orctest.h>
+#include <orc/orctest.h>
 #include <orc/orcparse.h>
 
 #include <stdio.h>

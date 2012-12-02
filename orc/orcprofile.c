@@ -29,7 +29,7 @@
 #include <config.h>
 #endif
 
-#include <orc-test/orcprofile.h>
+#include <orc/orcprofile.h>
 #include <orc/orcdebug.h>
 
 #ifdef HAVE_SYS_TIME_H

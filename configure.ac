@@ -189,7 +189,6 @@ Makefile
 doc/Makefile
 doc/version.entities
 orc/Makefile
-orc-test/Makefile
 testsuite/Makefile
 testsuite/orcc/Makefile
 testsuite/benchmorc/Makefile

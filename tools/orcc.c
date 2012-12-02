@@ -337,7 +337,7 @@ main (int argc, char *argv[])
     fprintf (output, "\n");
     fprintf (output, "%s", orc_target_c_get_typedefs ());
     fprintf (output, "#include <orc/orc.h>\n");
-    fprintf (output, "#include <orc-test/orctest.h>\n");
+    fprintf (output, "#include <orc/orctest.h>\n");
     fprintf (output, "%s", orc_target_get_asm_preamble ("c"));
     fprintf (output, "\n");
     if (use_backup) {

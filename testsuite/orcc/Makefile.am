@@ -14,7 +14,7 @@ test3_SOURCES = test3.c testorc.c
 test3_CFLAGS = -DDISABLE_ORC
 
 AM_CFLAGS = $(ORC_CFLAGS)
-LIBS = $(ORC_LIBS) $(top_builddir)/orc-test/liborc-test-@ORC_MAJORMINOR@.la
+LIBS = $(ORC_LIBS)
 
 CLEANFILES = testorc.c testorc.h orc_test.c
 

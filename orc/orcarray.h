@@ -2,8 +2,8 @@
 #ifndef _ORC_ARRAY_H_
 #define _ORC_ARRAY_H_
 
-#include <orc-test/orctest.h>
-#include <orc-test/orcrandom.h>
+#include <orc/orctest.h>
+#include <orc/orcrandom.h>
 #include <orc/orc.h>
 #include <orc/orcdebug.h>
 

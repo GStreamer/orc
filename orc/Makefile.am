@@ -27,7 +27,11 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orcparse.c \
 	orconce.c \
 	orcdebug.c \
-	orccode.c
+	orccode.c \
+	orctest.c \
+	orcarray.c \
+	orcrandom.c \
+	orcprofile.c
 
 if ENABLE_BACKEND_SSE
 liborc_@ORC_MAJORMINOR@_la_SOURCES += orcsse.c orcrules-sse.c orcprogram-sse.c
@@ -103,7 +107,11 @@ pkginclude_HEADERS = \
 	orcutils.h \
 	orcvariable.h \
 	orcx86.h \
-	orcx86insn.h
+	orcx86insn.h \
+	orctest.h \
+	orcarray.h \
+	orcrandom.h \
+	orcprofile.h
 
 noinst_HEADERS = \
 	opcodes.h

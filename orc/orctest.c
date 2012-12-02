@@ -1,10 +1,10 @@
 
 #include "config.h"
 
-#include <orc-test/orctest.h>
-#include <orc-test/orcarray.h>
-#include <orc-test/orcrandom.h>
-#include <orc-test/orcprofile.h>
+#include <orc/orctest.h>
+#include <orc/orcarray.h>
+#include <orc/orcrandom.h>
+#include <orc/orcprofile.h>
 #include <orc/orc.h>
 #include <orc/orcdebug.h>
 

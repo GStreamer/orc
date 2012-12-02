@@ -37,6 +37,6 @@ noinst_PROGRAMS += compile_opcodes_sys_c64x
 endif
 
 AM_CFLAGS = $(ORC_CFLAGS)
-LIBS = $(ORC_LIBS) $(top_builddir)/orc-test/liborc-test-@ORC_MAJORMINOR@.la
+LIBS = $(ORC_LIBS)
 
 

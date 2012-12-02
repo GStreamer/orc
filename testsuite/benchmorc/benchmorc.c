@@ -1,6 +1,6 @@
 
 #include <orc/orc.h>
-#include <orc-test/orctest.h>
+#include <orc/orctest.h>
 #include <orc/orcparse.h>
 
 #include <stdio.h>

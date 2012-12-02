@@ -7,8 +7,8 @@
 #define ORC_ENABLE_UNSTABLE_API
 
 #include <orc/orc.h>
-#include <orc-test/orctest.h>
-#include <orc-test/orcprofile.h>
+#include <orc/orctest.h>
+#include <orc/orcprofile.h>
 
 
 #define ALIGN(ptr,n) ((void *)((orc_intptr)(ptr) & (~(orc_intptr)(n-1))))
