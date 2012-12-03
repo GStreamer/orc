@@ -10,6 +10,7 @@
 #include <orc/orccompiler.h>
 #include <orc/orctarget.h>
 #include <orc/orcrule.h>
+#include <orc/orcerror.h>
 
 ORC_BEGIN_DECLS
 
@@ -98,6 +99,8 @@ void orc_program_append_ds_str (OrcProgram *p, const char *opcode,
 void orc_program_append_dds_str (OrcProgram *program, const char *name,
     const char *arg1, const char *arg2, const char *arg3);
 
+OrcCode *orc_program_compile_2 (const OrcProgram *program, OrcTarget *target,
+    unsigned int flags, OrcError **error);
 OrcCompileResult orc_program_compile (OrcProgram *p);
 OrcCompileResult orc_program_compile_for_target (OrcProgram *p, OrcTarget *target);
 OrcCompileResult orc_program_compile_full (OrcProgram *p, OrcTarget *target,
@@ -137,8 +140,8 @@ OrcCode *orc_program_take_code (OrcProgram *program);
 const char *orc_program_get_asm_code (OrcProgram *program);
 const char * orc_program_get_error (OrcProgram *program);
 
-int orc_program_get_max_array_size (OrcProgram *program);
-int orc_program_get_max_accumulator_size (OrcProgram *program);
+int orc_program_get_max_array_size (const OrcProgram *program);
+int orc_program_get_max_accumulator_size (const OrcProgram *program);
 
 
 ORC_END_DECLS

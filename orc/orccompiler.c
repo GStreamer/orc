@@ -186,6 +186,23 @@ OrcCompileResult
 orc_program_compile_full (OrcProgram * program, OrcTarget * target,
     unsigned int flags)
 {
+  OrcCode *code;
+
+  code = orc_program_compile_2 (program, target, flags, NULL);
+
+  if (code) {
+    program->orccode = code;
+    return ORC_COMPILE_RESULT_OK;
+  }
+
+  return ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
+}
+
+OrcCode *
+orc_program_compile_2 (const OrcProgram * program, OrcTarget * target,
+    unsigned int flags, OrcError ** error)
+{
+  OrcCode *code;
   OrcCompiler *compiler;
   int i;
   OrcCompileResult result;
@@ -282,32 +299,29 @@ orc_program_compile_full (OrcProgram * program, OrcTarget * target,
   if (compiler->error)
     goto error;
 
-  program->orccode = orc_code_new ();
+  code = orc_code_new ();
 
-  program->orccode->is_2d = program->is_2d;
-  program->orccode->constant_n = program->constant_n;
-  program->orccode->constant_m = program->constant_m;
-  program->orccode->backup_func = program->backup_func;
+  code->is_2d = program->is_2d;
+  code->constant_n = program->constant_n;
+  code->constant_m = program->constant_m;
+  code->backup_func = program->backup_func;
   if (program->backup_func) {
-    program->orccode->exec = program->backup_func;
+    code->exec = program->backup_func;
   } else {
-    program->orccode->exec = (void *) orc_executor_emulate;
+    code->exec = (void *) orc_executor_emulate;
   }
 
-  program->orccode->n_insns = compiler->n_insns;
-  program->orccode->insns =
-      malloc (sizeof (OrcInstruction) * compiler->n_insns);
-  memcpy (program->orccode->insns, compiler->insns,
+  code->n_insns = compiler->n_insns;
+  code->insns = malloc (sizeof (OrcInstruction) * compiler->n_insns);
+  memcpy (code->insns, compiler->insns,
       sizeof (OrcInstruction) * compiler->n_insns);
 
-  program->orccode->vars =
-      malloc (sizeof (OrcCodeVariable) * ORC_N_COMPILER_VARIABLES);
-  memset (program->orccode->vars, 0,
-      sizeof (OrcCodeVariable) * ORC_N_COMPILER_VARIABLES);
+  code->vars = malloc (sizeof (OrcCodeVariable) * ORC_N_COMPILER_VARIABLES);
+  memset (code->vars, 0, sizeof (OrcCodeVariable) * ORC_N_COMPILER_VARIABLES);
   for (i = 0; i < ORC_N_COMPILER_VARIABLES; i++) {
-    program->orccode->vars[i].vartype = compiler->vars[i].vartype;
-    program->orccode->vars[i].size = compiler->vars[i].size;
-    program->orccode->vars[i].value = compiler->vars[i].value;
+    code->vars[i].vartype = compiler->vars[i].vartype;
+    code->vars[i].size = compiler->vars[i].size;
+    code->vars[i].value = compiler->vars[i].value;
   }
 
   if (program->backup_func && _orc_compiler_flag_backup) {
@@ -317,7 +331,7 @@ orc_program_compile_full (OrcProgram * program, OrcTarget * target,
   }
 
   if (_orc_compiler_flag_emulate || target == NULL) {
-    program->orccode->exec = (void *) orc_executor_emulate;
+    code->exec = (void *) orc_executor_emulate;
     orc_compiler_error (compiler, "Compilation disabled, using emulation");
     compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
     goto error;
@@ -341,21 +355,21 @@ orc_program_compile_full (OrcProgram * program, OrcTarget * target,
     goto error;
   }
 
-  program->orccode->code_size = compiler->codeptr - compiler->code;
-  orc_code_allocate_codemem (program->orccode, program->orccode->code_size);
+  code->code_size = compiler->codeptr - compiler->code;
+  orc_code_allocate_codemem (code, code->code_size);
 
-  memcpy (program->orccode->code, compiler->code, program->orccode->code_size);
+  memcpy (code->code, compiler->code, code->code_size);
 
 #ifdef VALGRIND_DISCARD_TRANSLATIONS
-  VALGRIND_DISCARD_TRANSLATIONS (program->orccode->exec,
-      program->orccode->code_size);
+  VALGRIND_DISCARD_TRANSLATIONS (code->exec, code->code_size);
 #endif
 
   if (compiler->target->flush_cache) {
-    compiler->target->flush_cache (program->orccode);
+    compiler->target->flush_cache (code);
   }
 
-  program->asm_code = compiler->asm_code;
+  /* FIXME */
+  ((OrcProgram *) program)->asm_code = compiler->asm_code;
 
   result = compiler->result;
   for (i = 0; i < compiler->n_dup_vars; i++) {
@@ -369,7 +383,7 @@ orc_program_compile_full (OrcProgram * program, OrcTarget * target,
   free (compiler);
   ORC_INFO ("finished compiling (success)");
 
-  return result;
+  return code;
 error:
 
   if (compiler->error_msg) {
@@ -380,9 +394,7 @@ error:
         program->name, compiler->result);
   }
   result = compiler->result;
-  if (program->error_msg)
-    free (program->error_msg);
-  program->error_msg = compiler->error_msg;
+  //program->error_msg = compiler->error_msg;
   if (result == 0) {
     result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
@@ -400,7 +412,7 @@ error:
     free (compiler->output_insns);
   free (compiler);
   ORC_INFO ("finished compiling (fail)");
-  return result;
+  return NULL;
 }
 
 void
@@ -532,7 +544,7 @@ orc_compiler_rewrite_insns (OrcCompiler * compiler)
   int i;
   int j;
   OrcStaticOpcode *opcode;
-  OrcProgram *program = compiler->program;
+  const OrcProgram *program = compiler->program;
 
   compiler->n_insns = 0;
   for (j = 0; j < program->n_insns; j++) {

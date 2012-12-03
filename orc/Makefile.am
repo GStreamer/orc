@@ -31,7 +31,8 @@ liborc_@ORC_MAJORMINOR@_la_SOURCES = \
 	orctest.c \
 	orcarray.c \
 	orcrandom.c \
-	orcprofile.c
+	orcprofile.c \
+	orcerror.c
 
 if ENABLE_BACKEND_SSE
 liborc_@ORC_MAJORMINOR@_la_SOURCES += orcsse.c orcrules-sse.c orcprogram-sse.c
@@ -89,6 +90,7 @@ pkginclude_HEADERS = \
 	orccpuinsn.h \
 	orcdebug.h \
 	orcemulateopcodes.h \
+	orcerror.h \
 	orcexecutor.h \
 	orcfunctions.h \
 	orcinstruction.h \

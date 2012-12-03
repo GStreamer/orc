@@ -563,7 +563,7 @@ orc_x86_assemble_copy (OrcCompiler * compiler)
   OrcInstruction *insn;
   int shift = 0;
 
-  insn = compiler->program->insns + 0;
+  insn = compiler->insns + 0;
 
   if (strcmp (insn->opcode->name, "copyw") == 0) {
     shift = 1;

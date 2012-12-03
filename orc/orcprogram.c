@@ -976,7 +976,7 @@ orc_program_get_error (OrcProgram * program)
  * Returns: the number of bytes
  */
 int
-orc_program_get_max_array_size (OrcProgram * program)
+orc_program_get_max_array_size (const OrcProgram * program)
 {
   int i;
   int max;
@@ -1003,7 +1003,7 @@ orc_program_get_max_array_size (OrcProgram * program)
  * Returns: the number of bytes
  */
 int
-orc_program_get_max_accumulator_size (OrcProgram * program)
+orc_program_get_max_accumulator_size (const OrcProgram * program)
 {
   int i;
   int max;

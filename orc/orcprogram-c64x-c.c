@@ -107,7 +107,7 @@ static const char *varnames[] = {
 static void
 output_prototype (OrcCompiler * compiler)
 {
-  OrcProgram *p = compiler->program;
+  const OrcProgram *p = compiler->program;
   OrcVariable *var;
   int i;
   int need_comma;
@@ -115,7 +115,7 @@ output_prototype (OrcCompiler * compiler)
   ORC_ASM_CODE (compiler, "%s (", p->name);
   need_comma = FALSE;
   for (i = 0; i < 4; i++) {
-    var = &p->vars[ORC_VAR_D1 + i];
+    var = &compiler->vars[ORC_VAR_D1 + i];
     if (var->size) {
       if (need_comma)
         ORC_ASM_CODE (compiler, ", ");
@@ -133,7 +133,7 @@ output_prototype (OrcCompiler * compiler)
     }
   }
   for (i = 0; i < 4; i++) {
-    var = &p->vars[ORC_VAR_A1 + i];
+    var = &compiler->vars[ORC_VAR_A1 + i];
     if (var->size) {
       if (need_comma)
         ORC_ASM_CODE (compiler, ", ");
@@ -148,7 +148,7 @@ output_prototype (OrcCompiler * compiler)
     }
   }
   for (i = 0; i < 8; i++) {
-    var = &p->vars[ORC_VAR_S1 + i];
+    var = &compiler->vars[ORC_VAR_S1 + i];
     if (var->size) {
       if (need_comma)
         ORC_ASM_CODE (compiler, ", ");
@@ -166,7 +166,7 @@ output_prototype (OrcCompiler * compiler)
     }
   }
   for (i = 0; i < 8; i++) {
-    var = &p->vars[ORC_VAR_P1 + i];
+    var = &compiler->vars[ORC_VAR_P1 + i];
     if (var->size) {
       if (need_comma)
         ORC_ASM_CODE (compiler, ", ");

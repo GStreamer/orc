@@ -68,7 +68,7 @@ struct _OrcFixup {
  */
 struct _OrcCompiler {
   /*< private >*/
-  OrcProgram *program;
+  const OrcProgram *program;
   OrcTarget *target;
 
   unsigned int target_flags;
