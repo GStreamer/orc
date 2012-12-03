@@ -630,7 +630,7 @@ orc_program_add_accumulator (OrcProgram *program, int size, const char *name)
   program->vars[i].vartype = ORC_VAR_TYPE_ACCUMULATOR;
   program->vars[i].size = size;
   program->vars[i].name = strdup(name);
-  program->n_param_vars++;
+  program->n_accum_vars++;
 
   return i;
 }
