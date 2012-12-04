@@ -412,6 +412,18 @@ orc_mips_emit_or (OrcCompiler *compiler,
   orc_mips_emit (compiler, MIPS_BINARY_INSTRUCTION(0, source1, source2, dest, 0, 045));
 }
 
+void
+orc_mips_emit_and (OrcCompiler *compiler,
+                   OrcMipsRegister dest,
+                   OrcMipsRegister source1, OrcMipsRegister source2)
+{
+  ORC_ASM_CODE (compiler, "  and     %s, %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source1),
+                orc_mips_reg_name (source2));
+  orc_mips_emit (compiler, MIPS_BINARY_INSTRUCTION(0, source1, source2, dest, 0, 044));
+}
+
 void orc_mips_emit_lui (OrcCompiler *compiler, OrcMipsRegister dest, int value)
 {
   ORC_ASM_CODE (compiler, "  lui     %s,  %d\n",
@@ -440,6 +452,31 @@ orc_mips_emit_sub (OrcCompiler *compiler,
                 orc_mips_reg_name (source1),
                 orc_mips_reg_name (source2));
   orc_mips_emit (compiler, MIPS_BINARY_INSTRUCTION(0, source1, source2, dest, 0, 042));
+}
+
+void
+orc_mips_emit_subu_qb (OrcCompiler *compiler,
+                    OrcMipsRegister dest,
+                    OrcMipsRegister source1, OrcMipsRegister source2)
+{
+  ORC_ASM_CODE (compiler, "  subu.qb %s, %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source1),
+                orc_mips_reg_name (source2));
+  orc_mips_emit (compiler, MIPS_BINARY_INSTRUCTION(037, source1, source2, dest, 01, 020));
+}
+
+void
+orc_mips_emit_subq_s_ph (OrcCompiler *compiler,
+                         OrcMipsRegister dest,
+                         OrcMipsRegister source1,
+                         OrcMipsRegister source2)
+{
+  ORC_ASM_CODE (compiler, "  subq_s.ph %s, %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source1),
+                orc_mips_reg_name (source2));
+  orc_mips_emit (compiler, MIPS_BINARY_INSTRUCTION(037, source1, source2, dest, 017, 020));
 }
 
 void
@@ -551,6 +588,25 @@ orc_mips_emit_mul (OrcCompiler *compiler,
 }
 
 void
+orc_mips_emit_mul_ph (OrcCompiler *compiler,
+                      OrcMipsRegister dest,
+                      OrcMipsRegister source1,
+                      OrcMipsRegister source2)
+{
+  ORC_ASM_CODE (compiler, "  mul.ph  %s, %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source1),
+                orc_mips_reg_name (source2));
+  orc_mips_emit (compiler,
+                 037 << 26 /* SPECIAL3 */
+                 | (source1 - ORC_GP_REG_BASE) << 21
+                 | (source2 - ORC_GP_REG_BASE) << 16
+                 | (dest - ORC_GP_REG_BASE) << 11
+                 | 014 << 6 /* MUL.PH */
+                 | 030); /* ADDUH.QB */
+}
+
+void
 orc_mips_emit_mtlo
 (OrcCompiler *compiler, OrcMipsRegister source)
 {
@@ -612,3 +668,54 @@ orc_mips_emit_movn (OrcCompiler *compiler,
                                           src, condition, dest, 0,
                                           013)); /* MOVN */
 }
+
+void
+orc_mips_emit_repl_ph (OrcCompiler *compiler, OrcMipsRegister dest, int value)
+{
+  ORC_ASM_CODE (compiler, "  repl.ph %s, %d\n",
+                orc_mips_reg_name (dest),
+                value);
+  orc_mips_emit (compiler,
+                 037 << 26 /* SPECIAL3 */
+                 | (value & 0x3ff) << 16
+                 | (dest - ORC_GP_REG_BASE) << 11
+                 | 012 << 6 /* REPL.PH */
+                 | 022); /* ABSQ_S.PH */
+}
+
+void
+orc_mips_emit_cmp_lt_ph (OrcCompiler *compiler,
+                         OrcMipsRegister source1,
+                         OrcMipsRegister source2)
+{
+  ORC_ASM_CODE (compiler, "  cmp.lt.ph %s, %s\n",
+                orc_mips_reg_name (source1),
+                orc_mips_reg_name (source2));
+  orc_mips_emit (compiler,
+                 037 << 26 /* SPECIAL3 */
+                 | (source1 - ORC_GP_REG_BASE) << 21
+                 | (source2 - ORC_GP_REG_BASE) << 16
+                 | 0 << 11
+                 | 011 << 6 /* CMP.LT.PH */
+                 | 021); /* CMPU.EQ.QB */
+}
+
+void
+orc_mips_emit_pick_ph (OrcCompiler *compiler,
+                       OrcMipsRegister dest,
+                       OrcMipsRegister source1,
+                       OrcMipsRegister source2)
+{
+  ORC_ASM_CODE (compiler, "  pick.ph %s, %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source1),
+                orc_mips_reg_name (source2));
+  orc_mips_emit (compiler,
+                 037 << 26 /* SPECIAL3 */
+                 | (source1 - ORC_GP_REG_BASE) << 21
+                 | (source2 - ORC_GP_REG_BASE) << 16
+                 | (dest - ORC_GP_REG_BASE) << 11
+                 | 013 << 6 /* PICK.PH */
+                 | 021); /* CMPU.EQ.QB */
+}
+
