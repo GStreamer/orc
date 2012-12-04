@@ -4,6 +4,8 @@
 
 #define ORC_SW_MAX 32767
 #define ORC_SW_MIN (-1-ORC_SW_MAX)
+#define ORC_SB_MAX 127
+#define ORC_SB_MIN (-1-ORC_SB_MAX)
 
 void
 mips_rule_load (OrcCompiler *compiler, void *user, OrcInstruction *insn)
@@ -138,6 +140,16 @@ mips_rule_addb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 
 }
 
+void
+mips_rule_subb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  int src1 = ORC_SRC_ARG (compiler, insn, 0);
+  int src2 = ORC_SRC_ARG (compiler, insn, 1);
+  int dest = ORC_DEST_ARG (compiler, insn, 0);
+
+  orc_mips_emit_subu_qb (compiler, dest, src1, src2);
+
+}
 
 void
 mips_rule_copyl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
@@ -177,6 +189,17 @@ mips_rule_mul (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 }
 
 void
+mips_rule_mullw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  int src1 = ORC_SRC_ARG (compiler, insn, 0);
+  int src2 = ORC_SRC_ARG (compiler, insn, 1);
+  int dest = ORC_DEST_ARG (compiler, insn, 0);
+
+  orc_mips_emit_mul_ph (compiler, dest, src1, src2);
+}
+
+
+void
 mips_rule_shrs (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
   int src = ORC_SRC_ARG (compiler, insn, 0);
@@ -206,6 +229,20 @@ mips_rule_convssslw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 }
 
 void
+mips_rule_convssswb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  int src = ORC_SRC_ARG (compiler, insn, 0);
+  int dest = ORC_DEST_ARG (compiler, insn, 0);
+
+  orc_mips_emit_repl_ph (compiler, ORC_MIPS_T3, ORC_SB_MAX);
+  orc_mips_emit_cmp_lt_ph (compiler, ORC_MIPS_T3, src);
+  orc_mips_emit_pick_ph (compiler, dest, ORC_MIPS_T3, src);
+  orc_mips_emit_repl_ph (compiler, ORC_MIPS_T3, ORC_SB_MIN);
+  orc_mips_emit_cmp_lt_ph (compiler, src, ORC_MIPS_T3);
+  orc_mips_emit_pick_ph (compiler, dest, ORC_MIPS_T3, src);
+}
+
+void
 mips_rule_convsbw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
   int src = ORC_SRC_ARG (compiler, insn, 0);
@@ -224,9 +261,21 @@ mips_rule_mergewl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int src2 = ORC_SRC_ARG (compiler, insn, 1);
   int dest = ORC_DEST_ARG (compiler, insn, 0);
 
+  /* FIXME: use replv.ph if src1 == src2 */
   if (dest != src1)
     orc_mips_emit_move (compiler, dest, src1);
   orc_mips_emit_append (compiler, dest, src2, 16);
+}
+
+void
+mips_rule_mergebw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  int src1 = ORC_SRC_ARG (compiler, insn, 0);
+  int src2 = ORC_SRC_ARG (compiler, insn, 1);
+  int dest = ORC_DEST_ARG (compiler, insn, 0);
+
+  orc_mips_emit_shll_ph (compiler, dest, src1, 8);
+  orc_mips_emit_and (compiler, dest, dest, src2);
 }
 
 void
@@ -237,6 +286,26 @@ mips_rule_addssw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int dest = ORC_DEST_ARG (compiler, insn, 0);
 
   orc_mips_emit_addq_s_ph (compiler, dest, src1, src2);
+}
+
+void
+mips_rule_subssw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  int src1 = ORC_SRC_ARG (compiler, insn, 0);
+  int src2 = ORC_SRC_ARG (compiler, insn, 1);
+  int dest = ORC_DEST_ARG (compiler, insn, 0);
+
+  orc_mips_emit_subq_s_ph (compiler, dest, src1, src2);
+}
+
+void
+mips_rule_shrsw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  int src1 = ORC_SRC_ARG (compiler, insn, 0);
+  int src2 = ORC_SRC_ARG (compiler, insn, 1);
+  int dest = ORC_DEST_ARG (compiler, insn, 0);
+
+  orc_mips_emit_shra_ph (compiler, dest, src1, src2);
 }
 
 void
@@ -297,13 +366,19 @@ orc_compiler_orc_mips_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "addl", mips_rule_addl, NULL);
   orc_rule_register (rule_set, "addw", mips_rule_addw, NULL);
   orc_rule_register (rule_set, "addb", mips_rule_addb, NULL);
+  orc_rule_register (rule_set, "subb", mips_rule_subb, NULL);
   orc_rule_register (rule_set, "copyl", mips_rule_copyl, NULL);
   orc_rule_register (rule_set, "copyw", mips_rule_copyw, NULL);
   orc_rule_register (rule_set, "copyb", mips_rule_copyb, NULL);
   orc_rule_register (rule_set, "mulswl", mips_rule_mul, NULL);
+  orc_rule_register (rule_set, "mullw", mips_rule_mullw, NULL);
   orc_rule_register (rule_set, "shrsl", mips_rule_shrs, NULL);
   orc_rule_register (rule_set, "convssslw", mips_rule_convssslw, NULL);
+  orc_rule_register (rule_set, "convssswb", mips_rule_convssswb, NULL);
   orc_rule_register (rule_set, "convsbw", mips_rule_convsbw, NULL);
   orc_rule_register (rule_set, "mergewl", mips_rule_mergewl, NULL);
+  orc_rule_register (rule_set, "mergebw", mips_rule_mergebw, NULL);
   orc_rule_register (rule_set, "addssw", mips_rule_addssw, NULL);
+  orc_rule_register (rule_set, "subssw", mips_rule_subssw, NULL);
+  orc_rule_register (rule_set, "shrsw", mips_rule_shrsw, NULL);
 }
