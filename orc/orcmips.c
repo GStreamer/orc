@@ -391,6 +391,22 @@ orc_mips_emit_addq_s_ph (OrcCompiler *compiler,
 }
 
 void
+orc_mips_emit_adduh_r_qb (OrcCompiler *compiler,
+                         OrcMipsRegister dest,
+                         OrcMipsRegister source1,
+                         OrcMipsRegister source2)
+{
+  ORC_ASM_CODE (compiler, "  adduh_r.qb %s, %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source1),
+                orc_mips_reg_name (source2));
+  orc_mips_emit (compiler, MIPS_BINARY_INSTRUCTION(037, /* SPECIAL3 */
+                                                   source1, source2, dest,
+                                                   02, /* ADDUH_R */
+                                                   030 /* ADDUH.QB */));
+}
+
+void
 orc_mips_emit_ori (OrcCompiler *compiler,
                      OrcMipsRegister dest, OrcMipsRegister source, int value)
 {
@@ -684,6 +700,21 @@ orc_mips_emit_repl_ph (OrcCompiler *compiler, OrcMipsRegister dest, int value)
 }
 
 void
+orc_mips_emit_replv_qb (OrcCompiler *compiler,
+                        OrcMipsRegister dest,
+                        OrcMipsRegister source)
+{
+  ORC_ASM_CODE (compiler, "  replv.qb %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source));
+  orc_mips_emit (compiler,
+                 MIPS_BINARY_INSTRUCTION(037, /* SPECIAL3 */
+                                         ORC_MIPS_ZERO, /* actually no reg here */
+                                         source, dest,
+                                         03, /* REPLV.QB */
+                                         022 /* ABSQ_S.PH */));
+}
+void
 orc_mips_emit_cmp_lt_ph (OrcCompiler *compiler,
                          OrcMipsRegister source1,
                          OrcMipsRegister source2)
@@ -717,5 +748,22 @@ orc_mips_emit_pick_ph (OrcCompiler *compiler,
                  | (dest - ORC_GP_REG_BASE) << 11
                  | 013 << 6 /* PICK.PH */
                  | 021); /* CMPU.EQ.QB */
+}
+
+void
+orc_mips_emit_packrl_ph (OrcCompiler *compiler,
+                         OrcMipsRegister dest,
+                         OrcMipsRegister source1,
+                         OrcMipsRegister source2)
+{
+  ORC_ASM_CODE (compiler, "  packrl.ph %s, %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source1),
+                orc_mips_reg_name (source2));
+  orc_mips_emit (compiler,
+                 MIPS_BINARY_INSTRUCTION(037, /* SPECIAL3 */
+                                         source1, source2, dest,
+                                         016, /* PACKRL.PH */
+                                         021 /* CMPU.EQ.QB */));
 }
 
