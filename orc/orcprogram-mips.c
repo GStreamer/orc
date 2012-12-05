@@ -1,6 +1,7 @@
 #include <orc/orcmips.h>
 #include <orc/orcdebug.h>
 #include <stdlib.h>
+#include <string.h>
 #include "config.h"
 
 unsigned int orc_compiler_orc_mips_get_default_flags (void);
@@ -122,6 +123,15 @@ orc_compiler_orc_mips_init (OrcCompiler *compiler)
     break;
   default:
     ORC_ERROR("unhandled variable size %d", compiler->max_var_size);
+  }
+
+  for(i=0;i<compiler->n_insns;i++){
+    OrcInstruction *insn = compiler->insns + i;
+    OrcStaticOpcode *opcode = insn->opcode;
+
+    if (strcmp (opcode->name, "loadupib") == 0) {
+      compiler->vars[insn->src_args[0]].need_offset_reg = TRUE;
+    }
   }
 }
 

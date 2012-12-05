@@ -310,6 +310,79 @@ mips_rule_shrsw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 }
 
 void
+mips_rule_loadupib (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  OrcVariable *src = compiler->vars + insn->src_args[0];
+  OrcVariable *dest = compiler->vars + insn->dest_args[0];
+
+  if (compiler->vars[insn->src_args[0]].vartype == ORC_VAR_TYPE_CONST) {
+    ORC_PROGRAM_ERROR (compiler, "not implemented");
+    return;
+  }
+  switch (compiler->insn_shift) {
+  case 0:
+    orc_mips_emit_andi (compiler, ORC_MIPS_T3, src->ptr_offset, 1);
+    /* We only do the first lb if offset is even */
+    orc_mips_emit_conditional_branch_with_offset (compiler,
+                                                  ORC_MIPS_BEQ,
+                                                  ORC_MIPS_T3,
+                                                  ORC_MIPS_ZERO,
+                                                  16);
+    orc_mips_emit_lb (compiler, dest->alloc, src->ptr_register, 0);
+
+    orc_mips_emit_lb (compiler, ORC_MIPS_T3, src->ptr_register, 1);
+    orc_mips_emit_adduh_r_qb (compiler, dest->alloc, dest->alloc, ORC_MIPS_T3);
+    /* In the case where there is no insn_shift, src->ptr_register needs to be
+     * incremented only when ptr_offset is odd, _emit_loop() doesn't update it
+     * in that case, and therefore we do it here */
+    orc_mips_emit_addiu (compiler, src->ptr_register, src->ptr_register, 1);
+
+    orc_mips_emit_addiu (compiler, src->ptr_offset, src->ptr_offset, 1);
+    break;
+  case 2:
+    /*
+       lb       t3, 0(src)      # a
+       lb       t4, 1(src)      # b
+       lb       dest, 2(src)    # c
+       andi     t5, ptr_offset, 1 # i&1 NEW
+       replv.qb t3, t3          # aaaa
+       replv.qb t4, t4          # bbbb
+       replv.qb dest, dest      # cccc NEW
+       packrl.ph t3, t3, t4     # aabb
+       packrl.ph dest, t4, dest # bbcc NEW
+       move     t4, t3          # aabb
+       append   t4, dest, 8     # abbc
+       # if t5
+       # t3 <- dest
+       movn     t3, dest, t5    # NEW
+
+       adduh_r.qb dest, t3, t4  # a(a,b)b(b,c) | (a,b)b(b,c)c
+
+     */
+    orc_mips_emit_lb (compiler, ORC_MIPS_T3, src->ptr_register, 0);
+    orc_mips_emit_lb (compiler, ORC_MIPS_T4, src->ptr_register, 1);
+    orc_mips_emit_lb (compiler, dest->alloc, src->ptr_register, 2);
+    orc_mips_emit_andi (compiler, ORC_MIPS_T5, src->ptr_offset, 1);
+    orc_mips_emit_replv_qb (compiler, ORC_MIPS_T3, ORC_MIPS_T3);
+    orc_mips_emit_replv_qb (compiler, ORC_MIPS_T4, ORC_MIPS_T4);
+    orc_mips_emit_replv_qb (compiler, dest->alloc, dest->alloc);
+    orc_mips_emit_packrl_ph (compiler, ORC_MIPS_T3, ORC_MIPS_T3, ORC_MIPS_T4);
+    orc_mips_emit_packrl_ph (compiler, dest->alloc, ORC_MIPS_T4, dest->alloc);
+    orc_mips_emit_move (compiler, ORC_MIPS_T4, ORC_MIPS_T3);
+    orc_mips_emit_append (compiler, ORC_MIPS_T4, dest->alloc, 8);
+    orc_mips_emit_movn (compiler, ORC_MIPS_T3, dest->alloc, ORC_MIPS_T5);
+    orc_mips_emit_adduh_r_qb (compiler, dest->alloc, ORC_MIPS_T3, ORC_MIPS_T4);
+    /* FIXME: should we remove that as we only use ptr_offset for parity? */
+    orc_mips_emit_addiu (compiler, src->ptr_offset, src->ptr_offset, 4);
+    break;
+  default:
+    ORC_PROGRAM_ERROR (compiler, "unimplemented");
+  }
+  src->update_type = 1;
+}
+
+
+void
 mips_rule_loadp (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
   OrcVariable *src = compiler->vars + insn->src_args[0];
@@ -381,5 +454,6 @@ orc_compiler_orc_mips_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "mergebw", mips_rule_mergebw, NULL);
   orc_rule_register (rule_set, "addssw", mips_rule_addssw, NULL);
   orc_rule_register (rule_set, "subssw", mips_rule_subssw, NULL);
+  orc_rule_register (rule_set, "loadupib", mips_rule_loadupib, NULL);
   orc_rule_register (rule_set, "shrsw", mips_rule_shrsw, NULL);
 }
