@@ -48,7 +48,7 @@ mips_rule_load (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   default:
     ORC_PROGRAM_ERROR(compiler, "Don't know how to handle that shift");
   }
-
+  compiler->vars[insn->src_args[0]].update_type = 2;
 }
 
 void
@@ -87,6 +87,7 @@ mips_rule_store (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   default:
     ORC_PROGRAM_ERROR(compiler, "Don't know how to handle that shift");
   }
+  compiler->vars[insn->dest_args[0]].update_type = 2;
 }
 
 

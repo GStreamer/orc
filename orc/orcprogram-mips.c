@@ -297,14 +297,24 @@ orc_mips_emit_loop (OrcCompiler *compiler)
   }
 
   for (j=0; j<ORC_N_COMPILER_VARIABLES; j++) {
-    if (compiler->vars[j].name == NULL) continue;
-    if (compiler->vars[j].vartype == ORC_VAR_TYPE_SRC ||
-        compiler->vars[j].vartype == ORC_VAR_TYPE_DEST) {
-      if (compiler->vars[j].ptr_register) {
+    OrcVariable *var = compiler->vars + j;
+
+    if (var->name == NULL) continue;
+    if (var->vartype == ORC_VAR_TYPE_SRC ||
+        var->vartype == ORC_VAR_TYPE_DEST) {
+      int offset;
+      if (var->update_type == 0) {
+        offset = 0;
+      } else if (var->update_type == 1) {
+        offset = (var->size << compiler->loop_shift) >> 1;
+      } else {
+        offset = var->size << compiler->loop_shift;
+      }
+      if (offset !=0 && var->ptr_register) {
         orc_mips_emit_addiu (compiler,
-            compiler->vars[j].ptr_register,
-            compiler->vars[j].ptr_register,
-            compiler->vars[j].size << compiler->loop_shift);
+                             var->ptr_register,
+                             var->ptr_register,
+                             offset);
       }
     }
   }
