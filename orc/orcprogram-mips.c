@@ -222,20 +222,24 @@ orc_mips_load_constants_inner (OrcCompiler *compiler)
 {
   int i;
   for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
-    if (compiler->vars[i].name == NULL) continue;
-    switch (compiler->vars[i].vartype) {
+    OrcVariable *var = compiler->vars + i;
+    if (var->name == NULL) continue;
+    switch (var->vartype) {
       case ORC_VAR_TYPE_CONST:
       case ORC_VAR_TYPE_PARAM:
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
         orc_mips_emit_lw (compiler,
-            compiler->vars[i].ptr_register,
+            var->ptr_register,
             compiler->exec_reg, ORC_MIPS_EXECUTOR_OFFSET_ARRAYS(i));
         break;
       default:
         break;
     }
+
+    if (var->ptr_offset)
+      orc_mips_emit_move (compiler, var->ptr_offset, ORC_MIPS_ZERO);
   }
 
 
