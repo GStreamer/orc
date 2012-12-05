@@ -15,6 +15,7 @@ mips_rule_load (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   /* such that 2^total_shift is the amount to load at a time */
   int total_shift = compiler->insn_shift + ORC_PTR_TO_INT (user);
   int is_aligned = compiler->vars[insn->src_args[0]].is_aligned;
+  OrcMipsRegister tmp = orc_compiler_get_temp_reg (compiler);
 
   if (compiler->vars[insn->src_args[0]].vartype == ORC_VAR_TYPE_CONST) {
     ORC_PROGRAM_ERROR (compiler, "not implemented");
@@ -31,9 +32,9 @@ mips_rule_load (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     if (is_aligned) {
       orc_mips_emit_lh (compiler, dest, src, 0);
     } else {
-      orc_mips_emit_lb (compiler, compiler->tmpreg, src, 0);
+      orc_mips_emit_lb (compiler, tmp, src, 0);
       orc_mips_emit_lb (compiler, dest, src, 1);
-      orc_mips_emit_append (compiler, dest, compiler->tmpreg, 8);
+      orc_mips_emit_append (compiler, dest, tmp, 8);
     }
     break;
   case 2:
@@ -58,6 +59,7 @@ mips_rule_store (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int dest = compiler->vars[insn->dest_args[0]].ptr_register;
   int total_shift = compiler->insn_shift + ORC_PTR_TO_INT (user);
   int is_aligned = compiler->vars[insn->dest_args[0]].is_aligned;
+  OrcMipsRegister tmp = orc_compiler_get_temp_reg (compiler);
 
   ORC_DEBUG ("insn_shift=%d", compiler->insn_shift);
 
@@ -72,8 +74,8 @@ mips_rule_store (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     } else {
       /* Note: the code below is little endian specific */
       orc_mips_emit_sb (compiler, src, dest, 0);
-      orc_mips_emit_srl (compiler, compiler->tmpreg, src, 8);
-      orc_mips_emit_sb (compiler, compiler->tmpreg, dest, 1);
+      orc_mips_emit_srl (compiler, tmp, src, 8);
+      orc_mips_emit_sb (compiler, tmp, dest, 1);
     }
     break;
   case 2:
@@ -215,18 +217,20 @@ mips_rule_convssslw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
   int src = ORC_SRC_ARG (compiler, insn, 0);
   int dest = ORC_DEST_ARG (compiler, insn, 0);
+  OrcMipsRegister tmp0 = orc_compiler_get_temp_reg (compiler);
+  OrcMipsRegister tmp1 = orc_compiler_get_temp_reg (compiler);
 
   if (dest != src)
     orc_mips_emit_move (compiler, dest, src);
-  orc_mips_emit_ori (compiler, ORC_MIPS_T3, ORC_MIPS_ZERO, ORC_SW_MAX);
-  orc_mips_emit_slt (compiler, ORC_MIPS_T4, ORC_MIPS_T3, src);
-  orc_mips_emit_movn (compiler, dest, ORC_MIPS_T3, ORC_MIPS_T4);
-  orc_mips_emit_lui (compiler, ORC_MIPS_T3, (ORC_SW_MIN >> 16) & 0xffff);
-  orc_mips_emit_ori (compiler, ORC_MIPS_T3, ORC_MIPS_T3, ORC_SW_MAX & 0xffff);
+  orc_mips_emit_ori (compiler, tmp0, ORC_MIPS_ZERO, ORC_SW_MAX);
+  orc_mips_emit_slt (compiler, tmp1, tmp0, src);
+  orc_mips_emit_movn (compiler, dest, tmp0, tmp1);
+  orc_mips_emit_lui (compiler, tmp0, (ORC_SW_MIN >> 16) & 0xffff);
+  orc_mips_emit_ori (compiler, tmp0, tmp0, ORC_SW_MAX & 0xffff);
   /* this still works if src == dest since in that case, its value is either
    * the original src or ORC_SW_MAX, which works as well here */
-  orc_mips_emit_slt (compiler, ORC_MIPS_T4, src, ORC_MIPS_T3);
-  orc_mips_emit_movn (compiler, dest, ORC_MIPS_T3, ORC_MIPS_T4);
+  orc_mips_emit_slt (compiler, tmp1, src, tmp0);
+  orc_mips_emit_movn (compiler, dest, tmp0, tmp1);
 }
 
 void
@@ -234,13 +238,14 @@ mips_rule_convssswb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
   int src = ORC_SRC_ARG (compiler, insn, 0);
   int dest = ORC_DEST_ARG (compiler, insn, 0);
+  OrcMipsRegister tmp = orc_compiler_get_temp_reg (compiler);
 
-  orc_mips_emit_repl_ph (compiler, ORC_MIPS_T3, ORC_SB_MAX);
-  orc_mips_emit_cmp_lt_ph (compiler, ORC_MIPS_T3, src);
-  orc_mips_emit_pick_ph (compiler, dest, ORC_MIPS_T3, src);
-  orc_mips_emit_repl_ph (compiler, ORC_MIPS_T3, ORC_SB_MIN);
-  orc_mips_emit_cmp_lt_ph (compiler, src, ORC_MIPS_T3);
-  orc_mips_emit_pick_ph (compiler, dest, ORC_MIPS_T3, src);
+  orc_mips_emit_repl_ph (compiler, tmp, ORC_SB_MAX);
+  orc_mips_emit_cmp_lt_ph (compiler, tmp, src);
+  orc_mips_emit_pick_ph (compiler, dest, tmp, src);
+  orc_mips_emit_repl_ph (compiler, tmp, ORC_SB_MIN);
+  orc_mips_emit_cmp_lt_ph (compiler, src, tmp);
+  orc_mips_emit_pick_ph (compiler, dest, tmp, src);
 }
 
 void
@@ -314,6 +319,9 @@ mips_rule_loadupib (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
   OrcVariable *src = compiler->vars + insn->src_args[0];
   OrcVariable *dest = compiler->vars + insn->dest_args[0];
+  OrcMipsRegister tmp0 = orc_compiler_get_temp_reg (compiler);
+  OrcMipsRegister tmp1 = orc_compiler_get_temp_reg (compiler);
+  OrcMipsRegister tmp2 = orc_compiler_get_temp_reg (compiler);
 
   if (compiler->vars[insn->src_args[0]].vartype == ORC_VAR_TYPE_CONST) {
     ORC_PROGRAM_ERROR (compiler, "not implemented");
@@ -321,17 +329,17 @@ mips_rule_loadupib (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   }
   switch (compiler->insn_shift) {
   case 0:
-    orc_mips_emit_andi (compiler, ORC_MIPS_T3, src->ptr_offset, 1);
+    orc_mips_emit_andi (compiler, tmp0, src->ptr_offset, 1);
     /* We only do the first lb if offset is even */
     orc_mips_emit_conditional_branch_with_offset (compiler,
                                                   ORC_MIPS_BEQ,
-                                                  ORC_MIPS_T3,
+                                                  tmp0,
                                                   ORC_MIPS_ZERO,
                                                   16);
     orc_mips_emit_lb (compiler, dest->alloc, src->ptr_register, 0);
 
-    orc_mips_emit_lb (compiler, ORC_MIPS_T3, src->ptr_register, 1);
-    orc_mips_emit_adduh_r_qb (compiler, dest->alloc, dest->alloc, ORC_MIPS_T3);
+    orc_mips_emit_lb (compiler, tmp0, src->ptr_register, 1);
+    orc_mips_emit_adduh_r_qb (compiler, dest->alloc, dest->alloc, tmp0);
     /* In the case where there is no insn_shift, src->ptr_register needs to be
      * incremented only when ptr_offset is odd, _emit_loop() doesn't update it
      * in that case, and therefore we do it here */
@@ -359,19 +367,19 @@ mips_rule_loadupib (OrcCompiler *compiler, void *user, OrcInstruction *insn)
        adduh_r.qb dest, t3, t4  # a(a,b)b(b,c) | (a,b)b(b,c)c
 
      */
-    orc_mips_emit_lb (compiler, ORC_MIPS_T3, src->ptr_register, 0);
-    orc_mips_emit_lb (compiler, ORC_MIPS_T4, src->ptr_register, 1);
+    orc_mips_emit_lb (compiler, tmp0, src->ptr_register, 0);
+    orc_mips_emit_lb (compiler, tmp1, src->ptr_register, 1);
     orc_mips_emit_lb (compiler, dest->alloc, src->ptr_register, 2);
-    orc_mips_emit_andi (compiler, ORC_MIPS_T5, src->ptr_offset, 1);
-    orc_mips_emit_replv_qb (compiler, ORC_MIPS_T3, ORC_MIPS_T3);
-    orc_mips_emit_replv_qb (compiler, ORC_MIPS_T4, ORC_MIPS_T4);
+    orc_mips_emit_andi (compiler, tmp2, src->ptr_offset, 1);
+    orc_mips_emit_replv_qb (compiler, tmp0, tmp0);
+    orc_mips_emit_replv_qb (compiler, tmp1, tmp1);
     orc_mips_emit_replv_qb (compiler, dest->alloc, dest->alloc);
-    orc_mips_emit_packrl_ph (compiler, ORC_MIPS_T3, ORC_MIPS_T3, ORC_MIPS_T4);
-    orc_mips_emit_packrl_ph (compiler, dest->alloc, ORC_MIPS_T4, dest->alloc);
-    orc_mips_emit_move (compiler, ORC_MIPS_T4, ORC_MIPS_T3);
-    orc_mips_emit_append (compiler, ORC_MIPS_T4, dest->alloc, 8);
-    orc_mips_emit_movn (compiler, ORC_MIPS_T3, dest->alloc, ORC_MIPS_T5);
-    orc_mips_emit_adduh_r_qb (compiler, dest->alloc, ORC_MIPS_T3, ORC_MIPS_T4);
+    orc_mips_emit_packrl_ph (compiler, tmp0, tmp0, tmp1);
+    orc_mips_emit_packrl_ph (compiler, dest->alloc, tmp1, dest->alloc);
+    orc_mips_emit_move (compiler, tmp1, tmp0);
+    orc_mips_emit_append (compiler, tmp1, dest->alloc, 8);
+    orc_mips_emit_movn (compiler, tmp0, dest->alloc, tmp2);
+    orc_mips_emit_adduh_r_qb (compiler, dest->alloc, tmp0, tmp1);
     /* FIXME: should we remove that as we only use ptr_offset for parity? */
     orc_mips_emit_addiu (compiler, src->ptr_offset, src->ptr_offset, 4);
     break;

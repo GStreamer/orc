@@ -87,10 +87,6 @@ orc_compiler_orc_mips_init (OrcCompiler *compiler)
   compiler->valid_regs[ORC_MIPS_T0] = 0; /* $t0, $t1 and $t2 are used as loop */
   compiler->valid_regs[ORC_MIPS_T1] = 0; /* counters */
   compiler->valid_regs[ORC_MIPS_T2] = 0;
-  compiler->valid_regs[ORC_MIPS_T3] = 0; /* used as temporary register */
-  compiler->valid_regs[ORC_MIPS_T4] = 0; /* These two used to calculate which */
-  compiler->valid_regs[ORC_MIPS_T5] = 0; /* region 1 loop to use, and other
-                                            temporary stuff */
   compiler->valid_regs[ORC_MIPS_K0] = 0; /* for kernel/interupts */
   compiler->valid_regs[ORC_MIPS_K1] = 0; /* for kernel/interupts */
   compiler->valid_regs[ORC_MIPS_GP] = 0; /* global pointer */
@@ -108,8 +104,6 @@ orc_compiler_orc_mips_init (OrcCompiler *compiler)
   compiler->save_regs[ORC_MIPS_V1] = 1;
   for (i=ORC_MIPS_S0; i<= ORC_MIPS_S7; i++)
     compiler->save_regs[i] = 1;
-
-  compiler->tmpreg = ORC_MIPS_T3;
 
   switch (compiler->max_var_size) {
   case 1:
@@ -294,6 +288,8 @@ orc_mips_emit_loop (OrcCompiler *compiler)
     if (insn->flags & ORC_INSN_FLAG_INVARIANT) continue;
 
     orc_compiler_append_code(compiler,"/* %d: %s */\n", i, insn->opcode->name);
+
+    compiler->min_temp_reg = ORC_MIPS_T3;
 
     rule = insn->rule;
     if (rule && rule->emit) {
@@ -591,7 +587,7 @@ usual_case:
 
 
   /* We need a register that contains 1 so that we easily get 2^i */
-  orc_mips_emit_ori (compiler, compiler->tmpreg, ORC_MIPS_ZERO, 1);
+  orc_mips_emit_ori (compiler, ORC_MIPS_T3, ORC_MIPS_ZERO, 1);
   /* That's where we will store the bitfield of aligned vars (apart from
    * align_var) */
   orc_mips_emit_ori (compiler, ORC_MIPS_T5, ORC_MIPS_ZERO, 0);
@@ -603,7 +599,7 @@ usual_case:
     orc_mips_emit_conditional_branch_with_offset (compiler, ORC_MIPS_BNE,
                                                   ORC_MIPS_T0, ORC_MIPS_ZERO,
                                                   8 /* skipping the next two instructions */);
-    orc_mips_emit_sll (compiler, ORC_MIPS_T4, compiler->tmpreg, i);
+    orc_mips_emit_sll (compiler, ORC_MIPS_T4, ORC_MIPS_T3, i);
     orc_mips_emit_or (compiler, ORC_MIPS_T5, ORC_MIPS_T5, ORC_MIPS_T4);
   }
 
