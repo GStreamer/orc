@@ -472,6 +472,16 @@ mips_rule_loadp (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   }
 }
 
+void
+mips_rule_swapl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  int src = ORC_SRC_ARG (compiler, insn, 0);
+  int dest = ORC_DEST_ARG (compiler, insn, 0);
+
+  orc_mips_emit_wsbh (compiler, dest, src);
+  orc_mips_emit_packrl_ph (compiler, dest, dest, dest);
+}
+
 
 void
 orc_compiler_orc_mips_register_rules (OrcTarget *target)
@@ -509,4 +519,5 @@ orc_compiler_orc_mips_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "loadupib", mips_rule_loadupib, NULL);
   orc_rule_register (rule_set, "loadupdb", mips_rule_loadupdb, NULL);
   orc_rule_register (rule_set, "shrsw", mips_rule_shrsw, NULL);
+  orc_rule_register (rule_set, "swapl", mips_rule_swapl, NULL);
 }
