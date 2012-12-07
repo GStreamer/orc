@@ -389,6 +389,50 @@ mips_rule_loadupib (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   src->update_type = 1;
 }
 
+void
+mips_rule_loadupdb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  OrcVariable *src = compiler->vars + insn->src_args[0];
+  OrcVariable *dest = compiler->vars + insn->dest_args[0];
+  OrcMipsRegister tmp = orc_compiler_get_temp_reg (compiler);
+
+  if (compiler->vars[insn->src_args[0]].vartype == ORC_VAR_TYPE_CONST) {
+    ORC_PROGRAM_ERROR (compiler, "not implemented");
+    return;
+  }
+
+  switch (compiler->insn_shift) {
+  case 0:
+    orc_mips_emit_andi (compiler, tmp, src->ptr_offset, 1);
+    orc_mips_emit_conditional_branch_with_offset (compiler,
+                                                  ORC_MIPS_BEQ,
+                                                  tmp,
+                                                  ORC_MIPS_ZERO,
+                                                  8);
+    /* this is always done: in branch delay slot*/
+    orc_mips_emit_lb (compiler, dest->alloc, src->ptr_register, 0);
+    /* In the case where there is no insn_shift, src->ptr_register needs to be
+     * incremented only when ptr_offset is odd, _emit_loop() doesn't update it
+     * in that case, and therefore we do it here */
+    orc_mips_emit_addiu (compiler, src->ptr_register, src->ptr_register, 1);
+    orc_mips_emit_append (compiler, dest->alloc, dest->alloc, 8);
+
+    orc_mips_emit_addiu (compiler, src->ptr_offset, src->ptr_offset, 1);
+    break;
+  case 2:
+    orc_mips_emit_lb (compiler, tmp, src->ptr_register, 0);
+    orc_mips_emit_lb (compiler, dest->alloc, src->ptr_register, 1);
+    orc_mips_emit_replv_qb (compiler, tmp, tmp);
+    orc_mips_emit_replv_qb (compiler, dest->alloc, dest->alloc);
+    orc_mips_emit_packrl_ph (compiler, dest->alloc, tmp, dest->alloc);
+    /* FIXME: should we remove that as we only use ptr_offset for parity? */
+    orc_mips_emit_addiu (compiler, src->ptr_offset, src->ptr_offset, 4);
+    break;
+  default:
+    ORC_PROGRAM_ERROR (compiler, "unimplemented");
+  }
+  src->update_type = 1;
+}
 
 void
 mips_rule_loadp (OrcCompiler *compiler, void *user, OrcInstruction *insn)
@@ -463,5 +507,6 @@ orc_compiler_orc_mips_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "addssw", mips_rule_addssw, NULL);
   orc_rule_register (rule_set, "subssw", mips_rule_subssw, NULL);
   orc_rule_register (rule_set, "loadupib", mips_rule_loadupib, NULL);
+  orc_rule_register (rule_set, "loadupdb", mips_rule_loadupdb, NULL);
   orc_rule_register (rule_set, "shrsw", mips_rule_shrsw, NULL);
 }

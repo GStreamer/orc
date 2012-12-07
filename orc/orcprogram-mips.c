@@ -123,7 +123,8 @@ orc_compiler_orc_mips_init (OrcCompiler *compiler)
     OrcInstruction *insn = compiler->insns + i;
     OrcStaticOpcode *opcode = insn->opcode;
 
-    if (strcmp (opcode->name, "loadupib") == 0) {
+    if ((strcmp (opcode->name, "loadupib") == 0)
+        || (strcmp (opcode->name, "loadupdb") == 0)) {
       compiler->vars[insn->src_args[0]].need_offset_reg = TRUE;
     }
   }
