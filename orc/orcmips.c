@@ -767,3 +767,18 @@ orc_mips_emit_packrl_ph (OrcCompiler *compiler,
                                          021 /* CMPU.EQ.QB */));
 }
 
+void
+orc_mips_emit_wsbh (OrcCompiler *compiler,
+                    OrcMipsRegister dest,
+                    OrcMipsRegister source)
+{
+  ORC_ASM_CODE (compiler, "  wsbh    %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source));
+  orc_mips_emit (compiler,
+                 MIPS_BINARY_INSTRUCTION(037, /* SPECIAL3 */
+                                         ORC_MIPS_ZERO, /* actually no reg here */
+                                         source, dest,
+                                         02, /* WSBH */
+                                         040 /* BSHFL */));
+}

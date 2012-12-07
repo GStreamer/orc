@@ -146,6 +146,8 @@ void orc_mips_emit_pick_ph (OrcCompiler *compiler, OrcMipsRegister dest, OrcMips
 void orc_mips_emit_packrl_ph (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source1, OrcMipsRegister source2);
 void orc_mips_emit_align (OrcCompiler *compiler, int align_shift);
 
+void orc_mips_emit_wsbh (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source);
+
 void orc_mips_do_fixups (OrcCompiler *compiler);
 
 /* ORC_STRUCT_OFFSET doesn't work for cross-compiling, so we use that */
