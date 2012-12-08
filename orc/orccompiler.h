@@ -13,7 +13,6 @@
 
 ORC_BEGIN_DECLS
 
-typedef struct _OrcCompiler OrcCompiler;
 typedef struct _OrcFixup OrcFixup;
 
 

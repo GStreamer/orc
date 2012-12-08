@@ -5,6 +5,7 @@
 #include <orc/orcutils.h>
 #include <orc/orclimits.h>
 #include <orc/orcexecutor.h>
+#include <orc/orcinstruction.h>
 
 ORC_BEGIN_DECLS
 

@@ -9,8 +9,6 @@
 
 ORC_BEGIN_DECLS
 
-typedef struct _OrcInstruction OrcInstruction;
-
 /**
  * OrcInstruction:
  *

@@ -7,7 +7,6 @@
 
 ORC_BEGIN_DECLS
 
-typedef struct _OrcConstant OrcConstant;
 
 enum {
   ORC_CONST_ZERO,
