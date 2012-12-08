@@ -8,7 +8,6 @@
 
 ORC_BEGIN_DECLS
 
-typedef struct _OrcTarget OrcTarget;
 
 enum {
   ORC_TARGET_C_C99 = (1<<0),
