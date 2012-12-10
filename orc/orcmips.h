@@ -71,6 +71,8 @@ void orc_mips_emit_lh (OrcCompiler *compiler, OrcMipsRegister dest,
                        OrcMipsRegister base, unsigned int offset);
 void orc_mips_emit_lb (OrcCompiler *compiler, OrcMipsRegister dest,
                        OrcMipsRegister base, unsigned int offset);
+void orc_mips_emit_lbu (OrcCompiler *compiler, OrcMipsRegister dest,
+                       OrcMipsRegister base, unsigned int offset);
 
 void orc_mips_emit_jr (OrcCompiler *compiler, OrcMipsRegister address_reg);
 void orc_mips_emit_conditional_branch (OrcCompiler *compiler, int condition,
@@ -114,6 +116,7 @@ void orc_mips_emit_move (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsReg
 void orc_mips_emit_sub (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source1, OrcMipsRegister source2);
 void orc_mips_emit_subu_qb (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source1, OrcMipsRegister source2);
 void orc_mips_emit_subq_s_ph (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source1, OrcMipsRegister source2);
+void orc_mips_emit_subq_ph (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source1, OrcMipsRegister source2);
 void orc_mips_emit_srl (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
 void orc_mips_emit_sll (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
 void orc_mips_emit_sra (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source, int value);
@@ -140,6 +143,7 @@ void orc_mips_emit_movn (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsReg
 
 void orc_mips_emit_repl_ph (OrcCompiler *compiler, OrcMipsRegister dest, int value);
 void orc_mips_emit_replv_qb (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source);
+void orc_mips_emit_preceu_ph_qbr (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source);
 void orc_mips_emit_cmp_lt_ph (OrcCompiler *compiler, OrcMipsRegister source1, OrcMipsRegister source2);
 void orc_mips_emit_pick_ph (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source1, OrcMipsRegister source2);
 

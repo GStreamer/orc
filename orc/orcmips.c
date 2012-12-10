@@ -220,6 +220,16 @@ orc_mips_emit_lb (OrcCompiler *compiler, OrcMipsRegister dest,
 }
 
 void
+orc_mips_emit_lbu (OrcCompiler *compiler, OrcMipsRegister dest,
+                   OrcMipsRegister base, unsigned int offset)
+{
+  ORC_ASM_CODE (compiler, "  lbu     %s, %d(%s)\n",
+                orc_mips_reg_name (dest),
+                offset, orc_mips_reg_name (base));
+  orc_mips_emit (compiler, MIPS_IMMEDIATE_INSTRUCTION(044, base, dest, offset));
+}
+
+void
 orc_mips_emit_jr (OrcCompiler *compiler, OrcMipsRegister address_reg)
 {
   ORC_ASM_CODE (compiler, "  jr      %s\n", orc_mips_reg_name (address_reg));
@@ -496,6 +506,19 @@ orc_mips_emit_subq_s_ph (OrcCompiler *compiler,
 }
 
 void
+orc_mips_emit_subq_ph (OrcCompiler *compiler,
+                         OrcMipsRegister dest,
+                         OrcMipsRegister source1,
+                         OrcMipsRegister source2)
+{
+  ORC_ASM_CODE (compiler, "  subq.ph %s, %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source1),
+                orc_mips_reg_name (source2));
+  orc_mips_emit (compiler, MIPS_BINARY_INSTRUCTION(037, source1, source2, dest, 013, 020));
+}
+
+void
 orc_mips_emit_srl (OrcCompiler *compiler,
                      OrcMipsRegister dest, OrcMipsRegister source, int value)
 {
@@ -714,6 +737,23 @@ orc_mips_emit_replv_qb (OrcCompiler *compiler,
                                          03, /* REPLV.QB */
                                          022 /* ABSQ_S.PH */));
 }
+
+void
+orc_mips_emit_preceu_ph_qbr (OrcCompiler *compiler,
+                             OrcMipsRegister dest,
+                             OrcMipsRegister source)
+{
+  ORC_ASM_CODE (compiler, "  preceu.ph.qbr %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source));
+  orc_mips_emit (compiler,
+                 MIPS_BINARY_INSTRUCTION(037, /* SPECIAL3 */
+                                         ORC_MIPS_ZERO, /* actually no reg here */
+                                         source, dest,
+                                         035, /* PRECEU.PH.QBR */
+                                         022 /* ABSQ_S.PH */));
+}
+
 void
 orc_mips_emit_cmp_lt_ph (OrcCompiler *compiler,
                          OrcMipsRegister source1,
