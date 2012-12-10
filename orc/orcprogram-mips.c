@@ -541,7 +541,8 @@ usual_case:
    */
   orc_mips_emit_conditional_branch_with_offset (compiler, ORC_MIPS_BGEZ,
                                                 ORC_MIPS_T2, ORC_MIPS_ZERO,
-                                                16);
+                                                24);
+  orc_mips_emit_nop (compiler);
   orc_mips_emit_move (compiler, ORC_MIPS_T1, ORC_MIPS_ZERO);
   orc_mips_emit_move (compiler, ORC_MIPS_T2, ORC_MIPS_ZERO);
   orc_mips_emit_lw (compiler, ORC_MIPS_T0, compiler->exec_reg,
