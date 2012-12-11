@@ -320,10 +320,10 @@ void
 mips_rule_shrsw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
   int src1 = ORC_SRC_ARG (compiler, insn, 0);
-  int src2 = ORC_SRC_ARG (compiler, insn, 1);
+  OrcVariable *src2 = compiler->vars + insn->src_args[1];
   int dest = ORC_DEST_ARG (compiler, insn, 0);
 
-  orc_mips_emit_shra_ph (compiler, dest, src1, src2);
+  orc_mips_emit_shra_ph (compiler, dest, src1, src2->value.i);
 }
 
 void
