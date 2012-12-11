@@ -519,6 +519,19 @@ orc_mips_emit_subq_ph (OrcCompiler *compiler,
 }
 
 void
+orc_mips_emit_subu_ph (OrcCompiler *compiler,
+                       OrcMipsRegister dest,
+                       OrcMipsRegister source1,
+                       OrcMipsRegister source2)
+{
+  ORC_ASM_CODE (compiler, "  subu.ph %s, %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source1),
+                orc_mips_reg_name (source2));
+  orc_mips_emit (compiler, MIPS_BINARY_INSTRUCTION(037, source1, source2, dest, 011, 020));
+}
+
+void
 orc_mips_emit_srl (OrcCompiler *compiler,
                      OrcMipsRegister dest, OrcMipsRegister source, int value)
 {
@@ -735,6 +748,22 @@ orc_mips_emit_replv_qb (OrcCompiler *compiler,
                                          ORC_MIPS_ZERO, /* actually no reg here */
                                          source, dest,
                                          03, /* REPLV.QB */
+                                         022 /* ABSQ_S.PH */));
+}
+
+void
+orc_mips_emit_replv_ph (OrcCompiler *compiler,
+                        OrcMipsRegister dest,
+                        OrcMipsRegister source)
+{
+  ORC_ASM_CODE (compiler, "  replv.ph %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source));
+  orc_mips_emit (compiler,
+                 MIPS_BINARY_INSTRUCTION(037, /* SPECIAL3 */
+                                         ORC_MIPS_ZERO, /* actually no reg here */
+                                         source, dest,
+                                         013, /* REPLV.PH */
                                          022 /* ABSQ_S.PH */));
 }
 
