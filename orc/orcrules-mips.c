@@ -507,10 +507,13 @@ mips_rule_avgub (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 void
 mips_rule_convubw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
+#if 0
   int src = ORC_SRC_ARG (compiler, insn, 0);
   int dest = ORC_DEST_ARG (compiler, insn, 0);
 
-  orc_mips_emit_andi (compiler, dest, src, 0xff);
+  orc_mips_emit_replv_ph (compiler, ORC_MIPS_T3, 0xff);
+  orc_mips_emit_and (compiler, dest, src, ORC_MIPS_T3);
+#endif
 }
 
 void
