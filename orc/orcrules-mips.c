@@ -456,6 +456,10 @@ mips_rule_loadp (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   if (src->vartype == ORC_VAR_TYPE_CONST) {
     if (size == 1 || size == 2) {
       orc_mips_emit_ori (compiler, dest->alloc, ORC_MIPS_ZERO, src->value.i);
+      if (size == 1)
+        orc_mips_emit_replv_qb (compiler, dest->alloc, dest->alloc);
+      else if (size == 2)
+        orc_mips_emit_replv_ph (compiler, dest->alloc, dest->alloc);
     } else if (size == 4) {
       orc_int16 high_bits;
       high_bits = ((src->value.i >> 16) & 0xffff);
@@ -472,9 +476,11 @@ mips_rule_loadp (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     if (size == 1) {
       orc_mips_emit_lb (compiler, dest->alloc, compiler->exec_reg,
                         ORC_MIPS_EXECUTOR_OFFSET_PARAMS(insn->src_args[0]));
+      orc_mips_emit_replv_qb (compiler, dest->alloc, dest->alloc);
     } else if (size == 2) {
       orc_mips_emit_lh (compiler, dest->alloc, compiler->exec_reg,
                         ORC_MIPS_EXECUTOR_OFFSET_PARAMS(insn->src_args[0]));
+      orc_mips_emit_replv_ph (compiler, dest->alloc, dest->alloc);
     } else if (size == 4) {
       orc_mips_emit_lw (compiler, dest->alloc, compiler->exec_reg,
                         ORC_MIPS_EXECUTOR_OFFSET_PARAMS(insn->src_args[0]));
