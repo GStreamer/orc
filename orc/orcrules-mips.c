@@ -17,7 +17,6 @@ mips_rule_load (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   /* such that 2^total_shift is the amount to load at a time */
   int total_shift = compiler->insn_shift + ORC_PTR_TO_INT (user);
   int is_aligned = compiler->vars[insn->src_args[0]].is_aligned;
-  OrcMipsRegister tmp = orc_compiler_get_temp_reg (compiler);
 
   if (compiler->vars[insn->src_args[0]].vartype == ORC_VAR_TYPE_CONST) {
     ORC_PROGRAM_ERROR (compiler, "not implemented");
@@ -31,9 +30,9 @@ mips_rule_load (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     orc_mips_emit_lb (compiler, dest, src, 0);
     break;
   case 1:
-    orc_mips_emit_lbu (compiler, tmp, src, 0);
+    orc_mips_emit_lbu (compiler, ORC_MIPS_T3, src, 0);
     orc_mips_emit_lbu (compiler, dest, src, 1);
-    orc_mips_emit_append (compiler, dest, tmp, 16);
+    orc_mips_emit_append (compiler, dest, ORC_MIPS_T3, 16);
     break;
   case 2:
     if (is_aligned) {
@@ -57,7 +56,6 @@ mips_rule_store (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int dest = compiler->vars[insn->dest_args[0]].ptr_register;
   int total_shift = compiler->insn_shift + ORC_PTR_TO_INT (user);
   int is_aligned = compiler->vars[insn->dest_args[0]].is_aligned;
-  OrcMipsRegister tmp = orc_compiler_get_temp_reg (compiler);
 
   ORC_DEBUG ("insn_shift=%d", compiler->insn_shift);
 
@@ -72,8 +70,8 @@ mips_rule_store (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     } else {
       /* Note: the code below is little endian specific */
       orc_mips_emit_sb (compiler, src, dest, 0);
-      orc_mips_emit_srl (compiler, tmp, src, 8);
-      orc_mips_emit_sb (compiler, tmp, dest, 1);
+      orc_mips_emit_srl (compiler, ORC_MIPS_T3, src, 8);
+      orc_mips_emit_sb (compiler, ORC_MIPS_T3, dest, 1);
     }
     break;
   case 2:
@@ -215,8 +213,8 @@ mips_rule_convssslw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
   int src = ORC_SRC_ARG (compiler, insn, 0);
   int dest = ORC_DEST_ARG (compiler, insn, 0);
-  OrcMipsRegister tmp0 = orc_compiler_get_temp_reg (compiler);
-  OrcMipsRegister tmp1 = orc_compiler_get_temp_reg (compiler);
+  OrcMipsRegister tmp0 = ORC_MIPS_T3;
+  OrcMipsRegister tmp1 = ORC_MIPS_T4;
 
   if (dest != src)
     orc_mips_emit_move (compiler, dest, src);
@@ -236,7 +234,7 @@ mips_rule_convssswb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
   int src = ORC_SRC_ARG (compiler, insn, 0);
   int dest = ORC_DEST_ARG (compiler, insn, 0);
-  OrcMipsRegister tmp = orc_compiler_get_temp_reg (compiler);
+  OrcMipsRegister tmp = ORC_MIPS_T3;
 
   orc_mips_emit_repl_ph (compiler, tmp, ORC_SB_MAX);
   orc_mips_emit_cmp_lt_ph (compiler, tmp, src);
@@ -251,7 +249,7 @@ mips_rule_convsuswb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
   int src = ORC_SRC_ARG (compiler, insn, 0);
   int dest = ORC_DEST_ARG (compiler, insn, 0);
-  OrcMipsRegister tmp = orc_compiler_get_temp_reg (compiler);
+  OrcMipsRegister tmp = ORC_MIPS_T3;
 
   orc_mips_emit_repl_ph (compiler, tmp, ORC_UB_MAX);
   orc_mips_emit_cmp_lt_ph (compiler, tmp, src);
@@ -292,7 +290,7 @@ mips_rule_mergebw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int src1 = ORC_SRC_ARG (compiler, insn, 0);
   int src2 = ORC_SRC_ARG (compiler, insn, 1);
   int dest = ORC_DEST_ARG (compiler, insn, 0);
-  OrcMipsRegister tmp = orc_compiler_get_temp_reg (compiler);
+  OrcMipsRegister tmp = ORC_MIPS_T3;
 
   orc_mips_emit_shll_ph (compiler, tmp, src2, 8);
   orc_mips_emit_or (compiler, dest, tmp, src1);
@@ -333,9 +331,9 @@ mips_rule_loadupib (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
   OrcVariable *src = compiler->vars + insn->src_args[0];
   OrcVariable *dest = compiler->vars + insn->dest_args[0];
-  OrcMipsRegister tmp0 = orc_compiler_get_temp_reg (compiler);
-  OrcMipsRegister tmp1 = orc_compiler_get_temp_reg (compiler);
-  OrcMipsRegister tmp2 = orc_compiler_get_temp_reg (compiler);
+  OrcMipsRegister tmp0 = ORC_MIPS_T3;
+  OrcMipsRegister tmp1 = ORC_MIPS_T4;
+  OrcMipsRegister tmp2 = ORC_MIPS_T5;
 
   if (compiler->vars[insn->src_args[0]].vartype == ORC_VAR_TYPE_CONST) {
     ORC_PROGRAM_ERROR (compiler, "not implemented");
@@ -408,7 +406,7 @@ mips_rule_loadupdb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
   OrcVariable *src = compiler->vars + insn->src_args[0];
   OrcVariable *dest = compiler->vars + insn->dest_args[0];
-  OrcMipsRegister tmp = orc_compiler_get_temp_reg (compiler);
+  OrcMipsRegister tmp = ORC_MIPS_T3;
 
   if (compiler->vars[insn->src_args[0]].vartype == ORC_VAR_TYPE_CONST) {
     ORC_PROGRAM_ERROR (compiler, "not implemented");
