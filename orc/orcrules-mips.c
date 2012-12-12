@@ -240,8 +240,10 @@ mips_rule_convssswb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   orc_mips_emit_cmp_lt_ph (compiler, tmp, src);
   orc_mips_emit_pick_ph (compiler, dest, tmp, src);
   orc_mips_emit_repl_ph (compiler, tmp, ORC_SB_MIN);
-  orc_mips_emit_cmp_lt_ph (compiler, src, tmp);
-  orc_mips_emit_pick_ph (compiler, dest, tmp, src);
+  orc_mips_emit_cmp_lt_ph (compiler, dest, tmp);
+  orc_mips_emit_pick_ph (compiler, dest, tmp, dest);
+  if (compiler->insn_shift > 0)
+    orc_mips_emit_precr_qb_ph (compiler, dest, ORC_MIPS_ZERO, dest);
 }
 
 void
@@ -254,8 +256,10 @@ mips_rule_convsuswb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   orc_mips_emit_repl_ph (compiler, tmp, ORC_UB_MAX);
   orc_mips_emit_cmp_lt_ph (compiler, tmp, src);
   orc_mips_emit_pick_ph (compiler, dest, tmp, src);
-  orc_mips_emit_cmp_lt_ph (compiler, src, ORC_MIPS_ZERO);
-  orc_mips_emit_pick_ph (compiler, dest, ORC_MIPS_ZERO, src);
+  orc_mips_emit_cmp_lt_ph (compiler, dest, ORC_MIPS_ZERO);
+  orc_mips_emit_pick_ph (compiler, dest, ORC_MIPS_ZERO, dest);
+  if (compiler->insn_shift > 0)
+    orc_mips_emit_precr_qb_ph (compiler, dest, ORC_MIPS_ZERO, dest);
 }
 
 
