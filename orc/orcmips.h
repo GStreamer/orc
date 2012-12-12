@@ -146,6 +146,7 @@ void orc_mips_emit_repl_ph (OrcCompiler *compiler, OrcMipsRegister dest, int val
 void orc_mips_emit_replv_qb (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source);
 void orc_mips_emit_replv_ph (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source);
 void orc_mips_emit_preceu_ph_qbr (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source);
+void orc_mips_emit_precr_qb_ph (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source1, OrcMipsRegister source2);
 void orc_mips_emit_cmp_lt_ph (OrcCompiler *compiler, OrcMipsRegister source1, OrcMipsRegister source2);
 void orc_mips_emit_pick_ph (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source1, OrcMipsRegister source2);
 

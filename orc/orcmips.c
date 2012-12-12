@@ -784,6 +784,22 @@ orc_mips_emit_preceu_ph_qbr (OrcCompiler *compiler,
 }
 
 void
+orc_mips_emit_precr_qb_ph (OrcCompiler *compiler,
+                           OrcMipsRegister dest,
+                           OrcMipsRegister source1,
+                           OrcMipsRegister source2)
+{
+  ORC_ASM_CODE (compiler, "  precr.qb.ph %s, %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source1),
+                orc_mips_reg_name (source2));
+  orc_mips_emit (compiler,
+                 MIPS_BINARY_INSTRUCTION(037, /* SPECIAL3 */
+                                         source1, source2, dest,
+                                         015, /* PRECR.QB.PH */
+                                         021 /* CMPU.EQ.QB */));
+}
+void
 orc_mips_emit_cmp_lt_ph (OrcCompiler *compiler,
                          OrcMipsRegister source1,
                          OrcMipsRegister source2)
