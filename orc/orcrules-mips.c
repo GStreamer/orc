@@ -32,7 +32,7 @@ mips_rule_load (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   case 1:
     orc_mips_emit_lbu (compiler, ORC_MIPS_T3, src, 0);
     orc_mips_emit_lbu (compiler, dest, src, 1);
-    orc_mips_emit_append (compiler, dest, ORC_MIPS_T3, 16);
+    orc_mips_emit_append (compiler, dest, ORC_MIPS_T3, 8);
     break;
   case 2:
     if (is_aligned) {
