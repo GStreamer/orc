@@ -263,10 +263,16 @@ mips_rule_mergewl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int src2 = ORC_SRC_ARG (compiler, insn, 1);
   int dest = ORC_DEST_ARG (compiler, insn, 0);
 
-  /* FIXME: use replv.ph if src1 == src2 */
-  if (dest != src1)
-    orc_mips_emit_move (compiler, dest, src1);
-  orc_mips_emit_append (compiler, dest, src2, 16);
+  if (src1 == src2) {
+    orc_mips_emit_replv_ph (compiler, dest, src1);
+  } else if (dest == src1) {
+    orc_mips_emit_sll (compiler, dest, dest, 16);
+    orc_mips_emit_prepend (compiler, dest, src2, 16);
+  } else {
+    if (dest != src2)
+      orc_mips_emit_move (compiler, dest, src2);
+    orc_mips_emit_append (compiler, dest, src1, 16);
+  }
 }
 
 void
@@ -275,10 +281,18 @@ mips_rule_mergebw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int src1 = ORC_SRC_ARG (compiler, insn, 0);
   int src2 = ORC_SRC_ARG (compiler, insn, 1);
   int dest = ORC_DEST_ARG (compiler, insn, 0);
-  OrcMipsRegister tmp = ORC_MIPS_T3;
+  OrcMipsRegister tmp0 = ORC_MIPS_T3;
+  OrcMipsRegister tmp1 = ORC_MIPS_T4;
 
-  orc_mips_emit_shll_ph (compiler, tmp, src2, 8);
-  orc_mips_emit_or (compiler, dest, tmp, src1);
+  if (compiler->insn_shift > 0) {
+    orc_mips_emit_preceu_ph_qbr (compiler, tmp0, src1);
+    orc_mips_emit_preceu_ph_qbr (compiler, tmp1, src2);
+    orc_mips_emit_shll_ph (compiler, tmp1, tmp1, 8);
+    orc_mips_emit_or (compiler, dest, tmp0, tmp1);
+  } else {
+    orc_mips_emit_shll_ph (compiler, tmp0, src2, 8);
+    orc_mips_emit_or (compiler, dest, tmp0, src1);
+  }
 }
 
 void
