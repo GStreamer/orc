@@ -27,7 +27,7 @@ mips_rule_load (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   /* FIXME: Check alignment. We are assuming data is aligned here */
   switch (total_shift) {
   case 0:
-    orc_mips_emit_lb (compiler, dest, src, 0);
+    orc_mips_emit_lbu (compiler, dest, src, 0);
     break;
   case 1:
     orc_mips_emit_lbu (compiler, ORC_MIPS_T3, src, 0);
