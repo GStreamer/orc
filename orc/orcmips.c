@@ -896,3 +896,19 @@ orc_mips_emit_wsbh (OrcCompiler *compiler,
                                          02, /* WSBH */
                                          040 /* BSHFL */));
 }
+
+void
+orc_mips_emit_seh (OrcCompiler *compiler,
+                   OrcMipsRegister dest,
+                   OrcMipsRegister source)
+{
+  ORC_ASM_CODE (compiler, "  seh     %s, %s\n",
+                orc_mips_reg_name (dest),
+                orc_mips_reg_name (source));
+  orc_mips_emit (compiler,
+                 MIPS_BINARY_INSTRUCTION(037, /* SPECIAL3 */
+                                         ORC_MIPS_ZERO, /* actually no reg here */
+                                         source, dest,
+                                         030, /* SEH */
+                                         040 /* BSHFL */));
+}

@@ -183,6 +183,7 @@ void orc_mips_emit_packrl_ph (OrcCompiler *compiler, OrcMipsRegister dest, OrcMi
 void orc_mips_emit_align (OrcCompiler *compiler, int align_shift);
 
 void orc_mips_emit_wsbh (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source);
+void orc_mips_emit_seh (OrcCompiler *compiler, OrcMipsRegister dest, OrcMipsRegister source);
 
 void orc_mips_do_fixups (OrcCompiler *compiler);
 
