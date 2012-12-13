@@ -281,8 +281,14 @@ mips_rule_convsbw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 
   /* left shift 8 bits, then right shift signed 8 bits, so that the sign bit
    * gets replicated in the upper 8 bits */
-  orc_mips_emit_shll_ph (compiler, dest, src, 8);
-  orc_mips_emit_shra_ph (compiler, dest, dest, 8);
+  if (compiler->insn_shift > 0) {
+    orc_mips_emit_preceu_ph_qbr (compiler, dest, src);
+    orc_mips_emit_shll_ph (compiler, dest, dest, 8);
+    orc_mips_emit_shra_ph (compiler, dest, dest, 8);
+  } else {
+    orc_mips_emit_shll_ph (compiler, dest, src, 8);
+    orc_mips_emit_shra_ph (compiler, dest, dest, 8);
+  }
 }
 
 void
