@@ -232,7 +232,7 @@ mips_rule_convssslw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   orc_mips_emit_slt (compiler, tmp1, tmp0, src);
   orc_mips_emit_movn (compiler, dest, tmp0, tmp1);
   orc_mips_emit_lui (compiler, tmp0, (ORC_SW_MIN >> 16) & 0xffff);
-  orc_mips_emit_ori (compiler, tmp0, tmp0, ORC_SW_MAX & 0xffff);
+  orc_mips_emit_ori (compiler, tmp0, tmp0, ORC_SW_MIN & 0xffff);
   /* this still works if src == dest since in that case, its value is either
    * the original src or ORC_SW_MAX, which works as well here */
   orc_mips_emit_slt (compiler, tmp1, src, tmp0);
