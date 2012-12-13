@@ -389,22 +389,22 @@ mips_rule_loadupib (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     break;
   case 2:
     /*
-       lb       t3, 0(src)      # a
-       lb       t4, 1(src)      # b
+       lb       tmp0, 0(src)      # a
+       lb       tmp1, 1(src)      # b
        lb       dest, 2(src)    # c
-       andi     t5, ptr_offset, 1 # i&1 NEW
-       replv.qb t3, t3          # aaaa
-       replv.qb t4, t4          # bbbb
-       replv.qb dest, dest      # cccc NEW
-       packrl.ph t3, t3, t4     # aabb
-       packrl.ph dest, t4, dest # bbcc NEW
-       move     t4, t3          # aabb
-       append   t4, dest, 8     # abbc
-       # if t5
-       # t3 <- dest
-       movn     t3, dest, t5    # NEW
+       andi     tmp2, ptr_offset, 1 # i&1
+       replv.qb tmp0, tmp0          # aaaa
+       replv.qb tmp1, tmp1          # bbbb
+       replv.qb dest, dest      # cccc
+       packrl.ph tmp0, tmp1, tmp0     # bbaa
+       move     tmp1, tmp0          # bbaa
+       prepend   tmp1, dest, 8     # cbba
+       packrl.ph dest, dest, tmp1 # ccbb
+       # if tmp2
+       # tmp0 <- dest
+       movn     tmp0, dest, tmp2    # if tmp2 ccbb else bbaa
 
-       adduh_r.qb dest, t3, t4  # a(a,b)b(b,c) | (a,b)b(b,c)c
+       adduh_r.qb dest, tmp0, tmp1  # (b,c)b(a,b)a | c(b,c)b(a,b)
 
      */
     orc_mips_emit_lb (compiler, tmp0, src->ptr_register, 0);
@@ -414,10 +414,10 @@ mips_rule_loadupib (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     orc_mips_emit_replv_qb (compiler, tmp0, tmp0);
     orc_mips_emit_replv_qb (compiler, tmp1, tmp1);
     orc_mips_emit_replv_qb (compiler, dest->alloc, dest->alloc);
-    orc_mips_emit_packrl_ph (compiler, tmp0, tmp0, tmp1);
-    orc_mips_emit_packrl_ph (compiler, dest->alloc, tmp1, dest->alloc);
+    orc_mips_emit_packrl_ph (compiler, tmp0, tmp1, tmp0);
     orc_mips_emit_move (compiler, tmp1, tmp0);
-    orc_mips_emit_append (compiler, tmp1, dest->alloc, 8);
+    orc_mips_emit_prepend (compiler, tmp1, dest->alloc, 8);
+    orc_mips_emit_packrl_ph (compiler, dest->alloc, dest->alloc, tmp1);
     orc_mips_emit_movn (compiler, tmp0, dest->alloc, tmp2);
     orc_mips_emit_adduh_r_qb (compiler, dest->alloc, tmp0, tmp1);
     /* FIXME: should we remove that as we only use ptr_offset for parity? */
@@ -464,7 +464,7 @@ mips_rule_loadupdb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     orc_mips_emit_lb (compiler, dest->alloc, src->ptr_register, 1);
     orc_mips_emit_replv_qb (compiler, tmp, tmp);
     orc_mips_emit_replv_qb (compiler, dest->alloc, dest->alloc);
-    orc_mips_emit_packrl_ph (compiler, dest->alloc, tmp, dest->alloc);
+    orc_mips_emit_packrl_ph (compiler, dest->alloc, dest->alloc, tmp);
     /* FIXME: should we remove that as we only use ptr_offset for parity? */
     orc_mips_emit_addiu (compiler, src->ptr_offset, src->ptr_offset, 4);
     break;
