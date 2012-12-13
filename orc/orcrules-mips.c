@@ -188,13 +188,17 @@ mips_rule_copyb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 }
 
 void
-mips_rule_mul (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+mips_rule_mulswl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
   int src1 = ORC_SRC_ARG (compiler, insn, 0);
   int src2 = ORC_SRC_ARG (compiler, insn, 1);
   int dest = ORC_DEST_ARG (compiler, insn, 0);
+  OrcMipsRegister tmp0 = ORC_MIPS_T3;
+  OrcMipsRegister tmp1 = ORC_MIPS_T4;
 
-  orc_mips_emit_mul (compiler, dest, src1, src2);
+  orc_mips_emit_seh (compiler, tmp0, src1);
+  orc_mips_emit_seh (compiler, tmp1, src2);
+  orc_mips_emit_mul (compiler, dest, tmp0, tmp1);
 }
 
 void
@@ -588,7 +592,7 @@ orc_compiler_orc_mips_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "copyl", mips_rule_copyl, NULL);
   orc_rule_register (rule_set, "copyw", mips_rule_copyw, NULL);
   orc_rule_register (rule_set, "copyb", mips_rule_copyb, NULL);
-  orc_rule_register (rule_set, "mulswl", mips_rule_mul, NULL);
+  orc_rule_register (rule_set, "mulswl", mips_rule_mulswl, NULL);
   orc_rule_register (rule_set, "mullw", mips_rule_mullw, NULL);
   orc_rule_register (rule_set, "shrsl", mips_rule_shrs, NULL);
   orc_rule_register (rule_set, "convssslw", mips_rule_convssslw, NULL);
