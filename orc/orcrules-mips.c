@@ -574,6 +574,16 @@ mips_rule_subw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   orc_mips_emit_subq_ph (compiler, dest, src1, src2);
 }
 
+void
+mips_rule_convwb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  int src = ORC_SRC_ARG (compiler, insn, 0);
+  int dest = ORC_DEST_ARG (compiler, insn, 0);
+
+  if (compiler->insn_shift >0)
+    orc_mips_emit_precr_qb_ph (compiler, dest, ORC_MIPS_ZERO, src);
+}
+
 
 void
 orc_compiler_orc_mips_register_rules (OrcTarget *target)
@@ -606,6 +616,7 @@ orc_compiler_orc_mips_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "convsuswb", mips_rule_convsuswb, NULL);
   orc_rule_register (rule_set, "convsbw", mips_rule_convsbw, NULL);
   orc_rule_register (rule_set, "convubw", mips_rule_convubw, NULL);
+  orc_rule_register (rule_set, "convwb", mips_rule_convwb, NULL);
   orc_rule_register (rule_set, "mergewl", mips_rule_mergewl, NULL);
   orc_rule_register (rule_set, "mergebw", mips_rule_mergebw, NULL);
   orc_rule_register (rule_set, "addssw", mips_rule_addssw, NULL);
