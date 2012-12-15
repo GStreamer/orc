@@ -379,7 +379,7 @@ mips_rule_loadupib (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   OrcMipsRegister tmp1 = ORC_MIPS_T4;
   OrcMipsRegister tmp2 = ORC_MIPS_T5;
 
-  if (compiler->vars[insn->src_args[0]].vartype == ORC_VAR_TYPE_CONST) {
+  if (src->vartype != ORC_VAR_TYPE_SRC) {
     ORC_PROGRAM_ERROR (compiler, "not implemented");
     return;
   }
@@ -452,7 +452,7 @@ mips_rule_loadupdb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   OrcVariable *dest = compiler->vars + insn->dest_args[0];
   OrcMipsRegister tmp = ORC_MIPS_T3;
 
-  if (compiler->vars[insn->src_args[0]].vartype == ORC_VAR_TYPE_CONST) {
+  if (src->vartype != ORC_VAR_TYPE_SRC) {
     ORC_PROGRAM_ERROR (compiler, "not implemented");
     return;
   }
