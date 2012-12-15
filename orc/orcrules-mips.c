@@ -215,11 +215,14 @@ mips_rule_mullw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 void
 mips_rule_shrs (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
-  int src = ORC_SRC_ARG (compiler, insn, 0);
-  int shift = ORC_SRC_VAL (compiler, insn, 1);
+  int src1 = ORC_SRC_ARG (compiler, insn, 0);
+  OrcVariable *src2 = compiler->vars + insn->src_args[1];
   int dest = ORC_DEST_ARG (compiler, insn, 0);
-
-  orc_mips_emit_sra (compiler, dest, src, shift);
+  if (src2->vartype == ORC_VAR_TYPE_CONST) {
+    orc_mips_emit_sra (compiler, dest, src1, src2->value.i);
+  } else {
+    ORC_COMPILER_ERROR(compiler, "rule only implemented for constants");
+  }
 }
 
 void
@@ -360,8 +363,11 @@ mips_rule_shrsw (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int src1 = ORC_SRC_ARG (compiler, insn, 0);
   OrcVariable *src2 = compiler->vars + insn->src_args[1];
   int dest = ORC_DEST_ARG (compiler, insn, 0);
-
-  orc_mips_emit_shra_ph (compiler, dest, src1, src2->value.i);
+  if (src2->vartype == ORC_VAR_TYPE_CONST) {
+    orc_mips_emit_shra_ph (compiler, dest, src1, src2->value.i);
+  } else {
+    ORC_COMPILER_ERROR(compiler, "rule only implemented for constants");
+  }
 }
 
 void
