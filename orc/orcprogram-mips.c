@@ -151,6 +151,11 @@ orc_compiler_orc_mips_init (OrcCompiler *compiler)
     ORC_ERROR("unhandled variable size %d", compiler->max_var_size);
   }
 
+  /* Empirical evidence in a colorspace conversion benchmark shows that 3 is
+   * the best unroll shift. */
+  compiler->unroll_shift = 3;
+  compiler->unroll_index = 0;
+
   for(i=0;i<compiler->n_insns;i++){
     OrcInstruction *insn = compiler->insns + i;
     OrcStaticOpcode *opcode = insn->opcode;
@@ -307,40 +312,52 @@ orc_mips_load_constants_inner (OrcCompiler *compiler)
 }
 
 void
-orc_mips_emit_loop (OrcCompiler *compiler)
+orc_mips_emit_loop (OrcCompiler *compiler, int unroll)
 {
   int i, j;
+  int iteration_per_loop = 1;
   OrcInstruction *insn;
   OrcStaticOpcode *opcode;
   OrcRule *rule;
   ORC_DEBUG ("loop_shift=%d", compiler->loop_shift);
 
-  for (i=0; i<compiler->n_insns; i++) {
-    insn = compiler->insns + i;
-    opcode = insn->opcode;
-    if (insn->flags & ORC_INSN_FLAG_INVARIANT) continue;
+  if (unroll)
+    iteration_per_loop = 1 << compiler->unroll_shift;
 
-    orc_compiler_append_code(compiler,"/* %d: %s */\n", i, insn->opcode->name);
+  for (j=0; j<iteration_per_loop; j++) {
+    compiler->unroll_index = j;
+    for (i=0; i<compiler->n_insns; i++) {
+      insn = compiler->insns + i;
+      opcode = insn->opcode;
+      if (insn->flags & ORC_INSN_FLAG_INVARIANT) continue;
 
-    compiler->min_temp_reg = ORC_MIPS_T3;
+      orc_compiler_append_code(compiler,"/* %d: %s */\n", i, insn->opcode->name);
 
-    rule = insn->rule;
-    if (rule && rule->emit) {
-      compiler->insn_shift = compiler->loop_shift;
-      if (insn->flags & ORC_INSTRUCTION_FLAG_X2) {
-        compiler->insn_shift += 1;
+      compiler->min_temp_reg = ORC_MIPS_T3;
+
+      rule = insn->rule;
+      if (rule && rule->emit) {
+        compiler->insn_shift = compiler->loop_shift;
+        if (insn->flags & ORC_INSTRUCTION_FLAG_X2) {
+          compiler->insn_shift += 1;
+        }
+        if (insn->flags & ORC_INSTRUCTION_FLAG_X4) {
+          compiler->insn_shift += 2;
+        }
+        rule->emit (compiler, rule->emit_user, insn);
+      } else {
+        orc_compiler_append_code (compiler, "No rule for %s\n", opcode->name);
       }
-      if (insn->flags & ORC_INSTRUCTION_FLAG_X4) {
-        compiler->insn_shift += 2;
-      }
-      rule->emit (compiler, rule->emit_user, insn);
-    } else {
-      orc_compiler_append_code (compiler, "No rule for %s\n", opcode->name);
     }
   }
 
+  compiler->unroll_index = 0;
+
   for (j=0; j<ORC_N_COMPILER_VARIABLES; j++) {
     OrcVariable *var = compiler->vars + j;
+    int total_shift = compiler->loop_shift;
+    if (unroll)
+      total_shift += compiler->unroll_shift;
 
     if (var->name == NULL) continue;
     if (var->vartype == ORC_VAR_TYPE_SRC ||
@@ -349,9 +366,9 @@ orc_mips_emit_loop (OrcCompiler *compiler)
       if (var->update_type == 0) {
         offset = 0;
       } else if (var->update_type == 1) {
-        offset = (var->size << compiler->loop_shift) >> 1;
+        offset = (var->size << total_shift) >> 1;
       } else {
-        offset = var->size << compiler->loop_shift;
+        offset = var->size << total_shift;
       }
       if (offset !=0 && var->ptr_register) {
         orc_mips_emit_addiu (compiler,
@@ -417,7 +434,7 @@ orc_mips_get_alignment (OrcCompiler *compiler)
 
 void
 orc_mips_emit_full_loop (OrcCompiler *compiler, OrcMipsRegister counter,
-                         int loop_shift, int loop_label, int alignment)
+                         int loop_shift, int loop_label, int alignment, int unroll)
 {
   int saved_loop_shift;
   int saved_alignment;
@@ -426,7 +443,7 @@ orc_mips_emit_full_loop (OrcCompiler *compiler, OrcMipsRegister counter,
   compiler->loop_shift = loop_shift;
   saved_alignment = orc_mips_get_alignment (compiler);
   orc_mips_set_alignment (compiler, alignment);
-  orc_mips_emit_loop (compiler);
+  orc_mips_emit_loop (compiler, unroll);
   orc_mips_set_alignment (compiler, saved_alignment);
   compiler->loop_shift = saved_loop_shift;
   orc_mips_emit_addi (compiler, counter, counter, -1);
@@ -555,8 +572,8 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
     orc_mips_emit_srl (compiler, ORC_MIPS_T0, ORC_MIPS_T0, var_size_shift);
 
   /* $t1 = number of iterations in region1 (aligned)
-         = (n - $t0) / loop_size
-         = (n - $t0) >> loop_shift
+         = (n - $t0) / (loop_size * unroll)
+         = (n - $t0) >> (loop_shift + unroll_shift)
    */
   orc_mips_emit_sub (compiler, ORC_MIPS_T2, ORC_MIPS_T2, ORC_MIPS_T0);
 
@@ -583,9 +600,9 @@ usual_case:
   orc_mips_emit_nop (compiler);
 
 
-  if (compiler->loop_shift> 0)
+  if (compiler->loop_shift + compiler->unroll_shift > 0)
     orc_mips_emit_srl (compiler, ORC_MIPS_T1, ORC_MIPS_T2,
-                       compiler->loop_shift);
+                       compiler->loop_shift + compiler->unroll_shift);
   else
     orc_mips_emit_move (compiler, ORC_MIPS_T1, ORC_MIPS_T2);
 
@@ -596,19 +613,19 @@ usual_case:
   /* $t2 = number of iterations in region2 (after aligned region)
          = (n - $t0) % loop_size
          = (previous $t2) % loop_size
-         = $t2 & ((1 << loop_shift) - 1)
+         = $t2 & ((1 << loop_shift + unroll_shift) - 1)
    */
      /* note that this instruction is in the branch delay slot */
-  if (compiler->loop_shift > 0)
+  if (compiler->loop_shift + compiler->unroll_shift > 0)
     orc_mips_emit_andi (compiler, ORC_MIPS_T2, ORC_MIPS_T2,
-                        (1 << compiler->loop_shift) - 1);
+                        (1 << (compiler->loop_shift + compiler->unroll_shift)) - 1);
   else
     /* loop_shift==0: $t2 should be 0 because we can handle all our data in region 1*/
     orc_mips_emit_move (compiler, ORC_MIPS_T2, ORC_MIPS_ZERO);
 
   /* FIXME: when loop_shift == 0, we only need to emit region1 */
 
-  orc_mips_emit_full_loop (compiler, ORC_MIPS_T0, 0, LABEL_REGION0_LOOP, 0);
+  orc_mips_emit_full_loop (compiler, ORC_MIPS_T0, 0, LABEL_REGION0_LOOP, 0, FALSE);
 
   orc_mips_emit_label (compiler, LABEL_REGION1);
   orc_mips_emit_beqz (compiler, ORC_MIPS_T1, LABEL_REGION2);
@@ -669,7 +686,7 @@ usual_case:
        break;                  /* is strictly monotonic and increasing */
 
     orc_mips_emit_full_loop (compiler, ORC_MIPS_T1, compiler->loop_shift,
-                             label, i | (1 << align_var));
+                             label, i | (1 << align_var), TRUE);
 
     /* Jump the other loop versions and go to REGION2 */
     orc_mips_emit_beqz (compiler, ORC_MIPS_ZERO, LABEL_REGION2);
@@ -679,7 +696,7 @@ usual_case:
 
   /* Fallback loop that works for any alignment combination */
   orc_mips_emit_full_loop (compiler, ORC_MIPS_T1, compiler->loop_shift,
-                           LABEL_REGION1_LOOP, 1 << align_var);
+                           LABEL_REGION1_LOOP, 1 << align_var, TRUE);
 
 
   compiler->vars[align_var].is_aligned = FALSE;
@@ -688,7 +705,7 @@ usual_case:
   orc_mips_emit_beqz (compiler, ORC_MIPS_T2, LABEL_REGION2_LOOP_END);
   orc_mips_emit_nop (compiler);
 
-  orc_mips_emit_full_loop (compiler, ORC_MIPS_T2, 0, LABEL_REGION2_LOOP, 0);
+  orc_mips_emit_full_loop (compiler, ORC_MIPS_T2, 0, LABEL_REGION2_LOOP, 0, FALSE);
   orc_mips_emit_label (compiler, LABEL_REGION2_LOOP_END);
 
   if (compiler->program->is_2d) {
