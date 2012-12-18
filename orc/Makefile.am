@@ -106,7 +106,8 @@ pkginclude_HEADERS = \
 	orcutils.h \
 	orcvariable.h \
 	orcx86.h \
-	orcx86insn.h
+	orcx86insn.h \
+	orcmips.h
 
 noinst_HEADERS = \
 	opcodes.h
