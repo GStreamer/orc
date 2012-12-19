@@ -941,4 +941,21 @@ orc_mips_emit_seh (OrcCompiler *compiler,
                                          source, dest,
                                          030, /* SEH */
                                          040 /* BSHFL */));
+
+}
+
+void
+orc_mips_emit_pref (OrcCompiler *compiler,
+                    int hint,
+                    OrcMipsRegister base,
+                    int offset)
+{
+  ORC_ASM_CODE (compiler, "  pref    %d, %d(%s)\n",
+                hint, offset, orc_mips_reg_name (base));
+  orc_mips_emit (compiler,
+                 063 << 26 /* PREF */
+                 | (base - ORC_GP_REG_BASE) << 21
+                 | (hint & 0x1f) << 16
+                 | (offset & 0xffff));
+
 }

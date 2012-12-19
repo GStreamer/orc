@@ -311,6 +311,37 @@ orc_mips_load_constants_inner (OrcCompiler *compiler)
   }
 }
 
+#define CACHE_LINE_SIZE 32
+
+void
+orc_mips_emit_var_pref (OrcCompiler *compiler, int iter_offset, int total_shift)
+{
+  int i, j;
+  int offset = 0;
+  /* prefetch stuff into cache */
+  for (i=0; i<ORC_N_COMPILER_VARIABLES; i++) {
+    OrcVariable *var = compiler->vars + i;
+
+    if (var->name == NULL) continue;
+    if (var->vartype == ORC_VAR_TYPE_SRC) {
+      if (var->update_type == 0) {
+        offset = 0;
+      } else if (var->update_type == 1) {
+        offset = (var->size << total_shift) >> 1;
+      } else {
+        offset = var->size << total_shift;
+      }
+      for (j = iter_offset*offset; j < (iter_offset+1)*offset; j+=CACHE_LINE_SIZE)
+        orc_mips_emit_pref (compiler, 4 /* load-streamed */,
+                            var->ptr_register, iter_offset * offset + j*CACHE_LINE_SIZE);
+    } else if (var->vartype == ORC_VAR_TYPE_DEST) {
+      for (j = iter_offset*offset; j < (iter_offset+1)*offset; j+=CACHE_LINE_SIZE)
+      orc_mips_emit_pref (compiler, 5 /* store-streamed */,
+                          var->ptr_register, iter_offset * offset + j*CACHE_LINE_SIZE);
+    }
+  }
+}
+
 void
 orc_mips_emit_loop (OrcCompiler *compiler, int unroll)
 {
@@ -319,10 +350,17 @@ orc_mips_emit_loop (OrcCompiler *compiler, int unroll)
   OrcInstruction *insn;
   OrcStaticOpcode *opcode;
   OrcRule *rule;
+  int total_shift = compiler->loop_shift;
   ORC_DEBUG ("loop_shift=%d", compiler->loop_shift);
 
   if (unroll)
+    total_shift += compiler->unroll_shift;
+
+
+  if (unroll)
     iteration_per_loop = 1 << compiler->unroll_shift;
+
+  orc_mips_emit_var_pref (compiler, 1, total_shift);
 
   for (j=0; j<iteration_per_loop; j++) {
     compiler->unroll_index = j;
@@ -355,9 +393,6 @@ orc_mips_emit_loop (OrcCompiler *compiler, int unroll)
 
   for (j=0; j<ORC_N_COMPILER_VARIABLES; j++) {
     OrcVariable *var = compiler->vars + j;
-    int total_shift = compiler->loop_shift;
-    if (unroll)
-      total_shift += compiler->unroll_shift;
 
     if (var->name == NULL) continue;
     if (var->vartype == ORC_VAR_TYPE_SRC ||
@@ -443,6 +478,7 @@ orc_mips_emit_full_loop (OrcCompiler *compiler, OrcMipsRegister counter,
   compiler->loop_shift = loop_shift;
   saved_alignment = orc_mips_get_alignment (compiler);
   orc_mips_set_alignment (compiler, alignment);
+  orc_mips_emit_var_pref (compiler, 0, compiler->loop_shift + unroll * compiler->unroll_shift);
   orc_mips_emit_loop (compiler, unroll);
   orc_mips_set_alignment (compiler, saved_alignment);
   compiler->loop_shift = saved_loop_shift;
