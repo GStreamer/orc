@@ -60,9 +60,13 @@ mips_rule_load (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     orc_mips_emit_lbu (compiler, dest, src, offset);
     break;
   case 1:
-    orc_mips_emit_lbu (compiler, ORC_MIPS_T3, src, offset);
-    orc_mips_emit_lbu (compiler, dest, src, offset+1);
-    orc_mips_emit_append (compiler, dest, ORC_MIPS_T3, 8);
+    if (is_aligned) {
+      orc_mips_emit_lh  (compiler, dest, src, offset);
+    } else {
+      orc_mips_emit_lbu (compiler, ORC_MIPS_T3, src, offset);
+      orc_mips_emit_lbu (compiler, dest, src, offset+1);
+      orc_mips_emit_append (compiler, dest, ORC_MIPS_T3, 8);
+    }
     break;
   case 2:
     if (is_aligned) {
