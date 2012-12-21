@@ -186,7 +186,8 @@ mips_rule_copyb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int src = ORC_SRC_ARG (compiler, insn, 0);
   int dest = ORC_DEST_ARG (compiler, insn, 0);
 
-  orc_mips_emit_move (compiler, dest, src);
+  if (dest != src)
+    orc_mips_emit_move (compiler, dest, src);
 }
 
 void
