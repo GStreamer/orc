@@ -342,6 +342,98 @@ orc_mips_emit_var_pref (OrcCompiler *compiler, int iter_offset, int total_shift)
   }
 }
 
+static int
+uses_register (OrcCompiler *compiler,
+               OrcInstruction *insn,
+               OrcMipsRegister reg)
+{
+  int i;
+  for (i=0; i<ORC_STATIC_OPCODE_N_DEST; i++) {
+    OrcVariable *var = compiler->vars + insn->dest_args[i];
+    if (var->alloc == reg || var->ptr_register == reg)
+      return TRUE;
+  }
+
+  for (i=0; i<ORC_STATIC_OPCODE_N_SRC; i++) {
+    OrcVariable *var = compiler->vars + insn->src_args[i];
+    if (var->alloc == reg || var->ptr_register == reg)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+static void
+do_swap (int *tab, int i, int j)
+{
+  int tmp = tab[i];
+  tab[i] = tab[j];
+  tab[j] = tmp;
+}
+
+/* Assumes that the instruction at indexes[i] is a load instruction */
+static int
+can_raise (OrcCompiler *compiler, int *indexes, int i)
+{
+  OrcMipsRegister reg;
+  OrcInstruction *insn, *previous_insn;
+
+  if (i==0)
+    return FALSE;
+
+  insn = compiler->insns + indexes[i];
+  previous_insn = compiler->insns + indexes[i-1];
+
+  /* Register where the load operation will put the data */
+  reg = compiler->vars[insn->dest_args[0]].alloc;
+  return ! uses_register (compiler, previous_insn, reg);
+}
+
+/* Recursive. */
+static void
+try_raise (OrcCompiler *compiler, int *indexes, int i)
+{
+  if (can_raise (compiler, indexes, i)) {
+    do_swap (indexes, i-1, i);
+    try_raise (compiler, indexes, i-1);
+  }
+}
+
+/*
+   Do a kind of bubble sort, though it might not exactly be a sort. It only
+   moves load instructions up until they reach an operation above which they
+   cannot go.
+
+   FIXME: also push store instructions down.
+ */
+static void
+optimise_order (OrcCompiler *compiler, int *indexes)
+{
+  int i;
+  for (i=0; i<compiler->n_insns; i++) {
+    OrcInstruction *insn = compiler->insns + indexes[i];
+    if (insn->opcode->flags & ORC_STATIC_OPCODE_LOAD)
+      try_raise (compiler, indexes, i);
+  }
+}
+
+static int *
+get_optimised_instruction_order (OrcCompiler *compiler)
+{
+  int *instruction_idx = NULL;
+  int i;
+  if (compiler->n_insns == 0)
+    return NULL;
+
+  instruction_idx = malloc (compiler->n_insns * sizeof(int));
+  for (i=0; i<compiler->n_insns; i++)
+    instruction_idx[i] = i;
+
+  optimise_order (compiler, instruction_idx);
+
+  return instruction_idx;
+}
+
 void
 orc_mips_emit_loop (OrcCompiler *compiler, int unroll)
 {
@@ -351,6 +443,7 @@ orc_mips_emit_loop (OrcCompiler *compiler, int unroll)
   OrcStaticOpcode *opcode;
   OrcRule *rule;
   int total_shift = compiler->loop_shift;
+  int *insn_idx;
   ORC_DEBUG ("loop_shift=%d", compiler->loop_shift);
 
   if (unroll)
@@ -360,10 +453,16 @@ orc_mips_emit_loop (OrcCompiler *compiler, int unroll)
   if (unroll)
     iteration_per_loop = 1 << compiler->unroll_shift;
 
+  insn_idx = get_optimised_instruction_order (compiler);
+  if (insn_idx == NULL) {
+    ORC_ERROR ("Could not get optimised instruction order, not emitting loop");
+    return;
+  }
+
   for (j=0; j<iteration_per_loop; j++) {
     compiler->unroll_index = j;
     for (i=0; i<compiler->n_insns; i++) {
-      insn = compiler->insns + i;
+      insn = compiler->insns + insn_idx[i];
       opcode = insn->opcode;
       if (insn->flags & ORC_INSN_FLAG_INVARIANT) continue;
 
