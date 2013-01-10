@@ -254,12 +254,6 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   orc_compiler_rewrite_vars (compiler);
   if (compiler->error) goto error;
 
-  if (compiler->target) {
-    orc_compiler_global_reg_alloc (compiler);
-
-    orc_compiler_rewrite_vars2 (compiler);
-  }
-
 #if 0
   {
     ORC_ERROR("variables");
@@ -285,9 +279,6 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
     }
   }
 #endif
-
-  if (compiler->error) goto error;
-
   program->orccode = orc_code_new ();
 
   program->orccode->is_2d = program->is_2d;
@@ -322,6 +313,13 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
     compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
     goto error;
   }
+
+  if (compiler->target) {
+    orc_compiler_global_reg_alloc (compiler);
+
+    orc_compiler_rewrite_vars2 (compiler);
+  }
+  if (compiler->error) goto error;
 
   orc_compiler_assign_rules (compiler);
   if (compiler->error) goto error;
