@@ -162,10 +162,16 @@ typedef unsigned int orc_bool;
 #define ORC_GNUC_PREREQ(maj, min) 0
 #endif
   
-#if ORC_GNUC_PREREQ(3,3) && defined(__ELF__)
-#define ORC_INTERNAL __attribute__ ((visibility ("internal")))
+#ifndef ORC_INTERNAL
+#if defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
+#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+#define ORC_INTERNAL __hidden
+#elif defined (__GNUC__) && ORC_GNUC_PREREQ(3,3) && defined(__ELF__)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
 #else
 #define ORC_INTERNAL
+#endif
 #endif
 
 #if ORC_GNUC_PREREQ(3,3) /* guess */

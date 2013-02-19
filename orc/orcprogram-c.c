@@ -83,7 +83,20 @@ orc_target_c_get_typedefs (void)
     "#else\n"
     "#define ORC_RESTRICT\n"
     "#endif\n"
-    "#endif\n";
+    "#endif\n"
+    "\n"
+    "#ifndef ORC_INTERNAL\n"
+    "#if defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590)\n"
+    "#define ORC_INTERNAL __attribute__((visibility(\"hidden\")))\n"
+    "#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)\n"
+    "#define ORC_INTERNAL __hidden\n"
+    "#elif defined (__GNUC__)\n"
+    "#define ORC_INTERNAL __attribute__((visibility(\"hidden\")))\n"
+    "#else\n"
+    "#define ORC_INTERNAL\n"
+    "#endif\n"
+    "#endif\n"
+    "\n";
 }
 
 const char *

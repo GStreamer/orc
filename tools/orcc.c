@@ -35,6 +35,7 @@ int use_inline = FALSE;
 int use_code = FALSE;
 int use_lazy_init = FALSE;
 int use_backup = TRUE;
+int use_internal = FALSE;
 
 const char *init_function = NULL;
 
@@ -76,6 +77,8 @@ void help (void)
   printf("  --compat VERSION        Generate code compatible with Orc version VERSION\n");
   printf("  --inline                Generate inline functions in header\n");
   printf("  --no-inline             Do not generate inline functions in header\n");
+  printf("  --internal              Mark functions in header for internal visibility\n");
+  printf("  --no-internal           Do not mark functions in header for internal visibility\n");
   printf("  --init-function FUNCTION  Generate initialization function\n");
   printf("  --lazy-init             Do Orc compile at function execution\n");
   printf("  --no-backup             Do not generate backup functions\n");
@@ -135,6 +138,10 @@ main (int argc, char *argv[])
       use_inline = TRUE;
     } else if (strcmp(argv[i], "--no-inline") == 0) {
       use_inline = FALSE;
+    } else if (strcmp(argv[i], "--internal") == 0) {
+      use_internal = TRUE;
+    } else if (strcmp(argv[i], "--no-internal") == 0) {
+      use_internal = FALSE;
     } else if (strcmp(argv[i], "--init-function") == 0) {
       if (i+1 < argc) {
         init_function = argv[i+1];
@@ -619,7 +626,11 @@ output_prototype (OrcProgram *p, FILE *output)
 void
 output_code_header (OrcProgram *p, FILE *output)
 {
-  fprintf(output, "void ");
+  if(use_internal) {
+    fprintf(output, "ORC_INTERNAL void ");
+  } else {
+    fprintf(output, "void ");
+  }
   output_prototype (p, output);
   fprintf(output, ";\n");
 }
