@@ -80,8 +80,7 @@ orc_array_new (int n, int m, int element_size, int misalignment,
   if (alignment == 0) alignment = element_size;
   offset = (alignment * misalignment) & (ALIGNMENT - 1);
 
-  ar->data = ORC_PTR_OFFSET (ar->alloc_data,
-      ar->stride * EXTEND_ROWS + offset);
+  ar->data = ORC_PTR_OFFSET (data, ar->stride * EXTEND_ROWS + offset);
 
   return ar;
 }
