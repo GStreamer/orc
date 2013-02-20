@@ -3,9 +3,9 @@
 *.lo
 orc-*.tar.gz
 orc.pc
-orc-0.4.pc
+orc-*.pc
 orc-uninstalled.pc
-orc-0.4-uninstalled.pc
+orc-*-uninstalled.pc
 Makefile
 Makefile.in
 config.h
