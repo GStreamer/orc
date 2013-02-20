@@ -109,6 +109,11 @@ case "${host_os}" in
   mingw*|pw32*|cygwin*)
     AC_DEFINE(HAVE_THREAD_WIN32, 1, [Use Windows thread code])
     ;;
+  *android*)
+    AC_DEFINE(HAVE_THREAD_PTHREAD, 1, [Use pthread thread code])
+    PTHREAD_CFLAGS=
+    PTHREAD_LIBS=
+    ;;
   *)
     AC_DEFINE(HAVE_THREAD_PTHREAD, 1, [Use pthread thread code])
     PTHREAD_CFLAGS=
