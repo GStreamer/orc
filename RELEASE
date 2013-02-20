@@ -1,4 +1,16 @@
 
+0.4.17
+======
+
+Maintenance release:
+
+ - Merged known distro patches.
+ - Added MIPS backend (Guillaume Emont).
+ - Disabled ARM backend because of poor coverage.
+ - Added bytecode parsing and writing.  This can be used instead of
+   manual creation of OrcPrograms.
+
+
 0.4.16
 ======
 
