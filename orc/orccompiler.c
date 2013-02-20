@@ -580,6 +580,10 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
           cinsn->opcode = get_loadp_opcode_for_size (opcode->src_size[i]);
           cinsn->dest_args[0] = orc_compiler_new_temporary (compiler,
               opcode->src_size[i] * multiplier);
+          if (var->vartype == ORC_VAR_TYPE_CONST) {
+            compiler->vars[cinsn->dest_args[0]].flags |=
+                ORC_VAR_FLAG_VOLATILE_WORKAROUND;
+          }
           cinsn->src_args[0] = insn.src_args[i];
           insn.src_args[i] = cinsn->dest_args[0];
 

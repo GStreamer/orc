@@ -243,7 +243,18 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
         break;
       case ORC_VAR_TYPE_TEMP:
         if (!(var->last_use == -1 && var->first_use == 0)) {
-          ORC_ASM_CODE(compiler,"  %s var%d;\n", c_get_type_name(var->size), i);
+          if (var->flags & ORC_VAR_FLAG_VOLATILE_WORKAROUND) {
+            ORC_ASM_CODE(compiler,"#if defined(__APPLE__) && __GNUC__ == 4 && __GNUC_MINOR__ == 2 && defined (__i386__) \n");
+            ORC_ASM_CODE(compiler,"  volatile %s var%d;\n",
+                c_get_type_name(var->size), i);
+            ORC_ASM_CODE(compiler,"#else\n");
+            ORC_ASM_CODE(compiler,"  %s var%d;\n",
+                c_get_type_name(var->size), i);
+            ORC_ASM_CODE(compiler,"#endif\n");
+          } else {
+            ORC_ASM_CODE(compiler,"  %s var%d;\n",
+                c_get_type_name(var->size), i);
+          }
         }
         break;
       case ORC_VAR_TYPE_SRC:
