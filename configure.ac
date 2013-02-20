@@ -119,7 +119,7 @@ AC_SUBST(PTHREAD_CFLAGS)
 AC_SUBST(PTHREAD_LIBS)
 
 AC_ARG_ENABLE(backend,
-  AC_HELP_STRING([--enable-backend],[sse,mmx,neon,arm,mips,all (default all)]),
+  AC_HELP_STRING([--enable-backend],[sse,mmx,neon,mips,all (default all)]),
     [], [enable_backend=all])
 case "${enable_backend}" in
   sse)
@@ -138,10 +138,11 @@ case "${enable_backend}" in
     ENABLE_BACKEND_NEON=yes
     AC_DEFINE(ENABLE_BACKEND_NEON, 1, [Enable NEON backend])
     ;;
-  arm)
-    ENABLE_BACKEND_ARM=yes
-    AC_DEFINE(ENABLE_BACKEND_ARM, 1, [Enable Arm backend])
-    ;;
+### ARM backend is disabled until it has decent coverage
+#  arm)
+#    ENABLE_BACKEND_ARM=yes
+#    AC_DEFINE(ENABLE_BACKEND_ARM, 1, [Enable Arm backend])
+#    ;;
   c64x)
     ENABLE_BACKEND_C64X=yes
     AC_DEFINE(ENABLE_BACKEND_C64X, 1, [Enable c64x backend])
@@ -159,8 +160,8 @@ case "${enable_backend}" in
     AC_DEFINE(ENABLE_BACKEND_ALTIVEC, 1, [Enable Altivec backend])
     ENABLE_BACKEND_NEON=yes
     AC_DEFINE(ENABLE_BACKEND_NEON, 1, [Enable NEON backend])
-    ENABLE_BACKEND_ARM=yes
-    AC_DEFINE(ENABLE_BACKEND_ARM, 1, [Enable Arm backend])
+#    ENABLE_BACKEND_ARM=yes
+#    AC_DEFINE(ENABLE_BACKEND_ARM, 1, [Enable Arm backend])
     ENABLE_BACKEND_C64X=yes
     AC_DEFINE(ENABLE_BACKEND_C64X, 1, [Enable c64x backend])
     ENABLE_BACKEND_MIPS=yes
