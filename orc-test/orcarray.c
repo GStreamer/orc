@@ -66,21 +66,24 @@ orc_array_new (int n, int m, int element_size, int misalignment,
   data = mmap ((void *)(idx<<32), ar->alloc_len, PROT_READ|PROT_WRITE,
       MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
   idx++;
+  ar->alloc_data = data;
+  ar->aligned_data = data;
 #else
 #ifdef HAVE_POSIX_MEMALIGNx
   ret = posix_memalign (&data, ALIGNMENT, ar->alloc_len);
   ar->alloc_data = data;
+  ar->aligned_data = data;
 #else
   data = malloc (ar->alloc_len + ALIGNMENT);
   ar->alloc_data = data;
-  data = (void *)((((unsigned long)data) + (ALIGNMENT-1))&(~(ALIGNMENT-1)));
+  ar->aligned_data = (void *)((((unsigned long)data) + (ALIGNMENT-1))&(~(ALIGNMENT-1)));
 #endif
 #endif
 
   if (alignment == 0) alignment = element_size;
   offset = (alignment * misalignment) & (ALIGNMENT - 1);
 
-  ar->data = ORC_PTR_OFFSET (data, ar->stride * EXTEND_ROWS + offset);
+  ar->data = ORC_PTR_OFFSET (ar->aligned_data, ar->stride * EXTEND_ROWS + offset);
 
   return ar;
 }
@@ -99,13 +102,13 @@ orc_array_free (OrcArray *array)
 void
 orc_array_set_pattern (OrcArray *array, int value)
 {
-  memset (array->alloc_data, value, array->alloc_len);
+  memset (array->aligned_data, value, array->alloc_len);
 }
 
 void
 orc_array_set_random (OrcArray *array, OrcRandomContext *context)
 {
-  orc_random_bits (context, array->alloc_data, array->alloc_len);
+  orc_random_bits (context, array->aligned_data, array->alloc_len);
 }
 
 #define CREATE_FLOAT(sign,exp,mant) (((sign)<<31)|((exp)<<23)|((mant)<<0))
@@ -153,7 +156,7 @@ orc_array_set_pattern_2 (OrcArray *array, OrcRandomContext *context,
 
   switch (type) {
     case ORC_PATTERN_RANDOM:
-      orc_random_bits (context, array->alloc_data, array->alloc_len);
+      orc_random_bits (context, array->aligned_data, array->alloc_len);
       break;
     case ORC_PATTERN_FLOAT_SMALL:
       {
@@ -254,7 +257,7 @@ orc_array_compare (OrcArray *array1, OrcArray *array2, int flags)
       return TRUE;
     }
   } else {
-    if (memcmp (array1->alloc_data, array2->alloc_data,
+    if (memcmp (array1->aligned_data, array2->aligned_data,
           array1->alloc_len) == 0) {
       return TRUE;
     }
@@ -270,7 +273,7 @@ orc_array_check_out_of_bounds (OrcArray *array)
   int j;
   unsigned char *data;
   
-  data = array->alloc_data;
+  data = array->aligned_data;
   for(i=0;i<array->stride * EXTEND_ROWS;i++){
     if (data[i] != ORC_OOB_VALUE) {
       printf("OOB check failed at start-%d\n", array->stride * EXTEND_ROWS - i);

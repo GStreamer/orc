@@ -18,6 +18,7 @@ struct _OrcArray {
 
   void *alloc_data;
   int alloc_len;
+  void *aligned_data;
 };
 
 enum {
