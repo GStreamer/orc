@@ -6,7 +6,7 @@ includedir=${pcfiledir}/
 Name: orc-@ORC_MAJORMINOR@ uninstalled
 Description: Library of Optimized Inner Loops Runtime Compiler
 Version: @VERSION@
-Libs: -L${libdir} -lorc-@ORC_MAJORMINOR@ @LIBM@ @LIBRT@
+Libs: @abs_top_builddir@/orc/liborc-@ORC_MAJORMINOR@.la  @LIBM@ @LIBRT@
 Cflags: -I${includedir}
 
 orcc=${pcfiledir}/tools/orcc@EXEEXT@
