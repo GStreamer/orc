@@ -10,7 +10,7 @@ AM_INIT_AUTOMAKE(1.6)
 ORC_MAJORMINOR=0.4
 AC_SUBST(ORC_MAJORMINOR)
 
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADER(config.h)
 
 dnl CURRENT, REVISION, AGE
 dnl - library source changed -> increment REVISION
