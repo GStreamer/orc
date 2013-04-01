@@ -1,5 +1,5 @@
 AC_PREREQ([2.58])
-AC_INIT(orc,0.4.17)
+AC_INIT(orc,0.4.17.1)
 dnl don't forget to update libversion
 
 AS_NANO(ORC_GIT=no,ORC_GIT=yes)
