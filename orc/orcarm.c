@@ -14,6 +14,12 @@
 #include <orc/orcarm.h>
 #include <orc/orcutils.h>
 
+#ifdef HAVE_ARM
+#if defined(__APPLE__)
+#include  <libkern/OSCacheControl.h>
+#endif
+#endif
+
 /**
  * SECTION:orcarm
  * @title: ARM
@@ -724,7 +730,11 @@ void
 orc_arm_flush_cache (OrcCode *code)
 {
 #ifdef HAVE_ARM
+#ifdef __APPLE__
+  sys_icache_invalidate(code->code, code->code_size);
+#else
   __clear_cache (code->code, code->code + code->code_size);
+#endif
 #endif
 }
 
