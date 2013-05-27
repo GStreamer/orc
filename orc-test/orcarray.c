@@ -69,7 +69,7 @@ orc_array_new (int n, int m, int element_size, int misalignment,
   ar->alloc_data = data;
   ar->aligned_data = data;
 #else
-#ifdef HAVE_POSIX_MEMALIGNx
+#ifdef HAVE_POSIX_MEMALIGN
   ret = posix_memalign (&data, ALIGNMENT, ar->alloc_len);
   ar->alloc_data = data;
   ar->aligned_data = data;
