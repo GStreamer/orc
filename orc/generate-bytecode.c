@@ -122,7 +122,8 @@ main (int argc, char *argv[])
     fprintf(output, "  ORC_BC_ADD_PARAMETER_INT64,\n");
     fprintf(output, "  ORC_BC_ADD_PARAMETER_DOUBLE,\n");
     fprintf(output, "  ORC_BC_ADD_TEMPORARY,\n");
-    for (i=21;i<32;i++){
+    fprintf(output, "  ORC_BC_INSTRUCTION_FLAGS,\n");
+    for (i=22;i<32;i++){
       fprintf(output, "  ORC_BC_RESERVED_%d,\n", i);
     }
     for(i=0;i<opcode_set->n_opcodes;i++){
@@ -163,7 +164,8 @@ main (int argc, char *argv[])
     fprintf(output, "  ORC_BC_ADD_PARAMETER_INT64,\n");
     fprintf(output, "  ORC_BC_ADD_PARAMETER_DOUBLE,\n");
     fprintf(output, "  ORC_BC_ADD_TEMPORARY,\n");
-    for (i=21;i<32;i++){
+    fprintf(output, "  ORC_BC_INSTRUCTION_FLAGS,\n");
+    for (i=22;i<32;i++){
       fprintf(output, "  ORC_BC_RESERVED_%d,\n", i);
     }
 
