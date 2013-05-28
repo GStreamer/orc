@@ -35,6 +35,7 @@ void help (void)
   printf("\n");
   printf("Application Options:\n");
   printf("  -o, --output FILE       Write output to FILE\n");
+  printf("      --header FILE       Write header to FILE\n");
   printf("\n");
 
   exit (0);
