@@ -1,0 +1,129 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+<!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+]>
+<refentry id="orc-program" revision="3 june 2013">
+<refmeta>
+<refentrytitle>Orc Program Syntax</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>Orc</refmiscinfo>
+</refmeta>
+
+<refnamediv>
+<refname>Orc Program</refname>
+<refpurpose>
+Description of the Orc program syntax
+</refpurpose>
+</refnamediv>
+
+<refsect1>
+<title>Orc Program</title>
+
+  <para>
+    An orc program is an UTF-8 file containing the source read by the
+    Orc-compiler. Each program consists of several blocks. Each block contains a
+    directives and <link linkend="orc-opcodes">opcodes</link>.
+  </para>
+  
+  <refsect2>
+  <title>.init</title>
+  <para>
+    Global initialisation for a module.
+  </para>
+  </refsect2>
+
+  <refsect2>
+  <title>.function</title>
+  <programlisting>
+.function &lt;function-name&gt;</programlisting>
+  <para>
+    Starts a new function. Takes one arg which is the function name.
+  </para>
+  </refsect2>
+
+  <refsect2>
+  <title>.flags</title>
+  <programlisting>
+.flags (1d|2d)</programlisting>
+  <para>
+    Tells wheter arrays are 1 or 2 dimensional. The default is 1d.
+  </para>
+  </refsect2>
+  
+  <!--
+  .n <mult> <min> <max>
+  .m
+  -->
+
+  <refsect2>
+  <title>.source</title>
+<programlisting>
+.source &lt;size&gt; &lt;var-name&gt; [&lt;type-name&gt;]</programlisting>
+  <para>
+    Input data array parameter for functions. Arguments denote size of the items
+    in the array (1,2,4,8), name of the variable and optional name of the type.
+    Only reads are allowed.
+    <!-- align <value> -->
+  </para>
+  </refsect2>
+
+  <refsect2>
+  <title>.dest</title>
+<programlisting>
+.dest &lt;size&gt; &lt;var-name&gt; [&lt;type-name&gt;]</programlisting>
+  <para>
+    Output data array parameter for functions. Arguments denote size of the
+    items in the array (1,2,4,8), name of the variable and optional name of the
+    type. This directive can also be used for in/out array parameters.
+    <!-- align <value> -->
+  </para>
+  </refsect2>
+
+  <refsect2>
+  <title>.accumulator</title>
+<programlisting>
+.accumulator &lt;size&gt; &lt;var-name&gt; [&lt;type-name&gt;]</programlisting>
+  <para>
+    Output value parameter for functions. Arguments denote size of the variable
+    (1,2,4,8), name of the variable and optional name of the type.
+  </para>
+  </refsect2>
+
+  <refsect2>
+  <title>.param</title>
+<programlisting>
+.param &lt;size&gt; &lt;var-name&gt; [&lt;type-name&gt;]</programlisting>
+  <para>
+    Parameter for functions. Arguments denote size of the variable (1,2,4,8),
+    name of the variable and optional name of the type.
+  </para>
+  <para>
+    This directive has variants named: .longparam, .floatparam and .doubleparam.
+  </para>
+  </refsect2>
+
+  <refsect2>
+  <title>.const</title>
+<programlisting>
+.const &lt;size&gt; &lt;var-name&gt;</programlisting>
+  <para>
+    Constant for functions. Arguments denote size of the constant (1,2,4,8) and
+    the name.
+  </para>
+  </refsect2>
+
+  <refsect2>
+  <title>.temp</title>
+<programlisting>
+.temp &lt;size&gt; &lt;var-name&gt;</programlisting>
+  <para>
+    Local variable for functions. Arguments denote size of the variable
+    (1,2,4,8) and then name.
+  </para>
+  </refsect2>
+</refsect1>
+
+</refentry>

@@ -28,6 +28,7 @@
     <xi:include href="xml/orcprogram.xml"/>
     <xi:include href="xml/orccompiler.xml"/>
     <xi:include href="xml/orcexecutor.xml"/>
+    <xi:include href="program.xml"/>
     <xi:include href="opcodes.xml"/>
   </chapter>
   <chapter>

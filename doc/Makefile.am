@@ -66,7 +66,8 @@ HTML_IMAGES=
 
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
 # e.g. content_files=running.sgml building.sgml changes-2.0.sgml
-content_files=building.xml concepts.xml opcode_table.xml opcodes.xml running.xml tutorial.xml table.xml
+content_files=building.xml concepts.xml opcode_table.xml opcodes.xml \
+  program.xml running.xml tutorial.xml table.xml
 
 # SGML files where gtk-doc abbrevations (#GtkWidget) are expanded
 # These files must be listed here *and* in content_files
