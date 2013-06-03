@@ -168,7 +168,7 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
             }
           } else if (strcmp (token[i], "min") == 0) {
             if (i == n_tokens - 1) {
-              orc_parse_log (parser, "error: line %d: .n mult requires multiple value\n",
+              orc_parse_log (parser, "error: line %d: .n min requires multiple value\n",
                   parser->line_number);
             } else {
               orc_program_set_n_minimum (parser->program,
@@ -177,7 +177,7 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
             }
           } else if (strcmp (token[i], "max") == 0) {
             if (i == n_tokens - 1) {
-              orc_parse_log (parser, "error: line %d: .n mult requires multiple value\n",
+              orc_parse_log (parser, "error: line %d: .n max requires multiple value\n",
                   parser->line_number);
             } else {
               orc_program_set_n_maximum (parser->program,
