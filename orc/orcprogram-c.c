@@ -1242,7 +1242,7 @@ c_rule_convlf (OrcCompiler *p, void *user, OrcInstruction *insn)
   c_get_name_float (dest, p, insn, insn->dest_args[0]);
   c_get_name_int (src1, p, insn, insn->src_args[0]);
 
-  ORC_ASM_CODE(p,"     %s = %s;\n", dest, src1);
+  ORC_ASM_CODE(p,"    %s = %s;\n", dest, src1);
 }
 
 static void
@@ -1253,7 +1253,7 @@ c_rule_convld (OrcCompiler *p, void *user, OrcInstruction *insn)
   c_get_name_float (dest, p, insn, insn->dest_args[0]);
   c_get_name_int (src1, p, insn, insn->src_args[0]);
 
-  ORC_ASM_CODE(p,"     %s = %s;\n", dest, src1);
+  ORC_ASM_CODE(p,"    %s = %s;\n", dest, src1);
 }
 
 static void
