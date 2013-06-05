@@ -57,8 +57,7 @@ test_opcode_src (OrcStaticOpcode *opcode)
     }
   }
 
-  if ((opcode->flags & ORC_STATIC_OPCODE_FLOAT_SRC) ||
-      (opcode->flags & ORC_STATIC_OPCODE_FLOAT_DEST)) {
+  if (opcode->flags & ORC_STATIC_OPCODE_FLOAT) {
     flags = ORC_TEST_FLAGS_FLOAT;
   }
 

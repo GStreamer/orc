@@ -117,8 +117,7 @@ test_opcode_src (OrcStaticOpcode *opcode)
     orc_program_add_source (p, opcode->src_size[1], "s2");
   }
 
-  if ((opcode->flags & ORC_STATIC_OPCODE_FLOAT_SRC) ||
-      (opcode->flags & ORC_STATIC_OPCODE_FLOAT_DEST)) {
+  if (opcode->flags & ORC_STATIC_OPCODE_FLOAT) {
     flags = ORC_TEST_FLAGS_FLOAT;
   }
 
@@ -174,8 +173,7 @@ test_opcode_const (OrcStaticOpcode *opcode)
       orc_program_add_constant (p, opcode->src_size[2], 1, "c2");
   }
 
-  if ((opcode->flags & ORC_STATIC_OPCODE_FLOAT_SRC) ||
-      (opcode->flags & ORC_STATIC_OPCODE_FLOAT_DEST)) {
+  if (opcode->flags & ORC_STATIC_OPCODE_FLOAT) {
     flags = ORC_TEST_FLAGS_FLOAT;
   }
 
@@ -228,8 +226,7 @@ test_opcode_param (OrcStaticOpcode *opcode)
       orc_program_add_parameter (p, opcode->src_size[2], "p2");
   }
 
-  if ((opcode->flags & ORC_STATIC_OPCODE_FLOAT_SRC) ||
-      (opcode->flags & ORC_STATIC_OPCODE_FLOAT_DEST)) {
+  if (opcode->flags & ORC_STATIC_OPCODE_FLOAT) {
     flags = ORC_TEST_FLAGS_FLOAT;
   }
 
@@ -272,8 +269,7 @@ test_opcode_inplace (OrcStaticOpcode *opcode)
     orc_program_add_source (p, opcode->src_size[0], "s2");
   }
 
-  if ((opcode->flags & ORC_STATIC_OPCODE_FLOAT_SRC) ||
-      (opcode->flags & ORC_STATIC_OPCODE_FLOAT_DEST)) {
+  if (opcode->flags & ORC_STATIC_OPCODE_FLOAT) {
     flags = ORC_TEST_FLAGS_FLOAT;
   }
 
@@ -317,8 +313,7 @@ test_opcode_src_2d (OrcStaticOpcode *opcode)
     orc_program_add_source (p, opcode->src_size[1], "s2");
   }
 
-  if ((opcode->flags & ORC_STATIC_OPCODE_FLOAT_SRC) ||
-      (opcode->flags & ORC_STATIC_OPCODE_FLOAT_DEST)) {
+  if (opcode->flags & ORC_STATIC_OPCODE_FLOAT) {
     flags = ORC_TEST_FLAGS_FLOAT;
   }
 
@@ -367,8 +362,7 @@ test_opcode_src_const_n (OrcStaticOpcode *opcode)
     orc_program_add_source (p, opcode->src_size[1], "s2");
   }
 
-  if ((opcode->flags & ORC_STATIC_OPCODE_FLOAT_SRC) ||
-      (opcode->flags & ORC_STATIC_OPCODE_FLOAT_DEST)) {
+  if (opcode->flags & ORC_STATIC_OPCODE_FLOAT) {
     flags = ORC_TEST_FLAGS_FLOAT;
   }
 
@@ -417,8 +411,7 @@ test_opcode_src_const_n_2d (OrcStaticOpcode *opcode)
     orc_program_add_source (p, opcode->src_size[1], "s2");
   }
 
-  if ((opcode->flags & ORC_STATIC_OPCODE_FLOAT_SRC) ||
-      (opcode->flags & ORC_STATIC_OPCODE_FLOAT_DEST)) {
+  if (opcode->flags & ORC_STATIC_OPCODE_FLOAT) {
     flags = ORC_TEST_FLAGS_FLOAT;
   }
 
