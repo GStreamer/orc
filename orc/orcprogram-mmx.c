@@ -279,10 +279,10 @@ mmx_save_accumulators (OrcCompiler *compiler)
   for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     OrcVariable *var = compiler->vars + i;
 
-    if (compiler->vars[i].name == NULL) continue;
-    switch (compiler->vars[i].vartype) {
+    if (var->name == NULL) continue;
+    switch (var->vartype) {
       case ORC_VAR_TYPE_ACCUMULATOR:
-        src = compiler->vars[i].alloc;
+        src = var->alloc;
         tmp = orc_compiler_get_temp_reg (compiler);
 
 #ifndef MMX
@@ -291,7 +291,7 @@ mmx_save_accumulators (OrcCompiler *compiler)
         orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(3,2,3,2), src, tmp);
 #endif
 
-        if (compiler->vars[i].size == 2) {
+        if (var->size == 2) {
           orc_mmx_emit_paddw (compiler, tmp, src);
         } else {
           orc_mmx_emit_paddd (compiler, tmp, src);
@@ -300,14 +300,14 @@ mmx_save_accumulators (OrcCompiler *compiler)
 #ifndef MMX
         orc_mmx_emit_pshufd (compiler, ORC_MMX_SHUF(1,1,1,1), src, tmp);
 
-        if (compiler->vars[i].size == 2) {
+        if (var->size == 2) {
           orc_mmx_emit_paddw (compiler, tmp, src);
         } else {
           orc_mmx_emit_paddd (compiler, tmp, src);
         }
 #endif
 
-        if (compiler->vars[i].size == 2) {
+        if (var->size == 2) {
 #ifndef MMX
           orc_mmx_emit_pshuflw (compiler, ORC_MMX_SHUF(1,1,1,1), src, tmp);
 #else
@@ -317,7 +317,7 @@ mmx_save_accumulators (OrcCompiler *compiler)
           orc_mmx_emit_paddw (compiler, tmp, src);
         }
 
-        if (compiler->vars[i].size == 2) {
+        if (var->size == 2) {
           orc_mmx_emit_movd_store_register (compiler, src, compiler->gp_tmpreg);
           orc_x86_emit_and_imm_reg (compiler, 4, 0xffff, compiler->gp_tmpreg);
           orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
