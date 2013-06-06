@@ -105,3 +105,7 @@ endif
 update-www:
 	rsync -a html/* cooker.entropywave.com:/srv/code.entropywave.com/www/documentation/orc
 
+update-tables: $(top_builddir)/testsuite/generate_xml_table $(top_builddir)/testsuite/generate_xml_table2
+	$(top_builddir)/testsuite/generate_xml_table >table.xml
+	$(top_builddir)/testsuite/generate_xml_table2 >opcode_table.xml
+
