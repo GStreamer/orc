@@ -359,14 +359,16 @@ orc_uint64
 orc_bytecode_parse_get_uint64 (OrcBytecodeParse *parse)
 {
   orc_uint64 value;
-  value = orc_bytecode_parse_get_byte (parse);
-  value |= orc_bytecode_parse_get_byte (parse) << 8;
-  value |= orc_bytecode_parse_get_byte (parse) << 16;
-  value |= orc_bytecode_parse_get_byte (parse) << 24;
-  value |= (orc_uint64)orc_bytecode_parse_get_byte (parse) << 32;
-  value |= (orc_uint64)orc_bytecode_parse_get_byte (parse) << 40;
-  value |= (orc_uint64)orc_bytecode_parse_get_byte (parse) << 48;
-  value |= (orc_uint64)orc_bytecode_parse_get_byte (parse) << 56;
+
+  value = ((orc_uint64)orc_bytecode_parse_get_byte (parse));
+  value |= ((orc_uint64)orc_bytecode_parse_get_byte (parse)) << 8;
+  value |= ((orc_uint64)orc_bytecode_parse_get_byte (parse)) << 16;
+  value |= ((orc_uint64)orc_bytecode_parse_get_byte (parse)) << 24;
+  value |= ((orc_uint64)orc_bytecode_parse_get_byte (parse)) << 32;
+  value |= ((orc_uint64)orc_bytecode_parse_get_byte (parse)) << 40;
+  value |= ((orc_uint64)orc_bytecode_parse_get_byte (parse)) << 48;
+  value |= ((orc_uint64)orc_bytecode_parse_get_byte (parse)) << 56;
+
   return value;
 }
 
