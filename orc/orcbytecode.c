@@ -349,9 +349,9 @@ orc_bytecode_parse_get_uint32 (OrcBytecodeParse *parse)
 {
   orc_uint32 value;
   value = orc_bytecode_parse_get_byte (parse);
-  value |= orc_bytecode_parse_get_byte (parse) << 8;
-  value |= orc_bytecode_parse_get_byte (parse) << 16;
-  value |= orc_bytecode_parse_get_byte (parse) << 24;
+  value |= ((orc_uint32)orc_bytecode_parse_get_byte (parse)) << 8;
+  value |= ((orc_uint32)orc_bytecode_parse_get_byte (parse)) << 16;
+  value |= ((orc_uint32)orc_bytecode_parse_get_byte (parse)) << 24;
   return value;
 }
 
