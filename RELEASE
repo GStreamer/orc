@@ -1,4 +1,15 @@
 
+0.4.18
+======
+
+Maintenance release:
+
+ - Important bugfix in reading constants from bytecode. (Tim-Philipp Müller
+   and Sebastian Dröge)
+ - Documentation and code cleanup (Stefan Sauer)
+ - Fix cache flushing on iOS (Andoni Morales Alastruey)
+
+
 0.4.17
 ======
 
