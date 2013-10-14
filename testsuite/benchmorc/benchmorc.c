@@ -15,7 +15,7 @@ int error = FALSE;
 
 double weights_ginger[];
 double weights_feathers[];
-//double weights_preston[];
+/* double weights_preston[]; */
 double weights_n900[];
 
 int
@@ -64,9 +64,9 @@ main (int argc, char *argv[])
     double weight;
 
     perf = orc_test_performance_full (programs[i], 0, NULL);
-    //weight = weights_ginger[i];
+    /* weight = weights_ginger[i]; */
     weight = weights_feathers[i];
-    //weight = weights_n900[i];
+    /* weight = weights_n900[i]; */
 
     sum += weight * perf;
   }

@@ -81,8 +81,8 @@ orc_check_neon_proc_auxv (void)
     }
 
     if (aux[0] == AT_HWCAP) {
-      //if (aux[1] & 64) flags |= ORC_TARGET_NEON_VFP;
-      //if (aux[1] & 512) flags |= ORC_TARGET_NEON_IWMMXT;
+      /* if (aux[1] & 64) flags |= ORC_TARGET_NEON_VFP; */
+      /* if (aux[1] & 512) flags |= ORC_TARGET_NEON_IWMMXT; */
       if (aux[1] & 4096) flags |= ORC_TARGET_NEON_NEON;
       if (aux[1] & 128) flags |= ORC_TARGET_ARM_EDSP;
       ORC_INFO("arm hwcap %08x", aux[1]);

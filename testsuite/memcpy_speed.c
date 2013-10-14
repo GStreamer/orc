@@ -44,11 +44,11 @@ main(int argc, char *argv[])
   OrcProgram *p;
   int level1, level2, level3;
   int max;
-  //const uint8_t zero = 0;
+  /* const uint8_t zero = 0; */
 
   orc_init ();
 
-  //cpufreq = 2333e6;
+  /* cpufreq = 2333e6; */
   cpufreq = 1;
 
   if (argc > 1) {
@@ -74,10 +74,10 @@ main(int argc, char *argv[])
 
     p = orc_program_new ();
     orc_program_set_name (p, "orc_memcpy");
-    //orc_program_set_name (p, "orc_memset");
+    /* orc_program_set_name (p, "orc_memset"); */
     orc_program_add_destination (p, 1, "d1");
     orc_program_add_source (p, 1, "s1");
-    //orc_program_add_parameter (p, 1, "p1");
+    /* orc_program_add_parameter (p, 1, "p1"); */
 
     orc_program_append (p, "copyb", ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1);
 
@@ -121,7 +121,7 @@ main(int argc, char *argv[])
       void (*func) (OrcExecutor *);
 
       orc_profile_start(&prof);
-      //orc_memcpy (dest, src, size);
+      /* orc_memcpy (dest, src, size); */
       ex->program = p;
       ex->n = size;
       ex->arrays[ORC_VAR_D1] = dest;
@@ -164,13 +164,13 @@ main(int argc, char *argv[])
     ave -= null;
     ave_libc -= null;
 
-    //printf("%d: %10.4g %10.4g %10.4g %10.4g (libc %10.4g)\n", i, ave, std,
-    //    ave/(1<<i), cpufreq/(ave/(1<<i)),
-    //    cpufreq/(ave_libc/(1<<i)));
+    /* printf("%d: %10.4g %10.4g %10.4g %10.4g (libc %10.4g)\n", i, ave, std, */
+    /*     ave/(1<<i), cpufreq/(ave/(1<<i)), */
+    /*     cpufreq/(ave_libc/(1<<i))); */
     printf("%g %10.4g %10.4g\n", x,
         cpufreq/(ave/size), cpufreq/(ave_libc/size));
-    //printf("%g %10.4g %10.4g\n", x,
-    //    32*(ave/(size)), 32*(ave_libc/(size)));
+    /* printf("%g %10.4g %10.4g\n", x, */
+    /*     32*(ave/(size)), 32*(ave_libc/(size))); */
     fflush (stdout);
   }
 

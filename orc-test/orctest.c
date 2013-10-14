@@ -109,7 +109,7 @@ orc_test_gcc_compile (OrcProgram *p)
     return ORC_TEST_FAILED;
   }
   if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
-    //printf ("  no code generated: %s\n", orc_program_get_error (p));
+    /* printf ("  no code generated: %s\n", orc_program_get_error (p)); */
     return ORC_TEST_INDETERMINATE;
   }
 
@@ -232,7 +232,7 @@ orc_test_gcc_compile_neon (OrcProgram *p)
 
   result = orc_program_compile_full (p, target, flags);
   if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
-    //printf ("  no code generated: %s\n", orc_program_get_error (p));
+    /* printf ("  no code generated: %s\n", orc_program_get_error (p)); */
     return ORC_TEST_INDETERMINATE;
   }
 
@@ -326,7 +326,7 @@ orc_test_gcc_compile_c64x (OrcProgram *p)
 
   result = orc_program_compile_full (p, target, flags);
   if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
-    //printf ("  no code generated: %s\n", orc_program_get_error (p));
+    /* printf ("  no code generated: %s\n", orc_program_get_error (p)); */
     return ORC_TEST_INDETERMINATE;
   }
 
@@ -346,7 +346,7 @@ orc_test_gcc_compile_c64x (OrcProgram *p)
   ret = system (cmd);
   if (ret != 0) {
     ORC_ERROR ("compiler failed");
-    //printf("%s\n", orc_program_get_asm_code (p));
+    /* printf("%s\n", orc_program_get_asm_code (p)); */
     return ORC_TEST_INDETERMINATE;
   }
 
@@ -585,7 +585,7 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
       goto out;
     }
     if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
-      //printf ("  no code generated: %s\n", orc_program_get_error (program));
+      /* printf ("  no code generated: %s\n", orc_program_get_error (program)); */
       ret = ORC_TEST_INDETERMINATE;
       goto out;
     }
@@ -985,7 +985,7 @@ orc_test_performance_full (OrcProgram *program, int flags,
 
     result = orc_program_compile_full (program, target, flags);
     if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
-      //printf("compile failed\n");
+      /* printf("compile failed\n"); */
       orc_program_reset (program);
       return 0;
     }
@@ -994,7 +994,7 @@ orc_test_performance_full (OrcProgram *program, int flags,
   if (program->constant_n > 0) {
     n = program->constant_n;
   } else {
-    //n = 64 + (orc_random(&rand_context)&0xf);
+    /* n = 64 + (orc_random(&rand_context)&0xf); */
     n = 1000;
   }
 
@@ -1113,7 +1113,7 @@ orc_test_gcc_compile_mips (OrcProgram *p)
 
   result = orc_program_compile_full (p, target, flags);
   if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
-    //printf ("  no code generated: %s\n", orc_program_get_error (p));
+    /* printf ("  no code generated: %s\n", orc_program_get_error (p)); */
     return ORC_TEST_INDETERMINATE;
   }
 

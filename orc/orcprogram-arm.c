@@ -78,7 +78,7 @@ orc_arm_emit_epilogue (OrcCompiler *compiler)
   if (regs) orc_arm_emit_pop (compiler, regs);
   orc_arm_emit_bx_lr (compiler);
 
-  //orc_arm_dump_insns (compiler);
+  /* orc_arm_dump_insns (compiler); */
 }
 
 static OrcTarget orc_arm_target = {
@@ -130,7 +130,7 @@ orc_compiler_orc_arm_init (OrcCompiler *compiler)
   for(i=ORC_GP_REG_BASE;i<ORC_GP_REG_BASE+9;i++){
     compiler->valid_regs[i] = 1;
   }
-  //compiler->valid_regs[ORC_ARM_SB] = 0;
+  /* compiler->valid_regs[ORC_ARM_SB] = 0; */
   compiler->valid_regs[ORC_ARM_IP] = 0;
   compiler->valid_regs[ORC_ARM_SP] = 0;
   compiler->valid_regs[ORC_ARM_LR] = 0;
@@ -161,16 +161,16 @@ orc_arm_load_constants_outer (OrcCompiler *compiler)
     if (compiler->vars[i].name == NULL) continue;
     switch (compiler->vars[i].vartype) {
       case ORC_VAR_TYPE_CONST:
-        //orc_arm_emit_load_imm (compiler, compiler->vars[i].alloc,
-        //    (int)compiler->vars[i].value);
+        /* orc_arm_emit_load_imm (compiler, compiler->vars[i].alloc, */
+        /*     (int)compiler->vars[i].value); */
         break;
       case ORC_VAR_TYPE_PARAM:
         ORC_PROGRAM_ERROR(compiler,"unimplemented");
         return;
         /* FIXME offset is too large */
-        //orc_arm_loadw (compiler, compiler->vars[i].alloc,
-        //    compiler->exec_reg,
-        //    (int)ORC_STRUCT_OFFSET(OrcExecutor, params[i]));
+        /* orc_arm_loadw (compiler, compiler->vars[i].alloc, */
+        /*     compiler->exec_reg, */
+        /*     (int)ORC_STRUCT_OFFSET(OrcExecutor, params[i])); */
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
@@ -228,9 +228,9 @@ orc_arm_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
   if (var->ptr_register == 0) {
     int i;
     i = var - compiler->vars;
-    //orc_arm_emit_mov_memoffset_reg (compiler, orc_arm_ptr_size,
-    //    (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]),
-    //    compiler->exec_reg, X86_ECX);
+    /* orc_arm_emit_mov_memoffset_reg (compiler, orc_arm_ptr_size, */
+    /*     (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]), */
+    /*     compiler->exec_reg, X86_ECX); */
     ptr_reg = ORC_ARM_PC;
   } else {
     ptr_reg = var->ptr_register;
@@ -238,23 +238,23 @@ orc_arm_emit_load_src (OrcCompiler *compiler, OrcVariable *var)
   switch (var->size << compiler->loop_shift) {
     case 1:
       orc_arm_loadb (compiler, var->alloc, ptr_reg, 0);
-      //orc_arm_emit_mov_memoffset_reg (compiler, 1, 0, ptr_reg, X86_ECX);
-      //orc_arm_emit_mov_reg_arm (compiler, X86_ECX, var->alloc);
+      /* orc_arm_emit_mov_memoffset_reg (compiler, 1, 0, ptr_reg, X86_ECX); */
+      /* orc_arm_emit_mov_reg_arm (compiler, X86_ECX, var->alloc); */
       break;
     case 2:
       orc_arm_loadw (compiler, var->alloc, ptr_reg, 0);
-      //orc_arm_emit_mov_memoffset_reg (compiler, 2, 0, ptr_reg, X86_ECX);
-      //orc_arm_emit_mov_reg_arm (compiler, X86_ECX, var->alloc);
+      /* orc_arm_emit_mov_memoffset_reg (compiler, 2, 0, ptr_reg, X86_ECX); */
+      /* orc_arm_emit_mov_reg_arm (compiler, X86_ECX, var->alloc); */
       break;
     case 4:
       orc_arm_loadl (compiler, var->alloc, ptr_reg, 0);
-      //orc_arm_emit_mov_memoffset_arm (compiler, 4, 0, ptr_reg, var->alloc);
+      /* orc_arm_emit_mov_memoffset_arm (compiler, 4, 0, ptr_reg, var->alloc); */
       break;
-    //case 8:
-      //orc_arm_emit_mov_memoffset_arm (compiler, 8, 0, ptr_reg, var->alloc);
+    /* case 8: */
+      /* orc_arm_emit_mov_memoffset_arm (compiler, 8, 0, ptr_reg, var->alloc); */
       break;
-    //case 16:
-      //orc_arm_emit_mov_memoffset_arm (compiler, 16, 0, ptr_reg, var->alloc);
+    /* case 16: */
+      /* orc_arm_emit_mov_memoffset_arm (compiler, 16, 0, ptr_reg, var->alloc); */
       break;
     default:
       ORC_COMPILER_ERROR(compiler, "bad size %d", var->size << compiler->loop_shift);
@@ -266,8 +266,8 @@ orc_arm_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
 {
   int ptr_reg;
   if (var->ptr_register == 0) {
-    //orc_arm_emit_mov_memoffset_reg (compiler, orc_arm_ptr_size,
-    //    var->ptr_offset, compiler->exec_reg, X86_ECX);
+    /* orc_arm_emit_mov_memoffset_reg (compiler, orc_arm_ptr_size, */
+    /*     var->ptr_offset, compiler->exec_reg, X86_ECX); */
     ptr_reg = ORC_ARM_PC;
   } else {
     ptr_reg = var->ptr_register;
@@ -275,26 +275,26 @@ orc_arm_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
   switch (var->size << compiler->loop_shift) {
     case 1:
       orc_arm_storeb (compiler, ptr_reg, 0, var->alloc);
-      //orc_arm_emit_mov_orc_arm_reg (compiler, var->alloc, X86_ECX);
-      //orc_arm_emit_mov_reg_memoffset (compiler, 1, X86_ECX, 0, ptr_reg);
+      /* orc_arm_emit_mov_orc_arm_reg (compiler, var->alloc, X86_ECX); */
+      /* orc_arm_emit_mov_reg_memoffset (compiler, 1, X86_ECX, 0, ptr_reg); */
       break;
     case 2:
       orc_arm_storew (compiler, ptr_reg, 0, var->alloc);
-      //orc_arm_emit_mov_orc_arm_reg (compiler, var->alloc, X86_ECX);
-      //orc_arm_emit_mov_reg_memoffset (compiler, 2, X86_ECX, 0, ptr_reg);
+      /* orc_arm_emit_mov_orc_arm_reg (compiler, var->alloc, X86_ECX); */
+      /* orc_arm_emit_mov_reg_memoffset (compiler, 2, X86_ECX, 0, ptr_reg); */
       break;
     case 4:
       orc_arm_storel (compiler, ptr_reg, 0, var->alloc);
-      //orc_arm_emit_mov_orc_arm_memoffset (compiler, 4, var->alloc, 0, ptr_reg,
-      //    var->is_aligned, var->is_uncached);
+      /* orc_arm_emit_mov_orc_arm_memoffset (compiler, 4, var->alloc, 0, ptr_reg, */
+      /*     var->is_aligned, var->is_uncached); */
       break;
     case 8:
-      //orc_arm_emit_mov_orc_arm_memoffset (compiler, 8, var->alloc, 0, ptr_reg,
-      //    var->is_aligned, var->is_uncached);
+      /* orc_arm_emit_mov_orc_arm_memoffset (compiler, 8, var->alloc, 0, ptr_reg, */
+      /*     var->is_aligned, var->is_uncached); */
       break;
     case 16:
-      //orc_arm_emit_mov_orc_arm_memoffset (compiler, 16, var->alloc, 0, ptr_reg,
-      //    var->is_aligned, var->is_uncached);
+      /* orc_arm_emit_mov_orc_arm_memoffset (compiler, 16, var->alloc, 0, ptr_reg, */
+      /*     var->is_aligned, var->is_uncached); */
       break;
     default:
       ORC_COMPILER_ERROR(compiler, "bad size %d", var->size << compiler->loop_shift);
@@ -396,7 +396,7 @@ orc_arm_emit_loop (OrcCompiler *compiler)
       switch (compiler->vars[insn->src_args[k]].vartype) {
         case ORC_VAR_TYPE_SRC:
         case ORC_VAR_TYPE_DEST:
-          //orc_arm_emit_load_src (compiler, &compiler->vars[insn->src_args[k]]);
+          /* orc_arm_emit_load_src (compiler, &compiler->vars[insn->src_args[k]]); */
           break;
         case ORC_VAR_TYPE_CONST:
           break;
@@ -427,7 +427,7 @@ orc_arm_emit_loop (OrcCompiler *compiler)
 
       switch (compiler->vars[insn->dest_args[k]].vartype) {
         case ORC_VAR_TYPE_DEST:
-          //orc_arm_emit_store_dest (compiler, &compiler->vars[insn->dest_args[k]]);
+          /* orc_arm_emit_store_dest (compiler, &compiler->vars[insn->dest_args[k]]); */
           break;
         case ORC_VAR_TYPE_TEMP:
           break;
@@ -447,10 +447,10 @@ orc_arm_emit_loop (OrcCompiler *compiler)
             compiler->vars[k].ptr_register,
             compiler->vars[k].size << compiler->loop_shift);
       } else {
-        //orc_arm_emit_add_imm_memoffset (compiler, orc_arm_ptr_size,
-        //    compiler->vars[k].size << compiler->loop_shift,
-        //    (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]),
-        //    compiler->exec_reg);
+        /* orc_arm_emit_add_imm_memoffset (compiler, orc_arm_ptr_size, */
+        /*     compiler->vars[k].size << compiler->loop_shift, */
+        /*     (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]), */
+        /*     compiler->exec_reg); */
       }
     }
   }

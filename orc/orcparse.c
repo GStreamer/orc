@@ -84,7 +84,7 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
 
     p = parser->line;
     end = p + strlen (p);
-    //printf("%d: %s\n", parser->line_number, parser->line);
+    /* printf("%d: %s\n", parser->line_number, parser->line); */
 
     while (p[0] == ' ' || p[0] == '\t') p++;
 
@@ -93,7 +93,7 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
     }
 
     if (p[0] == '#') {
-      //printf("comment: %s\n", p+1);
+      /* printf("comment: %s\n", p+1); */
       continue;
     }
 
@@ -118,9 +118,9 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
     {
       int i;
       for(i=0;i<n_tokens;i++){
-        //printf("'%s' ", token[i]);
+        /* printf("'%s' ", token[i]); */
       }
-      //printf("\n");
+      /* printf("\n"); */
     }
 
     if (token[0][0] == '.') {

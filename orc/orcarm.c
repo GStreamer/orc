@@ -54,7 +54,7 @@ orc_arm_reg_name (int reg)
     "r4", "r5", "r6", "r7",
     "r8", "r9", "r10", "r11",
     "ip", "sp", "lr", "pc" };
-    //"r12", "r13", "r14", "r15" };
+  /* "r12", "r13", "r14", "r15" }; */
 #endif
 
   if (reg < ORC_GP_REG_BASE || reg >= ORC_GP_REG_BASE+16) {

@@ -388,8 +388,8 @@ orc_sse_detect_cpuid_intel (orc_uint32 level)
         case 28:
           orc_x86_microarchitecture = ORC_X86_BONNELL;
           break;
-          //orc_x86_microarchitecture = ORC_X86_WESTMERE;
-          //orc_x86_microarchitecture = ORC_X86_SANDY_BRIDGE;
+          /* orc_x86_microarchitecture = ORC_X86_WESTMERE; */
+          /* orc_x86_microarchitecture = ORC_X86_SANDY_BRIDGE; */
       }
     } else if (_orc_cpu_family == 15) {
       orc_x86_microarchitecture = ORC_X86_NETBURST;

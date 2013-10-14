@@ -200,7 +200,7 @@ orc_cpu_detect_arch(void)
   orc_check_altivec_fault();
 #endif
 
-  //_orc_profile_stamp = orc_profile_stamp_tb;
+  /* _orc_profile_stamp = orc_profile_stamp_tb; */
 }
 
 

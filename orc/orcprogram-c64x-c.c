@@ -8,7 +8,7 @@
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
 
-//static const char *c_get_type_name (int size);
+/* static const char *c_get_type_name (int size); */
 
 void orc_c_init (void);
 
@@ -52,8 +52,8 @@ orc_target_c64x_c_get_asm_preamble (void)
     "  int counter3;\n"
     "  void *arrays[ORC_N_VARIABLES];\n"
     "  int params[ORC_N_VARIABLES];\n"
-    "  //OrcVariable vars[ORC_N_VARIABLES];\n"
-    "  //OrcVariable *args[ORC_OPCODE_N_ARGS];\n"
+    "  /* OrcVariable vars[ORC_N_VARIABLES]; */\n"
+    "  /* OrcVariable *args[ORC_OPCODE_N_ARGS]; */\n"
     "};\n"
     "#define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))\n"
     "#define ORC_ABS(a) ((a)<0 ? -(a) : (a))\n"

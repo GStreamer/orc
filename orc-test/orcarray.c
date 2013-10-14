@@ -21,7 +21,7 @@
 
 #ifdef HAVE_MMAP
 /* This can be used to test non-zero high-32-bits of pointers. */
-//#define USE_MMAP
+/* #define USE_MMAP */
 #endif
 
 #define EXTEND_ROWS 16

@@ -170,7 +170,7 @@ orc_code_allocate_codemem (OrcCode *code, int size)
   code->code = ORC_PTR_OFFSET(region->write_ptr, chunk->offset);
   code->exec = ORC_PTR_OFFSET(region->exec_ptr, chunk->offset);
   code->code_size = size;
-  //compiler->codeptr = ORC_PTR_OFFSET(region->write_ptr, chunk->offset);
+  /* compiler->codeptr = ORC_PTR_OFFSET(region->write_ptr, chunk->offset); */
 }
 
 void

@@ -236,7 +236,9 @@ main (int argc, char *argv[])
   orc_test_init();
 
   for(i=0;i<18;i++){
-    //printf("/* %d */\n", i);
+#if 0
+    printf("/* %d */\n", i);
+#endif
     test_program (i);
   }
 

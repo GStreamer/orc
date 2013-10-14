@@ -83,7 +83,7 @@ orc_neon_emit_epilogue (OrcCompiler *compiler)
   if (regs) orc_arm_emit_pop (compiler, regs);
   orc_arm_emit_bx_lr (compiler);
 
-  //arm_dump_insns (compiler);
+  /* arm_dump_insns (compiler); */
 }
 
 static OrcTarget neon_target = {
@@ -137,7 +137,7 @@ orc_compiler_neon_init (OrcCompiler *compiler)
   for(i=ORC_VEC_REG_BASE+0;i<ORC_VEC_REG_BASE+32;i+=2){
     compiler->valid_regs[i] = 1;
   }
-  //compiler->valid_regs[ORC_ARM_SB] = 0;
+  /* compiler->valid_regs[ORC_ARM_SB] = 0; */
   compiler->valid_regs[ORC_ARM_IP] = 0;
   compiler->valid_regs[ORC_ARM_SP] = 0;
   compiler->valid_regs[ORC_ARM_LR] = 0;
@@ -330,9 +330,9 @@ orc_neon_emit_load_src (OrcCompiler *compiler, OrcVariable *var, int unroll_inde
   if (var->ptr_register == 0) {
     int i;
     i = var - compiler->vars;
-    //arm_emit_mov_memoffset_reg (compiler, arm_ptr_size,
-    //    (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]),
-    //    p->exec_reg, X86_ECX);
+    /* arm_emit_mov_memoffset_reg (compiler, arm_ptr_size, */
+    /*     (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]), */
+    /*     p->exec_reg, X86_ECX); */
     ptr_reg = ORC_ARM_PC;
   } else {
     ptr_reg = var->ptr_register;
@@ -378,8 +378,8 @@ orc_neon_emit_store_dest (OrcCompiler *compiler, OrcVariable *var)
 {
   int ptr_reg;
   if (var->ptr_register == 0) {
-    //arm_emit_mov_memoffset_reg (compiler, arm_ptr_size,
-    //    var->ptr_offset, p->exec_reg, X86_ECX);
+    /* arm_emit_mov_memoffset_reg (compiler, arm_ptr_size, */
+    /*     var->ptr_offset, p->exec_reg, X86_ECX); */
     ptr_reg = ORC_ARM_PC;
   } else {
     ptr_reg = var->ptr_register;
@@ -748,7 +748,7 @@ orc_neon_emit_loop (OrcCompiler *compiler, int unroll_index)
       switch (compiler->vars[insn->src_args[k]].vartype) {
         case ORC_VAR_TYPE_SRC:
         case ORC_VAR_TYPE_DEST:
-          //orc_neon_emit_load_src (compiler, &compiler->vars[insn->src_args[k]], unroll_index);
+          /* orc_neon_emit_load_src (compiler, &compiler->vars[insn->src_args[k]], unroll_index); */
           break;
         case ORC_VAR_TYPE_CONST:
           break;
@@ -788,7 +788,7 @@ orc_neon_emit_loop (OrcCompiler *compiler, int unroll_index)
 
       switch (compiler->vars[insn->dest_args[k]].vartype) {
         case ORC_VAR_TYPE_DEST:
-          //orc_neon_emit_store_dest (compiler, &compiler->vars[insn->dest_args[k]]);
+          /* orc_neon_emit_store_dest (compiler, &compiler->vars[insn->dest_args[k]]); */
           break;
         case ORC_VAR_TYPE_TEMP:
           break;
@@ -808,10 +808,10 @@ orc_neon_emit_loop (OrcCompiler *compiler, int unroll_index)
             compiler->vars[k].ptr_register,
             compiler->vars[k].size << compiler->loop_shift);
       } else {
-        //arm_emit_add_imm_memoffset (compiler, arm_ptr_size,
-        //    compiler->vars[k].size << compiler->loop_shift,
-        //    (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]),
-        //    p->exec_reg);
+        /* arm_emit_add_imm_memoffset (compiler, arm_ptr_size, */
+        /*     compiler->vars[k].size << compiler->loop_shift, */
+        /*     (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]), */
+        /*     p->exec_reg); */
       }
     }
   }

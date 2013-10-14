@@ -40,7 +40,7 @@ powerpc_emit_prologue (OrcCompiler *compiler)
 
   for(i=POWERPC_R13;i<=POWERPC_R31;i++){
     if (compiler->used_regs[i]) {
-      //powerpc_emit_push (compiler, 4, i);
+      /* powerpc_emit_push (compiler, 4, i); */
     }
   }
 }
@@ -52,7 +52,7 @@ powerpc_emit_epilogue (OrcCompiler *compiler)
 
   for(i=POWERPC_R31;i>=POWERPC_R31;i--){
     if (compiler->used_regs[i]) {
-      //powerpc_emit_pop (compiler, 4, i);
+      /* powerpc_emit_pop (compiler, 4, i); */
     }
   }
 
@@ -188,7 +188,7 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
   int k;
   OrcInstruction *insn;
   OrcStaticOpcode *opcode;
-  //OrcVariable *args[10];
+  /* OrcVariable *args[10]; */
   OrcRule *rule;
   int label_outer_loop_start;
   int label_loop_start;
@@ -224,7 +224,7 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
         (int)ORC_STRUCT_OFFSET(OrcExecutorAlt, m_index));
   }
 
-  //powerpc_load_constants (compiler);
+  /* powerpc_load_constants (compiler); */
   powerpc_load_inner_constants (compiler);
 
   for(k=0;k<4;k++){
@@ -232,7 +232,7 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
 
     if (compiler->vars[ORC_VAR_A1 + k].name == NULL) continue;
 
-      //powerpc_emit_VX_2(p, "vxor", 0x100004c4, reg, reg, reg);
+      /* powerpc_emit_VX_2(p, "vxor", 0x100004c4, reg, reg, reg); */
     powerpc_emit_vxor (compiler, var->alloc, var->alloc, var->alloc);
   }
 
@@ -278,7 +278,7 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
       switch (var->vartype) {
         case ORC_VAR_TYPE_SRC:
         case ORC_VAR_TYPE_DEST:
-          //powerpc_emit_load_src (compiler, var);
+          /* powerpc_emit_load_src (compiler, var); */
           break;
         case ORC_VAR_TYPE_CONST:
           break;
@@ -305,7 +305,7 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
 
       switch (var->vartype) {
         case ORC_VAR_TYPE_DEST:
-          //powerpc_emit_store_dest (compiler, var);
+          /* powerpc_emit_store_dest (compiler, var); */
           break;
         case ORC_VAR_TYPE_TEMP:
           break;

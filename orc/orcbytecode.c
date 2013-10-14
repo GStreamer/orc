@@ -78,7 +78,7 @@ orc_bytecode_from_program (OrcProgram *p)
     bytecode_append_string (bytecode, p->name);
   }
 #if 0
-  //if (!is_inline) {
+  /* if (!is_inline) { */
   if (p->backup_function) {
     bytecode_append_code (bytecode, ORC_BC_SET_BACKUP_FUNCTION);
     bytecode_pointer (bytecode, p->backup_function);
@@ -105,7 +105,7 @@ orc_bytecode_from_program (OrcProgram *p)
     if (var->size) {
       bytecode_append_code (bytecode, ORC_BC_ADD_ACCUMULATOR);
       bytecode_append_int (bytecode, var->size);
-      //bytecode_append_int (bytecode, var->alignment);
+      /* bytecode_append_int (bytecode, var->alignment); */
     }
   }
   for(i=0;i<8;i++){
@@ -377,7 +377,7 @@ orc_bytecode_parse_function (OrcProgram *program, const orc_uint8 *bytecode)
 {
   OrcBytecodeParse _parse;
   OrcBytecodeParse *parse = &_parse;
-  //int in_function = FALSE;
+  /* int in_function = FALSE; */
   int bc;
   int size;
   int alignment;
@@ -397,7 +397,7 @@ orc_bytecode_parse_function (OrcProgram *program, const orc_uint8 *bytecode)
           /* FIXME this is technically an error */
           return 0;
         case ORC_BC_BEGIN_FUNCTION:
-          //in_function = TRUE;
+          /* in_function = TRUE; */
           break;
         case ORC_BC_END_FUNCTION:
           return 0;

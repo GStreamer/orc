@@ -173,7 +173,7 @@ oil_profile_stamp_default (void)
   return ts;
 #elif defined(__GNUC__) && defined(HAVE_ARM) && defined(USE_CORTEX_A8_COUNTER)
   unsigned int ts;
-  //__asm__ __volatile__("  mrc p14, 0, %0, c1, c0, 0 \n" : "=r" (ts));
+  /* __asm__ __volatile__("  mrc p14, 0, %0, c1, c0, 0 \n" : "=r" (ts)); */
   __asm__ __volatile__("  mrc p15, 0, %0, c9, c13, 0 \n" : "=r" (ts));
   return ts;
 #elif defined(_MSC_VER) && defined(HAVE_I386)

@@ -646,7 +646,7 @@ powerpc_get_constant_full (OrcCompiler *p, int value0, int value1,
 void powerpc_emit_ret (OrcCompiler *compiler)
 {
   ORC_ASM_CODE(compiler,"  ret\n");
-  //*compiler->codeptr++ = 0xc3;
+  /* *compiler->codeptr++ = 0xc3; */
 }
 
 void
