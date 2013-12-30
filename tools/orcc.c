@@ -936,6 +936,8 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
     }
 #endif
 
+    orc_bytecode_free (bytecode);
+
     fprintf(output, "#else\n");
   }
 
