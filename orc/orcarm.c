@@ -33,7 +33,7 @@ orc_arm_cond_name (OrcArmCond cond)
     "eq", "ne", "cs", "cc", "mi", "pl", "vs", "vc",
     "hi", "ls", "ge", "lt", "gt", "le", "", ""
   };
-  if (cond < 0 || cond >= 16) {
+  if ((int)cond < 0 || (int)cond >= 16) {
     return "ERROR";
   }
   return cond_names[cond&0xf];
