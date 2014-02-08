@@ -16,10 +16,6 @@
 void orc_neon_emit_loadiq (OrcCompiler *compiler, int dest, int param);
 void orc_neon_emit_loadpq (OrcCompiler *compiler, int dest, int param);
 
-static const orc_uint32 orc_neon_constants[][4] = {
-  { 0x03030303, 0x07070707, 0x0b0b0b0b, 0x0f0f0f0f },
-};
-
 const char *orc_neon_reg_name (int reg)
 {
   static const char *vec_regs[] = {
