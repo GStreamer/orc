@@ -84,6 +84,7 @@ read_file (const char *filename)
   if (ret < 0) goto bail;
 
   contents[size] = 0;
+  fclose (file);
 
   return contents;
 bail:
