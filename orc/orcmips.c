@@ -73,7 +73,7 @@ orc_mips_reg_name (int reg)
     "$gp", "$sp", "$fp", "$ra"
   };
 
-  if (reg < ORC_GP_REG_BASE || reg > ORC_GP_REG_BASE + 32)
+  if (reg < ORC_GP_REG_BASE || reg >= ORC_GP_REG_BASE + 32)
     return "ERROR";
 
   return regs[reg-32];
