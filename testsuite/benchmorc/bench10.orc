@@ -1141,7 +1141,7 @@ convsuswb d1, t2
 
 
 .function cogorc_upsample_horiz_cosite_1tap
-.dest 2 d1 guint8 guint8
+.dest 2 d1 guint8
 .source 1 s1 guint8
 .temp 1 t1
 
@@ -1150,7 +1150,7 @@ mergebw d1, t1, t1
 
 
 .function cogorc_upsample_horiz_cosite
-.dest 2 d1 guint8 guint8
+.dest 2 d1 guint8
 .source 1 s1 guint8
 .source 1 s2 guint8
 .temp 1 t1
@@ -1198,7 +1198,7 @@ select1wb d1, t1
 
 .function orc_pack_yuyv
 .dest 4 d1 guint8
-.source 2 s1 guint8 guint8
+.source 2 s1 guint8
 .source 1 s2 guint8
 .source 1 s3 guint8
 .temp 1 t1
@@ -1242,7 +1242,7 @@ select0wb d1, t1
 
 .function orc_pack_uyvy
 .dest 4 d1 guint8
-.source 2 s1 guint8 guint8
+.source 2 s1 guint8
 .source 1 s2 guint8
 .source 1 s3 guint8
 .temp 1 t1
@@ -1260,9 +1260,9 @@ mergewl d1, t3, t4
 
 
 .function orc_matrix2_u8
-.dest 1 d1 guint8 guint8
-.source 1 s1 guint8 guint8
-.source 1 s2 guint8 guint8
+.dest 1 d1 guint8
+.source 1 s1 guint8
+.source 1 s2 guint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -1280,9 +1280,9 @@ convsuswb d1, t1
 
 
 .function orc_matrix2_11_u8
-.dest 1 d1 guint8 guint8
-.source 1 s1 guint8 guint8
-.source 1 s2 guint8 guint8
+.dest 1 d1 guint8
+.source 1 s1 guint8
+.source 1 s2 guint8
 .param 2 p1
 .param 2 p2
 .temp 2 t1
@@ -1305,9 +1305,9 @@ convsuswb d1, t3
 
 
 .function orc_matrix2_12_u8
-.dest 1 d1 guint8 guint8
-.source 1 s1 guint8 guint8
-.source 1 s2 guint8 guint8
+.dest 1 d1 guint8
+.source 1 s1 guint8
+.source 1 s2 guint8
 .param 2 p1
 .param 2 p2
 .temp 2 t1
@@ -1331,10 +1331,10 @@ convsuswb d1, t3
 
 
 .function orc_matrix3_u8
-.dest 1 d1 guint8 guint8
-.source 1 s1 guint8 guint8
-.source 1 s2 guint8 guint8
-.source 1 s3 guint8 guint8
+.dest 1 d1 guint8
+.source 1 s1 guint8
+.source 1 s2 guint8
+.source 1 s3 guint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -1356,10 +1356,10 @@ convsuswb d1, t1
 
 
 .function orc_matrix3_100_u8
-.dest 1 d1 guint8 guint8
-.source 1 s1 guint8 guint8
-.source 1 s2 guint8 guint8
-.source 1 s3 guint8 guint8
+.dest 1 d1 guint8
+.source 1 s1 guint8
+.source 1 s2 guint8
+.source 1 s3 guint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -1386,10 +1386,10 @@ convsuswb d1, t3
 
 
 .function orc_matrix3_100_offset_u8
-.dest 1 d1 guint8 guint8
-.source 1 s1 guint8 guint8
-.source 1 s2 guint8 guint8
-.source 1 s3 guint8 guint8
+.dest 1 d1 guint8
+.source 1 s1 guint8
+.source 1 s2 guint8
+.source 1 s3 guint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -1419,10 +1419,10 @@ convsuswb d1, t1
 
 
 .function orc_matrix3_000_u8
-.dest 1 d1 guint8 guint8
-.source 1 s1 guint8 guint8
-.source 1 s2 guint8 guint8
-.source 1 s3 guint8 guint8
+.dest 1 d1 guint8
+.source 1 s1 guint8
+.source 1 s2 guint8
+.source 1 s3 guint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -1450,7 +1450,7 @@ convwb d1, t1
 
 
 .function orc_pack_123x
-.dest 4 d1 guint32 guint8
+.dest 4 d1 guint32
 .source 1 s1 guint8
 .source 1 s2 guint8
 .source 1 s3 guint8
@@ -1464,7 +1464,7 @@ mergewl d1, t1, t2
 
 
 .function orc_pack_x123
-.dest 4 d1 guint32 guint8
+.dest 4 d1 guint32
 .source 1 s1 guint8
 .source 1 s2 guint8
 .source 1 s3 guint8
