@@ -184,9 +184,12 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
                   strtol (token[1], NULL, 0));
               i++;
             }
-          } else {
+          } else if (i == n_tokens - 1) {
             orc_program_set_constant_n (parser->program,
                 strtol (token[1], NULL, 0));
+          } else {
+            orc_parse_log (parser, "error: line %d: unknown .n token '%s'\n",
+                parser->line_number, token[i]);
           }
         }
       } else if (strcmp (token[0], ".m") == 0) {
@@ -207,8 +210,11 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
               orc_program_set_var_alignment (parser->program, var, alignment);
               i++;
             }
-          } else {
+          } else if (i == n_tokens - 1) {
             orc_program_set_type_name (parser->program, var, token[i]);
+          } else {
+            orc_parse_log (parser, "error: line %d: unknown .dest token '%s'\n",
+                parser->line_number, token[i]);
           }
         }
       } else if (strcmp (token[0], ".dest") == 0) {
@@ -226,8 +232,11 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
               orc_program_set_var_alignment (parser->program, var, alignment);
               i++;
             }
-          } else {
+          } else if (i == n_tokens - 1) {
             orc_program_set_type_name (parser->program, var, token[i]);
+          } else {
+            orc_parse_log (parser, "error: line %d: unknown .source token '%s'\n",
+                parser->line_number, token[i]);
           }
         }
       } else if (strcmp (token[0], ".accumulator") == 0) {
