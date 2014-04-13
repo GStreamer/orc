@@ -175,6 +175,10 @@ orc_program_free (OrcProgram *program)
     orc_code_free (program->orccode);
     program->orccode = NULL;
   }
+  if (program->init_function) {
+    free (program->init_function);
+    program->init_function = NULL;
+  }
   if (program->name) {
     free (program->name);
     program->name = NULL;
