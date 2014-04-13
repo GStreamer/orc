@@ -74,6 +74,7 @@ main (int argc, char *argv[])
   code = read_file (filename);
   if (code) {
     n = orc_parse (code, &programs);
+    free (code);
   } else {
     OrcStaticOpcode *opcode;
 
@@ -90,7 +91,9 @@ main (int argc, char *argv[])
 
   for(i=0;i<n;i++){
     show (programs[i]);
+    orc_program_free (programs[i]);
   }
+  free (programs);
 
   if (error) return 1;
   return 0;
@@ -389,6 +392,6 @@ show (OrcProgram *program)
   }
 
   orc_executor_free (ex);
-
+  orc_program_free (program);
 }
 

@@ -41,6 +41,7 @@ main (int argc, char *argv[])
   }
 
   n = orc_parse (code, &programs);
+  free (code);
 
   for(i=0;i<n;i++){
     double perf_mmx;
@@ -48,7 +49,9 @@ main (int argc, char *argv[])
     perf_mmx = orc_test_performance_full (programs[i], 0, "mmx");
     perf_sse = orc_test_performance_full (programs[i], 0, "sse");
     printf("%g %g\n", perf_mmx, perf_sse);
+    orc_program_free (programs[i]);
   }
+  free (programs);
 
   if (error) return 1;
   return 0;

@@ -224,6 +224,8 @@ test_program (int type)
   if (!ret) {
     error = TRUE;
   }
+
+  orc_program_free (p);
 }
 
 
