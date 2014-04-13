@@ -39,6 +39,7 @@ main (int argc, char *argv[])
   }
 
   n = orc_parse (code, &programs);
+  free (code);
 
 #if 0
   sum = 0;
@@ -69,7 +70,9 @@ main (int argc, char *argv[])
     /* weight = weights_n900[i]; */
 
     sum += weight * perf;
+    orc_program_free (programs[i]);
   }
+  free (programs);
   printf("score %g\n", 100.0/sum);
 #endif
 
