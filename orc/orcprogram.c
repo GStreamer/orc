@@ -171,6 +171,10 @@ orc_program_free (OrcProgram *program)
     free (program->asm_code);
     program->asm_code = NULL;
   }
+  if (program->orccode) {
+    orc_code_free (program->orccode);
+    program->orccode = NULL;
+  }
   if (program->name) {
     free (program->name);
     program->name = NULL;
