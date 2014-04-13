@@ -162,6 +162,10 @@ orc_program_free (OrcProgram *program)
       free (program->vars[i].name);
       program->vars[i].name = NULL;
     }
+    if (program->vars[i].type_name) {
+      free (program->vars[i].type_name);
+      program->vars[i].type_name = NULL;
+    }
   }
   if (program->asm_code) {
     free (program->asm_code);
