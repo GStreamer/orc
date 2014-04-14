@@ -61,6 +61,19 @@ typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 
 #endif
 #endif
 
+#ifndef ORC_INTERNAL
+#if defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
+#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+#define ORC_INTERNAL __hidden
+#elif defined (__GNUC__)
+#define ORC_INTERNAL __attribute__((visibility("hidden")))
+#else
+#define ORC_INTERNAL
+#endif
+#endif
+
+
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
 #endif
@@ -176,6 +189,14 @@ orc_memcpy (void * ORC_RESTRICT d1, const void * ORC_RESTRICT s1, int n)
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+    static const orc_uint8 bc[] = {
+      1, 9, 10, 111, 114, 99, 95, 109, 101, 109, 99, 112, 121, 11, 1, 1, 
+      12, 1, 1, 42, 0, 4, 2, 0, 
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p, _backup_orc_memcpy);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "orc_memcpy");
       orc_program_set_backup_function (p, _backup_orc_memcpy);
@@ -183,6 +204,7 @@ orc_memcpy (void * ORC_RESTRICT d1, const void * ORC_RESTRICT s1, int n)
       orc_program_add_source (p, 1, "s1");
 
       orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1, ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);
@@ -264,6 +286,14 @@ orc_memset (void * ORC_RESTRICT d1, int p1, int n)
     if (!p_inited) {
       OrcProgram *p;
 
+#if 1
+    static const orc_uint8 bc[] = {
+      1, 9, 10, 111, 114, 99, 95, 109, 101, 109, 115, 101, 116, 11, 1, 1, 
+      16, 1, 42, 0, 24, 2, 0, 
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p, _backup_orc_memset);
+#else
       p = orc_program_new ();
       orc_program_set_name (p, "orc_memset");
       orc_program_set_backup_function (p, _backup_orc_memset);
@@ -271,6 +301,7 @@ orc_memset (void * ORC_RESTRICT d1, int p1, int n)
       orc_program_add_parameter (p, 1, "p1");
 
       orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1, ORC_VAR_D1);
+#endif
 
       orc_program_compile (p);
       c = orc_program_take_code (p);

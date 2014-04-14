@@ -4114,7 +4114,7 @@ emulate_swaplq (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadq */
     var32 = ptr4[i];
     /* 1: swaplq */
-    var33.i = (ORC_UINT64_C(var32.i&0x00000000ffffffff) << 32) | (ORC_UINT64_C(var32.i&0xffffffff00000000) >> 32);
+    var33.i = ((var32.i&ORC_UINT64_C(0x00000000ffffffff)) << 32) | ((var32.i & ORC_UINT64_C(0xffffffff00000000)) >> 32);
     /* 2: storeq */
     ptr0[i] = var33;
   }
@@ -4896,7 +4896,7 @@ emulate_convlf (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadl */
     var32 = ptr4[i];
     /* 1: convlf */
-     var33.f = var32.i;
+    var33.f = var32.i;
     /* 2: storel */
     ptr0[i] = var33;
   }
@@ -5306,7 +5306,7 @@ emulate_convld (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadl */
     var32 = ptr4[i];
     /* 1: convld */
-     var33.f = var32.i;
+    var33.f = var32.i;
     /* 2: storeq */
     ptr0[i] = var33;
   }
