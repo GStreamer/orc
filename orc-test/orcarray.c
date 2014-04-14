@@ -42,7 +42,7 @@ orc_array_new (int n, int m, int element_size, int misalignment,
   void *data;
 #ifndef USE_MMAP
 #ifdef HAVE_POSIX_MEMALIGN
-  int ret ORC_GNUC_UNUSED;
+  int ret;
 #endif
 #endif
   int offset;
@@ -71,6 +71,7 @@ orc_array_new (int n, int m, int element_size, int misalignment,
 #else
 #ifdef HAVE_POSIX_MEMALIGN
   ret = posix_memalign (&data, ALIGNMENT, ar->alloc_len);
+  ORC_ASSERT (ret == 0);
   ar->alloc_data = data;
   ar->aligned_data = data;
 #else
