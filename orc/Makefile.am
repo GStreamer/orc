@@ -127,5 +127,5 @@ update: generate-emulation generate-bytecode
 	$(top_builddir)/tools/orcc$(EXEEXT) --header -o orcfunctions.h orcfunctions.orc
 	./generate-emulation$(EXEEXT) -o orcemulateopcodes.c
 	./generate-emulation$(EXEEXT) --header -o orcemulateopcodes.h
-	./generate-bytecode$(EXEEXT) --header -o orcbytecode.h
+	./generate-bytecode$(EXEEXT) --header -o orcbytecodes.h
 	
