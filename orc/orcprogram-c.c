@@ -1422,7 +1422,7 @@ c_rule_swaplq (OrcCompiler *p, void *user, OrcInstruction *insn)
   c_get_name_int (dest, p, insn, insn->dest_args[0]);
   c_get_name_int (src, p, insn, insn->src_args[0]);
 
-  ORC_ASM_CODE(p,"    %s = (ORC_UINT64_C(%s&0x00000000ffffffff) << 32) | (ORC_UINT64_C(%s&0xffffffff00000000) >> 32);\n",
+  ORC_ASM_CODE(p,"    %s = ((%s&ORC_UINT64_C(0x00000000ffffffff)) << 32) | ((%s & ORC_UINT64_C(0xffffffff00000000)) >> 32);\n",
       dest, src, src);
 }
 
