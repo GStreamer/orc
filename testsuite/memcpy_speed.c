@@ -11,12 +11,11 @@
 #include <orc-test/orcprofile.h>
 
 
-#define ALIGN(ptr,n) ((void *)((orc_intptr)(ptr) & (~(orc_intptr)(n-1))))
+#define ALIGN(ptr,n) ((void *)((orc_intptr)(ptr + n) & (~(orc_intptr)(n-1))))
 
 int hot_src = TRUE;
 int hot_dest = TRUE;
 int flush_cache = FALSE;
-
 
 void
 touch (unsigned char *ptr, int n)
@@ -173,6 +172,10 @@ main(int argc, char *argv[])
     /*     32*(ave/(size)), 32*(ave_libc/(size))); */
     fflush (stdout);
   }
+
+  orc_program_free (p);
+  free (s);
+  free (d);
 
   return 0;
 }
