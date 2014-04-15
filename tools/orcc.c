@@ -888,10 +888,10 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
 
     fprintf(output, "#if 1\n");
     /* fprintf(output, "#ifdef bytecode\n"); */
-    fprintf(output, "    static const orc_uint8 bc[] = {\n");
+    fprintf(output, "      static const orc_uint8 bc[] = {\n");
     for(i=0;i<bytecode->length;i++) {
       if ((i&0xf) == 0) {
-        fprintf(output, "      ");
+        fprintf(output, "        ");
       }
       fprintf(output, "%d, ", bytecode->bytecode[i]);
       if ((i&0xf) == 15) {
@@ -901,11 +901,11 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
     if ((i&0xf) != 15) {
       fprintf(output, "\n");
     }
-    fprintf(output, "    };\n");
-    fprintf(output, "    p = orc_program_new_from_static_bytecode (bc);\n");
-    /* fprintf(output, "   orc_program_set_name (p, \"%s\");\n", p->name); */
+    fprintf(output, "      };\n");
+    fprintf(output, "      p = orc_program_new_from_static_bytecode (bc);\n");
+    /* fprintf(output, "     orc_program_set_name (p, \"%s\");\n", p->name); */
     if (use_backup && !is_inline) {
-      fprintf(output, "    orc_program_set_backup_function (p, _backup_%s);\n",
+      fprintf(output, "      orc_program_set_backup_function (p, _backup_%s);\n",
           p->name);
     }
 
