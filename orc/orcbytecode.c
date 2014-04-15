@@ -420,6 +420,9 @@ orc_bytecode_parse_function (OrcProgram *program, const orc_uint8 *bytecode)
           program->constant_m = orc_bytecode_parse_get_int (parse);
           break;
         case ORC_BC_SET_NAME:
+          if (program->name) {
+            free (program->name);
+          }
           program->name = orc_bytecode_parse_get_string (parse);
           break;
         case ORC_BC_SET_BACKUP_FUNCTION:
