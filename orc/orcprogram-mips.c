@@ -659,6 +659,9 @@ orc_compiler_orc_mips_assemble (OrcCompiler *compiler)
   int var_size_shift;
   int i;
 
+  if (align_var < 0)
+    return;
+
   var_size_shift = get_shift (compiler->vars[align_var].size);
 
   stack_size = orc_mips_emit_prologue (compiler);

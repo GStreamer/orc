@@ -650,6 +650,8 @@ orc_emit_split_3_regions (OrcCompiler *compiler)
   int var_size_shift;
 
   align_var = get_align_var (compiler);
+  if (align_var < 0)
+    return;
   var_size_shift = get_shift (compiler->vars[align_var].size);
   align_shift = var_size_shift + compiler->loop_shift;
 
@@ -717,6 +719,8 @@ orc_emit_split_2_regions (OrcCompiler *compiler)
   int var_size_shift;
 
   align_var = get_align_var (compiler);
+  if (align_var < 0)
+    return;
   var_size_shift = get_shift (compiler->vars[align_var].size);
   align_shift = var_size_shift + compiler->loop_shift;
 
@@ -777,6 +781,10 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
   }
 
   align_var = get_align_var (compiler);
+  if (align_var < 0) {
+    orc_x86_assemble_copy (compiler);
+    return;
+  }
   is_aligned = compiler->vars[align_var].is_aligned;
 
   {
