@@ -826,6 +826,7 @@ orc_program_append_str (OrcProgram *program, const char *name,
   insn->opcode = orc_opcode_find_by_name (name);
   if (!insn->opcode) {
     ORC_ERROR ("unknown opcode: %s", name);
+    return;
   }
   insn->dest_args[0] = orc_program_find_var_by_name (program, arg1);
   if (insn->opcode->dest_size[1] != 0) {
