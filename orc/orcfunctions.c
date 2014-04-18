@@ -190,12 +190,12 @@ orc_memcpy (void * ORC_RESTRICT d1, const void * ORC_RESTRICT s1, int n)
       OrcProgram *p;
 
 #if 1
-    static const orc_uint8 bc[] = {
-      1, 9, 10, 111, 114, 99, 95, 109, 101, 109, 99, 112, 121, 11, 1, 1, 
-      12, 1, 1, 42, 0, 4, 2, 0, 
-    };
-    p = orc_program_new_from_static_bytecode (bc);
-    orc_program_set_backup_function (p, _backup_orc_memcpy);
+      static const orc_uint8 bc[] = {
+        1, 9, 10, 111, 114, 99, 95, 109, 101, 109, 99, 112, 121, 11, 1, 1, 
+        12, 1, 1, 42, 0, 4, 2, 0, 
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_orc_memcpy);
 #else
       p = orc_program_new ();
       orc_program_set_name (p, "orc_memcpy");
@@ -287,12 +287,12 @@ orc_memset (void * ORC_RESTRICT d1, int p1, int n)
       OrcProgram *p;
 
 #if 1
-    static const orc_uint8 bc[] = {
-      1, 9, 10, 111, 114, 99, 95, 109, 101, 109, 115, 101, 116, 11, 1, 1, 
-      16, 1, 42, 0, 24, 2, 0, 
-    };
-    p = orc_program_new_from_static_bytecode (bc);
-    orc_program_set_backup_function (p, _backup_orc_memset);
+      static const orc_uint8 bc[] = {
+        1, 9, 10, 111, 114, 99, 95, 109, 101, 109, 115, 101, 116, 11, 1, 1, 
+        16, 1, 42, 0, 24, 2, 0, 
+      };
+      p = orc_program_new_from_static_bytecode (bc);
+      orc_program_set_backup_function (p, _backup_orc_memset);
 #else
       p = orc_program_new ();
       orc_program_set_name (p, "orc_memset");

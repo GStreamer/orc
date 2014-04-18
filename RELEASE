@@ -1,3 +1,12 @@
+0.4.19
+======
+
+Maintenance release:
+
+  - Fix out-of-tree builds (Edward Hervey)
+  - Fix many memory leaks, compiler warnings and coverity warnings (Tim-Philipp Müller,
+    Olivier Crête, Todd Agulnick, Sebastian Dröge, Vincent Penquerc'h, Edward Hervey)
+  - Documentation fix for mulhsw, mulhuw (William Manley)
 
 0.4.18
 ======
