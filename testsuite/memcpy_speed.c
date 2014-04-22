@@ -20,7 +20,7 @@ int flush_cache = FALSE;
 void
 touch (unsigned char *ptr, int n)
 {
-  static int sum;
+  static unsigned int sum;
   int i;
   for(i=0;i<n;i++){
     sum += ptr[i];
