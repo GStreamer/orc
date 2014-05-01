@@ -176,6 +176,7 @@ OrcCode *orc_program_take_code (OrcProgram *program);
 
 const char *orc_program_get_asm_code (OrcProgram *program);
 const char * orc_program_get_error (OrcProgram *program);
+void orc_program_set_error (OrcProgram *program, const char *error);
 
 int orc_program_get_max_array_size (OrcProgram *program);
 int orc_program_get_max_accumulator_size (OrcProgram *program);

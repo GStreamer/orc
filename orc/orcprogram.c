@@ -307,6 +307,11 @@ orc_program_add_temporary (OrcProgram *program, int size, const char *name)
 {
   int i = ORC_VAR_T1 + program->n_temp_vars;
 
+  if (program->n_temp_vars >= ORC_MAX_TEMP_VARS) {
+    orc_program_set_error (program, "too many temporary variables allocated");
+    return 0;
+  }
+
   program->vars[i].vartype = ORC_VAR_TYPE_TEMP;
   program->vars[i].size = size;
   program->vars[i].name = strdup(name);
@@ -329,6 +334,11 @@ int
 orc_program_dup_temporary (OrcProgram *program, int var, int j)
 {
   int i = ORC_VAR_T1 + program->n_temp_vars;
+
+  if (program->n_temp_vars >= ORC_MAX_TEMP_VARS) {
+    orc_program_set_error (program, "too many temporary variables allocated");
+    return 0;
+  }
 
   program->vars[i].vartype = ORC_VAR_TYPE_TEMP;
   program->vars[i].size = program->vars[var].size;
@@ -356,6 +366,11 @@ orc_program_add_source_full (OrcProgram *program, int size, const char *name,
     const char *type_name, int alignment)
 {
   int i = ORC_VAR_S1 + program->n_src_vars;
+
+  if (program->n_src_vars >= ORC_MAX_SRC_VARS) {
+    orc_program_set_error (program, "too many source variables allocated");
+    return 0;
+  }
 
   program->vars[i].vartype = ORC_VAR_TYPE_SRC;
   program->vars[i].size = size;
@@ -401,6 +416,11 @@ orc_program_add_destination_full (OrcProgram *program, int size, const char *nam
     const char *type_name, int alignment)
 {
   int i = ORC_VAR_D1 + program->n_dest_vars;
+
+  if (program->n_dest_vars >= ORC_MAX_DEST_VARS) {
+    orc_program_set_error (program, "too many destination variables allocated");
+    return 0;
+  }
 
   program->vars[i].vartype = ORC_VAR_TYPE_DEST;
   program->vars[i].size = size;
@@ -449,6 +469,11 @@ orc_program_add_constant (OrcProgram *program, int size, int value, const char *
   
   i = ORC_VAR_C1 + program->n_const_vars;
 
+  if (program->n_const_vars >= ORC_MAX_CONST_VARS) {
+    orc_program_set_error (program, "too many constants allocated");
+    return 0;
+  }
+
   program->vars[i].vartype = ORC_VAR_TYPE_CONST;
   program->vars[i].size = size;
   program->vars[i].value.i = value;
@@ -465,6 +490,11 @@ orc_program_add_constant_int64 (OrcProgram *program, int size,
   int i;
   
   i = ORC_VAR_C1 + program->n_const_vars;
+
+  if (program->n_const_vars >= ORC_MAX_CONST_VARS) {
+    orc_program_set_error (program, "too many constants allocated");
+    return 0;
+  }
 
   program->vars[i].vartype = ORC_VAR_TYPE_CONST;
   program->vars[i].size = size;
@@ -504,6 +534,11 @@ orc_program_add_constant_str (OrcProgram *program, int size,
   int j;
 
   i = ORC_VAR_C1 + program->n_const_vars;
+
+  if (program->n_const_vars >= ORC_MAX_CONST_VARS) {
+    orc_program_set_error (program, "too many constants allocated");
+    return 0;
+  }
 
   val_i = _strtoll (value, &end, 0);
   if (end[0] == 0) {
@@ -561,6 +596,11 @@ orc_program_add_parameter (OrcProgram *program, int size, const char *name)
 {
   int i = ORC_VAR_P1 + program->n_param_vars;
 
+  if (program->n_param_vars >= ORC_MAX_PARAM_VARS) {
+    orc_program_set_error (program, "too many parameter variables allocated");
+    return 0;
+  }
+
   program->vars[i].vartype = ORC_VAR_TYPE_PARAM;
   program->vars[i].param_type = ORC_PARAM_TYPE_INT;
   program->vars[i].size = size;
@@ -585,6 +625,11 @@ orc_program_add_parameter_float (OrcProgram *program, int size, const char *name
 {
   int i = ORC_VAR_P1 + program->n_param_vars;
 
+  if (program->n_param_vars >= ORC_MAX_PARAM_VARS) {
+    orc_program_set_error (program, "too many parameter variables allocated");
+    return 0;
+  }
+
   program->vars[i].vartype = ORC_VAR_TYPE_PARAM;
   program->vars[i].param_type = ORC_PARAM_TYPE_FLOAT;
   program->vars[i].size = size;
@@ -600,6 +645,11 @@ orc_program_add_parameter_double (OrcProgram *program, int size,
 {
   int i = ORC_VAR_P1 + program->n_param_vars;
 
+  if (program->n_param_vars >= ORC_MAX_PARAM_VARS) {
+    orc_program_set_error (program, "too many parameter variables allocated");
+    return 0;
+  }
+
   program->vars[i].vartype = ORC_VAR_TYPE_PARAM;
   program->vars[i].param_type = ORC_PARAM_TYPE_DOUBLE;
   program->vars[i].size = size;
@@ -614,6 +664,11 @@ orc_program_add_parameter_int64 (OrcProgram *program, int size,
     const char *name)
 {
   int i = ORC_VAR_P1 + program->n_param_vars;
+
+  if (program->n_param_vars >= ORC_MAX_PARAM_VARS) {
+    orc_program_set_error (program, "too many parameter variables allocated");
+    return 0;
+  }
 
   program->vars[i].vartype = ORC_VAR_TYPE_PARAM;
   program->vars[i].param_type = ORC_PARAM_TYPE_INT64;
@@ -638,6 +693,11 @@ int
 orc_program_add_accumulator (OrcProgram *program, int size, const char *name)
 {
   int i = ORC_VAR_A1 + program->n_accum_vars;
+
+  if (program->n_accum_vars >= ORC_MAX_ACCUM_VARS) {
+    orc_program_set_error (program, "too many accumulator variables allocated");
+    return 0;
+  }
 
   program->vars[i].vartype = ORC_VAR_TYPE_ACCUMULATOR;
   program->vars[i].size = size;
@@ -962,7 +1022,8 @@ orc_program_get_asm_code (OrcProgram *program)
  *
  * Returns a character string containing the error message from
  * compilation.  This string is valid until the program
- * is compiled again or the program is freed.
+ * is compiled again, the program is freed, or another error
+ * is set.
  * 
  * Returns: a character string
  */
@@ -971,6 +1032,23 @@ orc_program_get_error (OrcProgram *program)
 {
   if (program->error_msg) return program->error_msg;
   return "";
+}
+
+/**
+ * orc_program_set_error:
+ * @program: a pointer to an OrcProgram structure
+ * @error: an error string
+ *
+ * Stores the error in the program. This string is duplicated.
+ * If an error has already been set, this new error is ignored.
+ * An error will stay till the next call to _reset, if any.
+ */
+void
+orc_program_set_error (OrcProgram *program, const char *error)
+{
+  if (!program->error_msg && error) {
+    program->error_msg = strdup (error);
+  }
 }
 
 /**
@@ -1079,6 +1157,10 @@ orc_program_reset (OrcProgram *program)
   if (program->asm_code) {
     free(program->asm_code);
     program->asm_code = NULL;
+  }
+  if (program->error_msg) {
+    free(program->error_msg);
+    program->error_msg = NULL;
   }
 }
 

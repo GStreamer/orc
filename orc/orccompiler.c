@@ -189,8 +189,16 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   OrcCompiler *compiler;
   int i;
   OrcCompileResult result;
+  const char *error_msg;
 
   ORC_INFO("initializing compiler for program \"%s\"", program->name);
+  error_msg = orc_program_get_error (program);
+  if (error_msg && strcmp (error_msg, "")) {
+    ORC_WARNING ("program %s failed to compile, reason: %s",
+        program->name, error_msg);
+    return ORC_COMPILE_RESULT_UNKNOWN_PARSE;
+  }
+
   compiler = malloc (sizeof(OrcCompiler));
   memset (compiler, 0, sizeof(OrcCompiler));
 
@@ -377,8 +385,7 @@ error:
         program->name, compiler->result);
   }
   result = compiler->result;
-  if (program->error_msg) free (program->error_msg);
-  program->error_msg = compiler->error_msg;
+  orc_program_set_error (program, compiler->error_msg);
   if (result == 0) {
     result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
