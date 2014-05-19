@@ -251,7 +251,7 @@ orc_array_compare (OrcArray *array1, OrcArray *array2, int flags)
         for (i=0;i<array1->n;i++){
           if (isnan(a[i]) && isnan(b[i])) continue;
           if (a[i] == b[i]) continue;
-          if (abs(a[i] - b[i]) < MIN_NONDENORMAL_D) continue;
+          if (fabs(a[i] - b[i]) < MIN_NONDENORMAL_D) continue;
           return FALSE;
         }
       }
