@@ -88,7 +88,7 @@ orc_code_chunk_split (OrcCodeChunk *chunk, int size)
   newchunk->offset = chunk->offset + size;
   newchunk->size = chunk->size - size;
   newchunk->next = chunk->next;
-  newchunk->prev = chunk->prev;
+  newchunk->prev = chunk;
 
   chunk->size = size;
   if (chunk->next) {
