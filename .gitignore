@@ -67,11 +67,16 @@ autom4te.cache
 /m4/lt~obsolete.m4
 
 /orc/generate-emulation
+/orc/generate-bytecode
 
+/test-driver
 /testsuite/abi
 /testsuite/benchmorc/benchmorc
+/testsuite/bytecode_parse
 /testsuite/compile_opcodes_sys
 /testsuite/compile_opcodes_sys_c
+/testsuite/compile_opcodes_sys_c64x
+/testsuite/compile_opcodes_sys_mips
 /testsuite/compile_opcodes_sys_neon
 /testsuite/compile_parse
 /testsuite/compile_parse_c
@@ -89,12 +94,16 @@ autom4te.cache
 /testsuite/show_parse
 /testsuite/test-schro
 /testsuite/test_accsadubl
+/testsuite/*.trs
+/testsuite/*.log
 /testsuite/orcc/orc_test.c
 /testsuite/orcc/testorc.c
 /testsuite/orcc/testorc.h
 /testsuite/orcc/orc_test
 /testsuite/orcc/test2
 /testsuite/orcc/test3
+/testsuite/orcc/*.trs
+/testsuite/orcc/*.log
 
 /tools/orcc
 /tools/orc-bugreport
