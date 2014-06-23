@@ -12,5 +12,7 @@ autoreconf -i -f
 
 cd "$olddir"
 
-$srcdir/configure --disable-static --enable-maintainer-mode --enable-gtk-doc $@
+if test -z "$NOCONFIGURE"; then
+    exec $srcdir/configure --disable-static --enable-maintainer-mode --enable-gtk-doc $@
+fi
 
