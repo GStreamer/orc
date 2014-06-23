@@ -199,6 +199,16 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
     return ORC_COMPILE_RESULT_UNKNOWN_PARSE;
   }
 
+  if (program->orccode) {
+    orc_code_free (program->orccode);
+    program->orccode = NULL;
+  }
+
+  if (program->asm_code) {
+    free (program->asm_code);
+    program->asm_code = NULL;
+  }
+
   compiler = malloc (sizeof(OrcCompiler));
   memset (compiler, 0, sizeof(OrcCompiler));
 
