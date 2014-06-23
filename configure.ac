@@ -216,7 +216,7 @@ AC_SUBST(ORC_LIBS)
 
 #CFLAGS=`echo $CFLAGS | sed s/O2/O0/`
 
-ORC_LDFLAGS="-no-undefined -export-symbols-regex \^orc_"
+ORC_LDFLAGS="-version-info \$(ORC_LIBVERSION) -no-undefined -export-symbols-regex \^orc_"
 if test "x${enable_Bsymbolic}" = "xyes"; then
   ORC_LDFLAGS="$ORC_LDFLAGS -Wl,-Bsymbolic-functions"
 fi
