@@ -1,3 +1,16 @@
+0.4.20
+======
+
+Maintenance release:
+
+  - Fix list corruption when splitting code memory chunks, causing crashes
+    when allocating a lot of code memory and trying to free it later
+    (Tim-Philipp Müller)
+  - Add some extra checks for the number of variables used in ORC code to
+    prevent overflows and crashes in the compiler (Vincent Penquerc'h)
+  - Various compiler warnings, coverity warnings and static code analysis
+    fixes (Sebastian Dröge)
+
 0.4.19
 ======
 
