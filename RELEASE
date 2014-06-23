@@ -1,3 +1,13 @@
+0.4.21
+======
+
+Maintenance release:
+
+  - Add libtool versioning to the linker flags again. This was accidentially
+    removed in 0.4.20 but should not cause any problems on platforms other
+    than OS X (Sebastian Dröge)
+
+
 0.4.20
 ======
 
