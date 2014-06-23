@@ -238,8 +238,10 @@ main (int argc, char *argv[])
   }
 
   n = orc_parse_full (code, &programs, &log);
+  free(code);
   n_programs = n;
   printf("%s", log);
+  free(log);
 
   if (programs == NULL) {
     printf("no programs\n");
@@ -411,6 +413,11 @@ main (int argc, char *argv[])
       output_code_assembly (programs[i], output);
     }
   }
+
+  for(i=0;i<n;i++){
+    orc_program_free(programs[i]);
+  }
+  free(programs);
 
   fclose (output);
 
