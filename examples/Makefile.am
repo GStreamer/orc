@@ -33,29 +33,32 @@ nodist_example3_SOURCES = example3orc.c example3orc.h
 mt19937ar_SOURCES = mt19937ar.c
 nodist_mt19937ar_SOURCES = mt19937arorc.c mt19937arorc.h
 
+orcc_v_gen = $(orcc_v_gen_$(V))
+orcc_v_gen_ = $(orcc_v_gen_$(AM_DEFAULT_VERBOSITY))
+orcc_v_gen_0 = @echo "  ORCC   $@";
 
 example1orc.c: $(srcdir)/example1orc.orc
-	$(top_builddir)/tools/orcc$(EXEEXT) --implementation -o example1orc.c $(srcdir)/example1orc.orc
+	$(orcc_v_gen)$(top_builddir)/tools/orcc$(EXEEXT) --implementation -o example1orc.c $(srcdir)/example1orc.orc
 	
 example1orc.h: $(srcdir)/example1orc.orc
-	$(top_builddir)/tools/orcc$(EXEEXT) --header -o example1orc.h $(srcdir)/example1orc.orc
+	$(orcc_v_gen)$(top_builddir)/tools/orcc$(EXEEXT) --header -o example1orc.h $(srcdir)/example1orc.orc
 
 example2orc.c: $(srcdir)/example2orc.orc
-	$(top_builddir)/tools/orcc$(EXEEXT) --implementation -o example2orc.c $(srcdir)/example2orc.orc
+	$(orcc_v_gen)$(top_builddir)/tools/orcc$(EXEEXT) --implementation -o example2orc.c $(srcdir)/example2orc.orc
 
 example2orc.h: $(srcdir)/example2orc.orc
-	$(top_builddir)/tools/orcc$(EXEEXT) --header -o example2orc.h $(srcdir)/example2orc.orc
+	$(orcc_v_gen)$(top_builddir)/tools/orcc$(EXEEXT) --header -o example2orc.h $(srcdir)/example2orc.orc
 
 example3orc.c: $(srcdir)/example3orc.orc
-	$(top_builddir)/tools/orcc$(EXEEXT) --implementation -o example3orc.c $(srcdir)/example3orc.orc
+	$(orcc_v_gen)$(top_builddir)/tools/orcc$(EXEEXT) --implementation -o example3orc.c $(srcdir)/example3orc.orc
 
 example3orc.h: $(srcdir)/example3orc.orc
-	$(top_builddir)/tools/orcc$(EXEEXT) --header -o example3orc.h $(srcdir)/example3orc.orc
+	$(orcc_v_gen)$(top_builddir)/tools/orcc$(EXEEXT) --header -o example3orc.h $(srcdir)/example3orc.orc
 
 mt19937arorc.c: $(srcdir)/mt19937arorc.orc
-	$(top_builddir)/tools/orcc$(EXEEXT) --implementation -o mt19937arorc.c $(srcdir)/mt19937arorc.orc
+	$(orcc_v_gen)$(top_builddir)/tools/orcc$(EXEEXT) --implementation -o mt19937arorc.c $(srcdir)/mt19937arorc.orc
 
 mt19937arorc.h: $(srcdir)/mt19937arorc.orc
-	$(top_builddir)/tools/orcc$(EXEEXT) --header -o mt19937arorc.h $(srcdir)/mt19937arorc.orc
+	$(orcc_v_gen)$(top_builddir)/tools/orcc$(EXEEXT) --header -o mt19937arorc.h $(srcdir)/mt19937arorc.orc
 
 

@@ -1,11 +1,16 @@
-AC_PREREQ([2.58])
-AC_INIT(orc,0.4.19.1)
+AC_PREREQ([2.68])
+AC_INIT([orc], [0.4.19.1], [http://bugzilla.gnome.org/enter_bug.cgi?product=orc],[orc])
 dnl don't forget to update libversion
 
 AS_NANO(ORC_GIT=no,ORC_GIT=yes)
 
-AC_CANONICAL_HOST([])
-AM_INIT_AUTOMAKE(1.6)
+AC_CANONICAL_HOST()
+AM_INIT_AUTOMAKE([-Wno-portability 1.11 no-dist-gzip dist-xz tar-ustar subdir-objects])
+
+dnl use pretty build output with automake >= 1.11
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],
+  [AM_DEFAULT_VERBOSITY=1
+   AC_SUBST(AM_DEFAULT_VERBOSITY)])
 
 ORC_MAJORMINOR=0.4
 AC_SUBST(ORC_MAJORMINOR)
@@ -19,14 +24,19 @@ dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 ORC_LIBVERSION="19:0:19"
 AC_SUBST(ORC_LIBVERSION)
-AC_LIBTOOL_WIN32_DLL
-AC_LIBTOOL_TAGS([])
-AC_PROG_LIBTOOL
+LT_PREREQ([2.2.6])
+LT_INIT([dlopen win32-dll disable-static])
+
+AC_PROG_CC
+AC_PROG_CC_STDC
 AM_PROG_CC_C_O
 AM_PROG_AS
+
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_CONFIG_SRCDIR([orc/orc.h])
+
+AM_MAINTAINER_MODE([enable])
 
 ACLOCAL_AMFLAGS="-I m4 $ACLOCAL_AMFLAGS"
 AC_SUBST(ACLOCAL_AMFLAGS)
@@ -41,8 +51,7 @@ AC_CHECK_FUNCS([posix_memalign])
 if test "x$cross_compiling" = "xyes" ; then
   enable_gtk_doc=no
 fi
-GTK_DOC_CHECK([1.0])
-
+GTK_DOC_CHECK([1.12])
 
 AS_HOST_DEFINES()
 
@@ -50,6 +59,7 @@ AC_C_BIGENDIAN
 
 AC_FUNC_MMAP()
 
+AC_HEADER_STDC
 AC_CHECK_HEADERS([inttypes.h])
 AC_CHECK_HEADERS([sys/time.h])
 AC_CHECK_HEADERS([unistd.h])
@@ -181,6 +191,19 @@ AM_CONDITIONAL(ENABLE_BACKEND_ARM, test "x$ENABLE_BACKEND_ARM" = "xyes")
 AM_CONDITIONAL(ENABLE_BACKEND_C64X, test "x$ENABLE_BACKEND_C64X" = "xyes")
 AM_CONDITIONAL(ENABLE_BACKEND_MIPS, test "x$ENABLE_BACKEND_MIPS" = "xyes")
 
+dnl Check for -Bsymbolic-functions linker flag used to avoid
+dnl intra-library PLT jumps, if available.
+AC_ARG_ENABLE(Bsymbolic,
+              [AS_HELP_STRING([--disable-Bsymbolic],[avoid linking with -Bsymbolic])],,
+              [SAVED_LDFLAGS="${LDFLAGS}"
+               AC_MSG_CHECKING([for -Bsymbolic-functions linker flag])
+               LDFLAGS=-Wl,-Bsymbolic-functions
+               AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[int main (void) { return 0; }]])],[
+                           AC_MSG_RESULT(yes)
+                           enable_Bsymbolic=yes],[
+                           AC_MSG_RESULT(no)
+                           enable_Bsymbolic=no])
+               LDFLAGS="${SAVED_LDFLAGS}"])
 
 AC_DEFINE(ORC_EXPORTS, 1, [Defined for compiling internal code])
 
@@ -193,12 +216,17 @@ AC_SUBST(ORC_LIBS)
 
 #CFLAGS=`echo $CFLAGS | sed s/O2/O0/`
 
+ORC_LDFLAGS="-no-undefined -export-symbols-regex \^orc_"
+if test "x${enable_Bsymbolic}" = "xyes"; then
+  ORC_LDFLAGS="$ORC_LDFLAGS -Wl,-Bsymbolic-functions"
+fi
+AC_SUBST(ORC_LDFLAGS)
+
 pkgconfigdir="\$(libdir)/pkgconfig"
 AC_SUBST(pkgconfigdir)
 
-
 AC_CONFIG_FILES([
-Makefile 
+Makefile
 doc/Makefile
 doc/version.entities
 orc/Makefile
@@ -212,6 +240,4 @@ orc-uninstalled.pc
 orc.pc
 ])
 AC_OUTPUT
-
-
 

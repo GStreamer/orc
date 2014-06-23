@@ -18,13 +18,17 @@ LIBS = $(ORC_LIBS) $(top_builddir)/orc-test/liborc-test-@ORC_MAJORMINOR@.la
 
 CLEANFILES = testorc.c testorc.h orc_test.c
 
+orcc_v_gen = $(orcc_v_gen_$(V))
+orcc_v_gen_ = $(orcc_v_gen_$(AM_DEFAULT_VERBOSITY))
+orcc_v_gen_0 = @echo "  ORCC   $@";
+
 testorc.h: $(srcdir)/../test.orc
-	$(top_builddir)/tools/orcc$(EXEEXT) --include stdint.h --header -o testorc.h $<
+	$(orcc_v_gen)$(top_builddir)/tools/orcc$(EXEEXT) --include stdint.h --header -o testorc.h $<
 
 testorc.c: $(srcdir)/../test.orc
-	$(top_builddir)/tools/orcc$(EXEEXT) --include stdint.h --implementation -o testorc.c $<
+	$(orcc_v_gen)$(top_builddir)/tools/orcc$(EXEEXT) --include stdint.h --implementation -o testorc.c $<
 
 orc_test.c: $(srcdir)/../test.orc
-	$(top_builddir)/tools/orcc$(EXEEXT) --include stdint.h --test -o orc_test.c $<
+	$(orcc_v_gen)$(top_builddir)/tools/orcc$(EXEEXT) --include stdint.h --test -o orc_test.c $<
 
 

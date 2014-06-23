@@ -4,9 +4,7 @@ pkgincludedir = $(includedir)/orc-@ORC_MAJORMINOR@/orc
 lib_LTLIBRARIES = liborc-@ORC_MAJORMINOR@.la
 
 liborc_@ORC_MAJORMINOR@_la_LIBADD = $(LIBM) $(LIBRT) $(PTHREAD_LIBS)
-liborc_@ORC_MAJORMINOR@_la_LDFLAGS = \
-	-version-info $(ORC_LIBVERSION) \
-	-no-undefined -export-symbols-regex 'orc_'
+liborc_@ORC_MAJORMINOR@_la_LDFLAGS = $(ORC_LDFLAGS)
 liborc_@ORC_MAJORMINOR@_la_CFLAGS = $(ORC_CFLAGS) \
 	-DORC_ENABLE_UNSTABLE_API
 
