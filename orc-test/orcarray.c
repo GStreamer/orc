@@ -77,7 +77,7 @@ orc_array_new (int n, int m, int element_size, int misalignment,
 #else
   data = malloc (ar->alloc_len + ALIGNMENT);
   ar->alloc_data = data;
-  ar->aligned_data = (void *)((((unsigned long)data) + (ALIGNMENT-1))&(~(ALIGNMENT-1)));
+  ar->aligned_data = (void *)((((size_t)data) + (ALIGNMENT-1))&(~(ALIGNMENT-1)));
 #endif
 #endif
 
