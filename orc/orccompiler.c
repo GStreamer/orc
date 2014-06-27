@@ -396,6 +396,7 @@ error:
   }
   result = compiler->result;
   orc_program_set_error (program, compiler->error_msg);
+  free (compiler->error_msg);
   if (result == 0) {
     result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
