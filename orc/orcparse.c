@@ -32,9 +32,7 @@ struct _OrcParser {
   OrcProgram *program;
   OrcProgram *error_program;
 
-  OrcProgram **programs;
-  int n_programs;
-  int n_programs_alloc;
+  OrcVector programs;
 
   char *log;
   int log_size;
@@ -135,13 +133,8 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
           }
           parser->program = orc_program_new ();
           orc_program_set_name (parser->program, token[1]);
-          if (parser->n_programs == parser->n_programs_alloc) {
-            parser->n_programs_alloc += 32;
-            parser->programs = realloc (parser->programs,
-                sizeof(OrcProgram *)*parser->n_programs_alloc);
-          }
-          parser->programs[parser->n_programs] = parser->program;
-          parser->n_programs++;
+
+          orc_vector_append (&parser->programs, parser->program);
           parser->creg_index = 1;
         }
       } else if (strcmp (token[0], ".backup") == 0) {
@@ -151,7 +144,6 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
         } else {
           orc_program_set_backup_name (parser->program, token[1]);
         }
-
       } else if (strcmp (token[0], ".init") == 0) {
         free (init_function);
         init_function = NULL;
@@ -413,13 +405,15 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
   } else {
     free (parser->log);
   }
-  if (parser->programs && parser->programs[0]) {
-    parser->programs[0]->init_function = init_function;
+
+  if (orc_vector_has_data (&parser->programs)) {
+    OrcProgram *prog = ORC_VECTOR_GET_ITEM (&parser->programs, 0, OrcProgram *);
+    prog->init_function = init_function;
   } else {
     free (init_function);
   }
-  *programs = parser->programs;
-  return parser->n_programs;
+  *programs = ORC_VECTOR_AS_TYPE (&parser->programs, OrcProgram);
+  return orc_vector_length (&parser->programs);
 }
 
 static OrcStaticOpcode *
