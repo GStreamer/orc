@@ -909,26 +909,19 @@ void
 orc_program_append_str (OrcProgram *program, const char *name,
     const char *arg1, const char *arg2, const char *arg3)
 {
-  OrcInstruction *insn;
+  const char *args[3] = { arg1, arg2, arg3 };
+  int argc;
 
-  insn = program->insns + program->n_insns;
+  if (arg3)
+    argc = 3;
+  else if (arg2)
+    argc = 2;
+  else if (arg1)
+    argc = 1;
+  else
+    argc = 0;
 
-  insn->opcode = orc_opcode_find_by_name (name);
-  if (!insn->opcode) {
-    ORC_ERROR ("unknown opcode: %s", name);
-    orc_program_set_error (program, "unknown opcode");
-    return;
-  }
-  insn->dest_args[0] = orc_program_find_var_by_name (program, arg1);
-  if (insn->opcode->dest_size[1] != 0) {
-    insn->dest_args[1] = orc_program_find_var_by_name (program, arg2);
-    insn->src_args[0] = orc_program_find_var_by_name (program, arg3);
-  } else {
-    insn->src_args[0] = orc_program_find_var_by_name (program, arg2);
-    insn->src_args[1] = orc_program_find_var_by_name (program, arg3);
-  }
-  
-  program->n_insns++;
+  orc_program_append_str_n (program, name, 0, argc, args);
 }
 
 /**
@@ -949,45 +942,109 @@ orc_program_append_str_2 (OrcProgram *program, const char *name,
     unsigned int flags, const char *arg1, const char *arg2, const char *arg3,
     const char *arg4)
 {
+  const char *args[4] = { arg1, arg2, arg3, arg4 };
+  int argc;
+
+  if (arg4)
+    argc = 4;
+  else if (arg3)
+    argc = 3;
+  else if (arg2)
+    argc = 2;
+  else if (arg1)
+    argc = 1;
+  else
+    argc = 0;
+
+  orc_program_append_str_n (program, name, flags, argc, args);
+}
+
+/**
+ * orc_program_append_str_n:
+ * @program: a pointer to an OrcProgram structure
+ * @name: name of instruction
+ * @flags: flags
+ * @argc: number of variableds
+ * @argv: array of variables
+ *
+ * Appends an instruction to the program, with any number of
+ * arguments. Only 1 <= number <= 6 is supported.
+ *
+ * Returns: status code.
+ * 0: succesfull
+ * <0: malformed opcode (unknown or bad arguments)
+ * >0: unknown argument. Then the return value equals to the nth
+ * argument. Beware: this is index, not offset (the first is 1).
+ */
+int
+orc_program_append_str_n (OrcProgram *program, const char *name,
+    unsigned int flags, int argc, const char **argv)
+{
   OrcInstruction *insn;
-  int args[4];
+  int args[6];
   int i;
+  int expected_args = 0;
 
   insn = program->insns + program->n_insns;
 
   insn->line = program->current_line;
   insn->opcode = orc_opcode_find_by_name (name);
   if (!insn->opcode) {
-    ORC_ERROR ("unknown opcode: %s at line %d", name, insn->line);
+    ORC_ERROR ("unknown opcode: %s", name);
     orc_program_set_error (program, "unknown opcode");
-    return;
-  }
-  if (insn->opcode->dest_size[1] != 0 && insn->opcode->src_size[2] != 0) {
-    ORC_ERROR ("opcode has too many dest/src parameters: %s", name);
-    orc_program_set_error (program, "opcode has too many dest/src parameters");
-    return;
+    return -1;
   }
 
-  args[0] = orc_program_find_var_by_name (program, arg1);
-  args[1] = orc_program_find_var_by_name (program, arg2);
-  args[2] = orc_program_find_var_by_name (program, arg3);
-  args[3] = orc_program_find_var_by_name (program, arg4);
+  /* dest_size[0] */
+  expected_args++;
+  if (insn->opcode->dest_size[1] != 0)
+    expected_args++;
+  if (insn->opcode->src_size[0] != 0)
+    expected_args++;
+  if (insn->opcode->src_size[1] != 0)
+    expected_args++;
+  if (insn->opcode->src_size[2] != 0)
+    expected_args++;
+  if (insn->opcode->src_size[3] != 0)
+    expected_args++;
+
+  if (argc < expected_args) {
+    ORC_ERROR ("not the correct number of arguments provided for opcode: %s expects %d but got %d", name, expected_args, argc);
+    orc_program_set_error (program, "not the correct number of arguments provided for opcode");
+    return -1;
+  }
+
+  if (argc != expected_args) {
+    ORC_ERROR ("not the correct number of arguments provided for opcode: %s expects %d but got %d", name, expected_args, argc);
+  };
+
+  for (i=0;i<expected_args;i++){
+    args[i] = orc_program_find_var_by_name (program, argv[i]);
+    if (args[i] == -1) {
+      ORC_ERROR ("bad operand \"%s\" in position %d for opcode: %s at line %d",
+                 argv[i], i+1, name, insn->line);
+      orc_program_set_error (program, "bad operand");
+      return i+1;
+    }
+  }
+
   insn->flags = flags;
+
   i = 0;
   insn->dest_args[0] = args[i++];
-  if (insn->opcode->dest_size[1] != 0) {
+  if (insn->opcode->dest_size[1] != 0)
     insn->dest_args[1] = args[i++];
-  }
-  if (insn->opcode->src_size[0] != 0) {
+  if (insn->opcode->src_size[0] != 0)
     insn->src_args[0] = args[i++];
-  }
-  if (insn->opcode->src_size[1] != 0) {
+  if (insn->opcode->src_size[1] != 0)
     insn->src_args[1] = args[i++];
-  }
-  if (insn->opcode->src_size[2] != 0) {
+  if (insn->opcode->src_size[2] != 0)
     insn->src_args[2] = args[i++];
-  }
+  if (insn->opcode->src_size[3] != 0)
+    insn->src_args[3] = args[i++];
+
   program->n_insns++;
+  return 0;
 }
 
 /**

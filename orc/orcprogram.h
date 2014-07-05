@@ -132,6 +132,8 @@ ORC_API void orc_program_append_str (OrcProgram *p, const char *opcode,
 ORC_API void orc_program_append_str_2 (OrcProgram *program, const char *name,
     unsigned int flags, const char *arg1, const char *arg2, const char *arg3,
     const char *arg4);
+ORC_API int orc_program_append_str_n (OrcProgram *program, const char *name,
+    unsigned int flags, int argc, const char **argv);
 ORC_API void orc_program_append_ds (OrcProgram *program, const char *opcode, int arg0,
     int arg1);
 ORC_API void orc_program_append_ds_str (OrcProgram *p, const char *opcode,
