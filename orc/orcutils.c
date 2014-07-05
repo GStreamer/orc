@@ -206,3 +206,34 @@ _strtoll (const char *nptr, char **endptr, int base)
   return (neg) ? - val : val;
 }
 
+int
+orc_vector_length (OrcVector *vector)
+{
+  return (vector == NULL) ?0 :vector->n_items;
+}
+
+int
+orc_vector_has_data (OrcVector *vector)
+{
+  return (orc_vector_length (vector) > 0 &&
+          vector->items != NULL && /* extra sanity check */
+          vector->items[0] != NULL);
+}
+
+void
+orc_vector_extend (OrcVector *vector)
+{
+  vector->n_items_alloc += ORC_VECTOR_ITEM_CHUNK;
+  vector->items = realloc (vector->items, sizeof(void *) * vector->n_items_alloc);
+}
+
+void
+orc_vector_append (OrcVector *vector, void *item)
+{
+  if (vector->n_items == vector->n_items_alloc) {
+    orc_vector_extend (vector);
+  }
+  vector->items[vector->n_items] = item;
+  vector->n_items++;
+}
+
