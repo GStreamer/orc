@@ -53,7 +53,8 @@ typedef enum {
   MODE_IMPL,
   MODE_HEADER,
   MODE_TEST,
-  MODE_ASSEMBLY
+  MODE_ASSEMBLY,
+  MODE_PARSE
 } OrcMode;
 
 OrcMode mode = MODE_IMPL;
@@ -124,6 +125,8 @@ main (int argc, char *argv[])
       mode = MODE_TEST;
     } else if (strcmp(argv[i], "--assembly") == 0) {
       mode = MODE_ASSEMBLY;
+    } else if (strcmp(argv[i], "--parse-only") == 0) {
+      mode = MODE_PARSE;
     } else if (strcmp(argv[i], "--include") == 0) {
       if (i+1 < argc) {
         include_file = argv[i+1];
@@ -248,6 +251,9 @@ main (int argc, char *argv[])
       case MODE_ASSEMBLY:
         output_file = "out.s";
         break;
+      case MODE_PARSE:
+        output_file = NULL;
+        break;
     }
   }
 
@@ -269,8 +275,19 @@ main (int argc, char *argv[])
   }
 
   if (programs == NULL) {
-    printf("no programs\n");
+    if (verbose) {
+      fprintf(stderr, "no programs found\n");
+    }
     exit(1);
+  }
+
+  if (verbose) {
+    fprintf(stderr, "%i program%s parsed\n",
+           n_programs, (n_programs > 1) ?"s" :"");
+  }
+
+  if (mode == MODE_PARSE) {
+    exit (0);
   }
 
   if (init_function == NULL) {
