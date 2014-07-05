@@ -60,31 +60,31 @@ OrcMode mode = MODE_IMPL;
 
 void help (void)
 {
-  printf("Usage:\n");
-  printf("  orcc [OPTION...] INPUT_FILE\n");
-  printf("\n");
-  printf("Help Options:\n");
-  printf("  -h, --help              Show help options\n");
-  printf("\n");
-  printf("Application Options:\n");
-  printf("  -v, --verbose           Output more information\n");
-  printf("  -o, --output FILE       Write output to FILE\n");
-  printf("  --implementation        Produce C code implementing functions\n");
-  printf("  --header                Produce C header for functions\n");
-  printf("  --test                  Produce test code for functions\n");
-  printf("  --assembly              Produce assembly code for functions\n");
-  printf("  --include FILE          Add #include <FILE> to code\n");
-  printf("  --target TARGET         Generate assembly for TARGET\n");
-  printf("  --compat VERSION        Generate code compatible with Orc version VERSION\n");
-  printf("  --inline                Generate inline functions in header\n");
-  printf("  --no-inline             Do not generate inline functions in header\n");
-  printf("  --internal              Mark functions in header for internal visibility\n");
-  printf("  --no-internal           Do not mark functions in header for internal visibility\n");
-  printf("  --decorator DECORATOR   Decorate functions in header with DECORATOR\n");
-  printf("  --init-function FUNCTION  Generate initialization function\n");
-  printf("  --lazy-init             Do Orc compile at function execution\n");
-  printf("  --no-backup             Do not generate backup functions\n");
-  printf("\n");
+  fprintf(stderr, "Usage:\n");
+  fprintf(stderr, "  orcc [OPTION...] INPUT_FILE\n");
+  fprintf(stderr, "\n");
+  fprintf(stderr, "Help Options:\n");
+  fprintf(stderr, "  -h, --help              Show help options\n");
+  fprintf(stderr, "\n");
+  fprintf(stderr, "Application Options:\n");
+  fprintf(stderr, "  -v, --verbose           Output more information\n");
+  fprintf(stderr, "  -o, --output FILE       Write output to FILE\n");
+  fprintf(stderr, "  --implementation        Produce C code implementing functions\n");
+  fprintf(stderr, "  --header                Produce C header for functions\n");
+  fprintf(stderr, "  --test                  Produce test code for functions\n");
+  fprintf(stderr, "  --assembly              Produce assembly code for functions\n");
+  fprintf(stderr, "  --include FILE          Add #include <FILE> to code\n");
+  fprintf(stderr, "  --target TARGET         Generate assembly for TARGET\n");
+  fprintf(stderr, "  --compat VERSION        Generate code compatible with Orc version VERSION\n");
+  fprintf(stderr, "  --inline                Generate inline functions in header\n");
+  fprintf(stderr, "  --no-inline             Do not generate inline functions in header\n");
+  fprintf(stderr, "  --internal              Mark functions in header for internal visibility\n");
+  fprintf(stderr, "  --no-internal           Do not mark functions in header for internal visibility\n");
+  fprintf(stderr, "  --decorator DECORATOR   Decorate functions in header with DECORATOR\n");
+  fprintf(stderr, "  --init-function FUNCTION  Generate initialization function\n");
+  fprintf(stderr, "  --lazy-init             Do Orc compile at function execution\n");
+  fprintf(stderr, "  --no-backup             Do not generate backup functions\n");
+  fprintf(stderr, "\n");
 
   exit (0);
 }
@@ -176,7 +176,7 @@ main (int argc, char *argv[])
         strcmp(argv[i], "-v") == 0) {
       verbose = 1;
     } else if (strcmp(argv[i], "--version") == 0) {
-      printf("Orc Compiler " PACKAGE_VERSION "\n");
+      fprintf(stderr, "Orc Compiler " PACKAGE_VERSION "\n");
       exit (0);
     } else if (strcmp(argv[i], "--compat") == 0) {
       if (i+1 < argc) {
@@ -190,25 +190,25 @@ main (int argc, char *argv[])
     } else if (strcmp(argv[i], "--no-backup") == 0) {
       use_backup = FALSE;
     } else if (strncmp(argv[i], "-", 1) == 0) {
-      printf("Unknown option: %s\n", argv[i]);
+      fprintf(stderr, "Unknown option: %s\n", argv[i]);
       exit (1);
     } else {
       if (input_file == NULL) {
         input_file = argv[i];
       } else {
-        printf("More than one input file specified: %s\n", argv[i]);
+        fprintf(stderr, "More than one input file specified: %s\n", argv[i]);
         exit (1);
       }
     }
   }
 
   if (input_file == NULL) {
-    printf("No input file specified\n");
+    fprintf(stderr, "No input file specified\n");
     exit (1);
   }
 
   if (mode == MODE_ASSEMBLY && orc_target_get_by_name (target) == NULL) {
-    printf("Unknown target \"%s\"\n", target);
+    fprintf(stderr, "Unknown target \"%s\"\n", target);
     exit (1);
   }
 
@@ -219,13 +219,13 @@ main (int argc, char *argv[])
     n = sscanf (compat_version, "%d.%d.%d.%d", &major, &minor, &micro, &nano);
 
     if (n < 3) {
-      printf("Unknown version \"%s\"\n", compat_version);
+      fprintf(stderr, "Unknown version \"%s\"\n", compat_version);
       exit (1);
     }
 
     compat = ORC_VERSION(major,minor,micro,nano);
     if (compat < ORC_VERSION(0,4,5,0)) {
-      printf("Compatibility version \"%s\" not supported.  Minimum 0.4.5\n",
+      fprintf(stderr, "Compatibility version \"%s\" not supported.  Minimum 0.4.5\n",
           compat_version);
       exit (1);
     }
@@ -253,7 +253,7 @@ main (int argc, char *argv[])
 
   code = read_file (input_file);
   if (!code) {
-    printf("Could not read input file: %s\n", input_file);
+    fprintf(stderr, "Could not read input file: %s\n", input_file);
     exit(1);
   }
 
@@ -283,7 +283,7 @@ main (int argc, char *argv[])
 
   output = fopen (output_file, "w");
   if (!output) {
-    printf("Could not write output file: %s\n", output_file);
+    fprintf(stderr, "Could not write output file: %s\n", output_file);
     exit(1);
   }
 
@@ -777,7 +777,7 @@ output_code_backup (OrcProgram *p, FILE *output)
     if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
       fprintf(output, "%s\n", orc_program_get_asm_code (p));
     } else {
-      printf("Failed to compile backup code for '%s'\n", p->name);
+      fprintf(stderr, "Failed to compile backup code for '%s'\n", p->name);
       error = TRUE;
     }
   }
@@ -803,7 +803,7 @@ output_code_no_orc (OrcProgram *p, FILE *output)
     if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
       fprintf(output, "%s\n", orc_program_get_asm_code (p));
     } else {
-      printf("Failed to compile no orc for '%s'\n", p->name);
+      fprintf(stderr, "Failed to compile no orc for '%s'\n", p->name);
       error = TRUE;
     }
   }
@@ -1469,7 +1469,7 @@ output_code_assembly (OrcProgram *p, FILE *output)
     if (ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
       fprintf(output, "%s\n", orc_program_get_asm_code (p));
     } else {
-      printf("Failed to compile assembly for '%s'\n", p->name);
+      fprintf(stderr, "Failed to compile assembly for '%s'\n", p->name);
       error = TRUE;
     }
   }
