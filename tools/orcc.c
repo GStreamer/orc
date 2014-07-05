@@ -94,14 +94,14 @@ main (int argc, char *argv[])
 {
   const char *orc_version;
   char *code;
-  int n;
   int i;
   char *output_file = NULL;
   char *input_file = NULL;
   char *include_file = NULL;
   char *compat_version = VERSION;
   FILE *output;
-  char *log = NULL;
+  OrcParseError **errors = NULL;
+  int n_errors = 0;
 
   orc_init ();
 
@@ -257,11 +257,16 @@ main (int argc, char *argv[])
     exit(1);
   }
 
-  n = orc_parse_full (code, &programs, &log);
+  orc_parse_code (code, &programs, &n_programs, &errors, &n_errors);
   free(code);
-  n_programs = n;
-  printf("%s", log);
-  free(log);
+  if (n_errors > 0) {
+    int i;
+    for (i=0;i<n_errors;i++) {
+      fprintf(stderr, "%s @ %i: error: %s\n", errors[i]->source, errors[i]->line_number, errors[i]->text);
+    }
+    orc_parse_error_freev (errors);
+    exit (1);
+  }
 
   if (programs == NULL) {
     printf("no programs\n");
@@ -299,7 +304,7 @@ main (int argc, char *argv[])
     fprintf(output, "#ifndef DISABLE_ORC\n");
     fprintf(output, "#include <orc/orc.h>\n");
     fprintf(output, "#endif\n");
-    for(i=0;i<n;i++){
+    for(i=0;i<n_programs;i++){
       output_code_header (programs[i], output);
     }
     if (init_function) {
@@ -309,7 +314,7 @@ main (int argc, char *argv[])
     fprintf(output, "\n");
     fprintf(output, "%s", orc_target_get_asm_preamble ("c"));
     fprintf(output, "\n");
-    for(i=0;i<n;i++){
+    for(i=0;i<n_programs;i++){
       output_code (programs[i], output);
     }
     fprintf(output, "\n");
@@ -336,14 +341,14 @@ main (int argc, char *argv[])
     if (!use_inline) {
       fprintf(output, "\n");
       fprintf(output, "%s", orc_target_c_get_typedefs ());
-      for(i=0;i<n;i++){
+      for(i=0;i<n_programs;i++){
         output_code_header (programs[i], output);
       }
     } else {
       fprintf(output, "\n");
       fprintf(output, "#include <orc/orc.h>\n");
       fprintf(output, "\n");
-      for(i=0;i<n;i++){
+      for(i=0;i<n_programs;i++){
         output_code_execute (programs[i], output, TRUE);
       }
     }
@@ -367,7 +372,7 @@ main (int argc, char *argv[])
     fprintf(output, "%s", orc_target_get_asm_preamble ("c"));
     fprintf(output, "\n");
     if (use_backup) {
-      for(i=0;i<n;i++){
+      for(i=0;i<n_programs;i++){
         fprintf(output, "/* %s */\n", programs[i]->name);
         output_code_backup (programs[i], output);
       }
@@ -412,7 +417,7 @@ main (int argc, char *argv[])
     fprintf(output, "    }\n");
     fprintf(output, "  }\n");
     fprintf(output, "\n");
-    for(i=0;i<n;i++){
+    for(i=0;i<n_programs;i++){
       output_code_test (programs[i], output);
     }
     fprintf(output, "\n");
@@ -423,12 +428,12 @@ main (int argc, char *argv[])
     fprintf(output, "}\n");
   } else if (mode == MODE_ASSEMBLY) {
     fprintf(output, "%s", orc_target_get_asm_preamble (target));
-    for(i=0;i<n;i++){
+    for(i=0;i<n_programs;i++){
       output_code_assembly (programs[i], output);
     }
   }
 
-  for(i=0;i<n;i++){
+  for(i=0;i<n_programs;i++){
     orc_program_free(programs[i]);
   }
   free(programs);
