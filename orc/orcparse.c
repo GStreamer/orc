@@ -100,6 +100,7 @@ static int orc_parse_handle_source (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_dest (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_accumulator (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_constant_str (OrcParser *parser, const OrcLine *line);
+static int orc_parse_handle_temporary (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_directive (OrcParser *parser, const OrcLine *line);
 
 static int orc_parse_handle_opcode (OrcParser *parser, const OrcLine *line);
@@ -439,15 +440,7 @@ orc_parse_handle_legacy (OrcParser *parser, const OrcLine *line)
   const char **token = (const char **)(line->tokens);
   int n_tokens = line->n_tokens;
 
-  if (strcmp (token[0], ".temp") == 0) {
-    if (n_tokens < 3) {
-      orc_parse_add_error (parser, "line %d: .temp without size or name\n",
-          parser->line_number);
-    } else {
-      int size = strtol (token[1], NULL, 0);
-      orc_program_add_temporary (parser->program, size, token[2]);
-    }
-  } else if (strcmp (token[0], ".param") == 0) {
+  if (strcmp (token[0], ".param") == 0) {
     if (n_tokens < 3) {
       orc_parse_add_error (parser, "line %d: .param without size or name\n",
           parser->line_number);
@@ -724,6 +717,24 @@ orc_parse_handle_constant_str (OrcParser *parser, const OrcLine *line)
   return 1;
 }
 
+#define ORC_PARSE_ITEM(ITEM) \
+  static int \
+  orc_parse_handle_##ITEM (OrcParser *parser, const OrcLine *line) \
+  { \
+    int size; \
+    \
+    if (line->n_tokens < 3) { \
+      orc_parse_add_error (parser, "line %d: %s without size or name\n", \
+          parser->line_number, line->tokens[0]); \
+      return 0; \
+    } \
+    size = strtol (line->tokens[1], NULL, 0); \
+    orc_program_add_ ## ITEM (parser->program, size, line->tokens[2]); \
+    return 1; \
+  }
+
+ORC_PARSE_ITEM (temporary)
+
 
 static int
 orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
@@ -739,6 +750,7 @@ orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
     { ".dest", orc_parse_handle_dest },
     { ".accumulator", orc_parse_handle_accumulator },
     { ".const", orc_parse_handle_constant_str },
+    { ".temp", orc_parse_handle_temporary },
     { NULL, NULL }
   };
   int i;
