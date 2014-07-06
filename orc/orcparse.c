@@ -98,6 +98,7 @@ static int orc_parse_handle_dotn (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_dotm (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_source (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_dest (OrcParser *parser, const OrcLine *line);
+static int orc_parse_handle_accumulator (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_directive (OrcParser *parser, const OrcLine *line);
 
 static int orc_parse_handle_opcode (OrcParser *parser, const OrcLine *line);
@@ -437,19 +438,7 @@ orc_parse_handle_legacy (OrcParser *parser, const OrcLine *line)
   const char **token = (const char **)(line->tokens);
   int n_tokens = line->n_tokens;
 
-  if (strcmp (token[0], ".accumulator") == 0) {
-    if (n_tokens < 3) {
-      orc_parse_add_error (parser, "line %d: .accumulator without size or name\n",
-          parser->line_number);
-    } else {
-      int size = strtol (token[1], NULL, 0);
-      int var;
-      var = orc_program_add_accumulator (parser->program, size, token[2]);
-      if (n_tokens > 3) {
-        orc_program_set_type_name (parser->program, var, token[3]);
-      }
-    }
-  } else if (strcmp (token[0], ".temp") == 0) {
+  if (strcmp (token[0], ".temp") == 0) {
     if (n_tokens < 3) {
       orc_parse_add_error (parser, "line %d: .temp without size or name\n",
           parser->line_number);
@@ -703,6 +692,27 @@ orc_parse_handle_dest (OrcParser *parser, const OrcLine *line)
 }
 
 static int
+orc_parse_handle_accumulator (OrcParser *parser, const OrcLine *line)
+{
+  int size;
+  int var;
+
+  if (line->n_tokens < 3) {
+    orc_parse_add_error (parser, "line %d: .accumulator without size or name\n",
+        parser->line_number);
+    return 0;
+  }
+
+  size = strtol (line->tokens[1], NULL, 0);
+  var = orc_program_add_accumulator (parser->program, size, line->tokens[2]);
+  if (line->n_tokens > 3) {
+    orc_program_set_type_name (parser->program, var, line->tokens[3]);
+  }
+
+  return 1;
+}
+
+static int
 orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
 {
   static const OrcDirective dirs[] = {
@@ -714,6 +724,7 @@ orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
     { ".m", orc_parse_handle_dotm },
     { ".source", orc_parse_handle_source },
     { ".dest", orc_parse_handle_dest },
+    { ".accumulator", orc_parse_handle_accumulator },
     { NULL, NULL }
   };
   int i;
