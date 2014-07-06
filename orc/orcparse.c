@@ -82,6 +82,8 @@ static void orc_parse_find_line_length (OrcParser *parser);
 static void orc_parse_advance (OrcParser *parser);
 static void orc_parse_sanity_check (OrcParser *parser, OrcProgram *program);
 
+static int orc_parse_handle_directive (OrcParser *parser, const OrcLine *line);
+
 static int orc_parse_handle_opcode (OrcParser *parser, const OrcLine *line);
 
 static OrcStaticOpcode * orc_parse_find_opcode (OrcParser *parser, const char *opcode);
@@ -133,8 +135,6 @@ orc_parse_code (const char *code, OrcProgram ***programs, int *n_programs,
   orc_parse_init (parser, code, enable_errors);
 
   while (orc_parse_has_data (parser)) {
-    const char **token = { NULL };
-    int n_tokens = 0;
     OrcLine _line;
     OrcLine *line = &_line;
 
@@ -160,206 +160,8 @@ orc_parse_code (const char *code, OrcProgram ***programs, int *n_programs,
       continue;
     }
 
-    n_tokens = line->n_tokens;
-    token = line->tokens;
-
     if (orc_line_is_directive (line)) {
-      if (strcmp (token[0], ".function") == 0) {
-        if (n_tokens < 2) {
-          orc_parse_add_error (parser, "line %d: .function without function name\n",
-              parser->line_number);
-        } else {
-          if (parser->program) {
-            orc_parse_sanity_check (parser, parser->program);
-          }
-          parser->program = orc_program_new ();
-          orc_program_set_name (parser->program, token[1]);
-
-          orc_vector_append (&parser->programs, parser->program);
-          parser->creg_index = 1;
-        }
-      } else if (strcmp (token[0], ".backup") == 0) {
-        if (n_tokens < 2) {
-          orc_parse_add_error (parser, "line %d: .backup without function name\n",
-              parser->line_number);
-        } else {
-          orc_program_set_backup_name (parser->program, token[1]);
-        }
-      } else if (strcmp (token[0], ".init") == 0) {
-        free (parser->init_function);
-        parser->init_function = NULL;
-        if (n_tokens < 2) {
-          orc_parse_add_error (parser, ".init without function name");
-        } else {
-          parser->init_function = strdup (token[1]);
-        }
-      } else if (strcmp (token[0], ".flags") == 0) {
-        int i;
-        for(i=1;i<n_tokens;i++){
-          if (!strcmp (token[i], "2d")) {
-            orc_program_set_2d (parser->program);
-          }
-        }
-      } else if (strcmp (token[0], ".n") == 0) {
-        int i;
-        for(i=1;i<n_tokens;i++){
-          if (strcmp (token[i], "mult") == 0) {
-            if (i == n_tokens - 1) {
-              orc_parse_add_error (parser, ".n mult requires multiple value");
-            } else {
-              orc_program_set_n_multiple (parser->program,
-                  strtol (token[1], NULL, 0));
-              i++;
-            }
-          } else if (strcmp (token[i], "min") == 0) {
-            if (i == n_tokens - 1) {
-              orc_parse_add_error (parser, ".n min requires multiple value");
-            } else {
-              orc_program_set_n_minimum (parser->program,
-                  strtol (token[1], NULL, 0));
-              i++;
-            }
-          } else if (strcmp (token[i], "max") == 0) {
-            if (i == n_tokens - 1) {
-              orc_parse_add_error (parser, ".n max requires multiple value");
-            } else {
-              orc_program_set_n_maximum (parser->program,
-                  strtol (token[1], NULL, 0));
-              i++;
-            }
-          } else if (i == n_tokens - 1) {
-            orc_program_set_constant_n (parser->program,
-                strtol (token[1], NULL, 0));
-          } else {
-            orc_parse_add_error (parser, "unknown .n token '%s'", token[i]);
-          }
-        }
-      } else if (strcmp (token[0], ".m") == 0) {
-        if (n_tokens < 2) {
-          orc_parse_add_error (parser, "line %d: .m without value\n",
-              parser->line_number);
-        } else {
-          int size = strtol (token[1], NULL, 0);
-          orc_program_set_constant_m (parser->program, size);
-        }
-      } else if (strcmp (token[0], ".source") == 0) {
-        if (n_tokens < 3) {
-          orc_parse_add_error (parser, "line %d: .source without size or identifier\n",
-              parser->line_number);
-        } else {
-          int size = strtol (token[1], NULL, 0);
-          int var;
-          int i;
-          var = orc_program_add_source (parser->program, size, token[2]);
-          for(i=3;i<n_tokens;i++){
-            if (strcmp (token[i], "align") == 0) {
-              if (i == n_tokens - 1) {
-                orc_parse_add_error (parser, "line %d: .source align requires alignment value\n",
-                    parser->line_number);
-              } else {
-                int alignment = strtol (token[i+1], NULL, 0);
-                orc_program_set_var_alignment (parser->program, var, alignment);
-                i++;
-              }
-            } else if (i == n_tokens - 1) {
-              orc_program_set_type_name (parser->program, var, token[i]);
-            } else {
-              orc_parse_add_error (parser, "line %d: unknown .source token '%s'\n",
-                  parser->line_number, token[i]);
-            }
-          }
-        }
-      } else if (strcmp (token[0], ".dest") == 0) {
-        if (n_tokens < 3) {
-          orc_parse_add_error (parser, "line %d: .dest without size or identifier\n",
-              parser->line_number);
-        } else {
-          int size = strtol (token[1], NULL, 0);
-          int var;
-          int i;
-          var = orc_program_add_destination (parser->program, size, token[2]);
-          for(i=3;i<n_tokens;i++){
-            if (strcmp (token[i], "align") == 0) {
-              if (i == n_tokens - 1) {
-                orc_parse_add_error (parser, "line %d: .source align requires alignment value\n",
-                    parser->line_number);
-              } else {
-                int alignment = strtol (token[i+1], NULL, 0);
-                orc_program_set_var_alignment (parser->program, var, alignment);
-                i++;
-              }
-            } else if (i == n_tokens - 1) {
-              orc_program_set_type_name (parser->program, var, token[i]);
-            } else {
-              orc_parse_add_error (parser, "line %d: unknown .dest token '%s'\n",
-                  parser->line_number, token[i]);
-            }
-          }
-        }
-      } else if (strcmp (token[0], ".accumulator") == 0) {
-        if (n_tokens < 3) {
-          orc_parse_add_error (parser, "line %d: .accumulator without size or name\n",
-              parser->line_number);
-        } else {
-          int size = strtol (token[1], NULL, 0);
-          int var;
-          var = orc_program_add_accumulator (parser->program, size, token[2]);
-          if (n_tokens > 3) {
-            orc_program_set_type_name (parser->program, var, token[3]);
-          }
-        }
-      } else if (strcmp (token[0], ".temp") == 0) {
-        if (n_tokens < 3) {
-          orc_parse_add_error (parser, "line %d: .temp without size or name\n",
-              parser->line_number);
-        } else {
-          int size = strtol (token[1], NULL, 0);
-          orc_program_add_temporary (parser->program, size, token[2]);
-        }
-      } else if (strcmp (token[0], ".param") == 0) {
-        if (n_tokens < 3) {
-          orc_parse_add_error (parser, "line %d: .param without size or name\n",
-              parser->line_number);
-        } else {
-          int size = strtol (token[1], NULL, 0);
-          orc_program_add_parameter (parser->program, size, token[2]);
-        }
-      } else if (strcmp (token[0], ".longparam") == 0) {
-        if (n_tokens < 3) {
-          orc_parse_add_error (parser, "line %d: .longparam without size or name\n",
-              parser->line_number);
-        } else {
-          int size = strtol (token[1], NULL, 0);
-          orc_program_add_parameter_int64 (parser->program, size, token[2]);
-        }
-      } else if (strcmp (token[0], ".const") == 0) {
-        if (n_tokens < 4) {
-          orc_parse_add_error (parser, "line %d: .const without size, name or value\n",
-              parser->line_number);
-        } else {
-          int size = strtol (token[1], NULL, 0);
-
-          orc_program_add_constant_str (parser->program, size, token[3], token[2]);
-        }
-      } else if (strcmp (token[0], ".floatparam") == 0) {
-        if (n_tokens < 3) {
-          orc_parse_add_error (parser, "line %d: .floatparam without size or name\n",
-              parser->line_number);
-        } else {
-          int size = strtol (token[1], NULL, 0);
-          orc_program_add_parameter_float (parser->program, size, token[2]);
-        }
-      } else if (strcmp (token[0], ".doubleparam") == 0) {
-        if (n_tokens < 3) {
-          orc_parse_add_error (parser, "line %d: .doubleparam without size or name\n",
-              parser->line_number);
-        } else {
-          int size = strtol (token[1], NULL, 0);
-          orc_program_add_parameter_double (parser->program, size, token[2]);
-        }
-      } else {
-        orc_parse_add_error (parser, "unknown directive: %s\n", token[0]);
-      }
+      orc_parse_handle_directive (parser, line);
     } else {
       orc_parse_handle_opcode (parser, line);
     }
@@ -607,6 +409,211 @@ orc_parse_add_error (OrcParser *parser, const char *format, ...)
   }
 }
 
+static int
+orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
+{
+  const char **token = (const char **)(line->tokens);
+  int n_tokens = line->n_tokens;
+
+  if (strcmp (token[0], ".function") == 0) {
+    if (n_tokens < 2) {
+      orc_parse_add_error (parser, "line %d: .function without function name\n",
+          parser->line_number);
+    } else {
+      if (parser->program) {
+        orc_parse_sanity_check (parser, parser->program);
+      }
+      parser->program = orc_program_new ();
+      orc_program_set_name (parser->program, token[1]);
+
+      orc_vector_append (&parser->programs, parser->program);
+      parser->creg_index = 1;
+    }
+  } else if (strcmp (token[0], ".backup") == 0) {
+    if (n_tokens < 2) {
+      orc_parse_add_error (parser, "line %d: .backup without function name\n",
+          parser->line_number);
+    } else {
+      orc_program_set_backup_name (parser->program, token[1]);
+    }
+  } else if (strcmp (token[0], ".init") == 0) {
+    free (parser->init_function);
+    parser->init_function = NULL;
+    if (n_tokens < 2) {
+      orc_parse_add_error (parser, ".init without function name");
+    } else {
+      parser->init_function = strdup (token[1]);
+    }
+  } else if (strcmp (token[0], ".flags") == 0) {
+    int i;
+    for(i=1;i<n_tokens;i++){
+      if (!strcmp (token[i], "2d")) {
+        orc_program_set_2d (parser->program);
+      }
+    }
+  } else if (strcmp (token[0], ".n") == 0) {
+    int i;
+    for(i=1;i<n_tokens;i++){
+      if (strcmp (token[i], "mult") == 0) {
+        if (i == n_tokens - 1) {
+          orc_parse_add_error (parser, ".n mult requires multiple value");
+        } else {
+          orc_program_set_n_multiple (parser->program,
+              strtol (token[1], NULL, 0));
+          i++;
+        }
+      } else if (strcmp (token[i], "min") == 0) {
+        if (i == n_tokens - 1) {
+          orc_parse_add_error (parser, ".n min requires multiple value");
+        } else {
+          orc_program_set_n_minimum (parser->program,
+              strtol (token[1], NULL, 0));
+          i++;
+        }
+      } else if (strcmp (token[i], "max") == 0) {
+        if (i == n_tokens - 1) {
+          orc_parse_add_error (parser, ".n max requires multiple value");
+        } else {
+          orc_program_set_n_maximum (parser->program,
+              strtol (token[1], NULL, 0));
+          i++;
+        }
+      } else if (i == n_tokens - 1) {
+        orc_program_set_constant_n (parser->program,
+            strtol (token[1], NULL, 0));
+      } else {
+        orc_parse_add_error (parser, "unknown .n token '%s'", token[i]);
+      }
+    }
+  } else if (strcmp (token[0], ".m") == 0) {
+    if (n_tokens < 2) {
+      orc_parse_add_error (parser, "line %d: .m without value\n",
+          parser->line_number);
+    } else {
+      int size = strtol (token[1], NULL, 0);
+      orc_program_set_constant_m (parser->program, size);
+    }
+  } else if (strcmp (token[0], ".source") == 0) {
+    if (n_tokens < 3) {
+      orc_parse_add_error (parser, "line %d: .source without size or identifier\n",
+          parser->line_number);
+    } else {
+      int size = strtol (token[1], NULL, 0);
+      int var;
+      int i;
+      var = orc_program_add_source (parser->program, size, token[2]);
+      for(i=3;i<n_tokens;i++){
+        if (strcmp (token[i], "align") == 0) {
+          if (i == n_tokens - 1) {
+            orc_parse_add_error (parser, "line %d: .source align requires alignment value\n",
+                parser->line_number);
+          } else {
+            int alignment = strtol (token[i+1], NULL, 0);
+            orc_program_set_var_alignment (parser->program, var, alignment);
+            i++;
+          }
+        } else if (i == n_tokens - 1) {
+          orc_program_set_type_name (parser->program, var, token[i]);
+        } else {
+          orc_parse_add_error (parser, "line %d: unknown .source token '%s'\n",
+              parser->line_number, token[i]);
+        }
+      }
+    }
+  } else if (strcmp (token[0], ".dest") == 0) {
+    if (n_tokens < 3) {
+      orc_parse_add_error (parser, "line %d: .dest without size or identifier\n",
+          parser->line_number);
+    } else {
+      int size = strtol (token[1], NULL, 0);
+      int var;
+      int i;
+      var = orc_program_add_destination (parser->program, size, token[2]);
+      for(i=3;i<n_tokens;i++){
+        if (strcmp (token[i], "align") == 0) {
+          if (i == n_tokens - 1) {
+            orc_parse_add_error (parser, "line %d: .source align requires alignment value\n",
+                parser->line_number);
+          } else {
+            int alignment = strtol (token[i+1], NULL, 0);
+            orc_program_set_var_alignment (parser->program, var, alignment);
+            i++;
+          }
+        } else if (i == n_tokens - 1) {
+          orc_program_set_type_name (parser->program, var, token[i]);
+        } else {
+          orc_parse_add_error (parser, "line %d: unknown .dest token '%s'\n",
+              parser->line_number, token[i]);
+        }
+      }
+    }
+  } else if (strcmp (token[0], ".accumulator") == 0) {
+    if (n_tokens < 3) {
+      orc_parse_add_error (parser, "line %d: .accumulator without size or name\n",
+          parser->line_number);
+    } else {
+      int size = strtol (token[1], NULL, 0);
+      int var;
+      var = orc_program_add_accumulator (parser->program, size, token[2]);
+      if (n_tokens > 3) {
+        orc_program_set_type_name (parser->program, var, token[3]);
+      }
+    }
+  } else if (strcmp (token[0], ".temp") == 0) {
+    if (n_tokens < 3) {
+      orc_parse_add_error (parser, "line %d: .temp without size or name\n",
+          parser->line_number);
+    } else {
+      int size = strtol (token[1], NULL, 0);
+      orc_program_add_temporary (parser->program, size, token[2]);
+    }
+  } else if (strcmp (token[0], ".param") == 0) {
+    if (n_tokens < 3) {
+      orc_parse_add_error (parser, "line %d: .param without size or name\n",
+          parser->line_number);
+    } else {
+      int size = strtol (token[1], NULL, 0);
+      orc_program_add_parameter (parser->program, size, token[2]);
+    }
+  } else if (strcmp (token[0], ".longparam") == 0) {
+    if (n_tokens < 3) {
+      orc_parse_add_error (parser, "line %d: .longparam without size or name\n",
+          parser->line_number);
+    } else {
+      int size = strtol (token[1], NULL, 0);
+      orc_program_add_parameter_int64 (parser->program, size, token[2]);
+    }
+  } else if (strcmp (token[0], ".const") == 0) {
+    if (n_tokens < 4) {
+      orc_parse_add_error (parser, "line %d: .const without size, name or value\n",
+          parser->line_number);
+    } else {
+      int size = strtol (token[1], NULL, 0);
+
+      orc_program_add_constant_str (parser->program, size, token[3], token[2]);
+    }
+  } else if (strcmp (token[0], ".floatparam") == 0) {
+    if (n_tokens < 3) {
+      orc_parse_add_error (parser, "line %d: .floatparam without size or name\n",
+          parser->line_number);
+    } else {
+      int size = strtol (token[1], NULL, 0);
+      orc_program_add_parameter_float (parser->program, size, token[2]);
+    }
+  } else if (strcmp (token[0], ".doubleparam") == 0) {
+    if (n_tokens < 3) {
+      orc_parse_add_error (parser, "line %d: .doubleparam without size or name\n",
+          parser->line_number);
+    } else {
+      int size = strtol (token[1], NULL, 0);
+      orc_program_add_parameter_double (parser->program, size, token[2]);
+    }
+  } else {
+    orc_parse_add_error (parser, "unknown directive: %s\n", token[0]);
+  }
+
+  return 1;
+}
 
 static OrcStaticOpcode *
 orc_parse_find_opcode (OrcParser *parser, const char *opcode)
