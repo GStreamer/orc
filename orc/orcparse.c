@@ -48,11 +48,17 @@ static void orc_parse_error_free (OrcParseError *error);
 static void orc_parse_splat_error (OrcParseError **errors, int n_errors, char **log);
 
 static void orc_parse_get_line (OrcParser *parser);
-static OrcStaticOpcode * get_opcode (OrcParser *parser, const char *opcode);
-static int opcode_n_args (OrcStaticOpcode *opcode);
-static int opcode_arg_size (OrcStaticOpcode *opcode, int arg);
 static void orc_parse_sanity_check (OrcParser *parser, OrcProgram *program);
 
+static OrcStaticOpcode * orc_parse_find_opcode (OrcParser *parser, const char *opcode);
+static int opcode_n_args (OrcStaticOpcode *opcode);
+static int opcode_arg_size (OrcStaticOpcode *opcode, int arg);
+
+const char *
+orc_parse_get_init_function (OrcProgram *program)
+{
+  return program->init_function;
+}
 
 int
 orc_parse (const char *code, OrcProgram ***programs)
@@ -368,7 +374,7 @@ orc_parse_code (const char *code, OrcProgram ***programs, int *n_programs,
         }
       }
 
-      o = get_opcode (parser, token[offset]);
+      o = orc_parse_find_opcode (parser, token[offset]);
 
       if (o) {
         int n_args = opcode_n_args (o);
@@ -537,7 +543,7 @@ orc_parse_add_error (OrcParser *parser, const char *format, ...)
 
 
 static OrcStaticOpcode *
-get_opcode (OrcParser *parser, const char *opcode)
+orc_parse_find_opcode (OrcParser *parser, const char *opcode)
 {
   int i;
 
@@ -660,11 +666,5 @@ orc_parse_sanity_check (OrcParser *parser, OrcProgram *program)
 
   }
 
-}
-
-const char *
-orc_parse_get_init_function (OrcProgram *program)
-{
-  return program->init_function;
 }
 
