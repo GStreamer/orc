@@ -48,6 +48,7 @@ static void orc_parse_error_free (OrcParseError *error);
 static void orc_parse_splat_error (OrcParseError **errors, int n_errors, char **log);
 
 static void orc_parse_init (OrcParser *parser, const char *code, int enable_errors);
+static int orc_parse_has_data (OrcParser *parser);
 static void orc_parse_get_line (OrcParser *parser);
 static void orc_parse_sanity_check (OrcParser *parser, OrcProgram *program);
 
@@ -99,7 +100,7 @@ orc_parse_code (const char *code, OrcProgram ***programs, int *n_programs,
 
   orc_parse_init (parser, code, enable_errors);
 
-  while (parser->p[0] != 0) {
+  while (orc_parse_has_data (parser)) {
     char *p;
     char *end;
     char *token[10];
@@ -449,6 +450,12 @@ orc_parse_init (OrcParser *parser, const char *code, int enable_errors)
   parser->p = code;
   parser->opcode_set = orc_opcode_set_get ("sys");
   parser->enable_errors = enable_errors;
+}
+
+static int
+orc_parse_has_data (OrcParser *parser)
+{
+  return parser->p[0] != 0;
 }
 
 static void
