@@ -102,6 +102,7 @@ static int orc_parse_handle_accumulator (OrcParser *parser, const OrcLine *line)
 static int orc_parse_handle_constant_str (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_temporary (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_parameter (OrcParser *parser, const OrcLine *line);
+static int orc_parse_handle_parameter_int64 (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_directive (OrcParser *parser, const OrcLine *line);
 
 static int orc_parse_handle_opcode (OrcParser *parser, const OrcLine *line);
@@ -441,17 +442,7 @@ orc_parse_handle_legacy (OrcParser *parser, const OrcLine *line)
   const char **token = (const char **)(line->tokens);
   int n_tokens = line->n_tokens;
 
-  if (strcmp (token[0], ".longparam") == 0) {
-    if (n_tokens < 3) {
-      orc_parse_add_error (parser, "line %d: .longparam without size or name\n",
-          parser->line_number);
-    } else {
-      int size = strtol (token[1], NULL, 0);
-      orc_program_add_parameter_int64 (parser->program, size, token[2]);
-    }
-    int size = strtol (token[1], NULL, 0);
-    orc_program_add_parameter_int64 (parser->program, size, token[2]);
-  } else if (strcmp (token[0], ".floatparam") == 0) {
+  if (strcmp (token[0], ".floatparam") == 0) {
     if (n_tokens < 3) {
       orc_parse_add_error (parser, "line %d: .floatparam without size or name\n",
           parser->line_number);
@@ -728,6 +719,7 @@ orc_parse_handle_constant_str (OrcParser *parser, const OrcLine *line)
 
 ORC_PARSE_ITEM (temporary)
 ORC_PARSE_ITEM (parameter)
+ORC_PARSE_ITEM (parameter_int64)
 
 
 static int
@@ -746,6 +738,7 @@ orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
     { ".const", orc_parse_handle_constant_str },
     { ".temp", orc_parse_handle_temporary },
     { ".param", orc_parse_handle_parameter },
+    { ".longparam", orc_parse_handle_parameter_int64 },
     { NULL, NULL }
   };
   int i;
