@@ -56,6 +56,15 @@ static int orc_line_has_data (const OrcLine *line);
 static int orc_line_is_comment (const OrcLine *line);
 static int orc_line_is_blank (const OrcLine *line);
 static void orc_line_skip_blanks (OrcLine *line);
+static int orc_line_is_separator (const OrcLine *line);
+static int orc_line_has_tokens (const OrcLine *line);
+#ifdef ORC_PARSE_DEBUG
+static void orc_line_dump_tokens (const OrcLine *line);
+#endif
+static void orc_line_parse_tokens (OrcLine *line);
+static void orc_line_advance (OrcLine *line);
+static void orc_line_add_token (OrcLine *line);
+static int orc_line_has_tokens (const OrcLine *line);
 
 static void orc_parse_add_error_valist (OrcParser *parser, const char *format, va_list args);
 static void orc_parse_add_error (OrcParser *parser, const char *format, ...);
@@ -121,9 +130,7 @@ orc_parse_code (const char *code, OrcProgram ***programs, int *n_programs,
   orc_parse_init (parser, code, enable_errors);
 
   while (orc_parse_has_data (parser)) {
-    char *p;
-    char *end;
-    char *token[10] = { NULL };
+    const char **token = { NULL };
     int n_tokens = 0;
     OrcLine _line;
     OrcLine *line = &_line;
@@ -140,32 +147,18 @@ orc_parse_code (const char *code, OrcProgram ***programs, int *n_programs,
       continue;
     }
 
-    p = line->p;
-    end = line->end;
+    orc_line_parse_tokens (line);
 
-    while (p < end) {
-      while (p[0] != 0 && (p[0] == ' ' || p[0] == '\t')) p++;
-      if (p[0] == 0 || p[0] == '#') break;
+#ifdef ORC_PARSE_DEBUG
+    orc_line_dump_tokens (line);
+#endif
 
-      token[n_tokens] = p;
-      while (p[0] != 0 && p[0] != ' ' && p[0] != '\t' && p[0] != ',') p++;
-      n_tokens++;
-
-      p[0] = 0;
-      p++;
-    }
-
-    if (n_tokens == 0) {
+    if (!orc_line_has_tokens (line)) {
       continue;
     }
 
-    {
-      int i;
-      for(i=0;i<n_tokens;i++){
-        /* printf("'%s' ", token[i]); */
-      }
-      /* printf("\n"); */
-    }
+    n_tokens = line->n_tokens;
+    token = line->tokens;
 
     if (token[0][0] == '.') {
       if (strcmp (token[0], ".function") == 0) {
@@ -496,6 +489,65 @@ orc_line_skip_blanks (OrcLine *line)
     line->p++;
   }
 }
+
+static int
+orc_line_is_separator (const OrcLine *line)
+{
+  return line->p[0] == ',';
+}
+
+static void
+orc_line_advance (OrcLine *line)
+{
+  while (orc_line_has_data (line) &&
+        !orc_line_is_blank (line) &&
+        !orc_line_is_separator (line)) {
+    line->p++;
+  }
+}
+
+static void
+orc_line_add_token (OrcLine *line)
+{
+  line->tokens[line->n_tokens] = line->p;
+  orc_line_advance (line);
+  line->n_tokens++;
+
+  line->p[0] = 0;
+  line->p++;
+}
+
+static int
+orc_line_has_tokens (const OrcLine *line)
+{
+  return line->n_tokens > 0;
+}
+
+#ifdef ORC_PARSE_DEBUG
+static void
+orc_line_dump_tokens (const OrcLine *line)
+{
+  int i = 0;
+
+  for(i=0;i<line->n_tokens;i++) {
+    fprintf(stderr, "'%s' ", line->tokens[i]);
+  }
+  fprintf(stderr, "\n");
+}
+#endif
+
+static void
+orc_line_parse_tokens (OrcLine *line)
+{
+  while (line->p < line->end) {
+    orc_line_skip_blanks (line);
+    if (!orc_line_has_data (line) || orc_line_is_comment (line)) {
+      break;
+    }
+    orc_line_add_token (line);
+  }
+}
+
 
 static void
 orc_parse_init (OrcParser *parser, const char *code, int enable_errors)
