@@ -47,12 +47,14 @@ static OrcParseError * orc_parse_error_new (const char *source, int line_number,
 static void orc_parse_error_free (OrcParseError *error);
 static void orc_parse_splat_error (OrcParseError **errors, int n_errors, char **log);
 
+static void orc_parse_init (OrcParser *parser, const char *code, int enable_errors);
 static void orc_parse_get_line (OrcParser *parser);
 static void orc_parse_sanity_check (OrcParser *parser, OrcProgram *program);
 
 static OrcStaticOpcode * orc_parse_find_opcode (OrcParser *parser, const char *opcode);
 static int opcode_n_args (OrcStaticOpcode *opcode);
 static int opcode_arg_size (OrcStaticOpcode *opcode, int arg);
+
 
 const char *
 orc_parse_get_init_function (OrcProgram *program)
@@ -93,15 +95,9 @@ orc_parse_code (const char *code, OrcProgram ***programs, int *n_programs,
 {
   OrcParser _parser;
   OrcParser *parser = &_parser;
+  int enable_errors = (errors && n_errors);
 
-  memset (parser, 0, sizeof(*parser));
-
-  parser->code = code;
-  parser->code_length = strlen (code);
-  parser->line_number = 0;
-  parser->p = code;
-  parser->opcode_set = orc_opcode_set_get ("sys");
-  parser->enable_errors = (errors && n_errors);
+  orc_parse_init (parser, code, enable_errors);
 
   while (parser->p[0] != 0) {
     char *p;
@@ -440,6 +436,19 @@ orc_parse_code (const char *code, OrcProgram ***programs, int *n_programs,
     *n_programs = orc_vector_length (&parser->programs);
   }
   return orc_vector_has_data (&parser->errors) ?-1 :0;
+}
+
+static void
+orc_parse_init (OrcParser *parser, const char *code, int enable_errors)
+{
+  memset (parser, 0, sizeof(*parser));
+
+  parser->code = code;
+  parser->code_length = strlen (code);
+  parser->line_number = 0;
+  parser->p = code;
+  parser->opcode_set = orc_opcode_set_get ("sys");
+  parser->enable_errors = enable_errors;
 }
 
 static void
