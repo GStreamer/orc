@@ -97,6 +97,7 @@ static int orc_parse_handle_flags (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_dotn (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_dotm (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_source (OrcParser *parser, const OrcLine *line);
+static int orc_parse_handle_dest (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_directive (OrcParser *parser, const OrcLine *line);
 
 static int orc_parse_handle_opcode (OrcParser *parser, const OrcLine *line);
@@ -436,34 +437,7 @@ orc_parse_handle_legacy (OrcParser *parser, const OrcLine *line)
   const char **token = (const char **)(line->tokens);
   int n_tokens = line->n_tokens;
 
-  if (strcmp (token[0], ".dest") == 0) {
-    if (n_tokens < 3) {
-      orc_parse_add_error (parser, "line %d: .dest without size or identifier\n",
-          parser->line_number);
-    } else {
-      int size = strtol (token[1], NULL, 0);
-      int var;
-      int i;
-      var = orc_program_add_destination (parser->program, size, token[2]);
-      for(i=3;i<n_tokens;i++){
-        if (strcmp (token[i], "align") == 0) {
-          if (i == n_tokens - 1) {
-            orc_parse_add_error (parser, "line %d: .source align requires alignment value\n",
-                parser->line_number);
-          } else {
-            int alignment = strtol (token[i+1], NULL, 0);
-            orc_program_set_var_alignment (parser->program, var, alignment);
-            i++;
-          }
-        } else if (i == n_tokens - 1) {
-          orc_program_set_type_name (parser->program, var, token[i]);
-        } else {
-          orc_parse_add_error (parser, "line %d: unknown .dest token '%s'\n",
-              parser->line_number, token[i]);
-        }
-      }
-    }
-  } else if (strcmp (token[0], ".accumulator") == 0) {
+  if (strcmp (token[0], ".accumulator") == 0) {
     if (n_tokens < 3) {
       orc_parse_add_error (parser, "line %d: .accumulator without size or name\n",
           parser->line_number);
@@ -692,6 +666,41 @@ orc_parse_handle_source (OrcParser *parser, const OrcLine *line)
   return 1;
 }
 
+static int
+orc_parse_handle_dest (OrcParser *parser, const OrcLine *line)
+{
+  int size;
+  int var;
+  int i;
+
+  if (line->n_tokens < 3) {
+    orc_parse_add_error (parser, "line %d: .dest without size or identifier\n",
+        parser->line_number);
+    return 0;
+  }
+
+  size = strtol (line->tokens[1], NULL, 0);
+  var = orc_program_add_destination (parser->program, size, line->tokens[2]);
+  for(i=3;i<line->n_tokens;i++){
+    if (strcmp (line->tokens[i], "align") == 0) {
+      if (i == line->n_tokens - 1) {
+        orc_parse_add_error (parser, "line %d: .source align requires alignment value\n",
+            parser->line_number);
+      } else {
+        int alignment = strtol (line->tokens[i+1], NULL, 0);
+        orc_program_set_var_alignment (parser->program, var, alignment);
+        i++;
+      }
+    } else if (i == line->n_tokens - 1) {
+      orc_program_set_type_name (parser->program, var, line->tokens[i]);
+    } else {
+      orc_parse_add_error (parser, "line %d: unknown .dest token '%s'\n",
+          parser->line_number, line->tokens[i]);
+    }
+  }
+
+  return 1;
+}
 
 static int
 orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
@@ -704,6 +713,7 @@ orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
     { ".n", orc_parse_handle_dotn },
     { ".m", orc_parse_handle_dotm },
     { ".source", orc_parse_handle_source },
+    { ".dest", orc_parse_handle_dest },
     { NULL, NULL }
   };
   int i;
