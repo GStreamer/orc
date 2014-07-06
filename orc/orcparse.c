@@ -99,6 +99,7 @@ static int orc_parse_handle_dotm (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_source (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_dest (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_accumulator (OrcParser *parser, const OrcLine *line);
+static int orc_parse_handle_constant_str (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_directive (OrcParser *parser, const OrcLine *line);
 
 static int orc_parse_handle_opcode (OrcParser *parser, const OrcLine *line);
@@ -462,15 +463,8 @@ orc_parse_handle_legacy (OrcParser *parser, const OrcLine *line)
       int size = strtol (token[1], NULL, 0);
       orc_program_add_parameter_int64 (parser->program, size, token[2]);
     }
-  } else if (strcmp (token[0], ".const") == 0) {
-    if (n_tokens < 4) {
-      orc_parse_add_error (parser, "line %d: .const without size, name or value\n",
-          parser->line_number);
-    } else {
-      int size = strtol (token[1], NULL, 0);
-
-      orc_program_add_constant_str (parser->program, size, token[3], token[2]);
-    }
+    int size = strtol (token[1], NULL, 0);
+    orc_program_add_parameter_int64 (parser->program, size, token[2]);
   } else if (strcmp (token[0], ".floatparam") == 0) {
     if (n_tokens < 3) {
       orc_parse_add_error (parser, "line %d: .floatparam without size or name\n",
@@ -713,6 +707,25 @@ orc_parse_handle_accumulator (OrcParser *parser, const OrcLine *line)
 }
 
 static int
+orc_parse_handle_constant_str (OrcParser *parser, const OrcLine *line)
+{
+  int size;
+
+  if (line->n_tokens < 4) {
+    orc_parse_add_error (parser, "line %d: .const without size, name or value\n",
+        parser->line_number);
+    return 0;
+  }
+
+  size = strtol (line->tokens[1], NULL, 0);
+
+  orc_program_add_constant_str (parser->program, size, line->tokens[3], line->tokens[2]);
+
+  return 1;
+}
+
+
+static int
 orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
 {
   static const OrcDirective dirs[] = {
@@ -725,6 +738,7 @@ orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
     { ".source", orc_parse_handle_source },
     { ".dest", orc_parse_handle_dest },
     { ".accumulator", orc_parse_handle_accumulator },
+    { ".const", orc_parse_handle_constant_str },
     { NULL, NULL }
   };
   int i;
