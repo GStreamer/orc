@@ -625,9 +625,13 @@ orc_parse_sanity_check (OrcParser *parser, OrcProgram *program)
   int j;
 
   for(i=0;i<=ORC_VAR_T15;i++) {
-    if (program->vars[i].size == 0) continue;
+    if (program->vars[i].size == 0) {
+      continue;
+    }
     for(j=i+1;j<=ORC_VAR_T15;j++) {
-      if (program->vars[j].size == 0) continue;
+      if (program->vars[j].size == 0) {
+        continue;
+      }
 
       if (strcmp (program->vars[i].name, program->vars[j].name) == 0) {
         orc_parse_add_error (parser, "duplicate variable name: %s",
@@ -641,30 +645,32 @@ orc_parse_sanity_check (OrcParser *parser, OrcProgram *program)
     OrcStaticOpcode *opcode = insn->opcode;
 
     for(j=0;j<ORC_STATIC_OPCODE_N_DEST;j++){
-      if (opcode->dest_size[j] == 0) continue;
+      if (opcode->dest_size[j] == 0) {
+        continue;
+      }
       if (program->vars[insn->dest_args[j]].used &&
           program->vars[insn->dest_args[j]].vartype == ORC_VAR_TYPE_DEST) {
-        orc_parse_add_error (parser, "destination \"%s\" written multiple times",
-            program->vars[insn->dest_args[j]].name);
+        orc_parse_add_error (parser, "destination %d \"%s\" written multiple times",
+            j+1, program->vars[insn->dest_args[j]].name);
       }
       program->vars[insn->dest_args[j]].used = TRUE;
     }
 
     for(j=0;j<ORC_STATIC_OPCODE_N_SRC;j++){
-      if (opcode->src_size[j] == 0) continue;
+      if (opcode->src_size[j] == 0) {
+        continue;
+      }
       if (program->vars[insn->src_args[j]].used &&
           program->vars[insn->src_args[j]].vartype == ORC_VAR_TYPE_SRC) {
-        orc_parse_add_error (parser, "source \"%s\" read multiple times",
-            program->vars[insn->src_args[j]].name);
+        orc_parse_add_error (parser, "source %d \"%s\" read multiple times",
+            j+1, program->vars[insn->src_args[j]].name);
       }
       if (!program->vars[insn->src_args[j]].used &&
           program->vars[insn->src_args[j]].vartype == ORC_VAR_TYPE_TEMP) {
-        orc_parse_add_error (parser, "variable \"%s\" used before being written",
-            program->vars[insn->src_args[j]].name);
+        orc_parse_add_error (parser, "variable %d \"%s\" used before being written",
+            j+1, program->vars[insn->src_args[j]].name);
       }
     }
-
   }
-
 }
 
