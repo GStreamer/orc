@@ -95,6 +95,7 @@ static int orc_parse_handle_function (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_init (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_flags (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_dotn (OrcParser *parser, const OrcLine *line);
+static int orc_parse_handle_dotm (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_directive (OrcParser *parser, const OrcLine *line);
 
 static int orc_parse_handle_opcode (OrcParser *parser, const OrcLine *line);
@@ -434,15 +435,7 @@ orc_parse_handle_legacy (OrcParser *parser, const OrcLine *line)
   const char **token = (const char **)(line->tokens);
   int n_tokens = line->n_tokens;
 
-  if (strcmp (token[0], ".m") == 0) {
-    if (n_tokens < 2) {
-      orc_parse_add_error (parser, "line %d: .m without value\n",
-          parser->line_number);
-    } else {
-      int size = strtol (token[1], NULL, 0);
-      orc_program_set_constant_m (parser->program, size);
-    }
-  } else if (strcmp (token[0], ".source") == 0) {
+  if (strcmp (token[0], ".source") == 0) {
     if (n_tokens < 3) {
       orc_parse_add_error (parser, "line %d: .source without size or identifier\n",
           parser->line_number);
@@ -673,6 +666,23 @@ orc_parse_handle_dotn (OrcParser *parser, const OrcLine *line)
 }
 
 static int
+orc_parse_handle_dotm (OrcParser *parser, const OrcLine *line)
+{
+  int size;
+
+  if (line->n_tokens < 2) {
+    orc_parse_add_error (parser, "line %d: .m without value\n",
+        parser->line_number);
+    return 0;
+  }
+
+  size = strtol (line->tokens[1], NULL, 0);
+  orc_program_set_constant_m (parser->program, size);
+
+  return 1;
+}
+
+static int
 orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
 {
   static const OrcDirective dirs[] = {
@@ -681,6 +691,7 @@ orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
     { ".init", orc_parse_handle_init },
     { ".flags", orc_parse_handle_flags },
     { ".n", orc_parse_handle_dotn },
+    { ".m", orc_parse_handle_dotm },
     { NULL, NULL }
   };
   int i;
