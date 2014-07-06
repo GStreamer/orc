@@ -93,6 +93,7 @@ static void orc_parse_sanity_check (OrcParser *parser, OrcProgram *program);
 static int orc_parse_handle_legacy (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_function (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_init (OrcParser *parser, const OrcLine *line);
+static int orc_parse_handle_flags (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_directive (OrcParser *parser, const OrcLine *line);
 
 static int orc_parse_handle_opcode (OrcParser *parser, const OrcLine *line);
@@ -432,14 +433,7 @@ orc_parse_handle_legacy (OrcParser *parser, const OrcLine *line)
   const char **token = (const char **)(line->tokens);
   int n_tokens = line->n_tokens;
 
-  if (strcmp (token[0], ".flags") == 0) {
-    int i;
-    for(i=1;i<n_tokens;i++){
-      if (!strcmp (token[i], "2d")) {
-        orc_program_set_2d (parser->program);
-      }
-    }
-  } else if (strcmp (token[0], ".n") == 0) {
+  if (strcmp (token[0], ".n") == 0) {
     int i;
     for(i=1;i<n_tokens;i++){
       if (strcmp (token[i], "mult") == 0) {
@@ -659,12 +653,25 @@ orc_parse_handle_init (OrcParser *parser, const OrcLine *line)
 }
 
 static int
+orc_parse_handle_flags (OrcParser *parser, const OrcLine *line)
+{
+  int i;
+  for (i=1;i<line->n_tokens;i++) {
+    if (!strcmp (line->tokens[i], "2d")) {
+      orc_program_set_2d (parser->program);
+    }
+  }
+  return 1;
+}
+
+static int
 orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
 {
   static const OrcDirective dirs[] = {
     { ".function", orc_parse_handle_function },
     { ".backup", orc_parse_handle_backup },
     { ".init", orc_parse_handle_init },
+    { ".flags", orc_parse_handle_flags },
     { NULL, NULL }
   };
   int i;
