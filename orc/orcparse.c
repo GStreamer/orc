@@ -37,6 +37,8 @@ struct _OrcParser {
   char *log;
   int log_size;
   int log_alloc;
+
+  char *init_function;
 };
 
 static void orc_parse_get_line (OrcParser *parser);
@@ -58,7 +60,6 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
 {
   OrcParser _parser;
   OrcParser *parser = &_parser;
-  char *init_function = NULL;
 
   memset (parser, 0, sizeof(*parser));
 
@@ -145,13 +146,13 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
           orc_program_set_backup_name (parser->program, token[1]);
         }
       } else if (strcmp (token[0], ".init") == 0) {
-        free (init_function);
-        init_function = NULL;
+        free (parser->init_function);
+        parser->init_function = NULL;
         if (n_tokens < 2) {
           orc_parse_log (parser, "error: line %d: .init without function name\n",
               parser->line_number);
         } else {
-          init_function = strdup (token[1]);
+          parser->init_function = strdup (token[1]);
         }
       } else if (strcmp (token[0], ".flags") == 0) {
         int i;
@@ -408,9 +409,9 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
 
   if (orc_vector_has_data (&parser->programs)) {
     OrcProgram *prog = ORC_VECTOR_GET_ITEM (&parser->programs, 0, OrcProgram *);
-    prog->init_function = init_function;
+    prog->init_function = parser->init_function;
   } else {
-    free (init_function);
+    free (parser->init_function);
   }
   *programs = ORC_VECTOR_AS_TYPE (&parser->programs, OrcProgram);
   return orc_vector_length (&parser->programs);
