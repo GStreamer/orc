@@ -94,6 +94,7 @@ static int orc_parse_handle_legacy (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_function (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_init (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_flags (OrcParser *parser, const OrcLine *line);
+static int orc_parse_handle_dotn (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_directive (OrcParser *parser, const OrcLine *line);
 
 static int orc_parse_handle_opcode (OrcParser *parser, const OrcLine *line);
@@ -433,41 +434,7 @@ orc_parse_handle_legacy (OrcParser *parser, const OrcLine *line)
   const char **token = (const char **)(line->tokens);
   int n_tokens = line->n_tokens;
 
-  if (strcmp (token[0], ".n") == 0) {
-    int i;
-    for(i=1;i<n_tokens;i++){
-      if (strcmp (token[i], "mult") == 0) {
-        if (i == n_tokens - 1) {
-          orc_parse_add_error (parser, ".n mult requires multiple value");
-        } else {
-          orc_program_set_n_multiple (parser->program,
-              strtol (token[1], NULL, 0));
-          i++;
-        }
-      } else if (strcmp (token[i], "min") == 0) {
-        if (i == n_tokens - 1) {
-          orc_parse_add_error (parser, ".n min requires multiple value");
-        } else {
-          orc_program_set_n_minimum (parser->program,
-              strtol (token[1], NULL, 0));
-          i++;
-        }
-      } else if (strcmp (token[i], "max") == 0) {
-        if (i == n_tokens - 1) {
-          orc_parse_add_error (parser, ".n max requires multiple value");
-        } else {
-          orc_program_set_n_maximum (parser->program,
-              strtol (token[1], NULL, 0));
-          i++;
-        }
-      } else if (i == n_tokens - 1) {
-        orc_program_set_constant_n (parser->program,
-            strtol (token[1], NULL, 0));
-      } else {
-        orc_parse_add_error (parser, "unknown .n token '%s'", token[i]);
-      }
-    }
-  } else if (strcmp (token[0], ".m") == 0) {
+  if (strcmp (token[0], ".m") == 0) {
     if (n_tokens < 2) {
       orc_parse_add_error (parser, "line %d: .m without value\n",
           parser->line_number);
@@ -665,6 +632,47 @@ orc_parse_handle_flags (OrcParser *parser, const OrcLine *line)
 }
 
 static int
+orc_parse_handle_dotn (OrcParser *parser, const OrcLine *line)
+{
+  int i;
+
+  for(i=1;i<line->n_tokens;i++){
+    if (strcmp (line->tokens[i], "mult") == 0) {
+      if (i == line->n_tokens - 1) {
+        orc_parse_add_error (parser, ".n mult requires multiple value");
+      } else {
+        orc_program_set_n_multiple (parser->program,
+            strtol (line->tokens[i+1], NULL, 0));
+        i++;
+      }
+    } else if (strcmp (line->tokens[i], "min") == 0) {
+      if (i == line->n_tokens - 1) {
+        orc_parse_add_error (parser, ".n min requires multiple value");
+      } else {
+        orc_program_set_n_minimum (parser->program,
+            strtol (line->tokens[i+1], NULL, 0));
+        i++;
+      }
+    } else if (strcmp (line->tokens[i], "max") == 0) {
+      if (i == line->n_tokens - 1) {
+        orc_parse_add_error (parser, ".n max requires multiple value");
+      } else {
+        orc_program_set_n_maximum (parser->program,
+            strtol (line->tokens[i+1], NULL, 0));
+        i++;
+      }
+    } else if (i == line->n_tokens - 1) {
+      orc_program_set_constant_n (parser->program,
+          strtol (line->tokens[i], NULL, 0));
+    } else {
+      orc_parse_add_error (parser, "unknown .n token '%s'", line->tokens[i]);
+    }
+  }
+
+  return 1;
+}
+
+static int
 orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
 {
   static const OrcDirective dirs[] = {
@@ -672,6 +680,7 @@ orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
     { ".backup", orc_parse_handle_backup },
     { ".init", orc_parse_handle_init },
     { ".flags", orc_parse_handle_flags },
+    { ".n", orc_parse_handle_dotn },
     { NULL, NULL }
   };
   int i;
