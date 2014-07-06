@@ -65,6 +65,7 @@ static void orc_line_parse_tokens (OrcLine *line);
 static void orc_line_advance (OrcLine *line);
 static void orc_line_add_token (OrcLine *line);
 static int orc_line_has_tokens (const OrcLine *line);
+static int orc_line_is_directive (const OrcLine *line);
 
 static void orc_parse_add_error_valist (OrcParser *parser, const char *format, va_list args);
 static void orc_parse_add_error (OrcParser *parser, const char *format, ...);
@@ -160,7 +161,7 @@ orc_parse_code (const char *code, OrcProgram ***programs, int *n_programs,
     n_tokens = line->n_tokens;
     token = line->tokens;
 
-    if (token[0][0] == '.') {
+    if (orc_line_is_directive (line)) {
       if (strcmp (token[0], ".function") == 0) {
         if (n_tokens < 2) {
           orc_parse_add_error (parser, "line %d: .function without function name\n",
@@ -546,6 +547,12 @@ orc_line_parse_tokens (OrcLine *line)
     }
     orc_line_add_token (line);
   }
+}
+
+static int
+orc_line_is_directive (const OrcLine *line)
+{
+  return line->tokens[0][0] == '.';
 }
 
 
