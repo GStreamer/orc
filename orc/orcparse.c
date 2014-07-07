@@ -28,6 +28,7 @@ struct _OrcParser {
 
   int line_number;
   char *line;
+  int line_length;
   int creg_index;
 
   OrcOpcodeSet *opcode_set;
@@ -50,6 +51,10 @@ static void orc_parse_splat_error (OrcParseError **errors, int n_errors, char **
 static void orc_parse_init (OrcParser *parser, const char *code, int enable_errors);
 static int orc_parse_has_data (OrcParser *parser);
 static void orc_parse_get_line (OrcParser *parser);
+static void orc_parse_put_line (OrcParser *parser);
+static void orc_parse_copy_line (OrcParser *parser);
+static void orc_parse_find_line_length (OrcParser *parser);
+static void orc_parse_advance (OrcParser *parser);
 static void orc_parse_sanity_check (OrcParser *parser, OrcProgram *program);
 
 static OrcStaticOpcode * orc_parse_find_opcode (OrcParser *parser, const char *opcode);
@@ -414,19 +419,20 @@ orc_parse_code (const char *code, OrcProgram ***programs, int *n_programs,
           orc_parse_add_error (parser, "bad operand \"%s\" in position %d",
                   token[offset + error], error);
         }
+
       } else {
         orc_parse_add_error (parser, "unknown opcode: %s", token[offset]);
       }
     }
+
+    orc_parse_put_line (parser);
   }
 
   if (parser->program) {
     orc_parse_sanity_check (parser, parser->program);
   }
 
-  if (parser->line) free (parser->line);
-
-  if (parser->enable_errors) {
+  if (enable_errors) {
     *errors = ORC_VECTOR_AS_TYPE (&parser->errors, OrcParseError);
     *n_errors = orc_vector_length (&parser->errors);
   }
@@ -608,35 +614,52 @@ opcode_arg_size (OrcStaticOpcode *opcode, int arg)
 }
 
 static void
-orc_parse_get_line (OrcParser *parser)
+orc_parse_find_line_length (OrcParser *parser)
 {
-  const char *end;
-  int n;
-
-  if (parser->line) {
-    free (parser->line);
-    parser->line = NULL;
-  }
+  const char *end = NULL;
 
   end = strchr (parser->p, '\n');
   if (end == NULL) {
     end = parser->code + parser->code_length;
   }
-
-  n = end - parser->p;
-  parser->line = malloc (n + 1);
-  memcpy (parser->line, parser->p, n);
-  parser->line[n] = 0;
-
   /* windows text files might have \r\n as line ending */
-  if (n > 0 && parser->line[n - 1] == '\r')
-    parser->line[n - 1] = 0;
+  if (end > parser->p && *(end - 1) == '\r')
+    end--;
 
-  parser->p = end;
-  if (parser->p[0] == '\n') {
+  parser->line_length = end - parser->p;
+}
+
+static void
+orc_parse_advance (OrcParser *parser)
+{
+  parser->p += parser->line_length;
+  if (parser->p[0] == '\n' || parser->p[0] == '\r') {
     parser->p++;
   }
+}
+
+static void
+orc_parse_copy_line (OrcParser *parser)
+{
+  parser->line = strndup (parser->p, parser->line_length);
   parser->line_number++;
+}
+
+static void
+orc_parse_put_line (OrcParser *parser)
+{
+  if (parser->line) {
+    free (parser->line);
+    parser->line = NULL;
+  }
+}
+
+static void
+orc_parse_get_line (OrcParser *parser)
+{
+  orc_parse_find_line_length (parser);
+  orc_parse_copy_line (parser);
+  orc_parse_advance (parser);
 }
 
 
