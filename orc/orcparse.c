@@ -91,6 +91,7 @@ static void orc_parse_advance (OrcParser *parser);
 static void orc_parse_sanity_check (OrcParser *parser, OrcProgram *program);
 
 static int orc_parse_handle_legacy (OrcParser *parser, const OrcLine *line);
+static int orc_parse_handle_function (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_directive (OrcParser *parser, const OrcLine *line);
 
 static int orc_parse_handle_opcode (OrcParser *parser, const OrcLine *line);
@@ -430,28 +431,7 @@ orc_parse_handle_legacy (OrcParser *parser, const OrcLine *line)
   const char **token = (const char **)(line->tokens);
   int n_tokens = line->n_tokens;
 
-  if (strcmp (token[0], ".function") == 0) {
-    if (n_tokens < 2) {
-      orc_parse_add_error (parser, "line %d: .function without function name\n",
-          parser->line_number);
-    } else {
-      if (parser->program) {
-        orc_parse_sanity_check (parser, parser->program);
-      }
-      parser->program = orc_program_new ();
-      orc_program_set_name (parser->program, token[1]);
-
-      orc_vector_append (&parser->programs, parser->program);
-      parser->creg_index = 1;
-    }
-  } else if (strcmp (token[0], ".backup") == 0) {
-    if (n_tokens < 2) {
-      orc_parse_add_error (parser, "line %d: .backup without function name\n",
-          parser->line_number);
-    } else {
-      orc_program_set_backup_name (parser->program, token[1]);
-    }
-  } else if (strcmp (token[0], ".init") == 0) {
+  if (strcmp (token[0], ".init") == 0) {
     free (parser->init_function);
     parser->init_function = NULL;
     if (n_tokens < 2) {
@@ -631,9 +611,50 @@ orc_parse_handle_legacy (OrcParser *parser, const OrcLine *line)
 }
 
 static int
+orc_parse_handle_function (OrcParser *parser, const OrcLine *line)
+{
+  const char *name;
+
+  if (line->n_tokens < 2) {
+    orc_parse_add_error (parser, "line %d: .function without function name\n",
+        parser->line_number);
+    name = "unknown_function";
+  } else {
+    name = line->tokens[1];
+  }
+
+  if (parser->program) {
+    orc_parse_sanity_check (parser, parser->program);
+  }
+  parser->program = orc_program_new ();
+  orc_program_set_name (parser->program, name);
+
+  orc_vector_append (&parser->programs, parser->program);
+  parser->creg_index = 1;
+
+  return 1;
+}
+
+static int
+orc_parse_handle_backup (OrcParser *parser, const OrcLine *line)
+{
+  if (line->n_tokens < 2) {
+    orc_parse_add_error (parser, "line %d: .backup without function name\n",
+        parser->line_number);
+    return 0;
+  }
+
+  orc_program_set_backup_name (parser->program, line->tokens[1]);
+
+  return 1;
+}
+
+static int
 orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
 {
   static const OrcDirective dirs[] = {
+    { ".function", orc_parse_handle_function },
+    { ".backup", orc_parse_handle_backup },
     { NULL, NULL }
   };
   int i;
