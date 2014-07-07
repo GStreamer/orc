@@ -104,6 +104,7 @@ static int orc_parse_handle_temporary (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_parameter (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_parameter_int64 (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_parameter_float (OrcParser *parser, const OrcLine *line);
+static int orc_parse_handle_parameter_double (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_directive (OrcParser *parser, const OrcLine *line);
 
 static int orc_parse_handle_opcode (OrcParser *parser, const OrcLine *line);
@@ -714,7 +715,7 @@ ORC_PARSE_ITEM (temporary)
 ORC_PARSE_ITEM (parameter)
 ORC_PARSE_ITEM (parameter_int64)
 ORC_PARSE_ITEM (parameter_float)
-
+ORC_PARSE_ITEM (parameter_double)
 
 static int
 orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
@@ -734,6 +735,7 @@ orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
     { ".param", orc_parse_handle_parameter },
     { ".longparam", orc_parse_handle_parameter_int64 },
     { ".floatparam", orc_parse_handle_parameter_float },
+    { ".doubleparam", orc_parse_handle_parameter_double },
     { NULL, NULL }
   };
   int i;
