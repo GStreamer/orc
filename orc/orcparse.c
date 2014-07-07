@@ -90,7 +90,6 @@ static void orc_parse_find_line_length (OrcParser *parser);
 static void orc_parse_advance (OrcParser *parser);
 static void orc_parse_sanity_check (OrcParser *parser, OrcProgram *program);
 
-static int orc_parse_handle_legacy (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_function (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_init (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_flags (OrcParser *parser, const OrcLine *line);
@@ -439,27 +438,6 @@ orc_parse_add_error (OrcParser *parser, const char *format, ...)
 }
 
 static int
-orc_parse_handle_legacy (OrcParser *parser, const OrcLine *line)
-{
-  const char **token = (const char **)(line->tokens);
-  int n_tokens = line->n_tokens;
-
-  if (strcmp (token[0], ".doubleparam") == 0) {
-    if (n_tokens < 3) {
-      orc_parse_add_error (parser, "line %d: .doubleparam without size or name\n",
-          parser->line_number);
-    } else {
-      int size = strtol (token[1], NULL, 0);
-      orc_program_add_parameter_double (parser->program, size, token[2]);
-    }
-  } else {
-    orc_parse_add_error (parser, "unknown directive: %s\n", token[0]);
-  }
-
-  return 1;
-}
-
-static int
 orc_parse_handle_function (OrcParser *parser, const OrcLine *line)
 {
   const char *name;
@@ -745,7 +723,8 @@ orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
       return 1;
     }
   }
-  return orc_parse_handle_legacy (parser, line);
+  orc_parse_add_error (parser, "unknown directive: %s", line->tokens[0]);
+  return 0;
 }
 
 
