@@ -18,6 +18,7 @@
 
 
 #define ORC_ERROR_LENGTH 256
+#define ORC_LINE_MAX_TOKENS 16
 
 typedef struct _OrcParser OrcParser;
 struct _OrcParser {
@@ -41,6 +42,20 @@ struct _OrcParser {
 
   char *init_function;
 };
+
+typedef struct _OrcLine OrcLine;
+struct _OrcLine {
+    char *p;
+    char *end;
+    const char *tokens[ORC_LINE_MAX_TOKENS];
+    int n_tokens;
+};
+
+static void orc_line_init (OrcLine *line, OrcParser *parser);
+static int orc_line_has_data (const OrcLine *line);
+static int orc_line_is_comment (const OrcLine *line);
+static int orc_line_is_blank (const OrcLine *line);
+static void orc_line_skip_blanks (OrcLine *line);
 
 static void orc_parse_add_error_valist (OrcParser *parser, const char *format, va_list args);
 static void orc_parse_add_error (OrcParser *parser, const char *format, ...);
@@ -108,28 +123,25 @@ orc_parse_code (const char *code, OrcProgram ***programs, int *n_programs,
   while (orc_parse_has_data (parser)) {
     char *p;
     char *end;
-    char *token[10];
-    int n_tokens;
+    char *token[10] = { NULL };
+    int n_tokens = 0;
+    OrcLine _line;
+    OrcLine *line = &_line;
 
     orc_parse_get_line (parser);
-    if (parser->program) orc_program_set_line (parser->program, parser->line_number);
+    if (parser->program) {
+      orc_program_set_line (parser->program, parser->line_number);
+    }
 
-    p = parser->line;
-    end = p + strlen (p);
-    /* printf("%d: %s\n", parser->line_number, parser->line); */
+    orc_line_init (line, parser);
+    orc_line_skip_blanks (line);
 
-    while (p[0] == ' ' || p[0] == '\t') p++;
-
-    if (p[0] == 0) {
+    if (!orc_line_has_data (line) || orc_line_is_comment (line)) {
       continue;
     }
 
-    if (p[0] == '#') {
-      /* printf("comment: %s\n", p+1); */
-      continue;
-    }
-
-    n_tokens = 0;
+    p = line->p;
+    end = line->end;
 
     while (p < end) {
       while (p[0] != 0 && (p[0] == ' ' || p[0] == '\t')) p++;
@@ -449,6 +461,40 @@ orc_parse_code (const char *code, OrcProgram ***programs, int *n_programs,
     *n_programs = orc_vector_length (&parser->programs);
   }
   return orc_vector_has_data (&parser->errors) ?-1 :0;
+}
+
+static void
+orc_line_init (OrcLine *line, OrcParser *parser)
+{
+  memset (line, 0, sizeof(*line));
+  line->p = parser->line;
+  line->end = line->p + parser->line_length;
+}
+
+static int
+orc_line_has_data (const OrcLine *line)
+{
+  return line->p[0] != 0;
+}
+
+static int
+orc_line_is_comment (const OrcLine *line)
+{
+  return line->p[0] == '#';
+}
+
+static int
+orc_line_is_blank (const OrcLine *line)
+{
+  return (line->p[0] == ' ' || line->p[0] == '\t');
+}
+
+static void
+orc_line_skip_blanks (OrcLine *line)
+{
+  while (orc_line_has_data (line) && orc_line_is_blank (line)) {
+    line->p++;
+  }
 }
 
 static void
