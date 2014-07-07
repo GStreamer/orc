@@ -1015,7 +1015,7 @@ orc_program_append_str_n (OrcProgram *program, const char *name,
   }
 
   if (argc != expected_args) {
-    ORC_ERROR ("not the correct number of arguments provided for opcode: %s expects %d but got %d", name, expected_args, argc);
+    ORC_WARNING ("not the correct number of arguments provided for opcode: %s expects %d but got %d", name, expected_args, argc);
   };
 
   for (i=0;i<expected_args;i++){

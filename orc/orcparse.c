@@ -351,6 +351,7 @@ orc_parse_code (const char *code, OrcProgram ***programs, int *n_programs,
       OrcStaticOpcode *o;
       unsigned int flags = 0;
       int offset = 0;
+      int error = 0;
 
       if (strcmp (token[0], "x4") == 0) {
         flags |= ORC_INSTRUCTION_FLAG_X4;
@@ -376,7 +377,7 @@ orc_parse_code (const char *code, OrcProgram ***programs, int *n_programs,
       if (o) {
         int n_args = opcode_n_args (o);
         int i, j;
-        char *args[4] = { NULL };
+        const char *args[6] = { NULL };
 
         if (n_tokens != 1 + offset + n_args) {
           orc_parse_add_error (parser, "line %d: too %s arguments for %s (expected %d)\n",
@@ -406,8 +407,13 @@ orc_parse_code (const char *code, OrcProgram ***programs, int *n_programs,
           }
         }
 
-        orc_program_append_str_2 (parser->program, token[offset], flags,
-              args[0], args[1], args[2], args[3]);
+        error = orc_program_append_str_n (parser->program, token[offset], flags,
+                    n_args, args);
+
+        if (error > 0) {
+          orc_parse_add_error (parser, "bad operand \"%s\" in position %d",
+                  token[offset + error], error);
+        }
       } else {
         orc_parse_add_error (parser, "unknown opcode: %s", token[offset]);
       }
