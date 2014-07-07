@@ -51,6 +51,13 @@ struct _OrcLine {
     int n_tokens;
 };
 
+typedef struct _OrcDirective OrcDirective;
+struct _OrcDirective {
+  const char *name;
+  int (* handler) (OrcParser *parser, const OrcLine *line);
+};
+
+
 static void orc_line_init (OrcLine *line, OrcParser *parser);
 static int orc_line_has_data (const OrcLine *line);
 static int orc_line_is_comment (const OrcLine *line);
@@ -66,6 +73,7 @@ static void orc_line_advance (OrcLine *line);
 static void orc_line_add_token (OrcLine *line);
 static int orc_line_has_tokens (const OrcLine *line);
 static int orc_line_is_directive (const OrcLine *line);
+static int orc_line_match_directive (const OrcLine *line, const char *dirname);
 
 static void orc_parse_add_error_valist (OrcParser *parser, const char *format, va_list args);
 static void orc_parse_add_error (OrcParser *parser, const char *format, ...);
@@ -82,6 +90,7 @@ static void orc_parse_find_line_length (OrcParser *parser);
 static void orc_parse_advance (OrcParser *parser);
 static void orc_parse_sanity_check (OrcParser *parser, OrcProgram *program);
 
+static int orc_parse_handle_legacy (OrcParser *parser, const OrcLine *line);
 static int orc_parse_handle_directive (OrcParser *parser, const OrcLine *line);
 
 static int orc_parse_handle_opcode (OrcParser *parser, const OrcLine *line);
@@ -290,6 +299,12 @@ orc_line_is_directive (const OrcLine *line)
   return line->tokens[0][0] == '.';
 }
 
+static int
+orc_line_match_directive (const OrcLine *line, const char *dirname)
+{
+  return strcmp (line->tokens[0], dirname) == 0;
+}
+
 
 static void
 orc_parse_init (OrcParser *parser, const char *code, int enable_errors)
@@ -410,7 +425,7 @@ orc_parse_add_error (OrcParser *parser, const char *format, ...)
 }
 
 static int
-orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
+orc_parse_handle_legacy (OrcParser *parser, const OrcLine *line)
 {
   const char **token = (const char **)(line->tokens);
   int n_tokens = line->n_tokens;
@@ -614,6 +629,23 @@ orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
 
   return 1;
 }
+
+static int
+orc_parse_handle_directive (OrcParser *parser, const OrcLine *line)
+{
+  static const OrcDirective dirs[] = {
+    { NULL, NULL }
+  };
+  int i;
+  for (i=0;dirs[i].name;i++) {
+    if (orc_line_match_directive (line, dirs[i].name)) {
+      dirs[i].handler (parser, line);
+      return 1;
+    }
+  }
+  return orc_parse_handle_legacy (parser, line);
+}
+
 
 static OrcStaticOpcode *
 orc_parse_find_opcode (OrcParser *parser, const char *opcode)
