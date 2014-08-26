@@ -208,9 +208,6 @@ ORC_BEGIN_DECLS
 
 #ifdef ORC_ENABLE_UNSTABLE_API
 
-int get_file_int (const char *file, int *value);
-char * get_file (const char *file);
-char * get_cpuinfo_line (char *cpuinfo, const char *tag);
 char * _strndup (const char *s, int n);
 char ** strsplit (const char *s, char delimiter);
 char * get_tag_value (char *s, const char *tag);
