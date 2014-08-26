@@ -77,6 +77,13 @@ AC_CHECK_LIB(rt, clock_gettime,
    )
 AC_SUBST(LIBRT)
 
+dnl Android liblog
+AC_CHECK_LIB(log, __android_log_print,
+   AC_DEFINE(HAVE_ANDROID_LIBLOG, 1, [Defined if we have __android_log_print()])
+   LIBLOG=-llog
+   )
+AC_SUBST(LIBLOG)
+
 AC_CACHE_CHECK(for monotonic clocks,
     orc_cv_monotonic_clock,AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #include <time.h>

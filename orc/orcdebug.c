@@ -35,6 +35,10 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
+#ifdef HAVE_ANDROID_LIBLOG
+#include <android/log.h>
+#endif
+
 /**
  * SECTION:orcdebug
  * @title: OrcDebug
@@ -66,6 +70,46 @@ _orc_debug_init(void)
   ORC_INFO ("orc-" VERSION " debug init");
 }
 
+#ifdef HAVE_ANDROID_LIBLOG
+static void
+orc_debug_print_valist (int level, const char *file, const char *func,
+        int line, const char *format, va_list args)
+{
+  int android_log_level;
+  char *dbg;
+
+  if (level > orc_debug_get_level())
+    return;
+
+  switch (level) {
+    case ORC_DEBUG_ERROR:
+      android_log_level = ANDROID_LOG_ERROR;
+      break;
+    case ORC_DEBUG_WARNING:
+      android_log_level = ANDROID_LOG_WARN;
+      break;
+    case ORC_DEBUG_INFO:
+      android_log_level = ANDROID_LOG_INFO;
+      break;
+    case ORC_DEBUG_LOG:
+      android_log_level = ANDROID_LOG_DEBUG;
+      break;
+    default:
+      android_log_level = ANDROID_LOG_VERBOSE;
+      break;
+  }
+
+  if (vasprintf (&dbg, format, args) < 0) {
+    __android_log_print (android_log_level, "Orc", "Failed to alloc debug string....");
+    return;
+  }
+
+  __android_log_print (android_log_level, "Orc",
+        "%s:%d:%s %s\n", file, line, func, dbg);
+
+  free (dbg);
+}
+#else
 static void
 orc_debug_print_valist (int level, const char *file, const char *func,
         int line, const char *format, va_list args)
@@ -84,6 +128,7 @@ orc_debug_print_valist (int level, const char *file, const char *func,
   vfprintf (stderr, format, args);
   fprintf (stderr, "\n");
 }
+#endif
 
 void
 orc_debug_print (int level, const char *file, const char *func,
