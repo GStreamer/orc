@@ -71,6 +71,7 @@ orc_check_neon_proc_auxv (void)
 
   fd = open("/proc/self/auxv", O_RDONLY);
   if (fd < 0) {
+    ORC_LOG ("Failed to open /proc/self/auxv");
     return 0;
   }
 
@@ -99,39 +100,7 @@ orc_check_neon_proc_auxv (void)
 }
 #endif
 
-#ifdef unused
-static void
-orc_cpu_arm_getflags_cpuinfo (char *cpuinfo)
-{
-  char *cpuinfo_flags;
-  char **flags;
-  char **f;
-
-  cpuinfo_flags = get_cpuinfo_line(cpuinfo, "Features");
-  if (cpuinfo_flags == NULL) {
-    free (cpuinfo);
-    return;
-  }
-
-  flags = strsplit(cpuinfo_flags, ' ');
-  for (f = flags; *f; f++) {
-#if 0
-    if (strcmp (*f, "edsp") == 0) {
-      ORC_DEBUG ("cpu feature %s", *f);
-      orc_cpu_flags |= ORC_CPU_FLAG_EDSP;
-    }
-    if (strcmp (*f, "vfp") == 0) {
-      ORC_DEBUG ("cpu feature %s", *f);
-      orc_cpu_flags |= ORC_CPU_FLAG_VFP;
-    }
-#endif
-
-    free (*f);
-  }
-  free (flags);
-  free (cpuinfo_flags);
-}
-
+#ifdef ANDROID
 static char *
 get_proc_cpuinfo (void)
 {
@@ -160,6 +129,78 @@ get_proc_cpuinfo (void)
 
   return cpuinfo;
 }
+
+static char *
+get_cpuinfo_line (char *cpuinfo, const char *tag)
+{
+  char *flags;
+  char *end;
+  char *colon;
+
+  flags = strstr(cpuinfo,tag);
+  if (flags == NULL) return NULL;
+
+  end = strchr(flags, '\n');
+  if (end == NULL) return NULL;
+  colon = strchr (flags, ':');
+  if (colon == NULL) return NULL;
+  colon++;
+  if(colon >= end) return NULL;
+
+  return _strndup (colon, end-colon);
+}
+
+static unsigned long
+orc_cpu_arm_getflags_cpuinfo ()
+{
+  unsigned long ret = 0;
+  char *cpuinfo;
+  char *cpuinfo_line;
+  char **flags;
+  char **f;
+
+  cpuinfo = get_proc_cpuinfo();
+  if (cpuinfo == NULL) {
+    ORC_DEBUG ("Failed to read /proc/cpuinfo");
+    return 0;
+  }
+
+  cpuinfo_line = get_cpuinfo_line(cpuinfo, "CPU architecture");
+  if (cpuinfo_line) {
+    int arm_arch = strtoul (cpuinfo_line, NULL, 0);
+    if (arm_arch >= 8L) {
+      /* Armv8 always supports these, but they won't be listed
+       * in the CPU info optional features */
+      ret = ORC_TARGET_ARM_EDSP | ORC_TARGET_NEON_NEON;
+      goto out;
+    }
+
+    free(cpuinfo_line);
+  }
+
+  cpuinfo_line = get_cpuinfo_line(cpuinfo, "Features");
+  if (cpuinfo_line == NULL) {
+    free (cpuinfo);
+    return 0;
+  }
+
+  flags = strsplit(cpuinfo_line, ' ');
+  for (f = flags; *f; f++) {
+    if (strcmp (*f, "edsp") == 0)
+      ret |= ORC_TARGET_ARM_EDSP;
+    else if (strcmp (*f, "neon") == 0)
+      ret |= ORC_TARGET_NEON_NEON;
+    free (*f);
+  }
+
+  free (flags);
+
+out:
+  free (cpuinfo_line);
+  free (cpuinfo);
+
+  return ret;
+}
 #endif
 
 unsigned long
@@ -170,46 +211,14 @@ orc_arm_get_cpu_flags (void)
 #ifdef __linux__
   neon_flags = orc_check_neon_proc_auxv ();
 #endif
-#ifdef unused
-#ifdef __linux__
-  int arm_implementer = 0;
-  char *cpuinfo;
-  char *s;
-
-  cpuinfo = get_proc_cpuinfo();
-  if (cpuinfo == NULL) return;
-
-  s = get_cpuinfo_line(cpuinfo, "CPU implementer");
-  if (s) {
-    arm_implementer = strtoul (s, NULL, 0);
-    free(s);
-  }
-
-  switch(arm_implementer) {
-    case 0x69: /* Intel */
-    case 0x41: /* ARM */
-      /* ARM chips are known to not have timestamping available from 
-       * user space */
-      break;
-    default:
-      break;
-  }
-
-#if 0
-  s = get_cpuinfo_line(cpuinfo, "CPU architecture");
-  if (s) {
-    int arm_arch;
-    arm_arch = strtoul (s, NULL, 0);
-    if (arm_arch >= 6)
-      orc_cpu_flags |= ORC_CPU_FLAG_ARM6;
-    free(s);
+#ifdef ANDROID
+  if (!neon_flags) {
+    /* On ARM, /proc/self/auxv might not be accessible.
+     * Fall back to /proc/cpuinfo */
+    neon_flags = orc_cpu_arm_getflags_cpuinfo ();
   }
 #endif
 
-  orc_cpu_arm_getflags_cpuinfo (cpuinfo);
-  free (cpuinfo);
-#endif
-#endif
   if (orc_compiler_flag_check ("-neon")) {
     neon_flags &= ~ORC_TARGET_NEON_NEON;
   }
