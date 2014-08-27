@@ -1,3 +1,14 @@
+0.4.22
+======
+
+Maintenance release:
+
+  - Handle NOCONFIGURE=1 in autogen.sh (Colin Walters)
+  - Some memory leak fixes in the compiler (Sebastian Dröge, Thiago Santos)
+  - Fixes for compiler warnings on Win64 (Edward Hervey)
+  - Properly detect CPU features on Android in non-debug build (Jan Schmidt)
+  - Use Android logging system instead of stderr for debug output (Jan Schmidt)
+
 0.4.21
 ======
 

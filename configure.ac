@@ -1,5 +1,5 @@
 AC_PREREQ([2.68])
-AC_INIT([orc], [0.4.21.1], [http://bugzilla.gnome.org/enter_bug.cgi?product=orc],[orc])
+AC_INIT([orc], [0.4.22], [http://bugzilla.gnome.org/enter_bug.cgi?product=orc],[orc])
 dnl don't forget to update libversion
 
 AS_NANO(ORC_GIT=no,ORC_GIT=yes)
@@ -22,7 +22,7 @@ dnl - library source changed -> increment REVISION
 dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
-ORC_LIBVERSION="21:0:21"
+ORC_LIBVERSION="22:0:22"
 AC_SUBST(ORC_LIBVERSION)
 LT_PREREQ([2.2.6])
 LT_INIT([dlopen win32-dll disable-static])
