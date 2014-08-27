@@ -1,5 +1,5 @@
 AC_PREREQ([2.68])
-AC_INIT([orc], [0.4.22], [http://bugzilla.gnome.org/enter_bug.cgi?product=orc],[orc])
+AC_INIT([orc], [0.4.22.1], [http://bugzilla.gnome.org/enter_bug.cgi?product=orc],[orc])
 dnl don't forget to update libversion
 
 AS_NANO(ORC_GIT=no,ORC_GIT=yes)
