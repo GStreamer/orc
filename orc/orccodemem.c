@@ -266,13 +266,6 @@ orc_code_region_allocate_codemem (OrcCodeRegion *region)
 {
   const char *tmpdir;
 
-  tmpdir = getenv ("TMPDIR");
-  if (tmpdir && orc_code_region_allocate_codemem_dual_map (region,
-        tmpdir, FALSE)) return;
-
-  if (orc_code_region_allocate_codemem_dual_map (region,
-        "/tmp", FALSE)) return;
-
   tmpdir = getenv ("XDG_RUNTIME_DIR");
   if (tmpdir && orc_code_region_allocate_codemem_dual_map (region,
         tmpdir, FALSE)) return;
@@ -280,6 +273,13 @@ orc_code_region_allocate_codemem (OrcCodeRegion *region)
   tmpdir = getenv ("HOME");
   if (tmpdir && orc_code_region_allocate_codemem_dual_map (region,
         tmpdir, FALSE)) return;
+
+  tmpdir = getenv ("TMPDIR");
+  if (tmpdir && orc_code_region_allocate_codemem_dual_map (region,
+        tmpdir, FALSE)) return;
+
+  if (orc_code_region_allocate_codemem_dual_map (region,
+        "/tmp", FALSE)) return;
 
   if (orc_code_region_allocate_codemem_anon_map (region)) return;
   
