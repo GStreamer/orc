@@ -1052,25 +1052,26 @@ orc_compiler_get_constant (OrcCompiler *compiler, int size, int value)
 {
   int i;
   int tmp;
+  unsigned int v = value;
 
   if (size < 4) {
     if (size < 2) {
-      value &= 0xff;
-      value |= (value<<8);
+      v &= 0xff;
+      v |= (v<<8);
     }
-    value &= 0xffff;
-    value |= (value<<16);
+    v &= 0xffff;
+    v |= (v<<16);
   }
 
   for(i=0;i<compiler->n_constants;i++){
     if (compiler->constants[i].is_long == FALSE &&
-        compiler->constants[i].value == value) {
+        compiler->constants[i].value == v) {
       break;
     }
   }
   if (i == compiler->n_constants) {
     compiler->n_constants++;
-    compiler->constants[i].value = value;
+    compiler->constants[i].value = v;
     compiler->constants[i].alloc_reg = 0;
     compiler->constants[i].use_count = 0;
     compiler->constants[i].is_long = FALSE;
