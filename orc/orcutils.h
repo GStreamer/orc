@@ -139,11 +139,10 @@ typedef unsigned int orc_bool;
 #endif
 
 #define ORC_READ_UINT32_LE(ptr) \
-  ((orc_uint32)( \
-    ((orc_uint8 *)(ptr))[0] | \
-    (((orc_uint8 *)(ptr))[1]<<8) | \
-    (((orc_uint8 *)(ptr))[2]<<16) | \
-    (((orc_uint8 *)(ptr))[3]<<24)))
+  (((orc_uint32)((orc_uint8 *)(ptr))[0]) | \
+   ((orc_uint32)(((orc_uint8 *)(ptr))[1])<<8) | \
+   ((orc_uint32)(((orc_uint8 *)(ptr))[2])<<16) | \
+   ((orc_uint32)(((orc_uint8 *)(ptr))[3])<<24))
 
 #define ORC_WRITE_UINT32_LE(ptr,val) \
   do { \
