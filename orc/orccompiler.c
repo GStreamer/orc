@@ -927,7 +927,7 @@ orc_compiler_rewrite_vars2 (OrcCompiler *compiler)
       compiler->vars[src2].alloc = 1;
     } else {
       int src2 = compiler->insns[j].src_args[1];
-      if (compiler->vars[src2].alloc == 1) {
+      if (src2 != -1 && compiler->vars[src2].alloc == 1) {
         compiler->vars[src2].alloc = 0;
       }
     }
