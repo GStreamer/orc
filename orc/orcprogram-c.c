@@ -441,8 +441,8 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
             ORC_ASM_CODE(compiler,"  *%s = %s;\n",
                 varnames[i], varname);
           } else if (compiler->target_flags & ORC_TARGET_C_OPCODE) {
-            ORC_ASM_CODE(compiler,"  ((orc_union32 *)ex->dest_ptrs[%d])->i += %s;\n",
-                i - ORC_VAR_A1, varname);
+            ORC_ASM_CODE(compiler,"  ((orc_union32 *)ex->dest_ptrs[%d])->i += (orc_uint%d)%s;\n",
+                i - ORC_VAR_A1, var->size * 8, varname);
           } else {
             ORC_ASM_CODE(compiler,"  ex->accumulators[%d] = %s;\n",
                 i - ORC_VAR_A1, varname);
@@ -1009,7 +1009,7 @@ c_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
   c_get_name_int (dest, p, insn, insn->dest_args[0]);
   c_get_name_int (src1, p, insn, insn->src_args[0]);
 
-  ORC_ASM_CODE(p,"    %s = %s + %s;\n", dest, dest, src1);
+  ORC_ASM_CODE(p,"    %s = ((orc_uint32)%s) + ((orc_uint32)%s);\n", dest, dest, src1);
 }
 
 static void
@@ -1187,7 +1187,8 @@ c_rule_splatbl (OrcCompiler *p, void *user, OrcInstruction *insn)
   c_get_name_int (src, p, insn, insn->src_args[0]);
 
   ORC_ASM_CODE(p,
-      "    %s = ((%s&0xff) << 24) | ((%s&0xff)<<16) | ((%s&0xff) << 8) | (%s&0xff);\n",
+      "    %s = ((((orc_uint32)%s)&0xff) << 24) | ((((orc_uint32)%s)&0xff)<<16)"
+      " | ((((orc_uint32)%s)&0xff) << 8) | (((orc_uint32)%s)&0xff);\n",
       dest, src, src, src, src);
 }
 
