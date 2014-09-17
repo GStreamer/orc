@@ -49,13 +49,6 @@ At runtime several environment variables can be used to control ORC.
   </para>
 </formalpara>
 
-<formalpara id="ORC_CPU_FLAGS">
-  <title><envar>ORC_CPU_FLAGS</envar></title>
-    This environment variable can be used to manually specify cpu capabilities.
-  <para>
-  </para>
-</formalpara>
-
 </refsect1>
 
 </refentry>
