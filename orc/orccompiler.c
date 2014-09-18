@@ -582,6 +582,13 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
           OrcInstruction *cinsn;
           int multiplier;
 
+          if (var->vartype == ORC_VAR_TYPE_CONST) {
+            if (var->replaced) {
+              insn.src_args[i] = var->replacement;
+              continue;
+            }
+          }
+
           cinsn = compiler->insns + compiler->n_insns;
           compiler->n_insns++;
 
@@ -598,13 +605,16 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
           cinsn->opcode = get_loadp_opcode_for_size (opcode->src_size[i]);
           cinsn->dest_args[0] = orc_compiler_new_temporary (compiler,
               opcode->src_size[i] * multiplier);
+
           if (var->vartype == ORC_VAR_TYPE_CONST) {
+            var->replaced = TRUE;
+            var->replacement = cinsn->dest_args[0];
+
             compiler->vars[cinsn->dest_args[0]].flags |=
                 ORC_VAR_FLAG_VOLATILE_WORKAROUND;
           }
           cinsn->src_args[0] = insn.src_args[i];
           insn.src_args[i] = cinsn->dest_args[0];
-
         }
       }
     }
