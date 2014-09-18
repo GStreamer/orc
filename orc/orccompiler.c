@@ -1091,36 +1091,14 @@ int
 orc_compiler_get_constant_long (OrcCompiler *compiler,
     orc_uint32 a, orc_uint32 b, orc_uint32 c, orc_uint32 d)
 {
-  int i;
   int tmp;
 
-  for(i=0;i<compiler->n_constants;i++){
-    if (compiler->constants[i].is_long == TRUE &&
-        compiler->constants[i].full_value[0] == a &&
-        compiler->constants[i].full_value[1] == b &&
-        compiler->constants[i].full_value[2] == c &&
-        compiler->constants[i].full_value[3] == d) {
-      break;
-    }
+  tmp = orc_compiler_try_get_constant_long (compiler, a, b, c, d);
+  if (tmp == ORC_REG_INVALID) {
+    tmp = orc_compiler_get_temp_reg (compiler);
+    orc_compiler_load_constant_long (compiler, tmp,
+        &compiler->constants[compiler->n_constants - 1]);
   }
-  if (i == compiler->n_constants) {
-    compiler->n_constants++;
-    compiler->constants[i].full_value[0] = a;
-    compiler->constants[i].full_value[1] = b;
-    compiler->constants[i].full_value[2] = c;
-    compiler->constants[i].full_value[3] = d;
-    compiler->constants[i].is_long = TRUE;
-    compiler->constants[i].alloc_reg = 0;
-    compiler->constants[i].use_count = 0;
-  }
-
-  compiler->constants[i].use_count++;
-
-  if (compiler->constants[i].alloc_reg != 0) {;
-    return compiler->constants[i].alloc_reg;
-  }
-  tmp = orc_compiler_get_temp_reg (compiler);
-  orc_compiler_load_constant_long (compiler, tmp, &compiler->constants[i]);
   return tmp;
 }
 
