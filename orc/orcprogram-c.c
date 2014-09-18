@@ -503,16 +503,16 @@ c_get_name_int (char *name, OrcCompiler *p, OrcInstruction *insn, int var)
       }
     }
   } else {
-    if (insn && (insn->flags & ORC_INSTRUCTION_FLAG_X2)) {
-      sprintf(name, "var%d.x2[%d]", var, p->unroll_index);
-    } else if (insn && (insn->flags & ORC_INSTRUCTION_FLAG_X4)) {
-      sprintf(name, "var%d.x4[%d]", var, p->unroll_index);
-    } else {
-      if (p->vars[var].size >= 2) {
-        sprintf(name, "var%d.i", var);
+    if (p->vars[var].size >= 2) {
+      if (insn && (insn->flags & ORC_INSTRUCTION_FLAG_X2)) {
+        sprintf(name, "var%d.x2[%d]", var, p->unroll_index);
+      } else if (insn && (insn->flags & ORC_INSTRUCTION_FLAG_X4)) {
+        sprintf(name, "var%d.x4[%d]", var, p->unroll_index);
       } else {
-        sprintf(name, "var%d", var);
+        sprintf(name, "var%d.i", var);
       }
+    } else {
+      sprintf(name, "var%d", var);
     }
   }
 }
