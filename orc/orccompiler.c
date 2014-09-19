@@ -580,10 +580,7 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
         } else if (var->vartype == ORC_VAR_TYPE_CONST ||
             var->vartype == ORC_VAR_TYPE_PARAM) {
           OrcInstruction *cinsn;
-          int multiplier;
-
-          cinsn = compiler->insns + compiler->n_insns;
-          compiler->n_insns++;
+          int l, multiplier, loaded;
 
           multiplier = 1;
           if (insn.flags & ORC_INSTRUCTION_FLAG_X2) {
@@ -592,6 +589,22 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
           if (insn.flags & ORC_INSTRUCTION_FLAG_X4) {
             multiplier = 4;
           }
+
+          loaded = -1;
+          for(l=0;l<ORC_N_COMPILER_VARIABLES;l++){
+            if (compiler->vars[l].name == NULL) continue;
+            if (!compiler->vars[l].has_parameter) continue;
+            if (compiler->vars[l].parameter != insn.src_args[i]) continue;
+            if (compiler->vars[l].size != opcode->src_size[i] * multiplier) continue;
+            loaded = l;
+            break;
+          }
+          if (loaded != -1) {
+            insn.src_args[i] = loaded;
+            continue;
+          }
+          cinsn = compiler->insns + compiler->n_insns;
+          compiler->n_insns++;
 
           cinsn->flags = insn.flags;
           cinsn->flags |= ORC_INSN_FLAG_ADDED;
@@ -602,9 +615,10 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
             compiler->vars[cinsn->dest_args[0]].flags |=
                 ORC_VAR_FLAG_VOLATILE_WORKAROUND;
           }
+          compiler->vars[cinsn->dest_args[0]].has_parameter = TRUE;
+          compiler->vars[cinsn->dest_args[0]].parameter = insn.src_args[i];
           cinsn->src_args[0] = insn.src_args[i];
           insn.src_args[i] = cinsn->dest_args[0];
-
         }
       }
     }

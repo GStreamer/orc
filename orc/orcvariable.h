@@ -70,6 +70,9 @@ struct _OrcVariable {
   int update_type;
   int need_offset_reg;
   unsigned int flags;
+
+  int has_parameter;
+  int parameter;
 };
 
 ORC_END_DECLS
