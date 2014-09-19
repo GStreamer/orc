@@ -377,11 +377,11 @@ opcode_arg_size (OrcStaticOpcode *opcode, int arg)
 {
   int i;
   for(i=0;i<ORC_STATIC_OPCODE_N_DEST;i++){
-    if (opcode->dest_size[i] != 0 && --arg == 0)
+    if (opcode->dest_size[i] != 0 && arg-- == 0)
       return opcode->dest_size[i];
   }
   for(i=0;i<ORC_STATIC_OPCODE_N_SRC;i++){
-    if (opcode->src_size[i] != 0 && --arg == 0)
+    if (opcode->src_size[i] != 0 && arg-- == 0)
       return opcode->src_size[i];
   }
   return 0;
