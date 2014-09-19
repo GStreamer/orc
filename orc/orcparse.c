@@ -45,6 +45,7 @@ static void orc_parse_get_line (OrcParser *parser);
 static OrcStaticOpcode * get_opcode (OrcParser *parser, const char *opcode);
 static void orc_parse_log (OrcParser *parser, const char *format, ...);
 static int opcode_n_args (OrcStaticOpcode *opcode);
+static int opcode_arg_size (OrcStaticOpcode *opcode, int arg);
 static void orc_parse_sanity_check (OrcParser *parser, OrcProgram *program);
 
 
@@ -286,7 +287,7 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
 
       if (o) {
         int n_args = opcode_n_args (o);
-        int i;
+        int i, j;
 
         if (n_tokens != 1 + offset + n_args) {
           orc_parse_log (parser, "error: line %d: too %s arguments for %s (expected %d)\n",
@@ -294,14 +295,14 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
               token[offset], n_args);
         }
 
-        for(i=offset+1;i<n_tokens;i++){
+        for(i=offset+1,j=0;i<n_tokens;i++,j++){
           char *end;
           double unused ORC_GNUC_UNUSED;
 
           unused = strtod (token[i], &end);
           if (end != token[i]) {
-            orc_program_add_constant_str (parser->program, 0, token[i],
-                token[i]);
+            orc_program_add_constant_str (parser->program, opcode_arg_size(o, j),
+                token[i], token[i]);
           }
         }
 
@@ -369,6 +370,21 @@ opcode_n_args (OrcStaticOpcode *opcode)
     if (opcode->src_size[i] != 0) n++;
   }
   return n;
+}
+
+static int
+opcode_arg_size (OrcStaticOpcode *opcode, int arg)
+{
+  int i;
+  for(i=0;i<ORC_STATIC_OPCODE_N_DEST;i++){
+    if (opcode->dest_size[i] != 0 && --arg == 0)
+      return opcode->dest_size[i];
+  }
+  for(i=0;i<ORC_STATIC_OPCODE_N_SRC;i++){
+    if (opcode->src_size[i] != 0 && --arg == 0)
+      return opcode->src_size[i];
+  }
+  return 0;
 }
 
 static void
