@@ -285,20 +285,13 @@ orc_executor_emulate (OrcExecutor *ex)
 
     for(k=0;k<ORC_STATIC_OPCODE_N_SRC;k++) {
       OrcCodeVariable *var = code->vars + insn->src_args[k];
-      int src_size = opcode->src_size[k];
-      if (src_size == 0) continue;
+      if (opcode->src_size[k] == 0) continue;
 
       if (var->vartype == ORC_VAR_TYPE_CONST) {
         opcode_ex[j].src_ptrs[k] = tmpspace[insn->src_args[k]];
         /* FIXME hack */
         load_constant (tmpspace[insn->src_args[k]], 8,
             var->value.i);
-        if (src_size == 1)
-          opcode_ex[j].shift = 3;
-        else if (src_size == 2)
-          opcode_ex[j].shift = 2;
-        else if (src_size == 4)
-          opcode_ex[j].shift = 1;
       } else if (var->vartype == ORC_VAR_TYPE_PARAM) {
         opcode_ex[j].src_ptrs[k] = tmpspace[insn->src_args[k]];
         /* FIXME hack */

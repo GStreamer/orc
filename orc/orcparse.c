@@ -288,7 +288,6 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
       if (o) {
         int n_args = opcode_n_args (o);
         int i, j;
-        char *args[4] = { 0 };
 
         if (n_tokens != 1 + offset + n_args) {
           orc_parse_log (parser, "error: line %d: too %s arguments for %s (expected %d)\n",
@@ -302,26 +301,21 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
 
           unused = strtod (token[i], &end);
           if (end != token[i]) {
-            char *varname;
-            int opsize = opcode_arg_size(o, j), cvar;
-
-            ORC_DEBUG ("arg size %d %d, flags %d", j, opsize, flags);
-            opsize *= (flags & ORC_INSTRUCTION_FLAG_X2 ? 2 : 1);
-            opsize *= (flags & ORC_INSTRUCTION_FLAG_X4 ? 4 : 1);
-
-            varname = malloc (strlen(token[i]) + 10);
-            sprintf(varname, "%s.%d", token[i], opsize);
-            cvar = orc_program_add_constant_str (parser->program, opsize,
-                token[i], varname);
-            free(varname);
-            /* use name of variable, it could be reused */
-            args[j] = parser->program->vars[cvar].name;
-          } else {
-            args[j] = token[i];
+            orc_program_add_constant_str (parser->program, opcode_arg_size(o, j),
+                token[i], token[i]);
           }
         }
-        orc_program_append_str_2 (parser->program, token[offset], flags,
-              args[0], args[1], args[2], args[3]);
+
+        if (n_tokens - offset == 5) {
+          orc_program_append_str_2 (parser->program, token[offset], flags,
+              token[offset+1], token[offset+2], token[offset+3], token[offset+4]);
+        } else if (n_tokens - offset == 4) {
+          orc_program_append_str_2 (parser->program, token[offset], flags,
+              token[offset+1], token[offset+2], token[offset+3], NULL);
+        } else {
+          orc_program_append_str_2 (parser->program, token[offset], flags,
+              token[offset+1], token[offset+2], NULL, NULL);
+        }
       } else {
         orc_parse_log (parser, "error: line %d: unknown opcode: %s\n",
             parser->line_number,
