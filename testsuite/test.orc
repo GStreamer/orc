@@ -2378,3 +2378,110 @@ copyb d1, s1
 
 
 
+.function video_convert_orc_convert_I420_BGRA
+.dest 4 argb
+.source 1 y
+.source 1 u
+.source 1 v
+.param 2 p1
+.param 2 p2
+.param 2 p3
+.param 2 p4
+.param 2 p5
+.temp 2 wy
+.temp 2 wu
+.temp 2 wv
+.temp 2 wr
+.temp 2 wg
+.temp 2 wb
+.temp 1 r
+.temp 1 g
+.temp 1 b
+.temp 4 x
+.const 1 c128 128
+
+subb r, y, c128
+splatbw wy, r
+loadupdb r, u
+subb r, r, c128
+splatbw wu, r
+loadupdb r, v
+subb r, r, c128
+splatbw wv, r
+
+mulhsw wy, wy, p1
+
+mulhsw wr, wv, p2
+addssw wr, wy, wr
+
+mulhsw wb, wu, p3
+addssw wb, wy, wb
+
+mulhsw wg, wu, p4
+addssw wg, wy, wg
+mulhsw wy, wv, p5
+addssw wg, wg, wy
+
+convssswb r, wr
+convssswb g, wg
+convssswb b, wb
+
+mergebw wb, b, g
+mergebw wr, r, 127
+mergewl x, wb, wr
+x4 addb argb, x, c128
+
+.function bayer_orc_merge_bg_bgra
+.dest 8 d
+.source 2 g0
+.source 2 r0
+.source 2 b1
+.source 2 g1
+.source 2 g2
+.source 2 r2
+.temp 4 ra
+.temp 4 bg
+.temp 2 r
+.temp 2 g
+.temp 2 t
+
+x2 avgub r, r0, r2
+x2 avgub g, g0, g2
+copyw t, g1
+x2 avgub g, g, t
+andw g, g, 255
+andw t, t, 65280
+orw g, t, g
+x2 mergebw bg, b1, g
+x2 mergebw ra, r, 255
+x2 mergewl d, bg, ra
+
+.function test_constant
+.dest 8 d
+.source 1 s
+.temp 1 tb
+.temp 2 tw
+.temp 4 tl
+.temp 8 tq
+.const 1 c128 128
+
+subb tb, s, c128
+
+mergebw tw, tb, tb
+subw tw, tw, c128
+x2 subb tw, tw, c128
+
+mergewl tl, tw, tw
+subl tl, tl, c128
+x2 subw tl, tl, c128
+x4 subb tl, tl, c128
+
+mergelq tq, tl, tl
+subq tq, tq, c128
+x2 subl tq, tq, c128
+x4 subw tq, tq, c128
+
+subq d, tq, c128
+
+
+
