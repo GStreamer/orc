@@ -288,6 +288,7 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
       if (o) {
         int n_args = opcode_n_args (o);
         int i, j;
+        char *args[4] = { NULL };
 
         if (n_tokens != 1 + offset + n_args) {
           orc_parse_log (parser, "error: line %d: too %s arguments for %s (expected %d)\n",
@@ -304,18 +305,11 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
             orc_program_add_constant_str (parser->program, opcode_arg_size(o, j),
                 token[i], token[i]);
           }
+          args[j] = token[i];
         }
 
-        if (n_tokens - offset == 5) {
-          orc_program_append_str_2 (parser->program, token[offset], flags,
-              token[offset+1], token[offset+2], token[offset+3], token[offset+4]);
-        } else if (n_tokens - offset == 4) {
-          orc_program_append_str_2 (parser->program, token[offset], flags,
-              token[offset+1], token[offset+2], token[offset+3], NULL);
-        } else {
-          orc_program_append_str_2 (parser->program, token[offset], flags,
-              token[offset+1], token[offset+2], NULL, NULL);
-        }
+        orc_program_append_str_2 (parser->program, token[offset], flags,
+              args[0], args[1], args[2], args[3]);
       } else {
         orc_parse_log (parser, "error: line %d: unknown opcode: %s\n",
             parser->line_number,
