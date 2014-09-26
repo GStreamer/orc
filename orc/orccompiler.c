@@ -919,10 +919,14 @@ orc_compiler_rewrite_vars2 (OrcCompiler *compiler)
      */
     if (compiler->insns[j].flags & ORC_INSN_FLAG_INVARIANT) continue;
 
-    if (!(compiler->insns[j].opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR)
-        && compiler->insns[j].opcode->dest_size[1] == 0) {
+    if (!(compiler->insns[j].opcode->flags & ORC_STATIC_OPCODE_ACCUMULATOR)) {
       int src1 = compiler->insns[j].src_args[0];
-      int dest = compiler->insns[j].dest_args[0];
+      int dest;
+
+      if (compiler->insns[j].opcode->dest_size[1] == 0)
+        dest = compiler->insns[j].dest_args[0];
+      else
+        dest = compiler->insns[j].dest_args[1];
 
       if (compiler->vars[src1].last_use == j) {
         if (compiler->vars[src1].first_use == j) {

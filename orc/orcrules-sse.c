@@ -1737,8 +1737,8 @@ sse_rule_splitql (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest2 = p->vars[insn->dest_args[1]].alloc;
 
 #ifndef MMX
-  orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,2,0), src, dest2);
   orc_sse_emit_pshufd (p, ORC_SSE_SHUF(3,1,3,1), src, dest1);
+  orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,2,0), src, dest2);
 #else
   orc_sse_emit_movdqa (p, src, dest2);
   orc_sse_emit_pshufw (p, ORC_SSE_SHUF(3,2,3,2), src, dest1);
@@ -1757,9 +1757,8 @@ sse_rule_splitlw (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_psrad_imm (p, 16, dest1);
   orc_sse_emit_packssdw (p, dest1, dest1);
 
-  if (dest2 != src) {
+  if (dest2 != src)
     orc_sse_emit_movdqa (p, src, dest2);
-  }
   orc_sse_emit_pslld_imm (p, 16, dest2);
   orc_sse_emit_psrad_imm (p, 16, dest2);
   orc_sse_emit_packssdw (p, dest2, dest2);
@@ -1774,14 +1773,14 @@ sse_rule_splitwb (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest2 = p->vars[insn->dest_args[1]].alloc;
   int tmp = orc_compiler_get_constant (p, 2, 0xff);
 
+  ORC_DEBUG ("got tmp %d", tmp);
   /* FIXME slow */
 
   orc_sse_emit_psraw_imm (p, 8, dest1);
   orc_sse_emit_packsswb (p, dest1, dest1);
 
-  if (dest2 != src) {
+  if (dest2 != src)
     orc_sse_emit_movdqa (p, src, dest2);
-  }
 
 #if 0
   orc_sse_emit_psllw_imm (p, 8, dest2);

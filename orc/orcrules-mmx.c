@@ -1737,10 +1737,11 @@ mmx_rule_splitql (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest2 = p->vars[insn->dest_args[1]].alloc;
 
 #ifndef MMX
-  orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(2,0,2,0), src, dest2);
   orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(3,1,3,1), src, dest1);
+  orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(2,0,2,0), src, dest2);
 #else
-  orc_mmx_emit_movq (p, src, dest2);
+  if (dest2 != src)
+    orc_mmx_emit_movq (p, src, dest2);
   orc_mmx_emit_pshufw (p, ORC_MMX_SHUF(3,2,3,2), src, dest1);
 #endif
 }
@@ -1757,9 +1758,8 @@ mmx_rule_splitlw (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_mmx_emit_psrad_imm (p, 16, dest1);
   orc_mmx_emit_packssdw (p, dest1, dest1);
 
-  if (dest2 != src) {
+  if (dest2 != src)
     orc_mmx_emit_movq (p, src, dest2);
-  }
   orc_mmx_emit_pslld_imm (p, 16, dest2);
   orc_mmx_emit_psrad_imm (p, 16, dest2);
   orc_mmx_emit_packssdw (p, dest2, dest2);
@@ -1779,9 +1779,8 @@ mmx_rule_splitwb (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_mmx_emit_psraw_imm (p, 8, dest1);
   orc_mmx_emit_packsswb (p, dest1, dest1);
 
-  if (dest2 != src) {
+  if (dest2 != src)
     orc_mmx_emit_movq (p, src, dest2);
-  }
 
 #if 0
   orc_mmx_emit_psllw_imm (p, 8, dest2);
