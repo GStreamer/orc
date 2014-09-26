@@ -1177,6 +1177,9 @@ orc_compiler_get_constant_reg (OrcCompiler *compiler)
       compiler->alloc_regs[compiler->constants[j].alloc_reg] = 1;
     }
   }
+  if (compiler->max_used_temp_reg < compiler->min_temp_reg)
+    compiler->max_used_temp_reg = compiler->min_temp_reg;
+
   for(j=ORC_VEC_REG_BASE;j<=compiler->max_used_temp_reg;j++) {
     compiler->alloc_regs[j] = 1;
   }
