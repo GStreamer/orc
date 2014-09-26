@@ -1958,6 +1958,51 @@ sse_rule_swapq_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+sse_rule_splitlw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest1 = p->vars[insn->dest_args[0]].alloc;
+  int dest2 = p->vars[insn->dest_args[1]].alloc;
+  int tmp1, tmp2;
+
+  tmp1 = orc_compiler_try_get_constant_long (p,
+      0x07060302, 0x0f0e0b0a, 0x07060302, 0x0f0e0b0a);
+  tmp2 = orc_compiler_try_get_constant_long (p,
+      0x05040100, 0x0d0c0908, 0x05040100, 0x0d0c0908);
+  if (tmp1 != ORC_REG_INVALID && tmp2 != ORC_REG_INVALID) {
+    orc_sse_emit_pshufb (p, tmp1, dest1);
+    if (dest2 != src)
+      orc_sse_emit_movdqa (p, src, dest2);
+    orc_sse_emit_pshufb (p, tmp2, dest2);
+  } else {
+    sse_rule_splitlw (p, user, insn);
+  }
+}
+
+
+static void
+sse_rule_splitwb_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src = p->vars[insn->src_args[0]].alloc;
+  int dest1 = p->vars[insn->dest_args[0]].alloc;
+  int dest2 = p->vars[insn->dest_args[1]].alloc;
+  int tmp1, tmp2;
+
+  tmp1 = orc_compiler_try_get_constant_long (p,
+      0x07050301, 0x0f0d0b09, 0x07050301, 0x0f0d0b09);
+  tmp2 = orc_compiler_try_get_constant_long (p,
+      0x06040200, 0x0e0c0a08, 0x06040200, 0x0e0c0a08);
+  if (tmp1 != ORC_REG_INVALID && tmp2 != ORC_REG_INVALID) {
+    orc_sse_emit_pshufb (p, tmp1, dest1);
+    if (dest2 != src)
+      orc_sse_emit_movdqa (p, src, dest2);
+    orc_sse_emit_pshufb (p, tmp2, dest2);
+  } else {
+    sse_rule_splitwb (p, user, insn);
+  }
+}
+
+static void
 sse_rule_select0lw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int dest = p->vars[insn->dest_args[0]].alloc;
@@ -2933,6 +2978,8 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "swapl", sse_rule_swapl_ssse3, NULL);
   orc_rule_register (rule_set, "swapwl", sse_rule_swapwl_ssse3, NULL);
   orc_rule_register (rule_set, "swapq", sse_rule_swapq_ssse3, NULL);
+  orc_rule_register (rule_set, "splitlw", sse_rule_splitlw_ssse3, NULL);
+  orc_rule_register (rule_set, "splitwb", sse_rule_splitwb_ssse3, NULL);
   orc_rule_register (rule_set, "select0lw", sse_rule_select0lw_ssse3, NULL);
   orc_rule_register (rule_set, "select1lw", sse_rule_select1lw_ssse3, NULL);
   orc_rule_register (rule_set, "select0wb", sse_rule_select0wb_ssse3, NULL);
