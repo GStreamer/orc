@@ -34,6 +34,7 @@ struct _OrcOpcodeSet {
 #define ORC_STATIC_OPCODE_STORE (1<<5)
 #define ORC_STATIC_OPCODE_INVARIANT (1<<6)
 #define ORC_STATIC_OPCODE_ITERATOR (1<<7)
+#define ORC_STATIC_OPCODE_COPY (1<<8)
 
 
 struct _OrcStaticOpcode {
