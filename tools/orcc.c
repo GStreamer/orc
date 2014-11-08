@@ -843,9 +843,9 @@ output_code_execute (OrcProgram *p, FILE *output, int is_inline)
           fprintf(output, "  {\n");
           fprintf(output, "    orc_union64 tmp;\n");
           fprintf(output, "    tmp.i = %s;\n", varnames[ORC_VAR_P1 + i]);
-          fprintf(output, "    ex->params[%s] = tmp.x2[0];\n",
+          fprintf(output, "    ex->params[%s] = ((orc_uint64) tmp.i) & 0xffffffff;\n",
               enumnames[ORC_VAR_P1 + i]);
-          fprintf(output, "    ex->params[%s] = tmp.x2[1];\n",
+          fprintf(output, "    ex->params[%s] = ((orc_uint64) tmp.i) >> 32;\n",
               enumnames[ORC_VAR_T1 + i]);
           fprintf(output, "  }\n");
           break;
@@ -854,9 +854,9 @@ output_code_execute (OrcProgram *p, FILE *output, int is_inline)
           fprintf(output, "  {\n");
           fprintf(output, "    orc_union64 tmp;\n");
           fprintf(output, "    tmp.f = %s;\n", varnames[ORC_VAR_P1 + i]);
-          fprintf(output, "    ex->params[%s] = tmp.x2[0];\n",
+          fprintf(output, "    ex->params[%s] = ((orc_uint64) tmp.i) & 0xffffffff;\n",
               enumnames[ORC_VAR_P1 + i]);
-          fprintf(output, "    ex->params[%s] = tmp.x2[1];\n",
+          fprintf(output, "    ex->params[%s] = ((orc_uint64) tmp.i) >> 32;\n",
               enumnames[ORC_VAR_T1 + i]);
           fprintf(output, "  }\n");
           break;
