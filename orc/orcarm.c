@@ -79,45 +79,91 @@ orc_arm_emit_bx_lr (OrcCompiler *compiler)
 }
 
 void
-orc_arm_emit_push (OrcCompiler *compiler, int regs)
+orc_arm_emit_push (OrcCompiler *compiler, int regs, orc_uint32 vregs)
 {
   int i;
-  int x = 0;
 
-  ORC_ASM_CODE(compiler,"  push {");
-  for(i=0;i<16;i++){
-    if (regs & (1<<i)) {
-      x |= (1<<i);
-      ORC_ASM_CODE(compiler,"r%d", i);
-      if (x != regs) {
-        ORC_ASM_CODE(compiler,", ");
+  if (regs) {
+    int x = 0;
+
+    ORC_ASM_CODE(compiler,"  push {");
+    for(i=0;i<16;i++){
+      if (regs & (1<<i)) {
+        x |= (1<<i);
+        ORC_ASM_CODE(compiler,"r%d", i);
+        if (x != regs) {
+          ORC_ASM_CODE(compiler,", ");
+        }
       }
     }
-  }
-  ORC_ASM_CODE(compiler,"}\n");
+    ORC_ASM_CODE(compiler,"}\n");
 
-  orc_arm_emit (compiler, 0xe92d0000 | regs);
+    orc_arm_emit (compiler, 0xe92d0000 | regs);
+  }
+
+  if (vregs) {
+    int first = -1, last = -1, nregs;
+
+    ORC_ASM_CODE(compiler, "  vpush {");
+    for(i=0; i<32; ++i) {
+      if (vregs & (1U << i)) {
+        if (first==-1) {
+           ORC_ASM_CODE(compiler, "d%d", i);
+           first = i;
+        }
+        last = i;
+      }
+    }
+    // What's the deal with even/odd registers ?
+    ORC_ASM_CODE(compiler, "-d%d}\n", last+1);
+
+    nregs = last + 1 - first + 1;
+    orc_arm_emit (compiler, 0xed2d0b00 | ((first & 0x10) << 22) | ((first & 0x0f) << 12) | (nregs << 1));
+  }
 }
 
 void
-orc_arm_emit_pop (OrcCompiler *compiler, int regs)
+orc_arm_emit_pop (OrcCompiler *compiler, int regs, orc_uint32 vregs)
 {
   int i;
-  int x = 0;
 
-  ORC_ASM_CODE(compiler,"  pop {");
-  for(i=0;i<16;i++){
-    if (regs & (1<<i)) {
-      x |= (1<<i);
-      ORC_ASM_CODE(compiler,"r%d", i);
-      if (x != regs) {
-        ORC_ASM_CODE(compiler,", ");
+
+  if (vregs) {
+    int first = -1, last = -1, nregs;
+
+    ORC_ASM_CODE(compiler, "  vpop {");
+    for(i=0; i<32; ++i) {
+      if (vregs & (1U << i)) {
+        if (first==-1) {
+           ORC_ASM_CODE(compiler, "d%d", i);
+           first = i;
+        }
+        last = i;
       }
     }
-  }
-  ORC_ASM_CODE(compiler,"}\n");
+    ORC_ASM_CODE(compiler, "-d%d}\n", last+1);
 
-  orc_arm_emit (compiler, 0xe8bd0000 | regs);
+    nregs = last + 1 - first + 1;
+    orc_arm_emit (compiler, 0xecbd0b00 | ((first & 0x10) << 22) | ((first & 0x0f) << 12) | (nregs << 1));
+  }
+
+  if (regs) {
+    int x = 0;
+
+    ORC_ASM_CODE(compiler,"  pop {");
+    for(i=0;i<16;i++){
+      if (regs & (1<<i)) {
+        x |= (1<<i);
+        ORC_ASM_CODE(compiler,"r%d", i);
+        if (x != regs) {
+          ORC_ASM_CODE(compiler,", ");
+        }
+      }
+    }
+    ORC_ASM_CODE(compiler,"}\n");
+
+    orc_arm_emit (compiler, 0xe8bd0000 | regs);
+  }
 }
 
 void

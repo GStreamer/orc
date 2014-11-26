@@ -41,7 +41,7 @@ orc_arm_emit_prologue (OrcCompiler *compiler)
       regs |= (1<<i);
     }
   }
-  if (regs) orc_arm_emit_push (compiler, regs);
+  if (regs) orc_arm_emit_push (compiler, regs, 0U);
 
 }
 
@@ -52,7 +52,7 @@ orc_arm_dump_insns (OrcCompiler *compiler)
 
   orc_arm_emit_add_r (compiler, ORC_ARM_COND_AL, 0, ORC_ARM_A2, ORC_ARM_A3, ORC_ARM_A4);
   orc_arm_emit_sub_r (compiler, ORC_ARM_COND_AL, 0, ORC_ARM_A2, ORC_ARM_A3, ORC_ARM_A4);
-  orc_arm_emit_push (compiler, 0x06);
+  orc_arm_emit_push (compiler, 0x06, 0U);
   orc_arm_emit_mov_r (compiler, ORC_ARM_COND_AL, 0, ORC_ARM_A2, ORC_ARM_A3);
 
   orc_arm_emit_branch (compiler, ORC_ARM_COND_LE, 0);
@@ -75,7 +75,7 @@ orc_arm_emit_epilogue (OrcCompiler *compiler)
       regs |= (1<<i);
     }
   }
-  if (regs) orc_arm_emit_pop (compiler, regs);
+  if (regs) orc_arm_emit_pop (compiler, regs, 0U);
   orc_arm_emit_bx_lr (compiler);
 
   /* orc_arm_dump_insns (compiler); */

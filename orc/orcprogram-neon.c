@@ -34,6 +34,7 @@ void
 orc_neon_emit_prologue (OrcCompiler *compiler)
 {
   unsigned int regs = 0;
+  orc_uint32 vregs = 0;
   int i;
 
   orc_compiler_append_code(compiler,".global %s\n", compiler->program->name);
@@ -45,8 +46,15 @@ orc_neon_emit_prologue (OrcCompiler *compiler)
       regs |= (1<<i);
     }
   }
-  if (regs) orc_arm_emit_push (compiler, regs);
 
+  for(i=0;i<32;i++) {
+     if (compiler->used_regs[ORC_VEC_REG_BASE+i] &&
+         compiler->save_regs[ORC_VEC_REG_BASE+i]) {
+        vregs |= (1U << i);
+     }
+  }
+
+  orc_arm_emit_push (compiler, regs, vregs);
 }
 
 void
@@ -57,7 +65,7 @@ orc_neon_dump_insns (OrcCompiler *compiler)
 
   orc_arm_emit_add (compiler, ORC_ARM_A2, ORC_ARM_A3, ORC_ARM_A4);
   orc_arm_emit_sub (compiler, ORC_ARM_A2, ORC_ARM_A3, ORC_ARM_A4);
-  orc_arm_emit_push (compiler, 0x06);
+  orc_arm_emit_push (compiler, 0x06, 0U);
   orc_arm_emit_mov (compiler, ORC_ARM_A2, ORC_ARM_A3);
 
   orc_arm_emit_branch (compiler, ORC_ARM_COND_LE, 0);
@@ -73,6 +81,7 @@ orc_neon_emit_epilogue (OrcCompiler *compiler)
 {
   int i;
   unsigned int regs = 0;
+  orc_uint32 vregs = 0;
 
   for(i=0;i<16;i++){
     if (compiler->used_regs[ORC_GP_REG_BASE + i] &&
@@ -80,7 +89,15 @@ orc_neon_emit_epilogue (OrcCompiler *compiler)
       regs |= (1<<i);
     }
   }
-  if (regs) orc_arm_emit_pop (compiler, regs);
+
+  for(i=0;i<32;i++) {
+     if (compiler->used_regs[ORC_VEC_REG_BASE+i] &&
+         compiler->save_regs[ORC_VEC_REG_BASE+i]) {
+        vregs |= (1U << i);
+     }
+  }
+
+  orc_arm_emit_pop (compiler, regs, vregs);
   orc_arm_emit_bx_lr (compiler);
 
   /* arm_dump_insns (compiler); */
@@ -144,6 +161,9 @@ orc_compiler_neon_init (OrcCompiler *compiler)
   compiler->valid_regs[ORC_ARM_PC] = 0;
   for(i=4;i<12;i++) {
     compiler->save_regs[ORC_GP_REG_BASE+i] = 1;
+  }
+  for(i=8;i<16;i++) {
+    compiler->save_regs[ORC_VEC_REG_BASE+i] = 1;
   }
   
   for(i=0;i<ORC_N_REGS;i++){
