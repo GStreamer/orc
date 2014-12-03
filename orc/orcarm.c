@@ -118,7 +118,7 @@ orc_arm_emit_push (OrcCompiler *compiler, int regs, orc_uint32 vregs)
     ORC_ASM_CODE(compiler, "-d%d}\n", last+1);
 
     nregs = last + 1 - first + 1;
-    orc_arm_emit (compiler, 0xed2d0b00 | ((first & 0x10) << 22) | ((first & 0x0f) << 12) | (nregs << 1));
+    orc_arm_emit (compiler, 0xed2d0b00 | (((first & 0x10) >> 4) << 22) | ((first & 0x0f) << 12) | (nregs << 1));
   }
 }
 
@@ -144,7 +144,7 @@ orc_arm_emit_pop (OrcCompiler *compiler, int regs, orc_uint32 vregs)
     ORC_ASM_CODE(compiler, "-d%d}\n", last+1);
 
     nregs = last + 1 - first + 1;
-    orc_arm_emit (compiler, 0xecbd0b00 | ((first & 0x10) << 22) | ((first & 0x0f) << 12) | (nregs << 1));
+    orc_arm_emit (compiler, 0xecbd0b00 | (((first & 0x10) >> 4) << 22) | ((first & 0x0f) << 12) | (nregs << 1));
   }
 
   if (regs) {
