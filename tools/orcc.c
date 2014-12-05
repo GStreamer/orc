@@ -537,13 +537,13 @@ static const char *orcify_typename (const char *s)
 }
 
 void
-output_prototype (OrcProgram *p, FILE *output)
+output_prototype (OrcProgram *p, FILE *output, int backup)
 {
   OrcVariable *var;
   int i;
   int need_comma;
 
-  fprintf(output, "%s (", p->name);
+  fprintf(output, "%s (", backup ? p->backup_name : p->name);
   need_comma = FALSE;
   for(i=0;i<4;i++){
     var = &p->vars[ORC_VAR_D1 + i];
@@ -633,6 +633,114 @@ output_prototype (OrcProgram *p, FILE *output)
 }
 
 void
+output_executor_backup_call (OrcProgram *p, FILE *output)
+{
+  OrcVariable *var;
+  int i;
+
+  fprintf(output, "  %s (", p->backup_name);
+  for(i=0;i<4;i++){
+    var = &p->vars[ORC_VAR_D1 + i];
+    if (var->size) {
+      fprintf(output, "ex->arrays[%s], ", enumnames[ORC_VAR_D1 + i]);
+      if (p->is_2d) {
+        fprintf(output, "ex->params[%s], ", enumnames[ORC_VAR_D1 + i]);
+      }
+    }
+  }
+  for(i=0;i<8;i++){
+    var = &p->vars[ORC_VAR_S1 + i];
+    if (var->size) {
+      fprintf(output, "ex->arrays[%s], ", enumnames[ORC_VAR_S1 + i]);
+      if (p->is_2d) {
+        fprintf(output, "  ex->params[%s], ", enumnames[ORC_VAR_S1 + i]);
+      }
+    }
+  }
+  for(i=0;i<8;i++){
+    var = &p->vars[ORC_VAR_P1 + i];
+    if (var->size) {
+      switch (var->param_type) {
+        case ORC_PARAM_TYPE_INT:
+          fprintf(output, "ex->params[%s],", enumnames[ORC_VAR_P1 + i]);
+          break;
+        case ORC_PARAM_TYPE_FLOAT:
+          fprintf(output, "((orc_union32 * )&ex->params[%s])->f, ",
+              enumnames[ORC_VAR_P1 + i]);
+          break;
+        case ORC_PARAM_TYPE_INT64:
+          fprintf(output, "(ex->params[%s] & 0xffffffff) | ((orc_uint64)(ex->params[%s]) << 32), ", enumnames[ORC_VAR_P1 + i], enumnames[ORC_VAR_T1 + i]);
+          break;
+        case ORC_PARAM_TYPE_DOUBLE:
+          /* FIXME */
+          break;
+        default:
+          ORC_ASSERT(0);
+      }
+    }
+  }
+  if (p->constant_n) {
+    fprintf(output, "%d", p->constant_n);
+  } else {
+    fprintf(output, "ex->n");
+  }
+  if (p->is_2d) {
+    if (p->constant_m) {
+      fprintf(output, ",  %d", p->constant_m);
+    } else {
+      fprintf(output, ", ORC_EXECUTOR_M(ex)");
+    }
+  }
+  fprintf(output, ");\n");
+}
+
+void
+output_backup_call (OrcProgram *p, FILE *output)
+{
+  OrcVariable *var;
+  int i;
+
+  fprintf(output, "  %s (", p->backup_name);
+  for(i=0;i<4;i++){
+    var = &p->vars[ORC_VAR_D1 + i];
+    if (var->size) {
+      fprintf(output, "%s, ", varnames[ORC_VAR_D1 + i]);
+      if (p->is_2d) {
+        fprintf(output, "%s_stride, ", varnames[ORC_VAR_D1 + i]);
+      }
+    }
+  }
+  for(i=0;i<8;i++){
+    var = &p->vars[ORC_VAR_S1 + i];
+    if (var->size) {
+      fprintf(output, "%s, ", varnames[ORC_VAR_S1 + i]);
+      if (p->is_2d) {
+        fprintf(output, "%s_stride, ", varnames[ORC_VAR_S1 + i]);
+      }
+    }
+  }
+  for(i=0;i<8;i++){
+    var = &p->vars[ORC_VAR_P1 + i];
+    if (var->size) {
+        fprintf(output, "%s, ", varnames[ORC_VAR_P1 + i]);
+    }
+  }
+  if (p->constant_n) {
+    fprintf(output, "%d", p->constant_n);
+  } else {
+    fprintf(output, "n");
+  }
+  if (p->is_2d) {
+    if (p->constant_m) {
+      fprintf(output, ", %d", p->constant_m);
+    } else {
+      fprintf(output, ", m");
+    }
+  }
+  fprintf(output, ");\n");
+}
+
+void
 output_code_header (OrcProgram *p, FILE *output)
 {
   if(use_internal) {
@@ -640,8 +748,13 @@ output_code_header (OrcProgram *p, FILE *output)
   } else {
     fprintf(output, "void ");
   }
-  output_prototype (p, output);
+  output_prototype (p, output, 0);
   fprintf(output, ";\n");
+  if (p->backup_name && mode != MODE_TEST) {
+    fprintf(output, "void ");
+    output_prototype (p, output, 1);
+    fprintf(output, ";\n");
+  }
 }
 
 void
@@ -655,7 +768,9 @@ output_code_backup (OrcProgram *p, FILE *output)
     fprintf(output, "_backup_%s (OrcExecutor * ORC_RESTRICT ex)\n", p->name);
   }
   fprintf(output, "{\n");
-  {
+  if (p->backup_name && mode != MODE_TEST) {
+    output_executor_backup_call (p, output);
+  } else {
     OrcCompileResult result;
 
     result = orc_program_compile_full (p, orc_target_get_by_name("c"),
@@ -677,9 +792,11 @@ output_code_no_orc (OrcProgram *p, FILE *output)
 {
 
   fprintf(output, "void\n");
-  output_prototype (p, output);
+  output_prototype (p, output, 0);
   fprintf(output, "{\n");
-  {
+  if (p->backup_name && mode != MODE_TEST) {
+    output_backup_call (p, output);
+  } else {
     OrcCompileResult result;
 
     result = orc_program_compile_full (p, orc_target_get_by_name("c"),
@@ -740,7 +857,7 @@ output_code_execute (OrcProgram *p, FILE *output, int is_inline)
   } else {
     fprintf(output, "void\n");
   }
-  output_prototype (p, output);
+  output_prototype (p, output, 0);
   fprintf(output, "\n");
   fprintf(output, "{\n");
   fprintf(output, "  OrcExecutor _ex, *ex = &_ex;\n");

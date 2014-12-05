@@ -179,6 +179,10 @@ orc_program_free (OrcProgram *program)
     free (program->init_function);
     program->init_function = NULL;
   }
+  if (program->backup_name) {
+    free (program->backup_name);
+    program->backup_name = NULL;
+  }
   if (program->name) {
     free (program->name);
     program->name = NULL;
@@ -275,6 +279,19 @@ orc_program_set_backup_function (OrcProgram *program, OrcExecutorFunc func)
   if (program->code_exec == NULL) {
     program->code_exec = func;
   }
+}
+
+/**
+ * orc_program_set_backup_name:
+ * @program: a pointer to an OrcProgram structure
+ * @name: a function name that performs the operations in the program
+ */
+void
+orc_program_set_backup_name (OrcProgram *program, const char *name)
+{
+  if (program->backup_name)
+    free (program->backup_name);
+  program->backup_name = strdup (name);
 }
 
 /**

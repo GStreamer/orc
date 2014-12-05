@@ -81,6 +81,7 @@ struct _OrcProgram {
   OrcVariable vars[ORC_N_VARIABLES];
 
   void *backup_func;
+  char *backup_name;
   int is_2d;
   int constant_n;
   int n_multiple;
@@ -143,6 +144,7 @@ OrcCompileResult orc_program_compile_for_target (OrcProgram *p, OrcTarget *targe
 OrcCompileResult orc_program_compile_full (OrcProgram *p, OrcTarget *target,
     unsigned int flags);
 void orc_program_set_backup_function (OrcProgram *p, OrcExecutorFunc func);
+void orc_program_set_backup_name (OrcProgram *p, const char *name);
 void orc_program_free (OrcProgram *program);
 
 int orc_program_find_var_by_name (OrcProgram *program, const char *name);

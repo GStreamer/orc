@@ -139,6 +139,14 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
         parser->programs[parser->n_programs] = parser->program;
         parser->n_programs++;
         parser->creg_index = 1;
+      } else if (strcmp (token[0], ".backup") == 0) {
+        if (n_tokens < 2) {
+          orc_parse_log (parser, "error: line %d: .backup without function name\n",
+              parser->line_number);
+        } else {
+          orc_program_set_backup_name (parser->program, token[1]);
+        }
+
       } else if (strcmp (token[0], ".init") == 0) {
         free (init_function);
         init_function = NULL;
