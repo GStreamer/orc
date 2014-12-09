@@ -2062,7 +2062,8 @@ orc_neon_rule_mergebw (OrcCompiler *p, void *user, OrcInstruction *insn)
           p->vars[insn->src_args[0]].alloc);
     }
 
-    if (p->vars[insn->src_args[1]].last_use != p->insn_index) {
+    if (p->vars[insn->src_args[1]].last_use != p->insn_index ||
+        p->vars[insn->src_args[1]].alloc == p->vars[insn->dest_args[0]].alloc) {
       orc_neon_emit_mov (p, p->tmpreg, p->vars[insn->src_args[1]].alloc);
       orc_neon_emit_unary (p, "vzip.8", 0xf3b20180,
           p->vars[insn->dest_args[0]].alloc,
@@ -2094,7 +2095,8 @@ orc_neon_rule_mergewl (OrcCompiler *p, void *user, OrcInstruction *insn)
           p->vars[insn->src_args[0]].alloc);
     }
 
-    if (p->vars[insn->src_args[1]].last_use != p->insn_index) {
+    if (p->vars[insn->src_args[1]].last_use != p->insn_index ||
+        p->vars[insn->src_args[1]].alloc == p->vars[insn->dest_args[0]].alloc) {
       orc_neon_emit_mov (p, p->tmpreg, p->vars[insn->src_args[1]].alloc);
       orc_neon_emit_unary (p, "vzip.16", 0xf3b60180,
           p->vars[insn->dest_args[0]].alloc,
@@ -2110,7 +2112,8 @@ orc_neon_rule_mergewl (OrcCompiler *p, void *user, OrcInstruction *insn)
           p->vars[insn->src_args[0]].alloc);
     }
 
-    if (p->vars[insn->src_args[1]].last_use != p->insn_index) {
+    if (p->vars[insn->src_args[1]].last_use != p->insn_index ||
+        p->vars[insn->src_args[1]].alloc == p->vars[insn->dest_args[0]].alloc) {
       orc_neon_emit_mov_quad (p, p->tmpreg, p->vars[insn->src_args[1]].alloc);
       orc_neon_emit_unary_quad (p, "vzip.16", 0xf3b60180,
           p->vars[insn->dest_args[0]].alloc,
@@ -2132,7 +2135,8 @@ orc_neon_rule_mergelq (OrcCompiler *p, void *user, OrcInstruction *insn)
           p->vars[insn->src_args[0]].alloc);
     }
 
-    if (p->vars[insn->src_args[1]].last_use != p->insn_index) {
+    if (p->vars[insn->src_args[1]].last_use != p->insn_index ||
+        p->vars[insn->src_args[1]].alloc == p->vars[insn->dest_args[0]].alloc) {
       orc_neon_emit_mov (p, p->tmpreg, p->vars[insn->src_args[1]].alloc);
       orc_neon_emit_unary (p, "vtrn.32", 0xf3ba0080,
           p->vars[insn->dest_args[0]].alloc,
@@ -2148,7 +2152,8 @@ orc_neon_rule_mergelq (OrcCompiler *p, void *user, OrcInstruction *insn)
           p->vars[insn->src_args[0]].alloc);
     }
 
-    if (p->vars[insn->src_args[1]].last_use != p->insn_index) {
+    if (p->vars[insn->src_args[1]].last_use != p->insn_index ||
+        p->vars[insn->src_args[1]].alloc == p->vars[insn->dest_args[0]].alloc) {
       orc_neon_emit_mov_quad (p, p->tmpreg, p->vars[insn->src_args[1]].alloc);
       orc_neon_emit_unary_quad (p, "vzip.32", 0xf3ba0180,
           p->vars[insn->dest_args[0]].alloc,
