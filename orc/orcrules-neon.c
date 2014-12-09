@@ -801,9 +801,6 @@ neon_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     } else if (size == 4) {
       orc_neon_emit_loadpl (compiler, dest->alloc, insn->src_args[0]);
     } else if (size == 8) {
-      if (src->size == 8) {
-        ORC_COMPILER_ERROR(compiler,"64-bit parameters not implemented");
-      }
       orc_neon_emit_loadpq (compiler, dest->alloc, insn->src_args[0]);
     } else {
       ORC_PROGRAM_ERROR(compiler,"unimplemented");
@@ -1289,7 +1286,24 @@ orc_neon_emit_loadpq (OrcCompiler *compiler, int dest, int param)
       update ? "!" : "");
   code = 0xf4a0000d;
   code |= 2<<10;
-  code |= (0&7)<<5;
+  code |= (0)<<7;
+  code |= (compiler->gp_tmpreg&0xf) << 16;
+  code |= (dest&0xf) << 12;
+  code |= ((dest>>4)&0x1) << 22;
+  code |= (!update) << 1;
+  orc_arm_emit (compiler, code);
+
+  ORC_ASM_CODE(compiler,"  vld1.32 %s[0], [%s]%s\n",
+      orc_neon_reg_name (dest+1),
+      orc_arm_reg_name (compiler->gp_tmpreg),
+      update ? "!" : "");
+  code = 0xf4a0000d;
+  code |= 2<<10;
+  code |= (0)<<7;
+  code |= (compiler->gp_tmpreg&0xf) << 16;
+  code |= ((dest+1)&0xf) << 12;
+  code |= (((dest+1)>>4)&0x1) << 22;
+  code |= (!update) << 1;
   orc_arm_emit (compiler, code);
 
   orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
@@ -1302,7 +1316,24 @@ orc_neon_emit_loadpq (OrcCompiler *compiler, int dest, int param)
       update ? "!" : "");
   code = 0xf4a0000d;
   code |= 2<<10;
-  code |= (1&7)<<5;
+  code |= (1)<<7;
+  code |= (compiler->gp_tmpreg&0xf) << 16;
+  code |= (dest&0xf) << 12;
+  code |= ((dest>>4)&0x1) << 22;
+  code |= (!update) << 1;
+  orc_arm_emit (compiler, code);
+
+  ORC_ASM_CODE(compiler,"  vld1.32 %s[1], [%s]%s\n",
+      orc_neon_reg_name (dest+1),
+      orc_arm_reg_name (compiler->gp_tmpreg),
+      update ? "!" : "");
+  code = 0xf4a0000d;
+  code |= 2<<10;
+  code |= (1)<<7;
+  code |= (compiler->gp_tmpreg&0xf) << 16;
+  code |= ((dest+1)&0xf) << 12;
+  code |= (((dest+1)>>4)&0x1) << 22;
+  code |= (!update) << 1;
   orc_arm_emit (compiler, code);
 }
 
