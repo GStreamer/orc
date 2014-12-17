@@ -1,3 +1,17 @@
+0.4.23
+======
+
+  - Various improvements to the NEON backend to bring it closer to the SSE
+    backend (Wim Waymans)
+  - Add support for setting a custom backup function (Wim Taymans)
+  - Preserve NEON/VFP registers across subroutines (Jerome Laheurte)
+  - Fix 64 bit parameter loading on big-endian systems (Tim-Philipp Müller)
+  - Improved implementations for various opcodes (Wim Taymans)
+  - Various improvements and fixes to constants handling (Wim Taymans)
+  - Avoid some undefined operations on signed integers (Wim Taymans)
+  - Prefer user specific directories over global ones for intermediate files
+    to prevent name collisions (Fabian Deutsch)
+
 0.4.22
 ======
 
