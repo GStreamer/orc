@@ -234,6 +234,7 @@ orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
       MAP_SHARED, fd, 0);
   if (region->write_ptr == MAP_FAILED) {
     ORC_WARNING ("failed to create write map");
+    munmap (region->exec_ptr, SIZE);
     close (fd);
     return FALSE;
   }
