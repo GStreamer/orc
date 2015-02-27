@@ -12,6 +12,8 @@
 
 
 #define ALIGN(ptr,n) ((void *)((orc_intptr)(ptr + n) & (~(orc_intptr)(n-1))))
+/* Limit amount of memory to check. Some systems can do above 64MB */
+#define MAX_SIZE_TO_CHECK 1024*1024*64+1024
 
 int hot_src = TRUE;
 int hot_dest = TRUE;
@@ -56,8 +58,8 @@ main(int argc, char *argv[])
     unalign = 0;
   }
 
-  s = malloc(1024*1024*64+1024);
-  d = malloc(1024*1024*64+1024);
+  s = malloc(MAX_SIZE_TO_CHECK);
+  d = malloc(MAX_SIZE_TO_CHECK);
   src = ORC_PTR_OFFSET(ALIGN(s,128),unalign);
   dest = ALIGN(d,128);
 
@@ -104,6 +106,11 @@ main(int argc, char *argv[])
     double x = i*0.1 + 6.0;
     int size = pow(2.0, x);
 
+    if (size > MAX_SIZE_TO_CHECK) {
+      printf ("Stopping test, exceeding maximum size to check (%d, could do above %d)\n",
+	      MAX_SIZE_TO_CHECK, size);
+      break;
+    }
     if (flush_cache) {
       touch (src, (1<<18));
     }
