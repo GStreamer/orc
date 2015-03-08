@@ -1320,13 +1320,8 @@ output_code_test (OrcProgram *p, FILE *output)
     var = &p->vars[ORC_VAR_C1 + i];
     if (var->size) {
       if (var->size < 8) {
-        if (var->value.i != 0x80000000) {
-          fprintf(output, "      orc_program_add_constant (p, %d, 0x%08x, \"%s\");\n",
-              var->size, (int)var->value.i, varnames[ORC_VAR_C1 + i]);
-        } else {
-          fprintf(output, "      orc_program_add_constant (p, %d, 0x%08x, \"%s\");\n",
-              var->size, (int)var->value.i, varnames[ORC_VAR_C1 + i]);
-        }
+	fprintf(output, "      orc_program_add_constant (p, %d, 0x%08x, \"%s\");\n",
+	    var->size, (int)var->value.i, varnames[ORC_VAR_C1 + i]);
       } else {
         fprintf(output, "      orc_program_add_constant_int64 (p, %d, "
             "0x%08x%08xULL, \"%s\");\n",
