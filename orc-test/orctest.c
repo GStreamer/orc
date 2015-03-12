@@ -804,7 +804,7 @@ orc_test_get_program_for_opcode (OrcStaticOpcode *opcode)
   OrcProgram *p;
   char s[40];
   int flags ORC_GNUC_UNUSED = 0;
-  int args[4] = { -1, -1, -1, -1 };
+  int args[5] = { -1, -1, -1, -1, -1 };
   int n_args = 0;
 
   p = orc_program_new ();
