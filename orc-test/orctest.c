@@ -859,7 +859,7 @@ orc_test_get_program_for_opcode_const (OrcStaticOpcode *opcode)
 {
   OrcProgram *p;
   char s[40];
-  int args[4] = { -1, -1, -1, -1 };
+  int args[5] = { -1, -1, -1, -1, -1 };
   int flags ORC_GNUC_UNUSED;
   int n_args = 0;
 
@@ -908,7 +908,7 @@ orc_test_get_program_for_opcode_param (OrcStaticOpcode *opcode)
 {
   OrcProgram *p;
   char s[40];
-  int args[4] = { -1, -1, -1, -1 };
+  int args[5] = { -1, -1, -1, -1, -1 };
   int flags ORC_GNUC_UNUSED;
   int n_args = 0;
 
