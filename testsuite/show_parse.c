@@ -108,7 +108,7 @@ read_file (const char *filename)
   long size;
   int ret;
 
-  file = fopen (filename, "r");
+  file = fopen (filename, "rb");
   if (file == NULL) return NULL;
 
   ret = fseek (file, 0, SEEK_END);
