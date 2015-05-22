@@ -452,6 +452,10 @@ orc_parse_get_line (OrcParser *parser)
   memcpy (parser->line, parser->p, n);
   parser->line[n] = 0;
 
+  /* windows text files might have \r\n as line ending */
+  if (n > 0 && parser->line[n - 1] == '\r')
+    parser->line[n - 1] = 0;
+
   parser->p = end;
   if (parser->p[0] == '\n') {
     parser->p++;
