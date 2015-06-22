@@ -565,7 +565,7 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
         if (var->vartype == ORC_VAR_TYPE_SRC ||
             var->vartype == ORC_VAR_TYPE_DEST) {
           OrcInstruction *cinsn;
-          
+
           cinsn = compiler->insns + compiler->n_insns;
           compiler->n_insns++;
 

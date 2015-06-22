@@ -307,13 +307,22 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
         for(i=offset+1,j=0;i<n_tokens;i++,j++){
           char *end;
           double unused ORC_GNUC_UNUSED;
+          char varname[20];
+
+          args[j] = token[i];
 
           unused = strtod (token[i], &end);
           if (end != token[i]) {
-            orc_program_add_constant_str (parser->program, opcode_arg_size(o, j),
-                token[i], token[i]);
+            int id;
+
+            /* make a unique name based on value and size */
+            sprintf (varname, "_%d.%s", opcode_arg_size(o, j), token[i]);
+            id = orc_program_add_constant_str (parser->program, opcode_arg_size(o, j),
+                token[i], varname);
+            /* it's possible we reused an existing variable, get its name so
+             * that we can refer to it in the opcode */
+            args[j] = parser->program->vars[id].name;
           }
-          args[j] = token[i];
         }
 
         orc_program_append_str_2 (parser->program, token[offset], flags,

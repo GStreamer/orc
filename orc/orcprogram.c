@@ -585,7 +585,8 @@ orc_program_add_constant_str (OrcProgram *program, int size,
   }
 
   for(j=0;j<program->n_const_vars;j++){
-    if (program->vars[ORC_VAR_C1 + j].value.i == program->vars[i].value.i) {
+    if (program->vars[ORC_VAR_C1 + j].value.i == program->vars[i].value.i &&
+        program->vars[ORC_VAR_C1 + j].size == size) {
       return ORC_VAR_C1 + j;
     }
   }
