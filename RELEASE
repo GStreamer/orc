@@ -1,3 +1,14 @@
+0.4.24
+======
+
+  - Only reuse constants of the same size and value (Wim Taymans)
+  - Fix reading of .orc files with Windows line endings on
+    Windows (Tim-Philipp Müller)
+  - Fix out of bounds array access in the tests (Luis de Bethencourt)
+  - Remove duplicate code path in orcc (Edward Hervey)
+  - Put a limit to the memcpy test (Edward Hervey)
+  - Fix mmap leak on error path (Vincent Penquerc'h)
+
 0.4.23
 ======
 
