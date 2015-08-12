@@ -35,8 +35,10 @@ test_simple (int max, int (*adder) (OrcProgram *, int, const char *))
   for (v = 0; v < max; v++)
     (*adder) (p, 2, names + v);
   result = orc_program_compile (p);
-  if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL (result))
+  if (ORC_COMPILE_RESULT_IS_FATAL (result))
     error = TRUE;
+
+  orc_program_reset (p);
 
   /* Check we can not add one more */
   (*adder) (p, 2, names + v);
