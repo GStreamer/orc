@@ -318,7 +318,7 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
     program->orccode->vars[i].value = compiler->vars[i].value;
   }
 
-  if (program->backup_func && _orc_compiler_flag_backup) {
+  if (program->backup_func && (_orc_compiler_flag_backup || target == NULL)) {
     orc_compiler_error (compiler, "Compilation disabled, using backup");
     compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
     goto error;
