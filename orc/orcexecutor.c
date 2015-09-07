@@ -295,10 +295,15 @@ orc_executor_emulate (OrcExecutor *ex)
       } else if (var->vartype == ORC_VAR_TYPE_PARAM) {
         opcode_ex[j].src_ptrs[k] = tmpspace[insn->src_args[k]];
         /* FIXME hack */
-        load_constant (tmpspace[insn->src_args[k]], 8,
-            (orc_uint64)(orc_uint32)ex->params[insn->src_args[k]] |
-            (((orc_uint64)(orc_uint32)ex->params[insn->src_args[k] +
-             (ORC_VAR_T1 - ORC_VAR_P1)])<<32));
+        if (var->size == 8) {
+          load_constant (tmpspace[insn->src_args[k]], 8,
+              (orc_uint64)(orc_uint32)ex->params[insn->src_args[k]] |
+              (((orc_uint64)(orc_uint32)ex->params[insn->src_args[k] +
+               (ORC_VAR_T1 - ORC_VAR_P1)])<<32));
+        } else {
+          load_constant (tmpspace[insn->src_args[k]], 8,
+              ex->params[insn->src_args[k]]);
+        }
       } else if (var->vartype == ORC_VAR_TYPE_TEMP) {
         opcode_ex[j].src_ptrs[k] = tmpspace[insn->src_args[k]];
       } else if (var->vartype == ORC_VAR_TYPE_SRC) {
