@@ -31,7 +31,11 @@ main (int argc, char *argv[])
   orc_init ();
   orc_test_init ();
 
+#ifdef ORC_TEST_FILENAME
+  filename = ORC_TEST_FILENAME;
+#else
   filename = "bench10.orc";
+#endif
   code = read_file (filename);
   if (!code) {
     printf("benchmorc needs bench10.orc file in current directory\n");

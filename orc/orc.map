@@ -1,0 +1,6 @@
+{
+global:
+    orc_*;
+local:
+    *;
+};
