@@ -11,7 +11,7 @@ dnl AS_HOST_DEFINES()
 AC_DEFUN([AS_HOST_DEFINES],
 [
   case "x${host_cpu}" in
-    xi?86 | k?)
+    xi?86 | xk?)
       HAVE_I386=yes
       AC_DEFINE(HAVE_I386, 1, [Defined if host is i386])
       ;;
