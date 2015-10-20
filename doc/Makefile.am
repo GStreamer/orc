@@ -104,8 +104,15 @@ endif
 
 -include $(top_srcdir)/git.mk
 
-update-www:
-	rsync -a html/* cooker.entropywave.com:/srv/code.entropywave.com/www/documentation/orc
+DOC_SERVER = gstreamer.freedesktop.org
+DOC_BASE = /srv/gstreamer.freedesktop.org/www/data/doc
+DOC_URL = $(DOC_SERVER):$(DOC_BASE)
+
+upload:
+	echo Uploading documentation to $(DOC_SERVER):$(DOC_BASE)/orc
+	ssh $(DOC_SERVER) mkdir -p $(DOC_BASE)/orc
+	rsync -rv -e ssh --delete html/* $(DOC_SERVER):$(DOC_BASE)/orc
+	ssh $(DOC_SERVER) chmod -R g+w $(DOC_BASE)/orc
 
 update-tables: $(top_builddir)/testsuite/generate_xml_table $(top_builddir)/testsuite/generate_xml_table2
 	$(top_builddir)/testsuite/generate_xml_table >table.xml

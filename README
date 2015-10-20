@@ -4,8 +4,7 @@ ORC - The Oil Runtime Compiler
 
 (and OIL stands for Optimized Inner Loops)
 
-Entropy Wave Inc (http://entropywave.com/) presents Orc, the sucessor
-to Liboil - The Library of Optimized Inner Loops.
+Orc is the sucessor to Liboil - The Library of Optimized Inner Loops.
 
 Orc is a library and set of tools for compiling and executing
 very simple programs that operate on arrays of data.  The "language"
@@ -20,9 +19,7 @@ will likely be some major changes in ease of use from a developer's
 perspective over the next few releases.
 
 The 0.4 series of Orc releases will be API and ABI compatible, and
-will be incompatible with the 0.5 series when it comes out.  The first
-release of the 0.5 series is anticipated to coincide with the release
-of GStreamer 1.0.
+will be incompatible with the 0.5 series when it comes out.
 
 
 Features:
@@ -48,8 +45,9 @@ Features:
 
 More information:
 
-  Web: http://code.entropywave.com/projects/orc/
-  Download: http://code.entropywave.com/download/orc/
+  Web           : http://gstreamer.freedesktop.org/modules/orc.html
+  Download      : http://gstreamer.freedesktop.org/data/src/orc/
+  Documentation : http://gstreamer.freedesktop.org/data/doc/orc/
 
 
 Questions and Answers:
@@ -85,7 +83,7 @@ Caveats (Known Bugs):
  - ?
 
 
-Future directions:
+Future directions (Possibly outdated):
 
  - Addition of more complex loop control and array structures.
 
@@ -96,13 +94,3 @@ Future directions:
    be converted to binary code into a series of instructions that can.
    This is necessary since assembly instructions on most targets do
    not cover all the features of the Orc assembly language.
- 
-
-About Entropy Wave:
-
-Entropy Wave creates tools that allow content producers and distributors
-use open video technology.  Through use of open source software like
-GStreamer and Dirac, Entropy Wave's customers save money on licensing
-costs for encoding and streaming video on the web.  Entropy Wave was
-founded in 2008 by long-time open source developer David Schleef.
-

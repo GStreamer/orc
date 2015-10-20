@@ -8,14 +8,21 @@ topdir=`pwd`
 tmpdir=${topdir}/tmp
 
 test -f orc-${version}.tar.gz || \
-  wget http://code.entropywave.com/download/orc/orc-${version}.tar.gz
+test -f orc-${version}.tar.xz || \
+  wget http://gstreamer.freedesktop.org/src/orc/orc-${version}.tar.gz || \
+  wget http://gstreamer.freedesktop.org/src/orc/orc-${version}.tar.xz
 
 rm -rf ${tmpdir}
 mkdir -p ${tmpdir}
 
-../tools/orcc -o ${tmpdir}/out.c --implementation test.orc
+# FIXME: no test.orc ..
+libtool --mode=execute ../../tools/orcc -o ${tmpdir}/out.c --implementation test.orc
 
-tar -xzf orc-${version}.tar.gz --directory ${tmpdir}
+if test -f orc-${version}.tar.gz; then
+  tar -xzf orc-${version}.tar.gz --directory ${tmpdir}
+elif test -f orc-${version}.tar.xz; then
+  tar -xzf orc-${version}.tar.xz --directory ${tmpdir}
+fi
 cd ${tmpdir}
 
 cd orc-${version}

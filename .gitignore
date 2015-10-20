@@ -92,8 +92,10 @@ autom4te.cache
 /testsuite/perf_opcodes_sys_compare
 /testsuite/perf_parse_compare
 /testsuite/show_parse
+/testsuite/test-limits
 /testsuite/test-schro
 /testsuite/test_accsadubl
+/testsuite/test_parse
 /testsuite/*.trs
 /testsuite/*.log
 /testsuite/orcc/orc_test.c
