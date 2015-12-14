@@ -191,6 +191,9 @@ static void
 get_varname_stride (char *s, OrcCompiler *compiler, int var)
 {
   if (compiler->target_flags & ORC_TARGET_C_NOEXEC) {
+    /* FIXME: correct varnames bound */
+    /* https://bugzilla.gnome.org/show_bug.cgi?id=759840 */
+    ORC_ASSERT (var < 48);
     sprintf(s, "%s_stride", varnames[var]);
   } else {
     sprintf(s, "ex->params[%d]", var);
