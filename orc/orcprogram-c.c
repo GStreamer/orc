@@ -291,7 +291,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     ORC_ASM_CODE(compiler,"  for (j = 0; j < m; j++) {\n");
     prefix = 2;
 
-    for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
+    for(i=0;i<ORC_N_VARNAMES;i++){
       OrcVariable *var = compiler->vars + i;
       if (var->name == NULL) continue;
       switch (var->vartype) {
@@ -417,7 +417,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
     ORC_ASM_CODE(compiler,"  }\n");
   }
 
-  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
+  for(i=0;i<ORC_N_VARNAMES;i++){
     char varname[40];
     OrcVariable *var = compiler->vars + i;
     if (var->name == NULL) continue;
