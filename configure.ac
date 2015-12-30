@@ -78,10 +78,16 @@ AC_CHECK_LIB(rt, clock_gettime,
 AC_SUBST(LIBRT)
 
 dnl Android liblog
-AC_CHECK_LIB(log, __android_log_print,
-   AC_DEFINE(HAVE_ANDROID_LIBLOG, 1, [Defined if we have __android_log_print()])
-   LIBLOG=-llog
-   )
+case "${host_os}" in
+  *android*)
+    AC_CHECK_LIB(log, __android_log_print,
+        AC_DEFINE(HAVE_ANDROID_LIBLOG, 1, [Defined if we have __android_log_print()])
+        LIBLOG=-llog
+    )
+    ;;
+  *)
+    ;;
+esac
 AC_SUBST(LIBLOG)
 
 AC_CACHE_CHECK(for monotonic clocks,
