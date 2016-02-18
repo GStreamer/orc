@@ -1,12 +1,12 @@
 prefix=
 exec_prefix=
-libdir=${pcfiledir}/orc/
+libdir=${pcfiledir}/orc/.libs
 includedir=${pcfiledir}/
 
 Name: orc-@ORC_MAJORMINOR@ uninstalled
 Description: Library of Optimized Inner Loops Runtime Compiler
 Version: @VERSION@
-Libs: @abs_top_builddir@/orc/liborc-@ORC_MAJORMINOR@.la  @LIBM@ @LIBRT@
+Libs: -L${libdir} -lorc-@ORC_MAJORMINOR@ @LIBM@ @LIBRT@
 Cflags: -I${includedir}
 
 orcc=${pcfiledir}/tools/orcc@EXEEXT@
