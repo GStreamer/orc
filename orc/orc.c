@@ -70,3 +70,16 @@ orc_init (void)
   }
 }
 
+/**
+ * orc_version_string:
+ *
+ * Returns the orc version as a string. This will be either a triplet like
+ * "0.4.25" or with an additional nano number like "0.4.25.1".
+ *
+ * Since: 0.4.25
+ */
+const char *
+orc_version_string (void)
+{
+  return (const char *) VERSION;
+}

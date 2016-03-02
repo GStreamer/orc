@@ -1,6 +1,7 @@
 <SECTION>
 <FILE>orc</FILE>
 orc_init
+orc_version_string
 </SECTION>
 
 <SECTION>
