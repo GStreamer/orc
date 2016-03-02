@@ -90,6 +90,7 @@ void help (void)
 int
 main (int argc, char *argv[])
 {
+  const char *orc_version;
   char *code;
   int n;
   int i;
@@ -101,6 +102,16 @@ main (int argc, char *argv[])
   char *log = NULL;
 
   orc_init ();
+
+  orc_version = orc_version_string ();
+  if (strcmp (orc_version, VERSION) != 0) {
+    fprintf (stderr, "WARNING: unexpected liborc library version %s is being "
+        "picked up by %s, which is version %s. This might be because orc was "
+        "installed from source and is also installed via packages, and liborc "
+        "from the wrong prefix is used. Check your system setup.\n",
+        orc_version, argv[0], VERSION);
+    exit(1);
+  }
 
   for(i=1;i<argc;i++) {
     if (strcmp(argv[i], "--header") == 0) {
