@@ -1,3 +1,21 @@
+0.4.25
+======
+
+  - compiler: also prefer the backup function when no target, instead
+    of trying to use emulation which is usually slower (Wim Taymans)
+  - executor: fix load of parameters smaller than 64 bits, fixing crashes
+    on ldresnearb and friends in emulated code (Wim Taymans)
+  - test-limits: improve test without target (Wim Taymans)
+  - Only check for Android's liblog on Android targets, so we don't accidentally
+    pick up another liblog that may exist elsewhere (Sebastian Dröge)
+  - Don't require libtool for uninstalled setups (-uninstalled pkg-config file)
+    (Julien Isorce)
+  - Make -Bsymbolic check in configure work with clang (Koop Mast)
+  - Coverity code analyser fixes (Luis de Bethencourt)
+  - docs: update generated opcode tables
+  - add orc_version_string() function and make orcc check the liborc that is
+    being picked up to make sure the right lib is being used (Tim-Philipp Müller)
+
 0.4.24
 ======
 

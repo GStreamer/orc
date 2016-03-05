@@ -1,5 +1,5 @@
 AC_PREREQ([2.68])
-AC_INIT([orc], [0.4.24.1], [http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&component=orc],[orc])
+AC_INIT([orc], [0.4.25], [http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&component=orc],[orc])
 dnl don't forget to update libversion
 
 AS_NANO(ORC_GIT=no,ORC_GIT=yes)
@@ -22,7 +22,7 @@ dnl - library source changed -> increment REVISION
 dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
-ORC_LIBVERSION="23:0:23"
+ORC_LIBVERSION="25:0:25"
 AC_SUBST(ORC_LIBVERSION)
 LT_PREREQ([2.2.6])
 LT_INIT([dlopen win32-dll disable-static])
