@@ -1,5 +1,5 @@
 AC_PREREQ([2.68])
-AC_INIT([orc], [0.4.25], [http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&component=orc],[orc])
+AC_INIT([orc], [0.4.25.1], [http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&component=orc],[orc])
 dnl don't forget to update libversion
 
 AS_NANO(ORC_GIT=no,ORC_GIT=yes)
