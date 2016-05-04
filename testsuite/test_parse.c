@@ -38,7 +38,7 @@ main (int argc, char *argv[])
       printf ("%s\n", programs[i]->name);
     orc_test_compare_output_full (programs[i], 0);
     cres = orc_program_compile (programs[i]);
-    if (cres != ORC_COMPILE_RESULT_OK) {
+    if (ORC_COMPILE_RESULT_IS_FATAL (cres)) {
       fprintf (stderr, "compile error: %d\n", cres);
       error = TRUE;
     }
@@ -55,7 +55,7 @@ main (int argc, char *argv[])
       printf ("%s\n", programs[i]->name);
     orc_test_compare_output_full (programs[i], 0);
     cres = orc_program_compile (programs[i]);
-    if (cres != ORC_COMPILE_RESULT_OK) {
+    if (ORC_COMPILE_RESULT_IS_FATAL (cres)) {
       fprintf (stderr, "compile error: %d\n", cres);
       error = TRUE;
     }
