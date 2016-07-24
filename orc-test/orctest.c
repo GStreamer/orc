@@ -727,7 +727,7 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
             if (flags & ORC_TEST_FLAGS_FLOAT) {
               a = print_array_val_float (dest_emul[l-ORC_VAR_D1], i, j);
               b = print_array_val_float (dest_exec[l-ORC_VAR_D1], i, j);
-              if (!float_compare (dest_emul[l-ORC_VAR_D1], dest_exec[l-ORC_VAR_D1], i, j) != 0) {
+              if (!float_compare (dest_emul[l-ORC_VAR_D1], dest_exec[l-ORC_VAR_D1], i, j)) {
                 line_bad = TRUE;
               }
             } else {
