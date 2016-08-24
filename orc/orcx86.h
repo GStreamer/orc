@@ -87,7 +87,7 @@ void orc_x86_emit_pop (OrcCompiler *compiler, int size, int reg);
   orc_x86_emit_cpuinsn_imm_memoffset (p, (value >= -128 && value < 128) ? \
       ORC_X86_add_imm8_rm : ORC_X86_add_imm32_rm, size, value, offset, reg)
 #define orc_x86_emit_add_reg_memoffset(p,size,src,offset,dest) \
-  orc_x86_emit_cpuinsn_reg_memoffset(p, ORC_X86_add_r_rm, src, offset, dest)
+  orc_x86_emit_cpuinsn_reg_memoffset_s(p, ORC_X86_add_r_rm, size, src, offset, dest)
 #define orc_x86_emit_add_reg_reg(p,size,src,dest) \
   orc_x86_emit_cpuinsn_size(p, ORC_X86_add_r_rm, size, src, dest)
 #define orc_x86_emit_add_memoffset_reg(p,size,offset,src,dest) \
@@ -100,7 +100,7 @@ void orc_x86_emit_pop (OrcCompiler *compiler, int size, int reg);
   orc_x86_emit_cpuinsn_memoffset_reg(p, ORC_X86_imul_rm_r, size, offset, src, dest)
 
 #define orc_x86_emit_cmp_reg_memoffset(p,size,src,offset,dest) \
-  orc_x86_emit_cpuinsn_reg_memoffset(p, ORC_X86_cmp_r_rm, src, offset, dest)
+  orc_x86_emit_cpuinsn_reg_memoffset_s(p, ORC_X86_cmp_r_rm, size, src, offset, dest)
 
 #define orc_x86_emit_jmp(p,label) \
   orc_x86_emit_cpuinsn_branch (p, ORC_X86_jmp, label)
@@ -178,6 +178,8 @@ void orc_x86_emit_cpuinsn_reg_memoffset (OrcCompiler *p, int index, int src,
     int offset, int dest);
 void orc_x86_emit_cpuinsn_reg_memoffset_8 (OrcCompiler *p, int index, int src,
     int offset, int dest);
+void orc_x86_emit_cpuinsn_reg_memoffset_s (OrcCompiler *p, int index, int size,
+    int src, int offset, int dest);
 void orc_x86_emit_cpuinsn_memoffset_reg (OrcCompiler *p, int index, int size,
     int offset, int src, int dest);
 void orc_x86_emit_cpuinsn_memoffset (OrcCompiler *p, int index, int size,
