@@ -141,8 +141,8 @@ orc_x86_emit_pop (OrcCompiler *compiler, int size, int reg)
 void
 orc_x86_emit_modrm_memoffset_old (OrcCompiler *compiler, int reg1, int offset, int reg2)
 {
-  if (offset == 0 && reg2 != compiler->exec_reg) {
-    if (reg2 == X86_ESP) {
+  if (offset == 0 && reg2 != compiler->exec_reg && reg2 != X86_EBP && reg2 != X86_R13) {
+    if (reg2 == X86_ESP || reg2 == X86_R12) {
       *compiler->codeptr++ = X86_MODRM(0, 4, reg1);
       *compiler->codeptr++ = X86_SIB(0, 4, reg2);
     } else {
@@ -150,13 +150,13 @@ orc_x86_emit_modrm_memoffset_old (OrcCompiler *compiler, int reg1, int offset, i
     }
   } else if (offset >= -128 && offset < 128) {
     *compiler->codeptr++ = X86_MODRM(1, reg2, reg1);
-    if (reg2 == X86_ESP) {
+    if (reg2 == X86_ESP || reg2 == X86_R12) {
       *compiler->codeptr++ = X86_SIB(0, 4, reg2);
     }
     *compiler->codeptr++ = (offset & 0xff);
   } else {
     *compiler->codeptr++ = X86_MODRM(2, reg2, reg1);
-    if (reg2 == X86_ESP) {
+    if (reg2 == X86_ESP || reg2 == X86_R12) {
       *compiler->codeptr++ = X86_SIB(0, 4, reg2);
     }
     *compiler->codeptr++ = (offset & 0xff);
@@ -169,8 +169,8 @@ orc_x86_emit_modrm_memoffset_old (OrcCompiler *compiler, int reg1, int offset, i
 void
 orc_x86_emit_modrm_memoffset (OrcCompiler *compiler, int offset, int src, int dest)
 {
-  if (offset == 0 && src != compiler->exec_reg) {
-    if (src == X86_ESP) {
+  if (offset == 0 && src != compiler->exec_reg && src != X86_EBP && src != X86_R13) {
+    if (src == X86_ESP || src == X86_R12) {
       *compiler->codeptr++ = X86_MODRM(0, 4, dest);
       *compiler->codeptr++ = X86_SIB(0, 4, src);
     } else {
@@ -178,13 +178,13 @@ orc_x86_emit_modrm_memoffset (OrcCompiler *compiler, int offset, int src, int de
     }
   } else if (offset >= -128 && offset < 128) {
     *compiler->codeptr++ = X86_MODRM(1, src, dest);
-    if (src == X86_ESP) {
+    if (src == X86_ESP || src == X86_R12) {
       *compiler->codeptr++ = X86_SIB(0, 4, src);
     }
     *compiler->codeptr++ = (offset & 0xff);
   } else {
     *compiler->codeptr++ = X86_MODRM(2, src, dest);
-    if (src == X86_ESP) {
+    if (src == X86_ESP || src == X86_R12) {
       *compiler->codeptr++ = X86_SIB(0, 4, src);
     }
     *compiler->codeptr++ = (offset & 0xff);
