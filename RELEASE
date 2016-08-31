@@ -1,3 +1,13 @@
+0.4.26
+======
+
+  - Use 64 bit arithmetic to increment the stride if needed (Wim Taymans)
+  - Fix generation of ModR/M / SIB bytes for the EBP, R12, R13 registers
+    on X86/X86-64 (Sebastian Dröge)
+  - Fix test_parse unit test if no executable backend is available (Pascal Terjan)
+  - Add orc-test path to the -uninstalled .pc file (Josep Torra)
+  - Fix compiler warnings in the tests on OS X (Josep Torra)
+
 0.4.25
 ======
 
