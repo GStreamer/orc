@@ -100,6 +100,12 @@ orc_c_args = ['-DORC_ENABLE_UNSTABLE_API', '-D_GNU_SOURCE']
 
 orc_dependencies = [libm, librt, liblog]
 
+if cc.get_id() != 'msvc'
+  link_args = ['-Wl,--version-script,' + meson.current_source_dir() + '/orc.map']
+else
+  link_args = []
+endif
+
 # FIXME: what about shared and/or static lib? look at options?
 orc_lib = shared_library('orc-' + orc_api, orc_sources,
   version : libversion,
@@ -107,7 +113,7 @@ orc_lib = shared_library('orc-' + orc_api, orc_sources,
   include_directories : orc_inc,
   c_args : orc_c_args,
   dependencies : orc_dependencies,
-  link_args : ['-Wl,--version-script,' + meson.current_source_dir() + '/orc.map'],
+  link_args : link_args,
   link_depends : 'orc.map',
   install : true)
 
