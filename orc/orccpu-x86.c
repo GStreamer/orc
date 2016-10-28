@@ -88,14 +88,14 @@ get_cpuid_ecx (orc_uint32 op, orc_uint32 init_ecx, orc_uint32 *a, orc_uint32 *b,
 {
   *a = op;
   *c = init_ecx;
-#ifdef __i386__
+#if defined(HAVE_I386)
   __asm__ (
       "  pushl %%ebx\n"
       "  cpuid\n"
       "  mov %%ebx, %%esi\n"
       "  popl %%ebx\n"
       : "+a" (*a), "=S" (*b), "+c" (*c), "=d" (*d));
-#elif defined(__amd64__)
+#elif defined(HAVE_AMD64)
   __asm__ (
       "  cpuid\n"
       : "+a" (*a), "=b" (*b), "+c" (*c), "=d" (*d));
