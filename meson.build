@@ -54,7 +54,7 @@ if cc.has_function('clock_gettime')
   cdata.set('HAVE_CLOCK_GETTIME', true)
 else
   # On glibc older than 2.17, clock_gettime is provided by time.h and -lrt
-  librt = find_library('rt', required : false)
+  librt = cc.find_library('rt', required : false)
   if librt.found() and cc.has_function('clock_gettime', dependencies : librt)
     pc_conf.set('LIBRT', '-lrt')
   endif
