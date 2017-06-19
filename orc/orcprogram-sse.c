@@ -764,6 +764,49 @@ orc_program_has_float (OrcCompiler *compiler)
 #define LABEL_STEP_DOWN(x) (8+(x))
 #define LABEL_STEP_UP(x) (13+(x))
 
+static void
+orc_compiler_sse_save_registers (OrcCompiler *compiler)
+{
+  int i;
+  int saved = 0;
+  for (i = 0; i < 16; ++i) {
+    if (compiler->save_regs[X86_XMM0 + i] == 1) {
+      ++saved;
+    }
+  }
+  if (saved > 0) {
+    orc_x86_emit_mov_imm_reg (compiler, 4, 16 * saved, compiler->gp_tmpreg);
+    orc_x86_emit_sub_reg_reg (compiler, compiler->is_64bit ? 8 : 4,
+        compiler->gp_tmpreg, X86_ESP);
+    saved = 0;
+    for (i = 0; i < 16; ++i) {
+      if (compiler->save_regs[X86_XMM0 + i] == 1) {
+        orc_x86_emit_mov_sse_memoffset (compiler, 16, X86_XMM0 + i,
+            saved * 16, X86_ESP, FALSE, FALSE);
+        ++saved;
+      }
+    }
+  }
+}
+
+static void
+orc_compiler_sse_restore_registers (OrcCompiler *compiler)
+{
+  int i;
+  int saved = 0;
+  for (i = 0; i < 16; ++i) {
+    if (compiler->save_regs[X86_XMM0 + i] == 1) {
+      orc_x86_emit_mov_memoffset_sse (compiler, 16, saved * 16, X86_ESP,
+          X86_XMM0 + i, FALSE);
+      ++saved;
+    }
+  }
+  if (saved > 0) {
+    orc_x86_emit_mov_imm_reg (compiler, 4, 16 * saved, compiler->gp_tmpreg);
+    orc_x86_emit_add_reg_reg (compiler, compiler->is_64bit ? 8 : 4,
+        compiler->gp_tmpreg, X86_ESP);
+  }
+}
 
 void
 orc_compiler_sse_assemble (OrcCompiler *compiler)
@@ -803,6 +846,8 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
   if (compiler->error) return;
 
   orc_x86_emit_prologue (compiler);
+
+  orc_compiler_sse_save_registers (compiler);
 
 #ifndef MMX
   if (orc_program_has_float (compiler)) {
@@ -990,6 +1035,9 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
 #else
   orc_x86_emit_emms (compiler);
 #endif
+
+  orc_compiler_sse_restore_registers (compiler);
+
   orc_x86_emit_epilogue (compiler);
 
   orc_x86_calculate_offsets (compiler);
