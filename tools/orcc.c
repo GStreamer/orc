@@ -49,13 +49,14 @@ char *target = "sse";
   } \
 } while (0)
 
-enum {
+typedef enum {
   MODE_IMPL,
   MODE_HEADER,
   MODE_TEST,
   MODE_ASSEMBLY
-};
-int mode = MODE_IMPL;
+} OrcMode;
+
+OrcMode mode = MODE_IMPL;
 
 void help (void)
 {
