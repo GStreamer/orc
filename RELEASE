@@ -1,3 +1,11 @@
+0.4.27
+======
+
+  - sse: preserve non volatile sse registers, needed for MSVC (Matej Knopp)
+  - x86: don't hard-code register size to zero in orc_x86_emit_*() functions (Igor Rondarev)
+  - Fix incorrect asm generation on 64-bit Windows when building with MSVC (Jan Schmidt)
+  - Support build using the Meson build system (Nirbheek Chauhan, Tim-Philipp Müller)
+
 0.4.26
 ======
 
