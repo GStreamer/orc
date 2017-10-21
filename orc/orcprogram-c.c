@@ -823,7 +823,7 @@ c_rule_loadpX (OrcCompiler *p, void *user, OrcInstruction *insn)
     }
   } else if (p->vars[insn->src_args[0]].vartype == ORC_VAR_TYPE_CONST) {
     if (p->vars[insn->src_args[0]].size <= 4) {
-      ORC_ASM_CODE(p,"    %s = (int)0x%08x; /* %d or %gf */\n", dest,
+      ORC_ASM_CODE(p,"    %s = 0x%08x; /* %d or %gf */\n", dest,
           (unsigned int)p->vars[insn->src_args[0]].value.i,
           (int)p->vars[insn->src_args[0]].value.i,
           p->vars[insn->src_args[0]].value.f);
