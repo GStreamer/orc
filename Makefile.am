@@ -1,7 +1,18 @@
 
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = orc orc-test tools examples doc testsuite
+if BUILD_TESTS
+ORCTEST_DIR = orc-test
+TESTSUITE_DIR= testsuite
+else
+ORCTEST_DIR =
+TESTSUITE_DIR =
+endif
+
+SUBDIRS = orc $(ORCTEST_DIR) tools $(TESTSUITE_DIR) examples doc
+
+DIST_SUBDIRS = orc orc-test tools examples testsuite doc
+
 
 EXTRA_DIST = COPYING RELEASE autogen.sh gtk-doc.make orc.m4 \
 	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/orc-0.4.*" ) \
