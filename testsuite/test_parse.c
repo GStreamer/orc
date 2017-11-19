@@ -65,5 +65,7 @@ main (int argc, char *argv[])
   if (error || n == 0)
     return 1;
 
+  free (programs);
+
   return 0;
 }

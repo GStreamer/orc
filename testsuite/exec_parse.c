@@ -46,8 +46,10 @@ main (int argc, char *argv[])
   for(i=0;i<n;i++){
     if (verbose) printf("%s\n", programs[i]->name);
     orc_test_compare_output_full (programs[i], 0);
+    orc_program_free (programs[i]);
   }
 
+  free (code);
   if (error) return 1;
   return 0;
 }
