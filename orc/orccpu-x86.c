@@ -520,10 +520,10 @@ orc_sse_detect_cpuid_amd (orc_uint32 level)
     if (edx & (1<<22)) {
       orc_x86_mmx_flags |= ORC_TARGET_MMX_MMXEXT;
     }
-    if (edx & (1<<31)) {
+    if (edx & (1U<<31)) {
       orc_x86_mmx_flags |= ORC_TARGET_MMX_3DNOW;
     }
-    if (edx & (1<<30)) {
+    if (edx & (1U<<30)) {
       orc_x86_mmx_flags |= ORC_TARGET_MMX_3DNOWEXT;
     }
   }
