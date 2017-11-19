@@ -268,3 +268,22 @@ orc.pc
 ])
 AC_OUTPUT
 
+echo "
+
+Configuration
+	Version                    : ${VERSION}
+	Source code location       : ${srcdir}
+	Prefix                     : ${prefix}
+	Compiler                   : ${CC}
+
+	API Documentation          : ${enable_gtk_doc}
+
+	Enable SSE backend         : ${ENABLE_BACKEND_SSE}
+	Enable MMX backend         : ${ENABLE_BACKEND_MMX}
+	Enable ALTIVEC backend     : ${ENABLE_BACKEND_ALTIVEC}
+	Enable NEON backend        : ${ENABLE_BACKEND_NEON}
+	Enable C64X backend        : ${ENABLE_BACKEND_C64X}
+	Enable MIPS backend        : ${ENABLE_BACKEND_MIPS}
+
+	Building test apps         : ${BUILD_TESTS}
+"
