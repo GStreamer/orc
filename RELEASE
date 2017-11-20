@@ -1,3 +1,10 @@
+0.4.28
+======
+
+  - Numerous undefined behaviour fixes (Edward Hervey)
+  - Ability to disable tests (Edward Hervey)
+  - Fix meson dist behaviour (Tim-Philipp Müller)
+
 0.4.27
 ======
 
