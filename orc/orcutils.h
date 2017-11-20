@@ -53,6 +53,7 @@ typedef enum {
 
 } OrcCompileResult;
 
+#include <stddef.h>
 
 #ifndef _ORC_INTEGER_TYPEDEFS_
 #define _ORC_INTEGER_TYPEDEFS_
@@ -122,8 +123,14 @@ typedef unsigned int orc_bool;
 
 #define ORC_PTR_TO_INT(x) ((int)(orc_intptr)(x))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
-#define ORC_STRUCT_OFFSET(struct_type, member)    \
-      (ORC_PTR_TO_INT((unsigned char *) &((struct_type*) 0)->member))
+
+#if (defined(__GNUC__)  && __GNUC__ >= 4) || defined (_MSC_VER)
+#define ORC_STRUCT_OFFSET(struct_type, member) \
+      ((int) offsetof (struct_type, member))
+#else
+#define ORC_STRUCT_OFFSET(struct_type, member)	\
+      ((int) ((unsigned char **) &((struct_type*) 0)->member))
+#endif
 
 #ifdef ORC_ENABLE_UNSTABLE_API
 
