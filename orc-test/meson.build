@@ -3,7 +3,7 @@ orc_test_sources = ['orctest.c', 'orcarray.c', 'orcrandom.c', 'orcprofile.c']
 
 install_headers(orc_test_headers, subdir : 'orc-' + orc_api + '/orc-test')
 
-orc_test_lib = shared_library('orc-test-' + orc_api, orc_test_sources,
+orc_test_lib = library ('orc-test-' + orc_api, orc_test_sources,
   c_args : [ orc_c_args , '-DORC_ENABLE_UNSTABLE_API' ],
   dependencies : [libm, orc_dep],
   install : true)

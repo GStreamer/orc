@@ -106,8 +106,7 @@ else
   link_args = []
 endif
 
-# FIXME: what about shared and/or static lib? look at options?
-orc_lib = shared_library('orc-' + orc_api, orc_sources,
+orc_lib = library ('orc-' + orc_api, orc_sources,
   version : libversion,
   soversion : soversion,
   include_directories : orc_inc,
