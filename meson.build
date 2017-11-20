@@ -111,9 +111,12 @@ subdir('orc')
 subdir('orc-test')
 subdir('tools')
 subdir('examples')
-subdir('testsuite')
 
-if not meson.is_cross_build() and host_os != 'windows'
+if not get_option('disable_tests')
+  subdir('testsuite')
+endif
+
+if not meson.is_cross_build() and not get_option('disable_gtkdoc') and host_os != 'windows'
   subdir('doc')
 endif
 

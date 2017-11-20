@@ -1,1 +1,3 @@
 option('enable-backend', type : 'combo', choices : ['sse', 'mmx', 'neon', 'mips', 'altivec', 'c64x', 'all'], value : 'all')
+option('disable_gtkdoc', type : 'boolean', value : false)
+option('disable_tests', type : 'boolean', value : false)
