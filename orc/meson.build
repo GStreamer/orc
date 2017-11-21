@@ -13,7 +13,6 @@ orc_sources = [
   'orcparse.c',
   'orcprogram.c',
   'orcprogram-c.c',
-  'orcprogram.h',
   'orcrule.c',
   'orcutils.c',
 ]
@@ -100,13 +99,15 @@ orc_c_args = ['-DORC_ENABLE_UNSTABLE_API', '-D_GNU_SOURCE']
 
 orc_dependencies = [libm, librt, liblog]
 
+# FIXME: Use gcc visibility attributes in ORC_EXPORT
 if cc.get_id() != 'msvc'
   link_args = ['-Wl,--version-script,' + meson.current_source_dir() + '/orc.map']
 else
   link_args = []
 endif
 
-orc_lib = library ('orc-' + orc_api, orc_sources,
+orc_shr = shared_library ('orc-' + orc_api,
+  orc_sources,
   version : libversion,
   soversion : soversion,
   include_directories : orc_inc,
@@ -116,7 +117,21 @@ orc_lib = library ('orc-' + orc_api, orc_sources,
   link_depends : 'orc.map',
   install : true)
 
-orc_dep = declare_dependency(include_directories : orc_inc, link_with : orc_lib)
+orc_sta = static_library ('orc-' + orc_api,
+  objects: orc_shr.extract_all_objects(),
+  include_directories : orc_inc,
+  c_args : orc_c_args,
+  install : true)
+
+if get_option('default_library') == 'static'
+  orc_lib = orc_sta
+else
+  orc_lib = orc_shr
+endif
+
+orc_dep = declare_dependency(include_directories : orc_inc,
+                             dependencies : orc_dependencies,
+                             link_with : orc_lib)
 
 executable ('generate-bytecode',
   'generate-bytecode.c',
