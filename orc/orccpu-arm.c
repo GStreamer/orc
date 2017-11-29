@@ -100,7 +100,6 @@ orc_check_neon_proc_auxv (void)
 }
 #endif
 
-#ifdef ANDROID
 static char *
 get_proc_cpuinfo (void)
 {
@@ -201,7 +200,6 @@ out:
 
   return ret;
 }
-#endif
 
 unsigned long
 orc_arm_get_cpu_flags (void)
@@ -211,13 +209,11 @@ orc_arm_get_cpu_flags (void)
 #ifdef __linux__
   neon_flags = orc_check_neon_proc_auxv ();
 #endif
-#ifdef ANDROID
   if (!neon_flags) {
     /* On ARM, /proc/self/auxv might not be accessible.
      * Fall back to /proc/cpuinfo */
     neon_flags = orc_cpu_arm_getflags_cpuinfo ();
   }
-#endif
 
   if (orc_compiler_flag_check ("-neon")) {
     neon_flags &= ~ORC_TARGET_NEON_NEON;
