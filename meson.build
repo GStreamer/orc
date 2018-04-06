@@ -42,7 +42,7 @@ elif cpu_family == 'powerpc'
   cdata.set('HAVE_POWERPC', true)
 elif cpu_family == 'arm'
   cdata.set('HAVE_ARM', true)
-elif cpu_family == 'mipsel'
+elif cpu_family == 'mips' and host_machine.endian() == 'little'
   cdata.set('HAVE_MIPSEL', true)
 endif
 
