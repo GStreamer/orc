@@ -72,6 +72,9 @@ endif
 if HAVE_ARM
 liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-arm.c
 endif
+if HAVE_MIPSEL
+liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-mips.c
+endif
 
 pkginclude_HEADERS = \
 	orc-stdint.h \

@@ -93,6 +93,8 @@ elif cpu_family == 'powerpc'
   orc_sources += ['orccpu-powerpc.c']
 elif cpu_family == 'arm'
   orc_sources += ['orccpu-arm.c']
+elif cpu_family == 'mips' and host_machine.endian() == 'little'
+  orc_sources += ['orccpu-mips.c']
 endif
 
 orc_c_args = ['-DORC_ENABLE_UNSTABLE_API', '-D_GNU_SOURCE']

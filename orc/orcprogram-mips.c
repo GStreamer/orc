@@ -80,6 +80,14 @@ enum {
 void
 orc_mips_init (void)
 {
+#ifdef HAVE_MIPSEL
+  /* Disable the MIPS backend if the DSPr2 ASE is not present. */
+  if (!(orc_mips_get_cpu_flags () & ORC_TARGET_MIPS_DSP2)) {
+    ORC_INFO("marking mips backend non-executable");
+    orc_mips_target.executable = FALSE;
+  }
+#endif
+
   orc_target_register (&orc_mips_target);
 
   orc_compiler_orc_mips_register_rules (&orc_mips_target);
@@ -88,7 +96,7 @@ orc_mips_init (void)
 unsigned int
 orc_compiler_orc_mips_get_default_flags (void)
 {
-  unsigned int flags = 0;
+  unsigned int flags = ORC_TARGET_MIPS_DSP2;
 
   if (_orc_compiler_flag_debug) {
     flags |= ORC_TARGET_MIPS_FRAME_POINTER;
