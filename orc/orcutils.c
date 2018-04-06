@@ -31,6 +31,9 @@
 #include <orc/orcdebug.h>
 #include <orc/orcutils.h>
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,6 +44,37 @@
  * @title: Utility functions
  * @short_description: Orc utility functions
  */
+
+#if defined(__arm__) || defined(__mips__)
+char *
+get_proc_cpuinfo (void)
+{
+  char *cpuinfo;
+  int fd;
+  int n;
+
+  cpuinfo = malloc(4096);
+  if (cpuinfo == NULL) return NULL;
+
+  fd = open("/proc/cpuinfo", O_RDONLY);
+  if (fd < 0) {
+    free (cpuinfo);
+    return NULL;
+  }
+
+  n = read(fd, cpuinfo, 4095);
+  if (n < 0) {
+    free (cpuinfo);
+    close (fd);
+    return NULL;
+  }
+  cpuinfo[n] = 0;
+
+  close (fd);
+
+  return cpuinfo;
+}
+#endif
 
 char *
 _strndup (const char *s, int n)

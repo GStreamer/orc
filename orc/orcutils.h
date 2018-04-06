@@ -214,6 +214,10 @@ ORC_BEGIN_DECLS
 
 #ifdef ORC_ENABLE_UNSTABLE_API
 
+#if defined(__arm__) || defined(__mips__)
+char * get_proc_cpuinfo (void);
+#endif
+
 char * _strndup (const char *s, int n);
 char ** strsplit (const char *s, char delimiter);
 char * get_tag_value (char *s, const char *tag);

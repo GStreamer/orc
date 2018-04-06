@@ -98,55 +98,6 @@ orc_check_neon_proc_auxv (void)
 }
 #endif
 
-static char *
-get_proc_cpuinfo (void)
-{
-  char *cpuinfo;
-  int fd;
-  int n;
-
-  cpuinfo = malloc(4096);
-  if (cpuinfo == NULL) return NULL;
-
-  fd = open("/proc/cpuinfo", O_RDONLY);
-  if (fd < 0) {
-    free (cpuinfo);
-    return NULL;
-  }
-
-  n = read(fd, cpuinfo, 4095);
-  if (n < 0) {
-    free (cpuinfo);
-    close (fd);
-    return NULL;
-  }
-  cpuinfo[n] = 0;
-
-  close (fd);
-
-  return cpuinfo;
-}
-
-static char *
-get_cpuinfo_line (char *cpuinfo, const char *tag)
-{
-  char *flags;
-  char *end;
-  char *colon;
-
-  flags = strstr(cpuinfo,tag);
-  if (flags == NULL) return NULL;
-
-  end = strchr(flags, '\n');
-  if (end == NULL) return NULL;
-  colon = strchr (flags, ':');
-  if (colon == NULL) return NULL;
-  colon++;
-  if(colon >= end) return NULL;
-
-  return _strndup (colon, end-colon);
-}
-
 static unsigned long
 orc_cpu_arm_getflags_cpuinfo ()
 {
@@ -162,7 +113,7 @@ orc_cpu_arm_getflags_cpuinfo ()
     return 0;
   }
 
-  cpuinfo_line = get_cpuinfo_line(cpuinfo, "CPU architecture");
+  cpuinfo_line = get_tag_value(cpuinfo, "CPU architecture");
   if (cpuinfo_line) {
     int arm_arch = strtoul (cpuinfo_line, NULL, 0);
     if (arm_arch >= 8L) {
@@ -175,7 +126,7 @@ orc_cpu_arm_getflags_cpuinfo ()
     free(cpuinfo_line);
   }
 
-  cpuinfo_line = get_cpuinfo_line(cpuinfo, "Features");
+  cpuinfo_line = get_tag_value(cpuinfo, "Features");
   if (cpuinfo_line == NULL) {
     free (cpuinfo);
     return 0;
