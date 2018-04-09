@@ -40,8 +40,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <setjmp.h>
-#include <signal.h>
 #include <time.h>
 
 

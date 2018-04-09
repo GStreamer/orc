@@ -37,8 +37,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <setjmp.h>
-#include <signal.h>
 #include <sys/time.h>
 #include <time.h>
 #if defined(__linux__)
