@@ -51,7 +51,7 @@ AC_CHECK_FUNCS([posix_memalign])
 if test "x$cross_compiling" = "xyes" ; then
   enable_gtk_doc=no
 fi
-GTK_DOC_CHECK([1.12])
+GTK_DOC_CHECK([1.12], [--flavour no-tmpl])
 
 AS_HOST_DEFINES()
 
