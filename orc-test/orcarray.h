@@ -28,17 +28,27 @@ enum {
   ORC_PATTERN_FLOAT_DENORMAL
 };
 
+ORC_TEST_API
 OrcArray *orc_array_new (int n, int m, int element_size, int misalignment,
     int alignment);
+
+ORC_TEST_API
 void orc_array_free (OrcArray *array);
 
+ORC_TEST_API
 void orc_array_set_pattern (OrcArray *array, int value);
+
+ORC_TEST_API
 void orc_array_set_random (OrcArray *array, OrcRandomContext *context);
+
+ORC_TEST_API
 void orc_array_set_pattern_2 (OrcArray *array, OrcRandomContext *context,
     int type);
 
-
+ORC_TEST_API
 int orc_array_compare (OrcArray *array1, OrcArray *array2, int flags);
+
+ORC_TEST_API
 int orc_array_check_out_of_bounds (OrcArray *array);
 
 #endif

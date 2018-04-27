@@ -28,7 +28,7 @@
 #ifndef _ORC_PROFILE_H_
 #define _ORC_PROFILE_H_
 
-#include <orc/orcutils.h>
+#include <orc-test/orctest.h>
 
 ORC_BEGIN_DECLS
 
@@ -59,9 +59,16 @@ struct _OrcProfile {
   int hist_count[ORC_PROFILE_HIST_LENGTH];
 };
 
+ORC_TEST_API
 unsigned long orc_profile_stamp(void);
+
+ORC_TEST_API
 void orc_profile_init(OrcProfile *prof);
+
+ORC_TEST_API
 void orc_profile_stop_handle(OrcProfile *prof);
+
+ORC_TEST_API
 void orc_profile_get_ave_std (OrcProfile *prof, double *ave_p, double *std_p);
 
 /**
