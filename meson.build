@@ -19,6 +19,9 @@ orc_inc = include_directories('.')
 
 cc = meson.get_compiler('c')
 
+cdata = configuration_data()      # config.h
+pc_conf = configuration_data()    # orc.pc
+
 # -Bsymbolic-functions
 if meson.version().version_compare('>= 0.46.0')
   if cc.has_link_argument('-Wl,-Bsymbolic-functions')
@@ -26,10 +29,17 @@ if meson.version().version_compare('>= 0.46.0')
   endif
 endif
 
-cdata = configuration_data()      # config.h
-pc_conf = configuration_data()    # orc.pc
-
-cdata.set('ORC_EXPORTS', true)
+# Symbol visibility
+if cc.get_id() == 'msvc'
+  export_define = '__declspec(dllexport) extern'
+elif cc.has_argument('-fvisibility=hidden')
+  add_project_arguments('-fvisibility=hidden', language: 'c')
+  export_define = 'extern __attribute__ ((visibility ("default")))'
+else
+  export_define = 'extern'
+endif
+# Passing this through the command line would be too messy
+cdata.set('ORC_API_EXPORT', export_define)
 
 all_backends = ['sse', 'mmx', 'altivec', 'neon', 'mips', 'c64x'] # 'arm'
 

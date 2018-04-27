@@ -200,14 +200,19 @@ typedef unsigned int orc_bool;
 #define ORC_END_DECLS
 #endif
 
-#ifdef _MSC_VER
-#ifdef ORC_EXPORTS
-#define ORC_EXPORT __declspec(dllexport) extern
+/* FIXME: unused, remove */
+#define ORC_EXPORT
+
+#if defined(_MSC_VER) || defined(_WIN32)
+#define ORC_API_IMPORT __declspec(dllimport) extern
 #else
-#define ORC_EXPORT __declspec(dllimport) extern
+#define ORC_API_IMPORT extern
 #endif
-#else /* not _MSC_VER */
-#define ORC_EXPORT extern
+
+#ifdef BUILDING_ORC
+#define ORC_API ORC_API_EXPORT /* defined in config.h */
+#else
+#define ORC_API ORC_API_IMPORT
 #endif
 
 ORC_BEGIN_DECLS

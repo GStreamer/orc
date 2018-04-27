@@ -230,8 +230,6 @@ AC_ARG_ENABLE(Bsymbolic,
                            enable_Bsymbolic=no)
                LDFLAGS="${SAVED_LDFLAGS}" LIBS="${SAVED_LIBS}"])
 
-AC_DEFINE(ORC_EXPORTS, 1, [Defined for compiling internal code])
-
 ORC_CFLAGS="$ORC_CFLAGS \$(ERROR_CFLAGS) -I\$(top_srcdir) -D_GNU_SOURCE"
 AC_SUBST(ERROR_CFLAGS)
 AC_SUBST(ORC_CFLAGS)

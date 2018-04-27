@@ -16,7 +16,7 @@ DIST_SUBDIRS = orc orc-test tools examples testsuite doc
 
 EXTRA_DIST = COPYING RELEASE autogen.sh gtk-doc.make orc.m4 \
 	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/orc-0.4.*" ) \
-	meson_options.txt orc/orc.map
+	meson_options.txt
 
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 

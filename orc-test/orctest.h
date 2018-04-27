@@ -7,8 +7,10 @@
 
 ORC_BEGIN_DECLS
 
-#ifndef ORC_TEST_API
-#define ORC_TEST_API extern
+#ifdef BUILDING_ORC_TEST
+#define ORC_TEST_API ORC_API_EXPORT /* defined in config.h */
+#else
+#define ORC_TEST_API ORC_API_IMPORT
 #endif
 
 typedef enum {

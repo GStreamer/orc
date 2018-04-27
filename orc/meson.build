@@ -101,28 +101,19 @@ orc_c_args = ['-DORC_ENABLE_UNSTABLE_API', '-D_GNU_SOURCE']
 
 orc_dependencies = [libm, librt, liblog]
 
-# FIXME: Use gcc visibility attributes in ORC_EXPORT
-if cc.get_id() != 'msvc'
-  link_args = ['-Wl,--version-script,' + meson.current_source_dir() + '/orc.map']
-else
-  link_args = []
-endif
-
 orc_shr = shared_library ('orc-' + orc_api,
   orc_sources,
   version : libversion,
   soversion : soversion,
   include_directories : orc_inc,
-  c_args : orc_c_args,
+  c_args : orc_c_args + ['-DBUILDING_ORC'],
   dependencies : orc_dependencies,
-  link_args : link_args,
-  link_depends : 'orc.map',
   install : true)
 
 orc_sta = static_library ('orc-' + orc_api,
   objects: orc_shr.extract_all_objects(),
   include_directories : orc_inc,
-  c_args : orc_c_args,
+  c_args : orc_c_args + ['-DBUILDING_ORC'],
   install : true)
 
 if get_option('default_library') == 'static'
