@@ -26,6 +26,7 @@
   POSSIBILITY OF SUCH DAMAGE.
 
 */
+#include "config.h"
 
 #include <orc/orcmips.h>
 #include <orc/orcdebug.h>

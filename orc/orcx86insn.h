@@ -2,6 +2,7 @@
 #ifndef ORC_ORC_X86_INSN_H_
 #define ORC_ORC_X86_INSN_H_
 
+#include <orc/orc.h>
 #include <orc/orccpuinsn.h>
 
 ORC_BEGIN_DECLS
@@ -301,9 +302,9 @@ struct _OrcX86Insn {
   int code_offset;
 };
 
-OrcX86Insn * orc_x86_get_output_insn (OrcCompiler *p);
-void orc_x86_output_insns (OrcCompiler *p);
-void orc_x86_calculate_offsets (OrcCompiler *p);
+ORC_API OrcX86Insn * orc_x86_get_output_insn (OrcCompiler *p);
+ORC_API void orc_x86_output_insns (OrcCompiler *p);
+ORC_API void orc_x86_calculate_offsets (OrcCompiler *p);
 
 
 

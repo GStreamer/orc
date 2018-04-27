@@ -9,6 +9,8 @@ ORC_BEGIN_DECLS
 
 #ifdef ORC_ENABLE_UNSTABLE_API
 
+/* FIXME: not sure why these are exported, no one needs to call these, that's
+ * already done as part of orc_init() */
 void orc_mmx_init (void);
 void orc_sse_init (void);
 void orc_arm_init (void);

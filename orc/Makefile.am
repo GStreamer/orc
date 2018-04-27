@@ -76,6 +76,8 @@ if HAVE_MIPSEL
 liborc_@ORC_MAJORMINOR@_la_SOURCES += orccpu-mips.c
 endif
 
+# FIXME: orcemulateopcodes.h probably shouldn't be installed, symbols are not exported or useful
+# FIXME: orcinternal.h should probably also not be installed
 pkginclude_HEADERS = \
 	orc-stdint.h \
 	orc.h \
@@ -125,7 +127,7 @@ generate_bytecode_DEPENDENCIES = liborc-0.4.la
 
 update: generate-emulation generate-bytecode
 	$(top_builddir)/tools/orcc$(EXEEXT) --implementation -o orcfunctions.c orcfunctions.orc
-	$(top_builddir)/tools/orcc$(EXEEXT) --header -o orcfunctions.h orcfunctions.orc
+	$(top_builddir)/tools/orcc$(EXEEXT) --decorator ORC_API --header -o orcfunctions.h orcfunctions.orc
 	./generate-emulation$(EXEEXT) -o orcemulateopcodes.c
 	./generate-emulation$(EXEEXT) --header -o orcemulateopcodes.h
 	./generate-bytecode$(EXEEXT) --header -o orcbytecodes.h

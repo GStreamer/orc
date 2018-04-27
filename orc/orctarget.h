@@ -2,7 +2,7 @@
 #ifndef _ORC_TARGET_H_
 #define _ORC_TARGET_H_
 
-#include <orc/orcutils.h>
+#include <orc/orc.h>
 #include <orc/orclimits.h>
 #include <orc/orcrule.h>
 
@@ -88,19 +88,21 @@ struct _OrcTarget {
 };
 
 
-OrcRule * orc_target_get_rule (OrcTarget *target, OrcStaticOpcode *opcode,
-    unsigned int target_flags);
-OrcTarget * orc_target_get_default (void);
-unsigned int orc_target_get_default_flags (OrcTarget *target);
-const char * orc_target_get_name (OrcTarget *target);
-const char * orc_target_get_flag_name (OrcTarget *target, int shift);
+ORC_API OrcRule *    orc_target_get_rule (OrcTarget *target,
+                                          OrcStaticOpcode *opcode,
+                                          unsigned int target_flags);
 
-const char *orc_target_get_asm_preamble (const char *target);
-const char * orc_target_get_preamble (OrcTarget *target);
-const char * orc_target_c_get_typedefs (void);
+ORC_API OrcTarget *  orc_target_get_default (void);
+ORC_API unsigned int orc_target_get_default_flags (OrcTarget *target);
+ORC_API const char * orc_target_get_name (OrcTarget *target);
+ORC_API const char * orc_target_get_flag_name (OrcTarget *target, int shift);
 
-void orc_target_register (OrcTarget *target);
-OrcTarget *orc_target_get_by_name (const char *target_name);
+ORC_API const char * orc_target_get_asm_preamble (const char *target);
+ORC_API const char * orc_target_get_preamble (OrcTarget *target);
+ORC_API const char * orc_target_c_get_typedefs (void);
+
+ORC_API void         orc_target_register (OrcTarget *target);
+ORC_API OrcTarget *  orc_target_get_by_name (const char *target_name);
 
 ORC_END_DECLS
 
