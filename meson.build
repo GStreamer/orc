@@ -19,6 +19,13 @@ orc_inc = include_directories('.')
 
 cc = meson.get_compiler('c')
 
+# -Bsymbolic-functions
+if meson.version().version_compare('>= 0.46.0')
+  if cc.has_link_argument('-Wl,-Bsymbolic-functions')
+    add_project_link_arguments('-Wl,-Bsymbolic-functions', language : 'c')
+  endif
+endif
+
 cdata = configuration_data()      # config.h
 pc_conf = configuration_data()    # orc.pc
 
