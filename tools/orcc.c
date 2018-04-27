@@ -38,6 +38,7 @@ int use_backup = TRUE;
 int use_internal = FALSE;
 
 const char *init_function = NULL;
+const char *decorator = NULL;
 
 char *target = "sse";
 
@@ -80,6 +81,7 @@ void help (void)
   printf("  --no-inline             Do not generate inline functions in header\n");
   printf("  --internal              Mark functions in header for internal visibility\n");
   printf("  --no-internal           Do not mark functions in header for internal visibility\n");
+  printf("  --decorator DECORATOR   Decorate functions in header with DECORATOR\n");
   printf("  --init-function FUNCTION  Generate initialization function\n");
   printf("  --lazy-init             Do Orc compile at function execution\n");
   printf("  --no-backup             Do not generate backup functions\n");
@@ -157,6 +159,13 @@ main (int argc, char *argv[])
     } else if (strcmp(argv[i], "--init-function") == 0) {
       if (i+1 < argc) {
         init_function = argv[i+1];
+        i++;
+      } else {
+        help();
+      }
+    } else if (strcmp(argv[i], "--decorator") == 0) {
+      if (i+1 < argc) {
+        decorator = argv[i+1];
         i++;
       } else {
         help();
@@ -757,6 +766,8 @@ output_code_header (OrcProgram *p, FILE *output)
 {
   if(use_internal) {
     fprintf(output, "ORC_INTERNAL void ");
+  } else if (decorator != NULL) {
+    fprintf(output, "%s void ", decorator);
   } else {
     fprintf(output, "void ");
   }
