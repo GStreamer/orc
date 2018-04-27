@@ -27,11 +27,12 @@
 
 */
 
+#include "config.h"
+
 #include <orc/orcmips.h>
 #include <orc/orcdebug.h>
 #include <stdlib.h>
 #include <string.h>
-#include "config.h"
 
 static unsigned int orc_compiler_orc_mips_get_default_flags (void);
 

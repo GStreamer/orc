@@ -215,6 +215,16 @@ AC_ARG_ENABLE(tests,
 [BUILD_TESTS=yes]) dnl Default value
 AM_CONDITIONAL(BUILD_TESTS,         test "x$BUILD_TESTS" = "xyes")
 
+dnl Symbol visibility
+AS_COMPILER_FLAG([-fvisibility=hidden], [
+  VISIBILITY_CFLAGS="-fvisibility=hidden"
+  AC_DEFINE(ORC_API_EXPORT, [extern __attribute__ ((visibility ("default")))], [public symbol export define])
+], [
+  VISIBILITY_CFLAGS=""
+  AC_DEFINE(ORC_API_EXPORT, [extern], [public symbol export define])
+])
+AC_SUBST(VISIBILITY_CFLAGS)
+
 dnl Check for -Bsymbolic-functions linker flag used to avoid
 dnl intra-library PLT jumps, if available.
 AC_ARG_ENABLE(Bsymbolic,
@@ -230,7 +240,7 @@ AC_ARG_ENABLE(Bsymbolic,
                            enable_Bsymbolic=no)
                LDFLAGS="${SAVED_LDFLAGS}" LIBS="${SAVED_LIBS}"])
 
-ORC_CFLAGS="$ORC_CFLAGS \$(ERROR_CFLAGS) -I\$(top_srcdir) -D_GNU_SOURCE"
+ORC_CFLAGS="$ORC_CFLAGS \$(VISIBILITY_CFLAGS) \$(ERROR_CFLAGS) -I\$(top_srcdir) -D_GNU_SOURCE"
 AC_SUBST(ERROR_CFLAGS)
 AC_SUBST(ORC_CFLAGS)
 
