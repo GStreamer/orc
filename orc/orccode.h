@@ -9,7 +9,6 @@
 
 ORC_BEGIN_DECLS
 
-typedef struct _OrcCodeChunk OrcCodeChunk;
 typedef struct _OrcCodeVariable OrcCodeVariable;
 
 
@@ -47,13 +46,6 @@ ORC_API void orc_code_allocate_codemem (OrcCode *code, int size);
 
 ORC_API OrcCode * orc_code_new (void);
 ORC_API void      orc_code_free (OrcCode *code);
-
-#ifdef ORC_ENABLE_UNSTABLE_API
-
-/* FIXME: this is internal API, nothing in the public headers returns an OrcCodeChunk */
-void orc_code_chunk_free (OrcCodeChunk *chunk);
-
-#endif
 
 ORC_END_DECLS
 

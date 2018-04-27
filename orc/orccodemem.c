@@ -18,6 +18,7 @@
 #include <windows.h>
 #endif
 
+#include <orc/orcinternal.h>
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
 

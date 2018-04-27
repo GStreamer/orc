@@ -39,7 +39,6 @@ typedef struct _OrcConstant OrcConstant;
 /* typedef struct _OrcFixup OrcFixup; */
 typedef struct _OrcTarget OrcTarget;
 typedef struct _OrcCode OrcCode;
-/* typedef struct _OrcCodeChunk OrcCodeChunk; */
 
 typedef enum {
   ORC_COMPILE_RESULT_OK = 0,

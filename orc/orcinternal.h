@@ -21,6 +21,11 @@ void orc_c64x_init (void);
 void orc_c64x_c_init (void);
 void orc_mips_init (void);
 
+typedef struct _OrcCodeChunk OrcCodeChunk;
+
+/* This is internal API, nothing in the public headers returns an OrcCodeChunk */
+void orc_code_chunk_free (OrcCodeChunk *chunk);
+
 extern int _orc_data_cache_size_level1;
 extern int _orc_data_cache_size_level2;
 extern int _orc_data_cache_size_level3;
