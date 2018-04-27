@@ -18,17 +18,14 @@
 
 #define ORC_SSE_ALIGNED_DEST_CUTOFF 64
 
-void orc_sse_emit_loop (OrcCompiler *compiler, int offset, int update);
+static void orc_sse_emit_loop (OrcCompiler *compiler, int offset, int update);
 
-void orc_compiler_sse_init (OrcCompiler *compiler);
-unsigned int orc_compiler_sse_get_default_flags (void);
-void orc_compiler_sse_assemble (OrcCompiler *compiler);
 void orc_compiler_sse_register_rules (OrcTarget *target);
-void orc_sse_emit_invariants (OrcCompiler *compiler);
+static void orc_compiler_sse_init (OrcCompiler *compiler);
+static unsigned int orc_compiler_sse_get_default_flags (void);
+static void orc_compiler_sse_assemble (OrcCompiler *compiler);
+static void orc_sse_emit_invariants (OrcCompiler *compiler);
 
-
-void orc_compiler_rewrite_vars (OrcCompiler *compiler);
-void orc_compiler_dump (OrcCompiler *compiler);
 void sse_load_constant (OrcCompiler *compiler, int reg, int size, int value);
 void sse_load_constant_long (OrcCompiler *compiler, int reg,
     OrcConstant *constant);
@@ -83,7 +80,7 @@ orc_sse_init (void)
   orc_compiler_sse_register_rules (&sse_target);
 }
 
-unsigned int
+static unsigned int
 orc_compiler_sse_get_default_flags (void)
 {
   unsigned int flags = 0;
@@ -135,7 +132,7 @@ sse_get_flag_name (int shift)
   return NULL;
 }
 
-void
+static void
 orc_compiler_sse_init (OrcCompiler *compiler)
 {
   int i;
@@ -808,7 +805,7 @@ orc_compiler_sse_restore_registers (OrcCompiler *compiler)
   }
 }
 
-void
+static void
 orc_compiler_sse_assemble (OrcCompiler *compiler)
 {
 #ifndef MMX
@@ -1046,7 +1043,7 @@ orc_compiler_sse_assemble (OrcCompiler *compiler)
   orc_x86_do_fixups (compiler);
 }
 
-void
+static void
 orc_sse_emit_loop (OrcCompiler *compiler, int offset, int update)
 {
   int j;
@@ -1130,7 +1127,7 @@ orc_sse_emit_loop (OrcCompiler *compiler, int offset, int update)
   }
 }
 
-void
+static void
 orc_sse_emit_invariants (OrcCompiler *compiler)
 {
   int j;

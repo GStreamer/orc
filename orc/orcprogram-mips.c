@@ -33,18 +33,18 @@
 #include <string.h>
 #include "config.h"
 
-unsigned int orc_compiler_orc_mips_get_default_flags (void);
+static unsigned int orc_compiler_orc_mips_get_default_flags (void);
 
-void orc_compiler_orc_mips_init (OrcCompiler *compiler);
+static void orc_compiler_orc_mips_init (OrcCompiler *compiler);
 
-void orc_compiler_orc_mips_assemble (OrcCompiler *compiler);
+static void orc_compiler_orc_mips_assemble (OrcCompiler *compiler);
 
-const char * orc_compiler_orc_mips_get_asm_preamble (void);
+static const char * orc_compiler_orc_mips_get_asm_preamble (void);
 
-void orc_mips_flush_cache (OrcCode *code);
+static void orc_mips_flush_cache (OrcCode *code);
 
 /* in orcrules-mips.c */
-void orc_compiler_orc_mips_register_rules (OrcTarget *target);
+extern void orc_compiler_orc_mips_register_rules (OrcTarget *target);
 
 static OrcTarget orc_mips_target = {
   "mips",
@@ -93,7 +93,7 @@ orc_mips_init (void)
   orc_compiler_orc_mips_register_rules (&orc_mips_target);
 }
 
-unsigned int
+static unsigned int
 orc_compiler_orc_mips_get_default_flags (void)
 {
   unsigned int flags = ORC_TARGET_MIPS_DSP2;
@@ -175,7 +175,7 @@ orc_compiler_orc_mips_init (OrcCompiler *compiler)
   }
 }
 
-const char *
+static const char *
 orc_compiler_orc_mips_get_asm_preamble (void)
 {
   return "\n"
@@ -186,7 +186,7 @@ orc_compiler_orc_mips_get_asm_preamble (void)
       "/* end Orc MIPS target preamble */\n\n";
 }
 
-int
+static int
 orc_mips_emit_prologue (OrcCompiler *compiler)
 {
   int i, stack_size;
@@ -234,7 +234,8 @@ orc_mips_emit_prologue (OrcCompiler *compiler)
   return stack_size;
 }
 
-void orc_mips_emit_epilogue (OrcCompiler *compiler, int stack_size)
+static void
+orc_mips_emit_epilogue (OrcCompiler *compiler, int stack_size)
 {
   int i;
 
@@ -267,7 +268,7 @@ void orc_mips_emit_epilogue (OrcCompiler *compiler, int stack_size)
   }
 }
 
-void
+static void
 orc_mips_load_constants_inner (OrcCompiler *compiler)
 {
   int i;
@@ -321,7 +322,9 @@ orc_mips_load_constants_inner (OrcCompiler *compiler)
 
 #define CACHE_LINE_SIZE 32
 
-void
+/* unused */
+#if 0
+static void
 orc_mips_emit_var_pref (OrcCompiler *compiler, int iter_offset, int total_shift)
 {
   int i, j;
@@ -349,6 +352,7 @@ orc_mips_emit_var_pref (OrcCompiler *compiler, int iter_offset, int total_shift)
     }
   }
 }
+#endif
 
 static int
 uses_register (OrcCompiler *compiler,
@@ -442,7 +446,7 @@ get_optimised_instruction_order (OrcCompiler *compiler)
   return instruction_idx;
 }
 
-void
+static void
 orc_mips_emit_loop (OrcCompiler *compiler, int unroll)
 {
   int i, j;
@@ -551,7 +555,7 @@ get_shift (int size)
  * dest or source variable in the order
  * ORC_VAR_D1-ORC_VAR_D4,ORC_VAR_S1-ORC_VAR_S8
  */
-void
+static void
 orc_mips_set_alignment (OrcCompiler *compiler, orc_uint16 alignment)
 {
   int i;
@@ -560,7 +564,7 @@ orc_mips_set_alignment (OrcCompiler *compiler, orc_uint16 alignment)
   }
 }
 
-orc_uint16
+static orc_uint16
 orc_mips_get_alignment (OrcCompiler *compiler)
 {
   int i;
@@ -572,7 +576,7 @@ orc_mips_get_alignment (OrcCompiler *compiler)
   return alignment;
 }
 
-void
+static void
 orc_mips_emit_full_loop (OrcCompiler *compiler, OrcMipsRegister counter,
                          int loop_shift, int loop_label, int alignment, int unroll)
 {
@@ -592,7 +596,7 @@ orc_mips_emit_full_loop (OrcCompiler *compiler, OrcMipsRegister counter,
 }
 
 /* FIXME: this stuff should be cached */
-int
+static int
 orc_mips_get_loop_label (OrcCompiler *compiler, int alignments)
 {
   int i,
@@ -619,7 +623,7 @@ orc_mips_get_loop_label (OrcCompiler *compiler, int alignments)
 }
 
 /* overwrites $t0 and $t1 */
-void
+static void
 orc_mips_add_strides (OrcCompiler *compiler, int var_size_shift)
 {
   int i;
@@ -871,7 +875,7 @@ usual_case:
   orc_mips_emit_epilogue (compiler, stack_size);
 }
 
-void
+static void
 orc_mips_flush_cache  (OrcCode *code)
 {
 #ifdef HAVE_MIPSEL

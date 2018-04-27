@@ -304,7 +304,7 @@ struct _OrcBytecodeParse {
   int code_start;
 };
 
-int
+static int
 orc_bytecode_parse_get_byte (OrcBytecodeParse *parse)
 {
   int value;
@@ -313,7 +313,7 @@ orc_bytecode_parse_get_byte (OrcBytecodeParse *parse)
   return value;
 }
 
-int
+static int
 orc_bytecode_parse_get_int (OrcBytecodeParse *parse)
 {
   int value;
@@ -327,7 +327,7 @@ orc_bytecode_parse_get_int (OrcBytecodeParse *parse)
   return value;
 }
 
-char *
+static char *
 orc_bytecode_parse_get_string (OrcBytecodeParse *parse)
 {
   int len;
@@ -344,7 +344,7 @@ orc_bytecode_parse_get_string (OrcBytecodeParse *parse)
   return s;
 }
 
-orc_uint32
+static orc_uint32
 orc_bytecode_parse_get_uint32 (OrcBytecodeParse *parse)
 {
   orc_uint32 value;
@@ -355,7 +355,7 @@ orc_bytecode_parse_get_uint32 (OrcBytecodeParse *parse)
   return value;
 }
 
-orc_uint64
+static orc_uint64
 orc_bytecode_parse_get_uint64 (OrcBytecodeParse *parse)
 {
   orc_uint64 value;

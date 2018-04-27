@@ -18,17 +18,14 @@
 
 #define ORC_MMX_ALIGNED_DEST_CUTOFF 64
 
-void orc_mmx_emit_loop (OrcCompiler *compiler, int offset, int update);
+static void orc_mmx_emit_loop (OrcCompiler *compiler, int offset, int update);
 
-void orc_compiler_mmx_init (OrcCompiler *compiler);
-unsigned int orc_compiler_mmx_get_default_flags (void);
-void orc_compiler_mmx_assemble (OrcCompiler *compiler);
-void orc_compiler_mmx_register_rules (OrcTarget *target);
-void orc_mmx_emit_invariants (OrcCompiler *compiler);
+static void orc_compiler_mmx_init (OrcCompiler *compiler);
+static unsigned int orc_compiler_mmx_get_default_flags (void);
+static void orc_compiler_mmx_assemble (OrcCompiler *compiler);
+extern void orc_compiler_mmx_register_rules (OrcTarget *target);
+static void orc_mmx_emit_invariants (OrcCompiler *compiler);
 
-
-void orc_compiler_rewrite_vars (OrcCompiler *compiler);
-void orc_compiler_dump (OrcCompiler *compiler);
 void mmx_load_constant (OrcCompiler *compiler, int reg, int size, int value);
 void mmx_load_constant_long (OrcCompiler *compiler, int reg,
     OrcConstant *constant);
@@ -83,7 +80,7 @@ orc_mmx_init (void)
   orc_compiler_mmx_register_rules (&mmx_target);
 }
 
-unsigned int
+static unsigned int
 orc_compiler_mmx_get_default_flags (void)
 {
   unsigned int flags = 0;
@@ -135,7 +132,7 @@ mmx_get_flag_name (int shift)
   return NULL;
 }
 
-void
+static void
 orc_compiler_mmx_init (OrcCompiler *compiler)
 {
   int i;
@@ -765,7 +762,7 @@ orc_program_has_float (OrcCompiler *compiler)
 #define LABEL_STEP_UP(x) (13+(x))
 
 
-void
+static void
 orc_compiler_mmx_assemble (OrcCompiler *compiler)
 {
 #ifndef MMX
@@ -998,7 +995,7 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
   orc_x86_do_fixups (compiler);
 }
 
-void
+static void
 orc_mmx_emit_loop (OrcCompiler *compiler, int offset, int update)
 {
   int j;
@@ -1082,7 +1079,7 @@ orc_mmx_emit_loop (OrcCompiler *compiler, int offset, int update)
   }
 }
 
-void
+static void
 orc_mmx_emit_invariants (OrcCompiler *compiler)
 {
   int j;

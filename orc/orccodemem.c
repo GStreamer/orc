@@ -46,13 +46,13 @@ struct _OrcCodeChunk {
 };
 
 
-void orc_code_region_allocate_codemem (OrcCodeRegion *region);
+static void orc_code_region_allocate_codemem (OrcCodeRegion *region);
 
 static OrcCodeRegion **orc_code_regions;
 static int orc_code_n_regions;
 
 
-OrcCodeRegion *
+static OrcCodeRegion *
 orc_code_region_new (void)
 {
   OrcCodeRegion *region;
@@ -76,7 +76,7 @@ orc_code_region_new (void)
   return region;
 }
 
-OrcCodeChunk *
+static OrcCodeChunk *
 orc_code_chunk_split (OrcCodeChunk *chunk, int size)
 {
   OrcCodeChunk *newchunk;
@@ -99,7 +99,7 @@ orc_code_chunk_split (OrcCodeChunk *chunk, int size)
   return newchunk;
 }
 
-void
+static void
 orc_code_chunk_merge (OrcCodeChunk *chunk)
 {
   OrcCodeChunk *chunk2 = chunk->next;
@@ -113,7 +113,7 @@ orc_code_chunk_merge (OrcCodeChunk *chunk)
   free(chunk2);
 }
 
-OrcCodeChunk *
+static OrcCodeChunk *
 orc_code_region_get_free_chunk (int size)
 {
   int i;
@@ -191,7 +191,7 @@ orc_code_chunk_free (OrcCodeChunk *chunk)
 }
 
 #ifdef HAVE_CODEMEM_MMAP
-int
+static int
 orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
     const char *dir, int force_unlink)
 {
@@ -248,7 +248,7 @@ orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
 #define MAP_ANONYMOUS MAP_ANON
 #endif
 
-int
+static int
 orc_code_region_allocate_codemem_anon_map (OrcCodeRegion *region)
 {
   region->exec_ptr = mmap (NULL, SIZE, PROT_READ|PROT_WRITE|PROT_EXEC,
@@ -262,7 +262,7 @@ orc_code_region_allocate_codemem_anon_map (OrcCodeRegion *region)
   return TRUE;
 }
 
-void
+static void
 orc_code_region_allocate_codemem (OrcCodeRegion *region)
 {
   const char *tmpdir;

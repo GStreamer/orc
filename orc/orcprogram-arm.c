@@ -22,8 +22,6 @@ void orc_compiler_orc_arm_init (OrcCompiler *compiler);
 unsigned int orc_compiler_orc_arm_get_default_flags (void);
 void orc_compiler_orc_arm_assemble (OrcCompiler *compiler);
 
-void orc_compiler_rewrite_vars (OrcCompiler *compiler);
-void orc_compiler_dump (OrcCompiler *compiler);
 void arm_add_strides (OrcCompiler *compiler);
 
 void

@@ -43,10 +43,10 @@
 #include <time.h>
 
 
-orc_uint32 orc_x86_vendor;
 int orc_x86_sse_flags;
 int orc_x86_mmx_flags;
-int orc_x86_microarchitecture;
+static orc_uint32 orc_x86_vendor;
+static int orc_x86_microarchitecture;
 
 
 #if defined(_MSC_VER)
@@ -266,7 +266,7 @@ orc_x86_detect_cpuid (void)
 
 }
 
-char orc_x86_processor_string[49];
+static char orc_x86_processor_string[49];
 
 static void
 orc_x86_cpuid_get_branding_string (void)

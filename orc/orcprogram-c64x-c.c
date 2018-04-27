@@ -14,7 +14,7 @@ void orc_c_init (void);
 
 static void emit_loop (OrcCompiler *compiler, int prefix);
 
-void
+static void
 orc_compiler_c64x_c_init (OrcCompiler *compiler)
 {
   int i;
@@ -25,7 +25,7 @@ orc_compiler_c64x_c_init (OrcCompiler *compiler)
   compiler->loop_shift = 0;
 }
 
-const char *
+static const char *
 orc_target_c64x_c_get_asm_preamble (void)
 {
   return "\n"
@@ -83,7 +83,7 @@ orc_target_c64x_c_get_asm_preamble (void)
     "/* end Orc C target preamble */\n\n";
 }
 
-unsigned int
+static unsigned int
 orc_compiler_c64x_c_get_default_flags (void)
 {
   return ORC_TARGET_C_NOEXEC;
@@ -211,7 +211,7 @@ get_shift (int size)
   return -1;
 }
 
-void
+static void
 orc_compiler_c64x_c_assemble (OrcCompiler *compiler)
 {
   int i;

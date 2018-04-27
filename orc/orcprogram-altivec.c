@@ -12,13 +12,13 @@
 #include <orc/orcdebug.h>
 
 
-void orc_compiler_powerpc_init (OrcCompiler *compiler);
-unsigned int orc_compiler_powerpc_get_default_flags (void);
-void orc_compiler_powerpc_assemble (OrcCompiler *compiler);
 void orc_compiler_powerpc_register_rules (OrcTarget *target);
+static void orc_compiler_powerpc_init (OrcCompiler *compiler);
+static unsigned int orc_compiler_powerpc_get_default_flags (void);
+static void orc_compiler_powerpc_assemble (OrcCompiler *compiler);
 
 
-void
+static void
 powerpc_emit_prologue (OrcCompiler *compiler)
 {
   int i;
@@ -45,7 +45,7 @@ powerpc_emit_prologue (OrcCompiler *compiler)
   }
 }
 
-void
+static void
 powerpc_emit_epilogue (OrcCompiler *compiler)
 {
   int i;
@@ -89,7 +89,7 @@ orc_powerpc_init (void)
   orc_compiler_powerpc_register_rules (&altivec_target);
 }
 
-unsigned int
+static unsigned int
 orc_compiler_powerpc_get_default_flags (void)
 {
   unsigned int flags = 0;
@@ -101,7 +101,7 @@ orc_compiler_powerpc_get_default_flags (void)
   return flags;
 }
 
-void
+static void
 orc_compiler_powerpc_init (OrcCompiler *compiler)
 {
   int i;
@@ -136,7 +136,7 @@ orc_compiler_powerpc_init (OrcCompiler *compiler)
   compiler->load_params = TRUE;
 }
 
-void
+static void
 powerpc_load_inner_constants (OrcCompiler *compiler)
 {
   int i;
@@ -181,7 +181,7 @@ orc_program_has_float (OrcCompiler *compiler)
   return FALSE;
 }
 
-void
+static void
 orc_compiler_powerpc_assemble (OrcCompiler *compiler)
 {
   int j;

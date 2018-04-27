@@ -32,14 +32,14 @@
  * or functions that use ORC_ASM_CODE() internally.
  */
 
-void orc_compiler_assign_rules (OrcCompiler *compiler);
-void orc_compiler_global_reg_alloc (OrcCompiler *compiler);
-void orc_compiler_rewrite_insns (OrcCompiler *compiler);
-void orc_compiler_rewrite_vars (OrcCompiler *compiler);
-void orc_compiler_rewrite_vars2 (OrcCompiler *compiler);
-int orc_compiler_dup_temporary (OrcCompiler *compiler, int var, int j);
-int orc_compiler_new_temporary (OrcCompiler *compiler, int size);
-void orc_compiler_check_sizes (OrcCompiler *compiler);
+static void orc_compiler_assign_rules (OrcCompiler *compiler);
+static void orc_compiler_global_reg_alloc (OrcCompiler *compiler);
+static void orc_compiler_rewrite_insns (OrcCompiler *compiler);
+static void orc_compiler_rewrite_vars (OrcCompiler *compiler);
+static void orc_compiler_rewrite_vars2 (OrcCompiler *compiler);
+static int orc_compiler_dup_temporary (OrcCompiler *compiler, int var, int j);
+static int orc_compiler_new_temporary (OrcCompiler *compiler, int size);
+static void orc_compiler_check_sizes (OrcCompiler *compiler);
 
 static char **_orc_compiler_flag_list;
 int _orc_compiler_flag_backup;
@@ -76,7 +76,7 @@ orc_compiler_flag_check (const char *flag)
   return FALSE;
 }
 
-int
+static int
 orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
 {
   int i;
@@ -416,7 +416,7 @@ error:
   return result;
 }
 
-void
+static void
 orc_compiler_check_sizes (OrcCompiler *compiler)
 {
   int i;
@@ -535,7 +535,7 @@ get_store_opcode_for_size (int size)
   return NULL;
 }
 
-void
+static void
 orc_compiler_rewrite_insns (OrcCompiler *compiler)
 {
   int i;
@@ -654,7 +654,7 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
   }
 }
 
-void
+static void
 orc_compiler_assign_rules (OrcCompiler *compiler)
 {
   int i;
@@ -719,7 +719,7 @@ orc_compiler_get_temp_reg (OrcCompiler *compiler)
   return 0;
 }
 
-void
+static void
 orc_compiler_rewrite_vars (OrcCompiler *compiler)
 {
   int j;
@@ -831,7 +831,7 @@ orc_compiler_rewrite_vars (OrcCompiler *compiler)
   }
 }
 
-void
+static void
 orc_compiler_global_reg_alloc (OrcCompiler *compiler)
 {
   int i;
@@ -903,7 +903,7 @@ orc_compiler_global_reg_alloc (OrcCompiler *compiler)
   }
 }
 
-void
+static void
 orc_compiler_rewrite_vars2 (OrcCompiler *compiler)
 {
   int i;
@@ -969,7 +969,7 @@ orc_compiler_rewrite_vars2 (OrcCompiler *compiler)
 
 }
 
-int
+static int
 orc_compiler_dup_temporary (OrcCompiler *compiler, int var, int j)
 {
   int i = ORC_VAR_T1 + compiler->n_temp_vars + compiler->n_dup_vars;
@@ -983,7 +983,7 @@ orc_compiler_dup_temporary (OrcCompiler *compiler, int var, int j)
   return i;
 }
 
-int
+static int
 orc_compiler_new_temporary (OrcCompiler *compiler, int size)
 {
   int i = ORC_VAR_T1 + compiler->n_temp_vars + compiler->n_dup_vars;
@@ -997,11 +997,13 @@ orc_compiler_new_temporary (OrcCompiler *compiler, int size)
   return i;
 }
 
-void
+#if 0
+static void
 orc_compiler_dump_asm (OrcCompiler *compiler)
 {
   printf("%s", compiler->asm_code);
 }
+#endif
 
 /**
  * orc_compiler_append_code:
@@ -1041,14 +1043,14 @@ orc_compiler_label_new (OrcCompiler *compiler)
   return compiler->n_labels++;
 }
 
-void
+static void
 orc_compiler_load_constant (OrcCompiler *compiler, int reg, int size,
     int value)
 {
   compiler->target->load_constant (compiler, reg, size, value);
 }
 
-void
+static void
 orc_compiler_load_constant_long (OrcCompiler *compiler, int reg,
     OrcConstant *constant)
 {
@@ -1199,7 +1201,7 @@ orc_compiler_get_constant_reg (OrcCompiler *compiler)
 
 #define ORC_COMPILER_ERROR_BUFFER_SIZE 200
 
-void
+static void
 orc_compiler_error_valist (OrcCompiler *compiler, const char *fmt,
     va_list args)
 {

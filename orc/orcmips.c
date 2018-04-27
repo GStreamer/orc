@@ -59,7 +59,7 @@
                  | (opcode & 0x1f) << 6 \
                  | 023) /* SHLL.QB */
 
-const char *
+static const char *
 orc_mips_reg_name (int reg)
 {
   static const char *regs[] = {
@@ -79,7 +79,7 @@ orc_mips_reg_name (int reg)
   return regs[reg-32];
 }
 
-void
+static void
 orc_mips_emit (OrcCompiler *compiler, orc_uint32 insn)
 {
   ORC_WRITE_UINT32_LE (compiler->codeptr, insn);
@@ -94,7 +94,7 @@ orc_mips_emit_label (OrcCompiler *compiler, unsigned int label)
   compiler->labels[label] = compiler->codeptr;
 }
 
-void
+static void
 orc_mips_add_fixup (OrcCompiler *compiler, int label, int type)
 {
   ORC_ASSERT (compiler->n_fixups < ORC_N_FIXUPS);

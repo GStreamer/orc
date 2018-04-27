@@ -14,7 +14,7 @@ static void c_get_name_int (char *name, OrcCompiler *p, OrcInstruction *insn, in
 
 void orc_c_init (void);
 
-void
+static void
 orc_compiler_c_init (OrcCompiler *compiler)
 {
   int i;
@@ -99,7 +99,7 @@ orc_target_c_get_typedefs (void)
     "\n";
 }
 
-const char *
+static const char *
 orc_target_c_get_asm_preamble (void)
 {
   return "\n"
@@ -146,7 +146,7 @@ orc_target_c_get_asm_preamble (void)
     "/* end Orc C target preamble */\n\n";
 }
 
-unsigned int
+static unsigned int
 orc_compiler_c_get_default_flags (void)
 {
   return 0;
@@ -200,7 +200,7 @@ get_varname_stride (char *s, OrcCompiler *compiler, int var)
   }
 }
 
-void
+static void
 orc_compiler_c_assemble (OrcCompiler *compiler)
 {
   int i;

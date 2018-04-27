@@ -281,7 +281,7 @@ output_opcode (OrcCompiler *p, const OrcSysOpcode *opcode, int size,
   *p->codeptr++ = (opcode->code >> 0) & 0xff;
 }
 
-const char *
+static const char *
 orc_x86_get_regname_mmxsse (int reg, int is_sse)
 {
   if (is_sse) {
@@ -291,13 +291,13 @@ orc_x86_get_regname_mmxsse (int reg, int is_sse)
   }
 }
 
-int
+static int
 is_sse_reg (int reg)
 {
   return (reg >= X86_XMM0) && (reg <= X86_XMM15);
 }
 
-void
+static void
 orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
 {
   char imm_str[40] = { 0 };
@@ -561,7 +561,7 @@ orc_uint8 nop_codes[][16] = {
 #endif
 };
 
-void
+static void
 orc_x86_insn_output_opcode (OrcCompiler *p, OrcX86Insn *xinsn)
 {
   int is_sse;
@@ -639,7 +639,7 @@ orc_x86_insn_output_opcode (OrcCompiler *p, OrcX86Insn *xinsn)
   }
 }
 
-void
+static void
 orc_x86_insn_output_modrm (OrcCompiler *p, OrcX86Insn *xinsn)
 {
   switch (xinsn->opcode->type) {
@@ -763,7 +763,7 @@ orc_x86_insn_output_modrm (OrcCompiler *p, OrcX86Insn *xinsn)
   }
 }
 
-void
+static void
 orc_x86_insn_output_immediate (OrcCompiler *p, OrcX86Insn *xinsn)
 {
   switch (xinsn->opcode->type) {
@@ -824,7 +824,7 @@ orc_x86_get_output_insn (OrcCompiler *p)
   return xinsn;
 }
 
-void
+static void
 orc_x86_recalc_offsets (OrcCompiler *p)
 {
   OrcX86Insn *xinsn;

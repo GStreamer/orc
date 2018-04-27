@@ -13,8 +13,8 @@
 
 #include <orc/orcneon.h>
 
-void orc_neon_emit_loadiq (OrcCompiler *compiler, int dest, int param);
-void orc_neon_emit_loadpq (OrcCompiler *compiler, int dest, int param);
+static void orc_neon_emit_loadiq (OrcCompiler *compiler, int dest, int param);
+static void orc_neon_emit_loadpq (OrcCompiler *compiler, int dest, int param);
 
 const char *orc_neon_reg_name (int reg)
 {
@@ -201,14 +201,14 @@ orc_neon_emit_unary_quad (OrcCompiler *p, const char *name, unsigned int code,
   orc_arm_emit (p, code);
 }
 
-void
+static void
 orc_neon_emit_mov (OrcCompiler *compiler, int dest, int src)
 {
   orc_neon_emit_binary (compiler, "vorr", 0xf2200110,
       dest, src, src);
 }
 
-void
+static void
 orc_neon_emit_mov_quad (OrcCompiler *compiler, int dest, int src)
 {
   orc_neon_emit_binary_quad (compiler, "vorr", 0xf2200110,
@@ -1156,7 +1156,7 @@ orc_neon_emit_loadil (OrcCompiler *compiler, int reg, int value)
   }
 }
 
-void
+static void
 orc_neon_emit_loadiq (OrcCompiler *compiler, int reg, int value)
 {
   /* orc_uint32 code; */
@@ -1267,7 +1267,7 @@ orc_neon_emit_loadpl (OrcCompiler *compiler, int dest, int param)
   orc_arm_emit (compiler, code);
 }
 
-void
+static void
 orc_neon_emit_loadpq (OrcCompiler *compiler, int dest, int param)
 {
   orc_uint32 code;

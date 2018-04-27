@@ -16,21 +16,19 @@
 
 #define SIZE 65536
 
-void orc_neon_emit_loop (OrcCompiler *compiler, int unroll_index);
+static void orc_neon_emit_loop (OrcCompiler *compiler, int unroll_index);
 
-void orc_compiler_neon_register_rules (OrcTarget *target);
-unsigned int orc_compiler_neon_get_default_flags (void);
+extern void orc_compiler_neon_register_rules (OrcTarget *target);
+static unsigned int orc_compiler_neon_get_default_flags (void);
 
-void orc_compiler_neon_init (OrcCompiler *compiler);
-void orc_compiler_neon_assemble (OrcCompiler *compiler);
+static void orc_compiler_neon_init (OrcCompiler *compiler);
+static void orc_compiler_neon_assemble (OrcCompiler *compiler);
 
-void orc_compiler_rewrite_vars (OrcCompiler *compiler);
-void orc_compiler_dump (OrcCompiler *compiler);
-void orc_neon_save_accumulators (OrcCompiler *compiler);
-void neon_add_strides (OrcCompiler *compiler);
+static void orc_neon_save_accumulators (OrcCompiler *compiler);
+static void neon_add_strides (OrcCompiler *compiler);
 
 
-void
+static void
 orc_neon_emit_prologue (OrcCompiler *compiler)
 {
   unsigned int regs = 0;
@@ -57,7 +55,9 @@ orc_neon_emit_prologue (OrcCompiler *compiler)
   orc_arm_emit_push (compiler, regs, vregs);
 }
 
-void
+/* unused */
+#if 0
+static void
 orc_neon_dump_insns (OrcCompiler *compiler)
 {
 
@@ -75,8 +75,9 @@ orc_neon_dump_insns (OrcCompiler *compiler)
   orc_arm_loadw (compiler, ORC_ARM_A3, ORC_ARM_A4, 0xa5);
   orc_arm_emit_load_reg (compiler, ORC_ARM_A3, ORC_ARM_A4, 0x5a5);
 }
+#endif
 
-void
+static void
 orc_neon_emit_epilogue (OrcCompiler *compiler)
 {
   int i;
@@ -136,13 +137,13 @@ orc_neon_init (void)
   orc_compiler_neon_register_rules (&neon_target);
 }
 
-unsigned int
+static unsigned int
 orc_compiler_neon_get_default_flags (void)
 {
   return ORC_TARGET_NEON_NEON;
 }
 
-void
+static void
 orc_compiler_neon_init (OrcCompiler *compiler)
 {
   int i;
@@ -259,7 +260,7 @@ orc_compiler_neon_init (OrcCompiler *compiler)
   }
 }
 
-void
+static void
 orc_neon_load_constants_outer (OrcCompiler *compiler)
 {
   int i;
@@ -311,7 +312,7 @@ orc_neon_load_constants_outer (OrcCompiler *compiler)
   }
 }
 
-void
+static void
 orc_neon_load_constants_inner (OrcCompiler *compiler)
 {
   int i;
@@ -490,7 +491,7 @@ enum {
   LABEL_L1L2_AFTER,
 };
 
-void
+static void
 orc_compiler_neon_assemble (OrcCompiler *compiler)
 {
   int align_var;
@@ -731,7 +732,7 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   orc_arm_do_fixups (compiler);
 }
 
-void
+static void
 orc_neon_emit_loop (OrcCompiler *compiler, int unroll_index)
 {
   int j;
@@ -846,7 +847,7 @@ orc_neon_emit_loop (OrcCompiler *compiler, int unroll_index)
    (((c)&0xf)<<0) | \
    ((((c)>>4)&0x1)<<5))
 
-void
+static void
 orc_neon_save_accumulators (OrcCompiler *compiler)
 {
   int i;
