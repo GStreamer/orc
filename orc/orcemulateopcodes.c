@@ -15,7 +15,7 @@
 #define ORC_MAX(a,b) ((a)>(b) ? (a) : (b))
 #define ORC_SB_MAX 127
 #define ORC_SB_MIN (-1-ORC_SB_MAX)
-#define ORC_UB_MAX (orc_uint8)255
+#define ORC_UB_MAX (orc_uint8) 255
 #define ORC_UB_MIN 0
 #define ORC_SW_MAX 32767
 #define ORC_SW_MIN (-1-ORC_SW_MAX)
