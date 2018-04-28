@@ -4,6 +4,7 @@
 #ifndef _ORCFUNCTIONS_H_
 #define _ORCFUNCTIONS_H_
 
+#include <orc/orcutils.h>
 
 #ifdef __cplusplus
 extern "C" {

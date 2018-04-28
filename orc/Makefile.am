@@ -128,7 +128,7 @@ generate_bytecode_DEPENDENCIES = liborc-0.4.la
 
 update: generate-emulation generate-bytecode
 	$(top_builddir)/tools/orcc$(EXEEXT) --implementation -o orcfunctions.c orcfunctions.orc
-	$(top_builddir)/tools/orcc$(EXEEXT) --decorator ORC_API --header -o orcfunctions.h orcfunctions.orc
+	$(top_builddir)/tools/orcc$(EXEEXT) --decorator ORC_API --include orc/orcutils.h --header -o orcfunctions.h orcfunctions.orc
 	./generate-emulation$(EXEEXT) -o orcemulateopcodes.c
 	./generate-emulation$(EXEEXT) --header -o orcemulateopcodes.h
 	./generate-bytecode$(EXEEXT) --header -o orcbytecodes.h
