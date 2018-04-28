@@ -1,5 +1,5 @@
 project ('orc', 'c', version : '0.4.28.1',
-                     meson_version : '>= 0.32.0',
+                     meson_version : '>= 0.36.0',
                      default_options : ['buildtype=debugoptimized',
                                         'warning_level=1',
                                         'c_std=gnu99'] )
@@ -13,7 +13,7 @@ orc_version_micro = meson.project_version().split('.')[2]
 soversion = 0
 libversion = '@0@.@1@.0'.format(soversion, orc_version_micro.to_int())
 
-add_global_arguments('-DHAVE_CONFIG_H', language : 'c')
+add_project_arguments('-DHAVE_CONFIG_H', language : 'c')
 
 orc_inc = include_directories('.')
 
