@@ -205,7 +205,7 @@ orc_test_gcc_compile (OrcProgram *p)
 OrcTestResult
 orc_test_gcc_compile_neon (OrcProgram *p)
 {
-  char cmd[300];
+  char cmd[400];
   char *base;
   char source_filename[100];
   char obj_filename[100];
@@ -1086,7 +1086,7 @@ orc_test_performance_full (OrcProgram *program, int flags,
 OrcTestResult
 orc_test_gcc_compile_mips (OrcProgram *p)
 {
-  char cmd[300];
+  char cmd[400];
   char *base;
   char source_filename[100];
   char obj_filename[100];
