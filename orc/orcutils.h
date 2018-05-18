@@ -202,7 +202,7 @@ typedef unsigned int orc_bool;
 /* FIXME: unused, remove */
 #define ORC_EXPORT
 
-#if defined(_MSC_VER) || defined(_WIN32)
+#if (defined(_MSC_VER) || defined(_WIN32)) && !defined(ORC_STATIC_COMPILATION)
 #define ORC_API_IMPORT __declspec(dllimport) extern
 #else
 #define ORC_API_IMPORT extern

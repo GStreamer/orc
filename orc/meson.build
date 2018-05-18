@@ -118,12 +118,15 @@ orc_sta = static_library ('orc-' + orc_api,
 
 if get_option('default_library') == 'static'
   orc_lib = orc_sta
+  orc_dep_cargs = ['-DORC_STATIC_COMPILATION']
 else
   orc_lib = orc_shr
+  orc_dep_cargs = []
 endif
 
 orc_dep = declare_dependency(include_directories : orc_inc,
                              dependencies : orc_dependencies,
+                             compile_args : orc_dep_cargs,
                              link_with : orc_lib)
 
 executable ('generate-bytecode',
