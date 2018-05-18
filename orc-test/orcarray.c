@@ -27,10 +27,6 @@
 #define EXTEND_ROWS 16
 #define EXTEND_STRIDE 256
 
-#ifdef _MSC_VER
-#define isnan(x) _isnan(x)
-#endif
-
 #define ALIGNMENT 64
 #define MISALIGNMENT 0
 

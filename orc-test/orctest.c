@@ -41,7 +41,6 @@
 #include <math.h>
 
 #ifdef _MSC_VER
-#define isnan(x) _isnan(x)
 #define snprintf _snprintf
 #endif
 

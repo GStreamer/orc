@@ -11,10 +11,6 @@
 #include <math.h>
 #include <string.h>
 
-#ifdef _MSC_VER
-#define isnan(x) _isnan(x)
-#endif
-
 static char * read_file (const char *filename);
 void output_code (OrcProgram *p, FILE *output);
 void output_code_header (OrcProgram *p, FILE *output);
