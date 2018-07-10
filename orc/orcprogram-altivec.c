@@ -27,12 +27,14 @@ powerpc_emit_prologue (OrcCompiler *compiler)
   ORC_ASM_CODE (compiler, "%s:\n", compiler->program->name);
 
   if (compiler->is_64bit) {
+#if !defined(_CALL_ELF) || _CALL_ELF == 1
     ORC_ASM_CODE (compiler, " .quad .%s,.TOC.@tocbase,0\n",
                   compiler->program->name);
     ORC_ASM_CODE (compiler, ".%s:\n", compiler->program->name);
     powerpc_emit (compiler, 0); powerpc_emit (compiler, 0);
     powerpc_emit (compiler, 0); powerpc_emit (compiler, 0);
     powerpc_emit (compiler, 0); powerpc_emit (compiler, 0);
+#endif
     powerpc_emit_stdu (compiler, POWERPC_R1, POWERPC_R1, -16);
   } else {
     powerpc_emit_stwu (compiler, POWERPC_R1, POWERPC_R1, -16);

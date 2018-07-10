@@ -418,7 +418,7 @@ orc_powerpc_flush_cache (OrcCode *code)
   int size = code->code_size;
 
   ptr = code->code;
-#ifdef __powerpc64__
+#if defined(__powerpc64__) && (!defined(_CALL_ELF) || _CALL_ELF == 1)
   *(unsigned char **) ptr = (unsigned char *) code->exec + 24;
 #endif
   for (i=0;i<size;i+=cache_line_size) {
