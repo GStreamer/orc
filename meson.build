@@ -1,5 +1,5 @@
 project ('orc', 'c', version : '0.4.28.1',
-                     meson_version : '>= 0.36.0',
+                     meson_version : '>= 0.46.0',
                      default_options : ['buildtype=debugoptimized',
                                         'warning_level=1',
                                         'c_std=gnu99'] )
