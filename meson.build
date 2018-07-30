@@ -1,5 +1,5 @@
 project ('orc', 'c', version : '0.4.28.1',
-                     meson_version : '>= 0.46.0',
+                     meson_version : '>= 0.47.0',
                      default_options : ['buildtype=debugoptimized',
                                         'warning_level=1',
                                         'c_std=gnu99'] )
@@ -133,8 +133,14 @@ if get_option('tests')
   subdir('testsuite')
 endif
 
-if not meson.is_cross_build() and not get_option('disable_gtkdoc') and host_os != 'windows'
-  subdir('doc')
+if build_machine.system() == 'windows'
+  message('Disabling gtk-doc while building on Windows')
+else
+  if find_program('gtkdoc-scan', required : get_option('gtk_doc')).found()
+    subdir('doc')
+  else
+    message('Not building documentation as gtk-doc was not found')
+  endif
 endif
 
 pc_conf.set('prefix', get_option('prefix'))
