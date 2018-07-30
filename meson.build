@@ -129,7 +129,7 @@ subdir('orc-test')
 subdir('tools')
 subdir('examples')
 
-if not get_option('disable_tests')
+if get_option('tests')
   subdir('testsuite')
 endif
 
