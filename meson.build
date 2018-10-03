@@ -126,8 +126,17 @@ cdata.set_quoted('VERSION', meson.project_version())
 
 subdir('orc')
 subdir('orc-test')
-subdir('tools')
-subdir('examples')
+
+have_tools = not get_option('tools').disabled()
+if have_tools
+  subdir('tools')
+else
+  orcc = disabler() # for testsuite/orcc/
+endif
+
+if not get_option('examples').disabled()
+  subdir('examples')
+endif
 
 if not get_option('tests').disabled()
   subdir('testsuite')

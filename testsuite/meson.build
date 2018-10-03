@@ -40,4 +40,7 @@ foreach bin : noinst_bins
 endforeach
 
 subdir('orcc')
-subdir('benchmorc')
+
+if not get_option('benchmarks').disabled()
+  subdir('benchmorc')
+endif

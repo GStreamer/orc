@@ -1,3 +1,8 @@
 option('enable-backend', type : 'combo', choices : ['sse', 'mmx', 'neon', 'mips', 'altivec', 'c64x', 'all'], value : 'all')
+
+# Common feature options
+option('benchmarks', type : 'feature', value : 'auto', yield : true)
+option('examples', type : 'feature', value : 'auto', yield : true)
 option('gtk_doc', type : 'feature', value : 'auto', yield : true, description : 'Generate API documentation with gtk-doc')
 option('tests', type : 'feature', value : 'auto', yield : true)
+option('tools', type : 'feature', value : 'auto', yield : true)

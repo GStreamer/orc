@@ -1,5 +1,9 @@
 if not meson.is_cross_build()
 
+  if not have_tools
+    error('Need to build tools (orcc) to build examples.')
+  endif
+
   examples = ['example1', 'example2', 'example3', 'mt19937ar']
 
   foreach ex : examples
