@@ -43,7 +43,7 @@ cdata.set('ORC_API_EXPORT', export_define)
 
 all_backends = ['sse', 'mmx', 'altivec', 'neon', 'mips', 'c64x'] # 'arm'
 
-backend = get_option('enable-backend')
+backend = get_option('orc-backend')
 foreach b : all_backends
   if backend == 'all' or backend == b
     cdata.set('ENABLE_BACKEND_' + b.to_upper(), 1)

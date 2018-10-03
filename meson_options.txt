@@ -1,4 +1,4 @@
-option('enable-backend', type : 'combo', choices : ['sse', 'mmx', 'neon', 'mips', 'altivec', 'c64x', 'all'], value : 'all')
+option('orc-backend', type : 'combo', choices : ['sse', 'mmx', 'neon', 'mips', 'altivec', 'c64x', 'all'], value : 'all')
 
 # Common feature options
 option('benchmarks', type : 'feature', value : 'auto', yield : true)
