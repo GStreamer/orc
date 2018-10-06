@@ -1,6 +1,6 @@
 if not meson.is_cross_build()
 
-  if not have_tools
+  if opt_tools.disabled() and opt_examples.enabled()
     error('Need to build tools (orcc) to build examples.')
   endif
 

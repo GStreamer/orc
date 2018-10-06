@@ -125,20 +125,32 @@ cdata.set_quoted('PACKAGE_VERSION', meson.project_version())
 cdata.set_quoted('VERSION', meson.project_version())
 
 subdir('orc')
-subdir('orc-test')
 
-have_tools = not get_option('tools').disabled()
-if have_tools
+opt_examples = get_option('examples')
+opt_orctest = get_option('orc-test')
+opt_tests = get_option('tests')
+opt_tools = get_option('tools')
+
+if not opt_orctest.disabled()
+  subdir('orc-test')
+else
+  if opt_tests.enabled()
+    error('Tests were enabled explicitly, but the orc-test library was disabled.')
+  endif
+  orc_test_dep = disabler() # for testsuites + orc-bugreport
+endif
+
+if not opt_tools.disabled()
   subdir('tools')
 else
   orcc = disabler() # for testsuite/orcc/
 endif
 
-if not get_option('examples').disabled()
+if not opt_examples.disabled()
   subdir('examples')
 endif
 
-if not get_option('tests').disabled()
+if not opt_tests.disabled()
   subdir('testsuite')
 endif
 

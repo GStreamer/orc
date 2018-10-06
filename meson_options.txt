@@ -1,5 +1,8 @@
 option('orc-backend', type : 'combo', choices : ['sse', 'mmx', 'neon', 'mips', 'altivec', 'c64x', 'all'], value : 'all')
 
+# Orc feature options
+option('orc-test', type : 'feature', value : 'auto', description : 'Build the orc-test library used for unit testing and by the orc-bugreport tool')
+
 # Common feature options
 option('benchmarks', type : 'feature', value : 'auto', yield : true)
 option('examples', type : 'feature', value : 'auto', yield : true)
