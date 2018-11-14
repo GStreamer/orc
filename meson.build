@@ -11,7 +11,9 @@ orc_version_micro = meson.project_version().split('.')[2]
 
 # maintaining compatibility with the previous libtool versioning
 soversion = 0
-libversion = '@0@.@1@.0'.format(soversion, orc_version_micro.to_int())
+curversion = orc_version_micro.to_int()
+libversion = '@0@.@1@.0'.format(soversion, curversion)
+osxversion = curversion + 1
 
 add_project_arguments('-DHAVE_CONFIG_H', language : 'c')
 
