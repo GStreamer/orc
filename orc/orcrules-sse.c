@@ -2069,7 +2069,7 @@ sse_rule_maxuw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  int tmp;
 
   tmp = orc_compiler_get_constant (p, 2, 0x8000);
   orc_sse_emit_pxor(p, tmp, src);
@@ -2266,7 +2266,7 @@ sse_rule_addssl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  int tmp;
 #if 0
   int tmp2 = orc_compiler_get_temp_reg (p);
   int tmp3 = orc_compiler_get_temp_reg (p);
@@ -2346,7 +2346,7 @@ sse_rule_subssl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src = p->vars[insn->src_args[1]].alloc;
   int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  int tmp;
   int tmp2 = orc_compiler_get_temp_reg (p);
   int tmp3 = orc_compiler_get_temp_reg (p);
 
