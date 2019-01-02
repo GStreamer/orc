@@ -1,0 +1,22 @@
+stages:
+ - build
+
+debian sid:
+  image: 'debian:sid'
+  stage: build
+  variables:
+    DEPENDENCIES: >
+      meson
+      ninja-build
+      build-essential
+  before_script:
+    - apt-get update
+    - apt-get install --yes ${DEPENDENCIES}
+  script:
+    - meson --werror build/
+    - ninja -C build/
+    - ninja -C build/ test
+    - ninja -C build/ install
+  artifacts:
+    paths:
+      - build/meson-logs/
