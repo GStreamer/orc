@@ -56,7 +56,7 @@ typedef enum {
 
 #ifndef _ORC_INTEGER_TYPEDEFS_
 #define _ORC_INTEGER_TYPEDEFS_
-#if defined(__STDC__) && __STDC__ && __STDC_VERSION__ >= 199901L
+#if defined(__STDC__) && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #include <stdint.h>
 typedef int8_t orc_int8;
 typedef int16_t orc_int16;
