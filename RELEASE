@@ -1,3 +1,18 @@
+0.4.29 (unreleased)
+======
+
+  - PowerPC: Support ELFv2 ABI (A. Wilcox) and ppc64le (Michel Normand)
+  - Mips backend: only enable if the DSPr2 ASE is present (James Cowgill)
+  - Windows and MSVC build fixes (Nirbheek Chauhan, Tim-Philipp Müller)
+  - orccpu-arm: Allow 'cpuinfo' fallback on non-android (Edward Hervey)
+  - pkg-config file for orc-test library (Tim-Philipp Müller)
+  - orcc: add --decorator command line argument to add function decorators
+    in header files (Tim-Philipp Müller)
+  - meson: Make orcc detectable from other subprojects (Seungha Yang)
+  - meson: add options to disable tests, docs, benchmarks, examples,
+    tools, etc. (Sebastian Dröge, Tim-Philipp Müller)
+  - meson: misc. other fixes (James Cowgill, Nirbheek Chauhan, Sebastian Dröge)
+
 0.4.28
 ======
 
