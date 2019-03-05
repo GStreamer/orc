@@ -1,0 +1,11 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/orc-test/.libs
+includedir=${pcfiledir}/
+
+Name: orc-@ORC_MAJORMINOR@ uninstalled
+Description: Test Library of Optimized Inner Loops Runtime Compiler
+Version: @VERSION@
+Requires: orc-@ORC_MAJORMINOR@
+Libs: -L${libdir} -lorc-test-@ORC_MAJORMINOR@ @LIBM@ @LIBRT@
+Cflags: -I${includedir}

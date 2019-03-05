@@ -26,5 +26,14 @@ else
   orc_test_lib = orc_test_shr
 endif
 
+# pkg-config file
+pkg = import('pkgconfig')
+pkg.generate(orc_test_lib,
+  name: 'orc-test',
+  filebase: 'orc-test-' + orc_api,
+  subdirs: 'orc-' + orc_api,
+  description: 'Test Library of Optimized Inner Loops Runtime Compiler',
+  libraries: [libm, orc_dep])
+
 orc_test_dep = declare_dependency(include_directories : orc_inc,
   link_with : orc_test_lib)

@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@/orc-@ORC_MAJORMINOR@
+
+Name: orc-test-@ORC_MAJORMINOR@
+Description: Test Library of Optimized Inner Loops Runtime Compiler
+Version: @VERSION@
+Requires: orc-@ORC_MAJORMINOR@
+Libs: -L${libdir} -lorc-test-@ORC_MAJORMINOR@
+Libs.private: @LIBM@ @LIBRT@ @PTHREAD_LIBS@
+Cflags: -I${includedir}

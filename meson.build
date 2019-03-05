@@ -166,6 +166,7 @@ else
   endif
 endif
 
+# FIXME: use pkg-config module
 pc_conf.set('prefix', get_option('prefix'))
 pc_conf.set('exec_prefix', get_option('prefix'))
 pc_conf.set('libdir', join_paths(get_option('prefix'), get_option('libdir')))

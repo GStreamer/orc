@@ -20,7 +20,7 @@ EXTRA_DIST = COPYING RELEASE autogen.sh gtk-doc.make orc.m4 \
 
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
-pkgconfig_DATA = orc-$(ORC_MAJORMINOR).pc
+pkgconfig_DATA = orc-$(ORC_MAJORMINOR).pc orc-test-$(ORC_MAJORMINOR).pc
 
 cp_v_gen = $(cp_v_gen_$(V))
 cp_v_gen_ = $(cp_v_gen_$(AM_DEFAULT_VERBOSITY))
@@ -29,12 +29,20 @@ cp_v_gen_0 = @echo "  CP     $@";
 orc-$(ORC_MAJORMINOR).pc: orc.pc
 	$(cp_v_gen)cp orc.pc orc-$(ORC_MAJORMINOR).pc
 
+orc-test-$(ORC_MAJORMINOR).pc: orc-test.pc
+	$(cp_v_gen)cp orc-test.pc orc-test-$(ORC_MAJORMINOR).pc
+
 orc-$(ORC_MAJORMINOR)-uninstalled.pc: orc-uninstalled.pc
 	$(cp_v_gen)cp orc-uninstalled.pc orc-$(ORC_MAJORMINOR)-uninstalled.pc
 
-BUILT_SOURCES=orc-$(ORC_MAJORMINOR)-uninstalled.pc
+orc-test-$(ORC_MAJORMINOR)-uninstalled.pc: orc-test-uninstalled.pc
+	$(cp_v_gen)cp orc-test-uninstalled.pc orc-test-$(ORC_MAJORMINOR)-uninstalled.pc
 
-CLEANFILES = orc-$(ORC_MAJORMINOR).pc orc-$(ORC_MAJORMINOR)-uninstalled.pc
+BUILT_SOURCES=orc-$(ORC_MAJORMINOR)-uninstalled.pc \
+	orc-test-$(ORC_MAJORMINOR)-uninstalled.pc
+
+CLEANFILES = orc-$(ORC_MAJORMINOR).pc orc-$(ORC_MAJORMINOR)-uninstalled.pc \
+	orc-test-$(ORC_MAJORMINOR).pc orc-test-$(ORC_MAJORMINOR)-uninstalled.pc
 
 ACLOCAL_AMFLAGS = -I m4
 

@@ -271,6 +271,8 @@ examples/Makefile
 tools/Makefile
 orc-uninstalled.pc
 orc.pc
+orc-test.pc
+orc-test-uninstalled.pc
 ])
 AC_OUTPUT
 
