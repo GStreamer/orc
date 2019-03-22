@@ -114,7 +114,7 @@ orc_arm_emit_push (OrcCompiler *compiler, int regs, orc_uint32 vregs)
         last = i;
       }
     }
-    // What's the deal with even/odd registers ?
+    /* What's the deal with even/odd registers ? */
     ORC_ASM_CODE(compiler, "-d%d}\n", last+1);
 
     nregs = last + 1 - first + 1;
