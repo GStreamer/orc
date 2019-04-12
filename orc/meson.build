@@ -101,7 +101,7 @@ orc_c_args = ['-DORC_ENABLE_UNSTABLE_API', '-D_GNU_SOURCE']
 
 orc_dependencies = [libm, librt, liblog]
 
-orc_shr = shared_library ('orc-' + orc_api,
+orc_lib = library ('orc-' + orc_api,
   orc_sources,
   version : libversion,
   soversion : soversion,
@@ -111,18 +111,9 @@ orc_shr = shared_library ('orc-' + orc_api,
   dependencies : orc_dependencies,
   install : true)
 
-orc_sta = static_library ('orc-' + orc_api,
-  objects: orc_shr.extract_all_objects(),
-  include_directories : orc_inc,
-  c_args : orc_c_args + ['-DBUILDING_ORC'],
-  install : true)
-
+orc_dep_cargs = []
 if get_option('default_library') == 'static'
-  orc_lib = orc_sta
-  orc_dep_cargs = ['-DORC_STATIC_COMPILATION']
-else
-  orc_lib = orc_shr
-  orc_dep_cargs = []
+  orc_dep_cargs += ['-DORC_STATIC_COMPILATION']
 endif
 
 orc_dep = declare_dependency(include_directories : orc_inc,
