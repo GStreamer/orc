@@ -1,4 +1,4 @@
-0.4.29 (unreleased)
+0.4.29
 ======
 
   - PowerPC: Support ELFv2 ABI (A. Wilcox) and ppc64le (Michel Normand)
