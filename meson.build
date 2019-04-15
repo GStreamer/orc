@@ -1,4 +1,4 @@
-project ('orc', 'c', version : '0.4.29',
+project ('orc', 'c', version : '0.4.29.1',
                      meson_version : '>= 0.47.0',
                      default_options : ['buildtype=debugoptimized',
                                         'warning_level=1',

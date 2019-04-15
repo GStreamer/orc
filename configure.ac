@@ -1,5 +1,5 @@
 AC_PREREQ([2.68])
-AC_INIT([orc], [0.4.29], [https://gitlab.freedesktop.org/gstreamer/orc/issues/],[orc])
+AC_INIT([orc], [0.4.29.1], [https://gitlab.freedesktop.org/gstreamer/orc/issues/],[orc])
 dnl don't forget to update libversion
 
 AS_NANO(ORC_GIT=no,ORC_GIT=yes)
