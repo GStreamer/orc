@@ -70,7 +70,7 @@ Questions and Answers:
 
  - Q: How big is the Orc library?
 
-   A: For embedded users, the --enable-backend configure option can
+   A: For embedded users, the orc-backend meson option can
    be used to disable irrelvant targets.  Compiled with only one target
    (SSE), the library size is about 150 kB uncompressed, or 48 kB
    compressed.  The goal was to keep the uncompressed size under

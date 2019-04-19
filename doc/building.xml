@@ -5,7 +5,7 @@
 %version-entities;
 <!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
 ]>
-<refentry id="orc-building" revision="29 may 2009">
+<refentry id="orc-building" revision="23 aug 2019">
 <refmeta>
 <refentrytitle>Building Orc and Applications That Use Orc</refentrytitle>
 <manvolnum>3</manvolnum>
@@ -20,41 +20,37 @@ How to build Orc and applications using it.
 </refnamediv>
 
 <refsect1>
-<title>Building Orc on UNIX</title>
+<title>Building Orc</title>
 
   <!-- this has been borrowed from the glib docs via gstreamer -->
   <para>
-    On UNIX, Orc uses the standard GNU build system,
-    using <application>autoconf</application> for package
-    configuration and resolving portability issues,
-    <application>automake</application> for building makefiles
-    that comply with the GNU Coding Standards, and
-    <application>libtool</application> for building shared
-    libraries on multiple platforms.  The normal sequence for
-    compiling and installing the Orc library is thus:
-
+    Orc uses the <ulink role="online-location" url="https://mesonbuild.com">Meson build system</ulink>
+    When using the Meson ninja backend (which is the default), the normal
+    sequence for compiling and installing the Orc library is thus:
     <literallayout>
-      <userinput>./configure</userinput>
-      <userinput>make</userinput>
-      <userinput>make install</userinput>
+      <userinput>meson builddir</userinput>
+      <userinput>ninja -C builddir</userinput>
+      <userinput>ninja -C builddir install</userinput>
     </literallayout>
   </para>
 
   <para>
-    The standard options provided by <application>GNU
-    autoconf</application> may be passed to the
-    <command>configure</command> script.  Please see the
-    <application>autoconf</application> documentation or run
-    <command>./configure --help</command> for information about
-    the standard options.
+    To see build options, check the meson_options.txt file and
+    <command>meson setup --help</command>, or run
+    <command>meson configure builddir</command> (after the first meson
+    configure run). You can pass build options directly when running meson
+    for the first time, or you can change options with
+    <command>meson configure builddir -Doption=xyz</command> after the
+    initial meson run.
   </para>
 
   <para>
     By default, code generators for all targets are built into the
     library.  Embedded system developers may wish to use the
-    --enable-backed option, which will disable all other code
+    <userinput>orc-backend</userinput> option, which will disable all other code
     generators, saving about 200 kB in binary size.  Outside of
-    embedded systems, using --enable-backend is not recommended.
+    embedded systems, using the <userinput>orc-backend</userinput> option
+    is not recommended.
   </para>
 
 </refsect1>

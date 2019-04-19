@@ -1,3 +1,9 @@
+0.4.30 (unreleased)
+===================
+
+  - autotools support has been dropped in favour of Meson as build system
+  - FILL ME
+
 0.4.29
 ======
 
