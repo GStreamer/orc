@@ -219,6 +219,7 @@ orc_x86_detect_cpuid (void)
 
 #define ORC_X86_GenuineIntel (('n'<<0)|('t'<<8)|('e'<<16)|('l'<<24))
 #define ORC_X86_AuthenticAMD (('c'<<0)|('A'<<8)|('M'<<16)|('D'<<24))
+#define ORC_X86_HygonGenuine (('u'<<0)|('i'<<8)|('n'<<16)|('e'<<24))
 #define ORC_X86_CentaurHauls (('a'<<0)|('u'<<8)|('l'<<16)|('s'<<24))
 #define ORC_X86_CyrixInstead (('t'<<0)|('e'<<8)|('a'<<16)|('d'<<24))
 #define ORC_X86_GenuineTMx86 (('M'<<0)|('x'<<8)|('8'<<16)|('6'<<24))
@@ -234,6 +235,7 @@ orc_x86_detect_cpuid (void)
       orc_sse_detect_cpuid_intel (level);
       break;
     case ORC_X86_AuthenticAMD:
+    case ORC_X86_HygonGenuine:
       orc_sse_detect_cpuid_amd (level);
       break;
     default:
