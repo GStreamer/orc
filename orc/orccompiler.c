@@ -117,7 +117,7 @@ orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
   }
 
   if (data_reg || !compiler->allow_gp_on_stack) {
-    orc_compiler_error (compiler, "register overflow for %s reg",
+    orc_compiler_error (compiler, "register overflow for %s register",
         data_reg ? "vector" : "gp");
     compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
