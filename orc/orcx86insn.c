@@ -254,6 +254,8 @@ static const OrcSysOpcode orc_x86_opcodes[] = {
   { "pshufw", ORC_X86_INSN_TYPE_IMM8_MMXM_MMX, 0, 0x00, 0x0f70 },
   { "movq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x00, 0x0f6f },
   { "movq", ORC_X86_INSN_TYPE_MMXM_MMX_REV, 0, 0x00, 0x0f7f },
+  { "endbr32", ORC_X86_INSN_TYPE_NONE, 0, 0xf3, 0x0f1efb },
+  { "endbr64", ORC_X86_INSN_TYPE_NONE, 0, 0xf3, 0x0f1efa },
 };
 
 static void

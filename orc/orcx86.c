@@ -452,6 +452,9 @@ orc_x86_emit_prologue (OrcCompiler *compiler)
   orc_compiler_append_code(compiler,"%s:\n", compiler->program->name);
   if (compiler->is_64bit) {
     int i;
+
+    orc_x86_emit_cpuinsn_none (compiler, ORC_X86_endbr64);
+
     for(i=0;i<16;i++){
       if (compiler->used_regs[ORC_GP_REG_BASE+i] &&
           compiler->save_regs[ORC_GP_REG_BASE+i]) {
@@ -459,6 +462,7 @@ orc_x86_emit_prologue (OrcCompiler *compiler)
       }
     }
   } else {
+    orc_x86_emit_cpuinsn_none (compiler, ORC_X86_endbr32);
     orc_x86_emit_push (compiler, 4, X86_EBP);
     if (compiler->use_frame_pointer) {
       orc_x86_emit_mov_reg_reg (compiler, 4, X86_ESP, X86_EBP);

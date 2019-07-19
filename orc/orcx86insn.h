@@ -278,6 +278,8 @@ typedef enum {
   ORC_X86_pshufw,
   ORC_X86_movq_mmx_load,
   ORC_X86_movq_mmx_store,
+  ORC_X86_endbr32,
+  ORC_X86_endbr64,
 } OrcX86Opcode;
 
 enum {
