@@ -29,6 +29,6 @@ endif
 # FIXME: there should be a way to specify the gtk-doc requirement
 # html_args : '--path=' + meson.current_build_dir() + ':' + meson.current_source_dir(),
 gnome.gtkdoc('orc',
-  src_dir : meson.source_root() + '/orc',
+  src_dir : join_paths(meson.current_source_dir(), '..', 'orc'),
   main_sgml : 'orc-docs.sgml',
   install : true)
