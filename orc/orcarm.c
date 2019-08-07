@@ -777,9 +777,12 @@ orc_arm_flush_cache (OrcCode *code)
 {
 #ifdef HAVE_ARM
 #ifdef __APPLE__
-  sys_icache_invalidate(code->code, code->code_size);
+  sys_dcache_flush(code->code, code->code_size);
+  sys_icache_invalidate(code->exec, code->code_size);
 #else
   __clear_cache (code->code, code->code + code->code_size);
+  if ((void *) code->exec != (void *) code->code)
+    __clear_cache (code->exec, code->exec + code->code_size);
 #endif
 #endif
 }
