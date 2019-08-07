@@ -44,8 +44,6 @@
 #define snprintf _snprintf
 #endif
 
-#define MIN_NONDENORMAL (1.1754944909521339405e-38)
-
 void _orc_profile_init(void);
 
 OrcRandomContext rand_context;
@@ -527,10 +525,12 @@ float_compare (OrcArray *array1, OrcArray *array2, int i, int j)
     case 4:
       if (isnan(*(float *)ptr1) && isnan(*(float *)ptr2)) return TRUE;
       if (*(float *)ptr1 == *(float *)ptr2) return TRUE;
-      if (fabs(*(float *)ptr1 - *(float *)ptr2) < MIN_NONDENORMAL) return TRUE;
+      if ((*(float *)ptr1 < 0.0) == (*(float *)ptr2 < 0.0) && abs(*(orc_uint32 *)ptr1 - *(orc_uint32 *)ptr2) <= 2) return TRUE;
       return FALSE;
     case 8:
-      /* FIXME */
+      if (isnan(*(double *)ptr1) && isnan(*(double *)ptr2)) return TRUE;
+      if (*(double *)ptr1 == *(double *)ptr2) return TRUE;
+      if ((*(double *)ptr1 < 0.0) == (*(double *)ptr2 < 0.0) && abs(*(orc_uint64 *)ptr1 - *(orc_uint64 *)ptr2) <= 2) return TRUE;
       return FALSE;
   }
   return FALSE;

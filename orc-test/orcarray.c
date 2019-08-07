@@ -211,9 +211,6 @@ orc_array_set_pattern_2 (OrcArray *array, OrcRandomContext *context,
   }
 }
 
-#define MIN_NONDENORMAL (1.1754944909521339405e-38)
-#define MIN_NONDENORMAL_D (2.2250738585072014e-308)
-
 int
 orc_array_compare (OrcArray *array1, OrcArray *array2, int flags)
 {
@@ -230,7 +227,7 @@ orc_array_compare (OrcArray *array1, OrcArray *array2, int flags)
         for (i=0;i<array1->n;i++){
           if (isnan(a[i]) && isnan(b[i])) continue;
           if (a[i] == b[i]) continue;
-          if (fabs(a[i] - b[i]) < MIN_NONDENORMAL) continue;
+          if ((a[i] < 0.0) == (b[i] < 0.0) && abs(*(orc_uint32 *)&a[i] - *(orc_uint32 *)&b[i]) <= 2) continue;
           return FALSE;
         }
       }
@@ -247,7 +244,7 @@ orc_array_compare (OrcArray *array1, OrcArray *array2, int flags)
         for (i=0;i<array1->n;i++){
           if (isnan(a[i]) && isnan(b[i])) continue;
           if (a[i] == b[i]) continue;
-          if (fabs(a[i] - b[i]) < MIN_NONDENORMAL_D) continue;
+          if ((a[i] < 0.0) == (b[i] < 0.0) && abs(*(orc_uint64 *)&a[i] - *(orc_uint64 *)&b[i]) <= 2) continue;
           return FALSE;
         }
       }
