@@ -488,7 +488,7 @@ print_array_val_hex (OrcArray *array, int i, int j)
   }
 }
 
-static orc_uint64
+static void
 print_array_val_float (OrcArray *array, int i, int j)
 {
   void *ptr = ORC_PTR_OFFSET (array->data,
@@ -498,18 +498,15 @@ print_array_val_float (OrcArray *array, int i, int j)
     case 4:
       if (isnan(*(float *)ptr)) {
         printf(" nan %08x", *(orc_uint32 *)ptr);
-        /* This is to get around signaling/non-signaling nans in the output */
-        return (*(orc_uint32 *)ptr) & 0xffbfffff;
       } else {
         printf(" %12.5g", *(float *)ptr);
-        return *(orc_int32 *)ptr;
       }
+      break;
     case 8:
       printf(" %12.5g", *(double *)ptr);
-      return *(orc_int64 *)ptr;
+      break;
     default:
       printf(" ERROR");
-      return -1;
   }
 }
 
@@ -724,8 +721,8 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
         for(l=ORC_VAR_D1;l<ORC_VAR_D1+4;l++){
           if (program->vars[l].size > 0) {
             if (flags & ORC_TEST_FLAGS_FLOAT) {
-              a = print_array_val_float (dest_emul[l-ORC_VAR_D1], i, j);
-              b = print_array_val_float (dest_exec[l-ORC_VAR_D1], i, j);
+              print_array_val_float (dest_emul[l-ORC_VAR_D1], i, j);
+              print_array_val_float (dest_exec[l-ORC_VAR_D1], i, j);
               if (!float_compare (dest_emul[l-ORC_VAR_D1], dest_exec[l-ORC_VAR_D1], i, j)) {
                 line_bad = TRUE;
               }
