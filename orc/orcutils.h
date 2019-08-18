@@ -167,6 +167,14 @@ typedef unsigned int orc_bool;
 #define ORC_GNUC_PREREQ(maj, min) 0
 #endif
   
+#if defined(__GNUC__) && (__GNUC__ > 2) && defined(__OPTIMIZE__)
+#define ORC_LIKELY(expr) (__builtin_expect ((expr), 1))
+#define ORC_UNLIKELY(expr) (__builtin_expect ((expr), 0))
+#else
+#define ORC_LIKELY(expr) (expr)
+#define ORC_UNLIKELY(expr) (expr)
+#endif
+
 #ifndef ORC_INTERNAL
 #if defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590)
 #define ORC_INTERNAL __attribute__((visibility("hidden")))
