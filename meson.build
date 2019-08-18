@@ -57,12 +57,14 @@ if cpu_family == 'x86'
   cdata.set('HAVE_I386', true)
 elif cpu_family == 'x86_64'
   cdata.set('HAVE_AMD64', true)
-elif cpu_family == 'powerpc'
+elif cpu_family == 'ppc' or cpu_family == 'ppc64'
   cdata.set('HAVE_POWERPC', true)
 elif cpu_family == 'arm'
   cdata.set('HAVE_ARM', true)
 elif cpu_family == 'mips' and host_machine.endian() == 'little'
   cdata.set('HAVE_MIPSEL', true)
+else
+  warning(cpu_family + ' isn\'t a supported cpu family for optimization')
 endif
 
 libm = cc.find_library('m', required : false)
