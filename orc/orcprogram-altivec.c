@@ -366,7 +366,7 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
           powerpc_emit_add (compiler,
               compiler->vars[k].ptr_register,
               compiler->vars[k].ptr_register,
-	      POWERPC_R0);
+              POWERPC_R0);
           if (compiler->is_64bit) {
             powerpc_emit_std (compiler,
                 compiler->vars[k].ptr_register,

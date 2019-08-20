@@ -781,7 +781,7 @@ powerpc_rule_select1ql (OrcCompiler *p, void *user, OrcInstruction *insn)
   int perm;
 
   perm = powerpc_get_constant_full (p, 0x04050607, 0x0c0d0e0f,
-		  0x14151617, 0x1c1d1e1f);
+      0x14151617, 0x1c1d1e1f);
   powerpc_emit_vperm (p, dest, src1, src1, perm);
 }
 
@@ -793,7 +793,7 @@ powerpc_rule_select0ql (OrcCompiler *p, void *user, OrcInstruction *insn)
   int perm;
 
   perm = powerpc_get_constant_full (p, 0x00010203, 0x08090a0b,
-		  0x10111213, 0x18191a1b);
+      0x10111213, 0x18191a1b);
   powerpc_emit_vperm (p, dest, src1, src1, perm);
 }
 
@@ -1065,10 +1065,10 @@ powerpc_rule_splitql (OrcCompiler *p, void *user, OrcInstruction *insn)
   int perm;
 
   perm = powerpc_get_constant_full (p, 0x04050607, 0x0c0d0e0f,
-		  0x14151617, 0x1c1d1e1f);
+      0x14151617, 0x1c1d1e1f);
   powerpc_emit_vperm (p, dest1, src1, src1, perm);
   perm = powerpc_get_constant_full (p, 0x00010203, 0x08090a0b,
-		  0x10111213, 0x18191a1b);
+      0x10111213, 0x18191a1b);
   powerpc_emit_vperm (p, dest2, src1, src1, perm);
 }
 
@@ -1082,7 +1082,7 @@ powerpc_rule_splitlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   powerpc_emit_vpkuwum (p, dest1, src1, src1);
   perm = powerpc_get_constant_full (p, 0x00010405, 0x08090c0d,
-		  0x10111415, 0x18191c1d);
+      0x10111415, 0x18191c1d);
   powerpc_emit_vperm (p, dest2, src1, src1, perm);
 }
 
@@ -1096,7 +1096,7 @@ powerpc_rule_splitwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   powerpc_emit_vpkuhum (p, dest1, src1, src1);
   perm = powerpc_get_constant_full (p, 0x00020406, 0x080a0c0e,
-		  0x10121416, 0x181a1c1e);
+      0x10121416, 0x181a1c1e);
   powerpc_emit_vperm (p, dest2, src1, src1, perm);
 }
 
