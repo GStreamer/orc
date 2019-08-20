@@ -99,6 +99,9 @@ orc_compiler_powerpc_get_default_flags (void)
 #ifdef __powerpc64__
   flags |= ORC_TARGET_POWERPC_64BIT;
 #endif
+#if defined(__LITTLE_ENDIAN__)
+  flags |= ORC_TARGET_POWERPC_LE;
+#endif
 
   return flags;
 }
@@ -401,14 +404,26 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
 
     if (var->size == 2) {
       powerpc_emit_vxor (compiler, POWERPC_V0, POWERPC_V0, POWERPC_V0);
-      powerpc_emit_vmrghh (compiler, var->alloc, POWERPC_V0, var->alloc);
+      if (IS_POWERPC_BE (compiler)) {
+        powerpc_emit_vmrghh (compiler, var->alloc, POWERPC_V0, var->alloc);
+      } else {
+        powerpc_emit_vmrglh (compiler, var->alloc, POWERPC_V0, var->alloc);
+      }
     }
 
-    ORC_ASM_CODE(compiler,"  lvsr %s, 0, %s\n", 
-        powerpc_get_regname (POWERPC_V0),
-        powerpc_get_regname (POWERPC_R0));
-    powerpc_emit_X (compiler, 0x7c00004c, powerpc_regnum(POWERPC_V0),
-        0, powerpc_regnum(POWERPC_R0));
+    if (IS_POWERPC_BE (compiler)) {
+      ORC_ASM_CODE(compiler,"  lvsr %s, 0, %s\n",
+          powerpc_get_regname (POWERPC_V0),
+          powerpc_get_regname (POWERPC_R0));
+      powerpc_emit_X (compiler, 0x7c00004c, powerpc_regnum(POWERPC_V0),
+          0, powerpc_regnum(POWERPC_R0));
+    } else {
+      ORC_ASM_CODE(compiler,"  lvsl %s, 0, %s\n",
+          powerpc_get_regname (POWERPC_V0),
+          powerpc_get_regname (POWERPC_R0));
+      powerpc_emit_X (compiler, 0x7c00000c, powerpc_regnum(POWERPC_V0),
+          0, powerpc_regnum(POWERPC_R0));
+    }
 
     powerpc_emit_vperm (compiler, var->alloc, var->alloc, var->alloc,
         POWERPC_V0);

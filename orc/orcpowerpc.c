@@ -53,10 +53,17 @@ powerpc_regnum (int i)
 void
 powerpc_emit(OrcCompiler *compiler, unsigned int insn)
 {
-  *compiler->codeptr++ = (insn>>24);
-  *compiler->codeptr++ = (insn>>16);
-  *compiler->codeptr++ = (insn>>8);
-  *compiler->codeptr++ = (insn>>0);
+  if (IS_POWERPC_BE(compiler)) {
+    *compiler->codeptr++ = (insn>>24);
+    *compiler->codeptr++ = (insn>>16);
+    *compiler->codeptr++ = (insn>>8);
+    *compiler->codeptr++ = (insn>>0);
+  } else {
+    *compiler->codeptr++ = (insn>>0);
+    *compiler->codeptr++ = (insn>>8);
+    *compiler->codeptr++ = (insn>>16);
+    *compiler->codeptr++ = (insn>>24);
+  }
 }
 
 void
@@ -530,14 +537,25 @@ powerpc_load_long_constant (OrcCompiler *p, int reg, orc_uint32 a,
   }
 
   powerpc_emit_label (p, label_data);
-  ORC_ASM_CODE(p,"  .long 0x%08x\n", a);
-  powerpc_emit (p, a);
-  ORC_ASM_CODE(p,"  .long 0x%08x\n", b);
-  powerpc_emit (p, b);
-  ORC_ASM_CODE(p,"  .long 0x%08x\n", c);
-  powerpc_emit (p, c);
-  ORC_ASM_CODE(p,"  .long 0x%08x\n", d);
-  powerpc_emit (p, d);
+  if (IS_POWERPC_BE(p)) {
+    ORC_ASM_CODE(p,"  .long 0x%08x\n", a);
+    powerpc_emit (p, a);
+    ORC_ASM_CODE(p,"  .long 0x%08x\n", b);
+    powerpc_emit (p, b);
+    ORC_ASM_CODE(p,"  .long 0x%08x\n", c);
+    powerpc_emit (p, c);
+    ORC_ASM_CODE(p,"  .long 0x%08x\n", d);
+    powerpc_emit (p, d);
+  } else {
+    ORC_ASM_CODE(p,"  .long 0x%08x\n", d);
+    powerpc_emit (p, d);
+    ORC_ASM_CODE(p,"  .long 0x%08x\n", c);
+    powerpc_emit (p, c);
+    ORC_ASM_CODE(p,"  .long 0x%08x\n", b);
+    powerpc_emit (p, b);
+    ORC_ASM_CODE(p,"  .long 0x%08x\n", a);
+    powerpc_emit (p, a);
+  }
 
   powerpc_emit_label (p, label_skip);
   if (p->is_64bit) {

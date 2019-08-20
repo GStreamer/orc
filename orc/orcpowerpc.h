@@ -7,10 +7,25 @@
 ORC_BEGIN_DECLS
 
 typedef enum {
-  ORC_TARGET_POWERPC_64BIT = (1<<0)
+  ORC_TARGET_POWERPC_64BIT = (1<<0),
+  ORC_TARGET_POWERPC_LE = (1<<1)
 } OrcTargetPowerPCFlags;
 
 #ifdef ORC_ENABLE_UNSTABLE_API
+
+
+#if defined(__LITTLE_ENDIAN__)
+#define IS_POWERPC_BE(compiler) \
+  (ORC_UNLIKELY ((compiler->target_flags & ORC_TARGET_POWERPC_LE) == 0))
+#define IS_POWERPC_LE(compiler) \
+  (ORC_LIKELY ((compiler->target_flags & ORC_TARGET_POWERPC_LE) == ORC_TARGET_POWERPC_LE))
+#else
+#define IS_POWERPC_BE(compiler) \
+  (ORC_LIKELY ((compiler->target_flags & ORC_TARGET_POWERPC_LE) == 0))
+#define IS_POWERPC_LE(compiler) \
+  (ORC_UNLIKELY ((compiler->target_flags & ORC_TARGET_POWERPC_LE) == ORC_TARGET_POWERPC_LE))
+#endif
+
 
 enum {
   POWERPC_R0 = ORC_GP_REG_BASE,
@@ -133,9 +148,18 @@ void powerpc_load_long_constant (OrcCompiler *p, int reg, orc_uint32 a, orc_uint
 #define powerpc_emit_vmuleub(p,a,b,c)      powerpc_emit_VX_2 (p, "vmuleub", 0x10000208, a, b, c)
 #define powerpc_emit_vmulesh(p,a,b,c)      powerpc_emit_VX_2 (p, "vmulesh", 0x10000348, a, b, c)
 #define powerpc_emit_vmuleuh(p,a,b,c)      powerpc_emit_VX_2 (p, "vmuleuh", 0x10000248, a, b, c)
+#define powerpc_emit_vmulosb(p,a,b,c)      powerpc_emit_VX_2 (p, "vmulosb", 0x10000108, a, b, c)
+#define powerpc_emit_vmuloub(p,a,b,c)      powerpc_emit_VX_2 (p, "vmuloub", 0x10000008, a, b, c)
+#define powerpc_emit_vmulosh(p,a,b,c)      powerpc_emit_VX_2 (p, "vmulosh", 0x10000148, a, b, c)
+#define powerpc_emit_vmulouh(p,a,b,c)      powerpc_emit_VX_2 (p, "vmulouh", 0x10000048, a, b, c)
+
+#define powerpc_emit_vmuleuw(p,a,b,c)      powerpc_emit_VX_2 (p, "vmuleuw", 0x10000288, a, b, c)
+#define powerpc_emit_vmulouw(p,a,b,c)      powerpc_emit_VX_2 (p, "vmulouw", 0x10000088, a, b, c)
 
 #define powerpc_emit_vmrghb(p,a,b,c)       powerpc_emit_VX_2 (p, "vmrghb", 0x1000000c, a, b, c)
 #define powerpc_emit_vmrghh(p,a,b,c)       powerpc_emit_VX_2 (p, "vmrghh", 0x1000004c, a, b, c)
+#define powerpc_emit_vmrglb(p,a,b,c)       powerpc_emit_VX_2 (p, "vmrglb", 0x1000010c, a, b, c)
+#define powerpc_emit_vmrglh(p,a,b,c)       powerpc_emit_VX_2 (p, "vmrglh", 0x1000014c, a, b, c)
 
 #define powerpc_emit_vpkshss(p,a,b,c)      powerpc_emit_VX_2 (p, "vpkshss", 0x1000018e, a, b, c)
 #define powerpc_emit_vpkshus(p,a,b,c)      powerpc_emit_VX_2 (p, "vpkshus", 0x1000010e, a, b, c)
@@ -166,6 +190,8 @@ void powerpc_load_long_constant (OrcCompiler *p, int reg, orc_uint32 a, orc_uint
 
 #define powerpc_emit_vupkhsb(p,a,b)        powerpc_emit_VX_4 (p, "vupkhsb", 0x1000020e, a, b)
 #define powerpc_emit_vupkhsh(p,a,b)        powerpc_emit_VX_4 (p, "vupkhsh", 0x1000024e, a, b)
+#define powerpc_emit_vupklsb(p,a,b)        powerpc_emit_VX_4 (p, "vupklsb", 0x1000028e, a, b)
+#define powerpc_emit_vupklsh(p,a,b)        powerpc_emit_VX_4 (p, "vupklsh", 0x100002ce, a, b)
 
 #define powerpc_emit_vperm(p,a,b,c,d)      powerpc_emit_VA (p, "vperm", 0x1000002b, a, b, c, d)
 
