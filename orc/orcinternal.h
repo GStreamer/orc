@@ -34,6 +34,7 @@ extern int _orc_cpu_model;
 extern int _orc_cpu_stepping;
 extern const char *_orc_cpu_name;
 
+void orc_compiler_emit_invariants (OrcCompiler *compiler);
 #endif
 
 ORC_END_DECLS

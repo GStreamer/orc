@@ -12,6 +12,7 @@
 #include <orc/orcmmx.h>
 #include <orc/orcutils.h>
 #include <orc/orcdebug.h>
+#include <orc/orcinternal.h>
 
 #define MMX 1
 #define SIZE 65536
@@ -24,7 +25,6 @@ static void orc_compiler_mmx_init (OrcCompiler *compiler);
 static unsigned int orc_compiler_mmx_get_default_flags (void);
 static void orc_compiler_mmx_assemble (OrcCompiler *compiler);
 extern void orc_compiler_mmx_register_rules (OrcTarget *target);
-static void orc_mmx_emit_invariants (OrcCompiler *compiler);
 
 void mmx_load_constant (OrcCompiler *compiler, int reg, int size, int value);
 void mmx_load_constant_long (OrcCompiler *compiler, int reg,
@@ -484,7 +484,7 @@ mmx_load_constants_outer (OrcCompiler *compiler)
     }
   }
 
-  orc_mmx_emit_invariants (compiler);
+  orc_compiler_emit_invariants (compiler);
 
   /* FIXME move to a better place */
   for(i=0;i<compiler->n_constants;i++){
@@ -1078,38 +1078,3 @@ orc_mmx_emit_loop (OrcCompiler *compiler, int offset, int update)
     }
   }
 }
-
-static void
-orc_mmx_emit_invariants (OrcCompiler *compiler)
-{
-  int j;
-  OrcInstruction *insn;
-  OrcStaticOpcode *opcode;
-  OrcRule *rule;
-
-  for(j=0;j<compiler->n_insns;j++){
-    insn = compiler->insns + j;
-    opcode = insn->opcode;
-
-    if (!(insn->flags & ORC_INSN_FLAG_INVARIANT)) continue;
-
-    ORC_ASM_CODE(compiler,"# %d: %s\n", j, insn->opcode->name);
-
-    compiler->insn_shift = compiler->loop_shift;
-    if (insn->flags & ORC_INSTRUCTION_FLAG_X2) {
-      compiler->insn_shift += 1;
-    }
-    if (insn->flags & ORC_INSTRUCTION_FLAG_X4) {
-      compiler->insn_shift += 2;
-    }
-
-    rule = insn->rule;
-    if (rule && rule->emit) {
-      rule->emit (compiler, rule->emit_user, insn);
-    } else {
-      orc_compiler_error (compiler, "no code generation rule for %s",
-          opcode->name);
-    }
-  }
-}
-

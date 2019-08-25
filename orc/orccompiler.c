@@ -8,6 +8,7 @@
 
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
+#include <orc/orcinternal.h>
 
 #ifdef HAVE_VALGRIND_VALGRIND_H
 #include <valgrind/valgrind.h>
@@ -1226,3 +1227,36 @@ orc_compiler_error (OrcCompiler *compiler, const char *fmt, ...)
   va_end (var_args);
 }
 
+void
+orc_compiler_emit_invariants (OrcCompiler *compiler)
+{
+  int j;
+  OrcInstruction *insn;
+  OrcStaticOpcode *opcode;
+  OrcRule *rule;
+
+  for(j=0;j<compiler->n_insns;j++){
+    insn = compiler->insns + j;
+    opcode = insn->opcode;
+
+    if (!(insn->flags & ORC_INSN_FLAG_INVARIANT)) continue;
+
+    ORC_ASM_CODE(compiler,"# %d: %s\n", j, opcode->name);
+
+    compiler->insn_shift = compiler->loop_shift;
+    if (insn->flags & ORC_INSTRUCTION_FLAG_X2) {
+      compiler->insn_shift += 1;
+    }
+    if (insn->flags & ORC_INSTRUCTION_FLAG_X4) {
+      compiler->insn_shift += 2;
+    }
+
+    rule = insn->rule;
+    if (rule && rule->emit) {
+      rule->emit (compiler, rule->emit_user, insn);
+    } else {
+      orc_compiler_error (compiler, "no code generation rule for %s",
+          opcode->name);
+    }
+  }
+}
