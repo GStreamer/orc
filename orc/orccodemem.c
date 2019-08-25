@@ -200,6 +200,10 @@ orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
   int n;
   char *filename;
   mode_t mask;
+  int exec_prot = PROT_READ | PROT_EXEC;
+
+  if (_orc_compiler_flag_debug)
+    exec_prot |= PROT_WRITE;
 
   filename = malloc (strlen ("/orcexec..") +
       strlen (dir) + 6 + 1);
@@ -224,8 +228,7 @@ orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
     return FALSE;
   }
 
-  region->exec_ptr = mmap (NULL, SIZE, PROT_READ|PROT_EXEC,
-      MAP_SHARED, fd, 0);
+  region->exec_ptr = mmap (NULL, SIZE, exec_prot, MAP_SHARED, fd, 0);
   if (region->exec_ptr == MAP_FAILED) {
     ORC_WARNING("failed to create exec map");
     close (fd);
