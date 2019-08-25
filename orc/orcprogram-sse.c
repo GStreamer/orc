@@ -739,20 +739,6 @@ orc_emit_split_2_regions (OrcCompiler *compiler)
       (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3), compiler->exec_reg);
 }
 
-#ifndef MMX
-static int
-orc_program_has_float (OrcCompiler *compiler)
-{
-  int j;
-  for(j=0;j<compiler->n_insns;j++){
-    OrcInstruction *insn = compiler->insns + j;
-    OrcStaticOpcode *opcode = insn->opcode;
-    if (opcode->flags & ORC_STATIC_OPCODE_FLOAT) return TRUE;
-  }
-  return FALSE;
-}
-#endif
-
 #define LABEL_REGION1_SKIP 1
 #define LABEL_INNER_LOOP_START 2
 #define LABEL_REGION2_SKIP 3

@@ -10,6 +10,7 @@
 #include <orc/orcpowerpc.h>
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
+#include <orc/orcinternal.h>
 
 
 void orc_compiler_powerpc_register_rules (OrcTarget *target);
@@ -172,18 +173,6 @@ powerpc_load_inner_constants (OrcCompiler *compiler)
         break;
     }
   }
-}
-
-static int
-orc_program_has_float (OrcCompiler *compiler)
-{
-  int j;
-  for(j=0;j<compiler->n_insns;j++){
-    OrcInstruction *insn = compiler->insns + j;
-    OrcStaticOpcode *opcode = insn->opcode;
-    if (opcode->flags & ORC_STATIC_OPCODE_FLOAT) return TRUE;
-  }
-  return FALSE;
 }
 
 static void

@@ -35,6 +35,7 @@ extern int _orc_cpu_stepping;
 extern const char *_orc_cpu_name;
 
 void orc_compiler_emit_invariants (OrcCompiler *compiler);
+int orc_program_has_float (OrcCompiler *compiler);
 #endif
 
 ORC_END_DECLS
