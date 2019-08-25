@@ -441,11 +441,22 @@ orc_powerpc_flush_cache (OrcCode *code)
 #endif
 }
 
-static void
+void
+powerpc_emit_load_address (OrcCompiler* compiler, int regd, int rega, int imm)
+{
+  if (compiler->is_64bit) {
+    powerpc_emit_ld (compiler, regd, rega, imm);
+  } else {
+    powerpc_emit_lwz (compiler, regd, rega, imm);
+  }
+}
+
+void
 powerpc_load_constant (OrcCompiler *p, int i, int reg)
 {
   int j;
   int value = p->constants[i].value;
+  int greg = p->gp_tmpreg;
 
   switch (p->constants[i].type) {
     case ORC_CONST_ZERO:
@@ -492,6 +503,7 @@ powerpc_load_constant (OrcCompiler *p, int i, int reg)
       value &= 0xff;
       value |= (value<<8);
       value |= (value<<16);
+      value |= (value<<24);
       for(j=0;j<4;j++){
         p->constants[i].full_value[j] = value;
       }
@@ -512,31 +524,39 @@ powerpc_load_constant (OrcCompiler *p, int i, int reg)
       break;
   }
 
-  powerpc_load_long_constant (p, reg,
-    p->constants[i].full_value[0],
-    p->constants[i].full_value[1],
-    p->constants[i].full_value[2],
-    p->constants[i].full_value[3]);
-}
-
-void
-powerpc_load_long_constant (OrcCompiler *p, int reg, orc_uint32 a,
-    orc_uint32 b, orc_uint32 c, orc_uint32 d)
-{
-  int label_skip, label_data;
-  int greg = p->gp_tmpreg;
-
-  label_skip = orc_compiler_label_new (p);
-  label_data = orc_compiler_label_new (p);
-
-  powerpc_emit_b (p, label_skip);
-
-  while ((p->codeptr - p->code) & 0xf) {
-    ORC_ASM_CODE(p,"  .long 0x00000000\n");
-    powerpc_emit (p, 0x00000000);
+  p->constants[i].is_long = TRUE;
+  if (p->constants[i].label == 0) {
+    p->constants[i].label = orc_compiler_label_new(p);
   }
 
-  powerpc_emit_label (p, label_data);
+  powerpc_emit_load_address (p, greg, POWERPC_R3,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[ORC_VAR_A2]));
+  powerpc_emit_load_address (p, greg, greg,
+      (int)ORC_STRUCT_OFFSET(OrcCode, exec));
+
+  powerpc_add_fixup (p, 1, p->codeptr, p->constants[i].label);
+  {
+    unsigned int insn;
+
+    ORC_ASM_CODE(p,"  addi %s, %s, %db - %s\n",
+        powerpc_get_regname(greg),
+        powerpc_get_regname(greg), p->constants[i].label, p->program->name);
+    insn = (14<<26) | (powerpc_regnum (greg)<<21) | (powerpc_regnum (greg)<<16);
+    insn |= 0;
+
+    powerpc_emit (p, insn);
+  }
+
+  ORC_ASM_CODE(p,"  lvx %s, 0, %s\n",
+      powerpc_get_regname(reg),
+      powerpc_get_regname(greg));
+  powerpc_emit_X (p, 0x7c0000ce, reg, 0, greg);
+}
+
+static void
+powerpc_emit_long_value(OrcCompiler* p, orc_uint32 a, orc_uint32 b,
+    orc_uint32 c, orc_uint32 d)
+{
   if (IS_POWERPC_BE(p)) {
     ORC_ASM_CODE(p,"  .long 0x%08x\n", a);
     powerpc_emit (p, a);
@@ -556,44 +576,44 @@ powerpc_load_long_constant (OrcCompiler *p, int reg, orc_uint32 a,
     ORC_ASM_CODE(p,"  .long 0x%08x\n", a);
     powerpc_emit (p, a);
   }
+}
 
-  powerpc_emit_label (p, label_skip);
-  if (p->is_64bit) {
-    powerpc_emit_ld (p,
-        greg,
-        POWERPC_R3,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[ORC_VAR_A2]));
-    powerpc_emit_ld (p,
-        greg, greg,
-        (int)ORC_STRUCT_OFFSET(OrcCode, exec));
-  } else {
-    powerpc_emit_lwz (p,
-        greg,
-        POWERPC_R3,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[ORC_VAR_A2]));
-    powerpc_emit_lwz (p,
-        greg, greg,
-        (int)ORC_STRUCT_OFFSET(OrcCode, exec));
+void
+powerpc_emit_full_constants(OrcCompiler* p)
+{
+  int i;
+  int aligned = FALSE;
+
+  for (i = 0; i < p->n_constants; i++) {
+    if (p->constants[i].is_long == TRUE && p->constants[i].label) {
+      if (!aligned) {
+        while ((p->codeptr - p->code) & 0xf) {
+          ORC_ASM_CODE(p, "  .long 0x00000000\n");
+          powerpc_emit(p, 0x00000000);
+        }
+        aligned = TRUE;
+      }
+      powerpc_emit_label(p, p->constants[i].label);
+      powerpc_emit_long_value(p,
+          p->constants[i].full_value[0], p->constants[i].full_value[1],
+          p->constants[i].full_value[2], p->constants[i].full_value[3]);
+    }
   }
+}
 
-  powerpc_add_fixup (p, 1, p->codeptr, label_data);
-  {
-    unsigned int insn;
+void
+powerpc_load_long_constant (OrcCompiler *p, int reg, orc_uint32 value0,
+    orc_uint32 value1, orc_uint32 value2, orc_uint32 value3)
+{
+  int i = p->n_constants++;
+  p->constants[i].type = ORC_CONST_FULL;
+  p->constants[i].full_value[0] = value0;
+  p->constants[i].full_value[1] = value1;
+  p->constants[i].full_value[2] = value2;
+  p->constants[i].full_value[3] = value3;
+  p->constants[i].alloc_reg = -1;
 
-    ORC_ASM_CODE(p,"  addi %s, %s, %db - %s\n",
-        powerpc_get_regname(greg),
-        powerpc_get_regname(greg), label_data, p->program->name);
-    insn = (14<<26) | (powerpc_regnum (greg)<<21) | (powerpc_regnum (greg)<<16);
-    insn |= 0;
-
-    powerpc_emit (p, insn);
-  }
-
-  ORC_ASM_CODE(p,"  lvx %s, 0, %s\n",
-      powerpc_get_regname(reg),
-      powerpc_get_regname(greg));
-  powerpc_emit_X (p, 0x7c0000ce, reg, 0, greg);
-
+  powerpc_load_constant (p, i, reg);
 }
 
 int
@@ -605,7 +625,7 @@ powerpc_get_constant (OrcCompiler *p, int type, int value)
   for(i=0;i<p->n_constants;i++){
     if (p->constants[i].type == type &&
         p->constants[i].value == value) {
-      if (p->constants[i].alloc_reg != 0) {
+      if (p->constants[i].alloc_reg > 0) {
         return p->constants[i].alloc_reg;
       }
       break;
@@ -631,15 +651,16 @@ powerpc_get_constant_full (OrcCompiler *p, int value0, int value1,
   int i;
 
   for(i=0;i<p->n_constants;i++){
-#if 0
-    if (p->constants[i].type == type &&
-        p->constants[i].value == value) {
-      if (p->constants[i].alloc_reg != 0) {
+    if (p->constants[i].type == ORC_CONST_FULL &&
+        p->constants[i].full_value[0] == value0 &&
+        p->constants[i].full_value[1] == value1 &&
+        p->constants[i].full_value[2] == value2 &&
+        p->constants[i].full_value[3] == value3) {
+      if (p->constants[i].alloc_reg > 0) {
         return p->constants[i].alloc_reg;
       }
       break;
     }
-#endif
   }
   if (i == p->n_constants) {
     p->n_constants++;

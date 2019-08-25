@@ -143,6 +143,47 @@ orc_compiler_powerpc_init (OrcCompiler *compiler)
 }
 
 static void
+powerpc_load_constants_outer (OrcCompiler *compiler)
+{
+  int i;
+  for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
+    if (compiler->vars[i].name == NULL) continue;
+    switch (compiler->vars[i].vartype) {
+      case ORC_VAR_TYPE_CONST:
+        break;
+      case ORC_VAR_TYPE_PARAM:
+        break;
+      case ORC_VAR_TYPE_SRC:
+      case ORC_VAR_TYPE_DEST:
+        break;
+      case ORC_VAR_TYPE_ACCUMULATOR:
+        powerpc_emit_vxor(compiler, compiler->vars[i].alloc,
+            compiler->vars[i].alloc, compiler->vars[i].alloc);
+        break;
+      case ORC_VAR_TYPE_TEMP:
+        break;
+      default:
+        orc_compiler_error(compiler,"bad vartype");
+        break;
+    }
+  }
+
+  orc_compiler_emit_invariants (compiler);
+
+  for(i=0;i<compiler->n_constants;i++) {
+    if (compiler->constants[i].is_long &&
+        !compiler->constants[i].alloc_reg) {
+      compiler->constants[i].alloc_reg =
+          orc_compiler_get_constant_reg (compiler);
+      if (compiler->constants[i].alloc_reg > 0) {
+        powerpc_load_constant (compiler, i,
+            compiler->constants[i].alloc_reg);
+      }
+    }
+  }
+}
+
+static void
 powerpc_load_inner_constants (OrcCompiler *compiler)
 {
   int i;
@@ -153,17 +194,10 @@ powerpc_load_inner_constants (OrcCompiler *compiler)
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
         if (compiler->vars[i].ptr_register) {
-          if (compiler->is_64bit) {
-            powerpc_emit_ld (compiler,
-                compiler->vars[i].ptr_register,
-                POWERPC_R3,
-                (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
-          } else {
-            powerpc_emit_lwz (compiler,
-                compiler->vars[i].ptr_register,
-                POWERPC_R3,
-                (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
-          }
+          powerpc_emit_load_address (compiler,
+              compiler->vars[i].ptr_register,
+              POWERPC_R3,
+              (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
         } else {
           /* FIXME */
           ORC_ASM_CODE(compiler,"ERROR");
@@ -176,14 +210,65 @@ powerpc_load_inner_constants (OrcCompiler *compiler)
 }
 
 static void
-orc_compiler_powerpc_assemble (OrcCompiler *compiler)
+orc_powerpc_emit_loop (OrcCompiler* compiler, int update)
 {
   int j;
   int k;
   OrcInstruction *insn;
   OrcStaticOpcode *opcode;
-  /* OrcVariable *args[10]; */
   OrcRule *rule;
+
+  for(j=0;j<compiler->n_insns;j++){
+    insn = compiler->insns + j;
+    opcode = insn->opcode;
+
+    compiler->insn_index = j;
+
+    if (insn->flags & ORC_INSN_FLAG_INVARIANT) continue;
+
+    ORC_ASM_CODE(compiler,"# %d: %s\n", j, insn->opcode->name);
+
+    compiler->min_temp_reg = ORC_VEC_REG_BASE;
+
+    compiler->insn_shift = compiler->loop_shift;
+    if (insn->flags & ORC_INSTRUCTION_FLAG_X2) {
+      compiler->insn_shift += 1;
+    }
+    if (insn->flags & ORC_INSTRUCTION_FLAG_X4) {
+      compiler->insn_shift += 2;
+    }
+
+    rule = insn->rule;
+    if (rule && rule->emit) {
+      rule->emit (compiler, rule->emit_user, insn);
+    } else {
+      orc_compiler_error (compiler, "no code generation rule for %s",
+          opcode->name);
+    }
+  }
+
+  if (update) {
+    for(k=0;k<ORC_N_COMPILER_VARIABLES;k++){
+      if (compiler->vars[k].name == NULL) continue;
+      if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
+          compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
+        if (compiler->vars[k].ptr_register) {
+          powerpc_emit_addi (compiler,
+              compiler->vars[k].ptr_register,
+              compiler->vars[k].ptr_register,
+              compiler->vars[k].size << compiler->loop_shift);
+        } else {
+            ORC_ASM_CODE(compiler,"ERROR\n");
+        }
+      }
+    }
+  }
+}
+
+static void
+orc_compiler_powerpc_assemble (OrcCompiler *compiler)
+{
+  int k;
   int label_outer_loop_start;
   int label_loop_start;
   int label_leave;
@@ -192,6 +277,27 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
   label_outer_loop_start = orc_compiler_label_new (compiler);
   label_loop_start = orc_compiler_label_new (compiler);
   label_leave = orc_compiler_label_new (compiler);
+
+  {
+    int i;
+
+    orc_powerpc_emit_loop (compiler, 0);
+
+    compiler->codeptr = compiler->code;
+    free (compiler->asm_code);
+    compiler->asm_code = NULL;
+    compiler->asm_code_len = 0;
+    memset (compiler->labels, 0, sizeof (compiler->labels));
+    memset (compiler->labels_int, 0, sizeof (compiler->labels_int));
+    compiler->n_fixups = 0;
+    compiler->n_output_insns = 0;
+
+    for(i=0;i<compiler->n_constants;i++) {
+      compiler->constants[i].label = 0;
+    }
+  }
+
+  if (compiler->error) return;
 
   powerpc_emit_prologue (compiler);
 
@@ -208,6 +314,8 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
     powerpc_emit_VX_b(compiler, "mtvscr", 0x10000644, tmp);
   }
 
+  powerpc_load_constants_outer (compiler);
+
   if (compiler->program->is_2d) {
     powerpc_emit_lwz (compiler, POWERPC_R0, POWERPC_R3,
         (int)ORC_STRUCT_OFFSET(OrcExecutorAlt, m));
@@ -218,17 +326,7 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
         (int)ORC_STRUCT_OFFSET(OrcExecutorAlt, m_index));
   }
 
-  /* powerpc_load_constants (compiler); */
   powerpc_load_inner_constants (compiler);
-
-  for(k=0;k<4;k++){
-    OrcVariable *var = &compiler->vars[ORC_VAR_A1 + k];
-
-    if (compiler->vars[ORC_VAR_A1 + k].name == NULL) continue;
-
-      /* powerpc_emit_VX_2(p, "vxor", 0x100004c4, reg, reg, reg); */
-    powerpc_emit_vxor (compiler, var->alloc, var->alloc, var->alloc);
-  }
 
   powerpc_emit_label (compiler, label_outer_loop_start);
 
@@ -244,85 +342,7 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
 
   powerpc_emit_label (compiler, label_loop_start);
 
-  for(j=0;j<compiler->n_insns;j++){
-    insn = compiler->insns + j;
-    opcode = insn->opcode;
-
-    compiler->insn_index = j;
-
-    ORC_ASM_CODE(compiler,"# %d: %s\n", j, insn->opcode->name);
-
-#if 0
-    /* set up args */
-    for(k=0;k<opcode->n_src + opcode->n_dest;k++){
-      args[k] = compiler->vars + insn->args[k];
-      ORC_ASM_CODE(compiler," %d", args[k]->alloc);
-      if (args[k]->is_chained) {
-        ORC_ASM_CODE(compiler," (chained)");
-      }
-    }
-    ORC_ASM_CODE(compiler,"\n");
-#endif
-
-    for(k=0;k<ORC_STATIC_OPCODE_N_SRC;k++){
-      OrcVariable *var = compiler->vars + insn->src_args[k];
-
-      if (opcode->src_size[k] == 0) continue;
-
-      switch (var->vartype) {
-        case ORC_VAR_TYPE_SRC:
-        case ORC_VAR_TYPE_DEST:
-          /* powerpc_emit_load_src (compiler, var); */
-          break;
-        case ORC_VAR_TYPE_CONST:
-          break;
-        case ORC_VAR_TYPE_TEMP:
-          break;
-        default:
-          break;
-      }
-    }
-
-    compiler->min_temp_reg = ORC_VEC_REG_BASE;
-
-    rule = insn->rule;
-    if (rule) {
-      rule->emit (compiler, rule->emit_user, insn);
-    } else {
-      ORC_ASM_CODE(compiler,"No rule for: %s\n", opcode->name);
-    }
-
-    for(k=0;k<ORC_STATIC_OPCODE_N_DEST;k++){
-      OrcVariable *var = compiler->vars + insn->dest_args[k];
-
-      if (opcode->dest_size[k] == 0) continue;
-
-      switch (var->vartype) {
-        case ORC_VAR_TYPE_DEST:
-          /* powerpc_emit_store_dest (compiler, var); */
-          break;
-        case ORC_VAR_TYPE_TEMP:
-          break;
-        default:
-          break;
-      }
-    }
-  }
-
-  for(k=0;k<ORC_N_COMPILER_VARIABLES;k++){
-    if (compiler->vars[k].name == NULL) continue;
-    if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
-        compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
-      if (compiler->vars[k].ptr_register) {
-        powerpc_emit_addi (compiler,
-            compiler->vars[k].ptr_register,
-            compiler->vars[k].ptr_register,
-            compiler->vars[k].size << compiler->loop_shift);
-      } else {
-        ORC_ASM_CODE(compiler,"ERROR\n");
-      }
-    }
-  }
+  orc_powerpc_emit_loop (compiler, 1);
 
   powerpc_emit_bne (compiler, label_loop_start);
 
@@ -340,17 +360,10 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
       if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
           compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
         if (compiler->vars[k].ptr_register) {
-          if (compiler->is_64bit) {
-            powerpc_emit_ld (compiler,
-                compiler->vars[k].ptr_register,
-                POWERPC_R3,
-                (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]));
-          } else {
-            powerpc_emit_lwz (compiler,
-                compiler->vars[k].ptr_register,
-                POWERPC_R3,
-                (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]));
-          }
+          powerpc_emit_load_address (compiler,
+              compiler->vars[k].ptr_register,
+              POWERPC_R3,
+              (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]));
           powerpc_emit_lwz (compiler,
               POWERPC_R0,
               POWERPC_R3,
@@ -436,6 +449,8 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
     powerpc_emit_VX_b(compiler, "mtvscr", 0x10000644, tmp);
   }
   powerpc_emit_epilogue (compiler);
+
+  powerpc_emit_full_constants (compiler);
 
   powerpc_do_fixups (compiler);
 }
