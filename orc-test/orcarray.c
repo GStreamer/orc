@@ -227,7 +227,7 @@ orc_array_compare (OrcArray *array1, OrcArray *array2, int flags)
         for (i=0;i<array1->n;i++){
           if (isnan(a[i]) && isnan(b[i])) continue;
           if (a[i] == b[i]) continue;
-          if ((a[i] < 0.0) == (b[i] < 0.0) && abs(*(orc_uint32 *)&a[i] - *(orc_uint32 *)&b[i]) <= 2) continue;
+          if ((a[i] < 0.0) == (b[i] < 0.0) && (*(orc_uint32 *)&a[i] - *(orc_uint32 *)&b[i]) <= 2) continue;
           return FALSE;
         }
       }
@@ -244,7 +244,7 @@ orc_array_compare (OrcArray *array1, OrcArray *array2, int flags)
         for (i=0;i<array1->n;i++){
           if (isnan(a[i]) && isnan(b[i])) continue;
           if (a[i] == b[i]) continue;
-          if ((a[i] < 0.0) == (b[i] < 0.0) && abs(*(orc_uint64 *)&a[i] - *(orc_uint64 *)&b[i]) <= 2) continue;
+          if ((a[i] < 0.0) == (b[i] < 0.0) && (*(orc_uint64 *)&a[i] - *(orc_uint64 *)&b[i]) <= 2) continue;
           return FALSE;
         }
       }
