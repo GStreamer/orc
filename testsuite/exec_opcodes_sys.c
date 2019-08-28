@@ -169,9 +169,17 @@ test_opcode_const (OrcStaticOpcode *opcode)
 
   if (opcode->flags & ORC_STATIC_OPCODE_FLOAT) {
     flags = ORC_TEST_FLAGS_FLOAT;
-    args[n_args++] =
-      orc_program_add_constant_float (p, opcode->src_size[1], 1, "c1");
-    if (opcode->src_size[2]) {
+    if (opcode->src_size[1] == 8) {
+      args[n_args++] =
+        orc_program_add_constant_double (p, opcode->src_size[1], 1, "c1");
+    } else {
+      args[n_args++] =
+        orc_program_add_constant_float (p, opcode->src_size[1], 1, "c1");
+    }
+    if (opcode->src_size[2] == 8) {
+      args[n_args++] =
+        orc_program_add_constant_double (p, opcode->src_size[2], 1, "c2");
+    } else if (opcode->src_size[2]) {
       args[n_args++] =
         orc_program_add_constant_float (p, opcode->src_size[2], 1, "c2");
     }
@@ -229,18 +237,34 @@ test_opcode_param (OrcStaticOpcode *opcode)
 
   if (opcode->flags & ORC_STATIC_OPCODE_FLOAT) {
     flags = ORC_TEST_FLAGS_FLOAT;
-    args[n_args++] =
-      orc_program_add_parameter_float (p, opcode->src_size[1], "p1");
-    if (opcode->src_size[2]) {
+    if (opcode->src_size[1] == 8) {
       args[n_args++] =
-        orc_program_add_parameter_float (p, opcode->src_size[2], "p2");
+          orc_program_add_parameter_double (p, opcode->src_size[1], "p1");
+    } else {
+      args[n_args++] =
+          orc_program_add_parameter_float (p, opcode->src_size[1], "p1");
+    }
+    if (opcode->src_size[2] == 8) {
+      args[n_args++] =
+          orc_program_add_parameter_double (p, opcode->src_size[2], "p2");
+    } else if (opcode->src_size[2]) {
+      args[n_args++] =
+          orc_program_add_parameter_float (p, opcode->src_size[2], "p2");
     }
   } else {
-    args[n_args++] =
-      orc_program_add_parameter (p, opcode->src_size[1], "p1");
-    if (opcode->src_size[2]) {
+    if (opcode->src_size[1] == 8) {
       args[n_args++] =
-        orc_program_add_parameter (p, opcode->src_size[2], "p2");
+          orc_program_add_parameter_int64 (p, opcode->src_size[1], "p1");
+    } else {
+      args[n_args++] =
+          orc_program_add_parameter (p, opcode->src_size[1], "p1");
+    }
+    if (opcode->src_size[2] == 8) {
+      args[n_args++] =
+          orc_program_add_parameter_int64 (p, opcode->src_size[2], "p2");
+    } else if (opcode->src_size[2]) {
+      args[n_args++] =
+          orc_program_add_parameter (p, opcode->src_size[2], "p2");
     }
   }
 
