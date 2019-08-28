@@ -123,10 +123,8 @@ orc_executor_set_param_float (OrcExecutor *ex, int var, float value)
 void
 orc_executor_set_param_int64 (OrcExecutor *ex, int var, orc_int64 value)
 {
-  orc_union64 u;
-  u.i = value;
-  ex->params[var] = u.x2[0];
-  ex->params[var + (ORC_VAR_T1-ORC_VAR_P1)] = u.x2[1];
+  ex->params[var] = value & 0xffffffff;
+  ex->params[var + (ORC_VAR_T1-ORC_VAR_P1)] = (value >> 32) & 0xffffffff;
 }
 
 void
@@ -134,8 +132,8 @@ orc_executor_set_param_double (OrcExecutor *ex, int var, double value)
 {
   orc_union64 u;
   u.f = value;
-  ex->params[var] = u.x2[0];
-  ex->params[var + (ORC_VAR_T1-ORC_VAR_P1)] = u.x2[1];
+  ex->params[var] = u.i & 0xffffffff;
+  ex->params[var + (ORC_VAR_T1-ORC_VAR_P1)] = (u.i >> 32) & 0xffffffff;
 }
 
 void
