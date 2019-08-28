@@ -29,6 +29,7 @@
 #include "config.h"
 #endif
 #include <orc/orc.h>
+#include <orc/orcinternal.h>
 
 #if defined(__linux__)
 #include <linux/auxvec.h>
@@ -41,6 +42,14 @@
 #ifndef PPC_FEATURE_HAS_ALTIVEC
 /* From linux-2.6/include/asm-powerpc/cputable.h */
 #define PPC_FEATURE_HAS_ALTIVEC 0x10000000
+#endif
+
+#ifndef PPC_FEATURE_HAS_VSX
+#define PPC_FEATURE_HAS_VSX 0x00000080
+#endif
+
+#ifndef PPC_FEATURE2_ARCH_2_07
+#define PPC_FEATURE2_ARCH_2_07 0x80000000
 #endif
 
 #endif
@@ -57,6 +66,7 @@
 #endif
 
 /***** powerpc *****/
+int orc_powerpc_cpu_flags;
 
 #if 0
 static unsigned long
@@ -83,28 +93,24 @@ test_altivec (void * ignored)
 #define SYSCTL "hw.altivec"
 #endif
 
-static unsigned long
-orc_check_altivec_sysctl_bsd (void)
+static void
+orc_check_powerpc_sysctl_bsd (void)
 {
-  unsigned long cpu_flags = 0;
   int ret, vu;
   size_t len;
 
   len = sizeof(vu);
   ret = sysctlbyname(SYSCTL, &vu, &len, NULL, 0);
   if (!ret && vu) {
-    cpu_flags |= ORC_TARGET_ALTIVEC_ALTIVEC;
+    orc_powerpc_cpu_flags |= ORC_TARGET_POWERPC_ALTIVEC;
   }
-
-  return cpu_flags;
 }
 #endif
 
 #if defined(__OpenBSD__)
-static unsigned long
-orc_check_altivec_sysctl_openbsd (void)
+static void
+orc_check_powerpc_sysctl_openbsd (void)
 {
-  unsigned long cpu_flags = 0;
   int mib[2], ret, vu;
   size_t len;
 
@@ -114,94 +120,106 @@ orc_check_altivec_sysctl_openbsd (void)
   len = sizeof(vu);
   ret = sysctl(mib, 2, &vu, &len, NULL, 0);
   if (!ret && vu) {
-    cpu_flags |= ORC_TARGET_ALTIVEC_ALTIVEC;
+    orc_powerpc_cpu_flags |= ORC_TARGET_POWERPC_ALTIVEC;
   }
-
-  return cpu_flags;
 }
 #endif
 
 #if defined(__linux__)
-static unsigned long
-orc_check_altivec_proc_auxv (void)
+static void
+orc_check_powerpc_proc_auxv (void)
 {
-  unsigned long cpu_flags = 0;
-  static int available = -1;
-  int new_avail = 0;
   unsigned long buf[64];
   ssize_t count;
-  int fd, i;
-
-  /* Flags already set */
-  if (available != -1) {
-    return 0;
-  }
+  int fd, i, found = 0;
 
   fd = open("/proc/self/auxv", O_RDONLY);
-  if (fd < 0) {
-    goto out;
-  }
+  if (fd < 0)
+    return;
 
-more:
-  count = read(fd, buf, sizeof(buf));
-  if (count < 0) {
-    goto out_close;
-  }
+  while (1) {
+    count = read(fd, buf, sizeof(buf));
+    if (count <= 0)
+      break;
 
-  for (i=0; i < (count / sizeof(unsigned long)); i += 2) {
-    if (buf[i] == AT_HWCAP) {
-      new_avail = !!(buf[i+1] & PPC_FEATURE_HAS_ALTIVEC);
-      goto out_close;
-    } else if (buf[i] == AT_NULL) {
-      goto out_close;
+    for (i=0; i < (count / sizeof(unsigned long)); i += 2) {
+      if (buf[i] == AT_NULL)
+        break;
+      if (buf[i] == AT_HWCAP) {
+        if (buf[i + 1] & PPC_FEATURE_HAS_ALTIVEC)
+          orc_powerpc_cpu_flags |= ORC_TARGET_POWERPC_ALTIVEC;
+        if (buf[i + 1] & PPC_FEATURE_HAS_VSX)
+          orc_powerpc_cpu_flags |= ORC_TARGET_POWERPC_VSX;
+        found++;
+      }
+      if (buf[i] == AT_HWCAP2) {
+        if (buf[i + 1] & PPC_FEATURE2_ARCH_2_07)
+          orc_powerpc_cpu_flags |= ORC_TARGET_POWERPC_V207;
+        found++;
+      }
+      if (buf[i] == AT_PLATFORM) {
+        _orc_cpu_name = (char*)buf[i + 1];
+        found++;
+      }
+      if (buf[i] == AT_L1D_CACHESIZE) {
+        _orc_data_cache_size_level1 = buf[i + 1];
+        found++;
+      }
+      if (buf[i] == AT_L2_CACHESIZE) {
+        _orc_data_cache_size_level2 = buf[i + 1];
+        found++;
+      }
+      if (buf[i] == AT_L3_CACHESIZE) {
+        _orc_data_cache_size_level3 = buf[i + 1];
+        found++;
+      }
+      if (found == 6)
+        break;
     }
   }
 
-  if (count == sizeof(buf)) {
-    goto more;
-  }
-
-out_close:
   close(fd);
-
-out:
-  available = new_avail;
-  if (available) {
-    cpu_flags |= ORC_TARGET_ALTIVEC_ALTIVEC;
-  }
-
-  return cpu_flags;
 }
 #endif
 
 #if !defined(__FreeBSD__) && !defined(__FreeBSD_kernel__) && !defined(__OpenBSD__) && !defined(__APPLE__) && !defined(__linux__)
 static void
-orc_check_altivec_fault (void)
+orc_check_powerpc_fault (void)
 {
   orc_fault_check_enable ();
   if (orc_fault_check_try(test_altivec, NULL)) {
     ORC_DEBUG ("cpu flag altivec");
-    orc_cpu_flags |= ORC_IMPL_FLAG_ALTIVEC;
+    orc_powerpc_cpu_flags |= ORC_TARGET_POWERPC_ALTIVEC;
   }
   orc_fault_check_disable ();
 }
 #endif
 
 void
-orc_cpu_detect_arch(void)
+powerpc_detect_cpu_flags (void)
 {
+  static int inited = 0;
+
+  if (inited) return;
+  inited = 1;
+
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__APPLE__)
-  orc_check_altivec_sysctl_bsd();
+  orc_check_powerpc_sysctl_bsd();
 #elif defined(__OpenBSD__)
-  orc_check_altivec_sysctl_openbsd();
+  orc_check_powerpc_sysctl_openbsd();
 #elif defined(__linux__)
-  orc_check_altivec_proc_auxv();
+  orc_check_powerpc_proc_auxv();
 #else
-  orc_check_altivec_fault();
+  orc_check_powerpc_fault();
 #endif
 
-  /* _orc_profile_stamp = orc_profile_stamp_tb; */
+  if (orc_compiler_flag_check("-altivec")) {
+    orc_powerpc_cpu_flags &= ~ORC_TARGET_POWERPC_ALTIVEC;
+  }
+  if (orc_compiler_flag_check("-vsx")) {
+    orc_powerpc_cpu_flags &= ~ORC_TARGET_POWERPC_VSX;
+  }
+  if (orc_compiler_flag_check("-v207")) {
+    orc_powerpc_cpu_flags &= ~ORC_TARGET_POWERPC_V207;
+  }
 }
-
-
-

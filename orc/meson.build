@@ -89,7 +89,7 @@ endif
 
 if cpu_family.startswith('x86')
   orc_sources += ['orccpu-x86.c']
-elif cpu_family == 'powerpc'
+elif cpu_family == 'ppc' or cpu_family == 'ppc64'
   orc_sources += ['orccpu-powerpc.c']
 elif cpu_family == 'arm'
   orc_sources += ['orccpu-arm.c']

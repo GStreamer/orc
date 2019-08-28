@@ -17,6 +17,7 @@ void orc_compiler_powerpc_register_rules (OrcTarget *target);
 static void orc_compiler_powerpc_init (OrcCompiler *compiler);
 static unsigned int orc_compiler_powerpc_get_default_flags (void);
 static void orc_compiler_powerpc_assemble (OrcCompiler *compiler);
+static const char* powerpc_get_flag_name (int shift);
 
 
 static void
@@ -79,7 +80,7 @@ static OrcTarget altivec_target = {
   0,
   NULL,
   NULL,
-  NULL,
+  powerpc_get_flag_name,
   orc_powerpc_flush_cache
 
 };
@@ -87,6 +88,14 @@ static OrcTarget altivec_target = {
 void
 orc_powerpc_init (void)
 {
+#ifdef HAVE_POWERPC
+  powerpc_detect_cpu_flags ();
+
+  if (!(orc_powerpc_cpu_flags & ORC_TARGET_POWERPC_ALTIVEC)) {
+    altivec_target.executable = FALSE;
+  }
+#endif
+
   orc_target_register (&altivec_target);
 
   orc_compiler_powerpc_register_rules (&altivec_target);
@@ -104,7 +113,29 @@ orc_compiler_powerpc_get_default_flags (void)
   flags |= ORC_TARGET_POWERPC_LE;
 #endif
 
+#ifdef HAVE_POWERPC
+  flags |= orc_powerpc_cpu_flags;
+#else
+  flags |= ORC_TARGET_POWERPC_ALTIVEC;
+  flags |= ORC_TARGET_POWERPC_VSX;
+  flags |= ORC_TARGET_POWERPC_V207;
+#endif
+
   return flags;
+}
+
+static const char *
+powerpc_get_flag_name (int shift)
+{
+  static const char *flags[] = {
+    "64bit", "le", "altivec", "vsx", "v2.07"
+  };
+
+  if (shift >= 0 && shift < sizeof(flags)/sizeof(flags[0])) {
+    return flags[shift];
+  }
+
+  return NULL;
 }
 
 static void

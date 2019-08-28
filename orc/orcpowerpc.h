@@ -6,11 +6,6 @@
 
 ORC_BEGIN_DECLS
 
-typedef enum {
-  ORC_TARGET_POWERPC_64BIT = (1<<0),
-  ORC_TARGET_POWERPC_LE = (1<<1)
-} OrcTargetPowerPCFlags;
-
 #ifdef ORC_ENABLE_UNSTABLE_API
 
 
@@ -93,6 +88,9 @@ enum {
   POWERPC_V30,
   POWERPC_V31
 };
+
+extern int orc_powerpc_cpu_flags;
+void powerpc_detect_cpu_flags (void);
 
 const char * powerpc_get_regname(int i);
 int powerpc_regnum (int i);
