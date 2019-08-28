@@ -100,9 +100,14 @@ powerpc_emit_addi (OrcCompiler *compiler, int regd, int rega, int imm)
 {
   unsigned int insn;
 
-  ORC_ASM_CODE(compiler,"  addi %s, %s, %d\n",
-      powerpc_get_regname(regd),
-      powerpc_get_regname(rega), imm);
+  if (rega == 0) {
+    ORC_ASM_CODE(compiler, "  li %s, %d\n",
+        powerpc_get_regname(regd), imm);
+  } else {
+    ORC_ASM_CODE(compiler,"  addi %s, %s, %d\n",
+        powerpc_get_regname(regd),
+        powerpc_get_regname(rega), imm);
+  }
   insn = (14<<26) | (powerpc_regnum (regd)<<21) | (powerpc_regnum (rega)<<16);
   insn |= imm&0xffff;
 
