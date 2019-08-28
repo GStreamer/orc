@@ -2,6 +2,7 @@
 #include "config.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include <orc/orc.h>
 #include <orc-test/orctest.h>
@@ -30,6 +31,8 @@ main (int argc, char *argv[])
   opcode_set = orc_opcode_set_get ("sys");
 
   for(i=0;i<opcode_set->n_opcodes;i++){
+    if (argc == 2 && strcmp(argv[1], opcode_set->opcodes[i].name) != 0)
+      continue;
     if (verbose) printf("%s src %d,%d,%d,%d\n",
         opcode_set->opcodes[i].name,
         opcode_set->opcodes[i].dest_size[0],
@@ -39,6 +42,8 @@ main (int argc, char *argv[])
     test_opcode_src (opcode_set->opcodes + i);
   }
   for(i=0;i<opcode_set->n_opcodes;i++){
+    if (argc == 2 && strcmp(argv[1], opcode_set->opcodes[i].name) != 0)
+      continue;
     if (verbose) printf("%s const %d,%d,%d\n",
         opcode_set->opcodes[i].name,
         opcode_set->opcodes[i].dest_size[0],
@@ -47,6 +52,8 @@ main (int argc, char *argv[])
     test_opcode_const (opcode_set->opcodes + i);
   }
   for(i=0;i<opcode_set->n_opcodes;i++){
+    if (argc == 2 && strcmp(argv[1], opcode_set->opcodes[i].name) != 0)
+      continue;
     if (verbose) printf("%s param %d,%d,%d\n",
         opcode_set->opcodes[i].name,
         opcode_set->opcodes[i].dest_size[0],
@@ -55,6 +62,8 @@ main (int argc, char *argv[])
     test_opcode_param (opcode_set->opcodes + i);
   }
   for(i=0;i<opcode_set->n_opcodes;i++){
+    if (argc == 2 && strcmp(argv[1], opcode_set->opcodes[i].name) != 0)
+      continue;
     if (verbose) printf("%s inplace %d,%d,%d\n",
         opcode_set->opcodes[i].name,
         opcode_set->opcodes[i].dest_size[0],
@@ -63,6 +72,8 @@ main (int argc, char *argv[])
     test_opcode_inplace (opcode_set->opcodes + i);
   }
   for(i=0;i<opcode_set->n_opcodes;i++){
+    if (argc == 2 && strcmp(argv[1], opcode_set->opcodes[i].name) != 0)
+      continue;
     if (verbose) printf("%s src 2d %d,%d,%d\n",
         opcode_set->opcodes[i].name,
         opcode_set->opcodes[i].dest_size[0],
@@ -71,6 +82,8 @@ main (int argc, char *argv[])
     test_opcode_src_2d (opcode_set->opcodes + i);
   }
   for(i=0;i<opcode_set->n_opcodes;i++){
+    if (argc == 2 && strcmp(argv[1], opcode_set->opcodes[i].name) != 0)
+      continue;
     if (verbose) printf("%s src const n %d,%d,%d\n",
         opcode_set->opcodes[i].name,
         opcode_set->opcodes[i].dest_size[0],
@@ -79,6 +92,8 @@ main (int argc, char *argv[])
     test_opcode_src_const_n (opcode_set->opcodes + i);
   }
   for(i=0;i<opcode_set->n_opcodes;i++){
+    if (argc == 2 && strcmp(argv[1], opcode_set->opcodes[i].name) != 0)
+      continue;
     if (verbose) printf("%s src const n 2d %d,%d,%d\n",
         opcode_set->opcodes[i].name,
         opcode_set->opcodes[i].dest_size[0],
