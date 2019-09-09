@@ -1,8 +1,22 @@
-0.4.30 (unreleased)
+0.4.30
 ===================
 
-  - autotools support has been dropped in favour of Meson as build system
-  - FILL ME
+  - Don't always generate static library but default to shared-only (Xavier Claessens)
+  - Work around false positives in Microsoft UWP certification kit (Nirbheek Chauhan)
+  - Add endbr32/endbr64 instructions on x86/x86-64 for indirect branch tracking (Wim Taymans)
+  - Fix gtk-doc build when orc is used as a meson subproject (Mathieu Duponchelle)
+  - Switch float comparison in tests to ULP method to fix spurious failures (Doug Nazar)
+  - Fix flushing of ARM icache when using dual map (Doug Nazar)
+  - Use float constants/parameters when testing float opcodes (Doug Nazar)
+  - Add support for Hygon Dhyana processor (fanjinke)
+  - Fix PPC/PPC64 CPU family detection (Doug Nazar)
+  - Add little-endian PPC support (Doug Nazar)
+  - Fix compiler warnings with clang (Matthew Waters)
+  - Mark exec mapping writable in debug mode for allowing breakpoints (Doug Nazar)
+  - Various codegen refactorings (Doug Nazar)
+  - autotools support has been dropped in favour of Meson as build system (Tim-Philipp Müller)
+  - Fix PPC CPU feature detection and add support for VSX/v2.07 (Doug Nazar)
+  - Add double/int64 support for PPC (Doug Nazar)
 
 0.4.29
 ======
