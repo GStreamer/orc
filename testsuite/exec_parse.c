@@ -20,6 +20,7 @@ main (int argc, char *argv[])
   char *code;
   int n;
   int i;
+  int ret;
   OrcProgram **programs;
   const char *filename = NULL;
 
@@ -45,7 +46,11 @@ main (int argc, char *argv[])
 
   for(i=0;i<n;i++){
     if (verbose) printf("%s\n", programs[i]->name);
-    orc_test_compare_output_full (programs[i], 0);
+    ret = orc_test_compare_output_full (programs[i], 0);
+    if (!ret) {
+      printf("failed %s\n", programs[i]->name);
+      error = TRUE;
+    }
     orc_program_free (programs[i]);
   }
 
