@@ -199,8 +199,8 @@ powerpc_load_constants_outer (OrcCompiler *compiler)
     }
   }
 
-  orc_compiler_emit_invariants (compiler);
-
+  /* Load constants first, as they may be used by invariants */
+  ORC_ASM_CODE(compiler,"# load constants\n");
   for(i=0;i<compiler->n_constants;i++) {
     if (compiler->constants[i].is_long &&
         !compiler->constants[i].alloc_reg) {
@@ -212,6 +212,9 @@ powerpc_load_constants_outer (OrcCompiler *compiler)
       }
     }
   }
+
+  ORC_ASM_CODE(compiler,"# load invariants\n");
+  orc_compiler_emit_invariants (compiler);
 }
 
 static void
@@ -219,6 +222,7 @@ powerpc_load_inner_constants (OrcCompiler *compiler)
 {
   int i;
 
+  ORC_ASM_CODE(compiler,"# load inner constants\n");
   for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
     if (compiler->vars[i].name == NULL) continue;
     switch (compiler->vars[i].vartype) {
@@ -312,6 +316,8 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
   {
     int i;
 
+    /* Emit invariants also to check for constants */
+    orc_compiler_emit_invariants (compiler);
     orc_powerpc_emit_loop (compiler, 0);
 
     compiler->codeptr = compiler->code;
