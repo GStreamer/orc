@@ -523,14 +523,14 @@ float_compare (OrcArray *array1, OrcArray *array2, int i, int j)
       if (isnan(*(float *)ptr1) && isnan(*(float *)ptr2)) return TRUE;
       if (*(float *)ptr1 == *(float *)ptr2) return TRUE;
       if ((*(float *)ptr1 < 0.0) == (*(float *)ptr2 < 0.0) &&
-          abs((orc_int32)(*(orc_uint32 *)ptr1 - *(orc_uint32 *)ptr2) <= 2))
+          abs((orc_int32)(*(orc_uint32 *)ptr1 - *(orc_uint32 *)ptr2)) <= 2)
         return TRUE;
       return FALSE;
     case 8:
       if (isnan(*(double *)ptr1) && isnan(*(double *)ptr2)) return TRUE;
       if (*(double *)ptr1 == *(double *)ptr2) return TRUE;
       if ((*(double *)ptr1 < 0.0) == (*(double *)ptr2 < 0.0) &&
-          llabs((orc_int64)(*(orc_uint64 *)ptr1 - *(orc_uint64 *)ptr2) <= 2))
+          llabs((orc_int64)(*(orc_uint64 *)ptr1 - *(orc_uint64 *)ptr2)) <= 2)
         return TRUE;
       return FALSE;
   }
