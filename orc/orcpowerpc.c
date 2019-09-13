@@ -740,3 +740,42 @@ void powerpc_emit_label (OrcCompiler *compiler, int label)
   powerpc_add_label (compiler, compiler->codeptr, label);
 }
 
+void
+powerpc_load_align (OrcCompiler *compiler, int vector_reg, int offset_reg, int src_reg)
+{
+  if (IS_POWERPC_BE (compiler)) {
+    ORC_ASM_CODE(compiler,"  lvsl %s, %s, %s\n",
+        powerpc_get_regname (vector_reg),
+        offset_reg == 0 ? "0" : powerpc_get_regname (offset_reg),
+        powerpc_get_regname (src_reg));
+    powerpc_emit_X (compiler, 0x7c00000c, powerpc_regnum(vector_reg),
+        offset_reg == 0 ? 0 : powerpc_regnum(offset_reg), powerpc_regnum(src_reg));
+  } else {
+    ORC_ASM_CODE(compiler,"  lvsr %s, %s, %s\n",
+        powerpc_get_regname (vector_reg),
+        offset_reg == 0 ? "0" : powerpc_get_regname (offset_reg),
+        powerpc_get_regname (src_reg));
+    powerpc_emit_X (compiler, 0x7c00004c, powerpc_regnum(vector_reg),
+        offset_reg == 0 ? 0 : powerpc_regnum(offset_reg), powerpc_regnum(src_reg));
+  }
+}
+
+void
+powerpc_store_align (OrcCompiler *compiler, int vector_reg, int offset_reg, int src_reg)
+{
+  if (IS_POWERPC_BE (compiler)) {
+    ORC_ASM_CODE(compiler,"  lvsr %s, %s, %s\n",
+        powerpc_get_regname (vector_reg),
+        offset_reg == 0 ? "0" : powerpc_get_regname (offset_reg),
+        powerpc_get_regname (src_reg));
+    powerpc_emit_X (compiler, 0x7c00004c, powerpc_regnum(vector_reg),
+        offset_reg == 0 ? 0 : powerpc_regnum(offset_reg), powerpc_regnum(src_reg));
+  } else {
+    ORC_ASM_CODE(compiler,"  lvsl %s, %s, %s\n",
+        powerpc_get_regname (vector_reg),
+        offset_reg == 0 ? "0" : powerpc_get_regname (offset_reg),
+        powerpc_get_regname (src_reg));
+    powerpc_emit_X (compiler, 0x7c00000c, powerpc_regnum(vector_reg),
+        offset_reg == 0 ? 0 : powerpc_regnum(offset_reg), powerpc_regnum(src_reg));
+  }
+}

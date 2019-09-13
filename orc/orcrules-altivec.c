@@ -15,26 +15,6 @@
 
 /* rules */
 
-static void
-powerpc_load_align (OrcCompiler *compiler, int vector_reg, int offset_reg, int src_reg)
-{
-  if (IS_POWERPC_BE (compiler)) {
-    ORC_ASM_CODE(compiler,"  lvsl %s, %s, %s\n",
-      powerpc_get_regname (vector_reg),
-      offset_reg == 0 ? "0" : powerpc_get_regname (offset_reg),
-      powerpc_get_regname (src_reg));
-    powerpc_emit_X (compiler, 0x7c00000c, powerpc_regnum(vector_reg),
-      offset_reg == 0 ? 0 : powerpc_regnum(offset_reg), powerpc_regnum(src_reg));
-  } else {
-    ORC_ASM_CODE(compiler,"  lvsr %s, %s, %s\n",
-      powerpc_get_regname (vector_reg),
-      offset_reg == 0 ? "0" : powerpc_get_regname (offset_reg),
-      powerpc_get_regname (src_reg));
-    powerpc_emit_X (compiler, 0x7c00004c, powerpc_regnum(vector_reg),
-      offset_reg == 0 ? 0 : powerpc_regnum(offset_reg), powerpc_regnum(src_reg));
-  }
-}
-
 static inline int
 powerpc_select_value (OrcCompiler *compiler, int be_value, int le_value)
 {
@@ -322,19 +302,7 @@ powerpc_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int perm = orc_compiler_get_temp_reg (compiler);
   int tmp = orc_compiler_get_temp_reg (compiler);
 
-  if (IS_POWERPC_BE (compiler)) {
-    ORC_ASM_CODE(compiler,"  lvsr %s, 0, %s\n",
-        powerpc_get_regname (perm),
-        powerpc_get_regname (dest->ptr_register));
-    powerpc_emit_X (compiler, 0x7c00004c, powerpc_regnum(perm),
-        0, powerpc_regnum(dest->ptr_register));
-  } else {
-    ORC_ASM_CODE(compiler,"  lvsl %s, 0, %s\n",
-        powerpc_get_regname (perm),
-        powerpc_get_regname (dest->ptr_register));
-    powerpc_emit_X (compiler, 0x7c00000c, powerpc_regnum(perm),
-        0, powerpc_regnum(dest->ptr_register));
-  }
+  powerpc_store_align (compiler, perm, 0, dest->ptr_register);
   powerpc_emit_vperm (compiler, tmp, src->alloc, src->alloc, perm);
 
   switch (size) {

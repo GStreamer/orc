@@ -138,6 +138,9 @@ void powerpc_emit_full_constants (OrcCompiler* p);
 void powerpc_emit_load_address (OrcCompiler* compiler, int regd, int rega, int imm);
 void powerpc_load_constant (OrcCompiler* p, int i, int reg);
 
+void powerpc_load_align (OrcCompiler *compiler, int vector_reg, int offset_reg, int src_reg);
+void powerpc_store_align (OrcCompiler *compiler, int vector_reg, int offset_reg, int src_reg);
+
 /* instructions */
 #define powerpc_emit_vand(p,a,b,c)         powerpc_emit_VX_2 (p, "vand", 0x10000404, a, b, c)
 #define powerpc_emit_vandc(p,a,b,c)        powerpc_emit_VX_2 (p, "vandc", 0x10000444, a, b, c)
