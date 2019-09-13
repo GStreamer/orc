@@ -370,8 +370,7 @@ powerpc_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
           powerpc_regnum(tmp),
           0, powerpc_regnum(dest->ptr_register));
 
-      powerpc_emit_D (compiler, "addi", 0x38000000, compiler->gp_tmpreg,
-          0, 4);
+      powerpc_emit_addi (compiler, compiler->gp_tmpreg, 0, 4);
 
       ORC_ASM_CODE(compiler,"  stvewx %s, %s, %s\n",
           powerpc_get_regname (tmp),

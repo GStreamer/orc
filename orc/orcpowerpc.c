@@ -208,7 +208,7 @@ powerpc_emit_srawi (OrcCompiler *compiler, int regd, int rega, int shift,
       powerpc_get_regname(regd),
       powerpc_get_regname(rega), shift);
 
-  insn = (31<<26) | (powerpc_regnum (regd)<<21) | (powerpc_regnum (rega)<<16);
+  insn = (31<<26) | (powerpc_regnum (rega)<<21) | (powerpc_regnum (regd)<<16);
   insn |= (shift<<11) | (824<<1) | record;
 
   powerpc_emit (compiler, insn);
@@ -233,7 +233,7 @@ powerpc_emit_D (OrcCompiler *compiler, const char *name,
   ORC_ASM_CODE(compiler,"  %s %s, %s, %d\n", name,
       powerpc_get_regname(regd),
       powerpc_get_regname(rega), imm);
-  insn |= (powerpc_regnum (regd)<<21) | (powerpc_regnum (rega)<<16);
+  insn |= (powerpc_regnum (rega)<<21) | (powerpc_regnum (regd)<<16);
   insn |= imm&0xffff;
 
   powerpc_emit (compiler, insn);
@@ -543,7 +543,7 @@ powerpc_load_constant (OrcCompiler *p, int i, int reg)
   {
     unsigned int insn;
 
-    ORC_ASM_CODE(p,"  addi %s, %s, %db - %s\n",
+    ORC_ASM_CODE(p,"  addi %s, %s, %df - %s\n",
         powerpc_get_regname(greg),
         powerpc_get_regname(greg), p->constants[i].label, p->program->name);
     insn = (14<<26) | (powerpc_regnum (greg)<<21) | (powerpc_regnum (greg)<<16);
