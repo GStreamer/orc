@@ -102,7 +102,7 @@ main(int argc, char *argv[])
     max = 140;
   }
 
-  for(i=0;i<max;i++){
+  for(i=0;i<max;i+=2){
     double x = i*0.1 + 6.0;
     int size = pow(2.0, x);
 
