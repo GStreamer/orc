@@ -642,16 +642,13 @@ powerpc_rule_mulhuw (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
+  int tmp = orc_compiler_get_temp_reg(p);
+  int perm = powerpc_get_constant_full(p, 0x10110001, 0x14150405,
+      0x18190809, 0x1c1d0c0d);;
 
-  if (IS_POWERPC_BE (p)) {
-    powerpc_emit_vmuleuh (p, dest, src1, src2);
-  } else {
-    int tmp = powerpc_get_constant (p, ORC_CONST_SPLAT_B, 8);
-
-    powerpc_emit_vmulouh (p, dest, src1, src2);
-    powerpc_emit_VX_2 (p, "vsro", 0x1000044c, dest, dest, tmp);
-    powerpc_emit_VX_2 (p, "vsro", 0x1000044c, dest, dest, tmp);
-  }
+  powerpc_emit_vmulouh (p, tmp, src1, src2);
+  powerpc_emit_vmuleuh (p, dest, src1, src2);
+  powerpc_emit_vperm(p, dest, tmp, dest, perm);
 }
 
 static void
@@ -882,17 +879,13 @@ powerpc_rule_mulll (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
+  int tmp = orc_compiler_get_temp_reg(p);
+  int perm = powerpc_get_constant_full(p, 0x14151617, 0x04050607,
+      0x1c1d1e1f, 0x0c0d0e0f);
 
-  if (IS_POWERPC_BE (p)) {
-    int perm;
-
-    powerpc_emit_vmuleuw (p, dest, src1, src2);
-    perm = powerpc_get_constant_full (p, 0x04050607, 0x04050607,
-        0x0c0d0e0f, 0x0c0d0e0f);
-    powerpc_emit_vperm (p, dest, dest, dest, perm);
-  } else {
-    powerpc_emit_vmulouw (p, dest, src1, src2);
-  }
+  powerpc_emit_vmulouw (p, tmp, src1, src2);
+  powerpc_emit_vmuleuw (p, dest, src1, src2);
+  powerpc_emit_vperm (p, dest, tmp, dest, perm);
 }
 
 static void
