@@ -364,6 +364,48 @@ powerpc_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   }
 }
 
+static void
+powerpc_denormalize_sp_full(OrcCompiler *p, int reg, int zero, int mask)
+{
+  int tmp = p->tmpreg;
+  powerpc_emit_VX_2(p, "xxland", 0xf0000417, tmp, reg, mask);
+  powerpc_emit_VX_2(p, "vcmpequw", 0x10000086, tmp, tmp, zero);
+  powerpc_emit_VA(p, "xxsel", 0xf000003f, tmp, reg, zero, tmp);
+  powerpc_emit_VX_2(p, "xvcpsgnsp", 0xf0000687, reg, reg, tmp);
+}
+
+static void
+powerpc_denormalize_sp_zero(OrcCompiler *p, int reg, int zero)
+{
+  int mask = powerpc_get_constant_full (p, 0x7f800000, 0x7f800000,
+      0x7f800000, 0x7f800000);
+  powerpc_denormalize_sp_full(p, reg, zero, mask);
+}
+
+static void
+powerpc_denormalize_sp(OrcCompiler *p, int reg)
+{
+  int zero = powerpc_get_constant (p, ORC_CONST_ZERO, 0);
+  powerpc_denormalize_sp_zero(p, reg, zero);
+}
+
+static void
+powerpc_denormalize_dp_full(OrcCompiler *p, int reg, int zero, int mask)
+{
+  int tmp = p->tmpreg;
+  powerpc_emit_VX_2(p, "xxland", 0xf0000417, tmp, reg, mask);
+  powerpc_emit_VX_2(p, "vcmpequd", 0x100000c7, tmp, tmp, zero);
+  powerpc_emit_VA(p, "xxsel", 0xf000003f, tmp, reg, zero, tmp);
+  powerpc_emit_VX_2(p, "xvcpsgndp", 0xf0000787, reg, reg, tmp);
+}
+
+static void
+powerpc_denormalize_dp_zero(OrcCompiler *p, int reg, int zero)
+{
+  int mask = powerpc_get_constant_full (p, 0x7ff00000, 0x00000000,
+      0x7ff00000, 0x00000000);
+  powerpc_denormalize_dp_full(p, reg, zero, mask);
+}
 
 
 #define RULE(name, opcode, code) \
@@ -374,6 +416,33 @@ powerpc_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
   int src2 = ORC_SRC_ARG (p, insn, 1); \
   int dest = ORC_DEST_ARG (p, insn, 0); \
   powerpc_emit_VX_2 (p, opcode, code , dest, src1, src2);\
+}
+
+#define RULE_DP(name, opcode, code) \
+static void \
+powerpc_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
+{ \
+  int src1 = ORC_SRC_ARG (p, insn, 0); \
+  int src2 = ORC_SRC_ARG (p, insn, 1); \
+  int dest = ORC_DEST_ARG (p, insn, 0); \
+  int zero = powerpc_get_constant (p, ORC_CONST_ZERO, 0); \
+  powerpc_denormalize_dp_zero (p, src1, zero); \
+  powerpc_denormalize_dp_zero (p, src2, zero); \
+  powerpc_emit_VX_2 (p, opcode, code , dest, src1, src2); \
+  powerpc_denormalize_dp_zero (p, dest, zero); \
+}
+
+#define RULE_DP_SRC(name, opcode, code) \
+static void \
+powerpc_rule_ ## name (OrcCompiler *p, void *user, OrcInstruction *insn) \
+{ \
+  int src1 = ORC_SRC_ARG (p, insn, 0); \
+  int src2 = ORC_SRC_ARG (p, insn, 1); \
+  int dest = ORC_DEST_ARG (p, insn, 0); \
+  int zero = powerpc_get_constant (p, ORC_CONST_ZERO, 0); \
+  powerpc_denormalize_dp_zero (p, src1, zero); \
+  powerpc_denormalize_dp_zero (p, src2, zero); \
+  powerpc_emit_VX_2 (p, opcode, code , dest, src1, src2); \
 }
 
 #define RULE_SHIFT(name, opcode, code) \
@@ -470,13 +539,11 @@ RULE(maxf, "vmaxfp", 0x1000040a)
 RULE(minf, "vminfp", 0x1000044a)
 RULE(cmpeqf, "vcmpeqfp", 0x100000c6)
 
-RULE(addd, "xvadddp", 0xf0000307)
-RULE(subd, "xvsubdp", 0xf0000347)
-RULE(muld, "xvmuldp", 0xf0000387)
-RULE(divd, "xvdivdp", 0xf00003c7)
-RULE(mind, "xvmindp", 0xf0000747)
-RULE(maxd, "xvmaxdp", 0xf0000707)
-RULE(cmpeqd, "xvcmpeqdp", 0xf000031f)
+RULE_DP(addd, "xvadddp", 0xf0000307)
+RULE_DP(subd, "xvsubdp", 0xf0000347)
+RULE_DP(muld, "xvmuldp", 0xf0000387)
+RULE_DP(divd, "xvdivdp", 0xf00003c7)
+RULE_DP_SRC(cmpeqd, "xvcmpeqdp", 0xf000031f)
 
 RULE(addq, "vaddudm", 0x100000c0)
 RULE(subq, "vsubudm", 0x100004c0)
@@ -1395,20 +1462,11 @@ powerpc_rule_divf (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
-  int y = orc_compiler_get_temp_reg (p);
-  int t = orc_compiler_get_temp_reg (p);
-  int c1;
-  int c0;
-
-  c1 = powerpc_get_constant (p, ORC_CONST_SPLAT_L, 0x3f800000); /* 1.0 */
-
-  powerpc_emit_VX_db (p, "vrefp", 0x1000010a, y, src2);
-
-  powerpc_emit_VA_acb (p, "vnmsubfp", 0x1000002f, t, y, c1, src2);
-  powerpc_emit_VA_acb (p, "vmaddfp", 0x1000002e, y, y, y, t);
-
-  c0 = powerpc_get_constant (p, ORC_CONST_SPLAT_L, 0x00000000); /* 0.0 */
-  powerpc_emit_VA_acb (p, "vmaddfp", 0x1000002e, dest, y, c0, src1);
+  int zero = powerpc_get_constant (p, ORC_CONST_ZERO, 0);
+  powerpc_denormalize_sp_zero (p, src1, zero);
+  powerpc_denormalize_sp_zero (p, src2, zero);
+  powerpc_emit_VX_2(p, "xvdivsp", 0xf00002c7, dest, src1, src2);
+  powerpc_denormalize_sp_zero (p, dest, zero);
 }
 
 static void
@@ -1488,8 +1546,10 @@ powerpc_rule_sqrtf(OrcCompiler* p, void* user, OrcInstruction* insn)
 {
   int src1 = ORC_SRC_ARG(p, insn, 0);
   int dest = ORC_DEST_ARG(p, insn, 0);
-
+  int zero = powerpc_get_constant (p, ORC_CONST_ZERO, 0);
+  powerpc_denormalize_sp_zero (p, src1, zero);
   powerpc_emit_VX_db(p, "xvsqrtsp", 0xf000022f, dest, src1);
+  powerpc_denormalize_sp_zero (p, dest, zero);
 }
 
 static void
@@ -1497,8 +1557,54 @@ powerpc_rule_sqrtd(OrcCompiler* p, void* user, OrcInstruction* insn)
 {
   int src1 = ORC_SRC_ARG(p, insn, 0);
   int dest = ORC_DEST_ARG(p, insn, 0);
-
+  int zero = powerpc_get_constant (p, ORC_CONST_ZERO, 0);
+  powerpc_denormalize_dp_zero (p, src1, zero);
   powerpc_emit_VX_db(p, "xvsqrtdp", 0xf000032f, dest, src1);
+  powerpc_denormalize_dp_zero (p, dest, zero);
+}
+
+static void
+powerpc_rule_mind (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+  int zero = powerpc_get_constant (p, ORC_CONST_ZERO, 0);
+  int mask = powerpc_get_constant_full (p, 0x7ff80000, 0x00000000,
+      0x7ff80000, 0x00000000);
+  int tmp2 = orc_compiler_get_temp_reg(p);
+  int tmp = p->tmpreg;
+  powerpc_denormalize_dp_zero (p, src1, zero);
+  powerpc_denormalize_dp_zero (p, src2, zero);
+  powerpc_emit_VX_2(p, "xvmindp", 0xf0000747, tmp2, src2, src1);
+  // Handle QNaN
+  powerpc_emit_VX_2(p, "xxland", 0xf0000417, tmp, src1, mask);
+  powerpc_emit_VX_2(p, "vcmpequd", 0x100000c7, tmp, tmp, mask);
+  powerpc_emit_VA(p, "xxsel", 0xf000003f, dest, tmp2, src1, tmp);
+}
+
+static void
+powerpc_rule_maxd (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  int src1 = ORC_SRC_ARG (p, insn, 0);
+  int src2 = ORC_SRC_ARG (p, insn, 1);
+  int dest = ORC_DEST_ARG (p, insn, 0);
+  int zero = powerpc_get_constant (p, ORC_CONST_ZERO, 0);
+  int mask = powerpc_get_constant_full (p, 0x7ff80000, 0x00000000,
+      0x7ff80000, 0x00000000);
+  int tmp2 = orc_compiler_get_temp_reg(p);
+  int tmp3 = orc_compiler_get_temp_reg(p);
+  int tmp = p->tmpreg;
+  powerpc_denormalize_dp_zero (p, src1, zero);
+  powerpc_denormalize_dp_zero (p, src2, zero);
+  powerpc_emit_VX_2(p, "xvmaxdp", 0xf0000707, tmp2, src2, src1);
+  // Handle QNaN
+  powerpc_emit_VX_2(p, "xxland", 0xf0000417, tmp, src2, mask);
+  powerpc_emit_VX_2(p, "vcmpequd", 0x100000c7, tmp, tmp, mask);
+  powerpc_emit_VA(p, "xxsel", 0xf000003f, tmp3, tmp2, src2, tmp);
+  powerpc_emit_VX_2(p, "xxland", 0xf0000417, tmp, src1, mask);
+  powerpc_emit_VX_2(p, "vcmpequd", 0x100000c7, tmp, tmp, mask);
+  powerpc_emit_VA(p, "xxsel", 0xf000003f, dest, tmp3, src1, tmp);
 }
 
 static void
@@ -1507,8 +1613,9 @@ powerpc_rule_cmpltd (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
-
-//  powerpc_emit_VXR (p, "vcmpgtfp", 0x100002c6, dest, src2, src1, FALSE);
+  int zero = powerpc_get_constant (p, ORC_CONST_ZERO, 0);
+  powerpc_denormalize_dp_zero (p, src1, zero);
+  powerpc_denormalize_dp_zero (p, src2, zero);
   powerpc_emit_VX_2(p, "xvcmpgtdp", 0xf000035f, dest, src2, src1);
 }
 
@@ -1518,8 +1625,9 @@ powerpc_rule_cmpled (OrcCompiler *p, void *user, OrcInstruction *insn)
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int src2 = ORC_SRC_ARG (p, insn, 1);
   int dest = ORC_DEST_ARG (p, insn, 0);
-
-//  powerpc_emit_VXR (p, "vcmpgefp", 0x100001c6, dest, src2, src1, FALSE);
+  int zero = powerpc_get_constant (p, ORC_CONST_ZERO, 0);
+  powerpc_denormalize_dp_zero (p, src1, zero);
+  powerpc_denormalize_dp_zero (p, src2, zero);
   powerpc_emit_VX_2(p, "xvcmpgedp", 0xf000039f, dest, src2, src1);
 }
 
@@ -1528,11 +1636,13 @@ powerpc_rule_convld (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int dest = ORC_DEST_ARG (p, insn, 0);
+  int zero = powerpc_get_constant (p, ORC_CONST_ZERO, 0);
 
   if (IS_POWERPC_LE (p)) {
     powerpc_emit_vsldoi(p, src1, src1, src1, 4);
   }
   powerpc_emit_VX_db (p, "xvcvsxddp", 0xf00003e3, dest, src1);
+  powerpc_denormalize_dp_zero (p, dest, zero);
 }
 
 static void
@@ -1540,8 +1650,19 @@ powerpc_rule_convdl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int dest = ORC_DEST_ARG (p, insn, 0);
+  int mask = powerpc_get_constant_full (p, 0xfff00000, 0x00000000,
+      0xfff00000, 0x00000000);
+  int nan = powerpc_get_constant_full (p, 0x7ff00000, 0x00000000,
+      0x7ff00000, 0x00000000);
+  int maxint = powerpc_get_constant_full (p, 0x7fffffff, 0x7fffffff,
+      0x7fffffff, 0x7fffffff);
+  int tmp = p->tmpreg;
 
+  powerpc_emit_VX_2(p, "xxland", 0xf0000417, tmp, src1, mask);
+  powerpc_emit_VX_2(p, "vcmpequd", 0x100000c7, tmp, tmp, nan);
   powerpc_emit_VX_db (p, "xvcvdpsxws", 0xf0000363, dest, src1);
+  powerpc_emit_VA(p, "xxsel", 0xf000003f, dest, dest, maxint, tmp);
+
   if (IS_POWERPC_LE (p)) {
     int tmp = powerpc_get_constant (p, ORC_CONST_SPLAT_B, 32);
     powerpc_emit_VX_2 (p, "vsro", 0x1000044c, dest, dest, tmp);
@@ -1553,11 +1674,23 @@ powerpc_rule_convfd (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int src1 = ORC_SRC_ARG (p, insn, 0);
   int dest = ORC_DEST_ARG (p, insn, 0);
+  int tmp2 = orc_compiler_get_temp_reg(p);
+  int zero = powerpc_get_constant (p, ORC_CONST_ZERO, 0);
+  int mask = powerpc_get_constant_full (p, 0x7f800000, 0x00000000,
+      0x7f800000, 0x00000000);
+  int tmp = p->tmpreg;
 
   if (IS_POWERPC_LE (p)) {
-    powerpc_emit_vsldoi(p, src1, src1, src1, 4);
+    powerpc_emit_vsldoi(p, tmp2, src1, src1, 4);
+  } else {
+    powerpc_emit_vor(p, tmp2, src1, src1);
   }
-  powerpc_emit_VX_db (p, "xvcvspdp", 0xf0000727, dest, src1);
+  powerpc_emit_VX_db (p, "xvcvspdp", 0xf0000727, dest, tmp2);
+
+  powerpc_emit_VX_2(p, "xxland", 0xf0000417, tmp, tmp2, mask);
+  powerpc_emit_VX_2(p, "vcmpequd", 0x100000c7, tmp, tmp, zero);
+  powerpc_emit_VA(p, "xxsel", 0xf000003f, tmp, dest, zero, tmp);
+  powerpc_emit_VX_2(p, "xvcpsgndp", 0xf0000787, dest, dest, tmp);
 }
 
 static void
@@ -1571,6 +1704,7 @@ powerpc_rule_convdf (OrcCompiler *p, void *user, OrcInstruction *insn)
     int tmp = powerpc_get_constant (p, ORC_CONST_SPLAT_B, 32);
     powerpc_emit_VX_2 (p, "vsro", 0x1000044c, dest, dest, tmp);
   }
+  powerpc_denormalize_sp(p, dest);
 }
 
 
@@ -1724,7 +1858,6 @@ orc_compiler_powerpc_register_rules (OrcTarget *target)
   REG(cmplef);
   REG(cmpltf);
   REG(mulf);
-  REG(divf);
   REG(convfl);
   REG(convlf);
 
@@ -1756,6 +1889,7 @@ orc_compiler_powerpc_register_rules (OrcTarget *target)
 
   rule_set = orc_rule_set_new(orc_opcode_set_get("sys"), target, ORC_TARGET_POWERPC_VSX);
 
+  REG(divf);
   REG(sqrtf);
   REG(addd);
   REG(subd);
