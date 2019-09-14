@@ -18,6 +18,8 @@ static void orc_compiler_powerpc_init (OrcCompiler *compiler);
 static unsigned int orc_compiler_powerpc_get_default_flags (void);
 static void orc_compiler_powerpc_assemble (OrcCompiler *compiler);
 static const char* powerpc_get_flag_name (int shift);
+static int orc_powerpc_assemble_copy_check (OrcCompiler *compiler);
+static void orc_powerpc_assemble_copy (OrcCompiler *compiler);
 
 
 static void
@@ -309,6 +311,11 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
   int label_leave;
   int set_vscr = FALSE;
 
+  if (orc_powerpc_assemble_copy_check (compiler)) {
+    orc_powerpc_assemble_copy (compiler);
+    return;
+  }
+
   label_outer_loop_start = orc_compiler_label_new (compiler);
   label_loop_start = orc_compiler_label_new (compiler);
   label_leave = orc_compiler_label_new (compiler);
@@ -492,3 +499,197 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
   powerpc_do_fixups (compiler);
 }
 
+static
+int orc_powerpc_assemble_copy_check (OrcCompiler *compiler)
+{
+  if (compiler->program->n_insns == 1 &&
+      compiler->program->is_2d == FALSE &&
+      (strcmp (compiler->program->insns[0].opcode->name, "copyb") == 0 ||
+      strcmp (compiler->program->insns[0].opcode->name, "copyw") == 0 ||
+      strcmp (compiler->program->insns[0].opcode->name, "copyl") == 0 ||
+      strcmp (compiler->program->insns[0].opcode->name, "copyq") == 0) &&
+      compiler->program->n_param_vars == 0 &&
+      compiler->program->n_const_vars == 0) {
+    /* TODO: add param & const support if this turns out to be faster */
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static
+void orc_powerpc_assemply_copy_loop (OrcCompiler *compiler, int size,
+    int shift, int next_label)
+{
+  const int src = POWERPC_R5;
+  const int dst = POWERPC_R6;
+  const int count = POWERPC_R7;
+  const int tmp = POWERPC_R0;
+  const int vtmp = POWERPC_V0;
+  const int vperm = POWERPC_V1;
+  int label_copy;
+
+  label_copy = orc_compiler_label_new (compiler);
+
+  ORC_ASM_CODE(compiler,"  cmplwi %s, %d\n",
+      powerpc_get_regname(count), size);
+  powerpc_emit(compiler, 0x28000000|(powerpc_regnum(count)<<16)|(size&0xffff));
+
+  ORC_ASM_CODE(compiler,"  blt %d%c\n", next_label,
+      (compiler->labels[next_label]!=NULL) ? 'b' : 'f');
+  powerpc_add_fixup (compiler, 0, compiler->codeptr, next_label);
+  powerpc_emit (compiler, 0x41800000);
+
+  powerpc_emit_D(compiler, "andi.", 0x70000000, tmp, src, size-1);
+  ORC_ASM_CODE(compiler,"  bgt %d%c\n", next_label,
+      (compiler->labels[next_label]!=NULL) ? 'b' : 'f');
+  powerpc_add_fixup (compiler, 0, compiler->codeptr, next_label);
+  powerpc_emit (compiler, 0x41810000);
+
+  powerpc_emit_D(compiler, "andi.", 0x70000000, tmp, dst, size-1);
+  ORC_ASM_CODE(compiler,"  bgt %d%c\n", next_label,
+      (compiler->labels[next_label]!=NULL) ? 'b' : 'f');
+  powerpc_add_fixup (compiler, 0, compiler->codeptr, next_label);
+  powerpc_emit (compiler, 0x41810000);
+
+  powerpc_emit_srawi (compiler, tmp, count, shift, 0);
+
+  ORC_ASM_CODE (compiler, "  mtctr %s\n", powerpc_get_regname(tmp));
+  powerpc_emit (compiler, 0x7c0903a6 | (powerpc_regnum (tmp)<<21));
+
+  powerpc_emit_label (compiler, label_copy);
+  if (size == 16) {
+    ORC_ASM_CODE(compiler,"  lvx %s, 0, %s\n",
+        powerpc_get_regname (vtmp),
+        powerpc_get_regname (src));
+    powerpc_emit_X (compiler, 0x7c0000ce, powerpc_regnum(vtmp),
+        0, powerpc_regnum(src));
+    ORC_ASM_CODE(compiler,"  stvx %s, 0, %s\n",
+        powerpc_get_regname (vtmp),
+        powerpc_get_regname (dst));
+    powerpc_emit_X (compiler, 0x7c0001ce,
+        powerpc_regnum(vtmp),
+        0, powerpc_regnum(dst));
+  } else {
+    switch (size) {
+      case 1:
+        ORC_ASM_CODE(compiler,"  lvebx %s, 0, %s\n",
+            powerpc_get_regname (vtmp),
+            powerpc_get_regname (src));
+        powerpc_emit_X (compiler, 0x7c00000e, powerpc_regnum(vtmp),
+            0, powerpc_regnum(src));
+        break;
+      case 2:
+        ORC_ASM_CODE(compiler,"  lvehx %s, 0, %s\n",
+            powerpc_get_regname (vtmp),
+            powerpc_get_regname (src));
+        powerpc_emit_X (compiler, 0x7c00004e, powerpc_regnum(vtmp),
+            0, powerpc_regnum(src));
+        break;
+      case 4:
+        ORC_ASM_CODE(compiler,"  lvewx %s, 0, %s\n",
+            powerpc_get_regname (vtmp),
+            powerpc_get_regname (src));
+        powerpc_emit_X (compiler, 0x7c00008e, powerpc_regnum(vtmp),
+            0, powerpc_regnum(src));
+        break;
+    }
+    powerpc_load_align (compiler, vperm, 0, src);
+    powerpc_emit_vperm (compiler, vtmp, vtmp, vtmp, vperm);
+    powerpc_store_align (compiler, vperm, 0, dst);
+    powerpc_emit_vperm (compiler, vtmp, vtmp, vtmp, vperm);
+    switch (size) {
+      case 1:
+        ORC_ASM_CODE(compiler,"  stvebx %s, 0, %s\n",
+            powerpc_get_regname (vtmp),
+            powerpc_get_regname (dst));
+        powerpc_emit_X (compiler, 0x7c00010e,
+            powerpc_regnum(vtmp),
+            0, powerpc_regnum(dst));
+        break;
+      case 2:
+        ORC_ASM_CODE(compiler,"  stvehx %s, 0, %s\n",
+            powerpc_get_regname (vtmp),
+            powerpc_get_regname (dst));
+        powerpc_emit_X (compiler, 0x7c00014e,
+            powerpc_regnum(vtmp),
+            0, powerpc_regnum(dst));
+        break;
+      case 4:
+	ORC_ASM_CODE(compiler,"  stvewx %s, 0, %s\n",
+            powerpc_get_regname (vtmp),
+            powerpc_get_regname (dst));
+        powerpc_emit_X (compiler, 0x7c00018e,
+            powerpc_regnum(vtmp),
+            0, powerpc_regnum(dst));
+        break;
+    }
+  }
+
+  powerpc_emit_addi (compiler, src, src, size);
+  powerpc_emit_addi (compiler, dst, dst, size);
+  powerpc_emit_addi (compiler, count, count, -size);
+  powerpc_emit_bne (compiler, label_copy);
+
+  powerpc_emit_label (compiler, next_label);
+}
+
+static
+void orc_powerpc_assemble_copy (OrcCompiler *compiler)
+{
+  const int src = POWERPC_R5;
+  const int dst = POWERPC_R6;
+  const int count = POWERPC_V7;
+  OrcInstruction *insn;
+  int shift = 0;
+  int label_word;
+  int label_halfword;
+  int label_byte;
+  int label_done;
+
+  insn = compiler->program->insns + 0;
+
+  if (strcmp (insn->opcode->name, "copyw") == 0) {
+    shift = 1;
+  } else if (strcmp (insn->opcode->name, "copyl") == 0) {
+    shift = 2;
+  } else if (strcmp (insn->opcode->name, "copyq") == 0) {
+    shift = 3;
+  }
+
+  label_word = orc_compiler_label_new (compiler);
+  label_halfword = orc_compiler_label_new (compiler);
+  label_byte = orc_compiler_label_new (compiler);
+  label_done = orc_compiler_label_new (compiler);
+
+  powerpc_emit_prologue (compiler);
+
+  powerpc_emit_load_address (compiler,
+      dst,
+      POWERPC_R3,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[insn->dest_args[0]]));
+  powerpc_emit_load_address (compiler,
+      src,
+      POWERPC_R3,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[insn->src_args[0]]));
+  powerpc_emit_lwz (compiler, count, POWERPC_R3,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor, n));
+
+  powerpc_emit_addi (compiler, POWERPC_R0, 0, shift);
+  ORC_ASM_CODE(compiler, "  slw %s, %s, %s\n",
+      powerpc_get_regname(count),
+      powerpc_get_regname(count),
+      powerpc_get_regname(POWERPC_R0));
+  powerpc_emit (compiler, (31<<26) |
+      (powerpc_regnum (count)<<21) |
+      (powerpc_regnum (count)<<16) |
+      (powerpc_regnum (POWERPC_R0)<<11) | (24<<1));
+
+  orc_powerpc_assemply_copy_loop (compiler, 16, 4, label_word);
+  orc_powerpc_assemply_copy_loop (compiler, 4, 2, label_halfword);
+  orc_powerpc_assemply_copy_loop (compiler, 2, 1, label_byte);
+  orc_powerpc_assemply_copy_loop (compiler, 1, 0, label_done);
+
+  powerpc_emit_epilogue (compiler);
+  powerpc_do_fixups (compiler);
+}
