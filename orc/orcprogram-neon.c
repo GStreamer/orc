@@ -476,6 +476,7 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   int align_shift;
   int var_size_shift;
   int i;
+  int set_fpscr = FALSE;
   
   align_var = get_align_var (compiler);
   if (compiler->error) return;
@@ -486,6 +487,18 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   compiler->vars[align_var].is_aligned = FALSE;
 
   orc_neon_emit_prologue (compiler);
+
+  if (orc_program_has_float (compiler)) {
+    set_fpscr = TRUE;
+    ORC_ASM_CODE (compiler,"  vmrs %s, fpscr\n", orc_arm_reg_name (compiler->gp_tmpreg));
+    orc_arm_emit (compiler, 0xeef10a10 | ((compiler->gp_tmpreg&0xf)<<12));
+    ORC_ASM_CODE (compiler,"  push %s\n", orc_arm_reg_name (compiler->gp_tmpreg));
+    orc_arm_emit (compiler, 0xe52d0004 | ((compiler->gp_tmpreg&0xf)<<12));
+
+    orc_arm_emit_load_imm (compiler, compiler->gp_tmpreg, 1<<24);
+    ORC_ASM_CODE (compiler,"  vmsr fpscr, %s\n", orc_arm_reg_name (compiler->gp_tmpreg));
+    orc_arm_emit (compiler, 0xeee10a10 | ((compiler->gp_tmpreg&0xf)<<12));
+  }
 
   orc_neon_load_constants_outer (compiler);
 
@@ -696,6 +709,14 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   }
 
   orc_neon_save_accumulators (compiler);
+
+  if (set_fpscr) {
+    ORC_ASM_CODE (compiler,"  pop %s\n", orc_arm_reg_name (compiler->gp_tmpreg));
+    orc_arm_emit (compiler, 0xe49d0004 | ((compiler->gp_tmpreg&0xf)<<12));
+
+    ORC_ASM_CODE (compiler,"  vmsr fpscr, %s\n", orc_arm_reg_name (compiler->gp_tmpreg));
+    orc_arm_emit (compiler, 0xeee10a10 | ((compiler->gp_tmpreg&0xf)<<12));
+  }
 
   orc_neon_emit_epilogue (compiler);
 
