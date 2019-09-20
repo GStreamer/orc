@@ -162,8 +162,10 @@ void powerpc_store_align (OrcCompiler *compiler, int vector_reg, int offset_reg,
 
 #define powerpc_emit_vmrghb(p,a,b,c)       powerpc_emit_VX_2 (p, "vmrghb", 0x1000000c, a, b, c)
 #define powerpc_emit_vmrghh(p,a,b,c)       powerpc_emit_VX_2 (p, "vmrghh", 0x1000004c, a, b, c)
+#define powerpc_emit_vmrghw(p,a,b,c)       powerpc_emit_VX_2 (p, "vmrghw", 0x1000008c, a, b, c)
 #define powerpc_emit_vmrglb(p,a,b,c)       powerpc_emit_VX_2 (p, "vmrglb", 0x1000010c, a, b, c)
 #define powerpc_emit_vmrglh(p,a,b,c)       powerpc_emit_VX_2 (p, "vmrglh", 0x1000014c, a, b, c)
+#define powerpc_emit_vmrglw(p,a,b,c)       powerpc_emit_VX_2 (p, "vmrglw", 0x1000018c, a, b, c)
 
 #define powerpc_emit_vpkshss(p,a,b,c)      powerpc_emit_VX_2 (p, "vpkshss", 0x1000018e, a, b, c)
 #define powerpc_emit_vpkshus(p,a,b,c)      powerpc_emit_VX_2 (p, "vpkshus", 0x1000010e, a, b, c)

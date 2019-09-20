@@ -508,6 +508,8 @@ int orc_powerpc_assemble_copy_check (OrcCompiler *compiler)
       strcmp (compiler->program->insns[0].opcode->name, "copyw") == 0 ||
       strcmp (compiler->program->insns[0].opcode->name, "copyl") == 0 ||
       strcmp (compiler->program->insns[0].opcode->name, "copyq") == 0) &&
+      (compiler->program->insns[0].flags &
+          (ORC_INSTRUCTION_FLAG_X2 | ORC_INSTRUCTION_FLAG_X4)) == 0 &&
       compiler->program->n_param_vars == 0 &&
       compiler->program->n_const_vars == 0) {
     /* TODO: add param & const support if this turns out to be faster */
