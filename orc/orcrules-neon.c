@@ -56,6 +56,253 @@ const char *orc_neon_reg_name_quad (int reg)
   return vec_regs[reg&0x1f];
 }
 
+/** the names of the SIMD registers when used in a scalar way */
+const char *orc_neon64_reg_name_scalar (int reg, int size)
+{
+  static const char *vec_regs[5][32] = {
+    { /** 8-bit */
+      "b0", "b1", "b2", "b3",
+      "b4", "b5", "b6", "b7",
+      "b8", "b9", "b10", "b11",
+      "b12", "b13", "b14", "b15",
+      "b16", "b17", "b18", "b19",
+      "b20", "b21", "b22", "b23",
+      "b24", "b25", "b26", "b27",
+      "b28", "b29", "b30", "b31"
+    },
+    { /** 16-bit */
+      "h0", "h1", "h2", "h3",
+      "h4", "h5", "h6", "h7",
+      "h8", "h9", "h10", "h11",
+      "h12", "h13", "h14", "h15",
+      "h16", "h17", "h18", "h19",
+      "h20", "h21", "h22", "h23",
+      "h24", "h25", "h26", "h27",
+      "h28", "h29", "h30", "h31"
+    },
+    { /** 32-bit */
+      "s0", "s1", "s2", "s3",
+      "s4", "s5", "s6", "s7",
+      "s8", "s9", "s10", "s11",
+      "s12", "s13", "s14", "s15",
+      "s16", "s17", "s18", "s19",
+      "s20", "s21", "s22", "s23",
+      "s24", "s25", "s26", "s27",
+      "s28", "s29", "s30", "s31"
+    },
+    { /** 64-bit */
+      "d0", "d1", "d2", "d3",
+      "d4", "d5", "d6", "d7",
+      "d8", "d9", "d10", "d11",
+      "d12", "d13", "d14", "d15",
+      "d16", "d17", "d18", "d19",
+      "d20", "d21", "d22", "d23",
+      "d24", "d25", "d26", "d27",
+      "d28", "d29", "d30", "d31"
+    },
+    { /** 128-bit */
+      "q0", "q1", "q2", "q3",
+      "q4", "q5", "q6", "q7",
+      "q8", "q9", "q10", "q11",
+      "q12", "q13", "q14", "q15",
+      "q16", "q17", "q18", "q19",
+      "q20", "q21", "q22", "q23",
+      "q24", "q25", "q26", "q27",
+      "q28", "q29", "q30", "q31"
+    }
+  };
+  int size_idx;
+
+  if (reg < ORC_VEC_REG_BASE || reg >= ORC_VEC_REG_BASE+32) {
+    return "ERROR";
+  }
+
+  size_idx = -1;
+  while (size) {
+    size_idx++;
+    size >>= 1;
+  }
+
+  if (size_idx < 0 || size_idx >= 5) {
+    return "ERROR";
+  }
+
+  return vec_regs[size_idx][reg&0x1f];
+}
+
+/** the names of the SIMD vector registers when used for vectorization */
+const char *orc_neon64_reg_name_vector (int reg, int size, int quad)
+{
+  static const char *vec_regs[8][32] = {
+    {
+      "v0.8b", "v1.8b", "v2.8b", "v3.8b",
+      "v4.8b", "v5.8b", "v6.8b", "v7.8b",
+      "v8.8b", "v9.8b", "v10.8b", "v11.8b",
+      "v12.8b", "v13.8b", "v14.8b", "v15.8b",
+      "v16.8b", "v17.8b", "v18.8b", "v19.8b",
+      "v20.8b", "v21.8b", "v22.8b", "v23.8b",
+      "v24.8b", "v25.8b", "v26.8b", "v27.8b",
+      "v28.8b", "v29.8b", "v30.8b", "v31.8b"
+    },
+    {
+      "v0.16b", "v1.16b", "v2.16b", "v3.16b",
+      "v4.16b", "v5.16b", "v6.16b", "v7.16b",
+      "v8.16b", "v9.16b", "v10.16b", "v11.16b",
+      "v12.16b", "v13.16b", "v14.16b", "v15.16b",
+      "v16.16b", "v17.16b", "v18.16b", "v19.16b",
+      "v20.16b", "v21.16b", "v22.16b", "v23.16b",
+      "v24.16b", "v25.16b", "v26.16b", "v27.16b",
+      "v28.16b", "v29.16b", "v30.16b", "v31.16b"
+    },
+    {
+      "v0.4h", "v1.4h", "v2.4h", "v3.4h",
+      "v4.4h", "v5.4h", "v6.4h", "v7.4h",
+      "v8.4h", "v9.4h", "v10.4h", "v11.4h",
+      "v12.4h", "v13.4h", "v14.4h", "v15.4h",
+      "v16.4h", "v17.4h", "v18.4h", "v19.4h",
+      "v20.4h", "v21.4h", "v22.4h", "v23.4h",
+      "v24.4h", "v25.4h", "v26.4h", "v27.4h",
+      "v28.4h", "v29.4h", "v30.4h", "v31.4h"
+    },
+    {
+      "v0.8h", "v1.8h", "v2.8h", "v3.8h",
+      "v4.8h", "v5.8h", "v6.8h", "v7.8h",
+      "v8.8h", "v9.8h", "v10.8h", "v11.8h",
+      "v12.8h", "v13.8h", "v14.8h", "v15.8h",
+      "v16.8h", "v17.8h", "v18.8h", "v19.8h",
+      "v20.8h", "v21.8h", "v22.8h", "v23.8h",
+      "v24.8h", "v25.8h", "v26.8h", "v27.8h",
+      "v28.8h", "v29.8h", "v30.8h", "v31.8h"
+    },
+    {
+      "v0.2s", "v1.2s", "v2.2s", "v3.2s",
+      "v4.2s", "v5.2s", "v6.2s", "v7.2s",
+      "v8.2s", "v9.2s", "v10.2s", "v11.2s",
+      "v12.2s", "v13.2s", "v14.2s", "v15.2s",
+      "v16.2s", "v17.2s", "v18.2s", "v19.2s",
+      "v20.2s", "v21.2s", "v22.2s", "v23.2s",
+      "v24.2s", "v25.2s", "v26.2s", "v27.2s",
+      "v28.2s", "v29.2s", "v30.2s", "v31.2s"
+    },
+    {
+      "v0.4s", "v1.4s", "v2.4s", "v3.4s",
+      "v4.4s", "v5.4s", "v6.4s", "v7.4s",
+      "v8.4s", "v9.4s", "v10.4s", "v11.4s",
+      "v12.4s", "v13.4s", "v14.4s", "v15.4s",
+      "v16.4s", "v17.4s", "v18.4s", "v19.4s",
+      "v20.4s", "v21.4s", "v22.4s", "v23.4s",
+      "v24.4s", "v25.4s", "v26.4s", "v27.4s",
+      "v28.4s", "v29.4s", "v30.4s", "v31.4s"
+    },
+    {
+      "v0.1d", "v1.1d", "v2.1d", "v3.1d",
+      "v4.1d", "v5.1d", "v6.1d", "v7.1d",
+      "v8.1d", "v9.1d", "v10.1d", "v11.1d",
+      "v12.1d", "v13.1d", "v14.1d", "v15.1d",
+      "v16.1d", "v17.1d", "v18.1d", "v19.1d",
+      "v20.1d", "v21.1d", "v22.1d", "v23.1d",
+      "v24.1d", "v25.1d", "v26.1d", "v27.1d",
+      "v28.1d", "v29.1d", "v30.1d", "v31.1d"
+    },
+    {
+      "v0.2d", "v1.2d", "v2.2d", "v3.2d",
+      "v4.2d", "v5.2d", "v6.2d", "v7.2d",
+      "v8.2d", "v9.2d", "v10.2d", "v11.2d",
+      "v12.2d", "v13.2d", "v14.2d", "v15.2d",
+      "v16.2d", "v17.2d", "v18.2d", "v19.2d",
+      "v20.2d", "v21.2d", "v22.2d", "v23.2d",
+      "v24.2d", "v25.2d", "v26.2d", "v27.2d",
+      "v28.2d", "v29.2d", "v30.2d", "v31.2d"
+    }
+  };
+  int size_idx;
+
+  if (reg < ORC_VEC_REG_BASE || reg >= ORC_VEC_REG_BASE+32) {
+    return "ERROR";
+  }
+
+  size_idx = -1;
+  while (size) {
+    size_idx++;
+    size >>= 1;
+  }
+
+  if (size_idx < 0 || size_idx >= 4) {
+    return "ERROR";
+  }
+
+  if (quad != 0 && quad != 1) {
+    return "ERROR";
+  }
+
+  return vec_regs[size_idx*2+quad][reg&0x1f];
+}
+
+/** a single element from a SIMD vector register as a scalar operand */
+const char *orc_neon64_reg_name_vector_single (int reg, int size)
+{
+  static const char *vec_regs[4][32] = {
+    {
+      "v0.b", "v1.b", "v2.b", "v3.b",
+      "v4.b", "v5.b", "v6.b", "v7.b",
+      "v8.b", "v9.b", "v10.b", "v11.b",
+      "v12.b", "v13.b", "v14.b", "v15.b",
+      "v16.b", "v17.b", "v18.b", "v19.b",
+      "v20.b", "v21.b", "v22.b", "v23.b",
+      "v24.b", "v25.b", "v26.b", "v27.b",
+      "v28.b", "v29.b", "v30.b", "v31.b"
+    },
+    {
+      "v0.h", "v1.h", "v2.h", "v3.h",
+      "v4.h", "v5.h", "v6.h", "v7.h",
+      "v8.h", "v9.h", "v10.h", "v11.h",
+      "v12.h", "v13.h", "v14.h", "v15.h",
+      "v16.h", "v17.h", "v18.h", "v19.h",
+      "v20.h", "v21.h", "v22.h", "v23.h",
+      "v24.h", "v25.h", "v26.h", "v27.h",
+      "v28.h", "v29.h", "v30.h", "v31.h"
+    },
+    {
+      "v0.s", "v1.s", "v2.s", "v3.s",
+      "v4.s", "v5.s", "v6.s", "v7.s",
+      "v8.s", "v9.s", "v10.s", "v11.s",
+      "v12.s", "v13.s", "v14.s", "v15.s",
+      "v16.s", "v17.s", "v18.s", "v19.s",
+      "v20.s", "v21.s", "v22.s", "v23.s",
+      "v24.s", "v25.s", "v26.s", "v27.s",
+      "v28.s", "v29.s", "v30.s", "v31.s"
+    },
+    {
+      "v0.d", "v1.d", "v2.d", "v3.d",
+      "v4.d", "v5.d", "v6.d", "v7.d",
+      "v8.d", "v9.d", "v10.d", "v11.d",
+      "v12.d", "v13.d", "v14.d", "v15.d",
+      "v16.d", "v17.d", "v18.d", "v19.d",
+      "v20.d", "v21.d", "v22.d", "v23.d",
+      "v24.d", "v25.d", "v26.d", "v27.d",
+      "v28.d", "v29.d", "v30.d", "v31.d"
+    },
+  };
+
+  int size_idx;
+
+  if (reg < ORC_VEC_REG_BASE || reg >= ORC_VEC_REG_BASE+32) {
+    return "ERROR";
+  }
+
+  size_idx = -1;
+  while (size) {
+    size_idx++;
+    size >>= 1;
+  }
+
+  if (size_idx < 0 || size_idx >= 4) {
+    return "ERROR";
+  }
+
+  return vec_regs[size_idx][reg&0x1f];
+}
+
 static void
 orc_neon_emit_binary (OrcCompiler *p, const char *name, unsigned int code,
     int dest, int src1, int src2)
@@ -71,6 +318,30 @@ orc_neon_emit_binary (OrcCompiler *p, const char *name, unsigned int code,
   code |= ((src1>>4)&0x1)<<7;
   code |= (src2&0xf)<<0;
   code |= ((src2>>4)&0x1)<<5;
+  orc_arm_emit (p, code);
+}
+
+static void
+orc_neon64_emit_binary (OrcCompiler *p, const char *name, unsigned int code,
+    OrcVariable dest, OrcVariable src1, OrcVariable src2, int vec_shift)
+{
+  int is_quad = 0;
+
+  if (p->insn_shift == vec_shift + 1) {
+    is_quad = 1;
+  } else if (p->insn_shift > vec_shift + 1) {
+    ORC_COMPILER_ERROR(p, "out-of-shift");
+    return;
+  }
+
+  ORC_ASM_CODE(p,"  %s %s, %s, %s\n", name,
+      orc_neon64_reg_name_vector (dest.alloc, dest.size, is_quad),
+      orc_neon64_reg_name_vector (src1.alloc, src1.size, is_quad),
+      orc_neon64_reg_name_vector (src2.alloc, src2.size, is_quad));
+  code |= (is_quad&0x1)<<30;
+  code |= (src2.alloc&0x1f)<<16;
+  code |= (src1.alloc&0x1f)<<5;
+  code |= (dest.alloc&0x1f);
   orc_arm_emit (p, code);
 }
 
@@ -845,85 +1116,178 @@ neon_rule_loadX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     ptr_register = src->ptr_register;
   }
 
-  if (size >= 8) {
-    if (is_aligned) {
-      if (size == 32) {
-        ORC_ASM_CODE(compiler,"  vld1.64 { %s, %s, %s, %s }, [%s,:256]%s\n",
-            orc_neon_reg_name (dest->alloc),
-            orc_neon_reg_name (dest->alloc + 1),
-            orc_neon_reg_name (dest->alloc + 2),
-            orc_neon_reg_name (dest->alloc + 3),
-            orc_arm_reg_name (ptr_register),
-            update ? "!" : "");
-        code = 0xf42002dd;
-      } else if (size == 16) {
-        ORC_ASM_CODE(compiler,"  vld1.64 { %s, %s }, [%s,:128]%s\n",
-            orc_neon_reg_name (dest->alloc),
-            orc_neon_reg_name (dest->alloc + 1),
-            orc_arm_reg_name (ptr_register),
-            update ? "!" : "");
-        code = 0xf4200aed;
-      } else if (size == 8) {
-        ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]%s\n",
-            orc_neon_reg_name (dest->alloc),
-            orc_arm_reg_name (ptr_register),
-            update ? "!" : "");
-        code = 0xf42007cd;
+  if (compiler->is_64bit) {
+    int opcode, flag;
+
+    if (size >= 16) {
+      /** load multiple single-element structures to one, two, three, or four registers */
+      char vt_str[64];
+
+      memset(vt_str, '\x00', 64);
+
+      if (is_aligned) {
+        if (size == 64) {
+          snprintf(vt_str, 64, "%s, %s, %s, %s",
+              orc_neon64_reg_name_vector (dest->alloc, 8, 1),
+              orc_neon64_reg_name_vector (dest->alloc + 1, 8, 1),
+              orc_neon64_reg_name_vector (dest->alloc + 2, 8, 1),
+              orc_neon64_reg_name_vector (dest->alloc + 3, 8, 1));
+          opcode = 2;
+        } else if (size == 32) {
+          snprintf(vt_str, 64, "%s, %s",
+              orc_neon64_reg_name_vector (dest->alloc, 8, 1),
+              orc_neon64_reg_name_vector (dest->alloc + 1, 8, 1));
+          opcode = 10;
+        } else if (size == 16) {
+          snprintf(vt_str, 64, "%s",
+              orc_neon64_reg_name_vector (dest->alloc, 8, 1));
+          opcode = 7;
+        } else {
+          ORC_COMPILER_ERROR(compiler,"bad aligned load size %d",
+              src->size << compiler->insn_shift);
+          return;
+        }
+        flag = 7;
       } else {
-        ORC_COMPILER_ERROR(compiler,"bad aligned load size %d",
-            src->size << compiler->insn_shift);
+        if (size == 64) {
+          snprintf(vt_str, 64, "%s, %s, %s, %s",
+              orc_neon64_reg_name_vector (dest->alloc, 1, 1),
+              orc_neon64_reg_name_vector (dest->alloc + 1, 1, 1),
+              orc_neon64_reg_name_vector (dest->alloc + 2, 1, 1),
+              orc_neon64_reg_name_vector (dest->alloc + 3, 1, 1));
+          opcode = 2;
+        } else if (size == 32) {
+          snprintf(vt_str, 64, "%s, %s",
+              orc_neon64_reg_name_vector (dest->alloc, 1, 1),
+              orc_neon64_reg_name_vector (dest->alloc + 1, 1, 1));
+          opcode = 10;
+        } else if (size == 16) {
+          snprintf(vt_str, 64, "%s",
+              orc_neon64_reg_name_vector (dest->alloc, 1, 1));
+          opcode = 7;
+        } else {
+          ORC_COMPILER_ERROR(compiler,"bad aligned load size %d",
+              src->size << compiler->insn_shift);
+          return;
+        }
+        flag = 1;
       }
+      ORC_ASM_CODE(compiler,"  ld1 { %s }, [%s]\n",
+          vt_str, orc_arm64_reg_name (ptr_register, 64));
+      code = 0x0c400000;
+      code |= (flag&0x1) << 30;
+      code |= (flag&0x3) << 10;
+      code |= (opcode&0xf) << 12;
     } else {
-      if (size == 32) {
-        ORC_ASM_CODE(compiler,"  vld1.8 { %s, %s, %s, %s }, [%s]%s\n",
-            orc_neon_reg_name (dest->alloc),
-            orc_neon_reg_name (dest->alloc + 1),
-            orc_neon_reg_name (dest->alloc + 2),
-            orc_neon_reg_name (dest->alloc + 3),
-            orc_arm_reg_name (ptr_register),
-            update ? "!" : "");
-        code = 0xf420020d;
-      } else if (size == 16) {
-        ORC_ASM_CODE(compiler,"  vld1.8 { %s, %s }, [%s]%s\n",
-            orc_neon_reg_name (dest->alloc),
-            orc_neon_reg_name (dest->alloc + 1),
-            orc_arm_reg_name (ptr_register),
-            update ? "!" : "");
-        code = 0xf4200a0d;
-      } else if (size == 8) {
-        ORC_ASM_CODE(compiler,"  vld1.8 %s, [%s]%s\n",
-            orc_neon_reg_name (dest->alloc),
-            orc_arm_reg_name (ptr_register),
-            update ? "!" : "");
-        code = 0xf420070d;
+      /** load one single-element structure to one lane of one register */
+      flag = 0;
+      if (size == 8) {
+        opcode = 4;
+        flag = 1;
+      } else if (size == 4) {
+        opcode = 4;
+      } else if (size == 2) {
+        opcode = 2;
+      } else if (size == 1) {
+        opcode = 1;
       } else {
         ORC_COMPILER_ERROR(compiler,"bad unaligned load size %d",
             src->size << compiler->insn_shift);
+        return;
       }
+      ORC_ASM_CODE(compiler,"  ld1 { %s }[0], [%s]\n",
+          orc_neon64_reg_name_vector_single (dest->alloc, size),
+          orc_arm64_reg_name (ptr_register, 64));
+      code = 0x0d400000;
+      code |= (opcode&0x7) << 13;
+      code |= (flag&0x3) << 10;
     }
+
+    code |= (ptr_register&0x1f) << 5;
+    code |= (dest->alloc&0x1f);
+
+    orc_arm_emit (compiler, code);
   } else {
-    int shift;
-    if (size == 4) {
-      shift = 2;
-    } else if (size == 2) {
-      shift = 1;
+    if (size >= 8) {
+      if (is_aligned) {
+        if (size == 32) {
+          ORC_ASM_CODE(compiler,"  vld1.64 { %s, %s, %s, %s }, [%s,:256]%s\n",
+              orc_neon_reg_name (dest->alloc),
+              orc_neon_reg_name (dest->alloc + 1),
+              orc_neon_reg_name (dest->alloc + 2),
+              orc_neon_reg_name (dest->alloc + 3),
+              orc_arm_reg_name (ptr_register),
+              update ? "!" : "");
+          code = 0xf42002dd;
+        } else if (size == 16) {
+          ORC_ASM_CODE(compiler,"  vld1.64 { %s, %s }, [%s,:128]%s\n",
+              orc_neon_reg_name (dest->alloc),
+              orc_neon_reg_name (dest->alloc + 1),
+              orc_arm_reg_name (ptr_register),
+              update ? "!" : "");
+          code = 0xf4200aed;
+        } else if (size == 8) {
+          ORC_ASM_CODE(compiler,"  vld1.64 %s, [%s]%s\n",
+              orc_neon_reg_name (dest->alloc),
+              orc_arm_reg_name (ptr_register),
+              update ? "!" : "");
+          code = 0xf42007cd;
+        } else {
+          ORC_COMPILER_ERROR(compiler,"bad aligned load size %d",
+              src->size << compiler->insn_shift);
+        }
+      } else {
+        if (size == 32) {
+          ORC_ASM_CODE(compiler,"  vld1.8 { %s, %s, %s, %s }, [%s]%s\n",
+              orc_neon_reg_name (dest->alloc),
+              orc_neon_reg_name (dest->alloc + 1),
+              orc_neon_reg_name (dest->alloc + 2),
+              orc_neon_reg_name (dest->alloc + 3),
+              orc_arm_reg_name (ptr_register),
+              update ? "!" : "");
+          code = 0xf420020d;
+        } else if (size == 16) {
+          ORC_ASM_CODE(compiler,"  vld1.8 { %s, %s }, [%s]%s\n",
+              orc_neon_reg_name (dest->alloc),
+              orc_neon_reg_name (dest->alloc + 1),
+              orc_arm_reg_name (ptr_register),
+              update ? "!" : "");
+          code = 0xf4200a0d;
+        } else if (size == 8) {
+          ORC_ASM_CODE(compiler,"  vld1.8 %s, [%s]%s\n",
+              orc_neon_reg_name (dest->alloc),
+              orc_arm_reg_name (ptr_register),
+              update ? "!" : "");
+          code = 0xf420070d;
+        } else {
+          ORC_COMPILER_ERROR(compiler,"bad unaligned load size %d",
+              src->size << compiler->insn_shift);
+        }
+      }
     } else {
-      shift = 0;
+      int shift;
+      if (size == 4) {
+        shift = 2;
+      } else if (size == 2) {
+        shift = 1;
+      } else {
+        shift = 0;
+      }
+      ORC_ASM_CODE(compiler,"  vld1.%d %s[0], [%s]%s\n",
+          8<<shift,
+          orc_neon_reg_name (dest->alloc),
+          orc_arm_reg_name (ptr_register),
+          update ? "!" : "");
+      code = 0xf4a0000d;
+      code |= shift<<10;
+      code |= (0&7)<<5;
     }
-    ORC_ASM_CODE(compiler,"  vld1.%d %s[0], [%s]%s\n",
-        8<<shift,
-        orc_neon_reg_name (dest->alloc),
-        orc_arm_reg_name (ptr_register),
-        update ? "!" : "");
-    code = 0xf4a0000d;
-    code |= shift<<10;
-    code |= (0&7)<<5;
+    code |= (ptr_register&0xf) << 16;
+    code |= (dest->alloc&0xf) << 12;
+    code |= ((dest->alloc>>4)&0x1) << 22;
+    code |= (!update) << 1;
+    orc_arm_emit (compiler, code);
   }
-  code |= (ptr_register&0xf) << 16;
-  code |= (dest->alloc&0xf) << 12;
-  code |= ((dest->alloc>>4)&0x1) << 22;
-  code |= (!update) << 1;
-  orc_arm_emit (compiler, code);
 }
 
 static void
@@ -935,85 +1299,177 @@ neon_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   unsigned int code = 0;
   int size = dest->size << compiler->insn_shift;
 
-  if (size >= 8) {
-    if (dest->is_aligned) {
-      if (size == 32) {
-        ORC_ASM_CODE(compiler,"  vst1.64 { %s, %s, %s, %s }, [%s,:256]%s\n",
-            orc_neon_reg_name (src->alloc),
-            orc_neon_reg_name (src->alloc + 1),
-            orc_neon_reg_name (src->alloc + 2),
-            orc_neon_reg_name (src->alloc + 3),
-            orc_arm_reg_name (dest->ptr_register),
-            update ? "!" : "");
-        code = 0xf40002dd;
-      } else if (size == 16) {
-        ORC_ASM_CODE(compiler,"  vst1.64 { %s, %s }, [%s,:128]%s\n",
-            orc_neon_reg_name (src->alloc),
-            orc_neon_reg_name (src->alloc + 1),
-            orc_arm_reg_name (dest->ptr_register),
-            update ? "!" : "");
-        code = 0xf4000aed;
-      } else if (size == 8) {
-        ORC_ASM_CODE(compiler,"  vst1.64 %s, [%s]%s\n",
-            orc_neon_reg_name (src->alloc),
-            orc_arm_reg_name (dest->ptr_register),
-            update ? "!" : "");
-        code = 0xf40007cd;
-      } else {
-        ORC_COMPILER_ERROR(compiler,"bad aligned store size %d", size);
-      }
-    } else {
-      if (size == 32) {
-        ORC_ASM_CODE(compiler,"  vst1.8 { %s, %s, %s, %s }, [%s]%s\n",
-            orc_neon_reg_name (src->alloc),
-            orc_neon_reg_name (src->alloc + 1),
-            orc_neon_reg_name (src->alloc + 2),
-            orc_neon_reg_name (src->alloc + 3),
-            orc_arm_reg_name (dest->ptr_register),
-            update ? "!" : "");
-        code = 0xf400020d;
-      } else if (size == 16) {
-        ORC_ASM_CODE(compiler,"  vst1.8 { %s, %s }, [%s]%s\n",
-            orc_neon_reg_name (src->alloc),
-            orc_neon_reg_name (src->alloc + 1),
-            orc_arm_reg_name (dest->ptr_register),
-            update ? "!" : "");
-        code = 0xf4000a0d;
-      } else if (size == 8) {
-        ORC_ASM_CODE(compiler,"  vst1.8 %s, [%s]%s\n",
-            orc_neon_reg_name (src->alloc),
-            orc_arm_reg_name (dest->ptr_register),
-            update ? "!" : "");
-        code = 0xf400070d;
-      } else {
-        ORC_COMPILER_ERROR(compiler,"bad aligned store size %d", size);
-      }
-    }
-  } else {
-    int shift;
-    if (size == 4) {
-      shift = 2;
-    } else if (size == 2) {
-      shift = 1;
-    } else {
-      shift = 0;
-    }
-    ORC_ASM_CODE(compiler,"  vst1.%d %s[0], [%s]%s\n",
-        8<<shift,
-        orc_neon_reg_name (src->alloc),
-        orc_arm_reg_name (dest->ptr_register),
-        update ? "!" : "");
-    code = 0xf480000d;
-    code |= shift<<10;
-    code |= (0&7)<<5;
-  }
-  code |= (dest->ptr_register&0xf) << 16;
-  code |= (src->alloc&0xf) << 12;
-  code |= ((src->alloc>>4)&0x1) << 22;
-  code |= (!update) << 1;
-  orc_arm_emit (compiler, code);
-}
+  if (compiler->is_64bit) {
+    int opcode, flag;
 
+    if (size >= 16) {
+      /** store multiple single-element structures to one, two, three, or four registers */
+      char vt_str[64];
+
+      memset(vt_str, '\x00', 64);
+
+      if (dest->is_aligned) {
+        if (size == 64) {
+          snprintf(vt_str, 64, "%s, %s, %s, %s",
+              orc_neon64_reg_name_vector (dest->alloc, 8, 1),
+              orc_neon64_reg_name_vector (dest->alloc + 1, 8, 1),
+              orc_neon64_reg_name_vector (dest->alloc + 2, 8, 1),
+              orc_neon64_reg_name_vector (dest->alloc + 3, 8, 1));
+          opcode = 2;
+        } else if (size == 32) {
+          snprintf(vt_str, 64, "%s, %s",
+              orc_neon64_reg_name_vector (dest->alloc, 8, 1),
+              orc_neon64_reg_name_vector (dest->alloc + 1, 8, 1));
+          opcode = 10;
+        } else if (size == 16) {
+          snprintf(vt_str, 64, "%s",
+              orc_neon64_reg_name_vector (dest->alloc, 8, 1));
+          opcode = 7;
+        } else {
+          ORC_COMPILER_ERROR(compiler,"bad aligned load size %d",
+              src->size << compiler->insn_shift);
+          return;
+        }
+        flag = 7;
+      } else {
+        if (size == 64) {
+          snprintf(vt_str, 64, "%s, %s, %s, %s",
+              orc_neon64_reg_name_vector (dest->alloc, 1, 1),
+              orc_neon64_reg_name_vector (dest->alloc + 1, 1, 1),
+              orc_neon64_reg_name_vector (dest->alloc + 2, 1, 1),
+              orc_neon64_reg_name_vector (dest->alloc + 3, 1, 1));
+          opcode = 2;
+        } else if (size == 32) {
+          snprintf(vt_str, 64, "%s, %s",
+              orc_neon64_reg_name_vector (dest->alloc, 1, 1),
+              orc_neon64_reg_name_vector (dest->alloc + 1, 1, 1));
+          opcode = 10;
+        } else if (size == 16) {
+          snprintf(vt_str, 64, "%s",
+              orc_neon64_reg_name_vector (dest->alloc, 1, 1));
+          opcode = 7;
+        } else {
+          ORC_COMPILER_ERROR(compiler,"bad aligned load size %d",
+              src->size << compiler->insn_shift);
+          return;
+        }
+        flag = 1;
+      }
+      ORC_ASM_CODE(compiler,"  st1 { %s }, [%s]\n",
+          vt_str, orc_arm64_reg_name (dest->ptr_register, 64));
+      code = 0x0c000000;
+      code |= (flag&0x1) << 30;
+      code |= (flag&0x3) << 10;
+      code |= (opcode&0xf) << 12;
+    } else {
+      /** store one single-element structure to one lane of one register */
+      flag = 0;
+      if (size == 8) {
+        opcode = 4;
+        flag = 1;
+      } else if (size == 4) {
+        opcode = 4;
+      } else if (size == 2) {
+        opcode = 2;
+      } else if (size == 1) {
+        opcode = 1;
+      } else {
+        ORC_COMPILER_ERROR(compiler,"bad unaligned load size %d",
+            src->size << compiler->insn_shift);
+        return;
+      }
+      ORC_ASM_CODE(compiler,"  st1 { %s }[0], [%s]\n",
+          orc_neon64_reg_name_vector_single (dest->alloc, size),
+          orc_arm64_reg_name (dest->ptr_register, 64));
+      code = 0x0d000000;
+      code |= (opcode&0x7) << 13;
+      code |= (flag&0x3) << 10;
+    }
+
+    code |= (dest->ptr_register&0x1f) << 5;
+    code |= (dest->alloc&0x1f);
+
+    orc_arm_emit (compiler, code);
+  } else {
+    if (size >= 8) {
+      if (dest->is_aligned) {
+        if (size == 32) {
+          ORC_ASM_CODE(compiler,"  vst1.64 { %s, %s, %s, %s }, [%s,:256]%s\n",
+              orc_neon_reg_name (src->alloc),
+              orc_neon_reg_name (src->alloc + 1),
+              orc_neon_reg_name (src->alloc + 2),
+              orc_neon_reg_name (src->alloc + 3),
+              orc_arm_reg_name (dest->ptr_register),
+              update ? "!" : "");
+          code = 0xf40002dd;
+        } else if (size == 16) {
+          ORC_ASM_CODE(compiler,"  vst1.64 { %s, %s }, [%s,:128]%s\n",
+              orc_neon_reg_name (src->alloc),
+              orc_neon_reg_name (src->alloc + 1),
+              orc_arm_reg_name (dest->ptr_register),
+              update ? "!" : "");
+          code = 0xf4000aed;
+        } else if (size == 8) {
+          ORC_ASM_CODE(compiler,"  vst1.64 %s, [%s]%s\n",
+              orc_neon_reg_name (src->alloc),
+              orc_arm_reg_name (dest->ptr_register),
+              update ? "!" : "");
+          code = 0xf40007cd;
+        } else {
+          ORC_COMPILER_ERROR(compiler,"bad aligned store size %d", size);
+        }
+      } else {
+        if (size == 32) {
+          ORC_ASM_CODE(compiler,"  vst1.8 { %s, %s, %s, %s }, [%s]%s\n",
+              orc_neon_reg_name (src->alloc),
+              orc_neon_reg_name (src->alloc + 1),
+              orc_neon_reg_name (src->alloc + 2),
+              orc_neon_reg_name (src->alloc + 3),
+              orc_arm_reg_name (dest->ptr_register),
+              update ? "!" : "");
+          code = 0xf400020d;
+        } else if (size == 16) {
+          ORC_ASM_CODE(compiler,"  vst1.8 { %s, %s }, [%s]%s\n",
+              orc_neon_reg_name (src->alloc),
+              orc_neon_reg_name (src->alloc + 1),
+              orc_arm_reg_name (dest->ptr_register),
+              update ? "!" : "");
+          code = 0xf4000a0d;
+        } else if (size == 8) {
+          ORC_ASM_CODE(compiler,"  vst1.8 %s, [%s]%s\n",
+              orc_neon_reg_name (src->alloc),
+              orc_arm_reg_name (dest->ptr_register),
+              update ? "!" : "");
+          code = 0xf400070d;
+        } else {
+          ORC_COMPILER_ERROR(compiler,"bad aligned store size %d", size);
+        }
+      }
+    } else {
+      int shift;
+      if (size == 4) {
+        shift = 2;
+      } else if (size == 2) {
+        shift = 1;
+      } else {
+        shift = 0;
+      }
+      ORC_ASM_CODE(compiler,"  vst1.%d %s[0], [%s]%s\n",
+          8<<shift,
+          orc_neon_reg_name (src->alloc),
+          orc_arm_reg_name (dest->ptr_register),
+          update ? "!" : "");
+      code = 0xf480000d;
+      code |= shift<<10;
+      code |= (0&7)<<5;
+    }
+    code |= (dest->ptr_register&0xf) << 16;
+    code |= (src->alloc&0xf) << 12;
+    code |= ((src->alloc>>4)&0x1) << 22;
+    code |= (!update) << 1;
+    orc_arm_emit (compiler, code);
+  }
+}
 
 #if 0
 static int
@@ -1333,7 +1789,7 @@ orc_neon_emit_loadpq (OrcCompiler *compiler, int dest, int param)
   orc_arm_emit (compiler, code);
 }
 
-#define UNARY(opcode,insn_name,code,vec_shift) \
+#define UNARY(opcode,insn_name,code,insn_name64,code64,vec_shift) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
@@ -1350,7 +1806,7 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
   } \
 }
 
-#define UNARY_LONG(opcode,insn_name,code,vec_shift) \
+#define UNARY_LONG(opcode,insn_name,code,insn_name64,code64,vec_shift) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
@@ -1363,7 +1819,7 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
   } \
 }
 
-#define UNARY_NARROW(opcode,insn_name,code,vec_shift) \
+#define UNARY_NARROW(opcode,insn_name,code,insn_name64,code64,vec_shift) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
@@ -1376,26 +1832,37 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
   } \
 }
 
-#define BINARY(opcode,insn_name,code,vec_shift) \
+#define BINARY(opcode,insn_name,code,insn_name64,code64,vec_shift) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  if (p->insn_shift <= vec_shift) { \
-    orc_neon_emit_binary (p, insn_name, code, \
-        p->vars[insn->dest_args[0]].alloc, \
-        p->vars[insn->src_args[0]].alloc, \
-        p->vars[insn->src_args[1]].alloc); \
-  } else if (p->insn_shift == vec_shift + 1) { \
-    orc_neon_emit_binary_quad (p, insn_name, code, \
-        p->vars[insn->dest_args[0]].alloc, \
-        p->vars[insn->src_args[0]].alloc, \
-        p->vars[insn->src_args[1]].alloc); \
+  if (p->is_64bit) { \
+    if (insn_name64) { \
+      orc_neon64_emit_binary (p, insn_name64, code64, \
+          p->vars[insn->dest_args[0]], \
+          p->vars[insn->src_args[0]], \
+          p->vars[insn->src_args[1]], vec_shift); \
+    } else { \
+      ORC_COMPILER_ERROR(p, "not supported in AArch64 yet"); \
+    } \
   } else { \
-    ORC_COMPILER_ERROR(p, "shift too large"); \
+    if (p->insn_shift <= vec_shift) { \
+      orc_neon_emit_binary (p, insn_name, code, \
+          p->vars[insn->dest_args[0]].alloc, \
+          p->vars[insn->src_args[0]].alloc, \
+          p->vars[insn->src_args[1]].alloc); \
+    } else if (p->insn_shift == vec_shift + 1) { \
+      orc_neon_emit_binary_quad (p, insn_name, code, \
+          p->vars[insn->dest_args[0]].alloc, \
+          p->vars[insn->src_args[0]].alloc, \
+          p->vars[insn->src_args[1]].alloc); \
+    } else { \
+      ORC_COMPILER_ERROR(p, "shift too large"); \
+    } \
   } \
 }
 
-#define BINARY_LONG(opcode,insn_name,code,vec_shift) \
+#define BINARY_LONG(opcode,insn_name,code,insn_name64,code64,vec_shift) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
@@ -1409,7 +1876,7 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
   } \
 }
 
-#define BINARY_NARROW(opcode,insn_name,code,vec_shift) \
+#define BINARY_NARROW(opcode,insn_name,code,insn_name64,code64,vec_shift) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
@@ -1423,7 +1890,7 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
   } \
 }
 
-#define MOVE(opcode,insn_name,code,vec_shift) \
+#define MOVE(opcode,insn_name,code,insn_name64,code64,vec_shift) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
@@ -1444,7 +1911,6 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
     ORC_COMPILER_ERROR(p, "shift too large"); \
   } \
 }
-
 
 typedef struct {
   orc_uint32 code;
@@ -1643,148 +2109,148 @@ orc_neon_rule_andn (OrcCompiler *p, void *user, OrcInstruction *insn)
 
 
 
-UNARY(absb,"vabs.s8",0xf3b10300, 3)
-BINARY(addb,"vadd.i8",0xf2000800, 3)
-BINARY(addssb,"vqadd.s8",0xf2000010, 3)
-BINARY(addusb,"vqadd.u8",0xf3000010, 3)
-BINARY(andb,"vand",0xf2000110, 3)
-/* BINARY(andnb,"vbic",0xf2100110, 3) */
-BINARY(avgsb,"vrhadd.s8",0xf2000100, 3)
-BINARY(avgub,"vrhadd.u8",0xf3000100, 3)
-BINARY(cmpeqb,"vceq.i8",0xf3000810, 3)
-BINARY(cmpgtsb,"vcgt.s8",0xf2000300, 3)
-MOVE(copyb,"vmov",0xf2200110, 3)
-BINARY(maxsb,"vmax.s8",0xf2000600, 3)
-BINARY(maxub,"vmax.u8",0xf3000600, 3)
-BINARY(minsb,"vmin.s8",0xf2000610, 3)
-BINARY(minub,"vmin.u8",0xf3000610, 3)
-BINARY(mullb,"vmul.i8",0xf2000910, 3)
-BINARY(orb,"vorr",0xf2200110, 3)
-/* LSHIFT(shlb,"vshl.i8",0xf2880510, 3) */
-/* RSHIFT(shrsb,"vshr.s8",0xf2880010,8, 3) */
-/* RSHIFT(shrub,"vshr.u8",0xf3880010,8, 3) */
-BINARY(subb,"vsub.i8",0xf3000800, 3)
-BINARY(subssb,"vqsub.s8",0xf2000210, 3)
-BINARY(subusb,"vqsub.u8",0xf3000210, 3)
-BINARY(xorb,"veor",0xf3000110, 3)
+UNARY(absb,"vabs.s8",0xf3b10300, NULL, 0, 3)
+BINARY(addb,"vadd.i8",0xf2000800, "add", 0x0e208400, 3)
+BINARY(addssb,"vqadd.s8",0xf2000010, "sqadd", 0x0e200c00, 3)
+BINARY(addusb,"vqadd.u8",0xf3000010, "uqadd", 0x2e200c00, 3)
+BINARY(andb,"vand",0xf2000110, NULL, 0, 3)
+/* BINARY(andnb,"vbic",0xf2100110, NULL, 0, 3) */
+BINARY(avgsb,"vrhadd.s8",0xf2000100, NULL, 0, 3)
+BINARY(avgub,"vrhadd.u8",0xf3000100, NULL, 0, 3)
+BINARY(cmpeqb,"vceq.i8",0xf3000810, NULL, 0, 3)
+BINARY(cmpgtsb,"vcgt.s8",0xf2000300, NULL, 0, 3)
+MOVE(copyb,"vmov",0xf2200110, NULL, 0, 3)
+BINARY(maxsb,"vmax.s8",0xf2000600, NULL, 0, 3)
+BINARY(maxub,"vmax.u8",0xf3000600, NULL, 0, 3)
+BINARY(minsb,"vmin.s8",0xf2000610, NULL, 0, 3)
+BINARY(minub,"vmin.u8",0xf3000610, NULL, 0, 3)
+BINARY(mullb,"vmul.i8",0xf2000910, NULL, 0, 3)
+BINARY(orb,"vorr",0xf2200110, NULL, 0, 3)
+/* LSHIFT(shlb,"vshl.i8",0xf2880510, NULL, 0, 3) */
+/* RSHIFT(shrsb,"vshr.s8",0xf2880010,8, NULL, 0, 3) */
+/* RSHIFT(shrub,"vshr.u8",0xf3880010,8, NULL, 0, 3) */
+BINARY(subb,"vsub.i8",0xf3000800, NULL, 0, 3)
+BINARY(subssb,"vqsub.s8",0xf2000210, NULL, 0, 3)
+BINARY(subusb,"vqsub.u8",0xf3000210, NULL, 0, 3)
+BINARY(xorb,"veor",0xf3000110, NULL, 0, 3)
 
-UNARY(absw,"vabs.s16",0xf3b50300, 2)
-BINARY(addw,"vadd.i16",0xf2100800, 2)
-BINARY(addssw,"vqadd.s16",0xf2100010, 2)
-BINARY(addusw,"vqadd.u16",0xf3100010, 2)
-BINARY(andw,"vand",0xf2000110, 2)
-/* BINARY(andnw,"vbic",0xf2100110, 2) */
-BINARY(avgsw,"vrhadd.s16",0xf2100100, 2)
-BINARY(avguw,"vrhadd.u16",0xf3100100, 2)
-BINARY(cmpeqw,"vceq.i16",0xf3100810, 2)
-BINARY(cmpgtsw,"vcgt.s16",0xf2100300, 2)
-MOVE(copyw,"vmov",0xf2200110, 2)
-BINARY(maxsw,"vmax.s16",0xf2100600, 2)
-BINARY(maxuw,"vmax.u16",0xf3100600, 2)
-BINARY(minsw,"vmin.s16",0xf2100610, 2)
-BINARY(minuw,"vmin.u16",0xf3100610, 2)
-BINARY(mullw,"vmul.i16",0xf2100910, 2)
-BINARY(orw,"vorr",0xf2200110, 2)
-/* LSHIFT(shlw,"vshl.i16",0xf2900510, 2) */
-/* RSHIFT(shrsw,"vshr.s16",0xf2900010,16, 2) */
-/* RSHIFT(shruw,"vshr.u16",0xf3900010,16, 2) */
-BINARY(subw,"vsub.i16",0xf3100800, 2)
-BINARY(subssw,"vqsub.s16",0xf2100210, 2)
-BINARY(subusw,"vqsub.u16",0xf3100210, 2)
-BINARY(xorw,"veor",0xf3000110, 2)
+UNARY(absw,"vabs.s16",0xf3b50300, NULL, 0, 2)
+BINARY(addw,"vadd.i16",0xf2100800, "add", 0x0e608400, 2)
+BINARY(addssw,"vqadd.s16",0xf2100010, "sqadd", 0x0e600c00, 2)
+BINARY(addusw,"vqadd.u16",0xf3100010, "uqadd", 0x2e600c00, 2)
+BINARY(andw,"vand",0xf2000110, NULL, 0, 2)
+/* BINARY(andnw,"vbic",0xf2100110, NULL, 0, 2) */
+BINARY(avgsw,"vrhadd.s16",0xf2100100, NULL, 0, 2)
+BINARY(avguw,"vrhadd.u16",0xf3100100, NULL, 0, 2)
+BINARY(cmpeqw,"vceq.i16",0xf3100810, NULL, 0, 2)
+BINARY(cmpgtsw,"vcgt.s16",0xf2100300, NULL, 0, 2)
+MOVE(copyw,"vmov",0xf2200110, NULL, 0, 2)
+BINARY(maxsw,"vmax.s16",0xf2100600, NULL, 0, 2)
+BINARY(maxuw,"vmax.u16",0xf3100600, NULL, 0, 2)
+BINARY(minsw,"vmin.s16",0xf2100610, NULL, 0, 2)
+BINARY(minuw,"vmin.u16",0xf3100610, NULL, 0, 2)
+BINARY(mullw,"vmul.i16",0xf2100910, NULL, 0, 2)
+BINARY(orw,"vorr",0xf2200110, NULL, 0, 2)
+/* LSHIFT(shlw,"vshl.i16",0xf2900510, NULL, 0, 2) */
+/* RSHIFT(shrsw,"vshr.s16",0xf2900010,16, NULL, 0, 2) */
+/* RSHIFT(shruw,"vshr.u16",0xf3900010,16, NULL, 0, 2) */
+BINARY(subw,"vsub.i16",0xf3100800, NULL, 0, 2)
+BINARY(subssw,"vqsub.s16",0xf2100210, NULL, 0, 2)
+BINARY(subusw,"vqsub.u16",0xf3100210, NULL, 0, 2)
+BINARY(xorw,"veor",0xf3000110, NULL, 0, 2)
 
-UNARY(absl,"vabs.s32",0xf3b90300, 1)
-BINARY(addl,"vadd.i32",0xf2200800, 1)
-BINARY(addssl,"vqadd.s32",0xf2200010, 1)
-BINARY(addusl,"vqadd.u32",0xf3200010, 1)
-BINARY(andl,"vand",0xf2000110, 1)
-/* BINARY(andnl,"vbic",0xf2100110, 1) */
-BINARY(avgsl,"vrhadd.s32",0xf2200100, 1)
-BINARY(avgul,"vrhadd.u32",0xf3200100, 1)
-BINARY(cmpeql,"vceq.i32",0xf3200810, 1)
-BINARY(cmpgtsl,"vcgt.s32",0xf2200300, 1)
-MOVE(copyl,"vmov",0xf2200110, 1)
-BINARY(maxsl,"vmax.s32",0xf2200600, 1)
-BINARY(maxul,"vmax.u32",0xf3200600, 1)
-BINARY(minsl,"vmin.s32",0xf2200610, 1)
-BINARY(minul,"vmin.u32",0xf3200610, 1)
-BINARY(mulll,"vmul.i32",0xf2200910, 1)
-BINARY(orl,"vorr",0xf2200110, 1)
-/* LSHIFT(shll,"vshl.i32",0xf2a00510, 1) */
-/* RSHIFT(shrsl,"vshr.s32",0xf2a00010,32, 1) */
-/* RSHIFT(shrul,"vshr.u32",0xf3a00010,32, 1) */
-BINARY(subl,"vsub.i32",0xf3200800, 1)
-BINARY(subssl,"vqsub.s32",0xf2200210, 1)
-BINARY(subusl,"vqsub.u32",0xf3200210, 1)
-BINARY(xorl,"veor",0xf3000110, 1)
+UNARY(absl,"vabs.s32",0xf3b90300, NULL, 0, 1)
+BINARY(addl,"vadd.i32",0xf2200800, "add", 0x0ea08400, 1)
+BINARY(addssl,"vqadd.s32",0xf2200010, "sqadd", 0x0ea00c00, 1)
+BINARY(addusl,"vqadd.u32",0xf3200010, "uqadd", 0x2ea00c00, 1)
+BINARY(andl,"vand",0xf2000110, NULL, 0, 1)
+/* BINARY(andnl,"vbic",0xf2100110, NULL, 0, 1) */
+BINARY(avgsl,"vrhadd.s32",0xf2200100, NULL, 0, 1)
+BINARY(avgul,"vrhadd.u32",0xf3200100, NULL, 0, 1)
+BINARY(cmpeql,"vceq.i32",0xf3200810, NULL, 0, 1)
+BINARY(cmpgtsl,"vcgt.s32",0xf2200300, NULL, 0, 1)
+MOVE(copyl,"vmov",0xf2200110, NULL, 0, 1)
+BINARY(maxsl,"vmax.s32",0xf2200600, NULL, 0, 1)
+BINARY(maxul,"vmax.u32",0xf3200600, NULL, 0, 1)
+BINARY(minsl,"vmin.s32",0xf2200610, NULL, 0, 1)
+BINARY(minul,"vmin.u32",0xf3200610, NULL, 0, 1)
+BINARY(mulll,"vmul.i32",0xf2200910, NULL, 0, 1)
+BINARY(orl,"vorr",0xf2200110, NULL, 0, 1)
+/* LSHIFT(shll,"vshl.i32",0xf2a00510, NULL, 0, 1) */
+/* RSHIFT(shrsl,"vshr.s32",0xf2a00010,32, NULL, 0, 1) */
+/* RSHIFT(shrul,"vshr.u32",0xf3a00010,32, NULL, 0, 1) */
+BINARY(subl,"vsub.i32",0xf3200800, NULL, 0, 1)
+BINARY(subssl,"vqsub.s32",0xf2200210, NULL, 0, 1)
+BINARY(subusl,"vqsub.u32",0xf3200210, NULL, 0, 1)
+BINARY(xorl,"veor",0xf3000110, NULL, 0, 1)
 
-/* UNARY(absq,"vabs.s64",0xf3b10300, 0) */
-BINARY(addq,"vadd.i64",0xf2300800, 0)
-/* BINARY(addssq,"vqadd.s64",0xf2000010, 0) */
-/* BINARY(addusq,"vqadd.u64",0xf3000010, 0) */
-BINARY(andq,"vand",0xf2000110, 0)
-/* BINARY(avgsq,"vrhadd.s64",0xf2000100, 0) */
-/* BINARY(avguq,"vrhadd.u64",0xf3000100, 0) */
-/* BINARY(cmpeqq,"vceq.i64",0xf3000810, 0) */
-/* BINARY(cmpgtsq,"vcgt.s64",0xf2000300, 0) */
-MOVE(copyq,"vmov",0xf2200110, 0)
-/* BINARY(maxsq,"vmax.s64",0xf2000600, 0) */
-/* BINARY(maxuq,"vmax.u64",0xf3000600, 0) */
-/* BINARY(minsq,"vmin.s64",0xf2000610, 0) */
-/* BINARY(minuq,"vmin.u64",0xf3000610, 0) */
-/* BINARY(mullq,"vmul.i64",0xf2000910, 0) */
-BINARY(orq,"vorr",0xf2200110, 0)
-BINARY(subq,"vsub.i64",0xf3300800, 0)
-/* BINARY(subssq,"vqsub.s64",0xf2000210, 0) */
-/* BINARY(subusq,"vqsub.u64",0xf3000210, 0) */
-BINARY(xorq,"veor",0xf3000110, 0)
+/* UNARY(absq,"vabs.s64",0xf3b10300, NULL, 0, 0) */
+BINARY(addq,"vadd.i64",0xf2300800, "add", 0x0ee08400, 0)
+/* BINARY(addssq,"vqadd.s64",0xf2000010, "sqadd", 0x0ee00c00, 0) */
+/* BINARY(addusq,"vqadd.u64",0xf3000010, "uqadd", 0x2ee00c00, 0) */
+BINARY(andq,"vand",0xf2000110, NULL, 0, 0)
+/* BINARY(avgsq,"vrhadd.s64",0xf2000100, NULL, 0, 0) */
+/* BINARY(avguq,"vrhadd.u64",0xf3000100, NULL, 0, 0) */
+/* BINARY(cmpeqq,"vceq.i64",0xf3000810, NULL, 0, 0) */
+/* BINARY(cmpgtsq,"vcgt.s64",0xf2000300, NULL, 0, 0) */
+MOVE(copyq,"vmov",0xf2200110, NULL, 0, 0)
+/* BINARY(maxsq,"vmax.s64",0xf2000600, NULL, 0, 0) */
+/* BINARY(maxuq,"vmax.u64",0xf3000600, NULL, 0, 0) */
+/* BINARY(minsq,"vmin.s64",0xf2000610, NULL, 0, 0) */
+/* BINARY(minuq,"vmin.u64",0xf3000610, NULL, 0, 0) */
+/* BINARY(mullq,"vmul.i64",0xf2000910, NULL, 0, 0) */
+BINARY(orq,"vorr",0xf2200110, NULL, 0, 0)
+BINARY(subq,"vsub.i64",0xf3300800, NULL, 0, 0)
+/* BINARY(subssq,"vqsub.s64",0xf2000210, NULL, 0, 0) */
+/* BINARY(subusq,"vqsub.u64",0xf3000210, NULL, 0, 0) */
+BINARY(xorq,"veor",0xf3000110, NULL, 0, 0)
 
-UNARY_LONG(convsbw,"vmovl.s8",0xf2880a10, 3)
-UNARY_LONG(convubw,"vmovl.u8",0xf3880a10, 3)
-UNARY_LONG(convswl,"vmovl.s16",0xf2900a10, 2)
-UNARY_LONG(convuwl,"vmovl.u16",0xf3900a10, 2)
-UNARY_LONG(convslq,"vmovl.s32",0xf2a00a10, 1)
-UNARY_LONG(convulq,"vmovl.u32",0xf3a00a10, 1)
-UNARY_NARROW(convwb,"vmovn.i16",0xf3b20200, 3)
-UNARY_NARROW(convssswb,"vqmovn.s16",0xf3b20280, 3)
-UNARY_NARROW(convsuswb,"vqmovun.s16",0xf3b20240, 3)
-UNARY_NARROW(convuuswb,"vqmovn.u16",0xf3b202c0, 3)
-UNARY_NARROW(convlw,"vmovn.i32",0xf3b60200, 2)
-UNARY_NARROW(convql,"vmovn.i64",0xf3ba0200, 1)
-UNARY_NARROW(convssslw,"vqmovn.s32",0xf3b60280, 2)
-UNARY_NARROW(convsuslw,"vqmovun.s32",0xf3b60240, 2)
-UNARY_NARROW(convuuslw,"vqmovn.u32",0xf3b602c0, 2)
-UNARY_NARROW(convsssql,"vqmovn.s64",0xf3ba0280, 1)
-UNARY_NARROW(convsusql,"vqmovun.s64",0xf3ba0240, 1)
-UNARY_NARROW(convuusql,"vqmovn.u64",0xf3ba02c0, 1)
+UNARY_LONG(convsbw,"vmovl.s8",0xf2880a10, NULL, 0, 3)
+UNARY_LONG(convubw,"vmovl.u8",0xf3880a10, NULL, 0, 3)
+UNARY_LONG(convswl,"vmovl.s16",0xf2900a10, NULL, 0, 2)
+UNARY_LONG(convuwl,"vmovl.u16",0xf3900a10, NULL, 0, 2)
+UNARY_LONG(convslq,"vmovl.s32",0xf2a00a10, NULL, 0, 1)
+UNARY_LONG(convulq,"vmovl.u32",0xf3a00a10, NULL, 0, 1)
+UNARY_NARROW(convwb,"vmovn.i16",0xf3b20200, NULL, 0, 3)
+UNARY_NARROW(convssswb,"vqmovn.s16",0xf3b20280, NULL, 0, 3)
+UNARY_NARROW(convsuswb,"vqmovun.s16",0xf3b20240, NULL, 0, 3)
+UNARY_NARROW(convuuswb,"vqmovn.u16",0xf3b202c0, NULL, 0, 3)
+UNARY_NARROW(convlw,"vmovn.i32",0xf3b60200, NULL, 0, 2)
+UNARY_NARROW(convql,"vmovn.i64",0xf3ba0200, NULL, 0, 1)
+UNARY_NARROW(convssslw,"vqmovn.s32",0xf3b60280, NULL, 0, 2)
+UNARY_NARROW(convsuslw,"vqmovun.s32",0xf3b60240, NULL, 0, 2)
+UNARY_NARROW(convuuslw,"vqmovn.u32",0xf3b602c0, NULL, 0, 2)
+UNARY_NARROW(convsssql,"vqmovn.s64",0xf3ba0280, NULL, 0, 1)
+UNARY_NARROW(convsusql,"vqmovun.s64",0xf3ba0240, NULL, 0, 1)
+UNARY_NARROW(convuusql,"vqmovn.u64",0xf3ba02c0, NULL, 0, 1)
 
-BINARY_LONG(mulsbw,"vmull.s8",0xf2800c00, 3)
-BINARY_LONG(mulubw,"vmull.u8",0xf3800c00, 3)
-BINARY_LONG(mulswl,"vmull.s16",0xf2900c00, 2)
-BINARY_LONG(muluwl,"vmull.u16",0xf3900c00, 2)
+BINARY_LONG(mulsbw,"vmull.s8",0xf2800c00, NULL, 0, 3)
+BINARY_LONG(mulubw,"vmull.u8",0xf3800c00, NULL, 0, 3)
+BINARY_LONG(mulswl,"vmull.s16",0xf2900c00, NULL, 0, 2)
+BINARY_LONG(muluwl,"vmull.u16",0xf3900c00, NULL, 0, 2)
 
-UNARY(swapw,"vrev16.i8",0xf3b00100, 2)
-UNARY(swapl,"vrev32.i8",0xf3b00080, 1)
-UNARY(swapq,"vrev64.i8",0xf3b00000, 0)
-UNARY(swapwl,"vrev32.i16",0xf3b40080, 1)
-UNARY(swaplq,"vrev64.i32",0xf3b80000, 0)
+UNARY(swapw,"vrev16.i8",0xf3b00100, NULL, 0, 2)
+UNARY(swapl,"vrev32.i8",0xf3b00080, NULL, 0, 1)
+UNARY(swapq,"vrev64.i8",0xf3b00000, NULL, 0, 0)
+UNARY(swapwl,"vrev32.i16",0xf3b40080, NULL, 0, 1)
+UNARY(swaplq,"vrev64.i32",0xf3b80000, NULL, 0, 0)
 
-UNARY_NARROW(select0ql,"vmovn.i64",0xf3ba0200, 1)
-UNARY_NARROW(select0lw,"vmovn.i32",0xf3b60200, 2)
-UNARY_NARROW(select0wb,"vmovn.i16",0xf3b20200, 3)
+UNARY_NARROW(select0ql,"vmovn.i64",0xf3ba0200, NULL, 0, 1)
+UNARY_NARROW(select0lw,"vmovn.i32",0xf3b60200, NULL, 0, 2)
+UNARY_NARROW(select0wb,"vmovn.i16",0xf3b20200, NULL, 0, 3)
 
-BINARY(addf,"vadd.f32",0xf2000d00, 1)
-BINARY(subf,"vsub.f32",0xf2200d00, 1)
-BINARY(mulf,"vmul.f32",0xf3000d10, 1)
-BINARY(maxf,"vmax.f32",0xf2000f00, 1)
-BINARY(minf,"vmin.f32",0xf2200f00, 1)
-BINARY(cmpeqf,"vceq.f32",0xf2000e00, 1)
-/* BINARY_R(cmpltf,"vclt.f32",0xf3200e00, 1) */
-/* BINARY_R(cmplef,"vcle.f32",0xf3000e00, 1) */
-UNARY(convfl,"vcvt.s32.f32",0xf3bb0700, 1)
-UNARY(convlf,"vcvt.f32.s32",0xf3bb0600, 1)
+BINARY(addf,"vadd.f32",0xf2000d00, NULL, 0, 1)
+BINARY(subf,"vsub.f32",0xf2200d00, NULL, 0, 1)
+BINARY(mulf,"vmul.f32",0xf3000d10, NULL, 0, 1)
+BINARY(maxf,"vmax.f32",0xf2000f00, NULL, 0, 1)
+BINARY(minf,"vmin.f32",0xf2200f00, NULL, 0, 1)
+BINARY(cmpeqf,"vceq.f32",0xf2000e00, NULL, 0, 1)
+/* BINARY_R(cmpltf,"vclt.f32",0xf3200e00, NULL, 0, 1) */
+/* BINARY_R(cmplef,"vcle.f32",0xf3000e00, NULL, 0, 1) */
+UNARY(convfl,"vcvt.s32.f32",0xf3bb0700, NULL, 0, 1)
+UNARY(convlf,"vcvt.f32.s32",0xf3bb0600, NULL, 0, 1)
 
-#define UNARY_VFP(opcode,insn_name,code,vec_shift) \
+#define UNARY_VFP(opcode,insn_name,code,insn_name64,code64,vec_shift) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
@@ -1800,7 +2266,7 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
   } \
 }
 
-#define BINARY_VFP(opcode,insn_name,code,vec_shift) \
+#define BINARY_VFP(opcode,insn_name,code,insn_name64,code64,vec_shift) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
@@ -1818,14 +2284,14 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
   } \
 }
 
-BINARY_VFP(addd,"vadd.f64",0xee300b00, 0)
-BINARY_VFP(subd,"vsub.f64",0xee300b40, 0)
-BINARY_VFP(muld,"vmul.f64",0xee200b00, 0)
-BINARY_VFP(divd,"vdiv.f64",0xee800b00, 0)
-UNARY_VFP(sqrtd,"vsqrt.f64",0xeeb10b00, 0)
-/* BINARY_VFP(cmpeqd,"vcmpe.f64",0xee000000, 0) */
-UNARY_VFP(convdf,"vcvt.f64.f32",0xee200b00, 0)
-UNARY_VFP(convfd,"vcvt.f32.f64",0xee200b00, 0)
+BINARY_VFP(addd,"vadd.f64",0xee300b00, NULL, 0, 0)
+BINARY_VFP(subd,"vsub.f64",0xee300b40, NULL, 0, 0)
+BINARY_VFP(muld,"vmul.f64",0xee200b00, NULL, 0, 0)
+BINARY_VFP(divd,"vdiv.f64",0xee800b00, NULL, 0, 0)
+UNARY_VFP(sqrtd,"vsqrt.f64",0xeeb10b00, NULL, 0, 0)
+/* BINARY_VFP(cmpeqd,"vcmpe.f64",0xee000000, NULL, 0, 0) */
+UNARY_VFP(convdf,"vcvt.f64.f32",0xee200b00, NULL, 0, 0)
+UNARY_VFP(convfd,"vcvt.f32.f64",0xee200b00, NULL, 0, 0)
 
 #if 1
 #define NUM_ITERS_DIVF 2
