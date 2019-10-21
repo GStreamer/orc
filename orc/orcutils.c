@@ -45,7 +45,7 @@
  * @short_description: Orc utility functions
  */
 
-#if defined(__arm__) || defined(__mips__)
+#if defined(__arm__) || defined(__aarch64__) || defined(__mips__)
 char *
 get_proc_cpuinfo (void)
 {

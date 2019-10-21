@@ -14,7 +14,7 @@
 #include <orc/orcarm.h>
 #include <orc/orcutils.h>
 
-#ifdef HAVE_ARM
+#if defined(HAVE_ARM) || defined(HAVE_AARCH64)
 #if defined(__APPLE__)
 #include  <libkern/OSCacheControl.h>
 #endif
@@ -775,7 +775,7 @@ orc_arm_emit_rv (OrcCompiler *p, int op, OrcArmCond cond,
 void
 orc_arm_flush_cache (OrcCode *code)
 {
-#ifdef HAVE_ARM
+#if defined (HAVE_ARM) || defined (HAVE_AARCH64)
 #ifdef __APPLE__
   sys_dcache_flush(code->code, code->code_size);
   sys_icache_invalidate(code->exec, code->code_size);

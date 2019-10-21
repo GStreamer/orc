@@ -62,6 +62,8 @@ elif cpu_family == 'ppc' or cpu_family == 'ppc64'
   cdata.set('HAVE_POWERPC', true)
 elif cpu_family == 'arm'
   cdata.set('HAVE_ARM', true)
+elif cpu_family == 'aarch64'
+  cdata.set('HAVE_AARCH64', true)
 elif cpu_family == 'mips' and host_machine.endian() == 'little'
   cdata.set('HAVE_MIPSEL', true)
 else

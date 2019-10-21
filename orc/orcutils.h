@@ -227,7 +227,7 @@ ORC_BEGIN_DECLS
 #ifdef ORC_ENABLE_UNSTABLE_API
 
 /* FIXME: remove, these are internal functions that were never exported */
-#if defined(__arm__) || defined(__mips__)
+#if defined(__arm__) || defined(__aarch64__) || defined(__mips__)
 char * get_proc_cpuinfo (void);
 #endif
 

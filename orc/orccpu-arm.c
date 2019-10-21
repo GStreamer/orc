@@ -45,7 +45,7 @@
 
 /***** arm *****/
 
-#ifdef __arm__
+#if defined (__arm__) || defined (__aarch64__)
 #if 0
 static unsigned long
 orc_profile_stamp_xscale(void)
@@ -80,10 +80,19 @@ orc_check_neon_proc_auxv (void)
     }
 
     if (aux[0] == AT_HWCAP) {
+#ifdef __arm__
       /* if (aux[1] & 64) flags |= ORC_TARGET_NEON_VFP; */
       /* if (aux[1] & 512) flags |= ORC_TARGET_NEON_IWMMXT; */
       if (aux[1] & 4096) flags |= ORC_TARGET_NEON_NEON;
       if (aux[1] & 128) flags |= ORC_TARGET_ARM_EDSP;
+#elif __aarch64__
+      /**
+       * Use HWCAP_ASIMD (1 << 1) to make sure Advanced SIMD (ASIMD) units exist in AArch64.
+       * Note that some ARMv7 features including HWCAP_NEON are always supported by ARMv8 CPUs.
+       */
+      if (aux[1] & (1 << 1))
+        flags |= ORC_TARGET_NEON_NEON | ORC_TARGET_ARM_EDSP; /** reuse 32bit flags */
+#endif
       ORC_INFO("arm hwcap %08x", aux[1]);
     } if (aux[0] == AT_PLATFORM) {
       ORC_INFO("arm platform %s", (char *)aux[1]);
