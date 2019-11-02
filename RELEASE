@@ -1,5 +1,14 @@
+0.4.31
+======
+
+  - Fix OrcTargetPowerPCFlags enum typedef to revert API change on
+    macOS/iOS (Pablo Marcos Oltra)
+  - Fixes for various PowerPC issues (Doug Nazar)
+  - Enable flush-to-zero mode for float programs on ARM/neon (Doug Nazar)
+  - Fix some opcodes to support x2/x4 processing on PowerPC (Doug Nazar)
+
 0.4.30
-===================
+======
 
   - Don't always generate static library but default to shared-only (Xavier Claessens)
   - Work around false positives in Microsoft UWP certification kit (Nirbheek Chauhan)
