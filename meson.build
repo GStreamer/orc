@@ -44,11 +44,13 @@ endif
 cdata.set('ORC_API_EXPORT', export_define)
 
 all_backends = ['sse', 'mmx', 'altivec', 'neon', 'mips', 'c64x'] # 'arm'
+enabled_backends = []
 
 backend = get_option('orc-backend')
 foreach b : all_backends
   if backend == 'all' or backend == b
     cdata.set('ENABLE_BACKEND_' + b.to_upper(), 1)
+    enabled_backends += [b]
   endif
 endforeach
 
@@ -130,6 +132,7 @@ cdata.set_quoted('VERSION', meson.project_version())
 
 subdir('orc')
 
+opt_benchmarks = get_option('benchmarks')
 opt_examples = get_option('examples')
 opt_orctest = get_option('orc-test')
 opt_tests = get_option('tests')
@@ -160,11 +163,17 @@ endif
 
 if build_machine.system() == 'windows'
   message('Disabling gtk-doc while building on Windows')
+  gtk_doc_summary = 'no (disabled on windows)'
 else
   if find_program('gtkdoc-scan', required : get_option('gtk_doc')).found()
     subdir('doc')
+    gtk_doc_summary = 'yes'
+  elif get_option('gtk_doc').disabled()
+    message('Not building documentation (disabled)')
+    gtk_doc_summary = 'no (disabled)'
   else
     message('Not building documentation as gtk-doc was not found')
+    gtk_doc_summary = 'no (gtk-doc not found)'
   endif
 endif
 
@@ -187,3 +196,23 @@ configure_file(input : 'orc.pc.in',
 install_data('orc.m4', install_dir : 'share/aclocal')
 
 configure_file(output : 'config.h', configuration : cdata)
+
+# summary
+if meson.version().version_compare('>= 0.53')
+  summary({
+    'SSE': ('sse' in enabled_backends).to_string('yes', 'no'),
+    'MMX': ('mmx' in enabled_backends).to_string('yes', 'no'),
+    'NEON': ('neon' in enabled_backends).to_string('yes', 'no'),
+    'MIPS': ('mips' in enabled_backends).to_string('yes', 'no'),
+    'c64x': ('c64x' in enabled_backends).to_string('yes', 'no'),
+    'Altivec': ('altivec' in enabled_backends).to_string('yes', 'no'),
+    }, section: 'Backends')
+  summary({
+    'Tools': (not opt_tools.disabled()).to_string('yes', 'no'),
+    'Tests': (not opt_tests.disabled()).to_string('yes', 'no'),
+    'Examples': (not opt_examples.disabled()).to_string('yes', 'no'),
+    'Benchmarks': (not opt_benchmarks.disabled()).to_string('yes', 'no'),
+    'Documentation': gtk_doc_summary,
+    'orc-test library': (not opt_orctest.disabled()).to_string('yes', 'no'),
+    }, section: 'Build options')
+endif

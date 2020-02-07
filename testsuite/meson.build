@@ -41,6 +41,7 @@ endforeach
 
 subdir('orcc')
 
-if not get_option('benchmarks').disabled()
+opt_benchmarks = get_option('benchmarks')
+if not opt_benchmarks.disabled()
   subdir('benchmorc')
 endif
