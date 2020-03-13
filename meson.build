@@ -161,19 +161,21 @@ if not opt_tests.disabled()
   subdir('testsuite')
 endif
 
+have_docs = false
 if build_machine.system() == 'windows'
   message('Disabling gtk-doc while building on Windows')
-  gtk_doc_summary = 'no (disabled on windows)'
+  gtk_doc_disabled_reason = 'disabled on windows'
 else
   if find_program('gtkdoc-scan', required : get_option('gtk_doc')).found()
     subdir('doc')
-    gtk_doc_summary = 'yes'
+    have_docs = true
+    gtk_doc_disabled_reason = ''
   elif get_option('gtk_doc').disabled()
     message('Not building documentation (disabled)')
-    gtk_doc_summary = 'no (disabled)'
+    gtk_doc_disabled_reason = 'disabled'
   else
     message('Not building documentation as gtk-doc was not found')
-    gtk_doc_summary = 'no (gtk-doc not found)'
+    gtk_doc_disabled_reason = 'gtk-doc not found'
   endif
 endif
 
@@ -200,19 +202,28 @@ configure_file(output : 'config.h', configuration : cdata)
 # summary
 if meson.version().version_compare('>= 0.53')
   summary({
-    'SSE': ('sse' in enabled_backends).to_string('yes', 'no'),
-    'MMX': ('mmx' in enabled_backends).to_string('yes', 'no'),
-    'NEON': ('neon' in enabled_backends).to_string('yes', 'no'),
-    'MIPS': ('mips' in enabled_backends).to_string('yes', 'no'),
-    'c64x': ('c64x' in enabled_backends).to_string('yes', 'no'),
-    'Altivec': ('altivec' in enabled_backends).to_string('yes', 'no'),
-    }, section: 'Backends')
+    'SSE': 'sse' in enabled_backends,
+    'MMX': 'mmx' in enabled_backends,
+    'NEON': 'neon' in enabled_backends,
+    'MIPS': 'mips' in enabled_backends,
+    'c64x': 'c64x' in enabled_backends,
+    'Altivec': 'altivec' in enabled_backends,
+    }, section: 'Backends', bool_yn: true)
+
+  # meson 0.53 will print two lines for two args (and warn about list_sep kwarg)
+  # meson 0.54 will print one line if list_sep is specified
+  if not have_docs
+    doc_summary = [have_docs, gtk_doc_disabled_reason]
+  else
+    doc_summary = have_docs
+  endif
+
   summary({
-    'Tools': (not opt_tools.disabled()).to_string('yes', 'no'),
-    'Tests': (not opt_tests.disabled()).to_string('yes', 'no'),
-    'Examples': (not opt_examples.disabled()).to_string('yes', 'no'),
-    'Benchmarks': (not opt_benchmarks.disabled()).to_string('yes', 'no'),
-    'Documentation': gtk_doc_summary,
-    'orc-test library': (not opt_orctest.disabled()).to_string('yes', 'no'),
-    }, section: 'Build options')
+    'Tools': not opt_tools.disabled(),
+    'Tests': not opt_tests.disabled(),
+    'Examples': not opt_examples.disabled(),
+    'Benchmarks': not opt_benchmarks.disabled(),
+    'Documentation': doc_summary,
+    'Orc-test library': not opt_orctest.disabled(),
+    }, section: 'Build options', bool_yn: true, list_sep: '  ')
 endif
