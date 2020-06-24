@@ -1138,9 +1138,15 @@ neon_rule_loadX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     }
 
     ptr_register = compiler->gp_tmpreg;
-    orc_arm_emit_add_imm (compiler, ptr_register,
-        src->ptr_register,
-        compiler->vars[insn->src_args[1]].value.i * src->size);
+    if (compiler->is_64bit) {
+        orc_arm64_emit_add_imm (compiler, 64, ptr_register,
+            src->ptr_register,
+            compiler->vars[insn->src_args[1]].value.i * src->size);
+    } else {
+        orc_arm_emit_add_imm (compiler, ptr_register,
+            src->ptr_register,
+            compiler->vars[insn->src_args[1]].value.i * src->size);
+    }
 
     update = FALSE;
     is_aligned = FALSE;
@@ -1703,16 +1709,30 @@ orc_neon_emit_loadpb (OrcCompiler *compiler, int dest, int param)
 {
   orc_uint32 code;
 
-  orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
-      compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
+  if (compiler->is_64bit) {
+      orc_arm64_emit_add_imm (compiler, 64, compiler->gp_tmpreg,
+          compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
 
-  ORC_ASM_CODE(compiler,"  vld1.8 {%s[],%s[]}, [%s]\n",
-      orc_neon_reg_name (dest), orc_neon_reg_name (dest+1),
-      orc_arm_reg_name (compiler->gp_tmpreg));
-  code = 0xf4a00c2f;
-  code |= (compiler->gp_tmpreg&0xf) << 16;
-  code |= (dest&0xf) << 12;
-  code |= ((dest>>4)&0x1) << 22;
+      ORC_ASM_CODE(compiler,"  ld1r {%s, %s}, [%s]\n",
+          orc_neon64_reg_name_vector (dest, 1, 0),
+          orc_neon64_reg_name_vector (dest+1, 1, 0),
+          orc_arm64_reg_name (compiler->gp_tmpreg, 64));
+      code = 0x0d40c000;
+      code |= 1 << 30; /* Q-bit */
+      code |= (compiler->gp_tmpreg&0x1f) << 5;
+      code |= (dest&0x1f) << 0;
+  } else {
+      orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
+          compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
+
+      ORC_ASM_CODE(compiler,"  vld1.8 {%s[],%s[]}, [%s]\n",
+          orc_neon_reg_name (dest), orc_neon_reg_name (dest+1),
+          orc_arm_reg_name (compiler->gp_tmpreg));
+      code = 0xf4a00c2f;
+      code |= (compiler->gp_tmpreg&0xf) << 16;
+      code |= (dest&0xf) << 12;
+      code |= ((dest>>4)&0x1) << 22;
+  }
   orc_arm_emit (compiler, code);
 }
 
@@ -1721,16 +1741,30 @@ orc_neon_emit_loadpw (OrcCompiler *compiler, int dest, int param)
 {
   orc_uint32 code;
 
-  orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
-      compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
+  if (compiler->is_64bit) {
+      orc_arm64_emit_add_imm (compiler, 64, compiler->gp_tmpreg,
+          compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
 
-  ORC_ASM_CODE(compiler,"  vld1.16 {%s[],%s[]}, [%s]\n",
-      orc_neon_reg_name (dest), orc_neon_reg_name (dest+1),
-      orc_arm_reg_name (compiler->gp_tmpreg));
-  code = 0xf4a00c6f;
-  code |= (compiler->gp_tmpreg&0xf) << 16;
-  code |= (dest&0xf) << 12;
-  code |= ((dest>>4)&0x1) << 22;
+      ORC_ASM_CODE(compiler,"  ld1r {%s, %s}, [%s]\n",
+          orc_neon64_reg_name_vector (dest, 2, 0),
+          orc_neon64_reg_name_vector (dest+1, 2, 0),
+          orc_arm64_reg_name (compiler->gp_tmpreg, 64));
+      code = 0x0d40c400;
+      code |= 1 << 30; /* Q-bit */
+      code |= (compiler->gp_tmpreg&0x1f) << 5;
+      code |= (dest&0x1f) << 0;
+  } else {
+      orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
+          compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
+
+      ORC_ASM_CODE(compiler,"  vld1.16 {%s[],%s[]}, [%s]\n",
+          orc_neon_reg_name (dest), orc_neon_reg_name (dest+1),
+          orc_arm_reg_name (compiler->gp_tmpreg));
+      code = 0xf4a00c6f;
+      code |= (compiler->gp_tmpreg&0xf) << 16;
+      code |= (dest&0xf) << 12;
+      code |= ((dest>>4)&0x1) << 22;
+  }
   orc_arm_emit (compiler, code);
 }
 
@@ -1739,16 +1773,30 @@ orc_neon_emit_loadpl (OrcCompiler *compiler, int dest, int param)
 {
   orc_uint32 code;
 
-  orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
-      compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
+  if (compiler->is_64bit) {
+      orc_arm64_emit_add_imm (compiler, 64, compiler->gp_tmpreg,
+          compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
 
-  ORC_ASM_CODE(compiler,"  vld1.32 {%s[],%s[]}, [%s]\n",
-      orc_neon_reg_name (dest), orc_neon_reg_name (dest+1),
-      orc_arm_reg_name (compiler->gp_tmpreg));
-  code = 0xf4a00caf;
-  code |= (compiler->gp_tmpreg&0xf) << 16;
-  code |= (dest&0xf) << 12;
-  code |= ((dest>>4)&0x1) << 22;
+      ORC_ASM_CODE(compiler,"  ld1r {%s, %s}, [%s]\n",
+          orc_neon64_reg_name_vector (dest, 4, 0),
+          orc_neon64_reg_name_vector (dest+1, 4, 0),
+          orc_arm64_reg_name (compiler->gp_tmpreg, 64));
+      code = 0x0d40c800;
+      code |= 1 << 30; /* Q-bit */
+      code |= (compiler->gp_tmpreg&0x1f) << 5;
+      code |= (dest&0x1f) << 0;
+  } else {
+      orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
+          compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
+
+      ORC_ASM_CODE(compiler,"  vld1.32 {%s[],%s[]}, [%s]\n",
+          orc_neon_reg_name (dest), orc_neon_reg_name (dest+1),
+          orc_arm_reg_name (compiler->gp_tmpreg));
+      code = 0xf4a00caf;
+      code |= (compiler->gp_tmpreg&0xf) << 16;
+      code |= (dest&0xf) << 12;
+      code |= ((dest>>4)&0x1) << 22;
+  }
   orc_arm_emit (compiler, code);
 }
 
@@ -1758,64 +1806,122 @@ orc_neon_emit_loadpq (OrcCompiler *compiler, int dest, int param)
   orc_uint32 code;
   int update = FALSE;
 
-  orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
-      compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
+  if (compiler->is_64bit) {
+      orc_arm64_emit_add_imm (compiler, 64, compiler->gp_tmpreg,
+          compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
 
-  ORC_ASM_CODE(compiler,"  vld1.32 %s[0], [%s]%s\n",
-      orc_neon_reg_name (dest),
-      orc_arm_reg_name (compiler->gp_tmpreg),
-      update ? "!" : "");
-  code = 0xf4a0000d;
-  code |= 2<<10;
-  code |= (0)<<7;
-  code |= (compiler->gp_tmpreg&0xf) << 16;
-  code |= (dest&0xf) << 12;
-  code |= ((dest>>4)&0x1) << 22;
-  code |= (!update) << 1;
-  orc_arm_emit (compiler, code);
+      /*
+       * This here is a bit more complex, as the top 32 bits of the Tx are
+       * stored at an offset sizeof(params) * (ORC_VAR_T1-ORC_VAR_P1) from
+       * bottom 32 bits Px, so we do interleaved load using LD3, where the
+       * (v0.4s)[0] is Px and (v2.4s)[2] is Tx, because they are exactly
+       * 256 bits apart = 32 bytes = sizeof(params)*(ORC_VAR_T1-ORC_VAR_P1).
+       *
+       * The way all the LD1..LD4R opcodes work may be inobvious from the
+       * ARM A64 ISA documentation. See the following article:
+       * https://community.arm.com/developer/ip-products/processors/b/processors-ip-blog/posts/coding-for-neon---part-1-load-and-stores
+       *
+       * Specifically, LD3.32 with Q-bit set (128-bit operation) works this
+       * way. Assume array of 32bit types with 12 entries:
+       *
+       *  uint32_t x0[12];
+       *  ld3 {v0.4s, v1.4d, v2.4s}, [x0]          .--- LSB (address 0)
+       *  results in:                              v
+       *  v0.4s[127:0] = { x0[9],  x0[6], x0[3], x0[0] };
+       *  v1.4s[127:0] = { x0[10], x0[7], x0[4], x0[1] };
+       *  v2.4s[127:0] = { x0[11], x0[8], x0[5], x0[2] };
+       *
+       * To obtain the correct final result of loadpq, two MOV instructions
+       * are necessary to generate v0.4s = { x0[8], x0[0], x0[8], x0[0] };
+       * Note that there might be a better way to perform the mixing with
+       * some TRN/ZIP/UZP instruction.
+       */
+      ORC_ASSERT((ORC_VAR_T1-ORC_VAR_P1) == 8);
+      ORC_ASM_CODE(compiler,"  ld3 {%s - %s}, [%s]\n",
+          orc_neon64_reg_name_vector (dest, 8, 0),
+          orc_neon64_reg_name_vector (dest+2, 8, 0),
+          orc_arm64_reg_name (compiler->gp_tmpreg, 64));
+      code = 0x0c404800;
+      code |= 1 << 30; /* Q-bit */
+      code |= (compiler->gp_tmpreg&0x1f) << 5;
+      code |= (dest&0x1f) << 0;
+      orc_arm_emit (compiler, code);
 
-  ORC_ASM_CODE(compiler,"  vld1.32 %s[0], [%s]%s\n",
-      orc_neon_reg_name (dest+1),
-      orc_arm_reg_name (compiler->gp_tmpreg),
-      update ? "!" : "");
-  code = 0xf4a0000d;
-  code |= 2<<10;
-  code |= (0)<<7;
-  code |= (compiler->gp_tmpreg&0xf) << 16;
-  code |= ((dest+1)&0xf) << 12;
-  code |= (((dest+1)>>4)&0x1) << 22;
-  code |= (!update) << 1;
-  orc_arm_emit (compiler, code);
+      ORC_ASM_CODE(compiler,"  mov %s[1], %s[2]\n",
+          orc_neon64_reg_name_vector (dest, 4, 0),
+          orc_neon64_reg_name_vector (dest+2, 4, 0));
+      code = 0x6e0c4400;
+      code |= ((dest+2)&0x1f) << 5;
+      code |= (dest&0x1f) << 0;
+      orc_arm_emit (compiler, code);
 
-  orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
-      compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor,
-        params[param + (ORC_VAR_T1-ORC_VAR_P1)]));
+      ORC_ASM_CODE(compiler,"  mov %s[1], %s[0]\n",
+          orc_neon64_reg_name_vector (dest, 8, 0),
+          orc_neon64_reg_name_vector (dest, 8, 0));
+      code = 0x6e180400;
+      code |= (dest&0x1f) << 5;
+      code |= (dest&0x1f) << 0;
+      orc_arm_emit (compiler, code);
+  } else {
+      orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
+          compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, params[param]));
 
-  ORC_ASM_CODE(compiler,"  vld1.32 %s[1], [%s]%s\n",
-      orc_neon_reg_name (dest),
-      orc_arm_reg_name (compiler->gp_tmpreg),
-      update ? "!" : "");
-  code = 0xf4a0000d;
-  code |= 2<<10;
-  code |= (1)<<7;
-  code |= (compiler->gp_tmpreg&0xf) << 16;
-  code |= (dest&0xf) << 12;
-  code |= ((dest>>4)&0x1) << 22;
-  code |= (!update) << 1;
-  orc_arm_emit (compiler, code);
+      ORC_ASM_CODE(compiler,"  vld1.32 %s[0], [%s]%s\n",
+          orc_neon_reg_name (dest),
+          orc_arm_reg_name (compiler->gp_tmpreg),
+          update ? "!" : "");
+      code = 0xf4a0000d;
+      code |= 2<<10;
+      code |= (0)<<7;
+      code |= (compiler->gp_tmpreg&0xf) << 16;
+      code |= (dest&0xf) << 12;
+      code |= ((dest>>4)&0x1) << 22;
+      code |= (!update) << 1;
+      orc_arm_emit (compiler, code);
 
-  ORC_ASM_CODE(compiler,"  vld1.32 %s[1], [%s]%s\n",
-      orc_neon_reg_name (dest+1),
-      orc_arm_reg_name (compiler->gp_tmpreg),
-      update ? "!" : "");
-  code = 0xf4a0000d;
-  code |= 2<<10;
-  code |= (1)<<7;
-  code |= (compiler->gp_tmpreg&0xf) << 16;
-  code |= ((dest+1)&0xf) << 12;
-  code |= (((dest+1)>>4)&0x1) << 22;
-  code |= (!update) << 1;
-  orc_arm_emit (compiler, code);
+      ORC_ASM_CODE(compiler,"  vld1.32 %s[0], [%s]%s\n",
+          orc_neon_reg_name (dest+1),
+          orc_arm_reg_name (compiler->gp_tmpreg),
+          update ? "!" : "");
+      code = 0xf4a0000d;
+      code |= 2<<10;
+      code |= (0)<<7;
+      code |= (compiler->gp_tmpreg&0xf) << 16;
+      code |= ((dest+1)&0xf) << 12;
+      code |= (((dest+1)>>4)&0x1) << 22;
+      code |= (!update) << 1;
+      orc_arm_emit (compiler, code);
+
+      orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
+          compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor,
+            params[param + (ORC_VAR_T1-ORC_VAR_P1)]));
+
+      ORC_ASM_CODE(compiler,"  vld1.32 %s[1], [%s]%s\n",
+          orc_neon_reg_name (dest),
+          orc_arm_reg_name (compiler->gp_tmpreg),
+          update ? "!" : "");
+      code = 0xf4a0000d;
+      code |= 2<<10;
+      code |= (1)<<7;
+      code |= (compiler->gp_tmpreg&0xf) << 16;
+      code |= (dest&0xf) << 12;
+      code |= ((dest>>4)&0x1) << 22;
+      code |= (!update) << 1;
+      orc_arm_emit (compiler, code);
+
+      ORC_ASM_CODE(compiler,"  vld1.32 %s[1], [%s]%s\n",
+          orc_neon_reg_name (dest+1),
+          orc_arm_reg_name (compiler->gp_tmpreg),
+          update ? "!" : "");
+      code = 0xf4a0000d;
+      code |= 2<<10;
+      code |= (1)<<7;
+      code |= (compiler->gp_tmpreg&0xf) << 16;
+      code |= ((dest+1)&0xf) << 12;
+      code |= (((dest+1)>>4)&0x1) << 22;
+      code |= (!update) << 1;
+      orc_arm_emit (compiler, code);
+  }
 }
 
 #define UNARY(opcode,insn_name,code,insn_name64,code64,vec_shift) \
