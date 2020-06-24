@@ -360,7 +360,7 @@ orc_neon_load_constants_inner (OrcCompiler *compiler)
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
         if (compiler->is_64bit) {
-          orc_arm64_emit_load_reg (compiler, 32,
+          orc_arm64_emit_load_reg (compiler, 64,
               compiler->vars[i].ptr_register,
               compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
         } else {
@@ -1104,7 +1104,7 @@ orc_neon_emit_loop (OrcCompiler *compiler, int unroll_index)
         compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
       if (compiler->vars[k].ptr_register) {
         if (compiler->is_64bit)
-          orc_arm64_emit_add_imm (compiler, 32,
+          orc_arm64_emit_add_imm (compiler, 64,
               compiler->vars[k].ptr_register,
               compiler->vars[k].ptr_register,
               compiler->vars[k].size << compiler->loop_shift);
