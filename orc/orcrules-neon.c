@@ -1996,31 +1996,33 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 typedef struct {
   orc_uint32 code;
   char *name;
+  orc_uint32 code64;
+  char *name64;
   int negate;
   int bits;
   int vec_shift;
 } ShiftInfo;
 ShiftInfo immshift_info[] = {
-  { 0xf2880510, "vshl.i8", FALSE, 8, 3 }, /* shlb */
-  { 0xf2880010, "vshr.s8", TRUE, 8, 3 }, /* shrsb */
-  { 0xf3880010, "vshr.u8", TRUE, 8, 3 }, /* shrub */
-  { 0xf2900510, "vshl.i16", FALSE, 16, 2 },
-  { 0xf2900010, "vshr.s16", TRUE, 16, 2 },
-  { 0xf3900010, "vshr.u16", TRUE, 16, 2 },
-  { 0xf2a00510, "vshl.i32", FALSE, 32, 1 },
-  { 0xf2a00010, "vshr.s32", TRUE, 32, 1 },
-  { 0xf3a00010, "vshr.u32", TRUE, 32, 1 }
+  { 0xf2880510, "vshl.i8", 0x0f085400, "shl", FALSE, 8, 3 }, /* shlb */
+  { 0xf2880010, "vshr.s8", 0x0f080400, "sshr", TRUE, 8, 3 }, /* shrsb */
+  { 0xf3880010, "vshr.u8", 0x2f080400, "ushr", TRUE, 8, 3 }, /* shrub */
+  { 0xf2900510, "vshl.i16", 0x0f105400, "shl", FALSE, 16, 2 },
+  { 0xf2900010, "vshr.s16", 0x0f100400, "sshr", TRUE, 16, 2 },
+  { 0xf3900010, "vshr.u16", 0x2f100400, "ushr", TRUE, 16, 2 },
+  { 0xf2a00510, "vshl.i32", 0x0f205400, "shl", FALSE, 32, 1 },
+  { 0xf2a00010, "vshr.s32", 0x0f200400, "sshr", TRUE, 32, 1 },
+  { 0xf3a00010, "vshr.u32", 0x2f200400, "ushr", TRUE, 32, 1 }
 };
 ShiftInfo regshift_info[] = {
-  { 0xf3000400, "vshl.u8", FALSE, 0, 3 }, /* shlb */
-  { 0xf2000400, "vshl.s8", TRUE, 0, 3 }, /* shrsb */
-  { 0xf3000400, "vshl.u8", TRUE, 0, 3 }, /* shrub */
-  { 0xf3100400, "vshl.u16", FALSE, 0, 2 },
-  { 0xf2100400, "vshl.s16", TRUE, 0, 2 },
-  { 0xf3100400, "vshl.u16", TRUE, 0, 2 },
-  { 0xf3200400, "vshl.u32", FALSE, 0, 1 },
-  { 0xf2200400, "vshl.s32", TRUE, 0, 1 },
-  { 0xf3200400, "vshl.u32", TRUE, 0, 1 }
+  { 0xf3000400, "vshl.u8", 0x2e204400, "ushl", FALSE, 0, 3 }, /* shlb */
+  { 0xf2000400, "vshl.s8", 0x0e204400, "sshl", TRUE, 0, 3 }, /* shrsb */
+  { 0xf3000400, "vshl.u8", 0x2e204400, "ushl", TRUE, 0, 3 }, /* shrub */
+  { 0xf3100400, "vshl.u16", 0x2e604400, "ushl", FALSE, 0, 2 },
+  { 0xf2100400, "vshl.s16", 0x0e604400, "sshl", TRUE, 0, 2 },
+  { 0xf3100400, "vshl.u16", 0x2e604400, "ushl", TRUE, 0, 2 },
+  { 0xf3200400, "vshl.u32", 0x2ea04400, "ushl", FALSE, 0, 1 },
+  { 0xf2200400, "vshl.s32", 0x0ea04400, "sshl", TRUE, 0, 1 },
+  { 0xf3200400, "vshl.u32", 0x2ea04400, "ushl", TRUE, 0, 1 }
 };
 
 static void
@@ -2039,60 +2041,91 @@ orc_neon_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
       ORC_COMPILER_ERROR(p, "shift too large");
       return;
     }
-    code = immshift_info[type].code;
-    if (p->insn_shift <= immshift_info[type].vec_shift) {
-      ORC_ASM_CODE(p,"  %s %s, %s, #%d\n",
-          immshift_info[type].name,
-          orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
-          orc_neon_reg_name (p->vars[insn->src_args[0]].alloc),
-          (int)p->vars[insn->src_args[1]].value.i);
+    if (p->is_64bit) {
+      code = immshift_info[type].code64;
+      if (p->insn_shift <= immshift_info[type].vec_shift) {
+        ORC_ASM_CODE(p,"  %s %s, %s, #%d\n",
+            immshift_info[type].name64,
+            orc_neon64_reg_name_vector (p->vars[insn->dest_args[0]].alloc, 1, 0),
+            orc_neon64_reg_name_vector (p->vars[insn->src_args[0]].alloc, 1, 0),
+            (int)p->vars[insn->src_args[1]].value.i);
+      } else {
+        ORC_ASM_CODE(p,"  %s %s, %s, #%d\n",
+            immshift_info[type].name64,
+            orc_neon64_reg_name_vector (p->vars[insn->dest_args[0]].alloc, 1, 1),
+            orc_neon64_reg_name_vector (p->vars[insn->src_args[0]].alloc, 1, 1),
+            (int)p->vars[insn->src_args[1]].value.i);
+        code |= 1 << 30;
+      }
+      code |= (p->vars[insn->dest_args[0]].alloc&0x1f)<<0;
+      code |= (p->vars[insn->src_args[0]].alloc&0x1f)<<5;
     } else {
-      ORC_ASM_CODE(p,"  %s %s, %s, #%d\n",
-          immshift_info[type].name,
-          orc_neon_reg_name_quad (p->vars[insn->dest_args[0]].alloc),
-          orc_neon_reg_name_quad (p->vars[insn->src_args[0]].alloc),
-          (int)p->vars[insn->src_args[1]].value.i);
-      code |= 0x40;
+      code = immshift_info[type].code;
+      if (p->insn_shift <= immshift_info[type].vec_shift) {
+        ORC_ASM_CODE(p,"  %s %s, %s, #%d\n",
+            immshift_info[type].name,
+            orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
+            orc_neon_reg_name (p->vars[insn->src_args[0]].alloc),
+            (int)p->vars[insn->src_args[1]].value.i);
+      } else {
+        ORC_ASM_CODE(p,"  %s %s, %s, #%d\n",
+            immshift_info[type].name,
+            orc_neon_reg_name_quad (p->vars[insn->dest_args[0]].alloc),
+            orc_neon_reg_name_quad (p->vars[insn->src_args[0]].alloc),
+            (int)p->vars[insn->src_args[1]].value.i);
+        code |= 0x40;
+      }
+      code |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12;
+      code |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22;
+      code |= (p->vars[insn->src_args[0]].alloc&0xf)<<0;
+      code |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5;
     }
-    code |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12;
-    code |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22;
-    code |= (p->vars[insn->src_args[0]].alloc&0xf)<<0;
-    code |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5;
     if (immshift_info[type].negate) {
       shift = immshift_info[type].bits - shift;
     }
     code |= shift<<16;
     orc_arm_emit (p, code);
   } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
+    OrcVariable tmpreg = { .alloc = p->tmpreg, .size = p->vars[insn->src_args[0]].size };
     orc_neon_emit_loadpb (p, p->tmpreg, insn->src_args[1]);
-
     if (regshift_info[type].negate) {
-      orc_neon_emit_unary_quad (p, "vneg.s8", 0xf3b10380,
-          p->tmpreg, p->tmpreg);
+      if (p->is_64bit)
+        orc_neon64_emit_unary (p, "neg", 0x2e20b800, tmpreg, tmpreg, p->insn_shift - 1);
+      else
+        orc_neon_emit_unary_quad (p, "vneg.s8", 0xf3b10380, p->tmpreg, p->tmpreg);
     }
 
-    code = regshift_info[type].code;
-    if (p->insn_shift <= regshift_info[type].vec_shift) {
-      ORC_ASM_CODE(p,"  %s %s, %s, %s\n",
-          regshift_info[type].name,
-          orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
-          orc_neon_reg_name (p->vars[insn->src_args[0]].alloc),
-          orc_neon_reg_name (p->tmpreg));
+    if (p->is_64bit) {
+      orc_neon64_emit_binary (p, regshift_info[type].name64,
+          regshift_info[type].code64,
+          p->vars[insn->dest_args[0]],
+          p->vars[insn->src_args[0]],
+          tmpreg,
+	  p->insn_shift - !!(p->insn_shift > regshift_info[type].vec_shift));
     } else {
-      ORC_ASM_CODE(p,"  %s %s, %s, %s\n",
-          regshift_info[type].name,
-          orc_neon_reg_name_quad (p->vars[insn->dest_args[0]].alloc),
-          orc_neon_reg_name_quad (p->vars[insn->src_args[0]].alloc),
-          orc_neon_reg_name_quad (p->tmpreg));
-      code |= 0x40;
+      code = regshift_info[type].code;
+      if (p->insn_shift <= regshift_info[type].vec_shift) {
+        ORC_ASM_CODE(p,"  %s %s, %s, %s\n",
+            regshift_info[type].name,
+            orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
+            orc_neon_reg_name (p->vars[insn->src_args[0]].alloc),
+            orc_neon_reg_name (p->tmpreg));
+      } else {
+        ORC_ASM_CODE(p,"  %s %s, %s, %s\n",
+            regshift_info[type].name,
+            orc_neon_reg_name_quad (p->vars[insn->dest_args[0]].alloc),
+            orc_neon_reg_name_quad (p->vars[insn->src_args[0]].alloc),
+            orc_neon_reg_name_quad (p->tmpreg));
+        code |= 0x40;
+      }
+      code |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12;
+      code |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22;
+      code |= (p->vars[insn->src_args[0]].alloc&0xf)<<0;
+      code |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5;
+      code |= (p->tmpreg&0xf)<<16;
+      code |= ((p->tmpreg>>4)&0x1)<<7;
+      orc_arm_emit (p, code);
     }
-    code |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12;
-    code |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22;
-    code |= (p->vars[insn->src_args[0]].alloc&0xf)<<0;
-    code |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5;
-    code |= (p->tmpreg&0xf)<<16;
-    code |= ((p->tmpreg>>4)&0x1)<<7;
-    orc_arm_emit (p, code);
   } else {
     ORC_PROGRAM_ERROR(p,"shift rule only works with constants and params");
   }
