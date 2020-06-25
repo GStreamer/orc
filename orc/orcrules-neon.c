@@ -427,6 +427,28 @@ orc_neon_emit_unary (OrcCompiler *p, const char *name, unsigned int code,
 }
 
 static void
+orc_neon64_emit_unary (OrcCompiler *p, const char *name, unsigned int code,
+    OrcVariable dest, OrcVariable src1, int vec_shift)
+{
+  int is_quad = 0;
+
+  if (p->insn_shift == vec_shift + 1) {
+    is_quad = 1;
+  } else if (p->insn_shift > vec_shift + 1) {
+    ORC_COMPILER_ERROR(p, "out-of-shift");
+    return;
+  }
+
+  ORC_ASM_CODE(p,"  %s %s, %s\n", name,
+      orc_neon64_reg_name_vector (dest.alloc, dest.size, is_quad),
+      orc_neon64_reg_name_vector (src1.alloc, src1.size, is_quad));
+  code |= (is_quad&0x1)<<30;
+  code |= (src1.alloc&0x1f)<<5;
+  code |= (dest.alloc&0x1f);
+  orc_arm_emit (p, code);
+}
+
+static void
 orc_neon_emit_unary_long (OrcCompiler *p, const char *name, unsigned int code,
     int dest, int src1)
 {
@@ -1790,16 +1812,26 @@ orc_neon_emit_loadpq (OrcCompiler *compiler, int dest, int param)
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  if (p->insn_shift <= vec_shift) { \
-    orc_neon_emit_unary (p, insn_name, code, \
-        p->vars[insn->dest_args[0]].alloc, \
-        p->vars[insn->src_args[0]].alloc); \
-  } else if (p->insn_shift == vec_shift + 1) { \
-    orc_neon_emit_unary_quad (p, insn_name, code, \
-        p->vars[insn->dest_args[0]].alloc, \
-        p->vars[insn->src_args[0]].alloc); \
+  if (p->is_64bit) { \
+    if (insn_name64) { \
+      orc_neon64_emit_unary (p, insn_name64, code64, \
+          p->vars[insn->dest_args[0]], \
+          p->vars[insn->src_args[0]], vec_shift); \
+    } else { \
+      ORC_COMPILER_ERROR(p, "not supported in AArch64 yet [%s %x]", (insn_name64), (code64)); \
+    } \
   } else { \
-    ORC_COMPILER_ERROR(p, "shift too large"); \
+    if (p->insn_shift <= vec_shift) { \
+      orc_neon_emit_unary (p, insn_name, code, \
+          p->vars[insn->dest_args[0]].alloc, \
+          p->vars[insn->src_args[0]].alloc); \
+    } else if (p->insn_shift == vec_shift + 1) { \
+      orc_neon_emit_unary_quad (p, insn_name, code, \
+          p->vars[insn->dest_args[0]].alloc, \
+          p->vars[insn->src_args[0]].alloc); \
+    } else { \
+      ORC_COMPILER_ERROR(p, "shift too large"); \
+    } \
   } \
 }
 
@@ -1807,12 +1839,22 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  if (p->insn_shift <= vec_shift) { \
-    orc_neon_emit_unary_long (p, insn_name, code, \
-        p->vars[insn->dest_args[0]].alloc, \
-        p->vars[insn->src_args[0]].alloc); \
+  if (p->is_64bit) { \
+    if (insn_name64) { \
+      orc_neon64_emit_unary (p, insn_name64, code64, \
+          p->vars[insn->dest_args[0]], \
+          p->vars[insn->src_args[0]], vec_shift); \
+    } else { \
+      ORC_COMPILER_ERROR(p, "not supported in AArch64 yet [%s %x]", (insn_name64), (code64)); \
+    } \
   } else { \
-    ORC_COMPILER_ERROR(p, "shift too large"); \
+    if (p->insn_shift <= vec_shift) { \
+      orc_neon_emit_unary_long (p, insn_name, code, \
+          p->vars[insn->dest_args[0]].alloc, \
+          p->vars[insn->src_args[0]].alloc); \
+    } else { \
+      ORC_COMPILER_ERROR(p, "shift too large"); \
+    } \
   } \
 }
 
@@ -1820,12 +1862,22 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  if (p->insn_shift <= vec_shift) { \
-    orc_neon_emit_unary_narrow (p, insn_name, code, \
-        p->vars[insn->dest_args[0]].alloc, \
-        p->vars[insn->src_args[0]].alloc); \
+  if (p->is_64bit) { \
+    if (insn_name64) { \
+      orc_neon64_emit_unary (p, insn_name64, code64, \
+          p->vars[insn->dest_args[0]], \
+          p->vars[insn->src_args[0]], vec_shift); \
+    } else { \
+      ORC_COMPILER_ERROR(p, "not supported in AArch64 yet [%s %x]", (insn_name64), (code64)); \
+    } \
   } else { \
-    ORC_COMPILER_ERROR(p, "shift too large"); \
+    if (p->insn_shift <= vec_shift) { \
+      orc_neon_emit_unary_narrow (p, insn_name, code, \
+          p->vars[insn->dest_args[0]].alloc, \
+          p->vars[insn->src_args[0]].alloc); \
+    } else { \
+      ORC_COMPILER_ERROR(p, "shift too large"); \
+    } \
   } \
 }
 
