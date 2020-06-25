@@ -2084,18 +2084,29 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
   if (p->vars[insn->dest_args[0]].alloc == p->vars[insn->src_args[0]].alloc) { \
     return; \
   } \
-  if (p->insn_shift <= vec_shift) { \
-    orc_neon_emit_binary (p, "vorr", 0xf2200110, \
-        p->vars[insn->dest_args[0]].alloc, \
-        p->vars[insn->src_args[0]].alloc, \
-        p->vars[insn->src_args[0]].alloc); \
-  } else if (p->insn_shift == vec_shift + 1) { \
-    orc_neon_emit_binary_quad (p, "vorr", 0xf2200110, \
-        p->vars[insn->dest_args[0]].alloc, \
-        p->vars[insn->src_args[0]].alloc, \
-        p->vars[insn->src_args[0]].alloc); \
+  if (p->is_64bit) { \
+    if (insn_name64) { \
+      orc_neon64_emit_binary (p, insn_name64, code64, \
+          p->vars[insn->dest_args[0]], \
+          p->vars[insn->src_args[0]], \
+          p->vars[insn->src_args[0]], vec_shift); \
+    } else { \
+      ORC_COMPILER_ERROR(p, "not supported in AArch64 yet [%s %x]", (insn_name64), (code64)); \
+    } \
   } else { \
-    ORC_COMPILER_ERROR(p, "shift too large"); \
+    if (p->insn_shift <= vec_shift) { \
+      orc_neon_emit_binary (p, "vorr", 0xf2200110, \
+          p->vars[insn->dest_args[0]].alloc, \
+          p->vars[insn->src_args[0]].alloc, \
+          p->vars[insn->src_args[0]].alloc); \
+    } else if (p->insn_shift == vec_shift + 1) { \
+      orc_neon_emit_binary_quad (p, "vorr", 0xf2200110, \
+          p->vars[insn->dest_args[0]].alloc, \
+          p->vars[insn->src_args[0]].alloc, \
+          p->vars[insn->src_args[0]].alloc); \
+    } else { \
+      ORC_COMPILER_ERROR(p, "shift too large"); \
+    } \
   } \
 }
 
@@ -2339,13 +2350,13 @@ BINARY(avgsb,"vrhadd.s8",0xf2000100, NULL, 0, 3)
 BINARY(avgub,"vrhadd.u8",0xf3000100, NULL, 0, 3)
 BINARY(cmpeqb,"vceq.i8",0xf3000810, NULL, 0, 3)
 BINARY(cmpgtsb,"vcgt.s8",0xf2000300, NULL, 0, 3)
-MOVE(copyb,"vmov",0xf2200110, NULL, 0, 3)
+MOVE(copyb,"vmov",0xf2200110, "mov", 0x0ea01c00, 3)
 BINARY(maxsb,"vmax.s8",0xf2000600, NULL, 0, 3)
 BINARY(maxub,"vmax.u8",0xf3000600, NULL, 0, 3)
 BINARY(minsb,"vmin.s8",0xf2000610, NULL, 0, 3)
 BINARY(minub,"vmin.u8",0xf3000610, NULL, 0, 3)
 BINARY(mullb,"vmul.i8",0xf2000910, NULL, 0, 3)
-BINARY(orb,"vorr",0xf2200110, NULL, 0, 3)
+BINARY(orb,"vorr",0xf2200110, "orr", 0x0ea01c00, 3)
 /* LSHIFT(shlb,"vshl.i8",0xf2880510, NULL, 0, 3) */
 /* RSHIFT(shrsb,"vshr.s8",0xf2880010,8, NULL, 0, 3) */
 /* RSHIFT(shrub,"vshr.u8",0xf3880010,8, NULL, 0, 3) */
@@ -2364,13 +2375,13 @@ BINARY(avgsw,"vrhadd.s16",0xf2100100, NULL, 0, 2)
 BINARY(avguw,"vrhadd.u16",0xf3100100, NULL, 0, 2)
 BINARY(cmpeqw,"vceq.i16",0xf3100810, NULL, 0, 2)
 BINARY(cmpgtsw,"vcgt.s16",0xf2100300, NULL, 0, 2)
-MOVE(copyw,"vmov",0xf2200110, NULL, 0, 2)
+MOVE(copyw,"vmov",0xf2200110, "mov", 0x0ea01c00, 2)
 BINARY(maxsw,"vmax.s16",0xf2100600, NULL, 0, 2)
 BINARY(maxuw,"vmax.u16",0xf3100600, NULL, 0, 2)
 BINARY(minsw,"vmin.s16",0xf2100610, NULL, 0, 2)
 BINARY(minuw,"vmin.u16",0xf3100610, NULL, 0, 2)
 BINARY(mullw,"vmul.i16",0xf2100910, NULL, 0, 2)
-BINARY(orw,"vorr",0xf2200110, NULL, 0, 2)
+BINARY(orw,"vorr",0xf2200110, "orr", 0x0ea01c00, 2)
 /* LSHIFT(shlw,"vshl.i16",0xf2900510, NULL, 0, 2) */
 /* RSHIFT(shrsw,"vshr.s16",0xf2900010,16, NULL, 0, 2) */
 /* RSHIFT(shruw,"vshr.u16",0xf3900010,16, NULL, 0, 2) */
@@ -2389,13 +2400,13 @@ BINARY(avgsl,"vrhadd.s32",0xf2200100, NULL, 0, 1)
 BINARY(avgul,"vrhadd.u32",0xf3200100, NULL, 0, 1)
 BINARY(cmpeql,"vceq.i32",0xf3200810, NULL, 0, 1)
 BINARY(cmpgtsl,"vcgt.s32",0xf2200300, NULL, 0, 1)
-MOVE(copyl,"vmov",0xf2200110, NULL, 0, 1)
+MOVE(copyl,"vmov",0xf2200110, "mov", 0x0ea01c00, 1)
 BINARY(maxsl,"vmax.s32",0xf2200600, NULL, 0, 1)
 BINARY(maxul,"vmax.u32",0xf3200600, NULL, 0, 1)
 BINARY(minsl,"vmin.s32",0xf2200610, NULL, 0, 1)
 BINARY(minul,"vmin.u32",0xf3200610, NULL, 0, 1)
 BINARY(mulll,"vmul.i32",0xf2200910, NULL, 0, 1)
-BINARY(orl,"vorr",0xf2200110, NULL, 0, 1)
+BINARY(orl,"vorr",0xf2200110, "orr", 0x0ea01c00, 1)
 /* LSHIFT(shll,"vshl.i32",0xf2a00510, NULL, 0, 1) */
 /* RSHIFT(shrsl,"vshr.s32",0xf2a00010,32, NULL, 0, 1) */
 /* RSHIFT(shrul,"vshr.u32",0xf3a00010,32, NULL, 0, 1) */
@@ -2413,13 +2424,13 @@ BINARY(andq,"vand",0xf2000110, NULL, 0, 0)
 /* BINARY(avguq,"vrhadd.u64",0xf3000100, NULL, 0, 0) */
 /* BINARY(cmpeqq,"vceq.i64",0xf3000810, NULL, 0, 0) */
 /* BINARY(cmpgtsq,"vcgt.s64",0xf2000300, NULL, 0, 0) */
-MOVE(copyq,"vmov",0xf2200110, NULL, 0, 0)
+MOVE(copyq,"vmov",0xf2200110, "mov", 0x0ea01c00, 0)
 /* BINARY(maxsq,"vmax.s64",0xf2000600, NULL, 0, 0) */
 /* BINARY(maxuq,"vmax.u64",0xf3000600, NULL, 0, 0) */
 /* BINARY(minsq,"vmin.s64",0xf2000610, NULL, 0, 0) */
 /* BINARY(minuq,"vmin.u64",0xf3000610, NULL, 0, 0) */
 /* BINARY(mullq,"vmul.i64",0xf2000910, NULL, 0, 0) */
-BINARY(orq,"vorr",0xf2200110, NULL, 0, 0)
+BINARY(orq,"vorr",0xf2200110, "orr", 0x0ea01c00, 0)
 BINARY(subq,"vsub.i64",0xf3300800, NULL, 0, 0)
 /* BINARY(subssq,"vqsub.s64",0xf2000210, NULL, 0, 0) */
 /* BINARY(subusq,"vqsub.u64",0xf3000210, NULL, 0, 0) */
