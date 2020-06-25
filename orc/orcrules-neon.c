@@ -2254,24 +2254,24 @@ BINARY(subq,"vsub.i64",0xf3300800, NULL, 0, 0)
 /* BINARY(subusq,"vqsub.u64",0xf3000210, NULL, 0, 0) */
 BINARY(xorq,"veor",0xf3000110, NULL, 0, 0)
 
-UNARY_LONG(convsbw,"vmovl.s8",0xf2880a10, NULL, 0, 3)
-UNARY_LONG(convubw,"vmovl.u8",0xf3880a10, NULL, 0, 3)
-UNARY_LONG(convswl,"vmovl.s16",0xf2900a10, NULL, 0, 2)
-UNARY_LONG(convuwl,"vmovl.u16",0xf3900a10, NULL, 0, 2)
-UNARY_LONG(convslq,"vmovl.s32",0xf2a00a10, NULL, 0, 1)
-UNARY_LONG(convulq,"vmovl.u32",0xf3a00a10, NULL, 0, 1)
-UNARY_NARROW(convwb,"vmovn.i16",0xf3b20200, NULL, 0, 3)
-UNARY_NARROW(convssswb,"vqmovn.s16",0xf3b20280, NULL, 0, 3)
-UNARY_NARROW(convsuswb,"vqmovun.s16",0xf3b20240, NULL, 0, 3)
-UNARY_NARROW(convuuswb,"vqmovn.u16",0xf3b202c0, NULL, 0, 3)
-UNARY_NARROW(convlw,"vmovn.i32",0xf3b60200, NULL, 0, 2)
-UNARY_NARROW(convql,"vmovn.i64",0xf3ba0200, NULL, 0, 1)
-UNARY_NARROW(convssslw,"vqmovn.s32",0xf3b60280, NULL, 0, 2)
-UNARY_NARROW(convsuslw,"vqmovun.s32",0xf3b60240, NULL, 0, 2)
-UNARY_NARROW(convuuslw,"vqmovn.u32",0xf3b602c0, NULL, 0, 2)
-UNARY_NARROW(convsssql,"vqmovn.s64",0xf3ba0280, NULL, 0, 1)
-UNARY_NARROW(convsusql,"vqmovun.s64",0xf3ba0240, NULL, 0, 1)
-UNARY_NARROW(convuusql,"vqmovn.u64",0xf3ba02c0, NULL, 0, 1)
+UNARY_LONG(convsbw,"vmovl.s8",0xf2880a10, "sshll", 0x0f08a400, 3)
+UNARY_LONG(convubw,"vmovl.u8",0xf3880a10, "ushll", 0x2f08a400, 3)
+UNARY_LONG(convswl,"vmovl.s16",0xf2900a10, "sshll", 0x0f10a400, 2)
+UNARY_LONG(convuwl,"vmovl.u16",0xf3900a10, "ushll", 0x2f10a400, 2)
+UNARY_LONG(convslq,"vmovl.s32",0xf2a00a10, "sshll", 0x0f20a400, 1)
+UNARY_LONG(convulq,"vmovl.u32",0xf3a00a10, "ushll", 0x2f20a400, 1)
+UNARY_NARROW(convwb,"vmovn.i16",0xf3b20200, "xtn", 0x0e212800, 3)
+UNARY_NARROW(convssswb,"vqmovn.s16",0xf3b20280, "sqxtn", 0x0e214800, 3)
+UNARY_NARROW(convsuswb,"vqmovun.s16",0xf3b20240, "sqxtun", 0x2e212800, 3)
+UNARY_NARROW(convuuswb,"vqmovn.u16",0xf3b202c0, "uqxtn", 0x2e214800, 3)
+UNARY_NARROW(convlw,"vmovn.i32",0xf3b60200, "xtn", 0x0e612800, 2)
+UNARY_NARROW(convql,"vmovn.i64",0xf3ba0200, "xtn", 0x0ea12800, 1)
+UNARY_NARROW(convssslw,"vqmovn.s32",0xf3b60280, "sqxtn", 0x0e614800, 2)
+UNARY_NARROW(convsuslw,"vqmovun.s32",0xf3b60240, "sqxtun", 0x2e612800, 2)
+UNARY_NARROW(convuuslw,"vqmovn.u32",0xf3b602c0, "uqxtn", 0x2e614800, 2)
+UNARY_NARROW(convsssql,"vqmovn.s64",0xf3ba0280, "sqxtn", 0x0ea14800, 1)
+UNARY_NARROW(convsusql,"vqmovun.s64",0xf3ba0240, "sqxtun", 0x2ea12800, 1)
+UNARY_NARROW(convuusql,"vqmovn.u64",0xf3ba02c0, "uqxtn", 0x2ea14800, 1)
 
 BINARY_LONG(mulsbw,"vmull.s8",0xf2800c00, NULL, 0, 3)
 BINARY_LONG(mulubw,"vmull.u8",0xf3800c00, NULL, 0, 3)
@@ -2573,26 +2573,46 @@ static void
 orc_neon_rule_convhwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   unsigned int code;
-  ORC_ASM_CODE(p,"  vshrn.i16 %s, %s, #%d\n",
-      orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
-      orc_neon_reg_name_quad (p->vars[insn->src_args[0]].alloc), 8);
-  code = NEON_BINARY (0xf2880810,
-      p->vars[insn->dest_args[0]].alloc,
-      0, p->vars[insn->src_args[0]].alloc);
-  orc_arm_emit (p, code);
+
+  if (p->is_64bit) {
+    ORC_ASM_CODE(p,"  shrn %s, %s, #%d\n",
+        orc_neon64_reg_name_vector (p->vars[insn->dest_args[0]].alloc, 8, 0),
+        orc_neon64_reg_name_vector (p->vars[insn->src_args[0]].alloc, 8, 1), 8);
+    orc_neon64_emit_unary (p, "shrn", 0x0f088400,
+        p->vars[insn->dest_args[0]],
+        p->vars[insn->src_args[0]], p->insn_shift);
+  } else {
+    ORC_ASM_CODE(p,"  vshrn.i16 %s, %s, #%d\n",
+        orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
+        orc_neon_reg_name_quad (p->vars[insn->src_args[0]].alloc), 8);
+    code = NEON_BINARY (0xf2880810,
+        p->vars[insn->dest_args[0]].alloc,
+        0, p->vars[insn->src_args[0]].alloc);
+    orc_arm_emit (p, code);
+  }
 }
 
 static void
 orc_neon_rule_convhlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   unsigned int code;
-  ORC_ASM_CODE(p,"  vshrn.i32 %s, %s, #%d\n",
-      orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
-      orc_neon_reg_name_quad (p->vars[insn->src_args[0]].alloc), 16);
-  code = NEON_BINARY (0xf2900810,
-      p->vars[insn->dest_args[0]].alloc,
-      0, p->vars[insn->src_args[0]].alloc);
-  orc_arm_emit (p, code);
+
+  if (p->is_64bit) {
+    ORC_ASM_CODE(p,"  shrn %s, %s\n",
+        orc_neon64_reg_name_vector (p->vars[insn->dest_args[0]].alloc, 8, 0),
+        orc_neon64_reg_name_vector (p->vars[insn->src_args[0]].alloc, 8, 1));
+    orc_neon64_emit_unary (p, "shrn", 0x0f108400,
+        p->vars[insn->dest_args[0]],
+        p->vars[insn->src_args[0]], p->insn_shift);
+  } else {
+    ORC_ASM_CODE(p,"  vshrn.i32 %s, %s, #%d\n",
+        orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
+        orc_neon_reg_name_quad (p->vars[insn->src_args[0]].alloc), 16);
+    code = NEON_BINARY (0xf2900810,
+        p->vars[insn->dest_args[0]].alloc,
+        0, p->vars[insn->src_args[0]].alloc);
+    orc_arm_emit (p, code);
+  }
 }
 
 static void
