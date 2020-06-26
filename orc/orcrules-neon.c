@@ -3141,26 +3141,33 @@ orc_neon_rule_splatbw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   OrcVariable tmpreg = { .alloc = p->tmpreg, .size = p->vars[insn->dest_args[0]].size };
 
-  if (p->insn_shift <= 2) {
-    if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
-      orc_neon_emit_mov (p, p->vars[insn->dest_args[0]],
-          p->vars[insn->src_args[0]]);
-    }
-
-    orc_neon_emit_mov (p, tmpreg, p->vars[insn->dest_args[0]]);
-    orc_neon_emit_unary (p, "vzip.8", 0xf3b20180,
-        p->vars[insn->dest_args[0]].alloc,
-        p->tmpreg);
+  if (p->is_64bit) {
+    orc_neon64_emit_binary (p, "zip1", 0x0e003800,
+        p->vars[insn->dest_args[0]],
+        p->vars[insn->src_args[0]],
+        p->vars[insn->src_args[0]], p->insn_shift - (p->insn_shift > 2));
   } else {
-    if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
-      orc_neon_emit_mov_quad (p, p->vars[insn->dest_args[0]],
-          p->vars[insn->src_args[0]]);
-    }
+    if (p->insn_shift <= 2) {
+      if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
+        orc_neon_emit_mov (p, p->vars[insn->dest_args[0]],
+            p->vars[insn->src_args[0]]);
+      }
 
-    orc_neon_emit_mov_quad (p, tmpreg, p->vars[insn->dest_args[0]]);
-    orc_neon_emit_unary_quad (p, "vzip.8", 0xf3b20180,
-        p->vars[insn->dest_args[0]].alloc,
-        p->tmpreg);
+      orc_neon_emit_mov (p, tmpreg, p->vars[insn->dest_args[0]]);
+      orc_neon_emit_unary (p, "vzip.8", 0xf3b20180,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg);
+    } else {
+      if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
+        orc_neon_emit_mov_quad (p, p->vars[insn->dest_args[0]],
+            p->vars[insn->src_args[0]]);
+      }
+
+      orc_neon_emit_mov_quad (p, tmpreg, p->vars[insn->dest_args[0]]);
+      orc_neon_emit_unary_quad (p, "vzip.8", 0xf3b20180,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg);
+    }
   }
 }
 
@@ -3169,34 +3176,45 @@ orc_neon_rule_splatbl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   OrcVariable tmpreg = { .alloc = p->tmpreg, .size = p->vars[insn->dest_args[0]].size };
 
-  if (p->insn_shift <= 1) {
-    if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
-      orc_neon_emit_mov (p, p->vars[insn->dest_args[0]],
-          p->vars[insn->src_args[0]]);
-    }
-
-    orc_neon_emit_mov (p, tmpreg, p->vars[insn->dest_args[0]]);
-    orc_neon_emit_unary (p, "vzip.8", 0xf3b20180,
-        p->vars[insn->dest_args[0]].alloc,
-        p->tmpreg);
-    orc_neon_emit_mov (p, tmpreg, p->vars[insn->dest_args[0]]);
-    orc_neon_emit_unary (p, "vzip.16", 0xf3b60180,
-        p->vars[insn->dest_args[0]].alloc,
-        p->tmpreg);
+  if (p->is_64bit) {
+    orc_neon64_emit_binary (p, "zip1", 0x0e003800,
+        tmpreg,
+        p->vars[insn->src_args[0]],
+        p->vars[insn->src_args[0]], p->insn_shift - (p->insn_shift > 1));
+    orc_neon64_emit_binary (p, "zip1", 0x0e403800,
+        p->vars[insn->dest_args[0]],
+        tmpreg,
+        tmpreg, p->insn_shift - (p->insn_shift > 1));
   } else {
-    if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
-      orc_neon_emit_mov_quad (p, p->vars[insn->dest_args[0]],
-          p->vars[insn->src_args[0]]);
-    }
+    if (p->insn_shift <= 1) {
+      if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
+        orc_neon_emit_mov (p, p->vars[insn->dest_args[0]],
+            p->vars[insn->src_args[0]]);
+      }
 
-    orc_neon_emit_mov (p, tmpreg, p->vars[insn->dest_args[0]]);
-    orc_neon_emit_unary_quad (p, "vzip.8", 0xf3b20180,
-        p->vars[insn->dest_args[0]].alloc,
-        p->tmpreg);
-    orc_neon_emit_mov (p, tmpreg, p->vars[insn->dest_args[0]]);
-    orc_neon_emit_unary_quad (p, "vzip.16", 0xf3b60180,
-        p->vars[insn->dest_args[0]].alloc,
-        p->tmpreg);
+      orc_neon_emit_mov (p, tmpreg, p->vars[insn->dest_args[0]]);
+      orc_neon_emit_unary (p, "vzip.8", 0xf3b20180,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg);
+      orc_neon_emit_mov (p, tmpreg, p->vars[insn->dest_args[0]]);
+      orc_neon_emit_unary (p, "vzip.16", 0xf3b60180,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg);
+    } else {
+      if (p->vars[insn->dest_args[0]].alloc != p->vars[insn->src_args[0]].alloc) {
+        orc_neon_emit_mov_quad (p, p->vars[insn->dest_args[0]],
+            p->vars[insn->src_args[0]]);
+      }
+
+      orc_neon_emit_mov (p, tmpreg, p->vars[insn->dest_args[0]]);
+      orc_neon_emit_unary_quad (p, "vzip.8", 0xf3b20180,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg);
+      orc_neon_emit_mov (p, tmpreg, p->vars[insn->dest_args[0]]);
+      orc_neon_emit_unary_quad (p, "vzip.16", 0xf3b60180,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg);
+    }
   }
 }
 
@@ -3885,22 +3903,40 @@ orc_neon_rule_splitql (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest1 = p->vars[insn->dest_args[1]].alloc;
   int src = p->vars[insn->src_args[0]].alloc;
 
-  if (p->insn_shift < 1) {
+  if (p->is_64bit) {
     if (src != dest0) {
-      orc_neon_emit_mov (p, p->vars[insn->dest_args[0]], p->vars[insn->src_args[0]]);
+      orc_neon64_emit_binary (p, "uzp2", 0x0e805800,
+          p->vars[insn->dest_args[0]], p->vars[insn->src_args[0]],
+          p->vars[insn->src_args[0]], p->insn_shift - (p->insn_shift >= 1));
+      orc_neon64_emit_binary (p, "uzp1", 0x0e801800,
+          p->vars[insn->dest_args[1]], p->vars[insn->src_args[0]],
+          p->vars[insn->src_args[0]], p->insn_shift - (p->insn_shift >= 1));
+    } else {
+      orc_neon64_emit_binary (p, "uzp1", 0x0e801800,
+          p->vars[insn->dest_args[1]], p->vars[insn->src_args[0]],
+          p->vars[insn->src_args[0]], p->insn_shift - (p->insn_shift >= 1));
+      orc_neon64_emit_binary (p, "uzp2", 0x0e805800,
+          p->vars[insn->dest_args[0]], p->vars[insn->src_args[0]],
+          p->vars[insn->src_args[0]], p->insn_shift - (p->insn_shift >= 1));
     }
-    if (src != dest1) {
-      orc_neon_emit_mov (p, p->vars[insn->dest_args[1]], p->vars[insn->src_args[0]]);
-    }
-    orc_neon_emit_unary (p, "vtrn.32", 0xf3ba0080, dest1, dest0);
   } else {
-    if (src != dest0) {
-      orc_neon_emit_mov_quad (p, p->vars[insn->dest_args[0]], p->vars[insn->src_args[0]]);
+    if (p->insn_shift < 1) {
+      if (src != dest0) {
+        orc_neon_emit_mov (p, p->vars[insn->dest_args[0]], p->vars[insn->src_args[0]]);
+      }
+      if (src != dest1) {
+        orc_neon_emit_mov (p, p->vars[insn->dest_args[1]], p->vars[insn->src_args[0]]);
+      }
+      orc_neon_emit_unary (p, "vtrn.32", 0xf3ba0080, dest1, dest0);
+    } else {
+      if (src != dest0) {
+        orc_neon_emit_mov_quad (p, p->vars[insn->dest_args[0]], p->vars[insn->src_args[0]]);
+      }
+      if (src != dest1) {
+        orc_neon_emit_mov_quad (p, p->vars[insn->dest_args[1]], p->vars[insn->src_args[0]]);
+      }
+      orc_neon_emit_unary_quad (p, "vuzp.32", 0xf3ba0140, dest1, dest0);
     }
-    if (src != dest1) {
-      orc_neon_emit_mov_quad (p, p->vars[insn->dest_args[1]], p->vars[insn->src_args[0]]);
-    }
-    orc_neon_emit_unary_quad (p, "vuzp.32", 0xf3ba0140, dest1, dest0);
   }
 }
 
@@ -3911,22 +3947,40 @@ orc_neon_rule_splitlw (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest1 = p->vars[insn->dest_args[1]].alloc;
   int src = p->vars[insn->src_args[0]].alloc;
 
-  if (p->insn_shift < 2) {
+  if (p->is_64bit) {
     if (src != dest0) {
-      orc_neon_emit_mov (p, p->vars[insn->dest_args[0]], p->vars[insn->src_args[0]]);
+      orc_neon64_emit_binary (p, "uzp2", 0x0e405800,
+          p->vars[insn->dest_args[0]], p->vars[insn->src_args[0]],
+          p->vars[insn->src_args[0]], p->insn_shift - (p->insn_shift >= 2));
+      orc_neon64_emit_binary (p, "uzp1", 0x0e401800,
+          p->vars[insn->dest_args[1]], p->vars[insn->src_args[0]],
+          p->vars[insn->src_args[0]], p->insn_shift - (p->insn_shift >= 2));
+    } else {
+      orc_neon64_emit_binary (p, "uzp1", 0x0e401800,
+          p->vars[insn->dest_args[1]], p->vars[insn->src_args[0]],
+          p->vars[insn->src_args[0]], p->insn_shift - (p->insn_shift >= 2));
+      orc_neon64_emit_binary (p, "uzp2", 0x0e405800,
+          p->vars[insn->dest_args[0]], p->vars[insn->src_args[0]],
+          p->vars[insn->src_args[0]], p->insn_shift - (p->insn_shift >= 2));
     }
-    if (src != dest1) {
-      orc_neon_emit_mov (p, p->vars[insn->dest_args[1]], p->vars[insn->src_args[0]]);
-    }
-    orc_neon_emit_unary (p, "vuzp.16", 0xf3b60100, dest1, dest0);
   } else {
-    if (src != dest0) {
-      orc_neon_emit_mov_quad (p, p->vars[insn->dest_args[0]], p->vars[insn->src_args[0]]);
+    if (p->insn_shift < 2) {
+      if (src != dest0) {
+        orc_neon_emit_mov (p, p->vars[insn->dest_args[0]], p->vars[insn->src_args[0]]);
+      }
+      if (src != dest1) {
+        orc_neon_emit_mov (p, p->vars[insn->dest_args[1]], p->vars[insn->src_args[0]]);
+      }
+      orc_neon_emit_unary (p, "vuzp.16", 0xf3b60100, dest1, dest0);
+    } else {
+      if (src != dest0) {
+        orc_neon_emit_mov_quad (p, p->vars[insn->dest_args[0]], p->vars[insn->src_args[0]]);
+      }
+      if (src != dest1) {
+        orc_neon_emit_mov_quad (p, p->vars[insn->dest_args[1]], p->vars[insn->src_args[0]]);
+      }
+      orc_neon_emit_unary_quad (p, "vuzp.16", 0xf3b60140, dest1, dest0);
     }
-    if (src != dest1) {
-      orc_neon_emit_mov_quad (p, p->vars[insn->dest_args[1]], p->vars[insn->src_args[0]]);
-    }
-    orc_neon_emit_unary_quad (p, "vuzp.16", 0xf3b60140, dest1, dest0);
   }
 }
 
@@ -3937,22 +3991,40 @@ orc_neon_rule_splitwb (OrcCompiler *p, void *user, OrcInstruction *insn)
   int dest1 = p->vars[insn->dest_args[1]].alloc;
   int src = p->vars[insn->src_args[0]].alloc;
 
-  if (p->insn_shift < 2) {
+  if (p->is_64bit) {
     if (src != dest0) {
-      orc_neon_emit_mov (p, p->vars[insn->dest_args[0]], p->vars[insn->src_args[0]]);
+      orc_neon64_emit_binary (p, "uzp2", 0x0e005800,
+          p->vars[insn->dest_args[0]], p->vars[insn->src_args[0]],
+          p->vars[insn->src_args[0]], p->insn_shift - (p->insn_shift >= 2));
+      orc_neon64_emit_binary (p, "uzp1", 0x0e001800,
+          p->vars[insn->dest_args[1]], p->vars[insn->src_args[0]],
+          p->vars[insn->src_args[0]], p->insn_shift - (p->insn_shift >= 2));
+    } else {
+      orc_neon64_emit_binary (p, "uzp1", 0x0e001800,
+          p->vars[insn->dest_args[1]], p->vars[insn->src_args[0]],
+          p->vars[insn->src_args[0]], p->insn_shift - (p->insn_shift >= 2));
+      orc_neon64_emit_binary (p, "uzp2", 0x0e005800,
+          p->vars[insn->dest_args[0]], p->vars[insn->src_args[0]],
+          p->vars[insn->src_args[0]], p->insn_shift - (p->insn_shift >= 2));
     }
-    if (src != dest1) {
-      orc_neon_emit_mov (p, p->vars[insn->dest_args[1]], p->vars[insn->src_args[0]]);
-    }
-    orc_neon_emit_unary (p, "vuzp.8", 0xf3b20100, dest1, dest0);
   } else {
-    if (src != dest0) {
-      orc_neon_emit_mov_quad (p, p->vars[insn->dest_args[0]], p->vars[insn->src_args[0]]);
+    if (p->insn_shift < 2) {
+      if (src != dest0) {
+        orc_neon_emit_mov (p, p->vars[insn->dest_args[0]], p->vars[insn->src_args[0]]);
+      }
+      if (src != dest1) {
+        orc_neon_emit_mov (p, p->vars[insn->dest_args[1]], p->vars[insn->src_args[0]]);
+      }
+      orc_neon_emit_unary (p, "vuzp.8", 0xf3b20100, dest1, dest0);
+    } else {
+      if (src != dest0) {
+        orc_neon_emit_mov_quad (p, p->vars[insn->dest_args[0]], p->vars[insn->src_args[0]]);
+      }
+      if (src != dest1) {
+        orc_neon_emit_mov_quad (p, p->vars[insn->dest_args[1]], p->vars[insn->src_args[0]]);
+      }
+      orc_neon_emit_unary_quad (p, "vuzp.8", 0xf3b20140, dest1, dest0);
     }
-    if (src != dest1) {
-      orc_neon_emit_mov_quad (p, p->vars[insn->dest_args[1]], p->vars[insn->src_args[0]]);
-    }
-    orc_neon_emit_unary_quad (p, "vuzp.8", 0xf3b20140, dest1, dest0);
   }
 }
 
