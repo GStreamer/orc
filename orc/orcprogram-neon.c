@@ -332,7 +332,7 @@ orc_neon_load_constants_outer (OrcCompiler *compiler)
       case ORC_VAR_TYPE_DEST:
         break;
       case ORC_VAR_TYPE_ACCUMULATOR:
-        orc_neon_emit_loadil (compiler, compiler->vars[i].alloc, 0);
+        orc_neon_emit_loadil (compiler, &(compiler->vars[i]), 0);
         break;
       case ORC_VAR_TYPE_TEMP:
         break;
