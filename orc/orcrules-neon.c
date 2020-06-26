@@ -2456,8 +2456,8 @@ BINARY(addssb,"vqadd.s8",0xf2000010, "sqadd", 0x0e200c00, 3)
 BINARY(addusb,"vqadd.u8",0xf3000010, "uqadd", 0x2e200c00, 3)
 BINARY(andb,"vand",0xf2000110, "and", 0x0e201c00, 3)
 /* BINARY(andnb,"vbic",0xf2100110, NULL, 0, 3) */
-BINARY(avgsb,"vrhadd.s8",0xf2000100, NULL, 0, 3)
-BINARY(avgub,"vrhadd.u8",0xf3000100, NULL, 0, 3)
+BINARY(avgsb,"vrhadd.s8",0xf2000100, "srhadd", 0x0e201400, 3)
+BINARY(avgub,"vrhadd.u8",0xf3000100, "urhadd", 0x2e201400, 3)
 BINARY(cmpeqb,"vceq.i8",0xf3000810, NULL, 0, 3)
 BINARY(cmpgtsb,"vcgt.s8",0xf2000300, NULL, 0, 3)
 MOVE(copyb,"vmov",0xf2200110, "mov", 0x0ea01c00, 3)
@@ -2481,8 +2481,8 @@ BINARY(addssw,"vqadd.s16",0xf2100010, "sqadd", 0x0e600c00, 2)
 BINARY(addusw,"vqadd.u16",0xf3100010, "uqadd", 0x2e600c00, 2)
 BINARY(andw,"vand",0xf2000110, "and", 0x0e201c00, 2)
 /* BINARY(andnw,"vbic",0xf2100110, NULL, 0, 2) */
-BINARY(avgsw,"vrhadd.s16",0xf2100100, NULL, 0, 2)
-BINARY(avguw,"vrhadd.u16",0xf3100100, NULL, 0, 2)
+BINARY(avgsw,"vrhadd.s16",0xf2100100, "srhadd", 0x0e601400, 2)
+BINARY(avguw,"vrhadd.u16",0xf3100100, "urhadd", 0x2e601400, 2)
 BINARY(cmpeqw,"vceq.i16",0xf3100810, NULL, 0, 2)
 BINARY(cmpgtsw,"vcgt.s16",0xf2100300, NULL, 0, 2)
 MOVE(copyw,"vmov",0xf2200110, "mov", 0x0ea01c00, 2)
@@ -2506,8 +2506,8 @@ BINARY(addssl,"vqadd.s32",0xf2200010, "sqadd", 0x0ea00c00, 1)
 BINARY(addusl,"vqadd.u32",0xf3200010, "uqadd", 0x2ea00c00, 1)
 BINARY(andl,"vand",0xf2000110, "and", 0x0e201c00, 1)
 /* BINARY(andnl,"vbic",0xf2100110, NULL, 0, 1) */
-BINARY(avgsl,"vrhadd.s32",0xf2200100, NULL, 0, 1)
-BINARY(avgul,"vrhadd.u32",0xf3200100, NULL, 0, 1)
+BINARY(avgsl,"vrhadd.s32",0xf2200100, "srhadd", 0x0ea01400, 1)
+BINARY(avgul,"vrhadd.u32",0xf3200100, "urhadd", 0x2ea01400, 1)
 BINARY(cmpeql,"vceq.i32",0xf3200810, NULL, 0, 1)
 BINARY(cmpgtsl,"vcgt.s32",0xf2200300, NULL, 0, 1)
 MOVE(copyl,"vmov",0xf2200110, "mov", 0x0ea01c00, 1)
@@ -2530,8 +2530,8 @@ BINARY(addq,"vadd.i64",0xf2300800, "add", 0x0ee08400, 0)
 /* BINARY(addssq,"vqadd.s64",0xf2000010, "sqadd", 0x0ee00c00, 0) */
 /* BINARY(addusq,"vqadd.u64",0xf3000010, "uqadd", 0x2ee00c00, 0) */
 BINARY(andq,"vand",0xf2000110, "and", 0x0e201c00, 0)
-/* BINARY(avgsq,"vrhadd.s64",0xf2000100, NULL, 0, 0) */
-/* BINARY(avguq,"vrhadd.u64",0xf3000100, NULL, 0, 0) */
+/* BINARY(avgsq,"vrhadd.s64",0xf2000100, "srhadd", 0x0ee01400, 0) */
+/* BINARY(avguq,"vrhadd.u64",0xf3000100, "urhadd", 0x2ee01400, 0) */
 /* BINARY(cmpeqq,"vceq.i64",0xf3000810, NULL, 0, 0) */
 /* BINARY(cmpgtsq,"vcgt.s64",0xf2000300, NULL, 0, 0) */
 MOVE(copyq,"vmov",0xf2200110, "mov", 0x0ea01c00, 0)
