@@ -3325,27 +3325,51 @@ orc_neon_rule_signw (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   orc_neon_emit_loadiw (p, &tmpreg, 1);
   if (p->insn_shift < 3) {
-    orc_neon_emit_binary (p, "vmin.s16", 0xf2100610,
-        p->vars[insn->dest_args[0]].alloc,
-        p->tmpreg,
-        p->vars[insn->src_args[0]].alloc);
+    if (p->is_64bit)
+      orc_neon64_emit_binary (p, "smin", 0x0e606c00,
+          p->vars[insn->dest_args[0]],
+          tmpreg,
+          p->vars[insn->src_args[0]], p->insn_shift);
+    else
+      orc_neon_emit_binary (p, "vmin.s16", 0xf2100610,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg,
+          p->vars[insn->src_args[0]].alloc);
   } else {
-    orc_neon_emit_binary_quad (p, "vmin.s16", 0xf2100610,
-        p->vars[insn->dest_args[0]].alloc,
-        p->tmpreg,
-        p->vars[insn->src_args[0]].alloc);
+    if (p->is_64bit)
+      orc_neon64_emit_binary (p, "smin", 0x0e606c00,
+          p->vars[insn->dest_args[0]],
+          tmpreg,
+          p->vars[insn->src_args[0]], p->insn_shift - 1);
+    else
+      orc_neon_emit_binary_quad (p, "vmin.s16", 0xf2100610,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg,
+          p->vars[insn->src_args[0]].alloc);
   }
   orc_neon_emit_loadiw (p, &tmpreg, -1);
   if (p->insn_shift < 3) {
-    orc_neon_emit_binary (p, "vmax.s16", 0xf2100600,
-        p->vars[insn->dest_args[0]].alloc,
-        p->tmpreg,
-        p->vars[insn->dest_args[0]].alloc);
+    if (p->is_64bit)
+      orc_neon64_emit_binary (p, "smax", 0x0e606400,
+          p->vars[insn->dest_args[0]],
+          tmpreg,
+          p->vars[insn->dest_args[0]], p->insn_shift);
+    else
+      orc_neon_emit_binary (p, "vmax.s16", 0xf2100600,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg,
+          p->vars[insn->dest_args[0]].alloc);
   } else {
-    orc_neon_emit_binary_quad (p, "vmax.s16", 0xf2100600,
-        p->vars[insn->dest_args[0]].alloc,
-        p->tmpreg,
-        p->vars[insn->dest_args[0]].alloc);
+    if (p->is_64bit)
+      orc_neon64_emit_binary (p, "smax", 0x0e606400,
+          p->vars[insn->dest_args[0]],
+          tmpreg,
+          p->vars[insn->dest_args[0]], p->insn_shift - 1);
+    else
+      orc_neon_emit_binary_quad (p, "vmax.s16", 0xf2100600,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg,
+          p->vars[insn->dest_args[0]].alloc);
   }
 }
 
@@ -3358,27 +3382,51 @@ orc_neon_rule_signb (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   orc_neon_emit_loadib (p, &tmpreg, 1);
   if (p->insn_shift < 4) {
-    orc_neon_emit_binary (p, "vmin.s8", 0xf2000610,
-        p->vars[insn->dest_args[0]].alloc,
-        p->tmpreg,
-        p->vars[insn->src_args[0]].alloc);
+    if (p->is_64bit)
+      orc_neon64_emit_binary (p, "smin", 0x0e206c00,
+          p->vars[insn->dest_args[0]],
+          tmpreg,
+          p->vars[insn->src_args[0]], p->insn_shift);
+    else
+      orc_neon_emit_binary (p, "vmin.s8", 0xf2000610,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg,
+          p->vars[insn->src_args[0]].alloc);
   } else {
-    orc_neon_emit_binary_quad (p, "vmin.s8", 0xf2000610,
-        p->vars[insn->dest_args[0]].alloc,
-        p->tmpreg,
-        p->vars[insn->src_args[0]].alloc);
+    if (p->is_64bit)
+      orc_neon64_emit_binary (p, "smin", 0x0e206c00,
+          p->vars[insn->dest_args[0]],
+          tmpreg,
+          p->vars[insn->src_args[0]], p->insn_shift - 1);
+    else
+      orc_neon_emit_binary_quad (p, "vmin.s8", 0xf2000610,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg,
+          p->vars[insn->src_args[0]].alloc);
   }
   orc_neon_emit_loadib (p, &tmpreg, -1);
   if (p->insn_shift < 4) {
-    orc_neon_emit_binary (p, "vmax.s8", 0xf2000600,
-        p->vars[insn->dest_args[0]].alloc,
-        p->tmpreg,
-        p->vars[insn->dest_args[0]].alloc);
+    if (p->is_64bit)
+      orc_neon64_emit_binary (p, "smax", 0x0e206400,
+          p->vars[insn->dest_args[0]],
+          tmpreg,
+          p->vars[insn->dest_args[0]], p->insn_shift);
+    else
+      orc_neon_emit_binary (p, "vmax.s8", 0xf2000600,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg,
+          p->vars[insn->dest_args[0]].alloc);
   } else {
-    orc_neon_emit_binary_quad (p, "vmax.s8", 0xf2000600,
-        p->vars[insn->dest_args[0]].alloc,
-        p->tmpreg,
-        p->vars[insn->dest_args[0]].alloc);
+    if (p->is_64bit)
+      orc_neon64_emit_binary (p, "smax", 0x0e206400,
+          p->vars[insn->dest_args[0]],
+          tmpreg,
+          p->vars[insn->dest_args[0]], p->insn_shift - 1);
+    else
+      orc_neon_emit_binary_quad (p, "vmax.s8", 0xf2000600,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg,
+          p->vars[insn->dest_args[0]].alloc);
   }
 }
 
@@ -3391,27 +3439,51 @@ orc_neon_rule_signl (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   orc_neon_emit_loadil (p, &tmpreg, 1);
   if (p->insn_shift < 2) {
-    orc_neon_emit_binary (p, "vmin.s32", 0xf2200610,
-        p->vars[insn->dest_args[0]].alloc,
-        p->tmpreg,
-        p->vars[insn->src_args[0]].alloc);
+    if (p->is_64bit)
+      orc_neon64_emit_binary (p, "smin", 0x0ea06c00,
+          p->vars[insn->dest_args[0]],
+          tmpreg,
+          p->vars[insn->src_args[0]], p->insn_shift);
+    else
+      orc_neon_emit_binary (p, "vmin.s32", 0xf2200610,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg,
+          p->vars[insn->src_args[0]].alloc);
   } else {
-    orc_neon_emit_binary_quad (p, "vmin.s32", 0xf2200610,
-        p->vars[insn->dest_args[0]].alloc,
-        p->tmpreg,
-        p->vars[insn->src_args[0]].alloc);
+    if (p->is_64bit)
+      orc_neon64_emit_binary (p, "smin", 0x0ea06c00,
+          p->vars[insn->dest_args[0]],
+          tmpreg,
+          p->vars[insn->src_args[0]], p->insn_shift - 1);
+    else
+      orc_neon_emit_binary_quad (p, "vmin.s32", 0xf2200610,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg,
+          p->vars[insn->src_args[0]].alloc);
   }
   orc_neon_emit_loadil (p, &tmpreg, -1);
   if (p->insn_shift < 2) {
-    orc_neon_emit_binary (p, "vmax.s32", 0xf2200600,
-        p->vars[insn->dest_args[0]].alloc,
-        p->tmpreg,
-        p->vars[insn->dest_args[0]].alloc);
+    if (p->is_64bit)
+      orc_neon64_emit_binary (p, "smax", 0x0ea06400,
+          p->vars[insn->dest_args[0]],
+          tmpreg,
+          p->vars[insn->dest_args[0]], p->insn_shift);
+    else
+      orc_neon_emit_binary (p, "vmax.s32", 0xf2200600,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg,
+          p->vars[insn->dest_args[0]].alloc);
   } else {
-    orc_neon_emit_binary_quad (p, "vmax.s32", 0xf2200600,
-        p->vars[insn->dest_args[0]].alloc,
-        p->tmpreg,
-        p->vars[insn->dest_args[0]].alloc);
+    if (p->is_64bit)
+      orc_neon64_emit_binary (p, "smax", 0x0ea06400,
+          p->vars[insn->dest_args[0]],
+          tmpreg,
+          p->vars[insn->dest_args[0]], p->insn_shift - 1);
+    else
+      orc_neon_emit_binary_quad (p, "vmax.s32", 0xf2200600,
+          p->vars[insn->dest_args[0]].alloc,
+          p->tmpreg,
+          p->vars[insn->dest_args[0]].alloc);
   }
 }
 
