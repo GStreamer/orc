@@ -2344,7 +2344,7 @@ UNARY(absb,"vabs.s8",0xf3b10300, "abs", 0x0e20b800, 3)
 BINARY(addb,"vadd.i8",0xf2000800, "add", 0x0e208400, 3)
 BINARY(addssb,"vqadd.s8",0xf2000010, "sqadd", 0x0e200c00, 3)
 BINARY(addusb,"vqadd.u8",0xf3000010, "uqadd", 0x2e200c00, 3)
-BINARY(andb,"vand",0xf2000110, NULL, 0, 3)
+BINARY(andb,"vand",0xf2000110, "and", 0x0e201c00, 3)
 /* BINARY(andnb,"vbic",0xf2100110, NULL, 0, 3) */
 BINARY(avgsb,"vrhadd.s8",0xf2000100, NULL, 0, 3)
 BINARY(avgub,"vrhadd.u8",0xf3000100, NULL, 0, 3)
@@ -2369,7 +2369,7 @@ UNARY(absw,"vabs.s16",0xf3b50300, "abs", 0x0e60b800, 2)
 BINARY(addw,"vadd.i16",0xf2100800, "add", 0x0e608400, 2)
 BINARY(addssw,"vqadd.s16",0xf2100010, "sqadd", 0x0e600c00, 2)
 BINARY(addusw,"vqadd.u16",0xf3100010, "uqadd", 0x2e600c00, 2)
-BINARY(andw,"vand",0xf2000110, NULL, 0, 2)
+BINARY(andw,"vand",0xf2000110, "and", 0x0e201c00, 2)
 /* BINARY(andnw,"vbic",0xf2100110, NULL, 0, 2) */
 BINARY(avgsw,"vrhadd.s16",0xf2100100, NULL, 0, 2)
 BINARY(avguw,"vrhadd.u16",0xf3100100, NULL, 0, 2)
@@ -2394,7 +2394,7 @@ UNARY(absl,"vabs.s32",0xf3b90300, "abs", 0x0ea0b800, 1)
 BINARY(addl,"vadd.i32",0xf2200800, "add", 0x0ea08400, 1)
 BINARY(addssl,"vqadd.s32",0xf2200010, "sqadd", 0x0ea00c00, 1)
 BINARY(addusl,"vqadd.u32",0xf3200010, "uqadd", 0x2ea00c00, 1)
-BINARY(andl,"vand",0xf2000110, NULL, 0, 1)
+BINARY(andl,"vand",0xf2000110, "and", 0x0e201c00, 1)
 /* BINARY(andnl,"vbic",0xf2100110, NULL, 0, 1) */
 BINARY(avgsl,"vrhadd.s32",0xf2200100, NULL, 0, 1)
 BINARY(avgul,"vrhadd.u32",0xf3200100, NULL, 0, 1)
@@ -2419,7 +2419,7 @@ BINARY(xorl,"veor",0xf3000110, "eor", 0x2e201c00, 1)
 BINARY(addq,"vadd.i64",0xf2300800, "add", 0x0ee08400, 0)
 /* BINARY(addssq,"vqadd.s64",0xf2000010, "sqadd", 0x0ee00c00, 0) */
 /* BINARY(addusq,"vqadd.u64",0xf3000010, "uqadd", 0x2ee00c00, 0) */
-BINARY(andq,"vand",0xf2000110, NULL, 0, 0)
+BINARY(andq,"vand",0xf2000110, "and", 0x0e201c00, 0)
 /* BINARY(avgsq,"vrhadd.s64",0xf2000100, NULL, 0, 0) */
 /* BINARY(avguq,"vrhadd.u64",0xf3000100, NULL, 0, 0) */
 /* BINARY(cmpeqq,"vceq.i64",0xf3000810, NULL, 0, 0) */
