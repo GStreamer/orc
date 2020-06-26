@@ -2363,7 +2363,7 @@ BINARY(orb,"vorr",0xf2200110, "orr", 0x0ea01c00, 3)
 BINARY(subb,"vsub.i8",0xf3000800, NULL, 0, 3)
 BINARY(subssb,"vqsub.s8",0xf2000210, NULL, 0, 3)
 BINARY(subusb,"vqsub.u8",0xf3000210, NULL, 0, 3)
-BINARY(xorb,"veor",0xf3000110, NULL, 0, 3)
+BINARY(xorb,"veor",0xf3000110, "eor", 0x2e201c00, 3)
 
 UNARY(absw,"vabs.s16",0xf3b50300, NULL, 0, 2)
 BINARY(addw,"vadd.i16",0xf2100800, "add", 0x0e608400, 2)
@@ -2388,7 +2388,7 @@ BINARY(orw,"vorr",0xf2200110, "orr", 0x0ea01c00, 2)
 BINARY(subw,"vsub.i16",0xf3100800, NULL, 0, 2)
 BINARY(subssw,"vqsub.s16",0xf2100210, NULL, 0, 2)
 BINARY(subusw,"vqsub.u16",0xf3100210, NULL, 0, 2)
-BINARY(xorw,"veor",0xf3000110, NULL, 0, 2)
+BINARY(xorw,"veor",0xf3000110, "eor", 0x2e201c00, 2)
 
 UNARY(absl,"vabs.s32",0xf3b90300, NULL, 0, 1)
 BINARY(addl,"vadd.i32",0xf2200800, "add", 0x0ea08400, 1)
@@ -2413,7 +2413,7 @@ BINARY(orl,"vorr",0xf2200110, "orr", 0x0ea01c00, 1)
 BINARY(subl,"vsub.i32",0xf3200800, NULL, 0, 1)
 BINARY(subssl,"vqsub.s32",0xf2200210, NULL, 0, 1)
 BINARY(subusl,"vqsub.u32",0xf3200210, NULL, 0, 1)
-BINARY(xorl,"veor",0xf3000110, NULL, 0, 1)
+BINARY(xorl,"veor",0xf3000110, "eor", 0x2e201c00, 1)
 
 /* UNARY(absq,"vabs.s64",0xf3b10300, NULL, 0, 0) */
 BINARY(addq,"vadd.i64",0xf2300800, "add", 0x0ee08400, 0)
@@ -2434,7 +2434,7 @@ BINARY(orq,"vorr",0xf2200110, "orr", 0x0ea01c00, 0)
 BINARY(subq,"vsub.i64",0xf3300800, NULL, 0, 0)
 /* BINARY(subssq,"vqsub.s64",0xf2000210, NULL, 0, 0) */
 /* BINARY(subusq,"vqsub.u64",0xf3000210, NULL, 0, 0) */
-BINARY(xorq,"veor",0xf3000110, NULL, 0, 0)
+BINARY(xorq,"veor",0xf3000110, "eor", 0x2e201c00, 0)
 
 UNARY_LONG(convsbw,"vmovl.s8",0xf2880a10, "sshll", 0x0f08a400, 3)
 UNARY_LONG(convubw,"vmovl.u8",0xf3880a10, "ushll", 0x2f08a400, 3)
