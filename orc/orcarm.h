@@ -440,6 +440,8 @@ ORC_API void orc_arm64_emit_ret (OrcCompiler *p, int Rn);
   orc_arm64_emit_am(p,bits,ORC_ARM64_DP_ADD,ORC_ARM64_TYPE_REG,0,Rd,Rn,Rm,0)
 #define orc_arm64_emit_add_lsl(p,bits,Rd,Rn,Rm,val) \
   orc_arm64_emit_am(p,bits,ORC_ARM64_DP_ADD,ORC_ARM64_TYPE_REG,ORC_ARM_LSL,Rd,Rn,Rm,val)
+#define orc_arm64_emit_add_lsr(p,bits,Rd,Rn,Rm,val) \
+  orc_arm64_emit_am(p,bits,ORC_ARM64_DP_ADD,ORC_ARM64_TYPE_REG,ORC_ARM_LSR,Rd,Rn,Rm,val)
 #define orc_arm64_emit_add_asr(p,bits,Rd,Rn,Rm,val) \
   orc_arm64_emit_am(p,bits,ORC_ARM64_DP_ADD,ORC_ARM64_TYPE_REG,ORC_ARM_ASR,Rd,Rn,Rm,val)
 #define orc_arm64_emit_add_ror(p,bits,Rd,Rn,Rm,val) \

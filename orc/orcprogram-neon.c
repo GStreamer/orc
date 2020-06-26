@@ -311,6 +311,17 @@ orc_compiler_neon_init (OrcCompiler *compiler)
     compiler->unroll_shift = 0;
   }
 
+  if (compiler->is_64bit) { /* The loadupdb is aarch64 only so far */
+    for(i=0;i<compiler->n_insns;i++){
+      OrcInstruction *insn = compiler->insns + i;
+      OrcStaticOpcode *opcode = insn->opcode;
+
+      if (strcmp (opcode->name, "loadupdb") == 0) {
+        compiler->vars[insn->src_args[0]].need_offset_reg = TRUE;
+      }
+    }
+  }
+
   if (0) {
     compiler->need_mask_regs = TRUE;
   }
@@ -343,6 +354,34 @@ orc_neon_load_constants_outer (OrcCompiler *compiler)
   }
 
   orc_compiler_emit_invariants (compiler);
+
+  if (compiler->is_64bit) { /* The loadupdb is aarch64 only so far */
+    for(i=0;i<compiler->n_insns;i++){
+      OrcInstruction *insn = compiler->insns + i;
+      OrcStaticOpcode *opcode = insn->opcode;
+
+      if (strcmp (opcode->name, "loadupdb") == 0) {
+        if (compiler->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
+            orc_arm64_emit_load_reg (compiler, 64,
+	        compiler->vars[insn->src_args[0]].ptr_offset,
+                compiler->exec_reg,
+		ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[1]]));
+        } else {
+            if (!compiler->vars[insn->src_args[0]].ptr_offset)
+                continue;
+            if (!compiler->vars[insn->src_args[1]].value.i)
+                orc_arm64_emit_eor(compiler, 64,
+                    compiler->vars[insn->src_args[0]].ptr_offset,
+                    compiler->vars[insn->src_args[0]].ptr_offset,
+                    compiler->vars[insn->src_args[0]].ptr_offset);
+            else
+                orc_arm64_emit_load_imm(compiler, 64,
+                    compiler->vars[insn->src_args[0]].ptr_offset,
+                    compiler->vars[insn->src_args[1]].value.i);
+        }
+      }
+    }
+  }
 }
 
 static void
@@ -363,6 +402,11 @@ orc_neon_load_constants_inner (OrcCompiler *compiler)
           orc_arm64_emit_load_reg (compiler, 64,
               compiler->vars[i].ptr_register,
               compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
+          if (compiler->vars[i].ptr_offset)
+              orc_arm64_emit_eor(compiler, 64,
+                  compiler->vars[i].ptr_offset,
+                  compiler->vars[i].ptr_offset,
+                  compiler->vars[i].ptr_offset);
         } else {
           orc_arm_emit_load_reg (compiler,
               compiler->vars[i].ptr_register,
@@ -1125,22 +1169,23 @@ orc_neon_emit_loop (OrcCompiler *compiler, int unroll_index)
     if (compiler->vars[k].name == NULL) continue;
     if (compiler->vars[k].vartype == ORC_VAR_TYPE_SRC ||
         compiler->vars[k].vartype == ORC_VAR_TYPE_DEST) {
-      if (compiler->vars[k].ptr_register) {
-        if (compiler->is_64bit)
+      if (compiler->is_64bit) {
+        if (compiler->vars[k].ptr_offset) {
+          orc_arm64_emit_add_imm (compiler, 64,
+              compiler->vars[k].ptr_offset,
+              compiler->vars[k].ptr_offset,
+              compiler->vars[k].size << compiler->loop_shift);
+        } else if (compiler->vars[k].ptr_register) {
           orc_arm64_emit_add_imm (compiler, 64,
               compiler->vars[k].ptr_register,
               compiler->vars[k].ptr_register,
               compiler->vars[k].size << compiler->loop_shift);
-        else
+        }
+      } else {
           orc_arm_emit_add_imm (compiler,
               compiler->vars[k].ptr_register,
               compiler->vars[k].ptr_register,
               compiler->vars[k].size << compiler->loop_shift);
-      } else {
-        /* arm_emit_add_imm_memoffset (compiler, arm_ptr_size, */
-        /*     compiler->vars[k].size << compiler->loop_shift, */
-        /*     (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[k]), */
-        /*     p->exec_reg); */
       }
     }
   }

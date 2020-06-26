@@ -1077,6 +1077,126 @@ orc_neon_storeq (OrcCompiler *compiler, int dest, int update, int src1, int is_a
 #endif
 
 static void
+neon_rule_loadupdb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
+{
+  OrcVariable *src = compiler->vars + insn->src_args[0];
+  unsigned int code = 0;
+  int size = src->size << compiler->insn_shift;
+  ORC_ASSERT(src->ptr_register);	/* can ptr_register be 0 ? */
+  int ptr_reg;
+
+  if (!compiler->is_64bit) {
+    ORC_COMPILER_ERROR(compiler, "loadupdb is implemented only on aarch64");
+    return;
+  }
+
+  /* FIXME this should be fixed at a higher level */
+  if (src->vartype != ORC_VAR_TYPE_SRC && src->vartype != ORC_VAR_TYPE_DEST) {
+    ORC_COMPILER_ERROR(compiler, "loadX used with non src/dest");
+    return;
+  }
+
+  if (src->ptr_offset) {
+    ptr_reg = compiler->gp_tmpreg;
+    orc_arm64_emit_add_lsr(compiler, 64, ptr_reg, src->ptr_register, src->ptr_offset, 1);
+  } else {
+    ptr_reg = src->ptr_register;
+  }
+
+  int opcode, flag;
+
+  if (size > 16) {
+    /** load multiple single-element structures to one, two, three, or four registers */
+    char vt_str[64];
+
+    memset(vt_str, '\x00', 64);
+
+    if (size == 64) {
+      snprintf(vt_str, 64, "%s, %s, %s, %s",
+          orc_neon64_reg_name_vector (compiler->tmpreg, 1, 1),
+          orc_neon64_reg_name_vector (compiler->tmpreg + 1, 1, 1),
+          orc_neon64_reg_name_vector (compiler->tmpreg + 2, 1, 1),
+          orc_neon64_reg_name_vector (compiler->tmpreg + 3, 1, 1));
+      opcode = 0x2;
+    } else if (size == 32) {
+      snprintf(vt_str, 64, "%s, %s",
+          orc_neon64_reg_name_vector (compiler->tmpreg, 1, 1),
+          orc_neon64_reg_name_vector (compiler->tmpreg + 1, 1, 1));
+      opcode = 0xa;
+    } else if (size == 16) {
+      snprintf(vt_str, 64, "%s",
+          orc_neon64_reg_name_vector (compiler->tmpreg, 1, 1));
+      opcode = 0x7;
+    } else {
+      ORC_COMPILER_ERROR(compiler,"bad aligned load size %d",
+          src->size << compiler->insn_shift);
+      return;
+    }
+    flag = 0; /* Bytes */
+
+    ORC_ASM_CODE(compiler,"  ld1 { %s }, [%s]\n",
+        vt_str, orc_arm64_reg_name (ptr_reg, 64));
+    code = 0x0c400000;
+    code |= 0 << 30; /* Q-bit */
+    code |= (flag&0x3) << 10;
+    code |= (opcode&0xf) << 12;
+  } else {
+    /** load one single-element structure to one lane of one register */
+    flag = 0;
+    if (size == 8) {
+      opcode = 4;
+      flag = 1; /* size==01 */
+    } else if (size == 4) {
+      opcode = 4;
+    } else if (size == 2) {
+      opcode = 2;
+    } else if (size == 1) {
+      opcode = 0;
+    } else {
+      ORC_COMPILER_ERROR(compiler,"bad unaligned load size %d",
+          src->size << compiler->insn_shift);
+      return;
+    }
+    ORC_ASM_CODE(compiler,"  ld1 { %s }[0], [%s]\n",
+        orc_neon64_reg_name_vector_single (compiler->tmpreg, size),
+        orc_arm64_reg_name (ptr_reg, 64));
+    code = 0x0d400000;
+    code |= (opcode&0x7) << 13;
+    code |= (flag&0x3) << 10;
+  }
+
+  code |= (ptr_reg&0x1f) << 5;
+  code |= (compiler->tmpreg&0x1f);
+
+  orc_arm_emit (compiler, code);
+
+  OrcVariable tmpreg = { .alloc = compiler->tmpreg, .size = compiler->vars[insn->src_args[0]].size };
+
+  switch (src->size) {
+    case 1:
+      orc_neon64_emit_binary (compiler, "zip1", 0x0e003800,
+          compiler->vars[insn->dest_args[0]],
+          tmpreg,
+          tmpreg, compiler->insn_shift - 1);
+      break;
+    case 2:
+      orc_neon64_emit_binary (compiler, "zip1", 0x0e403800,
+          compiler->vars[insn->dest_args[0]],
+          tmpreg,
+          tmpreg, compiler->insn_shift - 1);
+      break;
+    case 4:
+      orc_neon64_emit_binary (compiler, "zip1", 0x0e803800,
+          compiler->vars[insn->dest_args[0]],
+          tmpreg,
+          tmpreg, compiler->insn_shift - 1);
+      break;
+  }
+
+  src->update_type = 1;
+}
+
+static void
 neon_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 {
   OrcVariable *src = compiler->vars + insn->src_args[0];
@@ -4388,6 +4508,7 @@ orc_compiler_neon_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "loadpw", neon_rule_loadpX, (void *)2);
   orc_rule_register (rule_set, "loadpl", neon_rule_loadpX, (void *)4);
   orc_rule_register (rule_set, "loadpq", neon_rule_loadpX, (void *)8);
+  orc_rule_register (rule_set, "loadupdb", neon_rule_loadupdb, (void *)0);
   orc_rule_register (rule_set, "loadb", neon_rule_loadX, (void *)0);
   orc_rule_register (rule_set, "loadw", neon_rule_loadX, (void *)0);
   orc_rule_register (rule_set, "loadl", neon_rule_loadX, (void *)0);
