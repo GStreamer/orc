@@ -2340,7 +2340,7 @@ orc_neon_rule_andn (OrcCompiler *p, void *user, OrcInstruction *insn)
 
 
 
-UNARY(absb,"vabs.s8",0xf3b10300, NULL, 0, 3)
+UNARY(absb,"vabs.s8",0xf3b10300, "abs", 0x0e20b800, 3)
 BINARY(addb,"vadd.i8",0xf2000800, "add", 0x0e208400, 3)
 BINARY(addssb,"vqadd.s8",0xf2000010, "sqadd", 0x0e200c00, 3)
 BINARY(addusb,"vqadd.u8",0xf3000010, "uqadd", 0x2e200c00, 3)
@@ -2365,7 +2365,7 @@ BINARY(subssb,"vqsub.s8",0xf2000210, NULL, 0, 3)
 BINARY(subusb,"vqsub.u8",0xf3000210, NULL, 0, 3)
 BINARY(xorb,"veor",0xf3000110, "eor", 0x2e201c00, 3)
 
-UNARY(absw,"vabs.s16",0xf3b50300, NULL, 0, 2)
+UNARY(absw,"vabs.s16",0xf3b50300, "abs", 0x0e60b800, 2)
 BINARY(addw,"vadd.i16",0xf2100800, "add", 0x0e608400, 2)
 BINARY(addssw,"vqadd.s16",0xf2100010, "sqadd", 0x0e600c00, 2)
 BINARY(addusw,"vqadd.u16",0xf3100010, "uqadd", 0x2e600c00, 2)
@@ -2390,7 +2390,7 @@ BINARY(subssw,"vqsub.s16",0xf2100210, NULL, 0, 2)
 BINARY(subusw,"vqsub.u16",0xf3100210, NULL, 0, 2)
 BINARY(xorw,"veor",0xf3000110, "eor", 0x2e201c00, 2)
 
-UNARY(absl,"vabs.s32",0xf3b90300, NULL, 0, 1)
+UNARY(absl,"vabs.s32",0xf3b90300, "abs", 0x0ea0b800, 1)
 BINARY(addl,"vadd.i32",0xf2200800, "add", 0x0ea08400, 1)
 BINARY(addssl,"vqadd.s32",0xf2200010, "sqadd", 0x0ea00c00, 1)
 BINARY(addusl,"vqadd.u32",0xf3200010, "uqadd", 0x2ea00c00, 1)
@@ -2415,7 +2415,7 @@ BINARY(subssl,"vqsub.s32",0xf2200210, NULL, 0, 1)
 BINARY(subusl,"vqsub.u32",0xf3200210, NULL, 0, 1)
 BINARY(xorl,"veor",0xf3000110, "eor", 0x2e201c00, 1)
 
-/* UNARY(absq,"vabs.s64",0xf3b10300, NULL, 0, 0) */
+/* UNARY(absq,"vabs.s64",0xf3b10300, "abs", 0xee0b800, 0) */
 BINARY(addq,"vadd.i64",0xf2300800, "add", 0x0ee08400, 0)
 /* BINARY(addssq,"vqadd.s64",0xf2000010, "sqadd", 0x0ee00c00, 0) */
 /* BINARY(addusq,"vqadd.u64",0xf3000010, "uqadd", 0x2ee00c00, 0) */
