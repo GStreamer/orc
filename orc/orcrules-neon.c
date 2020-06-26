@@ -1189,7 +1189,7 @@ neon_rule_loadX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
       } else if (size == 2) {
         opcode = 2;
       } else if (size == 1) {
-        opcode = 1;
+        opcode = 0;
       } else {
         ORC_COMPILER_ERROR(compiler,"bad unaligned load size %d",
             src->size << compiler->insn_shift);
@@ -1372,7 +1372,7 @@ neon_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
       } else if (size == 2) {
         opcode = 2;
       } else if (size == 1) {
-        opcode = 1;
+        opcode = 0;
       } else {
         ORC_COMPILER_ERROR(compiler,"bad unaligned load size %d",
             src->size << compiler->insn_shift);
