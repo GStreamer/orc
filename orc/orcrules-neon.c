@@ -2461,10 +2461,10 @@ BINARY(avgub,"vrhadd.u8",0xf3000100, NULL, 0, 3)
 BINARY(cmpeqb,"vceq.i8",0xf3000810, NULL, 0, 3)
 BINARY(cmpgtsb,"vcgt.s8",0xf2000300, NULL, 0, 3)
 MOVE(copyb,"vmov",0xf2200110, "mov", 0x0ea01c00, 3)
-BINARY(maxsb,"vmax.s8",0xf2000600, NULL, 0, 3)
-BINARY(maxub,"vmax.u8",0xf3000600, NULL, 0, 3)
-BINARY(minsb,"vmin.s8",0xf2000610, NULL, 0, 3)
-BINARY(minub,"vmin.u8",0xf3000610, NULL, 0, 3)
+BINARY(maxsb,"vmax.s8",0xf2000600, "smax", 0x0e206400, 3)
+BINARY(maxub,"vmax.u8",0xf3000600, "umax", 0x2e206400, 3)
+BINARY(minsb,"vmin.s8",0xf2000610, "smin", 0x0e206c00, 3)
+BINARY(minub,"vmin.u8",0xf3000610, "umin", 0x2e206c00, 3)
 BINARY(mullb,"vmul.i8",0xf2000910, NULL, 0, 3)
 BINARY(orb,"vorr",0xf2200110, "orr", 0x0ea01c00, 3)
 /* LSHIFT(shlb,"vshl.i8",0xf2880510, NULL, 0, 3) */
@@ -2486,10 +2486,10 @@ BINARY(avguw,"vrhadd.u16",0xf3100100, NULL, 0, 2)
 BINARY(cmpeqw,"vceq.i16",0xf3100810, NULL, 0, 2)
 BINARY(cmpgtsw,"vcgt.s16",0xf2100300, NULL, 0, 2)
 MOVE(copyw,"vmov",0xf2200110, "mov", 0x0ea01c00, 2)
-BINARY(maxsw,"vmax.s16",0xf2100600, NULL, 0, 2)
-BINARY(maxuw,"vmax.u16",0xf3100600, NULL, 0, 2)
-BINARY(minsw,"vmin.s16",0xf2100610, NULL, 0, 2)
-BINARY(minuw,"vmin.u16",0xf3100610, NULL, 0, 2)
+BINARY(maxsw,"vmax.s16",0xf2100600, "smax", 0x0e606400, 2)
+BINARY(maxuw,"vmax.u16",0xf3100600, "umax", 0x2e606400, 2)
+BINARY(minsw,"vmin.s16",0xf2100610, "smin", 0x0e606c00, 2)
+BINARY(minuw,"vmin.u16",0xf3100610, "umin", 0x2e606c00, 2)
 BINARY(mullw,"vmul.i16",0xf2100910, NULL, 0, 2)
 BINARY(orw,"vorr",0xf2200110, "orr", 0x0ea01c00, 2)
 /* LSHIFT(shlw,"vshl.i16",0xf2900510, NULL, 0, 2) */
@@ -2511,10 +2511,10 @@ BINARY(avgul,"vrhadd.u32",0xf3200100, NULL, 0, 1)
 BINARY(cmpeql,"vceq.i32",0xf3200810, NULL, 0, 1)
 BINARY(cmpgtsl,"vcgt.s32",0xf2200300, NULL, 0, 1)
 MOVE(copyl,"vmov",0xf2200110, "mov", 0x0ea01c00, 1)
-BINARY(maxsl,"vmax.s32",0xf2200600, NULL, 0, 1)
-BINARY(maxul,"vmax.u32",0xf3200600, NULL, 0, 1)
-BINARY(minsl,"vmin.s32",0xf2200610, NULL, 0, 1)
-BINARY(minul,"vmin.u32",0xf3200610, NULL, 0, 1)
+BINARY(maxsl,"vmax.s32",0xf2200600, "smax", 0x0ea06400, 1)
+BINARY(maxul,"vmax.u32",0xf3200600, "umax", 0x2ea06400, 1)
+BINARY(minsl,"vmin.s32",0xf2200610, "smin", 0x0ea06c00, 1)
+BINARY(minul,"vmin.u32",0xf3200610, "umin", 0x2ea06c00, 1)
 BINARY(mulll,"vmul.i32",0xf2200910, NULL, 0, 1)
 BINARY(orl,"vorr",0xf2200110, "orr", 0x0ea01c00, 1)
 /* LSHIFT(shll,"vshl.i32",0xf2a00510, NULL, 0, 1) */
@@ -2535,10 +2535,10 @@ BINARY(andq,"vand",0xf2000110, "and", 0x0e201c00, 0)
 /* BINARY(cmpeqq,"vceq.i64",0xf3000810, NULL, 0, 0) */
 /* BINARY(cmpgtsq,"vcgt.s64",0xf2000300, NULL, 0, 0) */
 MOVE(copyq,"vmov",0xf2200110, "mov", 0x0ea01c00, 0)
-/* BINARY(maxsq,"vmax.s64",0xf2000600, NULL, 0, 0) */
-/* BINARY(maxuq,"vmax.u64",0xf3000600, NULL, 0, 0) */
-/* BINARY(minsq,"vmin.s64",0xf2000610, NULL, 0, 0) */
-/* BINARY(minuq,"vmin.u64",0xf3000610, NULL, 0, 0) */
+/* BINARY(maxsq,"vmax.s64",0xf2000600, "smax", 0x0ee06400, 0) */
+/* BINARY(maxuq,"vmax.u64",0xf3000600, "umax", 0x2ee06400, 0) */
+/* BINARY(minsq,"vmin.s64",0xf2000610, "smin", 0x0ee06c00, 0) */
+/* BINARY(minuq,"vmin.u64",0xf3000610, "umin", 0x2ee06c00, 0) */
 /* BINARY(mullq,"vmul.i64",0xf2000910, NULL, 0, 0) */
 BINARY(orq,"vorr",0xf2200110, "orr", 0x0ea01c00, 0)
 BINARY(subq,"vsub.i64",0xf3300800, "sub", 0x2ee08400, 0)
