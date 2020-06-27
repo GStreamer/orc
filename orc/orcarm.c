@@ -1218,15 +1218,15 @@ count_leading_zeros (orc_uint64 val)
  * 32-bit variant: immr:imms
  * 64-bit variant: N:immr:imms
  */
-static orc_uint32
-encode_logical_imm (int size, orc_uint64 val)
+static int
+encode_logical_imm (int size, orc_uint64 val, orc_uint32 *encoded)
 {
   orc_uint64 mask;
   orc_uint32 I, CTO, CLO;
-  orc_uint32 immr, imms, N, encoded;
+  orc_uint32 immr, imms, N;
 
   if (size > 64)
-    return 0;
+    return -1;
 
   /**
    * immediate values of all-zero and all-cones are not encoded.
@@ -1234,7 +1234,7 @@ encode_logical_imm (int size, orc_uint64 val)
    */
   if (val == 0ULL || val == ~0ULL ||
       (size != 64 && (val >> size != 0 || val == (~0ULL >> (64 - size)))))
-    return 0;
+    return -2;
 
   /** decide the element size (i.e., 2, 4, 8, 16, 32 or 64 bits) */
   do {
@@ -1268,9 +1268,9 @@ encode_logical_imm (int size, orc_uint64 val)
   imms |= (CTO-1);
   N = ((imms >> 6) & 1) ^ 1;
 
-  encoded = (N << 12) | (immr << 6) | (imms & 0x3f);
+  *encoded = (N << 12) | (immr << 6) | (imms & 0x3f);
 
-  return encoded;
+  return 0;
 }
 
 void
@@ -1278,9 +1278,9 @@ orc_arm64_emit_lg (OrcCompiler *p, OrcArm64RegBits bits, OrcArm64DP opcode,
     OrcArm64Type type, int opt, int Rd, int Rn, int Rm, orc_uint64 val)
 {
   orc_uint32 code;
-  orc_uint32 imm;
+  orc_uint32 imm = 0xffffffff;
 
-  int shift;
+  int shift, ret;
 
   static const char *insn_names[] = {
     "and", "orr", "eor", "ands"
@@ -1323,8 +1323,8 @@ orc_arm64_emit_lg (OrcCompiler *p, OrcArm64RegBits bits, OrcArm64DP opcode,
         return;
       }
 
-      imm = encode_logical_imm (bits, val);
-      if (!imm) {
+      ret = encode_logical_imm (bits, val, &imm);
+      if (ret) {
         ORC_COMPILER_ERROR(p, "wrong immediate value %llx", val);
         return;
       }
