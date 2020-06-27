@@ -2434,17 +2434,25 @@ orc_neon_rule_andn (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int max_shift = ORC_PTR_TO_INT(user);
 
-  /* this is special because the operand order is reversed */
-  if (p->insn_shift <= max_shift) { \
-    orc_neon_emit_binary (p, "vbic", 0xf2100110,
-        p->vars[insn->dest_args[0]].alloc,
-        p->vars[insn->src_args[1]].alloc,
-        p->vars[insn->src_args[0]].alloc);
+  if (p->is_64bit) {
+      orc_neon64_emit_binary (p, "bic", 0x0e601c00,
+          p->vars[insn->dest_args[0]],
+          p->vars[insn->src_args[1]],
+          p->vars[insn->src_args[0]],
+	  p->insn_shift - (p->insn_shift > max_shift));
   } else {
-    orc_neon_emit_binary_quad (p, "vbic", 0xf2100110,
-        p->vars[insn->dest_args[0]].alloc,
-        p->vars[insn->src_args[1]].alloc,
-        p->vars[insn->src_args[0]].alloc);
+    /* this is special because the operand order is reversed */
+    if (p->insn_shift <= max_shift) {
+      orc_neon_emit_binary (p, "vbic", 0xf2100110,
+          p->vars[insn->dest_args[0]].alloc,
+          p->vars[insn->src_args[1]].alloc,
+          p->vars[insn->src_args[0]].alloc);
+    } else {
+      orc_neon_emit_binary_quad (p, "vbic", 0xf2100110,
+          p->vars[insn->dest_args[0]].alloc,
+          p->vars[insn->src_args[1]].alloc,
+          p->vars[insn->src_args[0]].alloc);
+    }
   }
 }
 
