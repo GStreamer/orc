@@ -3225,38 +3225,49 @@ orc_neon_rule_splatw3q (OrcCompiler *p, void *user, OrcInstruction *insn)
   int offset = 0;
   int label = 20;
 
-  orc_arm_add_fixup (p, label, 1);
-  ORC_ASM_CODE(p,"  vldr %s, .L%d+%d\n",
-      orc_neon_reg_name (p->tmpreg), label, offset);
-  code = 0xed9f0b00;
-  code |= (p->tmpreg&0xf) << 12;
-  code |= ((p->tmpreg>>4)&0x1) << 22;
-  code |= ((offset - 8) >> 2)&0xff;
-  orc_arm_emit (p, code);
+  if (p->is_64bit) {
+      OrcVariable tmpreg = { .alloc = p->tmpreg, .size = p->vars[insn->dest_args[0]].size };
+      orc_neon64_emit_binary (p, "trn2", 0x0e406800,
+          tmpreg,
+          p->vars[insn->src_args[0]],
+          p->vars[insn->src_args[0]], p->insn_shift - (p->insn_shift > 0));
+      orc_neon64_emit_binary (p, "trn2", 0x0e806800,
+          p->vars[insn->dest_args[0]],
+          tmpreg,
+          tmpreg, p->insn_shift - (p->insn_shift > 0));
+  } else {
+    orc_arm_add_fixup (p, label, 1);
+    ORC_ASM_CODE(p,"  vldr %s, .L%d+%d\n",
+        orc_neon_reg_name (p->tmpreg), label, offset);
+    code = 0xed9f0b00;
+    code |= (p->tmpreg&0xf) << 12;
+    code |= ((p->tmpreg>>4)&0x1) << 22;
+    code |= ((offset - 8) >> 2)&0xff;
+    orc_arm_emit (p, code);
 
-  ORC_ASM_CODE(p,"  vtbl.8 %s, { %s, %s }, %s\n",
-      orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
-      orc_neon_reg_name (p->vars[insn->src_args[0]].alloc),
-      orc_neon_reg_name (p->vars[insn->src_args[0]].alloc + 1),
-      orc_neon_reg_name (p->tmpreg));
-  code = NEON_BINARY(0xf3b00900,
-      p->vars[insn->dest_args[0]].alloc,
-      p->vars[insn->src_args[0]].alloc,
-      p->tmpreg);
-  orc_arm_emit (p, code);
-
-  if (p->insn_shift > 0) {
-    ORC_ASM_CODE(p,"  vtbl.8 %s, { %s }, %s\n",
-        orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc+1),
-        orc_neon_reg_name (p->vars[insn->src_args[0]].alloc+1),
+    ORC_ASM_CODE(p,"  vtbl.8 %s, { %s, %s }, %s\n",
+        orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
+        orc_neon_reg_name (p->vars[insn->src_args[0]].alloc),
+        orc_neon_reg_name (p->vars[insn->src_args[0]].alloc + 1),
         orc_neon_reg_name (p->tmpreg));
-    code = NEON_BINARY(0xf3b00800,
-        p->vars[insn->dest_args[0]].alloc+1,
-        p->vars[insn->src_args[0]].alloc+1,
+    code = NEON_BINARY(0xf3b00900,
+        p->vars[insn->dest_args[0]].alloc,
+        p->vars[insn->src_args[0]].alloc,
         p->tmpreg);
     orc_arm_emit (p, code);
-  }
 
+    if (p->insn_shift > 0) {
+      ORC_ASM_CODE(p,"  vtbl.8 %s, { %s }, %s\n",
+          orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc+1),
+          orc_neon_reg_name (p->vars[insn->src_args[0]].alloc+1),
+          orc_neon_reg_name (p->tmpreg));
+      code = NEON_BINARY(0xf3b00800,
+          p->vars[insn->dest_args[0]].alloc+1,
+          p->vars[insn->src_args[0]].alloc+1,
+          p->tmpreg);
+      orc_arm_emit (p, code);
+    }
+  }
 }
 
 static void
