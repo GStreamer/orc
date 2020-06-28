@@ -1311,55 +1311,52 @@ neon_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
       if (dest->is_aligned) {
         if (size == 64) {
           snprintf(vt_str, 64, "%s, %s, %s, %s",
-              orc_neon64_reg_name_vector (dest->alloc, 8, 1),
-              orc_neon64_reg_name_vector (dest->alloc + 1, 8, 1),
-              orc_neon64_reg_name_vector (dest->alloc + 2, 8, 1),
-              orc_neon64_reg_name_vector (dest->alloc + 3, 8, 1));
-          opcode = 2;
+              orc_neon64_reg_name_vector (src->alloc, 8, 1),
+              orc_neon64_reg_name_vector (src->alloc + 1, 8, 1),
+              orc_neon64_reg_name_vector (src->alloc + 2, 8, 1),
+              orc_neon64_reg_name_vector (src->alloc + 3, 8, 1));
+          opcode = 0x2;
         } else if (size == 32) {
           snprintf(vt_str, 64, "%s, %s",
-              orc_neon64_reg_name_vector (dest->alloc, 8, 1),
-              orc_neon64_reg_name_vector (dest->alloc + 1, 8, 1));
-          opcode = 10;
+              orc_neon64_reg_name_vector (src->alloc, 8, 1),
+              orc_neon64_reg_name_vector (src->alloc + 1, 8, 1));
+          opcode = 0xa;
         } else if (size == 16) {
           snprintf(vt_str, 64, "%s",
-              orc_neon64_reg_name_vector (dest->alloc, 8, 1));
-          opcode = 7;
+              orc_neon64_reg_name_vector (src->alloc, 8, 1));
+          opcode = 0x7;
         } else {
           ORC_COMPILER_ERROR(compiler,"bad aligned load size %d",
               src->size << compiler->insn_shift);
           return;
         }
-        flag = 7;
       } else {
         if (size == 64) {
           snprintf(vt_str, 64, "%s, %s, %s, %s",
-              orc_neon64_reg_name_vector (dest->alloc, 1, 1),
-              orc_neon64_reg_name_vector (dest->alloc + 1, 1, 1),
-              orc_neon64_reg_name_vector (dest->alloc + 2, 1, 1),
-              orc_neon64_reg_name_vector (dest->alloc + 3, 1, 1));
-          opcode = 2;
+              orc_neon64_reg_name_vector (src->alloc, 1, 1),
+              orc_neon64_reg_name_vector (src->alloc + 1, 1, 1),
+              orc_neon64_reg_name_vector (src->alloc + 2, 1, 1),
+              orc_neon64_reg_name_vector (src->alloc + 3, 1, 1));
+          opcode = 0x2;
         } else if (size == 32) {
           snprintf(vt_str, 64, "%s, %s",
-              orc_neon64_reg_name_vector (dest->alloc, 1, 1),
-              orc_neon64_reg_name_vector (dest->alloc + 1, 1, 1));
-          opcode = 10;
+              orc_neon64_reg_name_vector (src->alloc, 1, 1),
+              orc_neon64_reg_name_vector (src->alloc + 1, 1, 1));
+          opcode = 0xa;
         } else if (size == 16) {
           snprintf(vt_str, 64, "%s",
-              orc_neon64_reg_name_vector (dest->alloc, 1, 1));
-          opcode = 7;
+              orc_neon64_reg_name_vector (src->alloc, 1, 1));
+          opcode = 0x7;
         } else {
           ORC_COMPILER_ERROR(compiler,"bad aligned load size %d",
               src->size << compiler->insn_shift);
           return;
         }
-        flag = 1;
       }
       ORC_ASM_CODE(compiler,"  st1 { %s }, [%s]\n",
           vt_str, orc_arm64_reg_name (dest->ptr_register, 64));
       code = 0x0c000000;
-      code |= (flag&0x1) << 30;
-      code |= (flag&0x3) << 10;
+      code |= 1 << 30;
       code |= (opcode&0xf) << 12;
     } else {
       /** store one single-element structure to one lane of one register */
@@ -1379,7 +1376,7 @@ neon_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
         return;
       }
       ORC_ASM_CODE(compiler,"  st1 { %s }[0], [%s]\n",
-          orc_neon64_reg_name_vector_single (dest->alloc, size),
+          orc_neon64_reg_name_vector_single (src->alloc, size),
           orc_arm64_reg_name (dest->ptr_register, 64));
       code = 0x0d000000;
       code |= (opcode&0x7) << 13;
@@ -1387,7 +1384,7 @@ neon_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     }
 
     code |= (dest->ptr_register&0x1f) << 5;
-    code |= (dest->alloc&0x1f);
+    code |= (src->alloc&0x1f);
 
     orc_arm_emit (compiler, code);
   } else {
