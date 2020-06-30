@@ -51,11 +51,12 @@ int _orc_compiler_flag_randomize;
 void
 _orc_compiler_init (void)
 {
-  const char *envvar;
+  char *envvar;
 
-  envvar = getenv ("ORC_CODE");
+  envvar = _orc_getenv ("ORC_CODE");
   if (envvar != NULL) {
     _orc_compiler_flag_list = strsplit (envvar, ',');
+    free (envvar);
   }
 
   _orc_compiler_flag_backup = orc_compiler_flag_check ("backup");

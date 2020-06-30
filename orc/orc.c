@@ -5,6 +5,11 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#include <processenv.h>
+#endif
+
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
 #include <orc/orconce.h>
@@ -83,3 +88,40 @@ orc_version_string (void)
 {
   return (const char *) VERSION;
 }
+
+/* getenv() is deprecated on Windows and always returns NULL on UWP */
+#ifdef _WIN32
+char*
+_orc_getenv (const char *key)
+{
+  int len;
+  char check[1], *value;
+
+  /* Get the len */
+  len = GetEnvironmentVariableA (key, check, 1);
+  if (len == 0)
+    /* env var is not set or is "" (empty string) */
+    return NULL;
+
+  /* max size of len is 32767, cannot overflow */
+  value = malloc (sizeof (value) * len);
+
+  if (GetEnvironmentVariableA (key, value, len) != (len - 1)) {
+    free (value);
+    return NULL;
+  }
+
+  return value;
+}
+#else
+char*
+_orc_getenv (const char *key)
+{
+  char *value = getenv (key);
+
+  if (value)
+    value = strdup (value);
+
+  return value;
+}
+#endif

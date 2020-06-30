@@ -29,6 +29,7 @@
 #include "config.h"
 #endif
 #include <orc/orcdebug.h>
+#include <orc/orcinternal.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -55,9 +56,9 @@ static OrcDebugPrintFunc _orc_debug_print_func = orc_debug_print_valist;
 void
 _orc_debug_init(void)
 {
-  const char *envvar;
+  char *envvar;
 
-  envvar = getenv ("ORC_DEBUG");
+  envvar = _orc_getenv ("ORC_DEBUG");
   if (envvar != NULL) {
     char *end = NULL;
     int level;
@@ -65,6 +66,7 @@ _orc_debug_init(void)
     if (end > envvar) {
       _orc_debug_level = level;
     }
+    free (envvar);
   }
 
   ORC_INFO ("orc-" VERSION " debug init");
