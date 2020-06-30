@@ -94,6 +94,16 @@ if host_os == 'windows'
   cdata.set('HAVE_CODEMEM_VIRTUALALLOC', true)
   cdata.set('HAVE_OS_WIN32', true)
   cdata.set('HAVE_THREAD_WIN32', true)
+
+  code = '''
+  #include <windows.h>
+  #if !(WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) && !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP))
+  #error "Not building for UWP"
+  #endif'''
+  if cc.compiles(code, name : 'building for UWP')
+    cdata.set('ORC_WINAPI_ONLY_APP', true)
+  endif
+
   pc_conf.set('EXEEXT', '.exe')
   pc_conf.set('PTHREAD_LIBS', '')
 else

@@ -11,11 +11,18 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
 #ifdef HAVE_CODEMEM_MMAP
 #include <sys/mman.h>
 #endif
+
 #ifdef HAVE_CODEMEM_VIRTUALALLOC
 #include <windows.h>
+  #ifdef ORC_WINAPI_ONLY_APP
+    #define _virtualalloc VirtualAllocFromApp
+  #else
+    #define _virtualalloc VirtualAlloc
+  #endif
 #endif
 
 #include <orc/orcinternal.h>
@@ -299,7 +306,10 @@ orc_code_region_allocate_codemem (OrcCodeRegion *region)
 void
 orc_code_region_allocate_codemem (OrcCodeRegion *region)
 {
-  region->write_ptr = VirtualAlloc(NULL, SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+  /* On UWP, we can't allocate memory as executable from the start. We can only
+   * set that later after compiling and copying the code over. This is a good
+   * idea in general to avoid security issues, so we do it on win32 too. */
+  region->write_ptr = _virtualalloc (NULL, SIZE, MEM_COMMIT, PAGE_READWRITE);
   region->exec_ptr = region->write_ptr;
   region->size = SIZE;
 }
