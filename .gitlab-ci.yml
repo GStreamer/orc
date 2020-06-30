@@ -48,7 +48,7 @@ debian sid:
     # Environment variables substitutions is done by PowerShell before calling
     # cmd.exe, that's why we use $env:FOO instead of %FOO%
     - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
-        meson build $env:MESON_ARGS &&
+        meson --werror build $env:MESON_ARGS &&
         ninja -C build &&
         ninja -C build test"
 
@@ -75,6 +75,6 @@ msys2:
     - C:\msys64\usr\bin\bash -c "pacman-key --init && pacman-key --populate msys2 && pacman-key --refresh-keys || true"
     - C:\msys64\usr\bin\bash -c "pacman -Syuu --noconfirm"
     - C:\msys64\usr\bin\bash -c "pacman -Sy --noconfirm --needed mingw-w64-x86_64-toolchain ninja"
-    - C:\msys64\usr\bin\bash -c "meson build $env:MESON_ARGS &&
+    - C:\msys64\usr\bin\bash -c "meson --werror build $env:MESON_ARGS &&
         ninja -C build &&
         ninja -C build test"

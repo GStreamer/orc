@@ -95,16 +95,16 @@ main(int argc, char *argv[])
 #endif
   orc_get_data_cache_sizes (&level1, &level2, &level3);
   if (level3 > 0) {
-    max = (log(level3)/M_LN2 - 6.0) * 10 + 20;
+    max = (int) ((log(level3)/M_LN2 - 6.0) * 10 + 20);
   } else if (level2 > 0) {
-    max = (log(level2)/M_LN2 - 6.0) * 10 + 20;
+    max = (int) ((log(level2)/M_LN2 - 6.0) * 10 + 20);
   } else {
     max = 140;
   }
 
   for(i=0;i<max;i+=2){
     double x = i*0.1 + 6.0;
-    int size = pow(2.0, x);
+    int size = (int) pow(2.0, x);
 
     if (size > MAX_SIZE_TO_CHECK) {
       printf ("Stopping test, exceeding maximum size to check (%d, could do above %d)\n",

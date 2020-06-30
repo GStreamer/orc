@@ -21,7 +21,7 @@ main (int argc, char *argv[])
   }
 
   /* Call a function that uses Orc */
-  audio_add_mono_to_stereo_scaled_s16 (c, a, b, volume*4096, N);
+  audio_add_mono_to_stereo_scaled_s16 (c, a, b, (int) (volume*4096), N);
 
   /* Print the results */
   for(i=0;i<N;i++){
