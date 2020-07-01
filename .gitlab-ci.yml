@@ -1,6 +1,9 @@
 stages:
  - build
 
+variables:
+  MESON_ARGS: --werror --fatal-meson-warnings
+
 debian sid:
   image: 'debian:sid'
   stage: build
@@ -13,7 +16,7 @@ debian sid:
     - apt-get update
     - apt-get install --yes ${DEPENDENCIES}
   script:
-    - meson setup --werror build/
+    - meson setup $MESON_ARGS build/
     - meson compile --verbose -C build/
     - meson test -C build/
     - meson test -C build/ --benchmark
@@ -45,12 +48,12 @@ debian sid:
   script:
     # For some reason, options are separated by newline instead of space, so we
     # have to replace them first.
-    # - $env:MESON_ARGS = $env:MESON_ARGS.replace("`n"," ")
+    #- $env:MESON_ARGS = $env:MESON_ARGS.replace("`n"," ")
     # Gitlab executes PowerShell in docker, but VsDevCmd.bat is a batch script.
     # Environment variables substitutions is done by PowerShell before calling
     # cmd.exe, that's why we use $env:FOO instead of %FOO%
     - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
-        meson setup --werror build $env:MESON_ARGS &&
+        meson setup build $env:MESON_ARGS &&
         meson compile --verbose -C build &&
         meson test -C build &&
         meson test -C build --benchmark"
@@ -82,7 +85,7 @@ msys2:
     - C:\msys64\usr\bin\bash -c "pacman -Suu --noconfirm"
     - echo "Installing needed MSYS2 packages"
     - C:\msys64\usr\bin\bash -c "pacman -Sy --noconfirm --needed mingw-w64-x86_64-toolchain ninja"
-    - C:\msys64\usr\bin\bash -c "meson setup --werror build $env:MESON_ARGS &&
+    - C:\msys64\usr\bin\bash -c "meson setup build $env:MESON_ARGS &&
         meson compile --verbose -C build &&
         meson test -C build &&
         meson test -C build --benchmark"
