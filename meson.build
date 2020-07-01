@@ -26,10 +26,8 @@ cdata = configuration_data()      # config.h
 pkg = import('pkgconfig')
 
 # -Bsymbolic-functions
-if meson.version().version_compare('>= 0.46.0')
-  if cc.has_link_argument('-Wl,-Bsymbolic-functions')
-    add_project_link_arguments('-Wl,-Bsymbolic-functions', language : 'c')
-  endif
+if cc.has_link_argument('-Wl,-Bsymbolic-functions')
+  add_project_link_arguments('-Wl,-Bsymbolic-functions', language : 'c')
 endif
 
 # Symbol visibility
@@ -192,30 +190,26 @@ install_data('orc.m4', install_dir : 'share/aclocal')
 configure_file(output : 'config.h', configuration : cdata)
 
 # summary
-if meson.version().version_compare('>= 0.53')
-  summary({
-    'SSE': 'sse' in enabled_backends,
-    'MMX': 'mmx' in enabled_backends,
-    'NEON': 'neon' in enabled_backends,
-    'MIPS': 'mips' in enabled_backends,
-    'c64x': 'c64x' in enabled_backends,
-    'Altivec': 'altivec' in enabled_backends,
-    }, section: 'Backends', bool_yn: true)
+summary({
+  'SSE': 'sse' in enabled_backends,
+  'MMX': 'mmx' in enabled_backends,
+  'NEON': 'neon' in enabled_backends,
+  'MIPS': 'mips' in enabled_backends,
+  'c64x': 'c64x' in enabled_backends,
+  'Altivec': 'altivec' in enabled_backends,
+  }, section: 'Backends', bool_yn: true)
 
-  # meson 0.53 will print two lines for two args (and warn about list_sep kwarg)
-  # meson 0.54 will print one line if list_sep is specified
-  if not have_docs
-    doc_summary = [have_docs, gtk_doc_disabled_reason]
-  else
-    doc_summary = have_docs
-  endif
-
-  summary({
-    'Tools': not opt_tools.disabled(),
-    'Tests': not opt_tests.disabled(),
-    'Examples': not opt_examples.disabled(),
-    'Benchmarks': not opt_benchmarks.disabled(),
-    'Documentation': doc_summary,
-    'Orc-test library': not opt_orctest.disabled(),
-    }, section: 'Build options', bool_yn: true, list_sep: '  ')
+if not have_docs
+  doc_summary = [have_docs, gtk_doc_disabled_reason]
+else
+  doc_summary = have_docs
 endif
+
+summary({
+  'Tools': not opt_tools.disabled(),
+  'Tests': not opt_tests.disabled(),
+  'Examples': not opt_examples.disabled(),
+  'Benchmarks': not opt_benchmarks.disabled(),
+  'Documentation': doc_summary,
+  'Orc-test library': not opt_orctest.disabled(),
+  }, section: 'Build options', bool_yn: true, list_sep: '  ')
