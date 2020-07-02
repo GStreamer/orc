@@ -234,23 +234,24 @@ _get_protect_name (int protect)
 static orc_bool
 _set_virtual_protect (void * mem, size_t size, int code_protect)
 {
-    char *msg;
-    DWORD old_protect;
+  char *msg;
+  DWORD old_protect;
 
-    if (!mem)
-      return FALSE;
 
-    if (_virtualprotect (mem, size, code_protect, &old_protect) > 0)
-      return TRUE;
-
-    FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER
-        | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM, NULL,
-        GetLastError (), 0, (LPTSTR) &msg, 0, NULL);
-    ORC_ERROR ("Couldn't set memory protect on %p from %s to %s: %s", mem,
-        _get_protect_name (old_protect), _get_protect_name (code_protect), msg);
-    LocalFree (msg);
-
+  if (!mem)
     return FALSE;
+
+  if (_virtualprotect (mem, size, code_protect, &old_protect) > 0)
+    return TRUE;
+
+  FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER
+      | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM, NULL,
+      GetLastError (), 0, (LPTSTR) &msg, 0, NULL);
+  ORC_ERROR ("Couldn't set memory protect on %p from %s to %s: %s", mem,
+      _get_protect_name (old_protect), _get_protect_name (code_protect), msg);
+  LocalFree (msg);
+
+  return FALSE;
 }
 #endif
 
