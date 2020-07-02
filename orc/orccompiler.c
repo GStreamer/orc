@@ -217,20 +217,6 @@ orc_program_compile_for_target (OrcProgram *program, OrcTarget *target)
 }
 
 #if defined(HAVE_CODEMEM_VIRTUALALLOC)
-static const char*
-_get_protect_name (int protect)
-{
-  switch (protect) {
-    /* These are the only two memory protection constants we use */
-    case PAGE_EXECUTE:
-      return "execute";
-    case PAGE_READWRITE:
-      return "readwrite";
-    default:
-      return "unknown";
-  }
-}
-
 static orc_bool
 _set_virtual_protect (void * mem, size_t size, int code_protect)
 {
@@ -247,8 +233,8 @@ _set_virtual_protect (void * mem, size_t size, int code_protect)
   FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER
       | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM, NULL,
       GetLastError (), 0, (LPTSTR) &msg, 0, NULL);
-  ORC_ERROR ("Couldn't set memory protect on %p from %s to %s: %s", mem,
-      _get_protect_name (old_protect), _get_protect_name (code_protect), msg);
+  ORC_ERROR ("Couldn't set memory protect on %p from %x to %x: %s", mem,
+      old_protect, code_protect, msg);
   LocalFree (msg);
 
   return FALSE;
