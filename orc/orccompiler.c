@@ -223,6 +223,9 @@ _set_virtual_protect (void * mem, size_t size, int code_protect)
   char *msg;
   DWORD old_protect;
 
+  /* No code, so we 'succeed' */
+  if (size == 0)
+    return TRUE;
 
   if (!mem)
     return FALSE;
