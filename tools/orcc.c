@@ -22,7 +22,6 @@ void output_code_assembly (OrcProgram *p, FILE *output);
 void output_code_execute (OrcProgram *p, FILE *output, int is_inline);
 void output_program_generation (OrcProgram *p, FILE *output, int is_inline);
 void output_init_function (FILE *output);
-static char * get_barrier (const char *s);
 static const char * my_basename (const char *s);
 
 int verbose = 0;
@@ -319,11 +318,7 @@ main (int argc, char *argv[])
       fprintf(output, "\n");
     }
   } else if (mode == MODE_HEADER) {
-    char *barrier = get_barrier (output_file);
-
-    fprintf(output, "#ifndef _%s_\n", barrier);
-    fprintf(output, "#define _%s_\n", barrier);
-    free (barrier);
+    fprintf(output, "#pragma once\n");
     fprintf(output, "\n");
     if (include_file) {
       fprintf(output, "#include <%s>\n", include_file);
@@ -355,8 +350,6 @@ main (int argc, char *argv[])
     fprintf(output, "\n");
     fprintf(output, "#ifdef __cplusplus\n");
     fprintf(output, "}\n");
-    fprintf(output, "#endif\n");
-    fprintf(output, "\n");
     fprintf(output, "#endif\n");
     fprintf(output, "\n");
   } else if (mode == MODE_TEST) {
@@ -448,28 +441,6 @@ main (int argc, char *argv[])
   }
 
   return 0;
-}
-
-
-static char *
-get_barrier (const char *s)
-{
-  char *barrier;
-  int n;
-  int i;
-
-  n = strlen(s);
-  barrier = malloc (n + 1);
-  for(i=0;i<n;i++) {
-    if (isalnum (s[i])) {
-      barrier[i] = toupper(s[i]);
-    } else {
-      barrier[i] = '_';
-    }
-  }
-  barrier[n] = 0;
-
-  return barrier;
 }
 
 static char *
