@@ -15,7 +15,8 @@ debian sid:
   script:
     - meson --werror build/
     - ninja -C build/
-    - ninja -C build/ test
+    - meson test -C build/
+    - meson test -C build/ --benchmark
     - ninja -C build/ install
   artifacts:
     paths:
@@ -51,7 +52,8 @@ debian sid:
     - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
         meson --werror build $env:MESON_ARGS &&
         ninja -C build &&
-        ninja -C build test"
+        meson test -C build &&
+        meson test -C build --benchmark"
 
 vs2017 amd64:
   extends: '.build windows'
@@ -80,4 +82,5 @@ msys2:
     - C:\msys64\usr\bin\bash -c "pacman -Sy --noconfirm --needed mingw-w64-x86_64-toolchain ninja"
     - C:\msys64\usr\bin\bash -c "meson --werror build $env:MESON_ARGS &&
         ninja -C build &&
-        ninja -C build test"
+        meson test -C build &&
+        meson test -C build --benchmark"
