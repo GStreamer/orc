@@ -1,5 +1,5 @@
 project ('orc', 'c', version : '0.4.31',
-                     meson_version : '>= 0.47.0',
+                     meson_version : '>= 0.49.0',
                      default_options : ['buildtype=debugoptimized',
                                         'warning_level=1',
                                         'c_std=gnu99'] )
@@ -192,13 +192,13 @@ endif
 # FIXME: use pkg-config module
 pc_conf.set('prefix', get_option('prefix'))
 pc_conf.set('exec_prefix', get_option('prefix'))
-pc_conf.set('libdir', join_paths(get_option('prefix'), get_option('libdir')))
-pc_conf.set('includedir', join_paths(get_option('prefix'), 'include'))
+pc_conf.set('libdir', get_option('prefix') / get_option('libdir'))
+pc_conf.set('includedir', get_option('prefix') / 'include')
 pc_conf.set('VERSION', meson.project_version())
 pc_conf.set('ORC_MAJORMINOR', orc_api)
 pc_conf.set('LIBM', libm.found() ? '-lm' : '')
 
-pkgconfigdir = join_paths (get_option('libdir'), 'pkgconfig')
+pkgconfigdir = get_option('libdir') / 'pkgconfig'
 configure_file(input : 'orc.pc.in',
   output : 'orc-' + orc_api + '.pc',
   configuration : pc_conf,
