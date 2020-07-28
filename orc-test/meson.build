@@ -27,7 +27,6 @@ else
 endif
 
 # pkg-config file
-pkg = import('pkgconfig')
 pkg.generate(orc_test_lib,
   name: 'orc-test',
   filebase: 'orc-test-' + orc_api,

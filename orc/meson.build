@@ -99,7 +99,7 @@ endif
 
 orc_c_args = ['-DORC_ENABLE_UNSTABLE_API', '-D_GNU_SOURCE']
 
-orc_dependencies = [libm, librt, liblog]
+orc_dependencies = [libm, librt, liblog, threads]
 
 orc_lib = library ('orc-' + orc_api,
   orc_sources,

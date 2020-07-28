@@ -22,7 +22,8 @@ orc_inc = include_directories('.')
 cc = meson.get_compiler('c')
 
 cdata = configuration_data()      # config.h
-pc_conf = configuration_data()    # orc.pc
+
+pkg = import('pkgconfig')
 
 # -Bsymbolic-functions
 if meson.version().version_compare('>= 0.46.0')
@@ -69,18 +70,16 @@ else
   warning(cpu_family + ' isn\'t a supported cpu family for optimization')
 endif
 
+threads = dependency('threads')
+
 libm = cc.find_library('m', required : false)
 
 librt = []
-pc_conf.set('LIBRT', '')
 if cc.has_function('clock_gettime')
   cdata.set('HAVE_CLOCK_GETTIME', true)
 else
   # On glibc older than 2.17, clock_gettime is provided by time.h and -lrt
   librt = cc.find_library('rt', required : false)
-  if librt.found() and cc.has_function('clock_gettime', dependencies : librt)
-    pc_conf.set('LIBRT', '-lrt')
-  endif
 endif
 
 liblog = []
@@ -103,19 +102,10 @@ if host_os == 'windows'
   if cc.compiles(code, name : 'building for UWP')
     cdata.set('ORC_WINAPI_ONLY_APP', true)
   endif
-
-  pc_conf.set('EXEEXT', '.exe')
-  pc_conf.set('PTHREAD_LIBS', '')
 else
   # If it is not windows, we just assume it is a unix of sorts for now.
   cdata.set('HAVE_CODEMEM_MMAP', true)
   cdata.set('HAVE_THREAD_PTHREAD', true)
-  pc_conf.set('EXEEXT', '')
-  if host_os == 'android'
-    pc_conf.set('PTHREAD_LIBS', '')
-  else
-    pc_conf.set('PTHREAD_LIBS', '-lpthread')
-  endif
 endif
 
 monotonic_test = '''
@@ -161,6 +151,7 @@ if not opt_tools.disabled()
   subdir('tools')
 else
   orcc = disabler() # for testsuite/orcc/
+  tools_variables = []
 endif
 
 if not opt_examples.disabled()
@@ -189,20 +180,11 @@ else
   endif
 endif
 
-# FIXME: use pkg-config module
-pc_conf.set('prefix', get_option('prefix'))
-pc_conf.set('exec_prefix', get_option('prefix'))
-pc_conf.set('libdir', get_option('prefix') / get_option('libdir'))
-pc_conf.set('includedir', get_option('prefix') / 'include')
-pc_conf.set('VERSION', meson.project_version())
-pc_conf.set('ORC_MAJORMINOR', orc_api)
-pc_conf.set('LIBM', libm.found() ? '-lm' : '')
-
-pkgconfigdir = get_option('libdir') / 'pkgconfig'
-configure_file(input : 'orc.pc.in',
-  output : 'orc-' + orc_api + '.pc',
-  configuration : pc_conf,
-  install_dir : pkgconfigdir)
+pkg.generate (orc_lib,
+  subdirs : 'orc-' + orc_api,
+  description : 'Library of Optimized Inner Loops Runtime Compiler',
+  variables : tools_variables,
+  libraries_private : orc_dependencies)
 
 # Install m4 macro that other projects use
 install_data('orc.m4', install_dir : 'share/aclocal')
