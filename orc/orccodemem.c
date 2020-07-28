@@ -32,6 +32,9 @@
 
 #define SIZE 65536
 
+/* See _orc_compiler_init() */
+extern int _orc_codemem_alignment;
+
 typedef struct _OrcCodeRegion OrcCodeRegion;
 
 struct _OrcCodeRegion {
@@ -163,7 +166,8 @@ orc_code_allocate_codemem (OrcCode *code, int size)
 {
   OrcCodeRegion *region;
   OrcCodeChunk *chunk;
-  int aligned_size = (size + 15) & (~15);
+  int aligned_size =
+      (size + _orc_codemem_alignment) & (~_orc_codemem_alignment);
 
   chunk = orc_code_region_get_free_chunk (aligned_size);
   region = chunk->region;

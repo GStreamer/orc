@@ -57,10 +57,17 @@ int _orc_compiler_flag_emulate;
 int _orc_compiler_flag_debug;
 int _orc_compiler_flag_randomize;
 
+/* For Windows */
+int _orc_codemem_alignment;
+
 void
 _orc_compiler_init (void)
 {
   char *envvar;
+#ifdef HAVE_CODEMEM_VIRTUALALLOC
+  size_t page_size;
+  SYSTEM_INFO info;
+#endif
 
   envvar = _orc_getenv ("ORC_CODE");
   if (envvar != NULL) {
@@ -73,14 +80,25 @@ _orc_compiler_init (void)
   _orc_compiler_flag_debug = orc_compiler_flag_check ("debug");
   _orc_compiler_flag_randomize = orc_compiler_flag_check ("randomize");
 
-#if defined(HAVE_CODEMEM_VIRTUALALLOC) && defined(ORC_WINAPI_ONLY_APP)
+  /* 16 bytes alignment by default */
+  _orc_codemem_alignment = 15;
+
+#ifdef HAVE_CODEMEM_VIRTUALALLOC
+  GetNativeSystemInfo(&info);
+  page_size = info.dwPageSize;
+
+  /* Protection attribute change via VirtualProtect will be applied per
+   * page memory unit. So we should split code memory with page aligned range.
+   * Otherwise the protection attribute of previously generated executable code
+   * memory can be affected by later generated one.
+   */
+  _orc_codemem_alignment = info.dwPageSize - 1;
+#endif
+
+#ifdef ORC_WINAPI_ONLY_APP
   if (!_orc_compiler_flag_backup && !_orc_compiler_flag_emulate) {
     int can_jit = FALSE;
-    size_t page_size;
-    SYSTEM_INFO info;
-    GetNativeSystemInfo(&info);
 
-    page_size = info.dwPageSize;
     /* If backup code is not enabled and emulation is not enabled, that means
      * we will do JIT compilation and call orc_code_region_allocate_codemem().
      * When targeting Windows Store apps, the codeGeneration capability must
