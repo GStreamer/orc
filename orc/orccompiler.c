@@ -719,7 +719,7 @@ orc_compiler_rewrite_insns (OrcCompiler *compiler)
         var = compiler->vars + insn.dest_args[i];
         if (var->vartype == ORC_VAR_TYPE_DEST) {
           OrcInstruction *cinsn;
-          
+
           cinsn = compiler->insns + compiler->n_insns;
           compiler->n_insns++;
 

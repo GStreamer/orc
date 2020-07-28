@@ -294,7 +294,7 @@ orc_code_region_allocate_codemem (OrcCodeRegion *region)
         "/tmp", FALSE)) return;
 
   if (orc_code_region_allocate_codemem_anon_map (region)) return;
-  
+
   ORC_ERROR("Failed to create write and exec mmap regions.  This "
       "is probably because SELinux execmem check is enabled (good) "
       "and $TMPDIR and $HOME are mounted noexec (bad).");
