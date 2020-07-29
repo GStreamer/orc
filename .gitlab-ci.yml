@@ -67,6 +67,8 @@ vs2017 x86:
 
 msys2:
   extends: '.build windows'
+  when: 'manual'
+  allow_failure: true
   script:
     # XXX: Copied from https://gitlab.freedesktop.org/gstreamer/gst-ci/blob/master/gitlab/ci_template.yml#L487
     - $env:PATH += ";C:\msys64\usr\bin;C:\msys64\mingw64\bin;C:\msys64\mingw32\bin"
