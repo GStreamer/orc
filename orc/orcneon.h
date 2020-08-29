@@ -12,6 +12,8 @@ ORC_BEGIN_DECLS
 ORC_API const char *orc_neon_reg_name (int reg);
 ORC_API const char *orc_neon_reg_name_quad (int reg);
 
+ORC_API const char *orc_neon64_reg_name_vector (int reg, int size, int quad);
+
 ORC_API void orc_neon_loadb (OrcCompiler *compiler, OrcVariable *var, int update);
 ORC_API void orc_neon_loadw (OrcCompiler *compiler, OrcVariable *var, int update);
 ORC_API void orc_neon_loadl (OrcCompiler *compiler, OrcVariable *var, int update);

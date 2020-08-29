@@ -1147,59 +1147,108 @@ orc_neon_save_accumulators (OrcCompiler *compiler)
       case ORC_VAR_TYPE_ACCUMULATOR:
         src = compiler->vars[i].alloc;
 
-        orc_arm_emit_load_imm (compiler, compiler->gp_tmpreg,
-            ORC_STRUCT_OFFSET(OrcExecutor, accumulators[i-ORC_VAR_A1]));
-        orc_arm_emit_add (compiler, compiler->gp_tmpreg,
-            compiler->gp_tmpreg, compiler->exec_reg);
+        if (compiler->is_64bit) {
+          orc_arm64_emit_add_imm (compiler, 64, compiler->gp_tmpreg,
+	    compiler->exec_reg,
+	    ORC_STRUCT_OFFSET(OrcExecutor, accumulators[i-ORC_VAR_A1]));
+	} else {
+          orc_arm_emit_load_imm (compiler, compiler->gp_tmpreg,
+              ORC_STRUCT_OFFSET(OrcExecutor, accumulators[i-ORC_VAR_A1]));
+          orc_arm_emit_add (compiler, compiler->gp_tmpreg,
+              compiler->gp_tmpreg, compiler->exec_reg);
+        }
         switch (var->size) {
           case 2:
             if (compiler->loop_shift > 0) {
-              ORC_ASM_CODE(compiler,"  vpaddl.u16 %s, %s\n",
-                  orc_neon_reg_name (src),
-                  orc_neon_reg_name (src));
-              code = 0xf3b40280;
-              code |= (src&0xf) << 12;
-              code |= ((src>>4)&0x1) << 22;
-              code |= (src&0xf) << 0;
-              orc_arm_emit (compiler, code);
+              if (compiler->is_64bit) {
+                ORC_ASM_CODE(compiler,"  addv %s, %s, %s\n",
+                    orc_neon64_reg_name_vector (src, 8, 0),
+                    orc_neon64_reg_name_vector (src, 8, 0),
+                    orc_neon64_reg_name_vector (src, 8, 0));
+                code = 0x0e71b800;
+                code |= (src&0x1f)<<5;
+                code |= (src&0x1f);
+                orc_arm_emit (compiler, code);
+              } else {
+                ORC_ASM_CODE(compiler,"  vpaddl.u16 %s, %s\n",
+                    orc_neon_reg_name (src),
+                    orc_neon_reg_name (src));
+                code = 0xf3b40280;
+                code |= (src&0xf) << 12;
+                code |= ((src>>4)&0x1) << 22;
+                code |= (src&0xf) << 0;
+                orc_arm_emit (compiler, code);
 
-              ORC_ASM_CODE(compiler,"  vpaddl.u32 %s, %s\n",
-                  orc_neon_reg_name (src),
-                  orc_neon_reg_name (src));
-              code = 0xf3b80280;
-              code |= (src&0xf) << 12;
-              code |= ((src>>4)&0x1) << 22;
-              code |= (src&0xf) << 0;
-              orc_arm_emit (compiler, code);
+                ORC_ASM_CODE(compiler,"  vpaddl.u32 %s, %s\n",
+                    orc_neon_reg_name (src),
+                    orc_neon_reg_name (src));
+                code = 0xf3b80280;
+                code |= (src&0xf) << 12;
+                code |= ((src>>4)&0x1) << 22;
+                code |= (src&0xf) << 0;
+                orc_arm_emit (compiler, code);
+              }
             }
 
-            ORC_ASM_CODE(compiler,"  vst1.16 %s[%d], [%s]\n",
-                orc_neon_reg_name (src), 0,
-                orc_arm_reg_name (compiler->gp_tmpreg));
-            code = 0xf480040f;
-            code |= (compiler->gp_tmpreg&0xf) << 16;
-            code |= (src&0xf) << 12;
-            code |= ((src>>4)&0x1) << 22;
-            orc_arm_emit (compiler, code);
+            if (compiler->is_64bit) {
+              ORC_ASM_CODE(compiler,"  st1 %s, [%s]\n",
+                  orc_neon64_reg_name_vector (src, 8, 0),
+                  orc_arm64_reg_name (compiler->gp_tmpreg, 64));
+              code = 0x0d004000;
+              code |= (compiler->gp_tmpreg&0x1f) << 5;
+              code |= (src&0x1f) << 0;
+              orc_arm_emit (compiler, code);
+            } else {
+              ORC_ASM_CODE(compiler,"  vst1.16 %s[%d], [%s]\n",
+                  orc_neon_reg_name (src), 0,
+                  orc_arm_reg_name (compiler->gp_tmpreg));
+              code = 0xf480040f;
+              code |= (compiler->gp_tmpreg&0xf) << 16;
+              code |= (src&0xf) << 12;
+              code |= ((src>>4)&0x1) << 22;
+              orc_arm_emit (compiler, code);
+            }
             break;
           case 4:
             if (compiler->loop_shift > 0) {
-              ORC_ASM_CODE(compiler,"  vpadd.u32 %s, %s, %s\n",
-                  orc_neon_reg_name (src),
-                  orc_neon_reg_name (src),
-                  orc_neon_reg_name (src));
-              code = NEON_BINARY(0xf2200b10, src, src, src);
-              orc_arm_emit (compiler, code);
+              if (compiler->is_64bit) {
+                ORC_ASM_CODE(compiler,"  addp %s, %s, %s\n",
+                    orc_neon64_reg_name_vector (src, 8, 0),
+                    orc_neon64_reg_name_vector (src, 8, 0),
+                    orc_neon64_reg_name_vector (src, 8, 0));
+                code = 0x0ea0bc00;
+                code |= (src&0x1f)<<16;
+                code |= (src&0x1f)<<5;
+                code |= (src&0x1f);
+                orc_arm_emit (compiler, code);
+              } else {
+                ORC_ASM_CODE(compiler,"  vpadd.u32 %s, %s, %s\n",
+                    orc_neon_reg_name (src),
+                    orc_neon_reg_name (src),
+                    orc_neon_reg_name (src));
+                code = NEON_BINARY(0xf2200b10, src, src, src);
+                orc_arm_emit (compiler, code);
+              }
             }
 
-            ORC_ASM_CODE(compiler,"  vst1.32 %s[%d], [%s]\n",
-                orc_neon_reg_name (src), 0,
-                orc_arm_reg_name (compiler->gp_tmpreg));
-            code = 0xf480080f;
-            code |= (compiler->gp_tmpreg&0xf) << 16;
-            code |= (src&0xf) << 12;
-            code |= ((src>>4)&0x1) << 22;
-            orc_arm_emit (compiler, code);
+            if (compiler->is_64bit) {
+              ORC_ASM_CODE(compiler,"  st1 {%s}[0], [%s]\n",
+                  orc_neon64_reg_name_vector (src, 8, 0),
+                  orc_arm64_reg_name (compiler->gp_tmpreg, 64));
+              code = 0x0d008000;
+              code |= (compiler->gp_tmpreg&0x1f) << 5;
+              code |= (src&0x1f) << 0;
+              orc_arm_emit (compiler, code);
+            } else {
+              ORC_ASM_CODE(compiler,"  vst1.32 %s[%d], [%s]\n",
+                  orc_neon_reg_name (src), 0,
+                  orc_arm_reg_name (compiler->gp_tmpreg));
+              code = 0xf480080f;
+              code |= (compiler->gp_tmpreg&0xf) << 16;
+              code |= (src&0xf) << 12;
+              code |= ((src>>4)&0x1) << 22;
+              orc_arm_emit (compiler, code);
+            }
             break;
           default:
             ORC_ERROR("bad size");
