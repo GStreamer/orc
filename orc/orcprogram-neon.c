@@ -753,8 +753,20 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
   orc_neon_load_constants_outer (compiler);
 
   if (compiler->is_64bit) {
-    /** @todo not supported yet */
-    if (compiler->program->is_2d) return;
+    if (compiler->program->is_2d) {
+      if (compiler->program->constant_m > 0) {
+        orc_arm64_emit_mov_imm (compiler, 32, ORC_ARM64_IP1, compiler->program->constant_m);
+        orc_arm64_emit_store_reg (compiler, 32, ORC_ARM64_IP1, compiler->exec_reg,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]));
+      } else {
+        orc_arm64_emit_load_reg (compiler, 32, ORC_ARM64_IP1, compiler->exec_reg,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A1]));
+        orc_arm64_emit_store_reg (compiler, 32, ORC_ARM64_IP1, compiler->exec_reg,
+            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A2]));
+      }
+
+      orc_arm_emit_label (compiler, LABEL_OUTER_LOOP);
+    }
 
     if (compiler->loop_shift > 0) {
       orc_neon64_loop_shift (compiler);
@@ -780,6 +792,17 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
           (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
 
       orc_neon64_loop_caches (compiler);
+    }
+
+    if (compiler->program->is_2d) {
+      neon_add_strides (compiler);
+
+      orc_arm64_emit_load_reg (compiler, 32, ORC_ARM64_IP1, compiler->exec_reg,
+          (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A2]));
+      orc_arm64_emit_subs_imm (compiler, 32, ORC_ARM64_IP1, ORC_ARM64_IP1, 1);
+      orc_arm64_emit_store_reg (compiler, 32, ORC_ARM64_IP1, compiler->exec_reg,
+          (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]));
+      orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_OUTER_LOOP);
     }
   } else {
     if (compiler->program->is_2d) {
@@ -1275,13 +1298,23 @@ neon_add_strides (OrcCompiler *compiler)
         break;
       case ORC_VAR_TYPE_SRC:
       case ORC_VAR_TYPE_DEST:
-        orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
-            (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
-        orc_arm_emit_load_reg (compiler, ORC_ARM_A2, compiler->exec_reg,
-            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[i]));
-        orc_arm_emit_add (compiler, ORC_ARM_A3, ORC_ARM_A3, ORC_ARM_A2);
-        orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
-            (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
+        if (compiler->is_64bit) {
+          orc_arm64_emit_load_reg (compiler, 32, ORC_ARM64_IP1, compiler->exec_reg,
+              (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
+          orc_arm64_emit_load_reg (compiler, 32, ORC_ARM64_R18, compiler->exec_reg,
+              (int)ORC_STRUCT_OFFSET(OrcExecutor, params[i]));
+          orc_arm64_emit_add (compiler, 32, ORC_ARM64_IP1, ORC_ARM64_IP1, ORC_ARM64_R18);
+          orc_arm64_emit_store_reg (compiler, 32, ORC_ARM64_IP1, compiler->exec_reg,
+              (int)ORC_STRUCT_OFFSET(OrcExecutor,arrays[i]));
+        } else {
+          orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+              (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
+          orc_arm_emit_load_reg (compiler, ORC_ARM_A2, compiler->exec_reg,
+              (int)ORC_STRUCT_OFFSET(OrcExecutor, params[i]));
+          orc_arm_emit_add (compiler, ORC_ARM_A3, ORC_ARM_A3, ORC_ARM_A2);
+          orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+              (int)ORC_STRUCT_OFFSET(OrcExecutor, arrays[i]));
+        }
         break;
       case ORC_VAR_TYPE_ACCUMULATOR:
         break;
