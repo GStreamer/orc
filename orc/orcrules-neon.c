@@ -15,7 +15,7 @@
 
 static void orc_neon_emit_loadib (OrcCompiler *compiler, OrcVariable *dest, int param);
 static void orc_neon_emit_loadiw (OrcCompiler *compiler, OrcVariable *dest, int param);
-static void orc_neon_emit_loadiq (OrcCompiler *compiler, OrcVariable *dest, int param);
+static void orc_neon_emit_loadiq (OrcCompiler *compiler, OrcVariable *dest, long long param);
 static void orc_neon_emit_loadpq (OrcCompiler *compiler, int dest, int param);
 
 const char *orc_neon_reg_name (int reg)
@@ -1091,7 +1091,7 @@ neon_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     } else if (size == 4) {
       orc_neon_emit_loadil (compiler, dest, src->value.i);
     } else if (size == 8) {
-      if (src->size == 8) {
+      if (src->size == 8 && !compiler->is_64bit) {
         ORC_COMPILER_ERROR(compiler,"64-bit constants not implemented");
       }
       orc_neon_emit_loadiq (compiler, dest, src->value.i);
@@ -1750,7 +1750,7 @@ orc_neon_emit_loadil (OrcCompiler *compiler, OrcVariable *dest, int value)
 }
 
 static void
-orc_neon_emit_loadiq (OrcCompiler *compiler, OrcVariable *dest, int value)
+orc_neon_emit_loadiq (OrcCompiler *compiler, OrcVariable *dest, long long value)
 {
   int reg = dest->alloc;
   /* orc_uint32 code; */
@@ -1763,6 +1763,30 @@ orc_neon_emit_loadiq (OrcCompiler *compiler, OrcVariable *dest, int value)
           *dest, *dest, *dest, compiler->insn_shift - 1);
       return;
     }
+
+    /*
+     * NOTE: This could be optimized further. The code below is 5 instructions
+     * long. By locating 8-bit "islands" of bits in the value itself (8-bit is
+     * the limit of IMM field in MOVI/ORR opcode), it may be possible for some
+     * sparse constants (with fewer than 5 such islands) to generate far more
+     * optimal (shorter than 5 instructions) load using MOVI and ORR opcodes
+     * instead. However, such optimization might also be premature, since the
+     * constant is usually loaded only once when the program starts, hence it
+     * is not implemented below for now.
+     */
+    ORC_ASM_CODE(compiler,"  ldr %s, L30\n",
+        orc_neon64_reg_name_vector (reg, 8, 0));
+    orc_arm_emit (compiler, 0x5c000040 | (reg & 0x1f));
+
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, 30);
+    orc_arm_emit (compiler, value & 0xffffffffULL);
+    orc_arm_emit (compiler, value >> 32ULL);
+    orc_arm_emit_label (compiler, 30);
+
+    orc_neon64_emit_binary (compiler, "trn1", 0x0ec02800,
+        *dest, *dest, *dest, compiler->insn_shift - 1);
+
+      return;
   } else {
     if (value == 0) {
       orc_neon_emit_binary_quad (compiler, "veor", 0xf3000110, reg, reg, reg);
