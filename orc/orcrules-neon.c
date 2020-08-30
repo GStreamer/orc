@@ -2627,15 +2627,25 @@ UNARY(convlf,"vcvt.f32.s32",0xf3bb0600, "scvtf", 0x0e21d800, 0)
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  orc_neon_emit_unary (p, insn_name, code, \
-      p->vars[insn->dest_args[0]].alloc, \
-      p->vars[insn->src_args[0]].alloc); \
-  if (p->insn_shift == vec_shift + 1) { \
-    orc_neon_emit_unary (p, insn_name, code, \
-        p->vars[insn->dest_args[0]].alloc + 1, \
-        p->vars[insn->src_args[0]].alloc + 1); \
+  if (p->is_64bit) { \
+    if (insn_name64) { \
+      orc_neon64_emit_unary (p, insn_name64, code64, \
+          p->vars[insn->dest_args[0]], \
+          p->vars[insn->src_args[0]], vec_shift - 1); \
+    } else { \
+      ORC_COMPILER_ERROR(p, "not supported in AArch64 yet [%s %x]", (insn_name64), (code64)); \
+    } \
   } else { \
-    ORC_COMPILER_ERROR(p, "shift too large"); \
+    orc_neon_emit_unary (p, insn_name, code, \
+        p->vars[insn->dest_args[0]].alloc, \
+        p->vars[insn->src_args[0]].alloc); \
+    if (p->insn_shift == vec_shift + 1) { \
+      orc_neon_emit_unary (p, insn_name, code, \
+          p->vars[insn->dest_args[0]].alloc + 1, \
+          p->vars[insn->src_args[0]].alloc + 1); \
+    } else { \
+      ORC_COMPILER_ERROR(p, "shift too large"); \
+    } \
   } \
 }
 
@@ -2643,28 +2653,39 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 static void \
 orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
 { \
-  orc_neon_emit_binary (p, insn_name, code, \
-      p->vars[insn->dest_args[0]].alloc, \
-      p->vars[insn->src_args[0]].alloc, \
-      p->vars[insn->src_args[1]].alloc); \
-  if (p->insn_shift == vec_shift + 1) { \
+  if (p->is_64bit) { \
+    if (insn_name64) { \
+      orc_neon64_emit_binary (p, insn_name64, code64, \
+          p->vars[insn->dest_args[0]], \
+          p->vars[insn->src_args[0]], \
+          p->vars[insn->src_args[1]], vec_shift - 1); \
+    } else { \
+      ORC_COMPILER_ERROR(p, "not supported in AArch64 yet [%s %x]", (insn_name64), (code64)); \
+    } \
+  } else { \
     orc_neon_emit_binary (p, insn_name, code, \
-        p->vars[insn->dest_args[0]].alloc+1, \
-        p->vars[insn->src_args[0]].alloc+1, \
-        p->vars[insn->src_args[1]].alloc+1); \
-  } else if (p->insn_shift > vec_shift + 1) { \
-    ORC_COMPILER_ERROR(p, "shift too large"); \
+        p->vars[insn->dest_args[0]].alloc, \
+        p->vars[insn->src_args[0]].alloc, \
+        p->vars[insn->src_args[1]].alloc); \
+    if (p->insn_shift == vec_shift + 1) { \
+      orc_neon_emit_binary (p, insn_name, code, \
+          p->vars[insn->dest_args[0]].alloc+1, \
+          p->vars[insn->src_args[0]].alloc+1, \
+          p->vars[insn->src_args[1]].alloc+1); \
+    } else if (p->insn_shift > vec_shift + 1) { \
+      ORC_COMPILER_ERROR(p, "shift too large"); \
+    } \
   } \
 }
 
-BINARY_VFP(addd,"vadd.f64",0xee300b00, NULL, 0, 0)
-BINARY_VFP(subd,"vsub.f64",0xee300b40, NULL, 0, 0)
-BINARY_VFP(muld,"vmul.f64",0xee200b00, NULL, 0, 0)
-BINARY_VFP(divd,"vdiv.f64",0xee800b00, NULL, 0, 0)
-UNARY_VFP(sqrtd,"vsqrt.f64",0xeeb10b00, NULL, 0, 0)
+BINARY_VFP(addd,"vadd.f64",0xee300b00, "fadd", 0x4e60d400, 0)
+BINARY_VFP(subd,"vsub.f64",0xee300b40, "fsub", 0x4ee0d400, 0)
+BINARY_VFP(muld,"vmul.f64",0xee200b00, "fmul", 0x6e60dc00, 0)
+BINARY_VFP(divd,"vdiv.f64",0xee800b00, "fdiv", 0x6e60fc00, 0)
+UNARY_VFP(sqrtd,"vsqrt.f64",0xeeb10b00, "fsqrt", 0x6ee1f800, 0)
 /* BINARY_VFP(cmpeqd,"vcmpe.f64",0xee000000, NULL, 0, 0) */
-UNARY_VFP(convdf,"vcvt.f64.f32",0xee200b00, NULL, 0, 0)
-UNARY_VFP(convfd,"vcvt.f32.f64",0xee200b00, NULL, 0, 0)
+UNARY_VFP(convdf,"vcvt.f64.f32",0xee200b00, "fcvtzs", 0x4ee1b800, 0)
+UNARY_VFP(convfd,"vcvt.f32.f64",0xee200b00, "scvtf", 0x4e61d800, 0)
 
 #if 1
 #define NUM_ITERS_DIVF 2
