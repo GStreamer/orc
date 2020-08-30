@@ -1247,7 +1247,7 @@ encode_logical_imm (int size, orc_uint64 val, orc_uint32 *encoded)
   } while (size > 2);
 
   /** decide the rotations to make the element be: 0^m 1^n */
-  mask = ((orc_uint64)-1ULL) >> (64 - size);
+  mask = ((orc_uint64)~0ULL) >> (64 - size);
   val &= mask;
 
   if (mask_shifted_ones (val)) {
