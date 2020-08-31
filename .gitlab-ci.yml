@@ -13,11 +13,11 @@ debian sid:
     - apt-get update
     - apt-get install --yes ${DEPENDENCIES}
   script:
-    - meson --werror build/
-    - ninja -C build/
+    - meson setup --werror build/
+    - meson compile --verbose -C build/
     - meson test -C build/
     - meson test -C build/ --benchmark
-    - ninja -C build/ install
+    - meson install -C build/
   artifacts:
     paths:
       - build/meson-logs/
@@ -41,7 +41,7 @@ debian sid:
     #   -Dbar=disabled
   before_script:
     # Make sure meson is up to date, so we don't need to rebuild the image with each release
-    - pip3 install -U meson
+    - pip3 install -U meson ninja
   script:
     # For some reason, options are separated by newline instead of space, so we
     # have to replace them first.
@@ -50,8 +50,8 @@ debian sid:
     # Environment variables substitutions is done by PowerShell before calling
     # cmd.exe, that's why we use $env:FOO instead of %FOO%
     - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
-        meson --werror build $env:MESON_ARGS &&
-        ninja -C build &&
+        meson setup --werror build $env:MESON_ARGS &&
+        meson compile --verbose -C build &&
         meson test -C build &&
         meson test -C build --benchmark"
 
@@ -82,12 +82,12 @@ msys2:
     - C:\msys64\usr\bin\bash -c "pacman -Suu --noconfirm"
     - echo "Installing needed MSYS2 packages"
     - C:\msys64\usr\bin\bash -c "pacman -Sy --noconfirm --needed mingw-w64-x86_64-toolchain ninja"
-    - C:\msys64\usr\bin\bash -c "meson --werror build $env:MESON_ARGS &&
-        ninja -C build &&
+    - C:\msys64\usr\bin\bash -c "meson setup --werror build $env:MESON_ARGS &&
+        meson compile --verbose -C build &&
         meson test -C build &&
         meson test -C build --benchmark"
 
-meson macos:
+macos x86_64:
   stage: 'build'
   tags:
     - gst-macos-10.15
@@ -108,7 +108,8 @@ meson macos:
     # Get ninja
     - pip3 install -U ninja
   script:
-    - CERT_PATH=$(python3 -m certifi) && export SSL_CERT_FILE=${CERT_PATH} && export REQUESTS_CA_BUNDLE=${CERT_PATH} && meson --werror build
-    - ninja -C build
+    - CERT_PATH=$(python3 -m certifi) && export SSL_CERT_FILE=${CERT_PATH} && export REQUESTS_CA_BUNDLE=${CERT_PATH}
+    - meson setup --werror build
+    - meson compile --verbose -C build
     - meson test -C build
     - meson test -C build --benchmark
