@@ -1,3 +1,11 @@
+0.4.32
+======
+
+  - Add support for JIT code generation in Universal Windows Platform apps
+    (Nirbheek Chauhan, Seungha Yang)
+  - Minor Meson build system fixes and improvements
+    (Jan Alexander Steffens, Tim-Philipp Müller)
+
 0.4.31
 ======
 
