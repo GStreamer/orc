@@ -1,8 +1,7 @@
 project ('orc', 'c', version : '0.4.32',
                      meson_version : '>= 0.54.0',
                      default_options : ['buildtype=debugoptimized',
-                                        'warning_level=1',
-                                        'c_std=gnu99'] )
+                                        'warning_level=1'] )
 
 orc_api = '0.4'
 orc_version_major = meson.project_version().split('.')[0]
