@@ -161,18 +161,24 @@ orc_check_powerpc_proc_auxv (void)
         _orc_cpu_name = (char*)buf[i + 1];
         found++;
       }
+#ifdef AT_L1D_CACHESIZE
       if (buf[i] == AT_L1D_CACHESIZE) {
         _orc_data_cache_size_level1 = buf[i + 1];
         found++;
       }
+#endif
+#ifdef AT_L2_CACHESIZE
       if (buf[i] == AT_L2_CACHESIZE) {
         _orc_data_cache_size_level2 = buf[i + 1];
         found++;
       }
+#endif
+#ifdef AT_L3_CACHESIZE
       if (buf[i] == AT_L3_CACHESIZE) {
         _orc_data_cache_size_level3 = buf[i + 1];
         found++;
       }
+#endif
       if (found == 6)
         break;
     }
