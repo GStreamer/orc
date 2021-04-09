@@ -264,11 +264,15 @@ orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
 #define MAP_ANONYMOUS MAP_ANON
 #endif
 
+#ifndef MAP_JIT
+#define MAP_JIT 0
+#endif
+
 static int
 orc_code_region_allocate_codemem_anon_map (OrcCodeRegion *region)
 {
   region->exec_ptr = mmap (NULL, SIZE, PROT_READ|PROT_WRITE|PROT_EXEC,
-      MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+      MAP_PRIVATE|MAP_ANONYMOUS|MAP_JIT, -1, 0);
   if (region->exec_ptr == MAP_FAILED) {
     ORC_WARNING("failed to create write/exec map. err=%i", errno);
     return FALSE;
@@ -300,9 +304,15 @@ orc_code_region_allocate_codemem (OrcCodeRegion *region)
 
   if (orc_code_region_allocate_codemem_anon_map (region)) return;
 
+#ifdef __APPLE__
+  ORC_ERROR("Failed to create write and exec mmap regions.  This "
+      "is probably because the Hardened Runtime is enabled without "
+      "the com.apple.security.cs.allow-jit entitlement.");
+#else
   ORC_ERROR("Failed to create write and exec mmap regions.  This "
       "is probably because SELinux execmem check is enabled (good) "
       "and $TMPDIR and $HOME are mounted noexec (bad).");
+#endif
 }
 
 #endif

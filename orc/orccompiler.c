@@ -6,6 +6,10 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#if defined(HAVE_PTHREAD_JIT)
+  #include <pthread.h>
+#endif
+
 #if defined(HAVE_CODEMEM_VIRTUALALLOC)
 #include <windows.h>
   #ifdef ORC_WINAPI_ONLY_APP
@@ -121,6 +125,11 @@ _orc_compiler_init (void)
       _orc_compiler_flag_emulate = TRUE;
     }
   }
+#endif
+
+#if defined(HAVE_PTHREAD_JIT)
+  ORC_INFO("pthread_jit_write_protect_supported_np() = %i",
+      pthread_jit_write_protect_supported_np());
 #endif
 }
 
@@ -447,6 +456,9 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   program->orccode->code_size = compiler->codeptr - compiler->code;
   orc_code_allocate_codemem (program->orccode, program->orccode->code_size);
 
+#if defined(HAVE_PTHREAD_JIT)
+  pthread_jit_write_protect_np(0);
+#endif
 #if defined(HAVE_CODEMEM_VIRTUALALLOC)
   /* Ensure that code region is writable before memcpy */
   _set_virtual_protect (program->orccode->code, program->orccode->code_size,
@@ -463,6 +475,9 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
     compiler->target->flush_cache (program->orccode);
   }
 
+#if defined(HAVE_PTHREAD_JIT)
+  pthread_jit_write_protect_np(1);
+#endif
 #if defined(HAVE_CODEMEM_VIRTUALALLOC)
   /* Code region is now ready for execution */
  if (!_set_virtual_protect (program->orccode->exec, program->orccode->code_size,

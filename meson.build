@@ -121,6 +121,7 @@ cdata.set('HAVE_MONOTONIC_CLOCK', cc.compiles(monotonic_test))
 cdata.set('HAVE_GETTIMEOFDAY', cc.has_function('gettimeofday'))
 cdata.set('HAVE_POSIX_MEMALIGN', cc.has_function('posix_memalign', prefix : '#include <stdlib.h>'))
 cdata.set('HAVE_MMAP', cc.has_function('mmap'))
+cdata.set('HAVE_PTHREAD_JIT', cc.has_function('pthread_jit_write_protect_np'))
 
 cdata.set('HAVE_SYS_TIME_H', cc.has_header('sys/time.h'))
 cdata.set('HAVE_UNISTD_H', cc.has_header('unistd.h'))
