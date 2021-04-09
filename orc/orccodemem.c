@@ -14,6 +14,7 @@
 
 #ifdef HAVE_CODEMEM_MMAP
 #include <sys/mman.h>
+#include <sys/errno.h>
 #endif
 
 #ifdef HAVE_CODEMEM_VIRTUALALLOC
@@ -223,7 +224,7 @@ orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
   fd = mkstemp (filename);
   umask (mask);
   if (fd == -1) {
-    ORC_WARNING ("failed to create temp file");
+    ORC_WARNING ("failed to create temp file '%s'. err=%i", filename, errno);
     free (filename);
     return FALSE;
   }
@@ -241,14 +242,14 @@ orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
 
   region->exec_ptr = mmap (NULL, SIZE, exec_prot, MAP_SHARED, fd, 0);
   if (region->exec_ptr == MAP_FAILED) {
-    ORC_WARNING("failed to create exec map");
+    ORC_WARNING("failed to create exec map '%s'. err=%i", filename, errno);
     close (fd);
     return FALSE;
   }
   region->write_ptr = mmap (NULL, SIZE, PROT_READ|PROT_WRITE,
       MAP_SHARED, fd, 0);
   if (region->write_ptr == MAP_FAILED) {
-    ORC_WARNING ("failed to create write map");
+    ORC_WARNING ("failed to create write map '%s'. err=%i", filename, errno);
     munmap (region->exec_ptr, SIZE);
     close (fd);
     return FALSE;
@@ -269,7 +270,7 @@ orc_code_region_allocate_codemem_anon_map (OrcCodeRegion *region)
   region->exec_ptr = mmap (NULL, SIZE, PROT_READ|PROT_WRITE|PROT_EXEC,
       MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
   if (region->exec_ptr == MAP_FAILED) {
-    ORC_WARNING("failed to create write/exec map");
+    ORC_WARNING("failed to create write/exec map. err=%i", errno);
     return FALSE;
   }
   region->write_ptr = region->exec_ptr;
