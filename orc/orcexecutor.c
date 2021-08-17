@@ -24,8 +24,7 @@ orc_executor_new (OrcProgram *program)
   ex = malloc(sizeof(OrcExecutor));
   memset(ex,0,sizeof(OrcExecutor));
 
-  ex->program = program;
-  ex->arrays[ORC_VAR_A2] = program->orccode;
+  orc_executor_set_program (ex, program);
 
   return ex;
 }
@@ -83,6 +82,7 @@ orc_executor_set_program (OrcExecutor *ex, OrcProgram *program)
   } else {
     ex->arrays[ORC_VAR_A1] = (void *)orc_executor_emulate;
   }
+  ex->arrays[ORC_VAR_A2] = program->orccode;
 }
 
 void
