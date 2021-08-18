@@ -14,7 +14,7 @@ orc_test_shr = shared_library ('orc-test-' + orc_api,
   install : true)
 
 orc_test_sta = static_library ('orc-test-' + orc_api,
-  objects : orc_test_shr.extract_all_objects(),
+  objects : orc_test_shr.extract_all_objects(recursive: false),
   include_directories : orc_inc,
   c_args : orc_c_args + ['-DBUILDING_ORC_TEST'],
   dependencies : [libm, orc_dep],
