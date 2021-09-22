@@ -32,12 +32,16 @@
 #include <orc/orcutils.h>
 #include <orc/orcdebug.h>
 
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
 #include <time.h>
 #if defined(__linux__)
 #include <linux/auxvec.h>
