@@ -18,6 +18,10 @@
 #if defined(__APPLE__)
 #include  <libkern/OSCacheControl.h>
 #endif
+#if defined (_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
 #endif
 
 /**
@@ -935,6 +939,13 @@ orc_arm_flush_cache (OrcCode *code)
 #ifdef __APPLE__
   sys_dcache_flush(code->code, code->code_size);
   sys_icache_invalidate(code->exec, code->code_size);
+#elif defined (_WIN32)
+  HANDLE h_proc = GetCurrentProcess();
+
+  FlushInstructionCache(h_proc, code->code, code->code_size);
+
+  if ((void *) code->exec != (void *) code->code)
+    FlushInstructionCache(h_proc, code->exec, code->code_size);
 #else
   __clear_cache (code->code, code->code + code->code_size);
   if ((void *) code->exec != (void *) code->code)
