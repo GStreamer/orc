@@ -49,7 +49,7 @@
 
 /***** arm *****/
 
-#if defined (__arm__) || defined (__aarch64__)
+#if defined (__arm__) || defined (__aarch64__) || defined (_M_ARM64)
 #if 0
 static unsigned long
 orc_profile_stamp_xscale(void)
@@ -120,6 +120,10 @@ orc_cpu_arm_getflags_cpuinfo ()
   char **flags;
   char **f;
 
+#if defined (_WIN32) && defined (_M_ARM64)
+  /* On Windows, for desktop applications, we are on always on ARMv8 (aarch64)*/
+  ret = ORC_TARGET_ARM_EDSP | ORC_TARGET_NEON_NEON;
+#else
   cpuinfo = get_proc_cpuinfo();
   if (cpuinfo == NULL) {
     ORC_DEBUG ("Failed to read /proc/cpuinfo");
@@ -159,6 +163,7 @@ orc_cpu_arm_getflags_cpuinfo ()
 out:
   free (cpuinfo_line);
   free (cpuinfo);
+#endif
 
   return ret;
 }
