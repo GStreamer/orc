@@ -91,7 +91,9 @@ if cpu_family.startswith('x86')
   orc_sources += ['orccpu-x86.c']
 elif cpu_family == 'ppc' or cpu_family == 'ppc64'
   orc_sources += ['orccpu-powerpc.c']
-elif cpu_family == 'arm' or cpu_family == 'aarch64'
+# TODO: Add support for Windows
+# https://gitlab.freedesktop.org/gstreamer/orc/-/issues/38
+elif (cpu_family == 'arm' or cpu_family == 'aarch64') and host_system != 'windows'
   orc_sources += ['orccpu-arm.c']
 elif cpu_family == 'mips' and host_machine.endian() == 'little'
   orc_sources += ['orccpu-mips.c']

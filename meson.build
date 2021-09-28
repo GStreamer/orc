@@ -53,6 +53,7 @@ foreach b : all_backends
 endforeach
 
 cpu_family = host_machine.cpu_family()
+host_system = host_machine.system()
 if cpu_family == 'x86'
   cdata.set('HAVE_I386', true)
 elif cpu_family == 'x86_64'
@@ -61,12 +62,14 @@ elif cpu_family == 'ppc' or cpu_family == 'ppc64'
   cdata.set('HAVE_POWERPC', true)
 elif cpu_family == 'arm'
   cdata.set('HAVE_ARM', true)
-elif cpu_family == 'aarch64'
+# TODO: Add support for Windows
+# https://gitlab.freedesktop.org/gstreamer/orc/-/issues/38
+elif cpu_family == 'aarch64' and host_system != 'windows'
   cdata.set('HAVE_AARCH64', true)
 elif cpu_family == 'mips' and host_machine.endian() == 'little'
   cdata.set('HAVE_MIPSEL', true)
 else
-  warning(cpu_family + ' isn\'t a supported cpu family for optimization')
+  warning(cpu_family + ' with ' + host_system + ' isn\'t a supported configuration for optimization')
 endif
 
 threads = dependency('threads')
