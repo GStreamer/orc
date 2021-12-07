@@ -1363,20 +1363,38 @@ neon_rule_loadX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   if (src->vartype == ORC_VAR_TYPE_DEST) update = FALSE;
 
   if (type == 1) {
-    if (compiler->vars[insn->src_args[1]].vartype != ORC_VAR_TYPE_CONST) {
+    OrcVariable *src2 = compiler->vars + insn->src_args[1];
+
+    if (src2->vartype != ORC_VAR_TYPE_CONST) {
       ORC_PROGRAM_ERROR(compiler,"unimplemented");
       return;
     }
 
     ptr_register = compiler->gp_tmpreg;
     if (compiler->is_64bit) {
+      if (src2->value.i < 0) {
+        orc_arm64_emit_sub_imm (compiler, 64, ptr_register,
+            src->ptr_register,
+            src2->value.i * src->size * -1);
+      }
+      else
+      {
         orc_arm64_emit_add_imm (compiler, 64, ptr_register,
             src->ptr_register,
-            compiler->vars[insn->src_args[1]].value.i * src->size);
+            src2->value.i * src->size);
+      }
     } else {
+      if (src2->value.i < 0) {
+        orc_arm_emit_sub_imm (compiler, ptr_register,
+            src->ptr_register,
+            src2->value.i * src->size * -1, TRUE);
+      }
+      else
+      {
         orc_arm_emit_add_imm (compiler, ptr_register,
             src->ptr_register,
-            compiler->vars[insn->src_args[1]].value.i * src->size);
+            src2->value.i * src->size);
+      }
     }
 
     update = FALSE;
