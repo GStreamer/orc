@@ -1,0 +1,29 @@
+[constants]
+vs_path = 'C:\BuildTools'
+msvc_version = '14.29.30133'
+msvc_version_dir = vs_path / 'VC\Tools\MSVC' / msvc_version
+msvc_arm_bindir = msvc_version_dir / 'bin\Hostx64\arm'
+msvc_arm_libdir = msvc_version_dir / 'lib\arm'
+
+[host_machine]
+system = 'windows'
+cpu_family = 'arm'
+cpu = 'armv7'
+endian = 'little'
+
+[properties]
+needs_exe_wrapper = true
+
+[built-in options]
+c_args = ['-DWINAPI_FAMILY=WINAPI_FAMILY_APP']
+cpp_args = ['-DWINAPI_FAMILY=WINAPI_FAMILY_APP']
+c_link_args = ['-DWINAPI_FAMILY=WINAPI_FAMILY_APP', '-APPCONTAINER', 'WindowsApp.lib']
+cpp_link_args = ['-DWINAPI_FAMILY=WINAPI_FAMILY_APP', '-APPCONTAINER', 'WindowsApp.lib']
+
+[binaries]
+lib       = msvc_arm_bindir / 'lib.exe'
+c         = msvc_arm_bindir / 'cl.exe'
+c_ld      = msvc_arm_bindir / 'link.exe'
+cpp       = msvc_arm_bindir / 'cl.exe'
+cpp_ld    = msvc_arm_bindir / 'link.exe'
+pkgconfig = 'false'
