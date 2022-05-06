@@ -231,12 +231,12 @@ orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
   if (force_unlink || !_orc_compiler_flag_debug) {
     unlink (filename);
   }
-  free (filename);
 
   n = ftruncate (fd, SIZE);
   if (n < 0) {
     ORC_WARNING("failed to expand file to size");
     close (fd);
+    free (filename);
     return FALSE;
   }
 
@@ -244,18 +244,21 @@ orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
   if (region->exec_ptr == MAP_FAILED) {
     ORC_WARNING("failed to create exec map '%s'. err=%i", filename, errno);
     close (fd);
+    free (filename);
     return FALSE;
   }
   region->write_ptr = mmap (NULL, SIZE, PROT_READ|PROT_WRITE,
       MAP_SHARED, fd, 0);
   if (region->write_ptr == MAP_FAILED) {
     ORC_WARNING ("failed to create write map '%s'. err=%i", filename, errno);
+    free (filename);
     munmap (region->exec_ptr, SIZE);
     close (fd);
     return FALSE;
   }
   region->size = SIZE;
 
+  free (filename);
   close (fd);
   return TRUE;
 }
