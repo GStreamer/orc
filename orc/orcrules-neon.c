@@ -2859,16 +2859,16 @@ UNARY_NARROW(select0ql,"vmovn.i64",0xf3ba0200, "xtn", 0x0ea12800, 1)
 UNARY_NARROW(select0lw,"vmovn.i32",0xf3b60200, "xtn", 0x0e612800, 2)
 UNARY_NARROW(select0wb,"vmovn.i16",0xf3b20200, "xtn", 0x0e212800, 3)
 
-BINARY(addf,"vadd.f32",0xf2000d00, "fadd", 0x0e20d400, 0)
-BINARY(subf,"vsub.f32",0xf2200d00, "fsub", 0x0ea0d400, 0)
-BINARY(mulf,"vmul.f32",0xf3000d10, "fmul", 0x2e20dc00, 0)
-BINARY(maxf,"vmax.f32",0xf2000f00, "fmax", 0x0e20f400, 0)
-BINARY(minf,"vmin.f32",0xf2200f00, "fmin", 0x0ea0f400, 0)
-BINARY(cmpeqf,"vceq.f32",0xf2000e00, "fcmeq", 0x5e20e400, 0)
+BINARY(addf,"vadd.f32",0xf2000d00, "fadd", 0x0e20d400, 1)
+BINARY(subf,"vsub.f32",0xf2200d00, "fsub", 0x0ea0d400, 1)
+BINARY(mulf,"vmul.f32",0xf3000d10, "fmul", 0x2e20dc00, 1)
+BINARY(maxf,"vmax.f32",0xf2000f00, "fmax", 0x0e20f400, 1)
+BINARY(minf,"vmin.f32",0xf2200f00, "fmin", 0x0ea0f400, 1)
+BINARY(cmpeqf,"vceq.f32",0xf2000e00, "fcmeq", 0x5e20e400, 1)
 /* BINARY_R(cmpltf,"vclt.f32",0xf3200e00, "fcmlt", 0x5ef8e800, 1) */
 /* BINARY_R(cmplef,"vcle.f32",0xf3000e00, "fcmle", 0x7ef8d800, 1) */
-UNARY(convfl,"vcvt.s32.f32",0xf3bb0700, "fcvtzs", 0x0ea1b800, 0)
-UNARY(convlf,"vcvt.f32.s32",0xf3bb0600, "scvtf", 0x0e21d800, 0)
+UNARY(convfl,"vcvt.s32.f32",0xf3bb0700, "fcvtzs", 0x0ea1b800, 1)
+UNARY(convlf,"vcvt.f32.s32",0xf3bb0600, "scvtf", 0x0e21d800, 1)
 
 #define UNARY_VFP(opcode,insn_name,code,insn_name64,code64,vec_shift) \
 static void \
@@ -2905,7 +2905,7 @@ orc_neon_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
       orc_neon64_emit_binary (p, insn_name64, code64, \
           p->vars[insn->dest_args[0]], \
           p->vars[insn->src_args[0]], \
-          p->vars[insn->src_args[1]], vec_shift - 1); \
+          p->vars[insn->src_args[1]], vec_shift); \
     } else { \
       ORC_COMPILER_ERROR(p, "not supported in AArch64 yet [%s %x]", (insn_name64), (code64)); \
     } \
