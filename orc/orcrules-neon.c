@@ -2948,24 +2948,24 @@ orc_neon_rule_divf (OrcCompiler *p, void *user, OrcInstruction *insn)
 
     orc_neon64_emit_unary (p, "frecpe", 0x0ea1d800,
       tmpreg, p->vars[insn->src_args[1]],
-      p->insn_shift);
+      vec_shift);
     for(i = 0; i < NUM_ITERS_DIVF; i++) {
       orc_neon64_emit_binary (p, "frecps", 0x0e20fc00,
         tmpreg2, /* correction factor */
         tmpreg, /* the last estimate */
         p->vars[insn->src_args[1]], /* the original number */
-        p->insn_shift);
+        vec_shift);
       orc_neon64_emit_binary (p, "fmul", 0x2e20dc00,
         tmpreg, /* revised estimate */
         tmpreg,  /* last estimate */
         tmpreg2, /* correction factor */
-        p->insn_shift);
+        vec_shift);
     }
 
     orc_neon64_emit_binary (p, "fmul", 0x2e20dc00,
       p->vars[insn->dest_args[0]],
       p->vars[insn->src_args[0]],
-      tmpreg, p->insn_shift);
+      tmpreg, vec_shift);
   } else {
     if (p->insn_shift <= vec_shift) {
       int i;
