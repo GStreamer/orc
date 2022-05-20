@@ -3030,34 +3030,34 @@ orc_neon_rule_sqrtf (OrcCompiler *p, void *user, OrcInstruction *insn)
 
     orc_neon64_emit_unary (p, "frsqrte", 0x2ea1d800,
       tmpreg, p->vars[insn->src_args[0]],
-      p->insn_shift);
+      vec_shift);
 
     for(i = 0; i < NUM_ITERS_SQRTF; i++) {
       orc_neon64_emit_binary (p, "fmul", 0x2e20dc00,
         tmpreg2, tmpreg, p->vars[insn->src_args[0]],
-        p->insn_shift);
+        vec_shift);
       orc_neon64_emit_binary (p, "frsqrts", 0x0ea0fc00,
-        tmpreg2, tmpreg, tmpreg2, p->insn_shift);
+        tmpreg2, tmpreg, tmpreg2, vec_shift);
       orc_neon64_emit_binary (p, "fmul", 0x2e20dc00,
         tmpreg, tmpreg, tmpreg2,
-        p->insn_shift);
+        vec_shift);
     }
 
     orc_neon64_emit_unary (p, "frecpe", 0x0ea1d800,
       p->vars[insn->dest_args[0]], tmpreg,
-      p->insn_shift);
+      vec_shift);
 
     for(i = 0; i < NUM_ITERS_DIVF; i++) {
       orc_neon64_emit_binary (p, "frecps", 0x0e20fc00,
         tmpreg2, /* correction factor */
         p->vars[insn->dest_args[0]], /* the last estimate */
         tmpreg, /* the original number */
-        p->insn_shift);
+        vec_shift);
       orc_neon64_emit_binary (p, "fmul", 0x2e20dc00,
         p->vars[insn->dest_args[0]], /* revised estimate */
         p->vars[insn->dest_args[0]],  /* last estimate */
         tmpreg2, /* correction factor */
-        p->insn_shift);
+        vec_shift);
     }
   } else {
     if (p->insn_shift <= vec_shift) {
