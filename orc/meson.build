@@ -53,37 +53,37 @@ orc_headers = [
 ]
 install_headers(orc_headers, subdir : 'orc-' + orc_api + '/orc')
 
-if backend == 'sse' or backend == 'all'
+if 'sse' in enabled_backends
   orc_sources += ['orcsse.c', 'orcrules-sse.c', 'orcprogram-sse.c',
     'orcx86.c', 'orcx86insn.c']
 endif
 
-if backend == 'mmx' or backend == 'all'
+if 'mmx' in enabled_backends
   # we assume it is ok to include the same file (orcx86) twice
   # in case all backends are selected (ie mmx and sse)
   orc_sources += ['orcmmx.c', 'orcrules-mmx.c', 'orcprogram-mmx.c', 'orcx86.c']
 endif
 
-if backend == 'altivec' or backend == 'all'
+if 'altivec' in enabled_backends
   orc_sources += ['orcrules-altivec.c', 'orcprogram-altivec.c', 'orcpowerpc.c']
 endif
 
-if backend == 'neon' or backend == 'all'
+if 'neon' in enabled_backends
   orc_sources += ['orcprogram-neon.c', 'orcrules-neon.c', 'orcarm.c']
 endif
 
 # ARM backend is disabled until it has decent coverage
-if backend == 'arm' or backend == 'all'
+if 'arm' in enabled_backends
   # we assume it is ok to include the same file (orcarm) twice
   # in case all backends are selected (ie neon and arm)
   # orc_sources += ['orcprogram-arm.c', 'orcrules-arm.c', 'orcarm.c']
 endif
 
-if backend == 'c64x' or backend == 'all'
+if 'c64x' in enabled_backends
   orc_sources += ['orcprogram-c64x-c.c']
 endif
 
-if backend == 'mips' or backend == 'all'
+if 'mips' in enabled_backends
   orc_sources += ['orcmips.c', 'orcprogram-mips.c', 'orcrules-mips.c']
 endif
 

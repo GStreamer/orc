@@ -41,8 +41,14 @@ endif
 # Passing this through the command line would be too messy
 cdata.set('ORC_API_EXPORT', export_define)
 
-all_backends = ['sse', 'mmx', 'altivec', 'neon', 'mips', 'c64x'] # 'arm'
+all_backends = ['sse', 'mmx']
+extra_backends = ['altivec', 'neon', 'mips', 'c64x'] # 'arm'
 enabled_backends = []
+
+host_system = host_machine.system()
+if host_system != 'windows'
+  all_backends += extra_backends
+endif
 
 backend = get_option('orc-backend')
 foreach b : all_backends
@@ -53,14 +59,14 @@ foreach b : all_backends
 endforeach
 
 cpu_family = host_machine.cpu_family()
-host_system = host_machine.system()
 if cpu_family == 'x86'
   cdata.set('HAVE_I386', true)
 elif cpu_family == 'x86_64'
   cdata.set('HAVE_AMD64', true)
 elif cpu_family == 'ppc' or cpu_family == 'ppc64'
   cdata.set('HAVE_POWERPC', true)
-elif cpu_family == 'arm'
+# TODO: Windows ARM device is not tested
+elif cpu_family == 'arm' and host_system != 'windows'
   cdata.set('HAVE_ARM', true)
 # TODO: Add support for Windows
 # https://gitlab.freedesktop.org/gstreamer/orc/-/issues/38
