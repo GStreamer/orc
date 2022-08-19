@@ -187,6 +187,7 @@ pkg.generate (orc_lib,
   subdirs : 'orc-' + orc_api,
   description : 'Library of Optimized Inner Loops Runtime Compiler',
   variables : tools_variables,
+  extra_cflags: orc_dep_cargs,
   libraries_private : orc_dependencies)
 
 # Install m4 macro that other projects use
