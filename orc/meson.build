@@ -101,7 +101,11 @@ endif
 
 orc_c_args = ['-DORC_ENABLE_UNSTABLE_API', '-D_GNU_SOURCE']
 
-orc_dependencies = [libm, librt, liblog, threads]
+orc_dependencies = [libm, librt, liblog]
+if host_os != 'windows'
+  # winpthread may be detected but we don't use it
+  orc_dependencies += threads
+endif
 
 orc_lib = library ('orc-' + orc_api,
   orc_sources,
