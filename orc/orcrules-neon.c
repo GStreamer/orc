@@ -1198,7 +1198,7 @@ neon_rule_loadupdb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     } else {
       ptr_reg = src->ptr_register;
     }
-    if (size > 8) {
+    if (size >= 8) {
       if (src->is_aligned) {
         if (size == 32) {
           ORC_ASM_CODE(compiler,"  vld1.64 { %s, %s, %s, %s }, [%s,:256]\n",
@@ -1280,6 +1280,43 @@ neon_rule_loadupdb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
         orc_neon_emit_unary (compiler, "vzip.8", 0xf3b20180,
           compiler->vars[insn->dest_args[0]].alloc,
           compiler->vars[insn->dest_args[0]].alloc + 1);
+
+        if (compiler->loop_shift == 1) {
+          /* When the loop_shift is 1, it is possible that one iteration of shift 0
+          has already been performed if the destination array is 8-byte aligned
+          (but not 16-byte aligned).
+          In this case, the output offset has been incremented by 1, and we need to
+          shift the outputs of loadupdb.*/
+
+          // set temp reg to 0
+          orc_arm_emit_eor_r(compiler, ORC_ARM_COND_AL, 0,
+            compiler->gp_tmpreg, compiler->gp_tmpreg, compiler->gp_tmpreg);
+          // test if input offset is odd
+          orc_arm_emit_tst_i(compiler, ORC_ARM_COND_AL, src->ptr_offset, 0x1);
+          // if yes, tmpreg = 0xff
+          orc_arm_emit_mov_i(compiler, ORC_ARM_COND_NE, 0, compiler->gp_tmpreg, 0xff);
+
+          // fill a simd reg with value of tmpreg (0xff or 0x0)
+          ORC_ASM_CODE(compiler,"  %s %s, %s\n", "vdup.8",
+            orc_neon_reg_name (dest->alloc+3), orc_arm_reg_name (compiler->gp_tmpreg));
+          code = 0xeec00b10;
+          code |= ((compiler->vars[insn->dest_args[0]].alloc+3)&0xf)<<16; // Vd
+          code |= (compiler->gp_tmpreg&0xf) << 12; // Rt
+          code |= (((compiler->vars[insn->dest_args[0]].alloc+3)>>4)&0x1) << 7; // D
+          orc_arm_emit (compiler, code);
+
+          // vext.8 with #imm=1 to create shifted output
+          orc_neon_emit_binary (compiler, "vext.8", 0xf2b00100,
+            compiler->vars[insn->dest_args[0]].alloc+1,
+            compiler->vars[insn->dest_args[0]].alloc,
+            compiler->vars[insn->dest_args[0]].alloc+1);
+
+          // select shifted output or not
+          orc_neon_emit_binary(compiler, "vbit.8", 0xf3200110,
+            compiler->vars[insn->dest_args[0]].alloc,
+            compiler->vars[insn->dest_args[0]].alloc+1,
+            compiler->vars[insn->dest_args[0]].alloc+3);
+        }
         break;
       case 2:
         orc_neon_emit_binary (compiler, "vorr", 0xf2200110,

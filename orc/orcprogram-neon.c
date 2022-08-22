@@ -909,9 +909,9 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
 
       compiler->size_region = 0;
       orc_arm_emit_label (compiler, LABEL_REGION0_LOOP);
-      orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
 
       orc_neon_emit_loop (compiler, -1);
+      orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
       orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION0_LOOP);
       orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, LABEL_REGION2_SKIP);
       orc_arm_emit_label (compiler, LABEL_REGION0_SKIP);
@@ -976,8 +976,8 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
       orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, LABEL_REGION1_SKIP);
 
       orc_arm_emit_label (compiler, LABEL_REGION1_LOOP);
-      orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
       orc_neon_emit_loop (compiler, -1);
+      orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
       orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION1_LOOP);
       orc_arm_emit_label (compiler, LABEL_REGION1_SKIP);
 
@@ -1004,10 +1004,10 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
     /* N is larger than L2 cache size */
     compiler->size_region = 3;
     orc_arm_emit_label (compiler, LABEL_REGION2_LOOP_LARGE);
-    orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
     for(i=0;i<(1<<compiler->unroll_shift);i++){
       orc_neon_emit_loop (compiler, i);
     }
+    orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
     orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION2_LOOP_LARGE);
     orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, LABEL_REGION2_SKIP);
 
@@ -1020,10 +1020,10 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
     /* N is smaller than L2 cache size */
     compiler->size_region = 2;
     orc_arm_emit_label (compiler, LABEL_REGION2_LOOP_MEDIUM);
-    orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
     for(i=0;i<(1<<compiler->unroll_shift);i++){
       orc_neon_emit_loop (compiler, i);
     }
+    orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
     orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION2_LOOP_MEDIUM);
     orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, LABEL_REGION2_SKIP);
 
@@ -1031,10 +1031,10 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
     /* N is smaller than L2 cache size */
     compiler->size_region = 1;
     orc_arm_emit_label (compiler, LABEL_REGION2_LOOP_SMALL);
-    orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
     for(i=0;i<(1<<compiler->unroll_shift);i++){
       orc_neon_emit_loop (compiler, i);
     }
+    orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
     orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION2_LOOP_SMALL);
 
     orc_arm_emit_label (compiler, LABEL_REGION2_SKIP);
@@ -1053,8 +1053,8 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
       orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, LABEL_REGION3_SKIP);
 
       orc_arm_emit_label (compiler, LABEL_REGION3_LOOP);
-      orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
       orc_neon_emit_loop (compiler, -1);
+      orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
       orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION3_LOOP);
       orc_arm_emit_label (compiler, LABEL_REGION3_SKIP);
 
