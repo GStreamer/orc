@@ -1,3 +1,21 @@
+0.4.33
+======
+
+  - Add support for aarch64 (64-bit ARM) architecture (not yet enabled on Windows though)
+    (Marek Vasut, Dongju Chae, Gaetan Bahl)
+  - aarch32: Implement loadupdb instruction used e.g. for video pixel
+    format packing/unpacking/conversions (Marek Vasut, Gaetan Bahl)
+  - neon: Fix unsigned only implementation of loadoffb, loadoffw and loadoffl
+    (Daniel Knobe)
+  - neon: Fix testsuite not passing on arm CPUs (Gaetan Bahl)
+  - orccodemem: Fix use-after-free in error paths (Bastien Nocera)
+  - orccpu-powerpc: Fix build with kernel < 4.11 (Fabrice Fontaine)
+  - Add support for macOS Hardened Runtime (Doug Nazar)
+  - Enable only SSE and MMX backends for Windows (Seungha Yang)
+  - Fix ORC_RESTRICT definition for MSVC (Tim-Philipp Müller)
+  - pkgconfig: add -DORC_STATIC_COMPILATION flag to .pc file for static-only builds
+    (Steve Lhomme)
+
 0.4.32
 ======
 
