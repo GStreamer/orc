@@ -3,7 +3,7 @@ orcc = executable ('orcc', 'orcc.c',
                    dependencies : [libm, orc_dep])
 
 # Make orcc usable for other subprojects
-if meson.has_exe_wrapper()
+if meson.can_run_host_binaries()
   meson.override_find_program('orcc', orcc)
 endif
 
