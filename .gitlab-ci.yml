@@ -1,6 +1,6 @@
 stages:
- - deploy
  - build
+ - deploy
 
 variables:
   MESON_ARGS: --werror --fatal-meson-warnings
