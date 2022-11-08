@@ -19,7 +19,7 @@ int hot_src = TRUE;
 int hot_dest = TRUE;
 int flush_cache = FALSE;
 
-void
+int
 touch (unsigned char *ptr, int n)
 {
   static unsigned int sum;
@@ -27,6 +27,9 @@ touch (unsigned char *ptr, int n)
   for(i=0;i<n;i++){
     sum += ptr[i];
   }
+  // Return it so compiler doesn't complain about it being only
+  // ever being written to but never read.
+  return sum;
 }
 
 int
