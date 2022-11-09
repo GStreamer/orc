@@ -54,7 +54,7 @@
 
 #endif
 
-#if defined(__FreeBSD__) || defined(__APPLE__)
+#if defined(__FreeBSD__) || defined(__APPLE__) || defined(__NetBSD__)
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #endif
@@ -86,9 +86,11 @@ test_altivec (void * ignored)
 }
 #endif
 
-#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__NetBSD__)
 #if defined(__APPLE__)
 #define SYSCTL "hw.vectorunit"
+#elif defined(__NetBSD__)
+#define SYSCTL "machdep.altivec"
 #else
 #define SYSCTL "hw.altivec"
 #endif
@@ -188,7 +190,7 @@ orc_check_powerpc_proc_auxv (void)
 }
 #endif
 
-#if !defined(__FreeBSD__) && !defined(__FreeBSD_kernel__) && !defined(__OpenBSD__) && !defined(__APPLE__) && !defined(__linux__)
+#if !defined(__FreeBSD__) && !defined(__FreeBSD_kernel__) && !defined(__OpenBSD__) && !defined(__APPLE__) && !defined(__linux__) && !defined(__NetBSD__)
 static void
 orc_check_powerpc_fault (void)
 {
@@ -209,7 +211,7 @@ powerpc_detect_cpu_flags (void)
   if (inited) return;
   inited = 1;
 
-#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__APPLE__)
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__APPLE__) || defined(__NetBSD__)
   orc_check_powerpc_sysctl_bsd();
 #elif defined(__OpenBSD__)
   orc_check_powerpc_sysctl_openbsd();
