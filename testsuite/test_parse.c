@@ -24,7 +24,7 @@ int error = FALSE;
 int
 main (int argc, char *argv[])
 {
-  OrcProgram **programs;
+  OrcProgram **programs = NULL;
   OrcCompileResult cres;
   int n, i;
 
@@ -48,6 +48,9 @@ main (int argc, char *argv[])
   if (error || n == 0)
     return 1;
  
+  free (programs);
+  programs = NULL;
+
   /* 2 - windows */
   n = orc_parse (txt_win32, &programs);
   for (i = 0; i < n; i++) {
