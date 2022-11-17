@@ -3,7 +3,7 @@ orc_test_sources = ['orctest.c', 'orcarray.c', 'orcrandom.c', 'orcprofile.c']
 
 install_headers(orc_test_headers, subdir : 'orc-' + orc_api + '/orc-test')
 
-orc_test_shr = shared_library ('orc-test-' + orc_api,
+orc_test_lib = library ('orc-test-' + orc_api,
   orc_test_sources,
   version : libversion,
   soversion : soversion,
@@ -13,17 +13,10 @@ orc_test_shr = shared_library ('orc-test-' + orc_api,
   dependencies : [libm, orc_dep],
   install : true)
 
-orc_test_sta = static_library ('orc-test-' + orc_api,
-  objects : orc_test_shr.extract_all_objects(recursive: false),
-  include_directories : orc_inc,
-  c_args : orc_c_args + ['-DBUILDING_ORC_TEST'],
-  dependencies : [libm, orc_dep],
-  install : true)
+orc_test_dep_cargs = []
 
 if get_option('default_library') == 'static'
-  orc_test_lib = orc_test_sta
-else
-  orc_test_lib = orc_test_shr
+  orc_test_dep_cargs += ['-DORC_STATIC_COMPILATION']
 endif
 
 # pkg-config file
