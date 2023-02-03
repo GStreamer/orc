@@ -130,14 +130,6 @@ cdata.set('HAVE_MONOTONIC_CLOCK', cc.compiles(monotonic_test))
 cdata.set('HAVE_GETTIMEOFDAY', cc.has_function('gettimeofday'))
 cdata.set('HAVE_POSIX_MEMALIGN', cc.has_function('posix_memalign', prefix : '#include <stdlib.h>'))
 cdata.set('HAVE_MMAP', cc.has_function('mmap'))
-
-# pthread_jit_write_protect_np() is available but unusable on iOS simulator
-if host_os == 'ios' and cpu_family == 'x86_64'
-  cdata.set('HAVE_PTHREAD_JIT', false)
-else
-  cdata.set('HAVE_PTHREAD_JIT', cc.has_function('pthread_jit_write_protect_np'))
-endif
-
 cdata.set('HAVE_SYS_TIME_H', cc.has_header('sys/time.h'))
 cdata.set('HAVE_UNISTD_H', cc.has_header('unistd.h'))
 cdata.set('HAVE_VALGRIND_VALGRIND_H', cc.has_header('valgrind/valgrind.h'))
