@@ -220,6 +220,10 @@ orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
 
   filename = malloc (strlen ("/orcexec..") +
       strlen (dir) + 6 + 1);
+
+  if (filename == NULL)
+    return FALSE;
+
   sprintf(filename, "%s/orcexec.XXXXXX", dir);
   mask = umask (0066);
   fd = mkstemp (filename);
