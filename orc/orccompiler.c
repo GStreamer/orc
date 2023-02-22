@@ -69,7 +69,7 @@ G_ALWAYS_INLINE
 static void
 orc_pthread_jit_write_protect_np (int protect)
 {
-  if (__builtin_available (macOS 10.11, *))
+  if (__builtin_available (macOS 11.0, *))
     if (pthread_jit_write_protect_supported_np ())
       pthread_jit_write_protect_np (protect);
 }
