@@ -4,7 +4,7 @@ ORC - The Oil Runtime Compiler
 
 (and OIL stands for Optimized Inner Loops)
 
-Orc is the sucessor to Liboil - The Library of Optimized Inner Loops.
+Orc is the successor to Liboil - The Library of Optimized Inner Loops.
 
 Orc is a library and set of tools for compiling and executing
 very simple programs that operate on arrays of data.  The "language"
