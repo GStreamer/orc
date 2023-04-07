@@ -1230,7 +1230,7 @@ count_leading_zeros (orc_uint64 val)
  * 64-bit variant: N:immr:imms
  */
 static int
-encode_logical_imm (int size, orc_uint64 val, orc_uint32 *encoded)
+encode_logical_imm (unsigned int size, orc_uint64 val, orc_uint32 *encoded)
 {
   orc_uint64 mask;
   orc_uint32 I, CTO, CLO;
