@@ -838,6 +838,11 @@ orc_program_append_2 (OrcProgram *program, const char *name, unsigned int flags,
     orc_program_set_error (program, "unknown opcode");
     return;
   }
+  if (insn->opcode->dest_size[1] != 0 && insn->opcode->src_size[2] != 0) {
+    ORC_ERROR ("opcode has too many dest/src parameters: %s", name);
+    orc_program_set_error (program, "opcode has too many dest/src parameters");
+    return;
+  }
 
   insn->flags = flags;
   args[0] = arg0;
@@ -955,6 +960,11 @@ orc_program_append_str_2 (OrcProgram *program, const char *name,
   if (!insn->opcode) {
     ORC_ERROR ("unknown opcode: %s at line %d", name, insn->line);
     orc_program_set_error (program, "unknown opcode");
+    return;
+  }
+  if (insn->opcode->dest_size[1] != 0 && insn->opcode->src_size[2] != 0) {
+    ORC_ERROR ("opcode has too many dest/src parameters: %s", name);
+    orc_program_set_error (program, "opcode has too many dest/src parameters");
     return;
   }
 
