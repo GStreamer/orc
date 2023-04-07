@@ -37,15 +37,15 @@ debian sid:
       - build/meson-logs/
 
 .build windows:
-  image: 'registry.freedesktop.org/gstreamer/gstreamer/amd64/windows:2022-01-26.3-main'
+  image: 'registry.freedesktop.org/gstreamer/gstreamer/amd64/windows:2023-04-03.0-main'
   stage: 'build'
   tags:
     - 'docker'
     - 'windows'
-    - '1809'
-    - 'gstreamer-windows'
+    - '2022'
   variables:
     # Make sure any failure in PowerShell scripts is fatal
+    # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-6
     ErrorActionPreference: 'Stop'
     WarningPreference: 'Stop'
     MESON_ARGS: ' '
@@ -53,6 +53,9 @@ debian sid:
     # Make sure meson is up to date, so we don't need to rebuild the image with each release
     - pip3 install -U meson ninja
   script:
+    # Set the code page to UTF-8
+    - chcp 65001
+
     # For some reason, options are separated by newline instead of space, so we
     # have to replace them first.
     - $env:MESON_ARGS = $env:MESON_ARGS.replace("`n"," ")
