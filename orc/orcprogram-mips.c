@@ -500,6 +500,8 @@ orc_mips_emit_loop (OrcCompiler *compiler, int unroll)
       }
     }
   }
+
+  free (insn_idx);
 }
 
 static int
