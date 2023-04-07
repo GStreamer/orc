@@ -182,7 +182,7 @@ void
 orc_memcpy (void * ORC_RESTRICT d1, const void * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
+  static int p_inited = 0;
   static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
@@ -279,7 +279,7 @@ void
 orc_memset (void * ORC_RESTRICT d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
+  static int p_inited = 0;
   static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 

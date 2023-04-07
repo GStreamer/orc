@@ -36,7 +36,7 @@ void _orc_compiler_init(void);
 void
 orc_init (void)
 {
-  static volatile int inited = FALSE;
+  static int inited = FALSE;
 
   if (!inited) {
     orc_global_mutex_lock ();
