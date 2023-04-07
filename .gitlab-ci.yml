@@ -15,6 +15,21 @@ workflow:
   - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_REF_PROTECTED == "true"'
   - if: '$CI_COMMIT_TAG'
 
+#
+# Global CI policy
+#
+# This can be used to configure global behaviour our our jobs.
+#
+default:
+  retry:
+    max: 2
+    when:
+      - 'runner_system_failure'
+      - 'stuck_or_timeout_failure'
+      - 'scheduler_failure'
+      - 'api_failure'
+  interruptible: true
+
 debian sid:
   image: 'debian:sid'
   stage: build
@@ -239,7 +254,7 @@ pages:
   image: 'debian:stable'
   stage: 'deploy'
   #needs: [ 'docs' ]
-  #interruptible: false
+  interruptible: false
   before_script:
     - apt update
     - apt-get install --yes meson ninja-build build-essential gtk-doc-tools
