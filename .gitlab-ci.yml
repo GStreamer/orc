@@ -5,6 +5,16 @@ stages:
 variables:
   MESON_ARGS: --werror --fatal-meson-warnings
 
+workflow:
+  # https://docs.gitlab.com/ee/ci/yaml/index.html#switch-between-branch-pipelines-and-merge-request-pipelines
+  rules:
+  - if: '$CI_PIPELINE_SOURCE == "schedules" || $CI_PIPELINE_SOURCE == "web"'
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"
+    when: never
+  - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_REF_PROTECTED == "true"'
+  - if: '$CI_COMMIT_TAG'
+
 debian sid:
   image: 'debian:sid'
   stage: build
