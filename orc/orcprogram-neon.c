@@ -599,9 +599,13 @@ enum {
 static void
 orc_neon64_loop_shift (OrcCompiler *compiler)
 {
-  int align_var = get_align_var (compiler);
-  int var_size_shift = get_shift (compiler->vars[align_var].size);
+  int align_var;
+  int var_size_shift;
   int align_shift = 4;
+
+  align_var = get_align_var (compiler);
+  if (compiler->error) return;
+  var_size_shift = get_shift (compiler->vars[align_var].size);
 
   if (compiler->n_insns < 5) {
     /** Get the number of loops (N) from OrcExecutor */
@@ -711,9 +715,13 @@ orc_neon64_loop_shift (OrcCompiler *compiler)
 static void
 orc_neon64_loop_caches (OrcCompiler *compiler)
 {
-  int align_var = get_align_var (compiler);
-  int var_size_shift = get_shift (compiler->vars[align_var].size);
+  int align_var;
+  int var_size_shift;
   int i;
+
+  align_var = get_align_var (compiler);
+  if (compiler->error) return;
+  var_size_shift = get_shift (compiler->vars[align_var].size);
 
   /** if IP0 == 0, go to LABEL_REGION2_SKIP */
   orc_arm64_emit_cmp_imm (compiler, 32, ORC_ARM64_IP0, 0);
