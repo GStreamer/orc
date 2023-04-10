@@ -1557,9 +1557,8 @@ orc_arm64_emit_bfm (OrcCompiler *p, OrcArm64RegBits bits, OrcArm64DP opcode,
   /** find its alias */
   switch (opcode) {
     case ORC_ARM64_DP_SBFM:
-      if (imms == 0x1f) {
-        if (bits == ORC_ARM64_REG_64)
-          imms |= 0x20;
+      if ((imms == 0x1f && bits == ORC_ARM64_REG_32) ||
+          (imms == 0x3f && bits == ORC_ARM64_REG_64)) {
         snprintf (opt_immr, ARM64_MAX_OP_LEN, ", #%u", immr);
         alias = 0;
       } else if (imms < immr) {
@@ -1596,14 +1595,11 @@ orc_arm64_emit_bfm (OrcCompiler *p, OrcArm64RegBits bits, OrcArm64DP opcode,
       }
       break;
     case ORC_ARM64_DP_UBFM:
-      if (imms == 0x1f) {
-        if (bits == ORC_ARM64_REG_64)
-          imms |= 0x20;
+      if ((imms == 0x1f && bits == ORC_ARM64_REG_32) ||
+          (imms == 0x3f && bits == ORC_ARM64_REG_64)) {
         snprintf (opt_immr, ARM64_MAX_OP_LEN, ", #%u", immr);
         alias = 1;
       } else if (imms + 1 == immr) {
-        if (bits == ORC_ARM64_REG_64)
-          imms |= 0x20;
         snprintf (opt_immr, ARM64_MAX_OP_LEN, ", #%u", immr);
         alias = 0;
       } else if (imms < immr) {
