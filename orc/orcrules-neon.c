@@ -1102,7 +1102,7 @@ neon_rule_loadupdb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 
     int opcode, flag;
 
-    if (size > 16) {
+    if (size >= 16) {
       /** load multiple single-element structures to one, two, three, or four registers */
       char vt_str[64];
 
