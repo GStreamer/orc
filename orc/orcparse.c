@@ -443,8 +443,7 @@ orc_parse_handle_function (OrcParser *parser, const OrcLine *line)
   const char *name;
 
   if (line->n_tokens < 2) {
-    orc_parse_add_error (parser, "line %d: .function without function name\n",
-        parser->line_number);
+    orc_parse_add_error (parser, ".function without function name");
     name = "unknown_function";
   } else {
     name = line->tokens[1];
@@ -466,8 +465,7 @@ static int
 orc_parse_handle_backup (OrcParser *parser, const OrcLine *line)
 {
   if (line->n_tokens < 2) {
-    orc_parse_add_error (parser, "line %d: .backup without function name\n",
-        parser->line_number);
+    orc_parse_add_error (parser, ".backup without function name");
     return 0;
   }
 
@@ -551,8 +549,7 @@ orc_parse_handle_dotm (OrcParser *parser, const OrcLine *line)
   int size;
 
   if (line->n_tokens < 2) {
-    orc_parse_add_error (parser, "line %d: .m without value\n",
-        parser->line_number);
+    orc_parse_add_error (parser, ".m without value");
     return 0;
   }
 
@@ -570,8 +567,7 @@ orc_parse_handle_source (OrcParser *parser, const OrcLine *line)
   int i;
 
   if (line->n_tokens < 3) {
-    orc_parse_add_error (parser, "line %d: .source without size or identifier\n",
-        parser->line_number);
+    orc_parse_add_error (parser, ".source without size or identifier");
     return 0;
   }
 
@@ -580,8 +576,7 @@ orc_parse_handle_source (OrcParser *parser, const OrcLine *line)
   for(i=3;i<line->n_tokens;i++){
     if (strcmp (line->tokens[i], "align") == 0) {
       if (i == line->n_tokens - 1) {
-        orc_parse_add_error (parser, "line %d: .source align requires alignment value\n",
-            parser->line_number);
+        orc_parse_add_error (parser, ".source align requires alignment value");
       } else {
         int alignment = strtol (line->tokens[i+1], NULL, 0);
         orc_program_set_var_alignment (parser->program, var, alignment);
@@ -590,8 +585,8 @@ orc_parse_handle_source (OrcParser *parser, const OrcLine *line)
     } else if (i == line->n_tokens - 1) {
       orc_program_set_type_name (parser->program, var, line->tokens[i]);
     } else {
-      orc_parse_add_error (parser, "line %d: unknown .source token '%s'\n",
-          parser->line_number, line->tokens[i]);
+      orc_parse_add_error (parser, "unknown .source token '%s'",
+          line->tokens[i]);
     }
   }
 
@@ -606,8 +601,7 @@ orc_parse_handle_dest (OrcParser *parser, const OrcLine *line)
   int i;
 
   if (line->n_tokens < 3) {
-    orc_parse_add_error (parser, "line %d: .dest without size or identifier\n",
-        parser->line_number);
+    orc_parse_add_error (parser, ".dest without size or identifier");
     return 0;
   }
 
@@ -616,8 +610,7 @@ orc_parse_handle_dest (OrcParser *parser, const OrcLine *line)
   for(i=3;i<line->n_tokens;i++){
     if (strcmp (line->tokens[i], "align") == 0) {
       if (i == line->n_tokens - 1) {
-        orc_parse_add_error (parser, "line %d: .source align requires alignment value\n",
-            parser->line_number);
+        orc_parse_add_error (parser, ".source align requires alignment value");
       } else {
         int alignment = strtol (line->tokens[i+1], NULL, 0);
         orc_program_set_var_alignment (parser->program, var, alignment);
@@ -626,8 +619,8 @@ orc_parse_handle_dest (OrcParser *parser, const OrcLine *line)
     } else if (i == line->n_tokens - 1) {
       orc_program_set_type_name (parser->program, var, line->tokens[i]);
     } else {
-      orc_parse_add_error (parser, "line %d: unknown .dest token '%s'\n",
-          parser->line_number, line->tokens[i]);
+      orc_parse_add_error (parser, "unknown .dest token '%s'",
+          line->tokens[i]);
     }
   }
 
@@ -641,8 +634,7 @@ orc_parse_handle_accumulator (OrcParser *parser, const OrcLine *line)
   int var;
 
   if (line->n_tokens < 3) {
-    orc_parse_add_error (parser, "line %d: .accumulator without size or name\n",
-        parser->line_number);
+    orc_parse_add_error (parser, ".accumulator without size or name");
     return 0;
   }
 
@@ -661,8 +653,7 @@ orc_parse_handle_constant_str (OrcParser *parser, const OrcLine *line)
   int size;
 
   if (line->n_tokens < 4) {
-    orc_parse_add_error (parser, "line %d: .const without size, name or value\n",
-        parser->line_number);
+    orc_parse_add_error (parser, ".const without size, name or value");
     return 0;
   }
 
@@ -680,8 +671,8 @@ orc_parse_handle_constant_str (OrcParser *parser, const OrcLine *line)
     int size; \
     \
     if (line->n_tokens < 3) { \
-      orc_parse_add_error (parser, "line %d: %s without size or name\n", \
-          parser->line_number, line->tokens[0]); \
+      orc_parse_add_error (parser, "%s without size or name\n", \
+          line->tokens[0]); \
       return 0; \
     } \
     size = strtol (line->tokens[1], NULL, 0); \
