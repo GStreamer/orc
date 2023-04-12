@@ -343,16 +343,16 @@ orc_parse_splat_error (OrcParseError **errors, int n_errors, char **log)
 {
   int i;
   int len = 0;
-  int size = ORC_ERROR_LENGTH;
+  int size = 0;
   char *_log = NULL;
 
   for(i=0;i<n_errors;i++){
-    int n = strlen (errors[i]->text + sizeof ("error: \n"));
+    int n = sizeof ("error: 123456789012345    \n") + strlen (errors[i]->source) + strlen (errors[i]->text);
     if (len + n >= size) {
-      size += ORC_ERROR_LENGTH;
+      size += MAX (n, 256);
       _log = realloc(_log, size);
     }
-    len += sprintf (_log + len, "error: %s\n", errors[i]->text);
+    len += sprintf (_log + len, "%s @ %i: error: %s\n", errors[i]->source, errors[i]->line_number, errors[i]->text);
   }
   *log = _log;
 }
