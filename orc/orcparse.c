@@ -865,7 +865,7 @@ static void
 orc_parse_copy_line (OrcParser *parser)
 {
   orc_parse_free_line (parser);
-  parser->line = strndup (parser->p, parser->line_length);
+  parser->line = _strndup (parser->p, parser->line_length);
   parser->line_number++;
 }
 
