@@ -776,9 +776,17 @@ orc_parse_handle_opcode (OrcParser *parser, const OrcLine *line)
   if (strcmp (line->tokens[0], "x4") == 0) {
     flags |= ORC_INSTRUCTION_FLAG_X4;
     offset = 1;
+    if (line->n_tokens < 2) {
+      orc_parse_add_error (parser, "too few arguments for x4 (expected at least 2)");
+      return 0;
+    }
   } else if (strcmp (line->tokens[0], "x2") == 0) {
     flags |= ORC_INSTRUCTION_FLAG_X2;
     offset = 1;
+    if (line->n_tokens < 2) {
+      orc_parse_add_error (parser, "too few arguments for x2 (expected at least 2)");
+      return 0;
+    }
   }
 
   o = orc_parse_find_opcode (parser, line->tokens[offset]);
@@ -794,6 +802,7 @@ orc_parse_handle_opcode (OrcParser *parser, const OrcLine *line)
     orc_parse_add_error (parser, "too %s arguments for %s (expected %d)",
       (line->n_tokens < 1+offset+n_args) ? "few" : "many",
       line->tokens[offset], n_args);
+    return 0;
   }
 
   for(i=offset+1,j=0;i<line->n_tokens;i++,j++){
