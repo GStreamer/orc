@@ -778,6 +778,9 @@ orc_parse_handle_opcode (OrcParser *parser, const OrcLine *line)
   unsigned int flags = 0;
   int offset = 0;
   int error = 0;
+  int n_args;
+  int i, j;
+  const char *args[6] = { NULL };
 
   if (strcmp (line->tokens[0], "x4") == 0) {
     flags |= ORC_INSTRUCTION_FLAG_X4;
@@ -789,49 +792,49 @@ orc_parse_handle_opcode (OrcParser *parser, const OrcLine *line)
 
   o = orc_parse_find_opcode (parser, line->tokens[offset]);
 
-  if (o) {
-    int n_args = opcode_n_args (o);
-    int i, j;
-    const char *args[6] = { NULL };
-
-    if (line->n_tokens != 1 + offset + n_args) {
-      orc_parse_add_error (parser, "too %s arguments for %s (expected %d)",
-        (line->n_tokens < 1+offset+n_args) ? "few" : "many",
-        line->tokens[offset], n_args);
-    }
-
-    for(i=offset+1,j=0;i<line->n_tokens;i++,j++){
-      char *end;
-      double unused ORC_GNUC_UNUSED;
-
-      args[j] = line->tokens[i];
-
-      unused = strtod (line->tokens[i], &end);
-      if (end != line->tokens[i]) {
-        char varname[80];
-        int id;
-
-        /* make a unique name based on value and size */
-        snprintf (varname, sizeof (varname), "_%d.%s", opcode_arg_size(o, j), line->tokens[i]);
-        id = orc_program_add_constant_str (parser->program, opcode_arg_size(o, j),
-            line->tokens[i], varname);
-        /* it's possible we reused an existing variable, get its name so
-         * that we can refer to it in the opcode */
-        args[j] = parser->program->vars[id].name;
-      }
-    }
-
-    error = orc_program_append_str_n (parser->program, line->tokens[offset], flags,
-                n_args, args);
-
-    if (error > 0) {
-      orc_parse_add_error (parser, "bad operand \"%s\" in position %d",
-              line->tokens[offset + error], error);
-    }
-    return 1;
+  if (!o) {
+    orc_parse_add_error (parser, "unknown opcode: %s", line->tokens[offset]);
+    return 0;
   }
-  orc_parse_add_error (parser, "unknown opcode: %s", line->tokens[offset]);
-  return 0;
+
+  n_args = opcode_n_args (o);
+
+  if (line->n_tokens != 1 + offset + n_args) {
+    orc_parse_add_error (parser, "too %s arguments for %s (expected %d)",
+      (line->n_tokens < 1+offset+n_args) ? "few" : "many",
+      line->tokens[offset], n_args);
+  }
+
+  for(i=offset+1,j=0;i<line->n_tokens;i++,j++){
+    char *end;
+    double unused ORC_GNUC_UNUSED;
+
+    args[j] = line->tokens[i];
+
+    unused = strtod (line->tokens[i], &end);
+    if (end != line->tokens[i]) {
+      char varname[80];
+      int id;
+
+      /* make a unique name based on value and size */
+      snprintf (varname, sizeof (varname), "_%d.%s", opcode_arg_size(o, j), line->tokens[i]);
+      id = orc_program_add_constant_str (parser->program, opcode_arg_size(o, j),
+          line->tokens[i], varname);
+      /* it's possible we reused an existing variable, get its name so
+       * that we can refer to it in the opcode */
+      args[j] = parser->program->vars[id].name;
+    }
+  }
+
+  error = orc_program_append_str_n (parser->program, line->tokens[offset], flags,
+              n_args, args);
+
+  if (error > 0) {
+    orc_parse_add_error (parser, "bad operand \"%s\" in position %d",
+            line->tokens[offset + error], error);
+  }
+
+  return 1;
 }
 
 static void
