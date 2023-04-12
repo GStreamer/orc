@@ -84,7 +84,7 @@ static void orc_parse_splat_error (OrcParseError **errors, int n_errors, char **
 static void orc_parse_init (OrcParser *parser, const char *code, int enable_errors);
 static int orc_parse_has_data (OrcParser *parser);
 static void orc_parse_get_line (OrcParser *parser);
-static void orc_parse_put_line (OrcParser *parser);
+static void orc_parse_free_line (OrcParser *parser);
 static void orc_parse_copy_line (OrcParser *parser);
 static void orc_parse_find_line_length (OrcParser *parser);
 static void orc_parse_advance (OrcParser *parser);
@@ -187,9 +187,8 @@ orc_parse_code (const char *code, OrcProgram ***programs, int *n_programs,
     } else {
       orc_parse_handle_opcode (parser, line);
     }
-
-    orc_parse_put_line (parser);
   }
+  orc_parse_free_line (parser);
 
   if (parser->program) {
     orc_parse_sanity_check (parser, parser->program);
@@ -865,12 +864,13 @@ orc_parse_advance (OrcParser *parser)
 static void
 orc_parse_copy_line (OrcParser *parser)
 {
+  orc_parse_free_line (parser);
   parser->line = strndup (parser->p, parser->line_length);
   parser->line_number++;
 }
 
 static void
-orc_parse_put_line (OrcParser *parser)
+orc_parse_free_line (OrcParser *parser)
 {
   if (parser->line) {
     free (parser->line);
