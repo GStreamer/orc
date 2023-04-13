@@ -244,7 +244,7 @@ struct _OrcVector {
     ((TYPE **)(((VECTOR)->items)))
 
 #define ORC_VECTOR_GET_ITEM(VECTOR, INDEX, TYPEPTR) \
-    ((TYPEPTR) &((VECTOR)->items[(INDEX)]))
+    ((TYPEPTR) ((VECTOR)->items[(INDEX)]))
 
 void orc_vector_extend (OrcVector *vector);
 void orc_vector_append (OrcVector *vector, void *item);
