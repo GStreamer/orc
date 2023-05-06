@@ -114,7 +114,7 @@ debian bookworm arm64:
         meson test -C build &&
         meson test -C build --benchmark"
 
-vs2019 cross-amd64:
+vs2019 amd64:
   extends: '.build windows'
   variables:
     ARCH: 'amd64'
