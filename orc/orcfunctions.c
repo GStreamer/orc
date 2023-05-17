@@ -182,39 +182,37 @@ void
 orc_memcpy (void * ORC_RESTRICT d1, const void * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
-  static OrcCode *c = 0;
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
   void (*func) (OrcExecutor *);
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
+  if (!orc_once_enter (&once, (void **) &c)) {
       OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 10, 111, 114, 99, 95, 109, 101, 109, 99, 112, 121, 11, 1, 1, 
-        12, 1, 1, 42, 0, 4, 2, 0, 
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p, _backup_orc_memcpy);
+    static const orc_uint8 bc[] = {
+      1, 9, 10, 111, 114, 99, 95, 109, 101, 109, 99, 112, 121, 11, 1, 1, 
+      12, 1, 1, 42, 0, 4, 2, 0, 
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p, _backup_orc_memcpy);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "orc_memcpy");
-      orc_program_set_backup_function (p, _backup_orc_memcpy);
-      orc_program_add_destination (p, 1, "d1");
-      orc_program_add_source (p, 1, "s1");
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_memcpy");
+    orc_program_set_backup_function (p, _backup_orc_memcpy);
+    orc_program_add_destination (p, 1, "d1");
+    orc_program_add_source (p, 1, "s1");
 
-      orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1, ORC_VAR_D1);
+    orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1, ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+
+    orc_once_leave (&once, c);
   }
+
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
 
@@ -279,39 +277,37 @@ void
 orc_memset (void * ORC_RESTRICT d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
-  static OrcCode *c = 0;
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
   void (*func) (OrcExecutor *);
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 10, 111, 114, 99, 95, 109, 101, 109, 115, 101, 116, 11, 1, 1, 
-        16, 1, 42, 0, 24, 2, 0, 
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p, _backup_orc_memset);
+    static const orc_uint8 bc[] = {
+      1, 9, 10, 111, 114, 99, 95, 109, 101, 109, 115, 101, 116, 11, 1, 1, 
+      16, 1, 42, 0, 24, 2, 0, 
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p, _backup_orc_memset);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "orc_memset");
-      orc_program_set_backup_function (p, _backup_orc_memset);
-      orc_program_add_destination (p, 1, "d1");
-      orc_program_add_parameter (p, 1, "p1");
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_memset");
+    orc_program_set_backup_function (p, _backup_orc_memset);
+    orc_program_add_destination (p, 1, "d1");
+    orc_program_add_parameter (p, 1, "p1");
 
-      orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1, ORC_VAR_D1);
+    orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1, ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+
+    orc_once_leave (&once, c);
   }
+
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
 

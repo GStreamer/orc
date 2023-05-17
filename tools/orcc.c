@@ -884,33 +884,33 @@ output_code_execute (OrcProgram *p, FILE *output, int is_inline)
       fprintf(output, "  OrcProgram *p = _orc_program_%s;\n", p->name);
     }
   } else {
-    fprintf(output, "  static int p_inited = 0;\n");
+    fprintf(output, "  static OrcOnce once = ORC_ONCE_INIT;\n");
     if (use_code) {
-      fprintf(output, "  static OrcCode *c = 0;\n");
+      fprintf(output, "  OrcCode *c;\n");
     } else {
-      fprintf(output, "  static OrcProgram *p = 0;\n");
+      fprintf(output, "  OrcProgram *p;\n");
     }
   }
   fprintf(output, "  void (*func) (OrcExecutor *);\n");
   fprintf(output, "\n");
   if (use_lazy_init) {
-    fprintf(output, "  if (!p_inited) {\n");
-    fprintf(output, "    orc_once_mutex_lock ();\n");
-    fprintf(output, "    if (!p_inited) {\n");
     if (use_code) {
-      fprintf(output, "      OrcProgram *p;\n");
+      fprintf(output, "  if (!orc_once_enter (&once, (void **) &c)) {\n");
+      fprintf(output, "    OrcProgram *p;\n");
+    } else {
+      fprintf(output, "  if (!orc_once_enter (&once, (void **) &p)) {\n");
     }
     fprintf(output, "\n");
     output_program_generation (p, output, is_inline);
     fprintf(output, "\n");
-    fprintf(output, "      orc_program_compile (p);\n");
+    fprintf(output, "    orc_program_compile (p);\n");
     if (use_code) {
-      fprintf(output, "      c = orc_program_take_code (p);\n");
-      fprintf(output, "      orc_program_free (p);\n");
+      fprintf(output, "    c = orc_program_take_code (p);\n");
+      fprintf(output, "    orc_program_free (p);\n");
+      fprintf(output, "    orc_once_leave (&once, c);\n");
+    } else {
+      fprintf(output, "    orc_once_leave (&once, p);\n");
     }
-    fprintf(output, "    }\n");
-    fprintf(output, "    p_inited = TRUE;\n");
-    fprintf(output, "    orc_once_mutex_unlock ();\n");
     fprintf(output, "  }\n");
   }
   if (use_code) {
@@ -1030,10 +1030,10 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
 
     fprintf(output, "#if 1\n");
     /* fprintf(output, "#ifdef bytecode\n"); */
-    fprintf(output, "      static const orc_uint8 bc[] = {\n");
+    fprintf(output, "    static const orc_uint8 bc[] = {\n");
     for(i=0;i<bytecode->length;i++) {
       if ((i&0xf) == 0) {
-        fprintf(output, "        ");
+        fprintf(output, "      ");
       }
       fprintf(output, "%d, ", bytecode->bytecode[i]);
       if ((i&0xf) == 15) {
@@ -1043,11 +1043,11 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
     if ((i&0xf) != 15) {
       fprintf(output, "\n");
     }
-    fprintf(output, "      };\n");
-    fprintf(output, "      p = orc_program_new_from_static_bytecode (bc);\n");
+    fprintf(output, "    };\n");
+    fprintf(output, "    p = orc_program_new_from_static_bytecode (bc);\n");
     /* fprintf(output, "     orc_program_set_name (p, \"%s\");\n", p->name); */
     if (use_backup && !is_inline) {
-      fprintf(output, "      orc_program_set_backup_function (p, _backup_%s);\n",
+      fprintf(output, "    orc_program_set_backup_function (p, _backup_%s);\n",
           p->name);
     }
 
@@ -1058,10 +1058,10 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
       OrcBytecode *bytecode2 = bytecode2 = orc_bytecode_from_program (p2);
 
       fprintf(output, "#ifdef badbytecode\n");
-      fprintf(output, "    static const orc_uint8 bc[] = {\n");
+      fprintf(output, "  static const orc_uint8 bc[] = {\n");
       for(i=0;i<bytecode2->length;i++) {
         if ((i&0xf) == 0) {
-          fprintf(output, "      ");
+          fprintf(output, "    ");
         }
         fprintf(output, "%s%d, ",
             (bytecode->bytecode[i] == bytecode2->bytecode[i]) ? "" : "/* */",
@@ -1073,7 +1073,7 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
       if ((i&0xf) != 15) {
         fprintf(output, "\n");
       }
-      fprintf(output, "    };\n");
+      fprintf(output, "  };\n");
       fprintf(output, "#endif\n");
     }
 #endif
@@ -1083,36 +1083,36 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
     fprintf(output, "#else\n");
   }
 
-  fprintf(output, "      p = orc_program_new ();\n");
+  fprintf(output, "    p = orc_program_new ();\n");
   if (p->constant_n != 0) {
-    fprintf(output, "      orc_program_set_constant_n (p, %d);\n",
+    fprintf(output, "    orc_program_set_constant_n (p, %d);\n",
         p->constant_n);
   }
   if (p->n_multiple != 0) {
     REQUIRE(0,4,14,1);
-    fprintf(output, "      orc_program_set_n_multiple (p, %d);\n",
+    fprintf(output, "    orc_program_set_n_multiple (p, %d);\n",
         p->n_multiple);
   }
   if (p->n_minimum != 0) {
     REQUIRE(0,4,14,1);
-    fprintf(output, "      orc_program_set_n_minimum (p, %d);\n",
+    fprintf(output, "    orc_program_set_n_minimum (p, %d);\n",
         p->n_minimum);
   }
   if (p->n_maximum != 0) {
     REQUIRE(0,4,14,1);
-    fprintf(output, "      orc_program_set_n_maximum (p, %d);\n",
+    fprintf(output, "    orc_program_set_n_maximum (p, %d);\n",
         p->n_maximum);
   }
   if (p->is_2d) {
-    fprintf(output, "      orc_program_set_2d (p);\n");
+    fprintf(output, "    orc_program_set_2d (p);\n");
     if (p->constant_m != 0) {
-      fprintf(output, "      orc_program_set_constant_m (p, %d);\n",
+      fprintf(output, "    orc_program_set_constant_m (p, %d);\n",
           p->constant_m);
     }
   }
-  fprintf(output, "      orc_program_set_name (p, \"%s\");\n", p->name);
+  fprintf(output, "    orc_program_set_name (p, \"%s\");\n", p->name);
   if (use_backup && !is_inline) {
-    fprintf(output, "      orc_program_set_backup_function (p, _backup_%s);\n",
+    fprintf(output, "    orc_program_set_backup_function (p, _backup_%s);\n",
         p->name);
   }
   for(i=0;i<4;i++){
@@ -1120,10 +1120,10 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
     if (var->size) {
       if (var->alignment != var->size) {
         REQUIRE(0,4,14,1);
-        fprintf(output, "      orc_program_add_destination_full (p, %d, \"%s\", 0, %d);\n",
+        fprintf(output, "    orc_program_add_destination_full (p, %d, \"%s\", 0, %d);\n",
             var->size, varnames[ORC_VAR_D1 + i], var->alignment);
       } else {
-        fprintf(output, "      orc_program_add_destination (p, %d, \"%s\");\n",
+        fprintf(output, "    orc_program_add_destination (p, %d, \"%s\");\n",
             var->size, varnames[ORC_VAR_D1 + i]);
       }
     }
@@ -1133,11 +1133,11 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
     if (var->size) {
       if (var->alignment != var->size) {
         REQUIRE(0,4,14,1);
-        fprintf(output, "      orc_program_add_source_full (p, %d, \"%s\", 0, %d);\n",
+        fprintf(output, "    orc_program_add_source_full (p, %d, \"%s\", 0, %d);\n",
             var->size, varnames[ORC_VAR_S1 + i],
             var->alignment);
       } else {
-        fprintf(output, "      orc_program_add_source (p, %d, \"%s\");\n",
+        fprintf(output, "    orc_program_add_source (p, %d, \"%s\");\n",
             var->size, varnames[ORC_VAR_S1 + i]);
       }
     }
@@ -1145,7 +1145,7 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
   for(i=0;i<4;i++){
     var = &p->vars[ORC_VAR_A1 + i];
     if (var->size) {
-      fprintf(output, "      orc_program_add_accumulator (p, %d, \"%s\");\n",
+      fprintf(output, "    orc_program_add_accumulator (p, %d, \"%s\");\n",
           var->size, varnames[ORC_VAR_A1 + i]);
     }
   }
@@ -1153,11 +1153,11 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
     var = &p->vars[ORC_VAR_C1 + i];
     if (var->size == 0) continue;
     if (var->size <= 4) {
-      fprintf(output, "      orc_program_add_constant (p, %d, 0x%08x, \"%s\");\n",
+      fprintf(output, "    orc_program_add_constant (p, %d, 0x%08x, \"%s\");\n",
           var->size, (int)var->value.i, varnames[ORC_VAR_C1 + i]);
     } else if (var->size > 4) {
       REQUIRE(0,4,8,1);
-      fprintf(output, "      orc_program_add_constant_int64 (p, %d, 0x%08x%08xULL, \"%s\");\n",
+      fprintf(output, "    orc_program_add_constant_int64 (p, %d, 0x%08x%08xULL, \"%s\");\n",
           var->size, (orc_uint32)(((orc_uint64)var->value.i)>>32),
           (orc_uint32)(var->value.i), varnames[ORC_VAR_C1 + i]);
     }
@@ -1185,14 +1185,14 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
         default:
           ORC_ASSERT(0);
       }
-      fprintf(output, "      orc_program_add_parameter%s (p, %d, \"%s\");\n",
+      fprintf(output, "    orc_program_add_parameter%s (p, %d, \"%s\");\n",
           suffix, var->size, varnames[ORC_VAR_P1 + i]);
     }
   }
   for(i=0;i<16;i++){
     var = &p->vars[ORC_VAR_T1 + i];
     if (var->size) {
-      fprintf(output, "      orc_program_add_temporary (p, %d, \"%s\");\n",
+      fprintf(output, "    orc_program_add_temporary (p, %d, \"%s\");\n",
           var->size, varnames[ORC_VAR_T1 + i]);
     }
   }
@@ -1207,11 +1207,11 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
       }
 
       if (p->vars[insn->src_args[1]].size != 0) {
-        fprintf(output, "      orc_program_append (p, \"%s\", %s, %s, %s);\n",
+        fprintf(output, "    orc_program_append (p, \"%s\", %s, %s, %s);\n",
             insn->opcode->name, enumnames[insn->dest_args[0]],
             enumnames[insn->src_args[0]], enumnames[insn->src_args[1]]);
       } else {
-        fprintf(output, "      orc_program_append_ds (p, \"%s\", %s, %s);\n",
+        fprintf(output, "    orc_program_append_ds (p, \"%s\", %s, %s);\n",
             insn->opcode->name, enumnames[insn->dest_args[0]],
             enumnames[insn->src_args[0]]);
       }
@@ -1235,7 +1235,7 @@ output_program_generation (OrcProgram *p, FILE *output, int is_inline)
         args[n_args++] = insn->src_args[2];
       }
 
-      fprintf(output, "      orc_program_append_2 (p, \"%s\", %d, %s, %s, %s, %s);\n",
+      fprintf(output, "    orc_program_append_2 (p, \"%s\", %d, %s, %s, %s, %s);\n",
           insn->opcode->name, insn->flags, enumnames[args[0]],
           enumnames[args[1]], enumnames[args[2]],
           enumnames[args[3]]);
