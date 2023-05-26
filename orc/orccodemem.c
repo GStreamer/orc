@@ -126,6 +126,7 @@ orc_code_chunk_merge (OrcCodeChunk *chunk)
   free(chunk2);
 }
 
+/* Must be called with orc_global_mutex_lock() */
 static OrcCodeChunk *
 orc_code_region_get_free_chunk (int size)
 {
@@ -133,12 +134,10 @@ orc_code_region_get_free_chunk (int size)
   OrcCodeRegion *region;
   OrcCodeChunk *chunk;
 
-  orc_global_mutex_lock ();
   for(i=0;i<orc_code_n_regions;i++){
     region = orc_code_regions[i];
     for(chunk = region->chunks; chunk; chunk = chunk->next) {
       if (!chunk->used && size <= chunk->size) {
-        orc_global_mutex_unlock ();
         return chunk;
       }
     }
@@ -146,19 +145,18 @@ orc_code_region_get_free_chunk (int size)
 
   orc_code_regions = realloc (orc_code_regions,
       sizeof(void *)*(orc_code_n_regions+1));
+  if (!orc_code_regions)
+    return NULL;
+
   orc_code_regions[orc_code_n_regions] = orc_code_region_new ();
   region = orc_code_regions[orc_code_n_regions];
   orc_code_n_regions++;
 
   for(chunk = region->chunks; chunk; chunk = chunk->next) {
     if (!chunk->used && size <= chunk->size){
-      orc_global_mutex_unlock ();
       return chunk;
     }
   }
-  orc_global_mutex_unlock ();
-
-  ORC_ASSERT(0);
 
   return NULL;
 }
@@ -171,7 +169,16 @@ orc_code_allocate_codemem (OrcCode *code, int size)
   int aligned_size =
       (size + _orc_codemem_alignment) & (~_orc_codemem_alignment);
 
+  orc_global_mutex_lock ();
   chunk = orc_code_region_get_free_chunk (aligned_size);
+  if (!chunk) {
+    orc_global_mutex_unlock ();
+
+    ORC_ERROR ("Failed to get free chunk memory");
+    /* TODO: error out more gracefully? */
+    ORC_ASSERT (0);
+  }
+
   region = chunk->region;
 
   if (chunk->size > aligned_size) {
@@ -185,6 +192,8 @@ orc_code_allocate_codemem (OrcCode *code, int size)
   code->exec = ORC_PTR_OFFSET(region->exec_ptr, chunk->offset);
   code->code_size = size;
   /* compiler->codeptr = ORC_PTR_OFFSET(region->write_ptr, chunk->offset); */
+
+  orc_global_mutex_unlock ();
 }
 
 void
@@ -195,6 +204,7 @@ orc_code_chunk_free (OrcCodeChunk *chunk)
     return;
   }
 
+  orc_global_mutex_lock ();
   chunk->used = FALSE;
   if (chunk->next && !chunk->next->used) {
     orc_code_chunk_merge (chunk);
@@ -202,6 +212,7 @@ orc_code_chunk_free (OrcCodeChunk *chunk)
   if (chunk->prev && !chunk->prev->used) {
     orc_code_chunk_merge (chunk->prev);
   }
+  orc_global_mutex_unlock ();
 }
 
 #ifdef HAVE_CODEMEM_MMAP
