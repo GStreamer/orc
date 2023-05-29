@@ -237,15 +237,22 @@ ios cross-arm64:
     - meson setup --werror -Dorc-test=disabled -Db_bitcode=true --cross-file ios-cross-file.txt build
     - meson compile --verbose -C build
 
-android fedora cross-arm64:
-  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/android-fedora:2020-06-25.0-master'
+.build android:
+  image: 'registry.freedesktop.org/gstreamer/cerbero/android:2022-09-22.0'
   stage: 'build'
+  tags:
+    - 'gstreamer'
   artifacts:
     name: "${CI_JOB_NAME}_${CI_COMMIT_SHA}"
     expire_in: '5 days'
     when: 'always'
     paths:
       - "build/meson-logs/*.txt"
+  variables:
+    ANDROID_SDK: '/android/sdk'
+    ANDROID_NDK: '/android/ndk'
+    ANDROID_API: '28'
+    TOOLCHAIN: "$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64"
   before_script:
     - dnf install -y python3-pip gcc ninja-build
     - pip3 install --user meson
@@ -253,30 +260,43 @@ android fedora cross-arm64:
     - export PATH="$HOME/.local/bin:$PATH"
     - |
       cat > android-cross-file.txt <<EOF
-      [constants]
-      ndk_path    = '/android/ndk'
-      toolchain   = ndk_path + '/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android'
-      api         = '28'
-
       [host_machine]
-      system      = 'android'
-      cpu_family  = 'aarch64'
-      cpu         = 'aarch64'
-      endian      = 'little'
+      system = 'android'
+      cpu_family = '$ARCH'
+      cpu = '$ARCH'
+      endian = 'little'
 
       [properties]
-      sys_root        = ndk_path + '/sysroot'
+      sys_root = '$ANDROID_NDK/sysroot'
       c_link_args     = ['-fuse-ld=gold']
       cpp_link_args   = ['-fuse-ld=gold']
 
       [binaries]
-      c           = toolchain + api + '-clang'
-      cpp         = toolchain + api + '-clang++'
-      ar          = toolchain + '-ar'
-      strip       = toolchain + '-strip'
+      ar        = '$TOOLCHAIN/bin/${ARCH}-linux-${ANDROID_HOST}-ar'
+      c         = '$TOOLCHAIN/bin/${CLANG_ARCH}-linux-${ANDROID_HOST}${ANDROID_API}-clang'
+      cpp       = '$TOOLCHAIN/bin/${CLANG_ARCH}-linux-${ANDROID_HOST}${ANDROID_API}-clang++'
+      ranlib    = '$TOOLCHAIN/bin/${ARCH}-linux-${ANDROID_HOST}-ranlib'
+      strip     = '$TOOLCHAIN/bin/${ARCH}-linux-${ANDROID_HOST}-strip'
+      pkgconfig = 'false'
       EOF
     - meson setup --werror --cross-file android-cross-file.txt build
     - meson compile --verbose -C build
+
+android arm64 cross:
+  extends: '.build android'
+  stage: 'build'
+  variables:
+    ARCH: 'aarch64'
+    CLANG_ARCH: 'aarch64'
+    ANDROID_HOST: 'android'
+
+android armv7 cross:
+  extends: '.build android'
+  stage: 'build'
+  variables:
+    ARCH: 'arm'
+    CLANG_ARCH: 'armv7a'
+    ANDROID_HOST: 'androideabi'
 
 # https://docs.gitlab.com/ee/user/project/pages/#how-it-works
 # GitLab automatically deploys the `public/` folder from an
