@@ -5,6 +5,7 @@
 
 #include <orc/orc.h>
 #include <orc/orcparse.h>
+#include <orc/orcutils-private.h>
 
 #include <string.h>
 #include <stdlib.h>

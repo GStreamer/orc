@@ -30,6 +30,7 @@
 #endif
 #include <orc/orcdebug.h>
 #include <orc/orcutils.h>
+#include <orc/orcutils-private.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>

@@ -231,26 +231,6 @@ ORC_BEGIN_DECLS
 char * get_proc_cpuinfo (void);
 #endif
 
-#define ORC_VECTOR_ITEM_CHUNK 32
-
-typedef struct _OrcVector OrcVector;
-struct _OrcVector {
-  void **items;
-  int n_items;
-  int n_items_alloc;
-};
-
-#define ORC_VECTOR_AS_TYPE(VECTOR, TYPE) \
-    ((TYPE **)(((VECTOR)->items)))
-
-#define ORC_VECTOR_GET_ITEM(VECTOR, INDEX, TYPEPTR) \
-    ((TYPEPTR) ((VECTOR)->items[(INDEX)]))
-
-void orc_vector_extend (OrcVector *vector);
-void orc_vector_append (OrcVector *vector, void *item);
-int orc_vector_length (OrcVector *vector);
-int orc_vector_has_data (OrcVector *vector);
-
 char * _strndup (const char *s, int n);
 char ** strsplit (const char *s, char delimiter);
 char * get_tag_value (char *s, const char *tag);
