@@ -226,17 +226,6 @@ ORC_BEGIN_DECLS
 
 #ifdef ORC_ENABLE_UNSTABLE_API
 
-/* FIXME: remove, these are internal functions that were never exported */
-#if defined(__arm__) || defined(__aarch64__) || defined(__mips__)
-char * get_proc_cpuinfo (void);
-#endif
-
-char * _strndup (const char *s, int n);
-char ** strsplit (const char *s, char delimiter);
-char * get_tag_value (char *s, const char *tag);
-
-orc_int64 _strtoll (const char *nptr, char **endptr, int base);
-
 /* FIXME: why are these exported ? */
 ORC_API void orc_global_mutex_lock (void);
 ORC_API void orc_global_mutex_unlock (void);

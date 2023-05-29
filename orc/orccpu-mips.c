@@ -31,6 +31,7 @@
 #include <orc/orcmips.h>
 #include <orc/orcutils.h>
 #include <orc/orcdebug.h>
+#include <orc/orcutils-private.h>
 
 #include <unistd.h>
 #include <fcntl.h>
