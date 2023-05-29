@@ -1,3 +1,18 @@
+0.4.34
+======
+
+  - Thread-safety improvements around orc codemem allocation/freeing
+    (Seungha Yang)
+  - Add orc_parse_code() with more detailed error reporting (Francesco Romani)
+  - Implement Orc function lazy initialization correctly via atomic operations
+    (Sebastian Dröge)
+  - orc program parser fixes and improvements (Francesco Romani, Sebastian Dröge)
+  - build fixes and compiler warning fixes (Thomas Klausner, Tim-Philipp Müller,
+    Sebastian Dröge)
+  - coverity and clang scan-build static code analysis fixes (Sebastian Dröge)
+  - meson: Do not always generate static library for test library (Jeremy Bicha)
+  - ci improvements (Jordan Petridis, Nirbheek Chauhan, Tim-Philipp Müller)
+
 0.4.33
 ======
 
