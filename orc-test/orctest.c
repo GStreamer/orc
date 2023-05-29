@@ -564,9 +564,13 @@ float_compare (OrcArray *array1, OrcArray *array2, int i, int j)
 
 int
 check_expected_failure (int flags, OrcProgram *p, OrcArray** src, OrcArray** dest_exec, OrcArray** dest_emul, int i, int j) {
+  OrcTarget *target;
+  unsigned int target_flags;
 
-  if (flags & ORC_TARGET_NEON_NEON) {
+  target = orc_target_get_default ();
+  target_flags = orc_target_get_default_flags (target);
 
+  if ((flags & ORC_TEST_FLAGS_BACKUP) == 0 && strcmp (orc_target_get_name (target), "neon") == 0 && (target_flags & ORC_TARGET_NEON_NEON)) {
     if (strstr(p->name, "divf")) {
 
       float src_val = get_array_val_float (src[1], i, j);
