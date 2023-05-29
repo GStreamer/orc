@@ -147,6 +147,18 @@ orc_parse_full (const char *code, OrcProgram ***programs, char **log)
   return n_programs;
 }
 
+/**
+ * orc_parse_code:
+ * @code: the orc source code
+ * @programs: (out) (array length=n_programs): where to store the parsed orc programs
+ * @n_programs: (out): number of parsed programs stored in @programs
+ * @errors: (out) (array length=n_errors) (nullable): where to store parse error details, or %NULL
+ * @n_errors: (out): number of parse errors stored in @errors
+ *
+ * Returns: 0 on success, -1 if there were any parse errors
+ *
+ * Since: 0.4.34
+ */
 int
 orc_parse_code (const char *code, OrcProgram ***programs, int *n_programs,
                 OrcParseError ***errors, int *n_errors)
