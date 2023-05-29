@@ -83,7 +83,7 @@ debian bookworm arm64:
   allow_failure: true
 
 .build windows:
-  image: 'registry.freedesktop.org/gstreamer/gstreamer/amd64/windows:2023-04-03.0-main'
+  image: 'registry.freedesktop.org/gstreamer/gstreamer/amd64/windows:2023-04-21.0-main'
   stage: 'build'
   tags:
     - 'docker'
