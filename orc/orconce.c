@@ -42,72 +42,32 @@ orc_global_mutex_unlock (void)
 
 #include <windows.h>
 
-static CRITICAL_SECTION once_mutex;
-static CRITICAL_SECTION global_mutex;
+static SRWLOCK once_mutex = SRWLOCK_INIT;
+static SRWLOCK global_mutex = SRWLOCK_INIT;
 
 void
 orc_once_mutex_lock (void)
 {
-  EnterCriticalSection (&once_mutex);
+  AcquireSRWLockExclusive (&once_mutex);
 }
 
 void
 orc_once_mutex_unlock (void)
 {
-  LeaveCriticalSection (&once_mutex);
+  ReleaseSRWLockExclusive (&once_mutex);
 }
 
 void
 orc_global_mutex_lock (void)
 {
-  EnterCriticalSection (&global_mutex);
+  AcquireSRWLockExclusive (&global_mutex);
 }
 
 void
 orc_global_mutex_unlock (void)
 {
-  LeaveCriticalSection (&global_mutex);
+  ReleaseSRWLockExclusive (&global_mutex);
 }
-
-#ifdef _MSC_VER
-
-#pragma section(".CRT$XCU",read)
-
-static void __cdecl
-orc_once_cs_init (void)
-{
-  InitializeCriticalSection (&once_mutex);
-  InitializeCriticalSection (&global_mutex);
-}
-
-__declspec(allocate(".CRT$XCU"))
-void (__cdecl * orc_once_cs_init_constructor)(void) = orc_once_cs_init;
-
-#elif defined(__GNUC__)
-
-static void orc_once_cs_init (void) __attribute__((constructor));
-
-static void
-orc_once_cs_init (void) 
-{
-  InitializeCriticalSection (&once_mutex);
-  InitializeCriticalSection (&global_mutex);
-}
-
-#else
-#error Expecting GCC or MSVC on Windows
-#endif
-
-#if 0
-BOOL WINAPI
-DllMain (HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
-{
-  if (dwReason == DLL_PROCESS_ATTACH) {
-    InitializeCriticalSection (&once_mutex);
-  }
-  return TRUE;
-}
-#endif
 
 #else
 
