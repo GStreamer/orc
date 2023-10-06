@@ -1060,19 +1060,6 @@ orc_sse_emit_loop (OrcCompiler *compiler, int offset, int update)
 
     rule = insn->rule;
     if (rule && rule->emit) {
-      if (!(insn->opcode->flags & (ORC_STATIC_OPCODE_ACCUMULATOR|ORC_STATIC_OPCODE_LOAD|ORC_STATIC_OPCODE_STORE|ORC_STATIC_OPCODE_COPY)) &&
-          compiler->vars[insn->dest_args[0]].alloc !=
-          compiler->vars[insn->src_args[0]].alloc) {
-#ifdef MMX
-        orc_sse_emit_movq (compiler,
-            compiler->vars[insn->src_args[0]].alloc,
-            compiler->vars[insn->dest_args[0]].alloc);
-#else
-        orc_sse_emit_movdqu (compiler,
-            compiler->vars[insn->src_args[0]].alloc,
-            compiler->vars[insn->dest_args[0]].alloc);
-#endif
-      }
       rule->emit (compiler, rule->emit_user, insn);
     } else {
       orc_compiler_error (compiler, "no code generation rule for %s",
