@@ -2230,10 +2230,10 @@ orc_neon_emit_loadpq (OrcCompiler *compiler, int dest, int param)
 
       /*
        * This here is a bit more complex, as the top 32 bits of the Tx are
-       * stored at an offset sizeof(params) * (ORC_VAR_T1-ORC_VAR_P1) from
+       * stored at an offset sizeof(params) * (ORC_N_PARAMS) from
        * bottom 32 bits Px, so we do interleaved load using LD3, where the
        * (v0.4s)[0] is Px and (v2.4s)[2] is Tx, because they are exactly
-       * 256 bits apart = 32 bytes = sizeof(params)*(ORC_VAR_T1-ORC_VAR_P1).
+       * 256 bits apart = 32 bytes = sizeof(params)*(ORC_N_PARAMS).
        *
        * The way all the LD1..LD4R opcodes work may be inobvious from the
        * ARM A64 ISA documentation. See the following article:
@@ -2254,7 +2254,7 @@ orc_neon_emit_loadpq (OrcCompiler *compiler, int dest, int param)
        * Note that there might be a better way to perform the mixing with
        * some TRN/ZIP/UZP instruction.
        */
-      ORC_ASSERT((ORC_VAR_T1-ORC_VAR_P1) == 8);
+      ORC_ASSERT((ORC_N_PARAMS) == 8);
       ORC_ASM_CODE(compiler,"  ld3 {%s - %s}, [%s]\n",
           orc_neon64_reg_name_vector (dest, 8, 0),
           orc_neon64_reg_name_vector (dest+2, 8, 0),
@@ -2312,7 +2312,7 @@ orc_neon_emit_loadpq (OrcCompiler *compiler, int dest, int param)
 
       orc_arm_emit_add_imm (compiler, compiler->gp_tmpreg,
           compiler->exec_reg, ORC_STRUCT_OFFSET(OrcExecutor,
-            params[param + (ORC_VAR_T1-ORC_VAR_P1)]));
+            params[param + (ORC_N_PARAMS)]));
 
       ORC_ASM_CODE(compiler,"  vld1.32 %s[1], [%s]%s\n",
           orc_neon_reg_name (dest),

@@ -34,7 +34,7 @@ sse_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 #ifndef MMX
       orc_sse_emit_movhps_load_memoffset (compiler,
           (int)ORC_STRUCT_OFFSET(OrcExecutor,
-            params[insn->src_args[0] + (ORC_VAR_T1 - ORC_VAR_P1)]),
+            params[insn->src_args[0] + (ORC_N_PARAMS)]),
           compiler->exec_reg, reg);
       orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(2,0,2,0), reg, reg);
 #else

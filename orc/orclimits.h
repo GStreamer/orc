@@ -99,6 +99,7 @@ enum {
   ORC_VAR_T16
 };
 
+#define ORC_N_PARAMS ORC_VAR_T1-ORC_VAR_P1
 
 ORC_END_DECLS
 

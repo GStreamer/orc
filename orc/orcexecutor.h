@@ -80,8 +80,8 @@ struct _OrcExecutorAlt {
   int time;
   int unused2;
   int unused4[8];
-  int params[ORC_VAR_T1-ORC_VAR_P1];
-  int params_hi[ORC_VAR_T1-ORC_VAR_P1];
+  int params[ORC_N_PARAMS];
+  int params_hi[ORC_N_PARAMS];
   int unused3[ORC_N_VARIABLES - ORC_VAR_T9];
   int accumulators[4];
 };

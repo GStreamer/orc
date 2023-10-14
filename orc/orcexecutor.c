@@ -124,7 +124,7 @@ void
 orc_executor_set_param_int64 (OrcExecutor *ex, int var, orc_int64 value)
 {
   ex->params[var] = value & 0xffffffff;
-  ex->params[var + (ORC_VAR_T1-ORC_VAR_P1)] = (value >> 32) & 0xffffffff;
+  ex->params[var + (ORC_N_PARAMS)] = (value >> 32) & 0xffffffff;
 }
 
 void
@@ -133,7 +133,7 @@ orc_executor_set_param_double (OrcExecutor *ex, int var, double value)
   orc_union64 u;
   u.f = value;
   ex->params[var] = u.i & 0xffffffff;
-  ex->params[var + (ORC_VAR_T1-ORC_VAR_P1)] = (u.i >> 32) & 0xffffffff;
+  ex->params[var + (ORC_N_PARAMS)] = (u.i >> 32) & 0xffffffff;
 }
 
 void
@@ -297,7 +297,7 @@ orc_executor_emulate (OrcExecutor *ex)
           load_constant (tmpspace[insn->src_args[k]], 8,
               (orc_uint64)(orc_uint32)ex->params[insn->src_args[k]] |
               (((orc_uint64)(orc_uint32)ex->params[insn->src_args[k] +
-               (ORC_VAR_T1 - ORC_VAR_P1)])<<32));
+               (ORC_N_PARAMS)])<<32));
         } else {
           load_constant (tmpspace[insn->src_args[k]], 8,
               ex->params[insn->src_args[k]]);

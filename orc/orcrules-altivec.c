@@ -152,7 +152,7 @@ powerpc_rule_loadpq (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     powerpc_emit_vperm(compiler, dest->alloc, dest->alloc, dest->alloc,
         POWERPC_V0);
 
-    powerpc_emit_addi (compiler, greg, greg, (ORC_VAR_T1 - ORC_VAR_P1) * 4);
+    powerpc_emit_addi (compiler, greg, greg, (ORC_N_PARAMS) * 4);
     ORC_ASM_CODE(compiler, "  lvewx %s, 0, %s\n",
         powerpc_get_regname(tmp),
         powerpc_get_regname(greg));

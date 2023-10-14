@@ -816,7 +816,7 @@ c_rule_loadpX (OrcCompiler *p, void *user, OrcInstruction *insn)
           dest, insn->src_args[0] - ORC_VAR_P1 + p->program->n_src_vars);
     } else {
       if (size == 8) {
-        ORC_ASM_CODE(p,"    %s = (ex->params[%d] & 0xffffffff) | ((orc_uint64)(ex->params[%d + (ORC_VAR_T1 - ORC_VAR_P1)]) << 32);\n",
+        ORC_ASM_CODE(p,"    %s = (ex->params[%d] & 0xffffffff) | ((orc_uint64)(ex->params[%d + (ORC_N_PARAMS)]) << 32);\n",
             dest, insn->src_args[0], insn->src_args[0]);
       } else {
         ORC_ASM_CODE(p,"    %s = ex->params[%d];\n", dest,
