@@ -327,17 +327,24 @@ sse_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   } 
   switch (dest->size << compiler->loop_shift) {
     case 1:
-      /* FIXME we might be using ecx twice here */
-      if (ptr_reg == compiler->gp_tmpreg) {
-        orc_compiler_error (compiler, "unimplemented corner case in %s",
-            insn->opcode->name);
+      if (compiler->target_flags & ORC_TARGET_SSE_SSE4_1) {
+        // Note: this instruction uses VPEXTRB + memory address, that's SSE 4.1
+        orc_sse_emit_pextrb_memoffset (compiler, 0, offset, src->alloc,
+          ptr_reg);
+      } else {
+        /* FIXME we might be using ecx twice here */
+        if (ptr_reg == compiler->gp_tmpreg) {
+          orc_compiler_error (compiler, "unimplemented corner case in %s",
+              insn->opcode->name);
+        }
+        orc_sse_emit_movd_store_register (compiler, src->alloc, compiler->gp_tmpreg);
+        orc_x86_emit_mov_reg_memoffset (compiler, 1, compiler->gp_tmpreg,
+            offset, ptr_reg);
       }
-      orc_sse_emit_movd_store_register (compiler, src->alloc, compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_memoffset (compiler, 1, compiler->gp_tmpreg,
-          offset, ptr_reg);
       break;
     case 2:
       if (compiler->target_flags & ORC_TARGET_SSE_SSE4_1) {
+        // Note: this instruction uses VPEXTRW + memory address, that's SSE 4.1
         orc_sse_emit_pextrw_memoffset (compiler, 0, offset, src->alloc,
             ptr_reg);
       } else {

@@ -162,6 +162,7 @@ static const OrcSysOpcode orc_x86_opcodes[] = {
   { "movdqa", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x66, 0x0f6f },
   { "movdqu", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0xf3, 0x0f6f },
   { "movhps", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0x00, 0x0f16 },
+  { "pextrb", ORC_X86_INSN_TYPE_IMM8_MMX_REG_REV, 0, 0x01, 0x0f3a14 },
   { "pextrw", ORC_X86_INSN_TYPE_IMM8_MMX_REG_REV, 0, 0x01, 0x0f3a15 },
   { "movd", ORC_X86_INSN_TYPE_MMX_REGM_REV, 0, 0x01, 0x0f7e },
   { "movq", ORC_X86_INSN_TYPE_MMXM_MMX_REV, 0, 0x66, 0x0fd6 },

@@ -186,6 +186,7 @@ typedef enum {
   ORC_X86_movdqa_load,
   ORC_X86_movdqu_load,
   ORC_X86_movhps_load,
+  ORC_X86_pextrb,
   ORC_X86_pextrw,
   ORC_X86_movd_store,
   ORC_X86_movq_sse_store,
@@ -461,6 +462,7 @@ ORC_API void orc_x86_calculate_offsets (OrcCompiler *p);
 #define orc_sse_emit_movdqu_load_memoffset(p,offset,a,b) orc_x86_emit_cpuinsn_load_memoffset(p, ORC_X86_movdqu_load, 4, 0, offset, a, b)
 #define orc_sse_emit_movhps_load_memoffset(p,offset,a,b) orc_x86_emit_cpuinsn_load_memoffset(p, ORC_X86_movhps_load, 4, 0, offset, a, b)
 
+#define orc_sse_emit_pextrb_memoffset(p,imm,a,offset,b) orc_x86_emit_cpuinsn_store_memoffset(p, ORC_X86_pextrb, 8, imm, a, offset, b)
 #define orc_sse_emit_pextrw_memoffset(p,imm,a,offset,b) orc_x86_emit_cpuinsn_store_memoffset(p, ORC_X86_pextrw, 16, imm, a, offset, b)
 #define orc_sse_emit_movd_store_memoffset(p,a,offset,b) orc_x86_emit_cpuinsn_store_memoffset(p, ORC_X86_movd_store, 16, 0, a, offset, b)
 #define orc_sse_emit_movq_store_memoffset(p,a,offset,b) orc_x86_emit_cpuinsn_store_memoffset(p, ORC_X86_movq_sse_store, 16, 0, a, offset, b)
