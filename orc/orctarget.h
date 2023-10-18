@@ -2,7 +2,6 @@
 #ifndef _ORC_TARGET_H_
 #define _ORC_TARGET_H_
 
-#include <orc/orc.h>
 #include <orc/orclimits.h>
 #include <orc/orcrule.h>
 

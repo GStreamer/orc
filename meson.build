@@ -30,16 +30,9 @@ if cc.has_link_argument('-Wl,-Bsymbolic-functions')
 endif
 
 # Symbol visibility
-if cc.get_id() == 'msvc'
-  export_define = '__declspec(dllexport) extern'
-elif cc.has_argument('-fvisibility=hidden')
+if cc.has_argument('-fvisibility=hidden')
   add_project_arguments('-fvisibility=hidden', language: 'c')
-  export_define = 'extern __attribute__ ((visibility ("default")))'
-else
-  export_define = 'extern'
 endif
-# Passing this through the command line would be too messy
-cdata.set('ORC_API_EXPORT', export_define)
 
 all_backends = ['sse', 'mmx']
 extra_backends = ['altivec', 'neon', 'mips', 'c64x'] # 'arm'

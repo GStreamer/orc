@@ -10,6 +10,8 @@
 #include <processenv.h>
 #endif
 
+#include <orc/orc.h>
+
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
 #include <orc/orconce.h>

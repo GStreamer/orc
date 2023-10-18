@@ -7,7 +7,6 @@
 #include <orc/orcexecutor.h>
 #include <orc/orccode.h>
 #include <orc/orcbytecode.h>
-#include <orc/orccompiler.h>
 #include <orc/orctarget.h>
 #include <orc/orcrule.h>
 

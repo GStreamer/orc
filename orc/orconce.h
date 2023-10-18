@@ -2,7 +2,7 @@
 #ifndef _ORC_ONCE_H_
 #define _ORC_ONCE_H_
 
-#include <orc/orc.h>
+#include <orc/orcutils.h>
 
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS)
 #include <stdatomic.h>

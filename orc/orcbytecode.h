@@ -2,7 +2,7 @@
 #ifndef _ORC_BYTECODE_H_
 #define _ORC_BYTECODE_H_
 
-#include <orc/orc.h>
+#include <orc/orcutils.h>
 #include <orc/orcbytecodes.h>
 
 ORC_BEGIN_DECLS

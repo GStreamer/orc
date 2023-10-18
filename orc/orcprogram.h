@@ -2,7 +2,6 @@
 #ifndef _ORC_PROGRAM_H_
 #define _ORC_PROGRAM_H_
 
-#include <orc/orc.h>
 #include <orc/orclimits.h>
 #include <orc/orcexecutor.h>
 #include <orc/orccode.h>

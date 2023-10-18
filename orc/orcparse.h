@@ -2,7 +2,7 @@
 #ifndef __ORC_PARSE_H__
 #define __ORC_PARSE_H__
 
-#include <orc/orc.h>
+#include <orc/orcutils.h>
 
 ORC_BEGIN_DECLS
 

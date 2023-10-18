@@ -29,8 +29,9 @@
 #define _ORC_DEBUG_H_
 
 #include <stdarg.h>
-#include <orc/orc.h>
 #include <stdlib.h>
+
+#include <orc/orcutils.h>
 
 ORC_BEGIN_DECLS
 

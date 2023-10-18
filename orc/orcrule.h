@@ -2,7 +2,6 @@
 #ifndef _ORC_RULE_H_
 #define _ORC_RULE_H_
 
-#include <orc/orc.h>
 #include <orc/orclimits.h>
 #include <orc/orcopcode.h>
 

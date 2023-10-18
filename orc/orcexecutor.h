@@ -2,8 +2,8 @@
 #ifndef _ORC_EXECUTOR_H_
 #define _ORC_EXECUTOR_H_
 
-#include <orc/orc.h>
 #include <orc/orclimits.h>
+#include <orc/orcutils.h>
 
 ORC_BEGIN_DECLS
 

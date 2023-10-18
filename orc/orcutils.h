@@ -207,17 +207,22 @@ typedef unsigned int orc_bool;
 #define ORC_END_DECLS
 #endif
 
-/* FIXME: unused, remove */
-#define ORC_EXPORT
-
-#if (defined(_MSC_VER) || defined(_WIN32)) && !defined(ORC_STATIC_COMPILATION)
-#define ORC_API_IMPORT __declspec(dllimport) extern
+#if (defined(_WIN32) || defined(__CYGWIN__)) && !defined(ORC_STATIC_COMPILATION)
+#  define _ORC_EXPORT __declspec(dllexport)
+#  define _ORC_IMPORT __declspec(dllimport)
+#elif __GNUC__ >= 4
+#  define _ORC_EXPORT __attribute__((visibility("default")))
+#  define _ORC_IMPORT
 #else
-#define ORC_API_IMPORT extern
+#  define _ORC_EXPORT
+#  define _ORC_IMPORT
 #endif
 
+#define ORC_API_EXPORT _ORC_EXPORT extern
+#define ORC_API_IMPORT _ORC_IMPORT extern
+
 #ifdef BUILDING_ORC
-#define ORC_API ORC_API_EXPORT /* defined in config.h */
+#define ORC_API ORC_API_EXPORT
 #else
 #define ORC_API ORC_API_IMPORT
 #endif
