@@ -156,6 +156,7 @@ static const OrcSysOpcode orc_x86_opcodes[] = {
   { "pshuflw", ORC_X86_INSN_TYPE_IMM8_MMXM_MMX, 0, 0xf2, 0x0f70 },
   { "pshufhw", ORC_X86_INSN_TYPE_IMM8_MMXM_MMX, 0, 0xf3, 0x0f70 },
   { "palignr", ORC_X86_INSN_TYPE_IMM8_MMXM_MMX, 0, 0x66, 0x0f3a0f },
+  { "pinsrb", ORC_X86_INSN_TYPE_IMM8_REGM_MMX, 0, 0x01, 0x0f3a20 },
   { "pinsrw", ORC_X86_INSN_TYPE_IMM8_REGM_MMX, 0, 0x01, 0x0fc4 },
   { "movd", ORC_X86_INSN_TYPE_REGM_MMX, 0, 0x01, 0x0f6e },
   { "movq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, 0xf3, 0x0f7e },

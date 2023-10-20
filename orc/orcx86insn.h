@@ -180,6 +180,7 @@ typedef enum {
   ORC_X86_pshuflw,
   ORC_X86_pshufhw,
   ORC_X86_palignr,
+  ORC_X86_pinsrb,
   ORC_X86_pinsrw,
   ORC_X86_movd_load,
   ORC_X86_movq_sse_load,
@@ -455,6 +456,7 @@ ORC_API void orc_x86_calculate_offsets (OrcCompiler *p);
 #define orc_sse_emit_palignr(p,imm,a,b) orc_x86_emit_cpuinsn_imm(p, ORC_X86_psalignr, imm, a, b)
 #define orc_sse_emit_movdqu(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_movdqu_load, 16, a, b)
 
+#define orc_sse_emit_pinsrb_memoffset(p,imm,offset,a,b) orc_x86_emit_cpuinsn_load_memoffset(p, ORC_X86_pinsrb, 4, imm, offset, a, b)
 #define orc_sse_emit_pinsrw_memoffset(p,imm,offset,a,b) orc_x86_emit_cpuinsn_load_memoffset(p, ORC_X86_pinsrw, 4, imm, offset, a, b)
 #define orc_sse_emit_movd_load_memoffset(p,offset,a,b) orc_x86_emit_cpuinsn_load_memoffset(p, ORC_X86_movd_load, 4, 0, offset, a, b)
 #define orc_sse_emit_movq_load_memoffset(p,offset,a,b) orc_x86_emit_cpuinsn_load_memoffset(p, ORC_X86_movq_sse_load, 4, 0, offset, a, b)
