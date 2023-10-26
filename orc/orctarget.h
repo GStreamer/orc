@@ -61,8 +61,10 @@ typedef enum {
   ORC_TARGET_SSE_SSE5 = (1<<6),
   ORC_TARGET_SSE_FRAME_POINTER = (1<<7),
   ORC_TARGET_SSE_SHORT_JUMPS = (1<<8),
-  ORC_TARGET_SSE_64BIT = (1<<9)
-}OrcTargetSSEFlags;
+  ORC_TARGET_SSE_64BIT = (1<<9),
+  ORC_TARGET_AVX_AVX = (1<<10),
+  ORC_TARGET_AVX_AVX2 = (1<<11),
+} OrcTargetSSEFlags;
 
 
 /**

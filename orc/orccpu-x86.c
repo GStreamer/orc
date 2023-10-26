@@ -265,7 +265,12 @@ orc_x86_detect_cpuid (void)
   if (orc_compiler_flag_check ("-sse5")) {
     orc_x86_sse_flags &= ~ORC_TARGET_SSE_SSE5;
   }
-
+  if (orc_compiler_flag_check ("-avx")) {
+    orc_x86_sse_flags &= ~ORC_TARGET_AVX_AVX;
+  }
+  if (orc_compiler_flag_check ("-avx2")) {
+    orc_x86_sse_flags &= ~ORC_TARGET_AVX_AVX2;
+  }
 }
 
 static char orc_x86_processor_string[49];
@@ -321,6 +326,16 @@ orc_x86_cpuid_handle_standard_flags (void)
   }
   if (ecx & (1<<20)) {
     orc_x86_sse_flags |= ORC_TARGET_SSE_SSE4_2;
+  }
+
+  if (ecx & (1 << 28)) {
+    orc_x86_sse_flags |= ORC_TARGET_AVX_AVX;
+  }
+
+  get_cpuid (0x00000007, &eax, &ebx, &ecx, &edx);
+
+  if (ebx & (1 << 5)) {
+    orc_x86_sse_flags |= ORC_TARGET_AVX_AVX2;
   }
 }
 
