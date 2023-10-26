@@ -21,10 +21,10 @@
 
 static void orc_mmx_emit_loop (OrcCompiler *compiler, int offset, int update);
 
+void orc_compiler_mmx_register_rules (OrcTarget *target);
 static void orc_compiler_mmx_init (OrcCompiler *compiler);
 static unsigned int orc_compiler_mmx_get_default_flags (void);
 static void orc_compiler_mmx_assemble (OrcCompiler *compiler);
-extern void orc_compiler_mmx_register_rules (OrcTarget *target);
 
 void mmx_load_constant (OrcCompiler *compiler, int reg, int size, int value);
 void mmx_load_constant_long (OrcCompiler *compiler, int reg,
@@ -85,7 +85,7 @@ orc_compiler_mmx_get_default_flags (void)
 {
   unsigned int flags = 0;
 
-#if defined (HAVE_AMD64)
+#if defined(HAVE_AMD64)
   flags |= ORC_TARGET_MMX_64BIT;
 #endif
   if (_orc_compiler_flag_debug) {
@@ -747,6 +747,49 @@ orc_emit_split_2_regions (OrcCompiler *compiler)
 #define LABEL_STEP_DOWN(x) (8+(x))
 #define LABEL_STEP_UP(x) (13+(x))
 
+static void
+orc_compiler_mmx_save_registers (OrcCompiler *compiler)
+{
+  int i;
+  int saved = 0;
+  for (i = 0; i < 16; ++i) {
+    if (compiler->save_regs[X86_MM0 + i] == 1) {
+      ++saved;
+    }
+  }
+  if (saved > 0) {
+    orc_x86_emit_mov_imm_reg (compiler, 4, 16 * saved, compiler->gp_tmpreg);
+    orc_x86_emit_sub_reg_reg (compiler, compiler->is_64bit ? 8 : 4,
+        compiler->gp_tmpreg, X86_ESP);
+    saved = 0;
+    for (i = 0; i < 16; ++i) {
+      if (compiler->save_regs[X86_MM0 + i] == 1) {
+        orc_x86_emit_mov_mmx_memoffset (compiler, 16, X86_MM0 + i,
+            saved * 16, X86_ESP, FALSE, FALSE);
+        ++saved;
+      }
+    }
+  }
+}
+
+static void
+orc_compiler_mmx_restore_registers (OrcCompiler *compiler)
+{
+  int i;
+  int saved = 0;
+  for (i = 0; i < 16; ++i) {
+    if (compiler->save_regs[X86_MM0 + i] == 1) {
+      orc_x86_emit_mov_memoffset_mmx (compiler, 16, saved * 16, X86_ESP,
+          X86_MM0 + i, FALSE);
+      ++saved;
+    }
+  }
+  if (saved > 0) {
+    orc_x86_emit_mov_imm_reg (compiler, 4, 16 * saved, compiler->gp_tmpreg);
+    orc_x86_emit_add_reg_reg (compiler, compiler->is_64bit ? 8 : 4,
+        compiler->gp_tmpreg, X86_ESP);
+  }
+}
 
 static void
 orc_compiler_mmx_assemble (OrcCompiler *compiler)
@@ -786,6 +829,8 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
   if (compiler->error) return;
 
   orc_x86_emit_prologue (compiler);
+
+  orc_compiler_mmx_save_registers (compiler);
 
 #ifndef MMX
   if (orc_program_has_float (compiler)) {
@@ -973,6 +1018,9 @@ orc_compiler_mmx_assemble (OrcCompiler *compiler)
 #else
   orc_x86_emit_emms (compiler);
 #endif
+
+  orc_compiler_mmx_restore_registers (compiler);
+
   orc_x86_emit_epilogue (compiler);
 
   orc_x86_calculate_offsets (compiler);
@@ -1012,19 +1060,6 @@ orc_mmx_emit_loop (OrcCompiler *compiler, int offset, int update)
 
     rule = insn->rule;
     if (rule && rule->emit) {
-      if (!(insn->opcode->flags & (ORC_STATIC_OPCODE_ACCUMULATOR|ORC_STATIC_OPCODE_LOAD|ORC_STATIC_OPCODE_STORE)) &&
-          compiler->vars[insn->dest_args[0]].alloc !=
-          compiler->vars[insn->src_args[0]].alloc) {
-#ifdef MMX
-        orc_mmx_emit_movq (compiler,
-            compiler->vars[insn->src_args[0]].alloc,
-            compiler->vars[insn->dest_args[0]].alloc);
-#else
-        orc_mmx_emit_movdqu (compiler,
-            compiler->vars[insn->src_args[0]].alloc,
-            compiler->vars[insn->dest_args[0]].alloc);
-#endif
-      }
       rule->emit (compiler, rule->emit_user, insn);
     } else {
       orc_compiler_error (compiler, "no code generation rule for %s",

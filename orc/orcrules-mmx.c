@@ -104,9 +104,19 @@ mmx_rule_loadX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   } 
   switch (src->size << compiler->loop_shift) {
     case 1:
-      orc_x86_emit_mov_memoffset_reg (compiler, 1, offset, ptr_reg,
-          compiler->gp_tmpreg);
-      orc_mmx_emit_movd_load_register (compiler, compiler->gp_tmpreg, dest->alloc);
+#ifndef MMX
+      if (compiler->target_flags & ORC_TARGET_MMX_SSE4_1) {
+        orc_mmx_emit_pxor (compiler, dest->alloc, dest->alloc);
+        orc_mmx_emit_pinsrb_memoffset (compiler, 0, offset, ptr_reg, dest->alloc);
+      } else {
+#endif
+        orc_x86_emit_mov_memoffset_reg (compiler, 1, offset, ptr_reg,
+            compiler->gp_tmpreg);
+        orc_mmx_emit_movd_load_register (compiler, compiler->gp_tmpreg,
+            dest->alloc);
+#ifndef MMX
+      }
+#endif
       break;
     case 2:
       orc_mmx_emit_pxor (compiler, dest->alloc, dest->alloc);
@@ -160,9 +170,19 @@ mmx_rule_loadoffX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   } 
   switch (src->size << compiler->loop_shift) {
     case 1:
-      orc_x86_emit_mov_memoffset_reg (compiler, 1, offset, ptr_reg,
-          compiler->gp_tmpreg);
-      orc_mmx_emit_movd_load_register (compiler, compiler->gp_tmpreg, dest->alloc);
+#ifndef MMX
+      if (compiler->target_flags & ORC_TARGET_MMX_SSE4_1) {
+        orc_mmx_emit_pxor (compiler, dest->alloc, dest->alloc);
+        orc_mmx_emit_pinsrb_memoffset (compiler, 0, offset, ptr_reg, dest->alloc);
+      } else {
+#endif
+        orc_x86_emit_mov_memoffset_reg (compiler, 1, offset, ptr_reg,
+            compiler->gp_tmpreg);
+        orc_mmx_emit_movd_load_register (compiler, compiler->gp_tmpreg,
+            dest->alloc);
+#ifndef MMX
+      }
+#endif
       break;
     case 2:
       orc_mmx_emit_pxor (compiler, dest->alloc, dest->alloc);
@@ -210,6 +230,20 @@ mmx_rule_loadupib (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   } 
   switch (src->size << compiler->loop_shift) {
     case 1:
+#ifndef MMX
+      if (compiler->target_flags & ORC_TARGET_MMX_SSE4_1) {
+        orc_mmx_emit_pxor (compiler, dest->alloc, dest->alloc);
+        orc_mmx_emit_pinsrb_memoffset (compiler, 0, offset, ptr_reg, dest->alloc);
+        orc_mmx_emit_movq (compiler, dest->alloc, tmp);
+      } else {
+#endif
+        orc_mmx_emit_pinsrw_memoffset (compiler, 0, offset, ptr_reg, dest->alloc);
+        orc_mmx_emit_movq (compiler, dest->alloc, tmp);
+        orc_mmx_emit_psrlw_imm (compiler, 8, tmp);
+#ifndef MMX
+      }
+#endif
+      break;
     case 2:
       orc_mmx_emit_pinsrw_memoffset (compiler, 0, offset, ptr_reg, dest->alloc);
       orc_mmx_emit_movq (compiler, dest->alloc, tmp);
@@ -327,20 +361,33 @@ mmx_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   } 
   switch (dest->size << compiler->loop_shift) {
     case 1:
-      /* FIXME we might be using ecx twice here */
-      if (ptr_reg == compiler->gp_tmpreg) {
-        orc_compiler_error (compiler, "unimplemented corner case in %s",
-            insn->opcode->name);
+#ifndef MMX
+      if (compiler->target_flags & ORC_TARGET_MMX_SSE4_1) {
+        // Note: this instruction uses VPEXTRB + memory address, that's SSE 4.1
+        orc_mmx_emit_pextrb_memoffset (compiler, 0, offset, src->alloc,
+          ptr_reg);
+      } else {
+#endif
+        /* FIXME we might be using ecx twice here */
+        if (ptr_reg == compiler->gp_tmpreg) {
+          orc_compiler_error (compiler, "unimplemented corner case in %s",
+              insn->opcode->name);
+        }
+        orc_mmx_emit_movd_store_register (compiler, src->alloc, compiler->gp_tmpreg);
+        orc_x86_emit_mov_reg_memoffset (compiler, 1, compiler->gp_tmpreg,
+            offset, ptr_reg);
+#ifndef MMX
       }
-      orc_mmx_emit_movd_store_register (compiler, src->alloc, compiler->gp_tmpreg);
-      orc_x86_emit_mov_reg_memoffset (compiler, 1, compiler->gp_tmpreg,
-          offset, ptr_reg);
+#endif
       break;
     case 2:
+#ifndef MMX
       if (compiler->target_flags & ORC_TARGET_MMX_SSE4_1) {
+        // Note: this instruction uses VPEXTRW + memory address, that's SSE 4.1
         orc_mmx_emit_pextrw_memoffset (compiler, 0, offset, src->alloc,
             ptr_reg);
       } else {
+#endif
         /* FIXME we might be using ecx twice here */
         if (ptr_reg == compiler->gp_tmpreg) {
           orc_compiler_error(compiler, "unimplemented corner case in %s",
@@ -349,7 +396,9 @@ mmx_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
         orc_mmx_emit_movd_store_register (compiler, src->alloc, compiler->gp_tmpreg);
         orc_x86_emit_mov_reg_memoffset (compiler, 2, compiler->gp_tmpreg,
             offset, ptr_reg);
+#ifndef MMX
       }
+#endif
       break;
     case 4:
       orc_x86_emit_mov_mmx_memoffset (compiler, 4, src->alloc, offset, ptr_reg,
@@ -687,15 +736,18 @@ mmx_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
       p->vars[insn->dest_args[0]].alloc); \
 }
 
-#define BINARY(opcode,insn_name,code) \
-static void \
-mmx_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
-{ \
-  orc_mmx_emit_ ## insn_name (p, \
-      p->vars[insn->src_args[1]].alloc, \
-      p->vars[insn->dest_args[0]].alloc); \
-}
-
+#define BINARY(opcode, insn_name, code) \
+  static void mmx_rule_##opcode (OrcCompiler *p, void *user, \
+      OrcInstruction *insn) \
+  { \
+    if (p->vars[insn->src_args[0]].alloc \
+        != p->vars[insn->dest_args[0]].alloc) { \
+      orc_mmx_emit_movq (p, p->vars[insn->src_args[0]].alloc, \
+          p->vars[insn->dest_args[0]].alloc); \
+    } \
+    orc_mmx_emit_##insn_name (p, p->vars[insn->src_args[1]].alloc, \
+        p->vars[insn->dest_args[0]].alloc); \
+  }
 
 UNARY(absb,pabsb,0x381c)
 BINARY(addb,paddb,0xfc)
@@ -781,8 +833,8 @@ BINARY(subq,psubq,0xfb)
 static void
 mmx_rule_accw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
 
   orc_mmx_emit_paddw (p, src, dest);
 }
@@ -790,8 +842,8 @@ mmx_rule_accw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
 
 #ifndef MMX
   if (p->loop_shift == 0) {
@@ -804,11 +856,11 @@ mmx_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src1 = p->vars[insn->src_args[0]].alloc;
-  int src2 = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
-  int tmp2 = orc_compiler_get_temp_reg (p);
+  const int src1 = p->vars[insn->src_args[0]].alloc;
+  const int src2 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+  const int tmp2 = orc_compiler_get_temp_reg (p);
 
 #ifndef MMX
   if (p->loop_shift <= 2) {
@@ -844,18 +896,17 @@ mmx_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_signX_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int opcodes[] = { ORC_X86_psignb, ORC_X86_psignw, ORC_X86_psignd };
-  int type = ORC_PTR_TO_INT(user);
-  int tmpc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int opcodes[] = { ORC_X86_psignb, ORC_X86_psignw, ORC_X86_psignd };
+  const int type = ORC_PTR_TO_INT (user);
 
-  tmpc = orc_compiler_get_temp_constant (p, 1<<type, 1);
+  const int tmpc = orc_compiler_get_temp_constant (p, 1 << type, 1);
+
   if (src == dest) {
     orc_x86_emit_cpuinsn_size (p, opcodes[type], 16, src, tmpc);
     orc_mmx_emit_movq (p, tmpc, dest);
   } else {
-    /* FIXME this would be a good opportunity to not chain src to dest */
     orc_mmx_emit_movq (p, tmpc, dest);
     orc_x86_emit_cpuinsn_size (p, opcodes[type], 16, src, dest);
   }
@@ -865,12 +916,15 @@ mmx_rule_signX_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_signw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = orc_compiler_get_constant (p, 2, 0x0001);
 
-  tmp = orc_compiler_get_constant (p, 2, 0x0001);
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
+
   orc_mmx_emit_pminsw (p, tmp, dest);
-
   tmp = orc_compiler_get_constant (p, 2, 0xffff);
   orc_mmx_emit_pmaxsw (p, tmp, dest);
 }
@@ -878,9 +932,13 @@ mmx_rule_signw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_absb_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
 
   orc_mmx_emit_pxor (p, tmp, tmp);
   orc_mmx_emit_pcmpgtb (p, src, tmp);
@@ -891,9 +949,9 @@ mmx_rule_absb_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_absw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
 
   if (src == dest) {
     orc_mmx_emit_movq (p, src, tmp);
@@ -911,9 +969,9 @@ mmx_rule_absw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_absl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
 
   if (src == dest) {
     orc_mmx_emit_movq (p, src, tmp);
@@ -931,7 +989,7 @@ mmx_rule_absl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int type = ORC_PTR_TO_INT(user);
+  const int type = ORC_PTR_TO_INT (user);
   /* int imm_code1[] = { 0x71, 0x71, 0x71, 0x72, 0x72, 0x72, 0x73, 0x73 }; */
   /* int imm_code2[] = { 6, 2, 4, 6, 2, 4, 6, 2 }; */
   /* int reg_code[] = { 0xf1, 0xd1, 0xe1, 0xf2, 0xd2, 0xe2, 0xf3, 0xd3 }; */
@@ -942,11 +1000,16 @@ mmx_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int opcodes_imm[] = { ORC_X86_psllw_imm, ORC_X86_psrlw_imm,
     ORC_X86_psraw_imm, ORC_X86_pslld_imm, ORC_X86_psrld_imm,
     ORC_X86_psrad_imm, ORC_X86_psllq_imm, ORC_X86_psrlq_imm };
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
     orc_x86_emit_cpuinsn_imm (p, opcodes_imm[type],
-        p->vars[insn->src_args[1]].value.i, 16,
-        p->vars[insn->dest_args[0]].alloc);
+        p->vars[insn->src_args[1]].value.i, 16, dest);
   } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
     int tmp = orc_compiler_get_temp_reg (p);
 
@@ -956,8 +1019,7 @@ mmx_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
         (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[1]]),
         p->exec_reg, tmp, FALSE);
 
-    orc_x86_emit_cpuinsn_size (p, opcodes[type], 16, tmp,
-        p->vars[insn->dest_args[0]].alloc);
+    orc_x86_emit_cpuinsn_size (p, opcodes[type], 16, tmp, dest);
   } else {
     orc_compiler_error (p, "code generation rule for %s only works with "
         "constant or parameter shifts", insn->opcode->name);
@@ -968,13 +1030,17 @@ mmx_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_shlb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
     orc_mmx_emit_psllw_imm (p, p->vars[insn->src_args[1]].value.i, dest);
-    tmp = orc_compiler_get_constant (p, 1,
-        0xff&(0xff<<p->vars[insn->src_args[1]].value.i));
+    const int tmp = orc_compiler_get_constant (p, 1,
+        0xff & (0xff << p->vars[insn->src_args[1]].value.i));
     orc_mmx_emit_pand (p, tmp, dest);
   } else {
     orc_compiler_error (p, "code generation rule for %s only works with "
@@ -986,15 +1052,19 @@ mmx_rule_shlb (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_shrsb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
     orc_mmx_emit_movq (p, src, tmp);
     orc_mmx_emit_psllw_imm (p, 8, tmp);
     orc_mmx_emit_psraw_imm (p, p->vars[insn->src_args[1]].value.i, tmp);
     orc_mmx_emit_psrlw_imm (p, 8, tmp);
+
+    if (src != dest) {
+      orc_mmx_emit_movq (p, src, dest);
+    }
 
     orc_mmx_emit_psraw_imm (p, 8 + p->vars[insn->src_args[1]].value.i, dest);
     orc_mmx_emit_psllw_imm (p, 8, dest);
@@ -1010,13 +1080,17 @@ mmx_rule_shrsb (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_shrub (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
     orc_mmx_emit_psrlw_imm (p, p->vars[insn->src_args[1]].value.i, dest);
-    tmp = orc_compiler_get_constant (p, 1,
-        (0xff>>p->vars[insn->src_args[1]].value.i));
+    const int tmp = orc_compiler_get_constant (p, 1,
+        (0xff >> p->vars[insn->src_args[1]].value.i));
     orc_mmx_emit_pand (p, tmp, dest);
   } else {
     orc_compiler_error (p, "code generation rule for %s only works with "
@@ -1028,9 +1102,9 @@ mmx_rule_shrub (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_shrsq (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
 #ifndef MMX
@@ -1041,6 +1115,10 @@ mmx_rule_shrsq (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_mmx_emit_psrad_imm (p, 31, tmp);
     orc_mmx_emit_psllq_imm (p, 64-p->vars[insn->src_args[1]].value.i, tmp);
 
+    if (src != dest) {
+      orc_mmx_emit_movq (p, src, dest);
+    }
+    
     orc_mmx_emit_psrlq_imm (p, p->vars[insn->src_args[1]].value.i, dest);
     orc_mmx_emit_por (p, tmp, dest);
   } else {
@@ -1053,9 +1131,13 @@ mmx_rule_shrsq (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_convsbw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
 
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
+  /* values of dest are shifted away so don't matter */
   orc_mmx_emit_punpcklbw (p, src, dest);
   orc_mmx_emit_psraw_imm (p, 8, dest);
 }
@@ -1063,44 +1145,47 @@ mmx_rule_convsbw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_convubw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
 
-  /* FIXME need a zero register */
-  if (0) {
-    orc_mmx_emit_punpcklbw (p, src, dest);
-    orc_mmx_emit_psrlw_imm (p, 8, dest);
-  } else {
-    orc_mmx_emit_pxor(p, tmp, tmp);
-    orc_mmx_emit_punpcklbw (p, tmp, dest);
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
   }
+  orc_mmx_emit_pxor (p, tmp, tmp);
+  orc_mmx_emit_punpcklbw (p, tmp, dest);
 }
 
 static void
 mmx_rule_convssswb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
 
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
   orc_mmx_emit_packsswb (p, src, dest);
 }
 
 static void
 mmx_rule_convsuswb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
 
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
   orc_mmx_emit_packuswb (p, src, dest);
 }
 
 static void
 mmx_rule_convuuswb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
 
   orc_mmx_emit_movq (p, src, tmp);
   orc_mmx_emit_movq (p, src, dest);
@@ -1115,8 +1200,12 @@ mmx_rule_convuuswb (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_convwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
 
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
   orc_mmx_emit_psllw_imm (p, 8, dest);
   orc_mmx_emit_psrlw_imm (p, 8, dest);
   orc_mmx_emit_packuswb (p, dest, dest);
@@ -1125,8 +1214,12 @@ mmx_rule_convwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_convhwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
 
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
   orc_mmx_emit_psrlw_imm (p, 8, dest);
   orc_mmx_emit_packuswb (p, dest, dest);
 }
@@ -1134,9 +1227,10 @@ mmx_rule_convhwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_convswl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
 
+  /* values of dest are shifted away so don't matter */
   orc_mmx_emit_punpcklwd (p, src, dest);
   orc_mmx_emit_psrad_imm (p, 16, dest);
 }
@@ -1144,25 +1238,26 @@ mmx_rule_convswl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_convuwl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
 
-  /* FIXME need a zero register */
-  if (0) {
-    orc_mmx_emit_punpcklwd (p, src, dest);
-    orc_mmx_emit_psrld_imm (p, 16, dest);
-  } else {
-    orc_mmx_emit_pxor(p, tmp, tmp);
-    orc_mmx_emit_punpcklwd (p, tmp, dest);
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
   }
+  orc_mmx_emit_pxor (p, tmp, tmp);
+  orc_mmx_emit_punpcklwd (p, tmp, dest);
 }
 
 static void
 mmx_rule_convlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
 
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
   orc_mmx_emit_pslld_imm (p, 16, dest);
   orc_mmx_emit_psrad_imm (p, 16, dest);
   orc_mmx_emit_packssdw (p, dest, dest);
@@ -1171,8 +1266,12 @@ mmx_rule_convlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_convhlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
 
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
   orc_mmx_emit_psrad_imm (p, 16, dest);
   orc_mmx_emit_packssdw (p, dest, dest);
 }
@@ -1180,8 +1279,8 @@ mmx_rule_convhlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_convssslw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
 
   orc_mmx_emit_packssdw (p, src, dest);
 }
@@ -1189,8 +1288,8 @@ mmx_rule_convssslw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_convsuslw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
 
   orc_mmx_emit_packusdw (p, src, dest);
 }
@@ -1198,9 +1297,9 @@ mmx_rule_convsuslw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_convslq (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
 
   orc_mmx_emit_movq (p, src, tmp);
   orc_mmx_emit_psrad_imm (p, 31, tmp);
@@ -1210,18 +1309,22 @@ mmx_rule_convslq (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_convulq (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_constant (p, 4, 0);
 
-  tmp = orc_compiler_get_constant (p, 4, 0);
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
+
   orc_mmx_emit_punpckldq (p, tmp, dest);
 }
 
 static void
 mmx_rule_convql (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
 
 #ifndef MMX
   orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(2,0,2,0), src, dest);
@@ -1233,7 +1336,12 @@ mmx_rule_convql (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_splatw3q (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
 
 #ifndef MMX
   orc_mmx_emit_pshuflw (p, ORC_MMX_SHUF(3,3,3,3), dest, dest);
@@ -1246,7 +1354,12 @@ mmx_rule_splatw3q (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_splatbw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
 
   orc_mmx_emit_punpcklbw (p, dest, dest);
 }
@@ -1254,7 +1367,12 @@ mmx_rule_splatbw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_splatbl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
 
   orc_mmx_emit_punpcklbw (p, dest, dest);
   orc_mmx_emit_punpcklwd (p, dest, dest);
@@ -1263,11 +1381,15 @@ mmx_rule_splatbl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
-  int tmpc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+  const int tmpc = orc_compiler_get_constant (p, 2, 0x0080);
 
-  tmpc = orc_compiler_get_constant (p, 2, 0x0080);
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
+
   orc_mmx_emit_paddw (p, tmpc, dest);
   orc_mmx_emit_movq (p, dest, tmp);
   orc_mmx_emit_psrlw_imm (p, 8, tmp);
@@ -1280,28 +1402,31 @@ static void
 mmx_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   /* About 5.2 cycles per array member on ginger */
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int a = orc_compiler_get_temp_reg (p);
-  int j = orc_compiler_get_temp_reg (p);
-  int j2 = orc_compiler_get_temp_reg (p);
-  int l = orc_compiler_get_temp_reg (p);
-  int divisor = orc_compiler_get_temp_reg (p);
-  int tmp;
-  int i;
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int a = orc_compiler_get_temp_reg (p);
+  const int j = orc_compiler_get_temp_reg (p);
+  const int j2 = orc_compiler_get_temp_reg (p);
+  const int l = orc_compiler_get_temp_reg (p);
+  const int divisor = orc_compiler_get_temp_reg (p);
+  const int tmp = orc_compiler_get_constant (p, 2, 0x8000);
 
-  orc_mmx_emit_movq (p, src, divisor);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_movq (p, src1, divisor);
   orc_mmx_emit_psllw_imm (p, 8, divisor);
   orc_mmx_emit_psrlw_imm (p, 1, divisor);
 
   orc_mmx_load_constant (p, a, 2, 0x00ff);
-  tmp = orc_compiler_get_constant (p, 2, 0x8000);
   orc_mmx_emit_movq (p, tmp, j);
   orc_mmx_emit_psrlw_imm (p, 8, j);
 
   orc_mmx_emit_pxor (p, tmp, dest);
 
-  for(i=0;i<7;i++){
+  for (int i = 0; i < 7; i++) {
     orc_mmx_emit_movq (p, divisor, l);
     orc_mmx_emit_pxor (p, tmp, l);
     orc_mmx_emit_pcmpgtw (p, dest, l);
@@ -1314,7 +1439,7 @@ mmx_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
      orc_mmx_emit_pxor (p, j2, a);
      orc_mmx_emit_psrlw_imm (p, 1, j);
   }
-  
+
   orc_mmx_emit_movq (p, divisor, l);
   orc_mmx_emit_pxor (p, tmp, l);
   orc_mmx_emit_pcmpgtw (p, dest, l);
@@ -1328,30 +1453,32 @@ static void
 mmx_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   /* About 8.4 cycles per array member on ginger */
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int b = orc_compiler_get_temp_reg (p);
-  int a = orc_compiler_get_temp_reg (p);
-  int k = orc_compiler_get_temp_reg (p);
-  int j = orc_compiler_get_temp_reg (p);
-  int tmp;
-  int i;
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int b = orc_compiler_get_temp_reg (p);
+  const int a = orc_compiler_get_temp_reg (p);
+  const int k = orc_compiler_get_temp_reg (p);
+  const int j = orc_compiler_get_temp_reg (p);
+  const int tmp = orc_compiler_get_constant (p, 2, 0x00ff);
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
 
   orc_mmx_emit_movq (p, dest, b);
-  tmp = orc_compiler_get_constant (p, 2, 0x00ff);
-  orc_mmx_emit_pand (p, tmp, src);
+  orc_mmx_emit_pand (p, tmp, src1);
 
-  tmp = orc_compiler_get_constant (p, 2, 0x8000);
   orc_mmx_emit_pxor (p, tmp, b);
 
   orc_mmx_emit_pxor (p, a, a);
   orc_mmx_emit_movq (p, tmp, j);
   orc_mmx_emit_psrlw_imm (p, 8, j);
 
-  for(i=0;i<8;i++){
+  for (int i = 0; i < 8; i++) {
     orc_mmx_emit_por (p, j, a);
     orc_mmx_emit_movq (p, a, k);
-    orc_mmx_emit_pmullw (p, src, k);
+    orc_mmx_emit_pmullw (p, src1, k);
     orc_mmx_emit_pxor (p, tmp, k);
     orc_mmx_emit_pcmpgtw (p, b, k);
     orc_mmx_emit_pand (p, j, k);
@@ -1366,11 +1493,16 @@ mmx_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_mulsbw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
 
-  orc_mmx_emit_punpcklbw (p, src, tmp);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_punpcklbw (p, src1, tmp);
   orc_mmx_emit_psraw_imm (p, 8, tmp);
   orc_mmx_emit_punpcklbw (p, dest, dest);
   orc_mmx_emit_psraw_imm (p, 8, dest);
@@ -1380,11 +1512,16 @@ mmx_rule_mulsbw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_mulubw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
 
-  orc_mmx_emit_punpcklbw (p, src, tmp);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_punpcklbw (p, src1, tmp);
   orc_mmx_emit_psrlw_imm (p, 8, tmp);
   orc_mmx_emit_punpcklbw (p, dest, dest);
   orc_mmx_emit_psrlw_imm (p, 8, dest);
@@ -1394,18 +1531,23 @@ mmx_rule_mulubw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_mullb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
-  int tmp2 = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+  const int tmp2 = orc_compiler_get_temp_reg (p);
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
 
   orc_mmx_emit_movq (p, dest, tmp);
 
-  orc_mmx_emit_pmullw (p, src, dest);
+  orc_mmx_emit_pmullw (p, src1, dest);
   orc_mmx_emit_psllw_imm (p, 8, dest);
   orc_mmx_emit_psrlw_imm (p, 8, dest);
 
-  orc_mmx_emit_movq (p, src, tmp2);
+  orc_mmx_emit_movq (p, src1, tmp2);
   orc_mmx_emit_psraw_imm (p, 8, tmp2);
   orc_mmx_emit_psraw_imm (p, 8, tmp);
   orc_mmx_emit_pmullw (p, tmp2, tmp);
@@ -1417,12 +1559,17 @@ mmx_rule_mullb (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_mulhsb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
-  int tmp2 = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+  const int tmp2 = orc_compiler_get_temp_reg (p);
 
-  orc_mmx_emit_movq (p, src, tmp);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_movq (p, src1, tmp);
   orc_mmx_emit_movq (p, dest, tmp2);
   orc_mmx_emit_psllw_imm (p, 8, tmp);
   orc_mmx_emit_psraw_imm (p, 8, tmp);
@@ -1433,7 +1580,7 @@ mmx_rule_mulhsb (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_mmx_emit_pmullw (p, tmp, dest);
   orc_mmx_emit_psrlw_imm (p, 8, dest);
 
-  orc_mmx_emit_movq (p, src, tmp);
+  orc_mmx_emit_movq (p, src1, tmp);
   orc_mmx_emit_psraw_imm (p, 8, tmp);
   orc_mmx_emit_psraw_imm (p, 8, tmp2);
   orc_mmx_emit_pmullw (p, tmp, tmp2);
@@ -1445,12 +1592,17 @@ mmx_rule_mulhsb (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_mulhub (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
-  int tmp2 = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+  const int tmp2 = orc_compiler_get_temp_reg (p);
 
-  orc_mmx_emit_movq (p, src, tmp);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_movq (p, src1, tmp);
   orc_mmx_emit_movq (p, dest, tmp2);
   orc_mmx_emit_psllw_imm (p, 8, tmp);
   orc_mmx_emit_psrlw_imm (p, 8, tmp);
@@ -1461,7 +1613,7 @@ mmx_rule_mulhub (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_mmx_emit_pmullw (p, tmp, dest);
   orc_mmx_emit_psrlw_imm (p, 8, dest);
 
-  orc_mmx_emit_movq (p, src, tmp);
+  orc_mmx_emit_movq (p, src1, tmp);
   orc_mmx_emit_psrlw_imm (p, 8, tmp);
   orc_mmx_emit_psrlw_imm (p, 8, tmp2);
   orc_mmx_emit_pmullw (p, tmp, tmp2);
@@ -1473,47 +1625,56 @@ mmx_rule_mulhub (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_mulswl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
 
   orc_mmx_emit_movq (p, dest, tmp);
-  orc_mmx_emit_pmulhw (p, src, tmp);
-  orc_mmx_emit_pmullw (p, src, dest);
+  orc_mmx_emit_pmulhw (p, src1, tmp);
+  orc_mmx_emit_pmullw (p, src1, dest);
   orc_mmx_emit_punpcklwd (p, tmp, dest);
 }
 
 static void
 mmx_rule_muluwl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
 
   orc_mmx_emit_movq (p, dest, tmp);
-  orc_mmx_emit_pmulhuw (p, src, tmp);
-  orc_mmx_emit_pmullw (p, src, dest);
+  orc_mmx_emit_pmulhuw (p, src1, tmp);
+  orc_mmx_emit_pmullw (p, src1, dest);
   orc_mmx_emit_punpcklwd (p, tmp, dest);
 }
 
 static void
 mmx_rule_mulll_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int i;
-  int offset = ORC_STRUCT_OFFSET(OrcExecutor,arrays[ORC_VAR_T1]);
+  const int offset = ORC_STRUCT_OFFSET (OrcExecutor, arrays[ORC_VAR_T1]);
 
   orc_x86_emit_mov_mmx_memoffset (p, 16, p->vars[insn->src_args[0]].alloc,
       offset, p->exec_reg, FALSE, FALSE);
   orc_x86_emit_mov_mmx_memoffset (p, 16, p->vars[insn->src_args[1]].alloc,
       offset + 16, p->exec_reg, FALSE, FALSE);
 
-  for(i=0;i<(1<<p->insn_shift);i++) {
-    orc_x86_emit_mov_memoffset_reg (p, 4, offset + 4*i, p->exec_reg,
-        p->gp_tmpreg);
-    orc_x86_emit_imul_memoffset_reg (p, 4, offset + 16+4*i, p->exec_reg,
-        p->gp_tmpreg);
-    orc_x86_emit_mov_reg_memoffset (p, 4, p->gp_tmpreg, offset + 4*i,
-        p->exec_reg);
+  for (int i = 0; i < (1 << p->insn_shift); i++) {
+     orc_x86_emit_mov_memoffset_reg (p, 4, offset + 4 * i, p->exec_reg,
+         p->gp_tmpreg);
+     orc_x86_emit_imul_memoffset_reg (p, 4, offset + 16 + 4 * i, p->exec_reg,
+         p->gp_tmpreg);
+     orc_x86_emit_mov_reg_memoffset (p, 4, p->gp_tmpreg, offset + 4 * i,
+         p->exec_reg);
   }
 
   orc_x86_emit_mov_memoffset_mmx (p, 16, offset, p->exec_reg,
@@ -1524,14 +1685,19 @@ mmx_rule_mulll_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_mulhsl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
-  int tmp2 = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+  const int tmp2 = orc_compiler_get_temp_reg (p);
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
 
   orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(2,3,0,1), dest, tmp);
-  orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(2,3,0,1), src, tmp2);
-  orc_mmx_emit_pmuldq (p, src, dest);
+  orc_mmx_emit_pshufd (p, ORC_MMX_SHUF (2, 3, 0, 1), src1, tmp2);
+  orc_mmx_emit_pmuldq (p, src1, dest);
   orc_mmx_emit_pmuldq (p, tmp, tmp2);
   orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(2,0,3,1), dest, dest);
   orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(2,0,3,1), tmp2, tmp2);
@@ -1543,9 +1709,8 @@ mmx_rule_mulhsl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_mulhsl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int i;
-  int regsize = p->is_64bit ? 8 : 4;
-  int offset = ORC_STRUCT_OFFSET(OrcExecutor,arrays[ORC_VAR_T1]);
+  const int regsize = p->is_64bit ? 8 : 4;
+  const int offset = ORC_STRUCT_OFFSET (OrcExecutor, arrays[ORC_VAR_T1]);
 
   orc_x86_emit_mov_mmx_memoffset (p, 16, p->vars[insn->src_args[0]].alloc,
       offset, p->exec_reg, FALSE, FALSE);
@@ -1556,11 +1721,13 @@ mmx_rule_mulhsl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_x86_emit_mov_reg_memoffset (p, regsize, X86_EDX, offset + 40,
       p->exec_reg);
 
-  for(i=0;i<(1<<p->insn_shift);i++) {
-    orc_x86_emit_mov_memoffset_reg (p, 4, offset + 4*i, p->exec_reg, X86_EAX);
-    orc_x86_emit_cpuinsn_memoffset (p, ORC_X86_imul_rm, 4,
-        offset + 16 + 4*i, p->exec_reg);
-    orc_x86_emit_mov_reg_memoffset (p, 4, X86_EDX, offset + 4*i, p->exec_reg);
+  for (int i = 0; i < (1 << p->insn_shift); i++) {
+     orc_x86_emit_mov_memoffset_reg (p, 4, offset + 4 * i, p->exec_reg,
+         X86_EAX);
+     orc_x86_emit_cpuinsn_memoffset (p, ORC_X86_imul_rm, 4, offset + 16 + 4 * i,
+         p->exec_reg);
+     orc_x86_emit_mov_reg_memoffset (p, 4, X86_EDX, offset + 4 * i,
+         p->exec_reg);
   }
 
   orc_x86_emit_mov_memoffset_mmx (p, 16, offset, p->exec_reg,
@@ -1568,20 +1735,23 @@ mmx_rule_mulhsl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_x86_emit_mov_memoffset_reg (p, regsize, offset + 32, p->exec_reg, X86_EAX);
   orc_x86_emit_mov_memoffset_reg (p, regsize, offset + 40, p->exec_reg, X86_EDX);
 }
-#endif
 
-#ifndef MMX
 static void
 mmx_rule_mulhul (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
-  int tmp2 = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+  const int tmp2 = orc_compiler_get_temp_reg (p);
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
 
   orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(2,3,0,1), dest, tmp);
-  orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(2,3,0,1), src, tmp2);
-  orc_mmx_emit_pmuludq (p, src, dest);
+  orc_mmx_emit_pshufd (p, ORC_MMX_SHUF (2, 3, 0, 1), src1, tmp2);
+  orc_mmx_emit_pmuludq (p, src1, dest);
   orc_mmx_emit_pmuludq (p, tmp, tmp2);
   orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(2,0,3,1), dest, dest);
   orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(2,0,3,1), tmp2, tmp2);
@@ -1592,11 +1762,16 @@ mmx_rule_mulhul (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_mulslq (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
 
-  orc_mmx_emit_movq (p, src, tmp);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_movq (p, src1, tmp);
   orc_mmx_emit_punpckldq (p, dest, dest);
   orc_mmx_emit_punpckldq (p, tmp, tmp);
   orc_mmx_emit_pmuldq (p, tmp, dest);
@@ -1606,9 +1781,8 @@ mmx_rule_mulslq (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_mulslq_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int i;
-  int regsize = p->is_64bit ? 8 : 4;
-  int offset = ORC_STRUCT_OFFSET(OrcExecutor,arrays[ORC_VAR_T1]);
+  const int regsize = p->is_64bit ? 8 : 4;
+  const int offset = ORC_STRUCT_OFFSET (OrcExecutor, arrays[ORC_VAR_T1]);
 
   orc_x86_emit_mov_mmx_memoffset (p, 8, p->vars[insn->src_args[0]].alloc,
       offset, p->exec_reg, FALSE, FALSE);
@@ -1619,12 +1793,15 @@ mmx_rule_mulslq_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_x86_emit_mov_reg_memoffset (p, regsize, X86_EDX, offset + 40,
       p->exec_reg);
 
-  for(i=0;i<(1<<p->insn_shift);i++) {
-    orc_x86_emit_mov_memoffset_reg (p, 4, offset + 4*i, p->exec_reg, X86_EAX);
-    orc_x86_emit_cpuinsn_memoffset (p, ORC_X86_imul_rm, 4,
-        offset + 8 + 4*i, p->exec_reg);
-    orc_x86_emit_mov_reg_memoffset (p, 4, X86_EAX, offset + 16 + 8*i, p->exec_reg);
-    orc_x86_emit_mov_reg_memoffset (p, 4, X86_EDX, offset + 16 + 8*i + 4, p->exec_reg);
+  for (int i = 0; i < (1 << p->insn_shift); i++) {
+     orc_x86_emit_mov_memoffset_reg (p, 4, offset + 4 * i, p->exec_reg,
+         X86_EAX);
+     orc_x86_emit_cpuinsn_memoffset (p, ORC_X86_imul_rm, 4, offset + 8 + 4 * i,
+         p->exec_reg);
+     orc_x86_emit_mov_reg_memoffset (p, 4, X86_EAX, offset + 16 + 8 * i,
+         p->exec_reg);
+     orc_x86_emit_mov_reg_memoffset (p, 4, X86_EDX, offset + 16 + 8 * i + 4,
+         p->exec_reg);
   }
 
   orc_x86_emit_mov_memoffset_mmx (p, 16, offset + 16, p->exec_reg,
@@ -1638,11 +1815,16 @@ mmx_rule_mulslq_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_mululq (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
 
-  orc_mmx_emit_movq (p, src, tmp);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_movq (p, src1, tmp);
   orc_mmx_emit_punpckldq (p, dest, dest);
   orc_mmx_emit_punpckldq (p, tmp, tmp);
   orc_mmx_emit_pmuludq (p, tmp, dest);
@@ -1652,8 +1834,12 @@ mmx_rule_mululq (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_select0lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  /* int src = p->vars[insn->src_args[0]].alloc; */
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src != dest) {
+     orc_mmx_emit_movq (p, src, dest);
+  }
 
   /* FIXME slow */
   /* same as convlw */
@@ -1666,8 +1852,12 @@ mmx_rule_select0lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_select1lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  /* int src = p->vars[insn->src_args[0]].alloc; */
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src != dest) {
+     orc_mmx_emit_movq (p, src, dest);
+  }
 
   /* FIXME slow */
 
@@ -1678,8 +1868,10 @@ mmx_rule_select1lw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_select0ql (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  /* values of dest are shifted away so don't matter */
 
   /* same as convql */
 #ifndef MMX
@@ -1692,8 +1884,10 @@ mmx_rule_select0ql (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_select1ql (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  /* values of dest are shifted away so don't matter */
 
   orc_mmx_emit_psrlq_imm (p, 32, dest);
 #ifndef MMX
@@ -1706,8 +1900,12 @@ mmx_rule_select1ql (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_select0wb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  /* int src = p->vars[insn->src_args[0]].alloc; */
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src != dest) {
+     orc_mmx_emit_movq (p, src, dest);
+  }
 
   /* FIXME slow */
   /* same as convwb */
@@ -1720,8 +1918,12 @@ mmx_rule_select0wb (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_select1wb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  /* int src = p->vars[insn->src_args[0]].alloc; */
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src != dest) {
+     orc_mmx_emit_movq (p, src, dest);
+  }
 
   /* FIXME slow */
 
@@ -1732,16 +1934,17 @@ mmx_rule_select1wb (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_splitql (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest1 = p->vars[insn->dest_args[0]].alloc;
-  int dest2 = p->vars[insn->dest_args[1]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest1 = p->vars[insn->dest_args[0]].alloc;
+  const int dest2 = p->vars[insn->dest_args[1]].alloc;
+
+  /* values of dest are shifted away so don't matter */
 
 #ifndef MMX
   orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(3,1,3,1), src, dest1);
   orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(2,0,2,0), src, dest2);
 #else
-  if (dest2 != src)
-    orc_mmx_emit_movq (p, src, dest2);
+  orc_mmx_emit_movq (p, src, dest2);
   orc_mmx_emit_pshufw (p, ORC_MMX_SHUF(3,2,3,2), src, dest1);
 #endif
 }
@@ -1749,9 +1952,11 @@ mmx_rule_splitql (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_splitlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest1 = p->vars[insn->dest_args[0]].alloc;
-  int dest2 = p->vars[insn->dest_args[1]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest1 = p->vars[insn->dest_args[0]].alloc;
+  const int dest2 = p->vars[insn->dest_args[1]].alloc;
+
+  /* values of dest are shifted away so don't matter */
 
   /* FIXME slow */
 
@@ -1769,11 +1974,14 @@ mmx_rule_splitlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_splitwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest1 = p->vars[insn->dest_args[0]].alloc;
-  int dest2 = p->vars[insn->dest_args[1]].alloc;
-  int tmp = orc_compiler_get_constant (p, 2, 0xff);
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest1 = p->vars[insn->dest_args[0]].alloc;
+  const int dest2 = p->vars[insn->dest_args[1]].alloc;
+  const int tmp = orc_compiler_get_constant (p, 2, 0xff);
 
+  /* values of dest are shifted away so don't matter */
+
+  ORC_DEBUG ("got tmp %d", tmp);
   /* FIXME slow */
 
   orc_mmx_emit_psraw_imm (p, 8, dest1);
@@ -1795,36 +2003,55 @@ mmx_rule_splitwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_mergebw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
 
-  orc_mmx_emit_punpcklbw (p, src, dest);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_punpcklbw (p, src1, dest);
 }
 
 static void
 mmx_rule_mergewl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
 
-  orc_mmx_emit_punpcklwd (p, src, dest);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_punpcklwd (p, src1, dest);
 }
 
 static void
 mmx_rule_mergelq (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
 
-  orc_mmx_emit_punpckldq (p, src, dest);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_punpckldq (p, src1, dest);
 }
 
 static void
 mmx_rule_swapw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
 
   orc_mmx_emit_movq (p, src, tmp);
   orc_mmx_emit_psllw_imm (p, 8, tmp);
@@ -1835,9 +2062,13 @@ mmx_rule_swapw (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_swapl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
 
   orc_mmx_emit_movq (p, src, tmp);
   orc_mmx_emit_pslld_imm (p, 16, tmp);
@@ -1852,9 +2083,13 @@ mmx_rule_swapl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_swapwl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
 
   orc_mmx_emit_movq (p, src, tmp);
   orc_mmx_emit_pslld_imm (p, 16, tmp);
@@ -1865,9 +2100,13 @@ mmx_rule_swapwl (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_swapq (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
 
   orc_mmx_emit_movq (p, src, tmp);
   orc_mmx_emit_psllq_imm (p, 32, tmp);
@@ -1886,7 +2125,12 @@ mmx_rule_swapq (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_swaplq (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
 
 #ifndef MMX
   orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(2,3,0,1), dest, dest);
@@ -1899,11 +2143,15 @@ mmx_rule_swaplq (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_swapw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_try_get_constant_long (p, 0x02030001, 0x06070405,
+      0x0a0b0809, 0x0e0f0c0d);
 
-  tmp = orc_compiler_try_get_constant_long (p,
-      0x02030001, 0x06070405, 0x0a0b0809, 0x0e0f0c0d);
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
+
   if (tmp != ORC_REG_INVALID) {
     orc_mmx_emit_pshufb (p, tmp, dest);
   } else {
@@ -1914,11 +2162,15 @@ mmx_rule_swapw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_swapl_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_try_get_constant_long (p, 0x00010203, 0x04050607,
+      0x08090a0b, 0x0c0d0e0f);
 
-  tmp = orc_compiler_try_get_constant_long (p,
-      0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f);
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
+
   if (tmp != ORC_REG_INVALID) {
     orc_mmx_emit_pshufb (p, tmp, dest);
   } else {
@@ -1929,11 +2181,15 @@ mmx_rule_swapl_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_swapwl_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_try_get_constant_long (p, 0x01000302, 0x05040706,
+      0x09080b0a, 0x0d0c0f0e);
 
-  tmp = orc_compiler_try_get_constant_long (p,
-      0x01000302, 0x05040706, 0x09080b0a, 0x0d0c0f0e);
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
+
   if (tmp != ORC_REG_INVALID) {
     orc_mmx_emit_pshufb (p, tmp, dest);
   } else {
@@ -1944,11 +2200,15 @@ mmx_rule_swapwl_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_swapq_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_try_get_constant_long (p, 0x04050607, 0x00010203,
+      0x0c0d0e0f, 0x08090a0b);
 
-  tmp = orc_compiler_try_get_constant_long (p,
-      0x04050607, 0x00010203, 0x0c0d0e0f, 0x08090a0b);
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
+
   if (tmp != ORC_REG_INVALID) {
     orc_mmx_emit_pshufb (p, tmp, dest);
   } else {
@@ -1957,13 +2217,68 @@ mmx_rule_swapq_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+mmx_rule_splitlw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest1 = p->vars[insn->dest_args[0]].alloc;
+  const int dest2 = p->vars[insn->dest_args[1]].alloc;
+  const int tmp1 = orc_compiler_try_get_constant_long (p, 0x07060302,
+      0x0f0e0b0a, 0x07060302, 0x0f0e0b0a);
+  const int tmp2 = orc_compiler_try_get_constant_long (p, 0x05040100,
+      0x0d0c0908, 0x05040100, 0x0d0c0908);
+
+  if (src != dest1) {
+    orc_mmx_emit_movq (p, src, dest1);
+  }
+
+  if (tmp1 != ORC_REG_INVALID && tmp2 != ORC_REG_INVALID) {
+    orc_mmx_emit_pshufb (p, tmp1, dest1);
+    if (dest2 != src)
+      orc_mmx_emit_movq (p, src, dest2);
+    orc_mmx_emit_pshufb (p, tmp2, dest2);
+  } else {
+    mmx_rule_splitlw (p, user, insn);
+  }
+}
+
+
+static void
+mmx_rule_splitwb_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest1 = p->vars[insn->dest_args[0]].alloc;
+  const int dest2 = p->vars[insn->dest_args[1]].alloc;
+  const int tmp1 = orc_compiler_try_get_constant_long (p, 0x07050301,
+      0x0f0d0b09, 0x07050301, 0x0f0d0b09);
+  const int tmp2 = orc_compiler_try_get_constant_long (p, 0x06040200,
+      0x0e0c0a08, 0x06040200, 0x0e0c0a08);
+
+  if (src != dest1) {
+    orc_mmx_emit_movq (p, src, dest1);
+  }
+
+  if (tmp1 != ORC_REG_INVALID && tmp2 != ORC_REG_INVALID) {
+    orc_mmx_emit_pshufb (p, tmp1, dest1);
+    if (dest2 != src)
+      orc_mmx_emit_movq (p, src, dest2);
+    orc_mmx_emit_pshufb (p, tmp2, dest2);
+  } else {
+    mmx_rule_splitwb (p, user, insn);
+  }
+}
+
+static void
 mmx_rule_select0lw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_try_get_constant_long (p, 0x05040100, 0x0d0c0908,
+      0x05040100, 0x0d0c0908);
 
-  tmp = orc_compiler_try_get_constant_long (p,
-      0x05040100, 0x0d0c0908, 0x05040100, 0x0d0c0908);
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
+
   if (tmp != ORC_REG_INVALID) {
     orc_mmx_emit_pshufb (p, tmp, dest);
   } else {
@@ -1974,11 +2289,15 @@ mmx_rule_select0lw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_select1lw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_try_get_constant_long (p, 0x07060302, 0x0f0e0b0a,
+      0x07060302, 0x0f0e0b0a);
 
-  tmp = orc_compiler_try_get_constant_long (p,
-      0x07060302, 0x0f0e0b0a, 0x07060302, 0x0f0e0b0a);
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
+
   if (tmp != ORC_REG_INVALID) {
     orc_mmx_emit_pshufb (p, tmp, dest);
   } else {
@@ -1989,11 +2308,15 @@ mmx_rule_select1lw_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_select0wb_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_try_get_constant_long (p, 0x06040200, 0x0e0c0a08,
+      0x06040200, 0x0e0c0a08);
 
-  tmp = orc_compiler_try_get_constant_long (p,
-      0x06040200, 0x0e0c0a08, 0x06040200, 0x0e0c0a08);
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
+
   if (tmp != ORC_REG_INVALID) {
     orc_mmx_emit_pshufb (p, tmp, dest);
   } else {
@@ -2004,11 +2327,15 @@ mmx_rule_select0wb_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_select1wb_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_try_get_constant_long (p, 0x07050301, 0x0f0d0b09,
+      0x07050301, 0x0f0d0b09);
 
-  tmp = orc_compiler_try_get_constant_long (p,
-      0x07050301, 0x0f0d0b09, 0x07050301, 0x0f0d0b09);
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
+
   if (tmp != ORC_REG_INVALID) {
     orc_mmx_emit_pshufb (p, tmp, dest);
   } else {
@@ -2022,214 +2349,269 @@ mmx_rule_select1wb_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_maxuw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_constant (p, 2, 0x8000);
 
-  tmp = orc_compiler_get_constant (p, 2, 0x8000);
-  orc_mmx_emit_pxor(p, tmp, src);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_pxor (p, tmp, src1);
   orc_mmx_emit_pxor(p, tmp, dest);
-  orc_mmx_emit_pmaxsw (p, src, dest);
-  orc_mmx_emit_pxor(p, tmp, src);
+  orc_mmx_emit_pmaxsw (p, src1, dest);
+  orc_mmx_emit_pxor (p, tmp, src1);
   orc_mmx_emit_pxor(p, tmp, dest);
 }
 
 static void
 mmx_rule_minuw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_constant (p, 2, 0x8000);
 
-  tmp = orc_compiler_get_constant (p, 2, 0x8000);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
 
-  orc_mmx_emit_pxor(p, tmp, src);
+  orc_mmx_emit_pxor (p, tmp, src1);
   orc_mmx_emit_pxor(p, tmp, dest);
-  orc_mmx_emit_pminsw (p, src, dest);
-  orc_mmx_emit_pxor(p, tmp, src);
+  orc_mmx_emit_pminsw (p, src1, dest);
+  orc_mmx_emit_pxor (p, tmp, src1);
   orc_mmx_emit_pxor(p, tmp, dest);
 }
 
 static void
 mmx_rule_avgsb_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_constant (p, 1, 0x80);
 
-  tmp = orc_compiler_get_constant (p, 1, 0x80);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
 
-  orc_mmx_emit_pxor(p, tmp, src);
+  orc_mmx_emit_pxor (p, tmp, src1);
   orc_mmx_emit_pxor(p, tmp, dest);
-  orc_mmx_emit_pavgb (p, src, dest);
-  orc_mmx_emit_pxor(p, tmp, src);
+  orc_mmx_emit_pavgb (p, src1, dest);
+  orc_mmx_emit_pxor (p, tmp, src1);
   orc_mmx_emit_pxor(p, tmp, dest);
 }
 
 static void
 mmx_rule_avgsw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_constant (p, 2, 0x8000);
 
-  tmp = orc_compiler_get_constant (p, 2, 0x8000);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
 
-  orc_mmx_emit_pxor(p, tmp, src);
+  orc_mmx_emit_pxor (p, tmp, src1);
   orc_mmx_emit_pxor(p, tmp, dest);
-  orc_mmx_emit_pavgw (p, src, dest);
-  orc_mmx_emit_pxor(p, tmp, src);
+  orc_mmx_emit_pavgw (p, src1, dest);
+  orc_mmx_emit_pxor (p, tmp, src1);
   orc_mmx_emit_pxor(p, tmp, dest);
 }
 
 static void
 mmx_rule_maxsb_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
 
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
   orc_mmx_emit_movq (p, dest, tmp);
-  orc_mmx_emit_pcmpgtb (p, src, tmp);
+  orc_mmx_emit_pcmpgtb (p, src1, tmp);
   orc_mmx_emit_pand (p, tmp, dest);
-  orc_mmx_emit_pandn (p, src, tmp);
+  orc_mmx_emit_pandn (p, src1, tmp);
   orc_mmx_emit_por (p, tmp, dest);
 }
 
 static void
 mmx_rule_minsb_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
 
-  orc_mmx_emit_movq (p, src, tmp);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_movq (p, src1, tmp);
   orc_mmx_emit_pcmpgtb (p, dest, tmp);
   orc_mmx_emit_pand (p, tmp, dest);
-  orc_mmx_emit_pandn (p, src, tmp);
+  orc_mmx_emit_pandn (p, src1, tmp);
   orc_mmx_emit_por (p, tmp, dest);
 }
 
 static void
 mmx_rule_maxsl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
 
   orc_mmx_emit_movq (p, dest, tmp);
-  orc_mmx_emit_pcmpgtd (p, src, tmp);
+  orc_mmx_emit_pcmpgtd (p, src1, tmp);
   orc_mmx_emit_pand (p, tmp, dest);
-  orc_mmx_emit_pandn (p, src, tmp);
+  orc_mmx_emit_pandn (p, src1, tmp);
   orc_mmx_emit_por (p, tmp, dest);
 }
 
 static void
 mmx_rule_minsl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
 
-  orc_mmx_emit_movq (p, src, tmp);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_movq (p, src1, tmp);
   orc_mmx_emit_pcmpgtd (p, dest, tmp);
   orc_mmx_emit_pand (p, tmp, dest);
-  orc_mmx_emit_pandn (p, src, tmp);
+  orc_mmx_emit_pandn (p, src1, tmp);
   orc_mmx_emit_por (p, tmp, dest);
 }
 
 static void
 mmx_rule_maxul_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
-  int tmpc;
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+  const int tmpc = orc_compiler_get_constant (p, 4, 0x80000000);
 
-  tmpc = orc_compiler_get_constant (p, 4, 0x80000000);
-  orc_mmx_emit_pxor(p, tmpc, src);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_pxor (p, tmpc, src1);
   orc_mmx_emit_pxor(p, tmpc, dest);
 
   orc_mmx_emit_movq (p, dest, tmp);
-  orc_mmx_emit_pcmpgtd (p, src, tmp);
+  orc_mmx_emit_pcmpgtd (p, src1, tmp);
   orc_mmx_emit_pand (p, tmp, dest);
-  orc_mmx_emit_pandn (p, src, tmp);
+  orc_mmx_emit_pandn (p, src1, tmp);
   orc_mmx_emit_por (p, tmp, dest);
 
-  orc_mmx_emit_pxor(p, tmpc, src);
+  orc_mmx_emit_pxor (p, tmpc, src1);
   orc_mmx_emit_pxor(p, tmpc, dest);
 }
 
 static void
 mmx_rule_minul_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
-  int tmpc;
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+  const int tmpc = orc_compiler_get_constant (p, 4, 0x80000000);
 
-  tmpc = orc_compiler_get_constant (p, 4, 0x80000000);
-  orc_mmx_emit_pxor(p, tmpc, src);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_pxor (p, tmpc, src1);
   orc_mmx_emit_pxor(p, tmpc, dest);
 
-  orc_mmx_emit_movq (p, src, tmp);
+  orc_mmx_emit_movq (p, src1, tmp);
   orc_mmx_emit_pcmpgtd (p, dest, tmp);
   orc_mmx_emit_pand (p, tmp, dest);
-  orc_mmx_emit_pandn (p, src, tmp);
+  orc_mmx_emit_pandn (p, src1, tmp);
   orc_mmx_emit_por (p, tmp, dest);
 
-  orc_mmx_emit_pxor(p, tmpc, src);
+  orc_mmx_emit_pxor (p, tmpc, src1);
   orc_mmx_emit_pxor(p, tmpc, dest);
 }
 
 static void
 mmx_rule_avgsl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
 
   /* (a+b+1) >> 1 = (a|b) - ((a^b)>>1) */
 
   orc_mmx_emit_movq (p, dest, tmp);
-  orc_mmx_emit_pxor(p, src, tmp);
+  orc_mmx_emit_pxor (p, src1, tmp);
   orc_mmx_emit_psrad_imm(p, 1, tmp);
 
-  orc_mmx_emit_por(p, src, dest);
+  orc_mmx_emit_por (p, src1, dest);
   orc_mmx_emit_psubd(p, tmp, dest);
 }
 
 static void
 mmx_rule_avgul (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
 
   /* (a+b+1) >> 1 = (a|b) - ((a^b)>>1) */
 
   orc_mmx_emit_movq (p, dest, tmp);
-  orc_mmx_emit_pxor(p, src, tmp);
+  orc_mmx_emit_pxor (p, src1, tmp);
   orc_mmx_emit_psrld_imm(p, 1, tmp);
 
-  orc_mmx_emit_por(p, src, dest);
+  orc_mmx_emit_por (p, src1, dest);
   orc_mmx_emit_psubd(p, tmp, dest);
 }
 
 static void
 mmx_rule_addssl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
 #if 0
   int tmp2 = orc_compiler_get_temp_reg (p);
   int tmp3 = orc_compiler_get_temp_reg (p);
 
-  orc_mmx_emit_movq (p, src, tmp);
+  orc_mmx_emit_movq (p, src1, tmp);
   orc_mmx_emit_pand (p, dest, tmp);
 
-  orc_mmx_emit_movq (p, src, tmp2);
+  orc_mmx_emit_movq (p, src1, tmp2);
   orc_mmx_emit_pxor (p, dest, tmp2);
   orc_mmx_emit_psrad_imm (p, 1, tmp2);
   orc_mmx_emit_paddd (p, tmp2, tmp);
@@ -2247,15 +2629,15 @@ mmx_rule_addssl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_mmx_emit_pxor (p, tmp, tmp2); /*  clamped value */
   orc_mmx_emit_pand (p, tmp3, tmp2);
 
-  orc_mmx_emit_paddd (p, src, dest);
+  orc_mmx_emit_paddd (p, src1, dest);
   orc_mmx_emit_pandn (p, dest, tmp3); /*  tmp is mask: ~0 is for clamping */
   orc_mmx_emit_movq (p, tmp3, dest);
 
   orc_mmx_emit_por (p, tmp2, dest);
 #endif
 
-  int s = orc_compiler_get_temp_reg (p);
-  int t = orc_compiler_get_temp_reg (p);
+  const int s = orc_compiler_get_temp_reg (p);
+  const int t = orc_compiler_get_temp_reg (p);
 
   /*
      From Tim Terriberry: (slightly faster than above)
@@ -2280,13 +2662,13 @@ mmx_rule_addssl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   orc_mmx_emit_movq (p, dest, s);
   orc_mmx_emit_movq (p, dest, t);
-  orc_mmx_emit_pxor (p, src, s);
-  orc_mmx_emit_paddd (p, src, dest);
+  orc_mmx_emit_pxor (p, src1, s);
+  orc_mmx_emit_paddd (p, src1, dest);
   orc_mmx_emit_pxor (p, dest, t);
-  tmp = orc_compiler_get_constant (p, 4, 0xffffffff);
+  int tmp = orc_compiler_get_constant (p, 4, 0xffffffff);
   orc_mmx_emit_pxor (p, tmp, t);
   orc_mmx_emit_por (p, t, s);
-  orc_mmx_emit_movq (p, src, t);
+  orc_mmx_emit_movq (p, src1, t);
   orc_mmx_emit_psrad_imm (p, 31, s);
   orc_mmx_emit_psrad_imm (p, 31, t);
   orc_mmx_emit_pand (p, s, dest);
@@ -2299,14 +2681,18 @@ mmx_rule_addssl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_subssl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp;
-  int tmp2 = orc_compiler_get_temp_reg (p);
-  int tmp3 = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  int tmp = orc_compiler_get_temp_constant (p, 4, 0xffffffff);
+  const int tmp2 = orc_compiler_get_temp_reg (p);
+  const int tmp3 = orc_compiler_get_temp_reg (p);
 
-  tmp = orc_compiler_get_temp_constant (p, 4, 0xffffffff);
-  orc_mmx_emit_pxor (p, src, tmp);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_pxor (p, src1, tmp);
   orc_mmx_emit_movq (p, tmp, tmp2);
   orc_mmx_emit_por (p, dest, tmp);
 
@@ -2327,7 +2713,7 @@ mmx_rule_subssl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_mmx_emit_pxor (p, tmp, tmp2); /*  clamped value */
   orc_mmx_emit_pand (p, tmp3, tmp2);
 
-  orc_mmx_emit_psubd (p, src, dest);
+  orc_mmx_emit_psubd (p, src1, dest);
   orc_mmx_emit_pandn (p, dest, tmp3);
   orc_mmx_emit_movq (p, tmp3, dest);
 
@@ -2338,21 +2724,26 @@ mmx_rule_subssl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 mmx_rule_addusl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
-  int tmp2 = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+  const int tmp2 = orc_compiler_get_temp_reg (p);
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
 
 #if 0
   /* an alternate version.  slower. */
   /* Compute the bit that gets carried from bit 0 to bit 1 */
-  orc_mmx_emit_movq (p, src, tmp);
+  orc_mmx_emit_movq (p, src1, tmp);
   orc_mmx_emit_pand (p, dest, tmp);
   orc_mmx_emit_pslld_imm (p, 31, tmp);
   orc_mmx_emit_psrld_imm (p, 31, tmp);
 
   /* Add in (src>>1) */
-  orc_mmx_emit_movq (p, src, tmp2);
+  orc_mmx_emit_movq (p, src1, tmp2);
   orc_mmx_emit_psrld_imm (p, 1, tmp2);
   orc_mmx_emit_paddd (p, tmp2, tmp);
 
@@ -2365,32 +2756,37 @@ mmx_rule_addusl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_mmx_emit_psrad_imm (p, 31, tmp);
 
   /* compute the sum, then or over the mask */
-  orc_mmx_emit_paddd (p, src, dest);
+  orc_mmx_emit_paddd (p, src1, dest);
   orc_mmx_emit_por (p, tmp, dest);
 #endif
 
-  orc_mmx_emit_movq (p, src, tmp);
+  orc_mmx_emit_movq (p, src1, tmp);
   orc_mmx_emit_pand (p, dest, tmp);
 
-  orc_mmx_emit_movq (p, src, tmp2);
+  orc_mmx_emit_movq (p, src1, tmp2);
   orc_mmx_emit_pxor (p, dest, tmp2);
   orc_mmx_emit_psrld_imm (p, 1, tmp2);
   orc_mmx_emit_paddd (p, tmp2, tmp);
 
   orc_mmx_emit_psrad_imm (p, 31, tmp);
-  orc_mmx_emit_paddd (p, src, dest);
+  orc_mmx_emit_paddd (p, src1, dest);
   orc_mmx_emit_por (p, tmp, dest);
 }
 
 static void
 mmx_rule_subusl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[1]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmp = orc_compiler_get_temp_reg (p);
-  int tmp2 = orc_compiler_get_temp_reg (p);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+  const int tmp2 = orc_compiler_get_temp_reg (p);
 
-  orc_mmx_emit_movq (p, src, tmp2);
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_movq (p, src1, tmp2);
   orc_mmx_emit_psrld_imm (p, 1, tmp2);
 
   orc_mmx_emit_movq (p, dest, tmp);
@@ -2401,7 +2797,7 @@ mmx_rule_subusl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_mmx_emit_psrad_imm (p, 31, tmp2);
 
   /* compute the difference, then and over the mask */
-  orc_mmx_emit_psubd (p, src, dest);
+  orc_mmx_emit_psubd (p, src1, dest);
   orc_mmx_emit_pand (p, tmp2, dest);
 
 }
@@ -2409,23 +2805,34 @@ mmx_rule_subusl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 #ifndef MMX
 /* float ops */
 
-#define UNARY_F(opcode,insn_name,code) \
-static void \
-mmx_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
-{ \
-  orc_mmx_emit_ ## insn_name (p, \
-      p->vars[insn->src_args[0]].alloc, \
-      p->vars[insn->dest_args[0]].alloc); \
-}
+#define UNARY_F(opcode, insn_name, code) \
+  static void mmx_rule_##opcode (OrcCompiler *p, void *user, \
+      OrcInstruction *insn) \
+  { \
+    const int src0 = p->vars[insn->src_args[0]].alloc; \
+    const int dest = p->vars[insn->dest_args[0]].alloc; \
+\
+    if (src0 != dest) { \
+     orc_mmx_emit_movq (p, src0, dest); \
+    } \
+\
+    orc_mmx_emit_##insn_name (p, src0, dest); \
+  }
 
-#define BINARY_F(opcode,insn_name,code) \
-static void \
-mmx_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
-{ \
-  orc_mmx_emit_ ## insn_name (p, \
-      p->vars[insn->src_args[1]].alloc, \
-      p->vars[insn->dest_args[0]].alloc); \
-}
+#define BINARY_F(opcode, insn_name, code) \
+  static void mmx_rule_##opcode (OrcCompiler *p, void *user, \
+      OrcInstruction *insn) \
+  { \
+    const int src0 = p->vars[insn->src_args[0]].alloc; \
+    const int src1 = p->vars[insn->src_args[1]].alloc; \
+    const int dest = p->vars[insn->dest_args[0]].alloc; \
+\
+    if (src0 != dest) { \
+     orc_mmx_emit_movq (p, src0, dest); \
+    } \
+\
+    orc_mmx_emit_##insn_name (p, src1, dest); \
+  }
 
 BINARY_F(addf, addps, 0x58)
 BINARY_F(subf, subps, 0x5c)
@@ -2442,14 +2849,20 @@ mmx_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
       p->vars[insn->dest_args[0]].alloc); \
 }
 
-#define BINARY_D(opcode,insn_name,code) \
-static void \
-mmx_rule_ ## opcode (OrcCompiler *p, void *user, OrcInstruction *insn) \
-{ \
-  orc_mmx_emit_ ## insn_name (p, \
-      p->vars[insn->src_args[1]].alloc, \
-      p->vars[insn->dest_args[0]].alloc); \
-}
+#define BINARY_D(opcode, insn_name, code) \
+  static void mmx_rule_##opcode (OrcCompiler *p, void *user, \
+      OrcInstruction *insn) \
+  { \
+    const int src0 = p->vars[insn->src_args[0]].alloc; \
+    const int src1 = p->vars[insn->src_args[1]].alloc; \
+    const int dest = p->vars[insn->dest_args[0]].alloc; \
+\
+    if (src0 != dest) { \
+     orc_mmx_emit_movq (p, src0, dest); \
+    } \
+\
+    orc_mmx_emit_##insn_name (p, src1, dest); \
+  }
 
 BINARY_D(addd, addpd, 0x58)
 BINARY_D(subd, subpd, 0x5c)
@@ -2460,177 +2873,210 @@ UNARY_D(sqrtd, sqrtpd, 0x51)
 static void
 mmx_rule_minf (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
   if (p->target_flags & ORC_TARGET_FAST_NAN) {
-    orc_mmx_emit_minps (p,
-        p->vars[insn->src_args[1]].alloc,
-        p->vars[insn->dest_args[0]].alloc);
+    orc_mmx_emit_minps (p, src1, dest);
   } else {
-    int tmp = orc_compiler_get_temp_reg (p);
-    orc_mmx_emit_movq (p,
-        p->vars[insn->src_args[1]].alloc,
-        tmp);
-    orc_mmx_emit_minps (p,
-        p->vars[insn->dest_args[0]].alloc,
-        tmp);
-    orc_mmx_emit_minps (p,
-        p->vars[insn->src_args[1]].alloc,
-        p->vars[insn->dest_args[0]].alloc);
-    orc_mmx_emit_por (p,
-        tmp,
-        p->vars[insn->dest_args[0]].alloc);
+    const int tmp = orc_compiler_get_temp_reg (p);
+    orc_mmx_emit_movq (p, src1, tmp);
+    orc_mmx_emit_minps (p, src0, tmp);
+    orc_mmx_emit_minps (p, src1, dest);
+    orc_mmx_emit_por (p, tmp, dest);
   }
 }
 
 static void
 mmx_rule_mind (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
   if (p->target_flags & ORC_TARGET_FAST_NAN) {
-    orc_mmx_emit_minpd (p,
-        p->vars[insn->src_args[1]].alloc,
-        p->vars[insn->dest_args[0]].alloc);
+    orc_mmx_emit_minpd (p, src1, dest);
   } else {
-    int tmp = orc_compiler_get_temp_reg (p);
-    orc_mmx_emit_movq (p,
-        p->vars[insn->src_args[1]].alloc,
-        tmp);
-    orc_mmx_emit_minpd (p,
-        p->vars[insn->dest_args[0]].alloc,
-        tmp);
-    orc_mmx_emit_minpd (p,
-        p->vars[insn->src_args[1]].alloc,
-        p->vars[insn->dest_args[0]].alloc);
-    orc_mmx_emit_por (p,
-        tmp,
-        p->vars[insn->dest_args[0]].alloc);
+    const int tmp = orc_compiler_get_temp_reg (p);
+    orc_mmx_emit_movq (p, src1, tmp);
+    orc_mmx_emit_minpd (p, src0, tmp);
+    orc_mmx_emit_minpd (p, src1, dest);
+    orc_mmx_emit_por (p, tmp, dest);
   }
 }
 
 static void
 mmx_rule_maxf (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
   if (p->target_flags & ORC_TARGET_FAST_NAN) {
-    orc_mmx_emit_maxps (p,
-        p->vars[insn->src_args[1]].alloc,
-        p->vars[insn->dest_args[0]].alloc);
+    orc_mmx_emit_maxps (p, src1, dest);
   } else {
-    int tmp = orc_compiler_get_temp_reg (p);
-    orc_mmx_emit_movq (p,
-        p->vars[insn->src_args[1]].alloc,
-        tmp);
-    orc_mmx_emit_maxps (p,
-        p->vars[insn->dest_args[0]].alloc,
-        tmp);
-    orc_mmx_emit_maxps (p,
-        p->vars[insn->src_args[1]].alloc,
-        p->vars[insn->dest_args[0]].alloc);
-    orc_mmx_emit_por (p,
-        tmp,
-        p->vars[insn->dest_args[0]].alloc);
+    const int tmp = orc_compiler_get_temp_reg (p);
+    orc_mmx_emit_movq (p, src1, tmp);
+    orc_mmx_emit_maxps (p, src0, tmp);
+    orc_mmx_emit_maxps (p, src1, dest);
+    orc_mmx_emit_por (p, tmp, dest);
   }
 }
 
 static void
 mmx_rule_maxd (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
   if (p->target_flags & ORC_TARGET_FAST_NAN) {
-    orc_mmx_emit_maxpd (p,
-        p->vars[insn->src_args[1]].alloc,
-        p->vars[insn->dest_args[0]].alloc);
+    orc_mmx_emit_maxpd (p, src1, dest);
   } else {
-    int tmp = orc_compiler_get_temp_reg (p);
-    orc_mmx_emit_movq (p,
-        p->vars[insn->src_args[1]].alloc,
-        tmp);
-    orc_mmx_emit_maxpd (p,
-        p->vars[insn->dest_args[0]].alloc,
-        tmp);
-    orc_mmx_emit_maxpd (p,
-        p->vars[insn->src_args[1]].alloc,
-        p->vars[insn->dest_args[0]].alloc);
-    orc_mmx_emit_por (p,
-        tmp,
-        p->vars[insn->dest_args[0]].alloc);
+    const int tmp = orc_compiler_get_temp_reg (p);
+    orc_mmx_emit_movq (p, src1, tmp);
+    orc_mmx_emit_maxpd (p, src0, tmp);
+    orc_mmx_emit_maxpd (p, src1, dest);
+    orc_mmx_emit_por (p, tmp, dest);
   }
 }
 
 static void
 mmx_rule_cmpeqf (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  orc_mmx_emit_cmpeqps (p,
-      p->vars[insn->src_args[1]].alloc,
-      p->vars[insn->dest_args[0]].alloc);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_cmpeqps (p, src1, dest);
 }
 
 static void
 mmx_rule_cmpeqd (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  orc_mmx_emit_cmpeqpd (p,
-      p->vars[insn->src_args[1]].alloc,
-      p->vars[insn->dest_args[0]].alloc);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_cmpeqpd (p, src1, dest);
 }
 
 
 static void
 mmx_rule_cmpltf (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  orc_mmx_emit_cmpltps (p,
-      p->vars[insn->src_args[1]].alloc,
-      p->vars[insn->dest_args[0]].alloc);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_cmpltps (p, src1, dest);
 }
 
 static void
 mmx_rule_cmpltd (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  orc_mmx_emit_cmpltpd (p,
-      p->vars[insn->src_args[1]].alloc,
-      p->vars[insn->dest_args[0]].alloc);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_cmpltpd (p, src1, dest);
 }
 
 
 static void
 mmx_rule_cmplef (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  orc_mmx_emit_cmpleps (p,
-      p->vars[insn->src_args[1]].alloc,
-      p->vars[insn->dest_args[0]].alloc);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_cmpleps (p, src1, dest);
 }
 
 static void
 mmx_rule_cmpled (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  orc_mmx_emit_cmplepd (p,
-      p->vars[insn->src_args[1]].alloc,
-      p->vars[insn->dest_args[0]].alloc);
+  const int src0 = p->vars[insn->src_args[0]].alloc;
+  const int src1 = p->vars[insn->src_args[1]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  if (src0 != dest) {
+    orc_mmx_emit_movq (p, src0, dest);
+  }
+
+  orc_mmx_emit_cmplepd (p, src1, dest);
 }
 
 
 static void
 mmx_rule_convfl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmpc;
-  int tmp = orc_compiler_get_temp_reg (p);
-  
-  tmpc = orc_compiler_get_temp_constant (p, 4, 0x80000000);
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+  const int tmpc = orc_compiler_get_temp_constant (p, 4, 0x80000000);
+
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
+
   orc_mmx_emit_movq (p, src, tmp);
   orc_mmx_emit_cvttps2dq (p, src, dest);
   orc_mmx_emit_psrad_imm (p, 31, tmp);
   orc_mmx_emit_pcmpeqd (p, dest, tmpc);
   orc_mmx_emit_pandn (p, tmpc, tmp);
   orc_mmx_emit_paddd (p, tmp, dest);
-
 }
 
 static void
 mmx_rule_convdl (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  int src = p->vars[insn->src_args[0]].alloc;
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int tmpc;
-  int tmp = orc_compiler_get_temp_reg (p);
-  
-  tmpc = orc_compiler_get_temp_constant (p, 4, 0x80000000);
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+  const int tmpc = orc_compiler_get_temp_constant (p, 4, 0x80000000);
+
+  if (src != dest) {
+    orc_mmx_emit_movq (p, src, dest);
+  }
+
   orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(3,1,3,1), src, tmp);
   orc_mmx_emit_cvttpd2dq (p, src, dest);
   orc_mmx_emit_psrad_imm (p, 31, tmp);
@@ -2932,6 +3378,8 @@ orc_compiler_mmx_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "swapl", mmx_rule_swapl_ssse3, NULL);
   orc_rule_register (rule_set, "swapwl", mmx_rule_swapwl_ssse3, NULL);
   orc_rule_register (rule_set, "swapq", mmx_rule_swapq_ssse3, NULL);
+  orc_rule_register (rule_set, "splitlw", mmx_rule_splitlw_ssse3, NULL);
+  orc_rule_register (rule_set, "splitwb", mmx_rule_splitwb_ssse3, NULL);
   orc_rule_register (rule_set, "select0lw", mmx_rule_select0lw_ssse3, NULL);
   orc_rule_register (rule_set, "select1lw", mmx_rule_select1lw_ssse3, NULL);
   orc_rule_register (rule_set, "select0wb", mmx_rule_select0wb_ssse3, NULL);
