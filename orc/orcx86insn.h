@@ -13,8 +13,8 @@ typedef enum {
   ORC_X86_INSN_TYPE_MMXM_MMX,        	/* mem/mmx, mmx */
   ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT,	/* $shift, mmx.  opcode in src */
   ORC_X86_INSN_TYPE_SSEM_SSE,		/* mem/mmx, sse */
-  ORC_X86_INSN_TYPE_IMM8_MMXM_MMX,
-  ORC_X86_INSN_TYPE_IMM8_MMX_REG_REV,
+  ORC_X86_INSN_TYPE_IMM8_MMXM_MMX, /* uses both a mmx and an imm */
+  ORC_X86_INSN_TYPE_IMM8_MMX_REG_REV, /* uses both an imm and a mem/mmx destination */
   ORC_X86_INSN_TYPE_MMXM_MMX_REV,
   ORC_X86_INSN_TYPE_SSEM_SSE_REV,
   ORC_X86_INSN_TYPE_REGM_MMX,
@@ -33,8 +33,8 @@ typedef enum {
   ORC_X86_INSN_TYPE_IMM32_REGM_MOV,
   ORC_X86_INSN_TYPE_REG8_REGM,
   ORC_X86_INSN_TYPE_REG16_REGM,
-  ORC_X86_INSN_TYPE_IMM32_A,
-  ORC_X86_INSN_TYPE_IMM8_REGM_MMX,
+  ORC_X86_INSN_TYPE_IMM32_A, /* scalar register AND imm */
+  ORC_X86_INSN_TYPE_IMM8_REGM_MMX, /* uses mmx register and imm */
 } OrcX86InsnType;
 
 typedef enum {
@@ -284,11 +284,12 @@ typedef enum {
   ORC_X86_endbr64,
 } OrcX86Opcode;
 
-enum {
-  ORC_X86_RM_REG,
-  ORC_X86_RM_MEMOFFSET,
-  ORC_X86_RM_MEMINDEX
-};
+typedef enum {
+  ORC_X86_RM_REG, /* operand can be register or memory */
+  ORC_X86_RM_MEMOFFSET, /* operand can be register or memory, allows offset */
+  ORC_X86_RM_MEMINDEX  /* operand can be register or memory, allows index */
+} OrcX86OperandType;
+
 
 typedef struct _OrcX86Insn OrcX86Insn;
 struct _OrcX86Insn {
