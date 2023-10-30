@@ -99,6 +99,7 @@ struct _OrcCompiler {
   int used_regs[ORC_N_REGS];
   int alloc_regs[ORC_N_REGS];
 
+  // 1 << loop shift means how many of these fit into a vector
   int loop_shift;
   int long_jumps;
   int use_frame_pointer;
