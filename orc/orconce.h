@@ -3,16 +3,16 @@
 #define _ORC_ONCE_H_
 
 #include <orc/orcutils.h>
+#include <orc/orcdebug.h>
 
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS)
+#if defined(_WIN32)
+#include <windows.h>
+typedef INIT_ONCE orc_once_atomic_int;
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS)
 #include <stdatomic.h>
 typedef atomic_int orc_once_atomic_int;
 #else
 typedef int orc_once_atomic_int;
-#endif
-
-#if (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 201112L || defined(__STDC_NO_ATOMICS)) && defined(_MSC_VER)
-#include <windows.h>
 #endif
 
 ORC_BEGIN_DECLS
@@ -26,12 +26,40 @@ struct _OrcOnce {
   void *value;
 };
 
+#if defined(_WIN32)
+#define ORC_ONCE_INIT { INIT_ONCE_STATIC_INIT, NULL }
+#else
 #define ORC_ONCE_INIT { 0, NULL }
+#endif
 
 ORC_API void orc_once_mutex_lock (void);
 ORC_API void orc_once_mutex_unlock (void);
 
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS)
+#if defined(_WIN32)
+static inline orc_bool orc_once_enter(OrcOnce *once, void **value) {
+  BOOL pending = FALSE;
+
+  if (!InitOnceBeginInitialize (&once->inited, 0, &pending, NULL)) {
+    DWORD err = GetLastError ();
+    /* should not fail though, there's nothing we can do if it happens */
+    ORC_ERROR ("InitOnceBeginInitialize failed with 0x%x", (int) err);
+    return FALSE;
+  }
+
+  if (!pending) {
+    *value = once->value;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static inline void orc_once_leave(OrcOnce *once, void *value) {
+  once->value = value;
+  InitOnceComplete (&once->inited, 0, NULL);
+}
+
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS)
 
 static inline orc_bool orc_once_enter(OrcOnce *once, void **value) {
   int inited;
@@ -58,44 +86,6 @@ static inline void orc_once_leave(OrcOnce *once, void *value) {
   int inited = TRUE;
   once->value = value;
   atomic_store_explicit (&once->inited, inited, memory_order_release);
-  orc_once_mutex_unlock ();
-}
-
-#elif defined(_MSC_VER)
-
-static inline orc_bool orc_once_enter(OrcOnce *once, void **value) {
-  int inited;
-
-  /* We use 0 for not initialized, 1 for initialized and 2 for currently
-   * being initialized */
-  inited = InterlockedCompareExchange(&once->inited, 2, 0);
-  /* If the value was previously initialized then just return here */
-  if (inited == 1) {
-    *value = once->value;
-    return TRUE;
-  }
-
-  orc_once_mutex_lock ();
-  /* If the value was currently being initialized then check if we're the
-   * thread that is doing the initialization or not */
-  if (inited == 2) {
-    inited = InterlockedCompareExchange(&once->inited, 2, 2);
-
-    /* The other thread initialized the value in the meantime so
-     * we can just return here */
-    if (inited == 1) {
-      *value = once->value;
-      orc_once_mutex_unlock ();
-      return TRUE;
-    }
-  }
-
-  return FALSE;
-}
-
-static inline void orc_once_leave(OrcOnce *once, void *value) {
-  once->value = value;
-  InterlockedExchange (&once->inited, 1);
   orc_once_mutex_unlock ();
 }
 
