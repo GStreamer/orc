@@ -227,6 +227,18 @@ typedef unsigned int orc_bool;
 #define ORC_API ORC_API_IMPORT
 #endif
 
+#ifndef ORC_RESTRICT
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define ORC_RESTRICT restrict
+#elif defined(__GNUC__) && __GNUC__ >= 4
+#define ORC_RESTRICT __restrict__
+#elif defined(_MSC_VER)
+#define ORC_RESTRICT __restrict
+#else
+#define ORC_RESTRICT
+#endif
+#endif
+
 ORC_BEGIN_DECLS
 
 #ifdef ORC_ENABLE_UNSTABLE_API

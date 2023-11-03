@@ -891,7 +891,7 @@ output_code_execute (OrcProgram *p, FILE *output, int is_inline)
       fprintf(output, "  OrcProgram *p;\n");
     }
   }
-  fprintf(output, "  void (*func) (OrcExecutor *);\n");
+  fprintf(output, "  OrcExecutorFunc func = NULL;\n");
   fprintf(output, "\n");
   if (use_lazy_init) {
     if (use_code) {

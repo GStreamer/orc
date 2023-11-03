@@ -16,7 +16,8 @@ typedef struct _OrcExecutorAlt OrcExecutorAlt;
 typedef void (*OrcOpcodeEmulateFunc)(OrcOpcodeExecutor *ex, void *user);
 typedef void (*OrcOpcodeEmulateNFunc)(OrcOpcodeExecutor *ex, int index, int n);
 typedef void (*OrcOpcodeEmulate16Func)(OrcOpcodeExecutor *ex);
-typedef void (*OrcExecutorFunc)(OrcExecutor *ex);
+
+typedef void (*OrcExecutorFunc)(OrcExecutor * ORC_RESTRICT ex);
 
 /**
  * OrcOpcodeExecutor:

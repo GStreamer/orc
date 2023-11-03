@@ -38,7 +38,7 @@ orc_executor_free (OrcExecutor *ex)
 void
 orc_executor_run (OrcExecutor *ex)
 {
-  void (*func) (OrcExecutor *);
+  OrcExecutorFunc func = NULL;
 
   if (ex->program) {
     func = ex->program->code_exec;
@@ -57,7 +57,7 @@ orc_executor_run (OrcExecutor *ex)
 void
 orc_executor_run_backup (OrcExecutor *ex)
 {
-  void (*func) (OrcExecutor *);
+  OrcExecutorFunc func = NULL;
 
   if (ex->program) {
     func = ex->program->backup_func;

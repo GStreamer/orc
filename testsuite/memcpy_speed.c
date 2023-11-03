@@ -127,7 +127,7 @@ main(int argc, char *argv[])
     orc_profile_init (&prof);
     for(j=0;j<10;j++){
       OrcExecutor _ex, *ex = &_ex;
-      void (*func) (OrcExecutor *);
+      OrcExecutorFunc func = NULL;
 
       orc_profile_start(&prof);
       /* orc_memcpy (dest, src, size); */
