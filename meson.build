@@ -16,9 +16,16 @@ osxversion = curversion + 1
 
 add_project_arguments('-DHAVE_CONFIG_H', language : 'c')
 
-orc_inc = include_directories('.')
-
 cc = meson.get_compiler('c')
+
+# Error out if a function's missing
+add_project_arguments(cc.get_supported_arguments([
+  '-we4013',
+  '-Wno-implicit-int',
+  '-Wno-implicit-function-declaration',
+]), language : 'c')
+
+orc_inc = include_directories('.')
 
 cdata = configuration_data()      # config.h
 
