@@ -11,7 +11,9 @@ struct _OrcSysOpcode {
   char name[16];
   // Type of instruction (source instruction set, operation type)
   int type;
-  // Unused
+  // (x86 only) Escape prefix (0F) 3A or 38
+  // See ss. 3.1.1.2 Intel® 64 and IA-32 Architectures Software Developer’s
+  // Manual
   int flags;
   // (x86 only) Instruction set prefix (EVEX, VEX, 2-byte SSE...)
   // See ss. 2.3.5 Intel® 64 and IA-32 Architectures Software Developer’s
