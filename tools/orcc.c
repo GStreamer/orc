@@ -462,14 +462,16 @@ main (int argc, char *argv[])
   } else if (mode == MODE_BINARY) {
     //  Binary mode outputs codegen for each program ("function") separately.
 
-    for(i=0;i<n_programs;i++){
-      char output_file[255] = {0};
-      const int l = snprintf (output_file, 255, "%s.bin", programs[i]->name);
-      ORC_ASSERT(l > 0);
+    for (i = 0; i < n_programs; i++) {
+      char output_file[255] = { 0 };
+      const OrcTarget *const t = orc_target_get_by_name (target);
+      const int l = snprintf (output_file, 255, "%s_%s.bin", programs[i]->name,
+          t->name);
+      ORC_ASSERT (l > 0);
       output = fopen (output_file, "wb");
 
-       if (!output) {
-        fprintf(stderr, "Could not write output file: %s\n", output_file);
+      if (!output) {
+        fprintf (stderr, "Could not write output file: %s\n", output_file);
         break;
       }
 
