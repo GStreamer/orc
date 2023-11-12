@@ -246,10 +246,10 @@ orc_x86_emit_rex (OrcCompiler *compiler, int size, int reg1, int reg2, int reg3)
   int rex = 0x40;
 
   if (compiler->is_64bit) {
-    if (size >= 8) rex |= 0x08;
-    if (reg1 & 8) rex |= 0x4;
-    if (reg2 & 8) rex |= 0x2;
-    if (reg3 & 8) rex |= 0x1;
+    if (size >= 8) rex |= 0x08; // REX.W determines if 64-bit operand
+    if (reg1 & 8) rex |= 0x4; // modr/m needs access to 64-bit mode operands
+    if (reg2 & 8) rex |= 0x2; // SIB index field extension
+    if (reg3 & 8) rex |= 0x1; // ModR/M r/m field, SIB base field, or Opcode reg field
 
     if (rex != 0x40) *compiler->codeptr++ = rex;
   }
