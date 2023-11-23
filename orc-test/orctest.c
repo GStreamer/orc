@@ -866,7 +866,8 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
   orc_executor_free (ex);
 
 out:
-  orc_program_reset (program);
+  if (!(flags & ORC_TEST_SKIP_RESET))
+    orc_program_reset (program);
 
   return ret;
 }

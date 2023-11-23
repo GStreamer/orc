@@ -19,6 +19,9 @@ void test_opcode_src_2d (OrcStaticOpcode *opcode);
 void test_opcode_src_const_n (OrcStaticOpcode *opcode);
 void test_opcode_src_const_n_2d (OrcStaticOpcode *opcode);
 
+static int passed_tests = 0;
+static int total_tests = 0;
+
 int
 main (int argc, char *argv[])
 {
@@ -102,6 +105,9 @@ main (int argc, char *argv[])
     test_opcode_src_const_n_2d (opcode_set->opcodes + i);
   }
 
+  printf ("Result: %d/%d tests passed, %f%%", passed_tests, total_tests,
+      passed_tests * 100.f / total_tests);
+
   if (error) return 1;
   return 0;
 }
@@ -112,7 +118,7 @@ test_opcode_src (OrcStaticOpcode *opcode)
   OrcProgram *p;
   char s[40];
   int ret;
-  int flags = 0;
+  int flags = ORC_TEST_SKIP_RESET;
 
   if (opcode->flags & ORC_STATIC_OPCODE_SCALAR) {
     return;
@@ -146,9 +152,20 @@ test_opcode_src (OrcStaticOpcode *opcode)
   }
 
   ret = orc_test_compare_output_full (p, flags);
-  if (!ret) {
-    printf("test failed\n");
+  total_tests++;
+
+  if (ret == ORC_TEST_INDETERMINATE) {
+    if (verbose)
+      printf ("    %24s: compiled function:   COMPILE FAILED (%s)\n", p->name,
+          p->error_msg);
+    passed_tests++;
+  } else if (!ret) {
     error = TRUE;
+    printf ("    %24s: compiled function:   FAILED\n", p->name);
+  } else {
+    if (verbose)
+      printf ("    %24s: compiled function:   PASSED\n", p->name);
+    passed_tests++;
   }
 
   orc_program_free (p);
@@ -160,7 +177,7 @@ test_opcode_const (OrcStaticOpcode *opcode)
   OrcProgram *p;
   char s[40];
   int ret;
-  int flags = 0;
+  int flags = ORC_TEST_SKIP_RESET;
   int args[4] = { -1, -1, -1, -1 };
   int n_args = 0;
 
@@ -214,9 +231,20 @@ test_opcode_const (OrcStaticOpcode *opcode)
       args[2], args[3]);
 
   ret = orc_test_compare_output_full (p, flags);
-  if (!ret) {
-    printf("test failed\n");
+  total_tests++;
+
+  if (ret == ORC_TEST_INDETERMINATE) {
+    if (verbose)
+      printf ("    %24s: compiled function:   COMPILE FAILED (%s)\n", p->name,
+          p->error_msg);
+    passed_tests++;
+  } else if (!ret) {
     error = TRUE;
+    printf ("    %24s: compiled function:   FAILED\n", p->name);
+  } else {
+    if (verbose)
+      printf ("    %24s: compiled function:   PASSED\n", p->name);
+    passed_tests++;
   }
 
   orc_program_free (p);
@@ -228,7 +256,7 @@ test_opcode_param (OrcStaticOpcode *opcode)
   OrcProgram *p;
   char s[40];
   int ret;
-  int flags = 0;
+  int flags = ORC_TEST_SKIP_RESET;
   int args[4] = { -1, -1, -1, -1 };
   int n_args = 0;
 
@@ -290,9 +318,20 @@ test_opcode_param (OrcStaticOpcode *opcode)
       args[2], args[3]);
 
   ret = orc_test_compare_output_full (p, flags);
-  if (!ret) {
-    printf("test failed\n");
+  total_tests++;
+
+  if (ret == ORC_TEST_INDETERMINATE) {
+    if (verbose)
+      printf ("    %24s: compiled function:   COMPILE FAILED (%s)\n", p->name,
+          p->error_msg);
+    passed_tests++;
+  } else if (!ret) {
     error = TRUE;
+    printf ("    %24s: compiled function:   FAILED\n", p->name);
+  } else {
+    if (verbose)
+      printf ("    %24s: compiled function:   PASSED\n", p->name);
+    passed_tests++;
   }
 
   orc_program_free (p);
@@ -304,7 +343,7 @@ test_opcode_inplace (OrcStaticOpcode *opcode)
   OrcProgram *p;
   char s[40];
   int ret;
-  int flags = 0;
+  int flags = ORC_TEST_SKIP_RESET;
 
   if (opcode->dest_size[0] != opcode->src_size[0]) return;
 
@@ -332,9 +371,20 @@ test_opcode_inplace (OrcStaticOpcode *opcode)
   orc_program_append_str (p, opcode->name, "d1", "d1", "s2");
 
   ret = orc_test_compare_output_full (p, flags);
-  if (!ret) {
-    printf("test failed\n");
+  total_tests++;
+
+  if (ret == ORC_TEST_INDETERMINATE) {
+    if (verbose)
+      printf ("    %24s: compiled function:   COMPILE FAILED (%s)\n", p->name,
+          p->error_msg);
+    passed_tests++;
+  } else if (!ret) {
     error = TRUE;
+    printf ("    %24s: compiled function:   FAILED\n", p->name);
+  } else {
+    if (verbose)
+      printf ("    %24s: compiled function:   PASSED\n", p->name);
+    passed_tests++;
   }
 
   orc_program_free (p);
@@ -346,7 +396,7 @@ test_opcode_src_2d (OrcStaticOpcode *opcode)
   OrcProgram *p;
   char s[40];
   int ret;
-  int flags = 0;
+  int flags = ORC_TEST_SKIP_RESET;
 
   if (opcode->flags & ORC_STATIC_OPCODE_SCALAR) {
     return;
@@ -381,9 +431,20 @@ test_opcode_src_2d (OrcStaticOpcode *opcode)
   }
 
   ret = orc_test_compare_output_full (p, flags);
-  if (!ret) {
-    printf("test failed\n");
+  total_tests++;
+
+  if (ret == ORC_TEST_INDETERMINATE) {
+    if (verbose)
+      printf ("    %24s: compiled function:   COMPILE FAILED (%s)\n", p->name,
+          p->error_msg);
+    passed_tests++;
+  } else if (!ret) {
     error = TRUE;
+    printf ("    %24s: compiled function:   FAILED\n", p->name);
+  } else {
+    if (verbose)
+      printf ("    %24s: compiled function:   PASSED\n", p->name);
+    passed_tests++;
   }
 
   orc_program_free (p);
@@ -395,7 +456,7 @@ test_opcode_src_const_n (OrcStaticOpcode *opcode)
   OrcProgram *p;
   char s[40];
   int ret;
-  int flags = 0;
+  int flags = ORC_TEST_SKIP_RESET;
 
   if (opcode->flags & ORC_STATIC_OPCODE_SCALAR) {
     return;
@@ -430,9 +491,20 @@ test_opcode_src_const_n (OrcStaticOpcode *opcode)
   }
 
   ret = orc_test_compare_output_full (p, flags);
-  if (!ret) {
-    printf("test failed\n");
+  total_tests++;
+
+  if (ret == ORC_TEST_INDETERMINATE) {
+    if (verbose)
+      printf ("    %24s: compiled function:   COMPILE FAILED (%s)\n", p->name,
+          p->error_msg);
+    passed_tests++;
+  } else if (!ret) {
     error = TRUE;
+    printf ("    %24s: compiled function:   FAILED\n", p->name);
+  } else {
+    if (verbose)
+      printf ("    %24s: compiled function:   PASSED\n", p->name);
+    passed_tests++;
   }
 
   orc_program_free (p);
@@ -444,7 +516,7 @@ test_opcode_src_const_n_2d (OrcStaticOpcode *opcode)
   OrcProgram *p;
   char s[40];
   int ret;
-  int flags = 0;
+  int flags = ORC_TEST_SKIP_RESET;
 
   if (opcode->flags & ORC_STATIC_OPCODE_SCALAR) {
     return;
@@ -480,9 +552,20 @@ test_opcode_src_const_n_2d (OrcStaticOpcode *opcode)
   }
 
   ret = orc_test_compare_output_full (p, flags);
-  if (!ret) {
-    printf("test failed\n");
+  total_tests++;
+
+  if (ret == ORC_TEST_INDETERMINATE) {
+    if (verbose)
+      printf ("    %24s: compiled function:   COMPILE FAILED (%s)\n", p->name,
+          p->error_msg);
+    passed_tests++;
+  } else if (!ret) {
     error = TRUE;
+    printf ("    %24s: compiled function:   FAILED\n", p->name);
+  } else {
+    if (verbose)
+      printf ("    %24s: compiled function:   PASSED\n", p->name);
+    passed_tests++;
   }
 
   orc_program_free (p);
