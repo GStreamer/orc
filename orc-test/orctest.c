@@ -34,7 +34,7 @@
 #include <orc/orc.h>
 #include <orc/orcdebug.h>
 
-
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -428,6 +428,30 @@ orc_test_random_bits (void *data, int n_bytes)
 }
 
 static orc_uint64
+print_const_val_signed (const OrcVariable *const var)
+{
+  // in orcemulateopcodes the preference is given for "little" endian
+  switch (var->size) {
+    case 1:
+      printf (" %5" PRId8 " [%4" PRIu8 "]", (orc_int8)(var->value.x4[0] & 0xFF), (orc_uint8)(var->value.x4[0] & 0xFF));
+      return var->value.x4[0] & 0xFF;
+    case 2:
+      printf (" %6" PRId16 " [%5" PRIu16 "]", var->value.x4[0], (orc_uint16)var->value.x4[0]);
+      return var->value.x4[0];
+    case 4:
+      printf (" %11" PRId32 " [%10" PRIu32 "]", var->value.x2[0], (orc_uint32)var->value.x2[0]);
+      return var->value.x2[0];
+    case 8:
+      printf (" %20" PRId64 " [%20" PRIu64 "]", var->value.i,
+          (orc_uint64)var->value.i);
+      return var->value.i;
+    default:
+      printf (" ERROR!");
+      return -1;
+  }
+}
+
+static orc_uint64
 print_array_val_signed (OrcArray *array, int i, int j)
 {
   void *ptr = ORC_PTR_OFFSET (array->data,
@@ -435,20 +459,47 @@ print_array_val_signed (OrcArray *array, int i, int j)
 
   switch (array->element_size) {
     case 1:
-      printf(" %4d", *(orc_int8 *)ptr);
+      printf (" %5" PRId8 " [%4" PRIu8 "]", *(orc_int8 *)ptr, *(orc_uint8 *)ptr);
       return *(orc_int8 *)ptr;
     case 2:
-      printf(" %5d", *(orc_int16 *)ptr);
+      printf (" %6" PRId16 " [%5" PRIu16 "]", *(orc_int16 *)ptr, *(orc_uint16 *)ptr);
       return *(orc_int16 *)ptr;
     case 4:
-      printf(" %10d", *(orc_int32 *)ptr);
+      printf (" %11" PRId32 " [%10" PRIu32 "]", *(orc_int32 *)ptr, *(orc_uint32 *)ptr);
       return *(orc_int32 *)ptr;
     case 8:
-      printf(" 0x%08x%08x", (orc_uint32)((*(orc_uint64 *)ptr)>>32),
-          (orc_uint32)((*(orc_uint64 *)ptr)));
+      printf (" %20" PRId64 " [%20" PRIu64 "]", *(orc_int64 *)ptr,
+          *(orc_uint64 *)ptr);
       return *(orc_int64 *)ptr;
     default:
+      printf (" ERROR!");
       return -1;
+  }
+}
+
+static void
+print_param_val_signed (const int *const var, const int *const var2,
+    const int size)
+{
+  switch (size) {
+    case 1:
+      printf (" %5" PRId8 " [%4" PRIu8 "]", *(orc_int8 *)var, *(orc_uint8 *)var);
+      break;
+    case 2:
+      printf (" %6" PRId16 " [%5" PRIu16 "]", *(orc_int16 *)var, *(orc_uint16 *)var);
+      break;
+    case 4:
+      printf (" %11" PRId32 " [%10" PRIu32 "]", *(orc_int32 *)var, *(orc_uint32 *)var);
+      break;
+    case 8:
+      {
+        const orc_uint64 v = ((orc_uint64)*var) << 32 | *(orc_uint32 *)var2;
+        printf (" %20" PRId64 " [%20" PRIu64 "]", (orc_int64)v, v);
+      }
+      break;
+    default:
+      printf (" ERROR!");
+      break;
   }
 }
 
@@ -487,17 +538,17 @@ print_array_val_hex (OrcArray *array, int i, int j)
 
   switch (array->element_size) {
     case 1:
-      printf(" %02x", *(orc_uint8 *)ptr);
+      printf(" %02" PRIx8, *(orc_uint8 *)ptr);
       return *(orc_int8 *)ptr;
     case 2:
-      printf(" %04x", *(orc_uint16 *)ptr);
+      printf(" %04" PRIx16, *(orc_uint16 *)ptr);
       return *(orc_int16 *)ptr;
     case 4:
-      printf(" %08x", *(orc_uint32 *)ptr);
+      printf(" %08" PRIx32, *(orc_uint32 *)ptr);
       return *(orc_int32 *)ptr;
     case 8:
-      printf(" 0x%08x%08x", (orc_uint32)((*(orc_uint64 *)ptr)>>32),
-          (orc_uint32)((*(orc_uint64 *)ptr)));
+      printf (" %20" PRId64 " [%20" PRIu64 "]", *(orc_int64 *)ptr,
+          *(orc_uint64 *)ptr);
       return *(orc_int64 *)ptr;
     default:
       return -1;
@@ -513,7 +564,7 @@ print_array_val_float (OrcArray *array, int i, int j)
   switch (array->element_size) {
     case 4:
       if (isnan(*(float *)ptr)) {
-        printf(" nan %08x", *(orc_uint32 *)ptr);
+        printf(" nan %08" PRIx32, *(orc_uint32 *)ptr);
       } else {
         printf(" %12.5g", *(float *)ptr);
       }
@@ -523,6 +574,48 @@ print_array_val_float (OrcArray *array, int i, int j)
       break;
     default:
       printf(" ERROR");
+  }
+}
+
+static void
+print_const_val_float (const OrcVariable *const var)
+{
+  switch (var->size) {
+    case 4:
+      if (isnan (var->value.x2f[0])) {
+        printf (" nan %08" PRIx32, var->value.x2[0]);
+      } else {
+        printf (" %12.5g", var->value.x2f[0]);
+      }
+      break;
+    case 8:
+      printf (" %12.5g", var->value.f);
+      break;
+    default:
+      printf (" ERROR");
+  }
+}
+
+static void
+print_param_val_float (const int *const var, const int *const var2,
+    const int size)
+{
+  switch (size) {
+    case 4:
+      if (isnan (*(float *)var)) {
+        printf (" nan %08" PRIx32, *var);
+      } else {
+        printf (" %12.5g", *(float *)var);
+      }
+      break;
+    case 8:
+      {
+        const orc_uint64 tmp = ((orc_uint64)var2 << 32) | (orc_uint64)var;
+        printf (" %12.5g", (double)tmp);
+      }
+      break;
+    default:
+      printf (" ERROR");
   }
 }
 
@@ -781,12 +874,33 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
         printf("%2d %2d:", i, j);
 
         for(l=ORC_VAR_S1;l<ORC_VAR_S1+8;l++){
-          if (program->vars[l].size > 0) {
+          switch (program->vars[l].vartype) {
+            case ORC_VAR_TYPE_SRC:
             if (flags & ORC_TEST_FLAGS_FLOAT) {
-              print_array_val_float (src[l-ORC_VAR_S1], i, j);
+              print_array_val_float (src[l - ORC_VAR_S1], i, j);
             } else {
-              print_array_val_hex (src[l-ORC_VAR_S1], i, j);
+              print_array_val_signed (src[l - ORC_VAR_S1], i, j);
             }
+              break;
+            case ORC_VAR_TYPE_CONST:
+              if (flags & ORC_TEST_FLAGS_FLOAT) {
+                print_const_val_float (program->vars + l);
+              } else {
+                print_const_val_signed (program->vars + l);
+              }
+              break;
+            case ORC_VAR_TYPE_PARAM:
+              if (flags & ORC_TEST_FLAGS_FLOAT) {
+                print_param_val_float (ex->params + l,
+                    ex->params + l + (ORC_VAR_T1-ORC_VAR_P1), program->vars[l].size);
+              } else {
+                print_param_val_signed (ex->params + l,
+                    ex->params + l + (ORC_VAR_T1-ORC_VAR_P1), program->vars[l].size);
+              }
+            case ORC_VAR_TYPE_DEST:
+            case ORC_VAR_TYPE_TEMP:
+            case ORC_VAR_TYPE_ACCUMULATOR:
+              break;
           }
         }
 
@@ -832,14 +946,33 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
           printf("%2d %2d:", i, j);
 
           for(k=0;k<ORC_N_VARIABLES;k++){
-            if (program->vars[k].name == NULL) continue;
-            if (program->vars[k].vartype == ORC_VAR_TYPE_SRC &&
-                program->vars[k].size > 0) {
-              if (flags & ORC_TEST_FLAGS_FLOAT) {
-                print_array_val_float (src[k-ORC_VAR_S1], i, j);
-              } else {
-                print_array_val_signed (src[k-ORC_VAR_S1], i, j);
-              }
+            switch (program->vars[k].vartype) {
+              case ORC_VAR_TYPE_SRC:
+                if (flags & ORC_TEST_FLAGS_FLOAT) {
+                  print_array_val_float (src[k - ORC_VAR_S1], i, j);
+                } else {
+                  print_array_val_signed (src[k - ORC_VAR_S1], i, j);
+                }
+                break;
+              case ORC_VAR_TYPE_CONST:
+                if (flags & ORC_TEST_FLAGS_FLOAT) {
+                  print_const_val_float (program->vars + k);
+                } else {
+                  print_const_val_signed (program->vars + k);
+                }
+                break;
+              case ORC_VAR_TYPE_PARAM:
+                if (flags & ORC_TEST_FLAGS_FLOAT) {
+                  print_param_val_float (ex->params + k,
+                      ex->params + k + (ORC_VAR_T1-ORC_VAR_P1), program->vars[k].size);
+                } else {
+                  print_param_val_signed (ex->params + k,
+                      ex->params + k + (ORC_VAR_T1-ORC_VAR_P1), program->vars[k].size);
+                }
+              case ORC_VAR_TYPE_DEST:
+              case ORC_VAR_TYPE_TEMP:
+              case ORC_VAR_TYPE_ACCUMULATOR:
+                break;
             }
           }
 
