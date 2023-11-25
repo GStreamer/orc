@@ -238,7 +238,7 @@ ios cross-arm64:
     - meson compile --verbose -C build
 
 .build android:
-  image: 'registry.freedesktop.org/gstreamer/cerbero/android:2022-09-22.0'
+  image: 'registry.freedesktop.org/gstreamer/cerbero/android:2023-05-31.0'
   stage: 'build'
   tags:
     - 'gstreamer'
@@ -266,17 +266,21 @@ ios cross-arm64:
       cpu = '$ARCH'
       endian = 'little'
 
+      [constants]
+      toolchain = '$TOOLCHAIN'
+      clang_arch = '$CLANG_ARCH'
+      android_host = '$ANDROID_HOST'
+      android_api = '$ANDROID_API'
+
       [properties]
       sys_root = '$ANDROID_NDK/sysroot'
-      c_link_args     = ['-fuse-ld=gold']
-      cpp_link_args   = ['-fuse-ld=gold']
 
       [binaries]
-      ar        = '$TOOLCHAIN/bin/${ARCH}-linux-${ANDROID_HOST}-ar'
-      c         = '$TOOLCHAIN/bin/${CLANG_ARCH}-linux-${ANDROID_HOST}${ANDROID_API}-clang'
-      cpp       = '$TOOLCHAIN/bin/${CLANG_ARCH}-linux-${ANDROID_HOST}${ANDROID_API}-clang++'
-      ranlib    = '$TOOLCHAIN/bin/${ARCH}-linux-${ANDROID_HOST}-ranlib'
-      strip     = '$TOOLCHAIN/bin/${ARCH}-linux-${ANDROID_HOST}-strip'
+      ar        = toolchain + '/bin/llvm-ar'
+      c         = [toolchain + '/bin/clang', '-target', clang_arch + '-linux-' + android_host + android_api]
+      cpp       = [toolchain + '/bin/clang++', '-target', clang_arch + '-linux-' + android_host + android_api]
+      ranlib    = toolchain + '/bin/llvm-ranlib'
+      strip     = toolchain + '/bin/llvm-strip'
       pkgconfig = 'false'
       EOF
     - meson setup --werror --cross-file android-cross-file.txt build
