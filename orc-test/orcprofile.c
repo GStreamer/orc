@@ -39,6 +39,10 @@
 #include <string.h>
 #include <math.h>
 
+#ifdef _WIN32
+#  include <windows.h>
+#endif
+
 /* not used because it requires a kernel patch */
 /* #undef USE_CORTEX_A8_COUNTER */
 
@@ -176,12 +180,6 @@ oil_profile_stamp_default (void)
   /* __asm__ __volatile__("  mrc p14, 0, %0, c1, c0, 0 \n" : "=r" (ts)); */
   __asm__ __volatile__("  mrc p15, 0, %0, c9, c13, 0 \n" : "=r" (ts));
   return ts;
-#elif defined(_MSC_VER) && defined(HAVE_I386)
-  unsigned long ts;
-  __asm push edx
-  __asm __emit 0fh __asm __emit 031h
-  __asm mov ts, eax
-  __asm pop edx
 #elif defined(HAVE_CLOCK_GETTIME) && defined(HAVE_MONOTONIC_CLOCK)
   struct timespec ts;
   clock_gettime (CLOCK_MONOTONIC, &ts);
@@ -190,6 +188,22 @@ oil_profile_stamp_default (void)
   struct timeval tv;
   gettimeofday(&tv,NULL);
   return 1000000*(unsigned long)tv.tv_sec + (unsigned long)tv.tv_usec;
+#elif defined(_WIN32)
+  LARGE_INTEGER pf, pc;
+  if (QueryPerformanceFrequency (&pf) == FALSE)
+    return 0;
+  if (QueryPerformanceCounter (&pc) == FALSE)
+    return 0;
+
+  orc_int64 tv_sec = pc.QuadPart / pf.QuadPart;
+  orc_int64 tv_nsec
+      = (((pc.QuadPart % pf.QuadPart) * 1000000000 + (pf.QuadPart >> 1))
+          / pf.QuadPart);
+  if (tv_nsec >= 1000000000) {
+    tv_sec++;
+    tv_nsec -= 1000000000;
+  }
+  return 1000000000 * tv_sec + tv_nsec;
 #else
   return 0;
 #endif
