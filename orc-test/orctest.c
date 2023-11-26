@@ -710,6 +710,23 @@ orc_test_compare_output_backup (OrcProgram *program)
   return orc_test_compare_output_full (program, ORC_TEST_FLAGS_BACKUP);
 }
 
+static void
+dump_program (const OrcProgram *const program, const OrcTarget *const target)
+{
+  char fname[256] = { 0 };
+  snprintf (fname, 256, "%s-%s.S", program->name, target->name);
+  FILE *f = fopen (fname, "w");
+  ORC_ASSERT (f);
+  fprintf (f, "%s\n", program->asm_code);
+  fclose (f);
+
+  snprintf (fname, 256, "%s-%s.bin", program->name, target->name);
+  f = fopen (fname, "wb");
+  ORC_ASSERT (f);
+  fwrite (program->orccode->code, 1, program->orccode->code_size, f);
+  fclose (f);
+}
+
 
 OrcTestResult
 orc_test_compare_output_full (OrcProgram *program, int flags)
@@ -750,6 +767,8 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
       ret = ORC_TEST_INDETERMINATE;
       goto out;
     }
+
+    dump_program(program, target);
   }
 
   if (program->constant_n > 0) {
@@ -818,7 +837,8 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
       orc_executor_set_stride (ex, i, src[i-ORC_VAR_S1]->stride);
     }
   }
-  ORC_DEBUG ("running");
+  ORC_DEBUG ("running %s\n", program->name);
+
   if (flags & ORC_TEST_FLAGS_BACKUP) {
     orc_executor_run_backup (ex);
   } else {
@@ -982,10 +1002,6 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
       printf("acc %d %d\n", acc_emul, acc_exec);
       ret = ORC_TEST_FAILED;
     }
-  }
-
-  if (ret == ORC_TEST_FAILED) {
-    printf("%s", orc_program_get_asm_code (program));
   }
 
   for(i=0;i<4;i++){
@@ -1196,6 +1212,8 @@ orc_test_performance_full (OrcProgram *program, int flags,
       orc_program_reset (program);
       return 0;
     }
+
+    dump_program(program, target);
   }
 
   if (program->constant_n > 0) {
@@ -1241,7 +1259,7 @@ orc_test_performance_full (OrcProgram *program, int flags,
     }
   }
 
-  ORC_DEBUG ("running");
+  ORC_DEBUG ("running %s\n", program->name);
   orc_profile_init (&prof);
   for(i=0;i<10;i++){
     orc_executor_set_n (ex, n);
