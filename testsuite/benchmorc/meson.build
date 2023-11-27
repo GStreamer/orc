@@ -6,3 +6,10 @@ exe = executable ('benchmorc', 'benchmorc.c',
             install: false)
 
 benchmark('bench10', exe)
+
+exe2 = executable('atomics', 'atomics.c',
+            dependencies: [orc_dep, orc_test_dep],
+            install: false)
+
+benchmark('atomics', exe2,
+            timeout: 60)
