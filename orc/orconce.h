@@ -5,10 +5,20 @@
 #include <orc/orcutils.h>
 #include <orc/orcdebug.h>
 
-#if defined(_WIN32)
+#if (!defined(_MSC_VER) || defined(__clang__)) && !defined(__STDC_NO_ATOMICS)
+// For MSVC, we need the Win32-based version, as C11 atomics
+// end up preferring the actually more unlikely jump -- therefore
+// triplicating the number of memory accesses.
+// C11 atomics are also a MSVC 17.5 preview 2 feature (_MSC_VER >= 1935)
+#  define ORC_ATOMICS_ALLOWED 1
+#else
+#  define ORC_ATOMICS_ALLOWED 0
+#endif
+
+#if defined(_WIN32) && !ORC_ATOMICS_ALLOWED
 #include <windows.h>
 typedef INIT_ONCE orc_once_atomic_int;
-#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS)
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && ORC_ATOMICS_ALLOWED
 #include <stdatomic.h>
 typedef atomic_int orc_once_atomic_int;
 #else
@@ -26,7 +36,7 @@ struct _OrcOnce {
   void *value;
 };
 
-#if defined(_WIN32)
+#  if defined(_WIN32) && !ORC_ATOMICS_ALLOWED
 #define ORC_ONCE_INIT { INIT_ONCE_STATIC_INIT, NULL }
 #else
 #define ORC_ONCE_INIT { 0, NULL }
@@ -35,7 +45,7 @@ struct _OrcOnce {
 ORC_API void orc_once_mutex_lock (void);
 ORC_API void orc_once_mutex_unlock (void);
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !ORC_ATOMICS_ALLOWED
 static inline orc_bool orc_once_enter(OrcOnce *once, void **value) {
   BOOL pending = FALSE;
 
@@ -59,13 +69,13 @@ static inline void orc_once_leave(OrcOnce *once, void *value) {
   InitOnceComplete (&once->inited, 0, NULL);
 }
 
-#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS)
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && ORC_ATOMICS_ALLOWED
 
 static inline orc_bool orc_once_enter(OrcOnce *once, void **value) {
   int inited;
 
   inited = atomic_load_explicit (&once->inited, memory_order_acquire);
-  if (inited) {
+  if (ORC_LIKELY(inited)) {
     *value = once->value;
     return TRUE;
   }
@@ -73,7 +83,7 @@ static inline orc_bool orc_once_enter(OrcOnce *once, void **value) {
   orc_once_mutex_lock ();
 
   inited = atomic_load_explicit (&once->inited, memory_order_acquire);
-  if (inited) {
+  if (ORC_UNLIKELY(inited)) {
     *value = once->value;
     orc_once_mutex_unlock ();
     return TRUE;
