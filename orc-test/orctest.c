@@ -941,6 +941,7 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
               b = print_array_val_hex (dest_exec[l-ORC_VAR_D1], i, j);
               if (a != b) {
                 line_bad = TRUE;
+                n_lines_bad++;
               }
             }
           }
