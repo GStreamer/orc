@@ -12,6 +12,8 @@
 
 int error = FALSE;
 
+static int passed_tests = 0;
+static int total_tests = 0;
 
 OrcProgram *
 get_program (int type)
@@ -221,8 +223,18 @@ test_program (int type)
   orc_program_set_name (p, s);
 
   ret = orc_test_compare_output (p);
-  if (!ret) {
+  total_tests++;
+
+  if (ret == ORC_TEST_INDETERMINATE) {
+    printf ("    %24s: compiled function:   COMPILE FAILED (%s)\n", p->name,
+        p->error_msg);
+    passed_tests++;
+  } else if (!ret) {
     error = TRUE;
+    printf ("    %24s: compiled function:   FAILED\n", p->name);
+  } else {
+    printf ("    %24s: compiled function:   PASSED\n", p->name);
+    passed_tests++;
   }
 
   orc_program_free (p);
@@ -243,6 +255,9 @@ main (int argc, char *argv[])
 #endif
     test_program (i);
   }
+
+  printf ("Result: %d/%d tests passed, %f%%", passed_tests, total_tests,
+      passed_tests * 100.f / total_tests);
 
   if (error) return 1;
   return 0;
