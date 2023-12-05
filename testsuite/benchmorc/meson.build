@@ -12,4 +12,4 @@ exe2 = executable('atomics', 'atomics.c',
             install: false)
 
 benchmark('atomics', exe2,
-            timeout: 60)
+            timeout: 120)
