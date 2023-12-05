@@ -1291,6 +1291,7 @@ output_code_test (OrcProgram *p, FILE *output)
   fprintf(output, "  {\n");
   fprintf(output, "    OrcProgram *p = NULL;\n");
   fprintf(output, "    int ret;\n");
+  fprintf(output, "    int flags = ORC_TEST_SKIP_RESET;");
   fprintf(output, "\n");
   fprintf(output, "    if (!quiet)");
   fprintf(output, "      printf (\"%s:\\n\");\n", p->name);
@@ -1434,32 +1435,39 @@ output_code_test (OrcProgram *p, FILE *output)
     fprintf(output, "\n");
   }
   if (use_backup) {
-    fprintf(output, "    ret = orc_test_compare_output_backup (p);\n");
-    fprintf(output, "    if (!ret) {\n");
+    fprintf(output, "    ret = orc_test_compare_output_full (p, ORC_TEST_FLAGS_BACKUP | flags);\n");
+    fprintf(output, "    if (ret == ORC_TEST_INDETERMINATE) {\n");
+    fprintf(output, "      printf (\"    compiled function:   COMPILE FAILED (%%s)\\n\", p->error_msg);\n");
+    fprintf(output, "    } else if (!ret) {\n");
     fprintf(output, "      error = TRUE;\n");
+    fprintf(output, "      printf (\"    backup function:   FAILED\\n\");\n");
     fprintf(output, "    } else if (!quiet) {\n");
     fprintf(output, "      printf (\"    backup function  :   PASSED\\n\");\n");
     fprintf(output, "    }\n");
     fprintf(output, "\n");
     if (compat >= ORC_VERSION(0,4,7,1)) {
       fprintf(output, "    if (benchmark) {\n");
+      fprintf(output, "      orc_program_reset (p);");
       fprintf(output, "      printf (\"    cycles (backup)  :   %%g\\n\",\n");
       fprintf(output, "          orc_test_performance_full (p, ORC_TEST_FLAGS_BACKUP, NULL));\n");
       fprintf(output, "    }\n");
       fprintf(output, "\n");
     }
   }
-  fprintf(output, "    ret = orc_test_compare_output (p);\n");
+  fprintf(output, "    orc_program_reset (p);");
+  fprintf(output, "    ret = orc_test_compare_output_full (p, flags);\n");
   fprintf(output, "    if (ret == ORC_TEST_INDETERMINATE && !quiet) {\n");
-  fprintf(output, "      printf (\"    compiled function:   COMPILE FAILED\\n\");\n");
+  fprintf(output, "      printf (\"    compiled function:   COMPILE FAILED(%%s)\\n\", p->error_msg);\n");
   fprintf(output, "    } else if (!ret) {\n");
   fprintf(output, "      error = TRUE;\n");
+  fprintf(output, "      printf (\"    compiled function:   FAILED\\n\");\n");
   fprintf(output, "    } else if (!quiet) {\n");
   fprintf(output, "      printf (\"    compiled function:   PASSED\\n\");\n");
   fprintf(output, "    }\n");
   fprintf(output, "\n");
   if (compat >= ORC_VERSION(0,4,7,1)) {
     fprintf(output, "    if (benchmark) {\n");
+    fprintf(output, "      orc_program_reset (p);");
     fprintf(output, "      printf (\"    cycles (compiled):   %%g\\n\",\n");
     fprintf(output, "          orc_test_performance_full (p, 0, NULL));\n");
     fprintf(output, "    }\n");
