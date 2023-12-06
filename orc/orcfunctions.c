@@ -184,10 +184,10 @@ orc_memcpy (void * ORC_RESTRICT d1, const void * ORC_RESTRICT s1, int n)
   OrcExecutor _ex, *ex = &_ex;
   static OrcOnce once = ORC_ONCE_INIT;
   OrcCode *c;
-  void (*func) (OrcExecutor *);
+  OrcExecutorFunc func = NULL;
 
   if (!orc_once_enter (&once, (void **) &c)) {
-      OrcProgram *p;
+    OrcProgram *p;
 
 #if 1
     static const orc_uint8 bc[] = {
@@ -209,10 +209,8 @@ orc_memcpy (void * ORC_RESTRICT d1, const void * ORC_RESTRICT s1, int n)
     orc_program_compile (p);
     c = orc_program_take_code (p);
     orc_program_free (p);
-
     orc_once_leave (&once, c);
   }
-
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
 
@@ -279,7 +277,7 @@ orc_memset (void * ORC_RESTRICT d1, int p1, int n)
   OrcExecutor _ex, *ex = &_ex;
   static OrcOnce once = ORC_ONCE_INIT;
   OrcCode *c;
-  void (*func) (OrcExecutor *);
+  OrcExecutorFunc func = NULL;
 
   if (!orc_once_enter (&once, (void **) &c)) {
     OrcProgram *p;
@@ -304,10 +302,8 @@ orc_memset (void * ORC_RESTRICT d1, int p1, int n)
     orc_program_compile (p);
     c = orc_program_take_code (p);
     orc_program_free (p);
-
     orc_once_leave (&once, c);
   }
-
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
 
