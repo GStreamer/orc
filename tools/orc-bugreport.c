@@ -50,6 +50,7 @@ main (int argc, char *argv[])
       printf("      -sse42     Disable SSE4.2\n");
       printf("      -sse4a     Disable SSE4a\n");
       printf("      -sse5      Disable SSE5\n");
+      printf("      -avx2      Disable AVX2\n");
       printf("\n");
       exit (0);
     }

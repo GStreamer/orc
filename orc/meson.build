@@ -20,6 +20,7 @@ orc_sources = [
 orc_headers = [
   'orc.h',
   'orcarm.h',
+  'orcavx.h',
   'orcbytecode.h',
   'orcbytecodes.h',
   'orccode.h',
@@ -52,6 +53,11 @@ orc_headers = [
   'orc-stdint.h',
 ]
 install_headers(orc_headers, subdir : 'orc-' + orc_api + '/orc')
+
+if 'avx' in enabled_backends
+  orc_sources += ['orcavx.c', 'orcrules-avx.c', 'orcprogram-avx.c',
+    'orcx86.c', 'orcx86insn.c']
+endif
 
 if 'sse' in enabled_backends
   orc_sources += ['orcsse.c', 'orcrules-sse.c', 'orcprogram-sse.c',

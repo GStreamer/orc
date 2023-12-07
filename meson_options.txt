@@ -1,4 +1,4 @@
-option('orc-backend', type : 'combo', choices : ['sse', 'mmx', 'neon', 'mips', 'altivec', 'c64x', 'all'], value : 'all')
+option('orc-backend', type : 'combo', choices : ['avx', 'sse', 'mmx', 'neon', 'mips', 'altivec', 'c64x', 'all'], value : 'all')
 
 # Orc feature options
 option('orc-test', type : 'feature', value : 'auto', description : 'Build the orc-test library used for unit testing and by the orc-bugreport tool')

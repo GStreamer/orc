@@ -12,6 +12,7 @@ ORC_BEGIN_DECLS
 /* The function prototypes need to be visible to orc.c */
 void orc_mmx_init (void);
 void orc_sse_init (void);
+void orc_avx_init (void);
 void orc_arm_init (void);
 void orc_powerpc_init (void);
 void orc_c_init (void);

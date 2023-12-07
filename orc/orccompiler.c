@@ -178,8 +178,10 @@ orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
     roff = rand()&0x1f;
   }
 
-  for(i=0;i<32;i++){
-    reg = offset + ((roff + i)&0x1f);
+  for (i = 0; i < ORC_N_REGS; i++) {
+    // For volatile registers, try up to 32 registers from offset
+    // Amyspark: this ensures that we don't run over vector registers
+    reg = offset + ((roff + i) & 0x1f);
     if (compiler->valid_regs[reg] &&
         !compiler->save_regs[reg] &&
         compiler->alloc_regs[reg] == 0) {
@@ -188,8 +190,10 @@ orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
       return reg;
     }
   }
-  for(i=0;i<32;i++){
-    reg = offset + ((roff + i)&0x1f);
+  // Use ORC_N_REGS to ensure forward proofed iteration
+  for (i = 0; i < ORC_N_REGS; i++) {
+    // Try with up to 64 registers starting from offset
+    reg = offset + ((roff + i) & 0x3f);
     if (compiler->valid_regs[reg] &&
         compiler->alloc_regs[reg] == 0) {
       compiler->alloc_regs[reg]++;
@@ -833,7 +837,8 @@ orc_compiler_get_temp_reg (OrcCompiler *compiler)
   ORC_DEBUG("at insn %d %s", compiler->insn_index,
       compiler->insns[compiler->insn_index].opcode->name);
 
-  for(j=compiler->min_temp_reg;j<ORC_VEC_REG_BASE+32;j++){
+  // Use ORC_N_REGS to ensure forward proofed iteration
+  for (j = compiler->min_temp_reg; j < ORC_N_REGS; j++) {
     if (compiler->valid_regs[j] && !compiler->alloc_regs[j]) {
       compiler->min_temp_reg = j+1;
       if (compiler->max_used_temp_reg < j) compiler->max_used_temp_reg = j;

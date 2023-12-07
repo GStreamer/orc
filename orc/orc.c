@@ -58,6 +58,9 @@ orc_init (void)
 #ifdef ENABLE_BACKEND_SSE
       orc_sse_init();
 #endif
+#ifdef ENABLE_BACKEND_AVX
+      orc_avx_init();
+#endif
 #ifdef ENABLE_BACKEND_ALTIVEC
       orc_powerpc_init();
 #endif

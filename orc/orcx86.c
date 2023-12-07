@@ -515,6 +515,14 @@ orc_x86_emit_epilogue (OrcCompiler *compiler)
     }
     orc_x86_emit_pop (compiler, 4, X86_EBP);
   }
+  // Remember to yank the higher lanes before returning!
+  // https://stackoverflow.com/a/41349852
+#ifdef ENABLE_BACKEND_AVX
+  if (strncmp (compiler->target->name, "avx", 3) == 0) {
+    orc_vex_emit_cpuinsn_none (compiler, ORC_X86_zeroupper_avx,
+        ORC_X86_AVX_VEX128_PREFIX);
+  }
+#endif
   orc_x86_emit_ret (compiler);
 }
 

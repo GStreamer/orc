@@ -41,7 +41,7 @@ if cc.has_argument('-fvisibility=hidden')
   add_project_arguments('-fvisibility=hidden', language: 'c')
 endif
 
-all_backends = ['sse', 'mmx']
+all_backends = ['avx', 'sse', 'mmx']
 extra_backends = ['altivec', 'neon', 'mips', 'c64x'] # 'arm'
 enabled_backends = []
 
@@ -216,6 +216,7 @@ configure_file(output : 'config.h', configuration : cdata)
 
 # summary
 summary({
+  'AVX': 'avx' in enabled_backends,
   'SSE': 'sse' in enabled_backends,
   'MMX': 'mmx' in enabled_backends,
   'NEON': 'neon' in enabled_backends,

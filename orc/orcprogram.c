@@ -738,7 +738,7 @@ void
 orc_program_set_var_alignment (OrcProgram *program, int var, int alignment)
 {
   program->vars[var].alignment = alignment;
-  if (alignment >= 16) {
+  if (program->vars[var].alignment >= 16) {
     program->vars[var].is_aligned = TRUE;
   }
 }
