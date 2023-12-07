@@ -163,10 +163,10 @@ ORC_API void orc_x86_emit_cpuinsn_size (OrcCompiler *p, int opcode, int size,
     int src, int dest);
 ORC_API void orc_x86_emit_cpuinsn_imm (OrcCompiler *p, int opcode, int imm,
     int src, int dest);
-ORC_API void orc_x86_emit_cpuinsn_load_memoffset (OrcCompiler *p, int size, int index,
-    int offset, int src, int dest, int imm);
+ORC_API void orc_x86_emit_cpuinsn_load_memoffset (OrcCompiler *p, int index, int size,
+    int imm, int offset, int src, int dest);
 ORC_API void orc_x86_emit_cpuinsn_store_memoffset (OrcCompiler *p, int size, int index,
-    int src, int offset, int dest, int imm);
+    int imm, int offset, int src, int dest);
 ORC_API void orc_x86_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int size,
     int imm, int offset, int src, int src_index, int shift, int dest);
 ORC_API void orc_x86_emit_cpuinsn_load_register (OrcCompiler *p, int index, int imm,
