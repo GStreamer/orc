@@ -145,6 +145,21 @@ opt_orctest = get_option('orc-test')
 opt_tests = get_option('tests')
 opt_tools = get_option('tools')
 
+if cc.compiles ('''#include <Availability.h>
+#include <TargetConditionals.h>
+#if defined(APPLE)
+# if TARGET_OS_OSX
+# error "Targeting macOS device"
+# endif
+#else
+#error "Not building for Apple devices"
+#endif''', name : 'building for non-macOS Darwin platform')
+  if not opt_orctest.disabled()
+    warning('Tests are only supported in macOS.')
+    opt_tests = disabler()
+  endif
+endif
+
 if not opt_orctest.disabled()
   subdir('orc-test')
 else
