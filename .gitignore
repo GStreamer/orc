@@ -1,5 +1,6 @@
 *.bin
 out.s
+*.S
 *.o
 *.la
 *.lo
