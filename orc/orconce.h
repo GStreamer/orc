@@ -99,7 +99,7 @@ static inline void orc_once_leave(OrcOnce *once, void *value) {
   orc_once_mutex_unlock ();
 }
 
-#elif defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1))
+#elif ORC_GNUC_PREREQ(4, 1)
 
 static inline orc_bool orc_once_enter(OrcOnce *once, void **value) {
   int inited;

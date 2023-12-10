@@ -174,7 +174,7 @@ typedef unsigned int orc_bool;
 
 #endif
 
-#if defined(__GNUC__) && (__GNUC__ > 2) && defined(__OPTIMIZE__)
+#if (ORC_GNUC_PREREQ(3,0) || ORC_CLANG_PREREQ(4, 0)) && defined(__OPTIMIZE__)
 #define ORC_LIKELY(expr) (__builtin_expect ((expr), 1))
 #define ORC_UNLIKELY(expr) (__builtin_expect ((expr), 0))
 #else

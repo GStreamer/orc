@@ -78,7 +78,7 @@ get_cpuid_ecx (orc_uint32 op, orc_uint32 init_ecx, orc_uint32 *a, orc_uint32 *b,
   *d = 0;
 #endif
 }
-#elif defined(__GNUC__) || defined (__SUNPRO_C)
+#elif defined(__GNUC__) || defined(__clang__) || defined (__SUNPRO_C)
 
 static void
 get_cpuid_ecx (orc_uint32 op, orc_uint32 init_ecx, orc_uint32 *a, orc_uint32 *b,

@@ -81,7 +81,12 @@ _orc_compiler_init (void)
 {
   char *envvar;
 #ifdef HAVE_CODEMEM_VIRTUALALLOC
-  size_t page_size;
+  #ifdef ORC_WINAPI_ONLY_APP
+    size_t page_size;
+  #else
+    size_t page_size ORC_GNUC_UNUSED;
+  #endif
+
   SYSTEM_INFO info;
 #endif
 
@@ -96,9 +101,6 @@ _orc_compiler_init (void)
   _orc_compiler_flag_debug = orc_compiler_flag_check ("debug");
   _orc_compiler_flag_randomize = orc_compiler_flag_check ("randomize");
 
-  /* 16 bytes alignment by default */
-  _orc_codemem_alignment = 15;
-
 #ifdef HAVE_CODEMEM_VIRTUALALLOC
   GetNativeSystemInfo(&info);
   page_size = info.dwPageSize;
@@ -109,6 +111,9 @@ _orc_compiler_init (void)
    * memory can be affected by later generated one.
    */
   _orc_codemem_alignment = info.dwPageSize - 1;
+#else
+  /* 16 bytes alignment by default */
+  _orc_codemem_alignment = 15;
 #endif
 
 #ifdef ORC_WINAPI_ONLY_APP
