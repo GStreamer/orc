@@ -762,6 +762,154 @@ orc_compiler_avx_restore_registers (OrcCompiler *compiler)
   }
 }
 
+/*
+ * The following code was ported from the MIPS backend,
+ * and extended to allow for store reordering and the
+ * multi-operand VEX syntax.
+ */
+
+static int
+uses_in_destination_register (const OrcCompiler *const compiler,
+               const OrcInstruction *const insn,
+               int reg)
+{
+  for (int i=0; i<ORC_STATIC_OPCODE_N_DEST; i++) {
+    const OrcVariable *const var = compiler->vars + insn->dest_args[i];
+    if (var->alloc == reg || var->ptr_register == reg)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+static int uses_in_source_register(const OrcCompiler *const compiler,
+               const OrcInstruction *const insn,
+               int reg) {
+  for (int i=0; i<ORC_STATIC_OPCODE_N_SRC; i++) {
+    const OrcVariable *const var = compiler->vars + insn->src_args[i];
+    if (var->alloc == reg || var->ptr_register == reg)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+static void
+do_swap (int *tab, int i, int j)
+{
+  int tmp = tab[i];
+  tab[i] = tab[j];
+  tab[j] = tmp;
+}
+
+/* Assumes that the instruction at indexes[i] is a load instruction */
+static int
+can_raise (const OrcCompiler *const compiler, const int *const indexes, int i)
+{
+  if (i==0)
+    return FALSE;
+
+  const OrcInstruction *const insn = compiler->insns + indexes[i];
+  const OrcInstruction *const previous_insn = compiler->insns + indexes[i-1];
+
+  /* Register where the load operation will put the data */
+  const int reg = compiler->vars[insn->dest_args[0]].alloc;
+  if (uses_in_source_register(compiler, previous_insn, reg) || uses_in_destination_register(compiler, previous_insn, reg)) {
+    return FALSE;
+  }
+
+  for (int j = 0; j < ORC_STATIC_OPCODE_N_SRC; j++) {
+    const OrcVariable *const var = compiler->vars + insn->src_args[j];
+    // If the previous instruction touches anything RIP
+    if (uses_in_destination_register(compiler, previous_insn, var->alloc) || uses_in_destination_register(compiler, previous_insn, var->ptr_register))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+/* Recursive. */
+static void
+try_raise (OrcCompiler *compiler, int *indexes, int i)
+{
+  if (can_raise (compiler, indexes, i)) {
+    do_swap (indexes, i-1, i);
+    try_raise (compiler, indexes, i-1);
+  }
+}
+
+
+/* Assumes that the instruction at indexes[i] is a load instruction */
+static int
+can_lower (const OrcCompiler *const compiler, const int *const indexes, int i)
+{
+  if (i >= compiler->n_insns - 1)
+    return FALSE;
+
+  const OrcInstruction *const insn = compiler->insns + indexes[i];
+  const OrcInstruction *const next_insn = compiler->insns + indexes[i+1];
+
+  /* Register where the store operation will put the data */
+  const int reg = compiler->vars[insn->dest_args[0]].ptr_register;
+  if (uses_in_source_register(compiler, next_insn, reg)) {
+    return FALSE;
+  }
+
+  for (int j = 0; j < ORC_STATIC_OPCODE_N_SRC; j++) {
+    const OrcVariable *const var = compiler->vars + insn->src_args[j];
+    // If the next instruction touches anything RIP
+    if (uses_in_destination_register(compiler, next_insn, var->alloc) || uses_in_destination_register(compiler, next_insn, var->ptr_register))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+static void
+try_lower (OrcCompiler *compiler, int *indexes, int i)
+{
+  if (can_lower (compiler, indexes, i)) {
+    do_swap (indexes, i-1, i);
+    try_lower (compiler, indexes, i+1);
+  }
+}
+
+/*
+   Do a kind of bubble sort, though it might not exactly be a sort. It only
+   moves load instructions up until they reach an operation above which they
+   cannot go.
+
+   FIXME: also push store instructions down.
+ */
+static void
+optimise_order (OrcCompiler *compiler, int *const indexes)
+{
+  for (int i=0; i<compiler->n_insns; i++) {
+    const OrcInstruction *const insn = compiler->insns + indexes[i];
+    if (insn->opcode->flags & ORC_STATIC_OPCODE_LOAD) {
+      try_raise(compiler, indexes, i);
+    }
+    else if (insn->opcode->flags & ORC_STATIC_OPCODE_STORE) {
+      try_lower(compiler, indexes, i);
+    }
+  }
+}
+
+static int *
+get_optimised_instruction_order (OrcCompiler *compiler)
+{
+  if (compiler->n_insns == 0)
+    return NULL;
+
+  int *const instruction_idx = malloc (compiler->n_insns * sizeof(int));
+  for (int i=0; i<compiler->n_insns; i++)
+    instruction_idx[i] = i;
+
+  optimise_order (compiler, instruction_idx);
+
+  return instruction_idx;
+}
+
 static void
 orc_compiler_avx_assemble (OrcCompiler *compiler)
 {
@@ -1007,8 +1155,10 @@ orc_avx_emit_loop (OrcCompiler *compiler, int offset, int update)
   OrcStaticOpcode *opcode;
   OrcRule *rule;
 
+  int *const insn_idx = get_optimised_instruction_order (compiler);
+
   for (j = 0; j < compiler->n_insns; j++) {
-    insn = compiler->insns + j;
+    insn = compiler->insns + insn_idx[j];
     opcode = insn->opcode;
 
     compiler->insn_index = j;
@@ -1068,4 +1218,6 @@ orc_avx_emit_loop (OrcCompiler *compiler, int offset, int update)
       }
     }
   }
+
+  free (insn_idx);
 }
