@@ -2497,3 +2497,303 @@ x2 convuwl src_u32, src_u16
 splitql src2_u32, src1_u32, src_u32
 accl acc_1, src1_u32
 accl acc_2, src2_u32
+
+.function audiopanoramam_orc_process_s16_ch2_psy_right
+.source 4 s1 orc_int16
+.dest 4 d1 orc_int16
+.floatparam 4 llpan
+.floatparam 4 rlpan
+.temp 8 t1
+.temp 4 left
+.temp 4 right
+.temp 4 right1
+
+x2 convswl t1 s1
+x2 convlf t1 t1
+select0ql left t1
+select1ql right t1
+mulf right1 left rlpan
+mulf left left llpan
+addf right right1 right
+mergelq t1 left right
+x2 convfl t1 t1
+x2 convssslw d1 t1
+
+.function video_orc_chroma_down_v2_u16
+.source 8 s1 orc_uint16
+.source 8 s2 orc_uint16
+.dest 8 d orc_uint16
+.temp 4 ay1
+.temp 4 uv1
+.temp 4 uv2
+
+splitql uv1, ay1, s1
+select1ql uv2, s2
+x2 avguw uv1, uv1, uv2
+mergelq d, ay1, uv1
+
+.function video_orc_unpack_ABGR_le
+.dest 4 argb orc_uint8
+.source 4 abgr orc_uint8
+.temp 4 a
+.temp 4 r
+
+swapl r, abgr
+shll a, r, 8
+shrul r, r, 24
+orl argb, r, a
+
+.function audio_orc_pack_f64_swap
+.dest 8 d1 double
+.source 8 s1 double
+
+swapq d1, s1
+
+.function video_orc_unpack_RGB15_be
+.dest 4 argb orc_uint32
+.source 2 rgb15 orc_uint16
+.temp 2 t
+.temp 2 r
+.temp 2 g
+.temp 2 b
+.temp 4 ag
+.temp 4 rb
+
+loadw t, rgb15
+andw r, t, 0x7c00
+andw g, t, 0x03e0
+andw b, t, 0x001f
+shlw b, b, 5
+mullw r, r, 0x0210
+mullw g, g, 0x4200
+mullw b, b, 0x4200
+mergewl ag, 0xff, g
+mergewl rb, r, b
+shll ag, ag, 8
+orl argb, ag, rb
+
+.function video_orc_convert_AYUV_ARGB
+.flags 2d
+.dest 4 argb orc_uint8
+.source 4 ayuv orc_uint8
+.param 2 p1
+.param 2 p2
+.param 2 p3
+.param 2 p4
+.param 2 p5
+.temp 1 a
+.temp 1 y
+.temp 1 u
+.temp 1 v
+.temp 2 wy
+.temp 2 wu
+.temp 2 wv
+.temp 2 wr
+.temp 2 wg
+.temp 2 wb
+.temp 1 r
+.temp 1 g
+.temp 1 b
+.temp 4 x
+.const 1 c128 128
+
+x4 subb x, ayuv, c128
+splitlw wv, wy, x
+splitwb y, a, wy
+splitwb v, u, wv
+
+splatbw wy, y
+splatbw wu, u
+splatbw wv, v
+
+mullw wy, wy, p1
+
+mullw wr, wv, p2
+addw wr, wy, wr
+convssswb r, wr
+mergebw wr, a, r
+
+mullw wb, wu, p3
+addw wb, wy, wb
+convssswb b, wb
+
+mullw wg, wu, p4
+addw wg, wy, wg
+mullw wy, wv, p5
+addw wg, wg, wy
+
+convssswb g, wg
+
+mergebw wb, g, b
+mergewl x, wr, wb
+x4 addb argb, x, c128
+
+
+.function video_orc_convert_AYUV_BGRA
+.flags 2d
+.dest 4 bgra orc_uint8
+.source 4 ayuv orc_uint8
+.param 2 p1
+.param 2 p2
+.param 2 p3
+.param 2 p4
+.param 2 p5
+.temp 1 a
+.temp 1 y
+.temp 1 u
+.temp 1 v
+.temp 2 wy
+.temp 2 wu
+.temp 2 wv
+.temp 2 wr
+.temp 2 wg
+.temp 2 wb
+.temp 1 r
+.temp 1 g
+.temp 1 b
+.temp 4 x
+.const 1 c128 128
+
+x4 subb x, ayuv, c128
+splitlw wv, wy, x
+splitwb y, a, wy
+splitwb v, u, wv
+
+splatbw wy, y
+splatbw wu, u
+splatbw wv, v
+
+mullw wy, wy, p1
+
+mullw wr, wv, p2
+addw wr, wy, wr
+convssswb r, wr
+mergebw wr, r, a
+
+mullw wb, wu, p3
+addw wb, wy, wb
+convssswb b, wb
+
+mullw wg, wu, p4
+addw wg, wy, wg
+mullw wy, wv, p5
+addw wg, wg, wy
+
+convssswb g, wg
+
+mergebw wb, b, g
+mergewl x, wb, wr
+x4 addb bgra, x, c128
+
+
+.function video_orc_convert_AYUV_ABGR
+.flags 2d
+.dest 4 argb orc_uint8
+.source 4 ayuv orc_uint8
+.param 2 p1
+.param 2 p2
+.param 2 p3
+.param 2 p4
+.param 2 p5
+.temp 1 a
+.temp 1 y
+.temp 1 u
+.temp 1 v
+.temp 2 wy
+.temp 2 wu
+.temp 2 wv
+.temp 2 wr
+.temp 2 wg
+.temp 2 wb
+.temp 1 r
+.temp 1 g
+.temp 1 b
+.temp 4 x
+.const 1 c128 128
+
+x4 subb x, ayuv, c128
+splitlw wv, wy, x
+splitwb y, a, wy
+splitwb v, u, wv
+
+splatbw wy, y
+splatbw wu, u
+splatbw wv, v
+
+mullw wy, wy, p1
+
+mullw wr, wv, p2
+addw wr, wy, wr
+convssswb r, wr
+
+mullw wb, wu, p3
+addw wb, wy, wb
+convssswb b, wb
+mergebw wb, a, b
+
+mullw wg, wu, p4
+addw wg, wy, wg
+mullw wy, wv, p5
+addw wg, wg, wy
+
+convssswb g, wg
+
+mergebw wr, g, r
+mergewl x, wb, wr
+x4 addb argb, x, c128
+
+.function video_orc_convert_AYUV_RGBA
+.flags 2d
+.dest 4 argb orc_uint8
+.source 4 ayuv orc_uint8
+.param 2 p1
+.param 2 p2
+.param 2 p3
+.param 2 p4
+.param 2 p5
+.temp 1 a
+.temp 1 y
+.temp 1 u
+.temp 1 v
+.temp 2 wy
+.temp 2 wu
+.temp 2 wv
+.temp 2 wr
+.temp 2 wg
+.temp 2 wb
+.temp 1 r
+.temp 1 g
+.temp 1 b
+.temp 4 x
+.const 1 c128 128
+
+x4 subb x, ayuv, c128
+splitlw wv, wy, x
+splitwb y, a, wy
+splitwb v, u, wv
+
+splatbw wy, y
+splatbw wu, u
+splatbw wv, v
+
+mullw wy, wy, p1
+
+mullw wr, wv, p2
+addw wr, wy, wr
+convssswb r, wr
+
+mullw wb, wu, p3
+addw wb, wy, wb
+convssswb b, wb
+mergebw wb, b, a
+
+mullw wg, wu, p4
+addw wg, wy, wg
+mullw wy, wv, p5
+addw wg, wg, wy
+
+convssswb g, wg
+
+mergebw wr, r, g
+mergewl x, wr, wb
+x4 addb argb, x, c128
