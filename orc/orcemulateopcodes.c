@@ -4898,7 +4898,7 @@ emulate_convlf (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadl */
     var32 = ptr4[i];
     /* 1: convlf */
-    var33.f = (float) var32.i;
+    var33.f = (float)var32.i;
     /* 2: storel */
     ptr0[i] = var33;
   }
@@ -5281,7 +5281,7 @@ emulate_convdl (OrcOpcodeExecutor *ex, int offset, int n)
     /* 1: convdl */
     {
        int tmp;
-       tmp = (int) var32.f;
+       tmp = (int)var32.f;
        if (tmp == 0x80000000 && !(var32.i & ORC_UINT64_C(0x8000000000000000))) tmp = 0x7fffffff;
        var33.i = tmp;
     }
@@ -5308,7 +5308,7 @@ emulate_convld (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadl */
     var32 = ptr4[i];
     /* 1: convld */
-    var33.f = var32.i;
+    var33.f = (double)var32.i;
     /* 2: storeq */
     ptr0[i] = var33;
   }

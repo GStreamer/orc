@@ -1250,7 +1250,7 @@ c_rule_convlf (OrcCompiler *p, void *user, OrcInstruction *insn)
   c_get_name_float (dest, p, insn, insn->dest_args[0]);
   c_get_name_int (src1, p, insn, insn->src_args[0]);
 
-  ORC_ASM_CODE(p,"    %s = %s;\n", dest, src1);
+  ORC_ASM_CODE(p,"    %s = (float)%s;\n", dest, src1);
 }
 
 static void
@@ -1261,7 +1261,7 @@ c_rule_convld (OrcCompiler *p, void *user, OrcInstruction *insn)
   c_get_name_float (dest, p, insn, insn->dest_args[0]);
   c_get_name_int (src1, p, insn, insn->src_args[0]);
 
-  ORC_ASM_CODE(p,"    %s = %s;\n", dest, src1);
+  ORC_ASM_CODE(p,"    %s = (double)%s;\n", dest, src1);
 }
 
 static void
@@ -1324,7 +1324,7 @@ c_rule_convdl (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   ORC_ASM_CODE(p, "    {\n");
   ORC_ASM_CODE(p,"       int tmp;\n");
-  ORC_ASM_CODE(p,"       tmp = %s;\n", src);
+  ORC_ASM_CODE(p,"       tmp = (int)%s;\n", src);
   ORC_ASM_CODE(p,"       if (tmp == 0x80000000 && !(%s & ORC_UINT64_C(0x8000000000000000))) tmp = 0x7fffffff;\n", src_i);
   ORC_ASM_CODE(p,"       %s = tmp;\n", dest);
   ORC_ASM_CODE(p, "    }\n");
