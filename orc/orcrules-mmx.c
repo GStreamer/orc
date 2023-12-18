@@ -1391,18 +1391,14 @@ mmx_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   const int src = p->vars[insn->src_args[0]].alloc;
   const int dest = p->vars[insn->dest_args[0]].alloc;
-  const int tmp = orc_compiler_get_temp_reg (p);
-  const int tmpc = orc_compiler_get_constant (p, 2, 0x0080);
+  const int tmpc = orc_compiler_get_constant (p, 2, 0x8081);
 
   if (src != dest) {
     orc_mmx_emit_movq (p, src, dest);
   }
 
-  orc_mmx_emit_paddw (p, tmpc, dest);
-  orc_mmx_emit_movq (p, dest, tmp);
-  orc_mmx_emit_psrlw_imm (p, 8, tmp);
-  orc_mmx_emit_paddw (p, tmp, dest);
-  orc_mmx_emit_psrlw_imm (p, 8, dest);
+  orc_mmx_emit_pmulhuw(p, tmpc, dest);
+  orc_mmx_emit_psrlw_imm (p, 7, dest);
 }
 
 #if 1

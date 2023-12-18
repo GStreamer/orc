@@ -1223,9 +1223,7 @@ c_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
   c_get_name_int (dest, p, insn, insn->dest_args[0]);
   c_get_name_int (src, p, insn, insn->src_args[0]);
 
-  ORC_ASM_CODE(p,
-      "    %s = ((orc_uint16)(((orc_uint16)(%s+128)) + (((orc_uint16)(%s+128))>>8)))>>8;\n",
-      dest, src, src);
+  ORC_ASM_CODE(p, "    %s = (((orc_uint16)%s) * 0x8081u) >> 23;\n", dest, src);
 }
 
 static void

@@ -1519,14 +1519,16 @@ powerpc_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
   int tmp2 = orc_compiler_get_temp_reg (p);
   int tmpc;
 
-  tmpc = powerpc_get_constant (p, ORC_CONST_SPLAT_W, 0x0080);
-  powerpc_emit_VX_2 (p, "vadduhm", 0x10000040, dest, src1, tmpc);
+  tmpc = powerpc_get_constant (p, ORC_CONST_SPLAT_W, 0x0001);
 
   ORC_ASM_CODE(p,"  vspltish %s, 8\n", powerpc_get_regname(tmp2));
   powerpc_emit_VX(p, 0x1000034c, powerpc_regnum(tmp2), 8, 0);
 
-  powerpc_emit_VX_2 (p, "vsrh", 0x10000244, tmp, dest, tmp2);
+  powerpc_emit_VX_2 (p, "vadduhm", 0x10000040, dest, src1, tmpc);
+
+  powerpc_emit_VX_2 (p, "vsrh", 0x10000244, tmp, src1, tmp2);
   powerpc_emit_VX_2 (p, "vadduhm", 0x10000040, dest, dest, tmp);
+
   powerpc_emit_VX_2 (p, "vsrh", 0x10000244, dest, dest, tmp2);
 }
 

@@ -1351,7 +1351,7 @@ emulate_div255w (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadw */
     var32 = ptr4[i];
     /* 1: div255w */
-    var33.i = ((orc_uint16)(((orc_uint16)(var32.i+128)) + (((orc_uint16)(var32.i+128))>>8)))>>8;
+    var33.i = (((orc_uint16)var32.i) * 0x8081u) >> 23u;
     /* 2: storew */
     ptr0[i] = var33;
   }

@@ -1221,20 +1221,15 @@ avx_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   const int src = p->vars[insn->src_args[0]].alloc;
   const int dest = p->vars[insn->dest_args[0]].alloc;
-  const int tmp = orc_compiler_get_temp_reg (p);
-  const int tmpc = orc_compiler_get_constant (p, 2, 0x0080);
+  const int tmpc = orc_compiler_get_constant (p, 2, 0x8081);
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
   if (size >= 32) {
-    orc_avx_emit_paddw (p, src, tmpc, dest);
-    orc_avx_emit_psrlw_imm (p, 8, dest, tmp);
-    orc_avx_emit_paddw (p, dest, tmp, dest);
-    orc_avx_emit_psrlw_imm (p, 8, dest, dest);
+    orc_avx_emit_pmulhuw(p, src, tmpc, dest);
+    orc_avx_emit_psrlw_imm (p, 7, dest, dest);
   } else {
-    orc_avx_sse_emit_paddw (p, src, tmpc, dest);
-    orc_avx_sse_emit_psrlw_imm (p, 8, dest, tmp);
-    orc_avx_sse_emit_paddw (p, dest, tmp, dest);
-    orc_avx_sse_emit_psrlw_imm (p, 8, dest, dest);
+    orc_avx_sse_emit_pmulhuw(p, src, tmpc, dest);
+    orc_avx_sse_emit_psrlw_imm (p, 7, dest, dest);
   }
 }
 

@@ -4246,50 +4246,59 @@ orc_neon_rule_splitwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 static void
 orc_neon_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
-  OrcVariable tmpreg = { .alloc = p->tmpreg, .size = p->vars[insn->src_args[0]].size };
-  int dest = p->vars[insn->dest_args[0]].alloc;
-  int src = p->vars[insn->src_args[0]].alloc;
-  int tmp = p->tmpreg;
+  const OrcVariable dest = p->vars[insn->dest_args[0]];
+  const OrcVariable src = p->vars[insn->src_args[0]];
+  OrcVariable tmp1 = { .alloc = p->tmpreg2, .size = src.size * 2 };
+  OrcVariable tmp2 = { .alloc = p->tmpreg, .size = src.size };
+  orc_neon_emit_loadiw (p, &tmp2, 0x8081);
 
   if (p->is_64bit) {
-    orc_neon64_emit_unary (p, "rshrn", 0x0f088c00,
-        tmpreg,
-        p->vars[insn->src_args[0]], p->insn_shift - !!(p->insn_shift >= 3));
-    orc_neon64_emit_unary (p, "ushll", 0x2f08a400,
-        tmpreg,
-        tmpreg, p->insn_shift - !!(p->insn_shift >= 3));
-    orc_neon64_emit_binary (p, "add", 0x0e608400,
-        tmpreg,
-        tmpreg,
-        p->vars[insn->src_args[0]], p->insn_shift - !!(p->insn_shift >= 3));
-    orc_neon64_emit_unary (p, "rshrn", 0x0f088c00,
-        p->vars[insn->dest_args[0]],
-	tmpreg, p->insn_shift - !!(p->insn_shift >= 3));
-    orc_neon64_emit_unary (p, "ushll", 0x2f08a400,
-        p->vars[insn->dest_args[0]],
-        p->vars[insn->dest_args[0]], p->insn_shift - !!(p->insn_shift >= 3));
-  } else {
-    if (p->insn_shift < 3) {
-      ORC_ASM_CODE(p,"  vrshrn.u16 %s, %s, #%d\n", orc_neon_reg_name(tmp),
-          orc_neon_reg_name_quad(src), 8);
-      orc_arm_emit (p, NEON_BINARY (0xf2880850, tmp, 0, src));
-      orc_neon_emit_unary_long (p, "vmovl.u8",0xf3880a10, tmp, tmp);
-      orc_neon_emit_binary (p, "vadd.i16", 0xf2100800, tmp, tmp, src);
-      ORC_ASM_CODE(p,"  vrshrn.u16 %s, %s, #%d\n", orc_neon_reg_name(dest),
-          orc_neon_reg_name_quad(tmp), 8);
-      orc_arm_emit (p, NEON_BINARY (0xf2880850, dest, 0, tmp));
-      orc_neon_emit_unary_long (p, "vmovl.u8",0xf3880a10, dest, dest);
-    } else {
-      ORC_ASM_CODE(p,"  vrshrn.u16 %s, %s, #%d\n", orc_neon_reg_name(tmp),
-          orc_neon_reg_name_quad(src), 8);
-      orc_arm_emit (p, NEON_BINARY (0xf2880850, tmp, 0, src));
-      orc_neon_emit_unary_long (p, "vmovl.u8",0xf3880a10, tmp, tmp);
-      orc_neon_emit_binary_quad (p, "vadd.i16", 0xf2100800, tmp, tmp, src);
-      ORC_ASM_CODE(p,"  vrshrn.u16 %s, %s, #%d\n", orc_neon_reg_name(dest),
-          orc_neon_reg_name_quad(tmp), 8);
-      orc_arm_emit (p, NEON_BINARY (0xf2880850, dest, 0, tmp));
-      orc_neon_emit_unary_long (p, "vmovl.u8",0xf3880a10, dest, dest);
+    {
+      // Unfortunately, this opcode requires quad for the destination
+      // so we can't use orc_neon64_emit_binary
+      ORC_ASM_CODE (p, "  %s %s, %s, %s\n", "umull",
+          orc_neon64_reg_name_vector (tmp1.alloc, tmp1.size, 1),
+          orc_neon64_reg_name_vector (src.alloc, src.size, 0),
+          orc_neon64_reg_name_vector (tmp2.alloc, tmp2.size, 0));
+      int code = 0x2e60c000;
+      code |= (tmp2.alloc & 0x1f) << 16;
+      code |= (src.alloc & 0x1f) << 5;
+      code |= (tmp1.alloc & 0x1f);
+      orc_arm_emit (p, code);
     }
+    {
+      // vreinterpret dest here, it'll be fixed by uzp2
+      const OrcVariable dest_i32 = { .alloc = tmp2.alloc, .size = dest.size * 2 };
+      orc_neon64_emit_binary (p, "umull2", 0x2e60c000, dest_i32, src, tmp2,
+          p->insn_shift - 1);
+    }
+    {
+      // vreinterpret src_2, it needs full quad width
+      const OrcVariable tmp1_i64 = {.alloc = tmp1.alloc, .size = dest.size };
+      const OrcVariable tmp2_i64 = {.alloc = tmp2.alloc, .size = dest.size };
+      const OrcVariable dest_i64 = { .alloc = dest.alloc, .size = dest.size };
+      orc_neon64_emit_binary (p, "uzp2", 0x0e405800, dest_i64, tmp1_i64, tmp2_i64,
+          p->insn_shift - 1);
+    }
+    {
+      ORC_ASM_CODE (p, "  %s %s, %s, #%d\n", immshift_info[5].name64,
+          orc_neon64_reg_name_vector (dest.alloc, dest.size, 1),
+          orc_neon64_reg_name_vector (dest.alloc, dest.size, 1), 7);
+      int code = immshift_info[5].code64 | (1U << 30);
+      code |= (dest.alloc & 0x1f) << 0;
+      code |= (src.alloc & 0x1f) << 5;
+      code |= ((immshift_info[5].bits - 7U) << 16);
+      orc_arm_emit (p, code);
+    }
+  } else {
+    // Multiply low
+    orc_neon_emit_binary_long (p, "vmull.u16", 0xf3900c00, tmp1.alloc, src.alloc,
+                              tmp2.alloc);
+    // Multiply high
+    orc_neon_emit_binary_long (p, "vmull.u16", 0xf3900c00, dest.alloc,
+                              src.alloc + 1, tmp2.alloc);
+    orc_neon_emit_unary_quad (p, "vuzp.16", 0xf3b60100, tmp1.alloc, dest.alloc);
+    orc_neon_emit_shift (p, 5, &dest, &dest, 7, 1);
   }
 }
 
