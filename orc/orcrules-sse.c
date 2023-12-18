@@ -1937,15 +1937,20 @@ sse_rule_splitql (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int src = p->vars[insn->src_args[0]].alloc;
   const int dest1 = p->vars[insn->dest_args[0]].alloc;
   const int dest2 = p->vars[insn->dest_args[1]].alloc;
+  const int zero = orc_compiler_get_constant (p, 4, 0);
 
   /* values of dest are shifted away so don't matter */
 
 #ifndef MMX
-  orc_sse_emit_pshufd (p, ORC_SSE_SHUF(3,1,3,1), src, dest1);
-  orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,2,0), src, dest2);
+  orc_sse_emit_pshufd (p, ORC_SSE_SHUF (3, 1, 3, 1), src, dest1);
+  orc_sse_emit_punpcklqdq (p, zero, dest1);
+  orc_sse_emit_pshufd (p, ORC_SSE_SHUF (2, 0, 2, 0), src, dest2);
+  orc_sse_emit_punpcklqdq (p, zero, dest2);
 #else
   orc_sse_emit_movdqa (p, src, dest2);
-  orc_sse_emit_pshufw (p, ORC_SSE_SHUF(3,2,3,2), src, dest1);
+  orc_sse_emit_pshufw (p, ORC_SSE_SHUF (3, 2, 3, 2), src, dest1);
+  orc_sse_emit_punpckldq (p, zero, dest1);
+  orc_sse_emit_punpckldq (p, zero, dest2);
 #endif
 }
 

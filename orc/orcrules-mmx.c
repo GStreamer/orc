@@ -34,7 +34,7 @@ mmx_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 #ifndef MMX
       orc_mmx_emit_movhps_load_memoffset (compiler,
           (int)ORC_STRUCT_OFFSET(OrcExecutor,
-            params[insn->src_args[0] + (ORC_VAR_T1 - ORC_VAR_P1)]),
+            params[insn->src_args[0] + (ORC_N_PARAMS)]),
           compiler->exec_reg, reg);
       orc_mmx_emit_pshufd (compiler, ORC_MMX_SHUF(2,0,2,0), reg, reg);
 #else
@@ -1009,7 +1009,7 @@ mmx_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
     orc_x86_emit_cpuinsn_imm (p, opcodes_imm[type],
-        p->vars[insn->src_args[1]].value.i, 16, dest);
+        p->vars[insn->src_args[1]].value.i, 0, dest);
   } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
     int tmp = orc_compiler_get_temp_reg (p);
 
@@ -1937,15 +1937,20 @@ mmx_rule_splitql (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int src = p->vars[insn->src_args[0]].alloc;
   const int dest1 = p->vars[insn->dest_args[0]].alloc;
   const int dest2 = p->vars[insn->dest_args[1]].alloc;
+  const int zero = orc_compiler_get_constant (p, 4, 0);
 
   /* values of dest are shifted away so don't matter */
 
 #ifndef MMX
-  orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(3,1,3,1), src, dest1);
-  orc_mmx_emit_pshufd (p, ORC_MMX_SHUF(2,0,2,0), src, dest2);
+  orc_mmx_emit_pshufd (p, ORC_MMX_SHUF (3, 1, 3, 1), src, dest1);
+  orc_mmx_emit_punpcklqdq (p, zero, dest1);
+  orc_mmx_emit_pshufd (p, ORC_MMX_SHUF (2, 0, 2, 0), src, dest2);
+  orc_mmx_emit_punpcklqdq (p, zero, dest2);
 #else
   orc_mmx_emit_movq (p, src, dest2);
-  orc_mmx_emit_pshufw (p, ORC_MMX_SHUF(3,2,3,2), src, dest1);
+  orc_mmx_emit_pshufw (p, ORC_MMX_SHUF (3, 2, 3, 2), src, dest1);
+  orc_mmx_emit_punpckldq (p, zero, dest1);
+  orc_mmx_emit_punpckldq (p, zero, dest2);
 #endif
 }
 

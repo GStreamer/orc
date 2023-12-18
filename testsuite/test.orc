@@ -2483,5 +2483,17 @@ x4 subw tq, tq, c128
 
 subq d, tq, c128
 
+.function acc_even_odd_fail
+.accumulator 4 acc_1 orc_uint32
+.accumulator 4 acc_2 orc_uint32
+.source 2 src_u8 orc_uint8
+.temp 4 src_u16 orc_uint16
+.temp 8 src_u32 orc_uint32
+.temp 4 src1_u32 orc_uint32
+.temp 4 src2_u32 orc_uint32
 
-
+x2 convubw src_u16, src_u8
+x2 convuwl src_u32, src_u16
+splitql src2_u32, src1_u32, src_u32
+accl acc_1, src1_u32
+accl acc_2, src2_u32
