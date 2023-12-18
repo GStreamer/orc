@@ -141,6 +141,8 @@ orc_target_c_get_asm_preamble (void)
     "#define ORC_RESTRICT restrict\n"
     "#elif defined(__GNUC__) && __GNUC__ >= 4\n"
     "#define ORC_RESTRICT __restrict__\n"
+    "#elif defined(_MSC_VER)\n"
+    "#define ORC_RESTRICT __restrict\n"
     "#else\n"
     "#define ORC_RESTRICT\n"
     "#endif\n"
