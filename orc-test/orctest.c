@@ -610,7 +610,7 @@ print_param_val_float (const int *const var, const int *const var2,
       break;
     case 8:
       {
-        const orc_uint64 tmp = ((orc_uint64)var2 << 32) | (orc_uint64)var;
+        const orc_uint64 tmp = ((orc_uint64)*var2 << 32) | (orc_uint64)*var;
         printf (" %12.5g", (double)tmp);
       }
       break;
