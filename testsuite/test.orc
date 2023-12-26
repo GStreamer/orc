@@ -2797,3 +2797,12 @@ convssswb g, wg
 mergebw wr, r, g
 mergewl x, wr, wb
 x4 addb argb, x, c128
+
+.function volume_orc_process_int32
+.dest 4 d1 orc_int32
+.param 4 p1
+.temp 8 t1
+
+mulslq t1, d1, p1
+shrsq t1, t1, 27
+convql d1, t1

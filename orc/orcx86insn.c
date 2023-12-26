@@ -1277,6 +1277,7 @@ get_vex_vvvv (OrcCompiler *p, const OrcX86Insn *const xinsn)
     switch (xinsn->opcode_index) {
       case ORC_X86_pslldq_imm:
       case ORC_X86_psrldq_imm:
+      case ORC_X86_psrlq_imm:
       case ORC_X86_psrlw_imm:
       case ORC_X86_psrld_imm:
       case ORC_X86_psraw_imm:

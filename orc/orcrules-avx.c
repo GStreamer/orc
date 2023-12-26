@@ -1153,14 +1153,14 @@ avx_rule_convql (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int zero = orc_compiler_get_temp_constant (p, 4, 0);
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
-  if (size >= 16) {
+  if (size >= 32) {
     orc_avx_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 0, 2, 0), src, dest);
     orc_avx_emit_punpcklqdq (p, dest, zero, dest);
     // same as above
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
   } else {
     orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 0, 2, 0), src, dest);
-    orc_avx_emit_punpcklqdq (p, dest, zero, dest);
+    orc_avx_sse_emit_punpcklqdq (p, dest, zero, dest);
   }
 }
 
