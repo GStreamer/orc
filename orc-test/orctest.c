@@ -701,13 +701,19 @@ check_expected_failure (int flags, OrcProgram *p, OrcArray** src, OrcArray** des
 OrcTestResult
 orc_test_compare_output (OrcProgram *program)
 {
-  return orc_test_compare_output_full (program, 0);
+  return orc_test_compare_output_full_for_target (program, 0, NULL);
 }
 
 OrcTestResult
 orc_test_compare_output_backup (OrcProgram *program)
 {
   return orc_test_compare_output_full (program, ORC_TEST_FLAGS_BACKUP);
+}
+
+OrcTestResult
+orc_test_compare_output_full (OrcProgram *program, int flags)
+{
+  return orc_test_compare_output_full_for_target (program, flags, NULL);
 }
 
 static void
@@ -729,7 +735,7 @@ dump_program (const OrcProgram *const program, const OrcTarget *const target)
 
 
 OrcTestResult
-orc_test_compare_output_full (OrcProgram *program, int flags)
+orc_test_compare_output_full_for_target (OrcProgram *program, int flags, const char *target_name)
 {
   OrcExecutor *ex;
   int n;
@@ -754,7 +760,7 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
     OrcTarget *target;
     unsigned int flags;
 
-    target = orc_target_get_default ();
+    target = orc_target_get_by_name (target_name);
     flags = orc_target_get_default_flags (target);
 
     result = orc_program_compile_full (program, target, flags);

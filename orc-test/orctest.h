@@ -49,6 +49,9 @@ ORC_TEST_API
 OrcTestResult orc_test_compare_output_full (OrcProgram *program, int flags);
 
 ORC_TEST_API
+OrcTestResult orc_test_compare_output_full_for_target (OrcProgram *program, int flags, const char *target_name);
+
+ORC_TEST_API
 OrcTestResult orc_test_compare_output_backup (OrcProgram *program);
 
 ORC_TEST_API
