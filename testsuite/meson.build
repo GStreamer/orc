@@ -19,6 +19,17 @@ foreach test : tests
   test(test, t, env : 'testfile=' + meson.current_source_dir() + '/test.orc')
 endforeach
 
+if cpu_family == 'x86' or cpu_family == 'x86_64'
+  if enabled_backends.contains('sse') and enabled_backends.contains('avx')
+    t = executable('exec_opcodes_sys_sse', 'exec_opcodes_sys.c',
+                  install: false,
+                  c_args: ['-DTARGET="sse"'],
+                  dependencies: [libm, orc_dep, orc_test_dep])
+
+    test('exec_opcodes_sys (sse)', t, env : 'testfile=' + meson.current_source_dir() + '/test.orc')
+  endif
+endif
+
 noinst_bins = ['generate_xml_table', 'generate_xml_table2']
 
 if backend == 'neon' or backend == 'all'

@@ -7,6 +7,9 @@
 #include <orc/orc.h>
 #include <orc-test/orctest.h>
 
+#ifndef TARGET
+#define TARGET NULL
+#endif
 
 int error = FALSE;
 int verbose = FALSE;
@@ -151,7 +154,7 @@ test_opcode_src (OrcStaticOpcode *opcode)
     orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
   }
 
-  ret = orc_test_compare_output_full (p, flags);
+  ret = orc_test_compare_output_full_for_target (p, flags, TARGET);
   total_tests++;
 
   if (ret == ORC_TEST_INDETERMINATE) {
@@ -230,7 +233,7 @@ test_opcode_const (OrcStaticOpcode *opcode)
   orc_program_append_2 (p, opcode->name, 0, args[0], args[1],
       args[2], args[3]);
 
-  ret = orc_test_compare_output_full (p, flags);
+  ret = orc_test_compare_output_full_for_target (p, flags, TARGET);
   total_tests++;
 
   if (ret == ORC_TEST_INDETERMINATE) {
@@ -317,7 +320,7 @@ test_opcode_param (OrcStaticOpcode *opcode)
   orc_program_append_2 (p, opcode->name, 0, args[0], args[1],
       args[2], args[3]);
 
-  ret = orc_test_compare_output_full (p, flags);
+  ret = orc_test_compare_output_full_for_target (p, flags, TARGET);
   total_tests++;
 
   if (ret == ORC_TEST_INDETERMINATE) {
@@ -370,7 +373,7 @@ test_opcode_inplace (OrcStaticOpcode *opcode)
 
   orc_program_append_str (p, opcode->name, "d1", "d1", "s2");
 
-  ret = orc_test_compare_output_full (p, flags);
+  ret = orc_test_compare_output_full_for_target (p, flags, TARGET);
   total_tests++;
 
   if (ret == ORC_TEST_INDETERMINATE) {
@@ -430,7 +433,7 @@ test_opcode_src_2d (OrcStaticOpcode *opcode)
     orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
   }
 
-  ret = orc_test_compare_output_full (p, flags);
+  ret = orc_test_compare_output_full_for_target (p, flags, TARGET);
   total_tests++;
 
   if (ret == ORC_TEST_INDETERMINATE) {
@@ -490,7 +493,7 @@ test_opcode_src_const_n (OrcStaticOpcode *opcode)
     orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
   }
 
-  ret = orc_test_compare_output_full (p, flags);
+  ret = orc_test_compare_output_full_for_target (p, flags, TARGET);
   total_tests++;
 
   if (ret == ORC_TEST_INDETERMINATE) {
@@ -551,7 +554,7 @@ test_opcode_src_const_n_2d (OrcStaticOpcode *opcode)
     orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
   }
 
-  ret = orc_test_compare_output_full (p, flags);
+  ret = orc_test_compare_output_full_for_target (p, flags, TARGET);
   total_tests++;
 
   if (ret == ORC_TEST_INDETERMINATE) {
