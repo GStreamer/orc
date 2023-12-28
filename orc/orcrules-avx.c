@@ -375,7 +375,7 @@ avx_rule_ldreslinl_avx2 (OrcCompiler *compiler, void *user,
     // Insert into the destination
     orc_x86_emit_mov_memoffset_avx (compiler, 4, 0, src->ptr_register,
         dest->alloc, FALSE);
-    orc_avx_sse_emit_por (compiler, tmp, dest->alloc, dest->alloc);
+    orc_avx_sse_emit_paddb (compiler, tmp, dest->alloc, dest->alloc);
 
     // offset <- offset + i
     if (compiler->vars[increment_var].vartype == ORC_VAR_TYPE_PARAM) {
@@ -443,29 +443,25 @@ avx_rule_ldreslinl_avx2 (OrcCompiler *compiler, void *user,
       // Insert the pixels in place
       switch (i) {
         case 0:
-          // dest <- a c b d
+          // dest <- tmp[0..64]
           orc_avx_sse_emit_movdqa (compiler, tmp, dest->alloc);
           break;
         case 2:
-          // dest <- ? a ? c ? b ? d
+          // dest <- tmp[0..64] dest[0..64]
           orc_avx_sse_emit_punpcklqdq (compiler, dest->alloc, tmp, dest->alloc);
           break;
         case 4:
-          // the pixel sits squarely in the middle
-          orc_avx_emit_punpckhqdq (compiler, dest->alloc, tmp, tmp3);
-          orc_avx_emit_punpcklqdq (compiler, dest->alloc, tmp, dest->alloc);
-          orc_avx_emit_permute2i128 (compiler, ORC_AVX_PERMUTE(2, 0), dest->alloc, tmp3,
-              dest->alloc);
+          // dest <- dest[255...192] tmp[0..64] dest[0..127]
+          orc_avx_emit_broadcast (compiler, tmp, tmp3, 8);
+          orc_avx_emit_permute4x64_imm (compiler, ORC_AVX_SSE_SHUF (2, 2, 1, 0), dest->alloc, dest->alloc);
+          // Copy the 3rd quad from tmp3
+          orc_avx_emit_pblendd (compiler, ORC_AVX_SSE_SHUF(0, 3, 0, 0), dest->alloc, tmp3, dest->alloc);
           break;
         case 6:
-          // this is horrible, it's a SSE interpolation on the upper lane only
-          // zonk the low lane
-          orc_avx_emit_permute2i128 (compiler, ORC_AVX_PERMUTE(0, ORC_AVX_ZERO_LANE), tmp, tmp, tmp);
-          // interpolate the high lane
-          orc_avx_emit_punpcklqdq (compiler, dest->alloc, tmp, tmp3);
-          // preserve the correct result
-          orc_avx_emit_permute2i128 (compiler, ORC_AVX_PERMUTE(3, 0), dest->alloc, tmp3,
-              dest->alloc);
+          // dest <- tmp[0..64] dest[128..191] dest[0..127]
+          orc_avx_emit_broadcast (compiler, tmp, tmp3, 8);
+          // Copy the 4th quad from tmp3
+          orc_avx_emit_pblendd (compiler, ORC_AVX_SSE_SHUF(3, 0, 0, 0), dest->alloc, tmp3, dest->alloc);
           break;
         default:
           ORC_COMPILER_ERROR (compiler, "Invalid shift value for masking");

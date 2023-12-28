@@ -301,6 +301,7 @@ typedef enum
   ORC_X86_blendpd_avx,
   ORC_X86_pinsrd,
   ORC_X86_permute2i128_avx,
+  ORC_X86_pblendd_avx,
 } OrcX86Opcode;
 
 typedef enum {
@@ -990,6 +991,7 @@ ORC_API void orc_vex_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int 
 
 #define orc_avx_emit_permute4x64_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_X86_permute4x64_imm_avx, imm, s1, 0, d, ORC_X86_AVX_VEX256_PREFIX)
 #define orc_avx_emit_blendpd(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_X86_blendpd_avx, imm, s1, s2, d, ORC_X86_AVX_VEX256_PREFIX)
+#define orc_avx_emit_pblendd(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_X86_pblendd_avx, imm, s1, s2, d, ORC_X86_AVX_VEX256_PREFIX)
 
 #define orc_avx_sse_emit_pinsrd_register(p, imm, s1, s2, d) \
   orc_vex_emit_cpuinsn_imm (p, ORC_X86_pinsrd, imm, s1, s2, d, \
