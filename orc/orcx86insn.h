@@ -302,6 +302,7 @@ typedef enum
   ORC_X86_pinsrd,
   ORC_X86_permute2i128_avx,
   ORC_X86_pblendd_avx,
+  ORC_X86_blendvpd_avx,
 } OrcX86Opcode;
 
 typedef enum {
@@ -330,7 +331,7 @@ struct _OrcX86Insn {
   // Immediate mode operand
   int imm;
   // Source register(s)/address
-  int src[2];
+  int src[3];
   // Destination
   int dest;
   // Operand size
@@ -366,6 +367,9 @@ ORC_API void orc_vex_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index,
     int dest, OrcX86OpcodePrefix prefix);
 ORC_API void orc_vex_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int size,
     int imm, int offset, int src, int src_index, int shift, int dest, OrcX86OpcodePrefix prefix);
+
+ORC_API void orc_vex_emit_blend_size (OrcCompiler *p, int opcode, int size,
+    int src0, int src1, int src2, int dest, OrcX86OpcodePrefix prefix);
 
 #define orc_sse_emit_punpcklbw(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_punpcklbw, 16, a, b)
 #define orc_avx_sse_emit_punpcklbw(p,s1,s2,d) orc_vex_emit_cpuinsn_size(p, ORC_X86_punpcklbw, 16, s1, s2, d, ORC_X86_AVX_VEX128_PREFIX)
@@ -992,6 +996,13 @@ ORC_API void orc_vex_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int 
 #define orc_avx_emit_permute4x64_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_X86_permute4x64_imm_avx, imm, s1, 0, d, ORC_X86_AVX_VEX256_PREFIX)
 #define orc_avx_emit_blendpd(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_X86_blendpd_avx, imm, s1, s2, d, ORC_X86_AVX_VEX256_PREFIX)
 #define orc_avx_emit_pblendd(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_X86_pblendd_avx, imm, s1, s2, d, ORC_X86_AVX_VEX256_PREFIX)
+
+#define orc_avx_sse_emit_blendvpd(p, s1, s2, mask, d) \
+    orc_vex_emit_blend_size (p, ORC_X86_blendvpd_avx, 1, s1, s2, mask, d, \
+        ORC_X86_AVX_VEX128_PREFIX)
+#define orc_avx_emit_blendvpd(p, s1, s2, mask, d) \
+    orc_vex_emit_blend_size (p, ORC_X86_blendvpd_avx, 1, s1, s2, mask, d, \
+        ORC_X86_AVX_VEX256_PREFIX)
 
 #define orc_avx_sse_emit_pinsrd_register(p, imm, s1, s2, d) \
   orc_vex_emit_cpuinsn_imm (p, ORC_X86_pinsrd, imm, s1, s2, d, \

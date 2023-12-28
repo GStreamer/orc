@@ -940,3 +940,25 @@ convfl d1, s1
 convlf d1, s1
 
 
+.function adder_orc_volume_u32
+.dest 4 d1 guint32
+.param 4 p1
+.const 4 c1 0x80000000
+.temp 8 t1
+.temp 4 t2
+
+xorl t2, d1, c1
+mulslq t1, t2, p1
+shrsq t1, t1, 27
+convsssql t2, t1
+xorl d1, t2, c1
+
+
+.function adder_orc_volume_s32
+.dest 4 d1 gint32
+.param 4 p1
+.temp 8 t1
+
+mulslq t1, d1, p1
+shrsq t1, t1, 27
+convsssql d1, t1

@@ -14,6 +14,9 @@
 #include <orc/orcsse.h>
 #include <orc/orcmmx.h>
 
+#include <orc/orcx86insn.h>
+
+
 #define ORC_VEX_3_BIT 0xC4
 #define ORC_VEX_2_BIT 0xC5
 
@@ -296,6 +299,7 @@ static const OrcSysOpcode orc_x86_opcodes[] = {
   { "pinsrd", ORC_X86_INSN_TYPE_IMM8_REGM_MMX, ORC_VEX_W0 | ORC_VEX_ESCAPE_3A, ORC_VEX_SIMD_PREFIX_66, 0x22 },
   { "perm2i128", ORC_X86_INSN_TYPE_IMM8_MMXM_MMX, ORC_VEX_W0 | ORC_VEX_ESCAPE_3A, ORC_VEX_SIMD_PREFIX_66, 0x46 },
   { "pblendd", ORC_X86_INSN_TYPE_IMM8_MMXM_MMX, ORC_VEX_W0 | ORC_VEX_ESCAPE_3A, ORC_VEX_SIMD_PREFIX_66, 0x02 },
+  { "blendvpd", ORC_X86_INSN_TYPE_MMXM_MMX, ORC_VEX_W0 | ORC_VEX_ESCAPE_3A, ORC_VEX_SIMD_PREFIX_66, 0x4b },
 };
 
 static void
@@ -412,6 +416,7 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
   char src_op[40] = { 0 };
   char dst_op[40] = { 0 };
   char src_2nd_op[40] = { 0 };
+  char src_3rd_op[40] = { 0 };
 
   const OrcX86OpcodePrefix is_sse = get_common_reg_type(xinsn);
 
@@ -578,9 +583,7 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
   const int operand2 = xinsn->src[0];
 
   if (may_have_avx_operand && xinsn->src[1] != 0) {
-    // TODO: implement and figure out more opcode types
     switch (xinsn->opcode->type) {
-      case ORC_X86_INSN_TYPE_MMXM_MMX:
       case ORC_X86_INSN_TYPE_SSEM_SSE:
       case ORC_X86_INSN_TYPE_IMM8_MMXM_MMX:
       case ORC_X86_INSN_TYPE_IMM8_MMX_SHIFT:
@@ -593,6 +596,26 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
       case ORC_X86_INSN_TYPE_IMM8_REGM_MMX:
         sprintf(src_2nd_op, "%%%s, ",
               orc_x86_get_simd_regname (operand2, ORC_X86_AVX_VEX128_PREFIX));
+        break;
+      case ORC_X86_INSN_TYPE_MMXM_MMX:
+        // In all cases it can be either a pointer to, or a XMM/YMM register
+        // Intel Intrinsics Manual s.2.3.9
+        if (xinsn->type == ORC_X86_RM_REG) {
+          sprintf(src_2nd_op, "%%%s, ",
+              orc_x86_get_simd_regname (operand2, is_sse));
+        } else if (xinsn->type == ORC_X86_RM_MEMOFFSET) {
+          sprintf(src_2nd_op, "%d(%%%s), ", xinsn->offset,
+              orc_x86_get_regname_ptr (p, xinsn->src[2]));
+        } else if (xinsn->type == ORC_X86_RM_MEMINDEX) {
+          sprintf(src_2nd_op, "%d(%%%s,%%%s,%d), ", xinsn->offset,
+              orc_x86_get_regname_ptr (p, xinsn->src[2]),
+              orc_x86_get_regname_ptr (p, xinsn->index_reg),
+              1 << xinsn->shift);
+        } else {
+          ORC_COMPILER_ERROR(p, "Unhandled instruction type %d for 4th operand", xinsn->type);
+          ORC_ASSERT(0);
+          return;
+        }
         break;
       case ORC_X86_INSN_TYPE_REGM_MMX:
       case ORC_X86_INSN_TYPE_MMXM_MMX_REV:
@@ -623,6 +646,24 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
     }
   }
 
+  if (xinsn->src[2] != 0) {
+    switch (xinsn->opcode->type) {
+      case ORC_X86_INSN_TYPE_MMXM_MMX:
+        if (may_have_avx_operand) {
+          sprintf(src_3rd_op, "%%%s, ",
+                orc_x86_get_simd_regname (xinsn->src[2], is_sse));
+        } else {
+          ORC_COMPILER_ERROR(p, "Blends on SSE require XMM0 as the mask, this cannot be guaranteed");
+          ORC_ASSERT(0);
+          return;
+        }
+        break;
+      default:
+        ORC_COMPILER_ERROR(p, "Unhandled instruction type %d for 4th operand", xinsn->type);
+        ORC_ASSERT(0);
+        return;
+    }
+  }
 
   // Handle destinations
   switch (xinsn->opcode->type) {
@@ -721,13 +762,8 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
   }
 
   if (xinsn->prefix == ORC_X86_AVX_VEX128_PREFIX || xinsn->prefix == ORC_X86_AVX_VEX256_PREFIX) {
-    if (src_2nd_op[0] != '\0') {
-      ORC_ASM_CODE(p,"  v%s %s%s%s%s\n", xinsn->opcode->name,
-          imm_str, src_op, src_2nd_op, dst_op);
-    } else {
-      ORC_ASM_CODE(p,"  v%s %s%s%s\n", xinsn->opcode->name,
-          imm_str, src_op, dst_op);
-    }
+    ORC_ASM_CODE(p,"  v%s %s%s%s%s%s\n", xinsn->opcode->name,
+        imm_str, src_op, src_2nd_op, src_3rd_op, dst_op);
   } else {
     ORC_ASM_CODE(p,"  %s %s%s%s\n", xinsn->opcode->name,
         imm_str, src_op, dst_op);
@@ -1202,8 +1238,17 @@ static void
 orc_vex_insn_output_immediate (OrcCompiler *const p, const OrcX86Insn *const xinsn)
 {
   switch ((OrcX86InsnType)xinsn->opcode->type) {
-    case ORC_X86_INSN_TYPE_REGM_MMX:
     case ORC_X86_INSN_TYPE_MMXM_MMX:
+      switch (xinsn->opcode_index) {
+        // Complete here with VPBLENDVB and VBLENDVPS when implemented
+        // Intel Intrinsics Manual s.2.3.9
+        case ORC_X86_blendvpd_avx:
+          *p->codeptr++ = (xinsn->src[2] & 0xF) << 4;
+        default:
+          break;
+      }
+      break;
+    case ORC_X86_INSN_TYPE_REGM_MMX:
     case ORC_X86_INSN_TYPE_SSEM_AVX:
     case ORC_X86_INSN_TYPE_MMXM_MMX_REV:
     case ORC_X86_INSN_TYPE_SSEM_SSE_REV:
@@ -2014,6 +2059,7 @@ orc_vex_emit_cpuinsn_size (OrcCompiler *const p, const int index,
   xinsn->prefix = prefix;
   xinsn->src[0] = src0;
   xinsn->src[1] = src1;
+  xinsn->src[2] = 0;
   xinsn->dest = dest;
   xinsn->type = ORC_X86_RM_REG;
   xinsn->size = size;
@@ -2031,6 +2077,7 @@ orc_vex_emit_cpuinsn_imm (OrcCompiler *const p, const int index, const int imm, 
   xinsn->imm = imm;
   xinsn->src[0] = src0;
   xinsn->src[1] = src1;
+  xinsn->src[2] = 0;
   xinsn->dest = dest;
   xinsn->type = ORC_X86_RM_REG;
   xinsn->size = 4;
@@ -2050,6 +2097,7 @@ orc_vex_emit_cpuinsn_load_memoffset (OrcCompiler *const p, const int index,
   xinsn->imm = imm;
   xinsn->src[0] = src0;
   xinsn->src[1] = src1;
+  xinsn->src[2] = 0;
   xinsn->dest = dest;
   xinsn->type = ORC_X86_RM_MEMOFFSET;
   xinsn->offset = offset;
@@ -2092,5 +2140,24 @@ orc_vex_emit_cpuinsn_load_memindex (OrcCompiler *const p, const int index, const
   xinsn->offset = offset;
   xinsn->index_reg = src_index;
   xinsn->shift = shift;
+  xinsn->size = size;
+}
+
+void
+orc_vex_emit_blend_size (OrcCompiler *const p, const int index,
+    const int size, const int src0, const int src1, const int src2,
+    const int dest, const OrcX86OpcodePrefix prefix)
+{
+  OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
+  const OrcSysOpcode *const opcode = orc_x86_opcodes + index;
+
+  xinsn->opcode_index = index;
+  xinsn->opcode = opcode;
+  xinsn->prefix = prefix;
+  xinsn->src[0] = src0;
+  xinsn->src[1] = src1;
+  xinsn->src[2] = src2;
+  xinsn->dest = dest;
+  xinsn->type = ORC_X86_RM_REG;
   xinsn->size = size;
 }

@@ -5,6 +5,7 @@
 
 #include <orc/orcavx-internal.h>
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -3008,6 +3009,33 @@ avx_rule_convsuslw_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
   }
 }
 
+static void
+avx_rule_convsssql_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
+  const int tmpc_max = orc_compiler_get_temp_constant (p, 8, INT32_MAX);
+  const int tmpc_min = orc_compiler_get_temp_constant (p, 8, INT32_MIN);
+  const int tmp = orc_compiler_get_temp_reg (p);
+
+  if (size >= 32) {
+    orc_avx_emit_pcmpgtq (p, src, tmpc_max, tmp);
+    orc_avx_emit_blendvpd (p, src, tmpc_max, tmp, dest);
+    orc_avx_emit_pcmpgtq (p, dest, tmpc_min, tmp);
+    orc_avx_emit_blendvpd (p, tmpc_min, dest, tmp, dest);
+    // full interleave required again
+    orc_avx_emit_pshufd (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
+    orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
+  } else {
+    orc_avx_sse_emit_pcmpgtq (p, src, tmpc_max, tmp);
+    orc_avx_sse_emit_blendvpd (p, src, tmpc_max, tmp, dest);
+    orc_avx_sse_emit_pcmpgtq (p, dest, tmpc_min, tmp);
+    orc_avx_sse_emit_blendvpd (p, tmpc_min, dest, tmp, dest);
+    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
+  }
+}
+
 void
 orc_compiler_avx_register_rules (OrcTarget *target)
 {
@@ -3239,6 +3267,7 @@ orc_compiler_avx_register_rules (OrcTarget *target)
   REGISTER_RULE_WITH_GENERIC (convulq, convulq_avx2);
   REGISTER_RULE_WITH_GENERIC (convssslw, convssslw_avx2);
   REGISTER_RULE_WITH_GENERIC (convsuslw, convsuslw_avx2);
+  REGISTER_RULE_WITH_GENERIC (convsssql, convsssql_avx2);
   REGISTER_RULE_WITH_GENERIC (mulslq, mulslq_avx2);
   REGISTER_RULE_WITH_GENERIC (mulhsl, mulhsl_avx2);
   REGISTER_RULE_WITH_GENERIC (cmpeqq, cmpeqq_avx2);
