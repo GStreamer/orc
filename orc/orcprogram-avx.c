@@ -321,13 +321,25 @@ orc_avx_load_constant (OrcCompiler *compiler, int reg, int size,
     orc_uint64 value)
 {
   if (size == 8) {
+    if (value == 0) {
+      orc_avx_emit_pxor (compiler, reg, reg, reg);
+      return;
+    } else if (value == UINT64_MAX) {
+      orc_avx_emit_pcmpeqb (compiler, reg, reg, reg);
+      return;
+    }
+
+    // Store the upper half
+    if (value >> 32) {
+      orc_x86_emit_mov_imm_reg (compiler, 4, value >> 32, compiler->gp_tmpreg);
+      orc_avx_sse_emit_pinsrd_register (compiler, 1,  reg, compiler->gp_tmpreg, reg);
+    } else {
+      orc_avx_emit_pxor (compiler, reg, reg, reg);
+    }
+
     // Store the lower half
     orc_x86_emit_mov_imm_reg (compiler, 4, value >> 0, compiler->gp_tmpreg);
     orc_avx_sse_emit_pinsrd_register (compiler, 0,  reg, compiler->gp_tmpreg, reg);
-
-    // Store the upper half
-    orc_x86_emit_mov_imm_reg (compiler, 4, value >> 32, compiler->gp_tmpreg);
-    orc_avx_sse_emit_pinsrd_register (compiler, 1,  reg, compiler->gp_tmpreg, reg);
 
     // broadcast mm0 to the rest
     orc_avx_emit_broadcast (compiler, reg, reg, size);
