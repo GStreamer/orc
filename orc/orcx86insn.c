@@ -40,7 +40,7 @@
 // Special instruction that uses 66 but not the escape 0F
 #define ORC_SKIP_ESCAPE (1U << 6)
 
-static const OrcSysOpcode orc_x86_opcodes[] = {
+static const OrcX86Opcode orc_x86_opcodes[] = {
   { "punpcklbw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, ORC_SIMD_PREFIX_MMX, 0x60 },
   { "punpcklwd", ORC_X86_INSN_TYPE_MMXM_MMX, 0, ORC_SIMD_PREFIX_MMX, 0x61 },
   { "punpckldq", ORC_X86_INSN_TYPE_MMXM_MMX, 0, ORC_SIMD_PREFIX_MMX, 0x62 },
@@ -307,7 +307,7 @@ static const OrcSysOpcode orc_x86_opcodes[] = {
 };
 
 static void
-output_opcode (OrcCompiler *p, const OrcSysOpcode *opcode, int size,
+output_opcode (OrcCompiler *p, const OrcX86Opcode *opcode, int size,
     int src, int dest, OrcX86OpcodePrefix reg_type)
 {
   ORC_ASSERT(opcode->code != 0 || opcode->prefix != 0 || opcode->flags != 0);
@@ -1815,7 +1815,7 @@ void
 orc_x86_emit_cpuinsn_size (OrcCompiler *p, int index, int size, int src, int dest)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *opcode = orc_x86_opcodes + index;
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
@@ -1829,7 +1829,7 @@ void
 orc_x86_emit_cpuinsn_imm (OrcCompiler *p, int index, int imm, int src, int dest)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *opcode = orc_x86_opcodes + index;
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
@@ -1845,7 +1845,7 @@ orc_x86_emit_cpuinsn_load_memoffset (OrcCompiler *p, int index, int size,
     int imm, int offset, int src, int dest)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *opcode = orc_x86_opcodes + index;
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
@@ -1862,7 +1862,7 @@ orc_x86_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index, int size,
     int imm, int offset, int src, int dest)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *opcode = orc_x86_opcodes + index;
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
@@ -1879,7 +1879,7 @@ orc_x86_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int size,
     int imm, int offset, int src, int src_index, int shift, int dest)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *opcode = orc_x86_opcodes + index;
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
@@ -1898,7 +1898,7 @@ orc_x86_emit_cpuinsn_imm_reg (OrcCompiler *p, int index, int size, int imm,
     int dest)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *opcode = orc_x86_opcodes + index;
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
@@ -1914,7 +1914,7 @@ orc_x86_emit_cpuinsn_imm_memoffset (OrcCompiler *p, int index, int size,
     int imm, int offset, int dest)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *opcode = orc_x86_opcodes + index;
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
@@ -1945,7 +1945,7 @@ orc_x86_emit_cpuinsn_reg_memoffset_s (OrcCompiler *p, int index, int size,
     int src, int offset, int dest)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *opcode = orc_x86_opcodes + index;
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
@@ -1961,7 +1961,7 @@ orc_x86_emit_cpuinsn_memoffset_reg (OrcCompiler *p, int index, int size,
     int offset, int src, int dest)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *opcode = orc_x86_opcodes + index;
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
@@ -1976,7 +1976,7 @@ void
 orc_x86_emit_cpuinsn_branch (OrcCompiler *p, int index, int label)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *opcode = orc_x86_opcodes + index;
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
@@ -1988,7 +1988,7 @@ void
 orc_x86_emit_cpuinsn_align (OrcCompiler *p, int index, int align_shift)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *opcode = orc_x86_opcodes + index;
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
@@ -1999,7 +1999,7 @@ void
 orc_x86_emit_cpuinsn_label (OrcCompiler *p, int index, int label)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *opcode = orc_x86_opcodes + index;
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
@@ -2011,7 +2011,7 @@ void
 orc_x86_emit_cpuinsn_none (OrcCompiler *p, int index)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *opcode = orc_x86_opcodes + index;
   int size = 4;
 
   xinsn->opcode_index = index;
@@ -2024,7 +2024,7 @@ orc_x86_emit_cpuinsn_memoffset (OrcCompiler *p, int index, int size,
     int offset, int srcdest)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *opcode = orc_x86_opcodes + index;
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
@@ -2040,7 +2040,7 @@ orc_vex_emit_cpuinsn_none (OrcCompiler *p, const int index,
     const OrcX86OpcodePrefix prefix)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *opcode = orc_x86_opcodes + index;
   int size = 4;
 
   xinsn->opcode_index = index;
@@ -2055,7 +2055,7 @@ orc_vex_emit_cpuinsn_size (OrcCompiler *const p, const int index,
     const OrcX86OpcodePrefix prefix)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *const opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *const opcode = orc_x86_opcodes + index;
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
@@ -2072,7 +2072,7 @@ void
 orc_vex_emit_cpuinsn_imm (OrcCompiler *const p, const int index, const int imm, const int src0, const int src1, const int dest, const OrcX86OpcodePrefix prefix)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *opcode = orc_x86_opcodes + index;
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
@@ -2092,7 +2092,7 @@ orc_vex_emit_cpuinsn_load_memoffset (OrcCompiler *const p, const int index,
     const int src1, const int dest, const OrcX86OpcodePrefix prefix)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *opcode = orc_x86_opcodes + index;
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
@@ -2113,7 +2113,7 @@ orc_vex_emit_cpuinsn_store_memoffset (OrcCompiler *const p, const int index,
     const int dest, const OrcX86OpcodePrefix prefix)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *opcode = orc_x86_opcodes + index;
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
@@ -2131,7 +2131,7 @@ orc_vex_emit_cpuinsn_load_memindex (OrcCompiler *const p, const int index, const
     const int imm, const int offset, const int src, const int src_index, const int shift, int dest, const OrcX86OpcodePrefix prefix)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *opcode = orc_x86_opcodes + index;
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;
@@ -2152,7 +2152,7 @@ orc_vex_emit_blend_size (OrcCompiler *const p, const int index,
     const int dest, const OrcX86OpcodePrefix prefix)
 {
   OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcSysOpcode *const opcode = orc_x86_opcodes + index;
+  const OrcX86Opcode *const opcode = orc_x86_opcodes + index;
 
   xinsn->opcode_index = index;
   xinsn->opcode = opcode;

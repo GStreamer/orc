@@ -305,7 +305,7 @@ typedef enum
   ORC_X86_andps,
   ORC_X86_orps,
   ORC_X86_blendvpd_sse,
-} OrcX86Opcode;
+} OrcX86OpcodeIdx;
 
 typedef enum {
   ORC_X86_RM_REG, /* operand can be register or memory */
@@ -320,7 +320,7 @@ typedef enum {
   ORC_X86_AVX_VEX256_PREFIX,
 } OrcX86OpcodePrefix;
 
-struct _OrcSysOpcode {
+struct _OrcX86Opcode {
   // Mnemonic
   char name[16];
   // Type of instruction (source instruction set, operation type)
@@ -341,16 +341,16 @@ struct _OrcSysOpcode {
   int code2;
 };
 
-typedef struct _OrcSysOpcode OrcSysOpcode;
+typedef struct _OrcX86Opcode OrcX86Opcode;
 
 #define ORC_SYS_OPCODE_FLAG_FIXED (1<<0)
 
 typedef struct _OrcX86Insn OrcX86Insn;
 struct _OrcX86Insn {
   // Index into the opcode table
-  OrcX86Opcode opcode_index;
+  OrcX86OpcodeIdx opcode_index;
   // The opcode the index points to
-  const OrcSysOpcode *opcode;
+  const OrcX86Opcode *opcode;
   // What version should we encode?
   // SSE (without), VEX with SSE vectors,
   // VEX with AVX vectors...
