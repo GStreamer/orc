@@ -303,6 +303,8 @@ typedef enum
   ORC_X86_permute2i128_avx,
   ORC_X86_pblendd_avx,
   ORC_X86_blendvpd_avx,
+  ORC_X86_andps,
+  ORC_X86_orps,
 } OrcX86Opcode;
 
 typedef enum {
@@ -625,6 +627,7 @@ ORC_API void orc_vex_emit_blend_size (OrcCompiler *p, int opcode, int size,
 #define orc_sse_emit_pcmpgtq(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_pcmpgtq, 16, a, b)
 #define orc_avx_sse_emit_pcmpgtq(p,s1,s2,d) orc_vex_emit_cpuinsn_size(p, ORC_X86_pcmpgtq, 32, s1, s2, d, ORC_X86_AVX_VEX128_PREFIX)
 #define orc_avx_emit_pcmpgtq(p,s1,s2,d) orc_vex_emit_cpuinsn_size(p, ORC_X86_pcmpgtq, 32, s1, s2, d, ORC_X86_AVX_VEX256_PREFIX)
+
 #define orc_sse_emit_addps(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_addps, 16, a, b)
 #define orc_avx_sse_emit_addps(p,s1,s2,d) orc_vex_emit_cpuinsn_size(p, ORC_X86_addps, 32, s1, s2, d, ORC_X86_AVX_VEX128_PREFIX)
 #define orc_avx_emit_addps(p,s1,s2,d) orc_vex_emit_cpuinsn_size(p, ORC_X86_addps, 32, s1, s2, d, ORC_X86_AVX_VEX256_PREFIX)
@@ -640,6 +643,13 @@ ORC_API void orc_vex_emit_blend_size (OrcCompiler *p, int opcode, int size,
 #define orc_sse_emit_sqrtps(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_sqrtps, 16, a, b)
 #define orc_avx_sse_emit_sqrtps(p,s1,s2,d) orc_vex_emit_cpuinsn_size(p, ORC_X86_sqrtps, 32, s1, s2, d, ORC_X86_AVX_VEX128_PREFIX)
 #define orc_avx_emit_sqrtps(p,s1,s2,d) orc_vex_emit_cpuinsn_size(p, ORC_X86_sqrtps, 32, s1, s2, d, ORC_X86_AVX_VEX256_PREFIX)
+#define orc_sse_emit_andps(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_andps, 16, a, b)
+#define orc_avx_sse_emit_andps(p,s1,s2,d) orc_vex_emit_cpuinsn_size(p, ORC_X86_andps, 32, s1, s2, d, ORC_X86_AVX_VEX128_PREFIX)
+#define orc_avx_emit_andps(p,s1,s2,d) orc_vex_emit_cpuinsn_size(p, ORC_X86_andps, 32, s1, s2, d, ORC_X86_AVX_VEX256_PREFIX)
+#define orc_sse_emit_orps(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_orps, 16, a, b)
+#define orc_avx_sse_emit_orps(p,s1,s2,d) orc_vex_emit_cpuinsn_size(p, ORC_X86_orps, 32, s1, s2, d, ORC_X86_AVX_VEX128_PREFIX)
+#define orc_avx_emit_orps(p,s1,s2,d) orc_vex_emit_cpuinsn_size(p, ORC_X86_orps, 32, s1, s2, d, ORC_X86_AVX_VEX256_PREFIX)
+
 #define orc_sse_emit_addpd(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_addpd, 16, a, b)
 #define orc_avx_sse_emit_addpd(p,s1,s2,d) orc_vex_emit_cpuinsn_size(p, ORC_X86_addpd, 32, s1, s2, d, ORC_X86_AVX_VEX128_PREFIX)
 #define orc_avx_emit_addpd(p,s1,s2,d) orc_vex_emit_cpuinsn_size(p, ORC_X86_addpd, 32, s1, s2, d, ORC_X86_AVX_VEX256_PREFIX)
