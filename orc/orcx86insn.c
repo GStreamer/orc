@@ -8,7 +8,6 @@
 #include <string.h>
 
 #include <orc/orc.h>
-#include <orc/orccpuinsn.h>
 #include <orc/orcx86.h>
 #include <orc/orcavx.h>
 #include <orc/orcsse.h>
