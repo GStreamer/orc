@@ -2844,6 +2844,8 @@ BINARY_F(subf, subps, 0x5c)
 BINARY_F(mulf, mulps, 0x59)
 BINARY_F(divf, divps, 0x5e)
 UNARY_F(sqrtf, sqrtps, 0x51)
+BINARY_F(orf, orps, 0x56)
+BINARY_F(andf, andps, 0x54)
 
 #define UNARY_D(opcode,insn_name,code) \
 static void \
@@ -3296,6 +3298,8 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "cmplef", sse_rule_cmplef, NULL);
   orc_rule_register (rule_set, "convfl", sse_rule_convfl, NULL);
   orc_rule_register (rule_set, "convlf", sse_rule_convlf, NULL);
+  orc_rule_register (rule_set, "orf", sse_rule_orf, NULL);
+  orc_rule_register (rule_set, "andf", sse_rule_andf, NULL);
 
   orc_rule_register (rule_set, "addd", sse_rule_addd, NULL);
   orc_rule_register (rule_set, "subd", sse_rule_subd, NULL);

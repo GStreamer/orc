@@ -4906,6 +4906,64 @@ emulate_convlf (OrcOpcodeExecutor *ex, int offset, int n)
 }
 
 void
+emulate_orf (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
+  orc_union32 var32;
+  orc_union32 var33;
+  orc_union32 var34;
+
+  ptr0 = (orc_union32 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union32 *)ex->src_ptrs[0];
+  ptr5 = (orc_union32 *)ex->src_ptrs[1];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var32 = ptr4[i];
+    /* 1: loadl */
+    var33 = ptr5[i];
+    /* 2: orf */
+    var34.i = var32.i | var33.i;
+    /* 3: storel */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
+emulate_andf (OrcOpcodeExecutor *ex, int offset, int n)
+{
+  int i;
+  orc_union32 * ORC_RESTRICT ptr0;
+  const orc_union32 * ORC_RESTRICT ptr4;
+  const orc_union32 * ORC_RESTRICT ptr5;
+  orc_union32 var32;
+  orc_union32 var33;
+  orc_union32 var34;
+
+  ptr0 = (orc_union32 *)ex->dest_ptrs[0];
+  ptr4 = (orc_union32 *)ex->src_ptrs[0];
+  ptr5 = (orc_union32 *)ex->src_ptrs[1];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var32 = ptr4[i];
+    /* 1: loadl */
+    var33 = ptr5[i];
+    /* 2: andf */
+    var34.i = var32.i & var33.i;
+    /* 3: storel */
+    ptr0[i] = var34;
+  }
+
+}
+
+void
 emulate_addd (OrcOpcodeExecutor *ex, int offset, int n)
 {
   int i;

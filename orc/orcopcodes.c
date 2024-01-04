@@ -499,6 +499,8 @@ static OrcStaticOpcode opcodes[] = {
   { "convfd", ORC_STATIC_OPCODE_FLOAT, { 8 }, { 4 }, emulate_convfd },
   { "convdf", ORC_STATIC_OPCODE_FLOAT, { 4 }, { 8 }, emulate_convdf },
 
+  { "orf", ORC_STATIC_OPCODE_FLOAT, { 4 }, { 4, 4 }, emulate_orf },
+  { "andf", ORC_STATIC_OPCODE_FLOAT, { 4 }, { 4, 4 }, emulate_andf },
   { "" }
 };
 

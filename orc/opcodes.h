@@ -140,6 +140,11 @@ UNARY_F(sqrtf, "sqrt(%s)")
 BINARY_FL(cmpeqf, "(%s == %s) ? (~0) : 0")
 BINARY_FL(cmpltf, "(%s < %s) ? (~0) : 0")
 BINARY_FL(cmplef, "(%s <= %s) ? (~0) : 0")
+/* We avoid the _F because denormalizing a float will give wrong results as
+ * this operations are bitwise
+ */
+BINARY_SL(orf, "%s | %s")
+BINARY_SL(andf, "%s & %s")
 
 BINARY_D(addd, "%s + %s")
 BINARY_D(subd, "%s - %s")

@@ -2684,6 +2684,8 @@ BINARY (subf, subps)
 BINARY (mulf, mulps)
 BINARY (divf, divps)
 BINARY (sqrtf, sqrtps)
+BINARY (orf, orps)
+BINARY (andf, andps)
 
 BINARY (addd, addpd)
 BINARY (subd, subpd)
@@ -3129,6 +3131,8 @@ orc_compiler_avx_register_rules (OrcTarget *target)
   REGISTER_RULE (cmplef);
   REGISTER_RULE (convfl);
   REGISTER_RULE (convlf);
+  REGISTER_RULE (orf);
+  REGISTER_RULE (andf);
 
   REGISTER_RULE (addd);
   REGISTER_RULE (subd);
