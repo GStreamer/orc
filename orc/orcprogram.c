@@ -1283,3 +1283,71 @@ orc_program_has_float (OrcCompiler *compiler)
   }
   return FALSE;
 }
+
+/**
+ * orc_program_compile:
+ * @program: the OrcProgram to compile
+ *
+ * Compiles an Orc program for the current CPU.  If successful,
+ * executable code for the program was generated and can be
+ * executed.
+ *
+ * The return value indicates various levels of success or failure.
+ * Success can be determined by checking for a true value of the
+ * macro ORC_COMPILE_RESULT_IS_SUCCESSFUL() on the return value.  This
+ * indicates that executable code was generated.  If the macro
+ * ORC_COMPILE_RESULT_IS_FATAL() on the return value evaluates to
+ * true, then there was a syntactical error in the program.  If the
+ * result is neither successful nor fatal, the program can still be
+ * emulated.
+ *
+ * Returns: an OrcCompileResult
+ */
+OrcCompileResult
+orc_program_compile (OrcProgram *program)
+{
+  return orc_program_compile_for_target (program, orc_target_get_default ());
+}
+
+/**
+ * orc_program_compile_for_target:
+ * @program: the OrcProgram to compile
+ *
+ * Compiles an Orc program for the given target, using the
+ * default target flags for that target.
+ *
+ * Returns: an OrcCompileResult
+ */
+OrcCompileResult
+orc_program_compile_for_target (OrcProgram *program, OrcTarget *target)
+{
+  unsigned int flags;
+
+  if (target) {
+    flags = target->get_default_flags ();
+  } else {
+    flags = 0;
+  }
+
+  return orc_program_compile_full (program, target, flags);
+}
+
+/**
+ * orc_program_compile_full:
+ * @program: the OrcProgram to compile
+ *
+ * Compiles an Orc program for the given target, using the
+ * given target flags.
+ *
+ * Returns: an OrcCompileResult
+ */
+OrcCompileResult
+orc_program_compile_full (OrcProgram *program, OrcTarget *target,
+    unsigned int flags)
+{
+  OrcCompiler *compiler;
+
+  compiler = malloc (sizeof(OrcCompiler));
+  memset (compiler, 0, sizeof(OrcCompiler));
+  return orc_compiler_compile_program (compiler, program, target, flags);
+}

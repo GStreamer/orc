@@ -161,6 +161,7 @@ ORC_API void orc_compiler_append_code (OrcCompiler *p, const char *fmt, ...) ORC
 #ifdef ORC_ENABLE_UNSTABLE_API
 
 ORC_API int orc_compiler_flag_check (const char *flag);
+ORC_API OrcCompileResult orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTarget *target, unsigned int flags);
 
 /* FIXME: remove, these were never actually exported as public symbols, so unusable  */
 extern int _orc_compiler_flag_backup;
