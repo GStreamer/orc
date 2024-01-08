@@ -220,6 +220,8 @@ struct a ops[] = {
   { "muld", "a * b", "multiply" },
   { "divf", "a / b", "divide" },
   { "divd", "a / b", "divide" },
+  { "orf", "a | b", "bitwise or"},
+  { "andf", "a &amp; b", "bitwise and"},
   { "sqrtf", "sqrt(a)", "square root" },
   { "sqrtd", "sqrt(a)", "square root" },
   { "maxf", "max(a,b)", "maximum" },
