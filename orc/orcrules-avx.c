@@ -2960,6 +2960,24 @@ avx_rule_convdl (OrcCompiler *p, void *user, OrcInstruction *insn)
 
 // convert int32_t to float
 UNARY (convlf, cvtdq2ps);
+
+static void
+// convert int16 to floats
+avx_rule_convwf (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
+
+  if (size >= 16) {
+    orc_avx_emit_pmovsxwd (p, src, dest);
+    orc_avx_emit_cvtdq2ps (p, dest, dest);
+  } else {
+    orc_avx_sse_emit_pmovsxwd (p, src, dest);
+    orc_avx_sse_emit_cvtdq2ps (p, dest, dest);
+  }
+}
+
 // convert int32_t to double, upper lane of src is ignored
 UNARY_W (convld, cvtdq2pd, 16);
 // convert float to double, upper lane of src is ignored
@@ -3130,6 +3148,7 @@ orc_compiler_avx_register_rules (OrcTarget *target)
   REGISTER_RULE (cmpltf);
   REGISTER_RULE (cmplef);
   REGISTER_RULE (convfl);
+  REGISTER_RULE (convwf);
   REGISTER_RULE (convlf);
   REGISTER_RULE (orf);
   REGISTER_RULE (andf);

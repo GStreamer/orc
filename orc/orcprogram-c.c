@@ -1243,6 +1243,17 @@ c_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+c_rule_convwf (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  char dest[40], src1[40];
+
+  c_get_name_float (dest, p, insn, insn->dest_args[0]);
+  c_get_name_int (src1, p, insn, insn->src_args[0]);
+
+  ORC_ASM_CODE(p,"    %s = (float)%s;\n", dest, src1);
+}
+
+static void
 c_rule_convlf (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   char dest[40], src1[40];
@@ -1606,5 +1617,6 @@ orc_c_init (void)
   orc_rule_register (rule_set, "mergebw", c_rule_mergebw, NULL);
   orc_rule_register (rule_set, "mergewl", c_rule_mergewl, NULL);
   orc_rule_register (rule_set, "mergelq", c_rule_mergelq, NULL);
+  orc_rule_register (rule_set, "convwf", c_rule_convwf, NULL);
 }
 

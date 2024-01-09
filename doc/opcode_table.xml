@@ -1454,22 +1454,6 @@
 <entry>a</entry>
 </row>
 <row>
-<entry>orf</entry>
-<entry>4</entry>
-<entry>4</entry>
-<entry>4</entry>
-<entry>bitwise or</entry>
-<entry>a | b</entry>
-</row>
-<row>
-<entry>andf</entry>
-<entry>4</entry>
-<entry>4</entry>
-<entry>4</entry>
-<entry>bitwise and</entry>
-<entry>a &amp; b</entry>
-</row>
-<row>
 <entry>addd</entry>
 <entry>8</entry>
 <entry>8</entry>
@@ -1580,6 +1564,30 @@
 <entry></entry>
 <entry>convert double to float</entry>
 <entry>a</entry>
+</row>
+<row>
+<entry>orf</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>bitwise or</entry>
+<entry>a | b</entry>
+</row>
+<row>
+<entry>andf</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>4</entry>
+<entry>bitwise and</entry>
+<entry>a &amp; b</entry>
+</row>
+<row>
+<entry>convwf</entry>
+<entry>4</entry>
+<entry>2</entry>
+<entry></entry>
+<entry></entry>
+<entry></entry>
 </row>
 </tbody>
 </tgroup>
