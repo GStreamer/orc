@@ -934,7 +934,11 @@ output_code_execute (OrcProgram *p, FILE *output, int is_inline)
     fprintf(output, "\n");
     output_program_generation (p, output, is_inline);
     fprintf(output, "\n");
-    fprintf(output, "    orc_program_compile (p);\n");
+    if (target) {
+      fprintf(output, "    orc_program_compile_for_target (p, orc_target_get_by_name (\"%s\"));\n", target);
+    } else {
+      fprintf(output, "    orc_program_compile (p);\n");
+    }
     if (use_code) {
       fprintf(output, "    c = orc_program_take_code (p);\n");
       fprintf(output, "    orc_program_free (p);\n");
