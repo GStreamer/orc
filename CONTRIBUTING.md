@@ -1,6 +1,17 @@
 Contributing
 ============
 
+Commit message
+--------------
+It is preferable to prefix the commit message with the affected component. For
+example, in case the modified component is the `orc` compiler: `orcc`, prefix
+the commit with `orcc:`. Some of the components are:
+
+* docs: Anything related to documentation
+* [TARGET]: In case modifications of a particular target like sse or avx
+* orcc: For a change in the compiler
+
+
 How to add a new target instruction?
 ------------------------------------
 Each target has a way to generate its own instructions. For example, in SSE,
