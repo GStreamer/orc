@@ -267,7 +267,7 @@ avx_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   dest->update_type = 2;
 }
 
-static void
+ORC_GNUC_UNUSED static void
 // load, nearest neighbor resampled
 avx_rule_ldresnearl_avx2 (OrcCompiler *compiler, void *user,
     OrcInstruction *insn)
@@ -324,7 +324,7 @@ avx_rule_ldresnearl_avx2 (OrcCompiler *compiler, void *user,
   src->update_type = 0;
 }
 
-static void
+ORC_GNUC_UNUSED static void
 // load, bilinear resampled
 avx_rule_ldreslinl_avx2 (OrcCompiler *compiler, void *user,
     OrcInstruction *insn)
@@ -3300,6 +3300,8 @@ orc_compiler_avx_register_rules (OrcTarget *target)
   // These rules require dropping into SSE to be implemented in straight AVX
   REGISTER_RULE_WITH_GENERIC (loadupdb, loadupdb_avx2);
   REGISTER_RULE_WITH_GENERIC (loadupib, loadupib_avx2);
-  REGISTER_RULE_WITH_GENERIC (ldresnearl, ldresnearl_avx2);
-  REGISTER_RULE_WITH_GENERIC (ldreslinl, ldreslinl_avx2);
+  // The following rules need optimization -- they're more than twice slower
+  // than their SSE counterparts, and even more wrt the scalar implementation
+  // REGISTER_RULE_WITH_GENERIC (ldresnearl, ldresnearl_avx2);
+  // REGISTER_RULE_WITH_GENERIC (ldreslinl, ldreslinl_avx2);
 }
