@@ -53,20 +53,20 @@ orc_headers = [
 ]
 install_headers(orc_headers, subdir : 'orc-' + orc_api + '/orc')
 
+if 'avx' in enabled_backends or 'sse' in enabled_backends or 'mmx' in enabled_backends
+  orc_sources += ['orcx86.c', 'orcx86insn.c', 'orcprogram-x86.c']
+endif
+
 if 'avx' in enabled_backends
-  orc_sources += ['orcavx.c', 'orcrules-avx.c', 'orcprogram-avx.c',
-    'orcx86.c', 'orcx86insn.c']
+  orc_sources += ['orcavx.c', 'orcrules-avx.c', 'orcprogram-avx.c']
 endif
 
 if 'sse' in enabled_backends
-  orc_sources += ['orcsse.c', 'orcrules-sse.c', 'orcprogram-sse.c',
-    'orcx86.c', 'orcx86insn.c']
+  orc_sources += ['orcsse.c', 'orcrules-sse.c', 'orcprogram-sse.c']
 endif
 
 if 'mmx' in enabled_backends
-  # we assume it is ok to include the same file (orcx86) twice
-  # in case all backends are selected (ie mmx and sse)
-  orc_sources += ['orcmmx.c', 'orcrules-mmx.c', 'orcprogram-mmx.c', 'orcx86.c']
+  orc_sources += ['orcmmx.c', 'orcrules-mmx.c', 'orcprogram-mmx.c']
 endif
 
 if 'altivec' in enabled_backends

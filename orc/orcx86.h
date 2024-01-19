@@ -9,6 +9,35 @@ ORC_BEGIN_DECLS
 
 #ifdef ORC_ENABLE_UNSTABLE_API
 
+typedef struct _OrcX86Target
+{
+  /* Same as OrcTarget */
+  const char *name;
+  unsigned int (*get_default_flags)(void);
+  const char * (*get_flag_name)(int shift);
+
+  /* X86 specific */
+  void (*validate_registers)(int *regs, int is_64bit);
+  void (*saveable_registers)(int *regs, int is_64bit);
+  int (*is_64bit)(int flags);
+  int (*use_frame_pointer)(int flags);
+  int (*use_long_jumps)(int flags);
+  int (*loop_shift)(int max_var_size);
+  void (*init_accumulator)(OrcCompiler *c, OrcVariable *var);
+  void (*reduce_accumulator)(OrcCompiler *c, OrcVariable *var);
+  void (*load_constant)(OrcCompiler *c, int reg, int size, orc_uint64 value);
+  void (*load_constant_long)(OrcCompiler *c, int reg, OrcConstant *constant);
+  void (*move_register_to_memoffset)(OrcCompiler *compiler, int size, int reg1, int offset, int reg2, int aligned, int uncached);
+  void (*move_memoffset_to_register)(OrcCompiler *compiler, int size, int offset, int reg1, int reg2, int is_aligned);
+  int (*get_shift)(int size);
+  void (*set_mxcsr)(OrcCompiler *c);
+  void (*restore_mxcsr)(OrcCompiler *c);
+  int register_size;
+  int register_start;
+  int n_registers;
+  int label_step_up;
+} OrcX86Target;
+
 enum {
   X86_EAX = ORC_GP_REG_BASE,
   X86_ECX,
