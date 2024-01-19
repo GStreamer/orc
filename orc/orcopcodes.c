@@ -8,6 +8,7 @@
 
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
+#include <orc/orcinternal.h>
 
 /**
  * SECTION:orcopcode
@@ -75,6 +76,15 @@ orc_target_get_by_name (const char *name)
 OrcTarget *
 orc_target_get_default (void)
 {
+  const char *const envvar = _orc_getenv ("ORC_BACKEND");
+
+  if (envvar != NULL) {
+    OrcTarget *const target = orc_target_get_by_name (envvar);
+
+    if (target != NULL)
+      return target;
+  }
+
   return default_target;
 }
 
