@@ -87,10 +87,14 @@ struct _OrcTarget {
   void (*load_constant)(OrcCompiler *compiler, int reg, int size, int value);
   const char * (*get_flag_name)(int shift);
   void (*flush_cache) (OrcCode *code);
+  /* FIXME or you either support the size, or provide a better function to also
+   * handle 64 bits constants, but there is no need to add another API for
+   * one specific case. Use a _full passing also the size.
+   */
   void (*load_constant_long)(OrcCompiler *compiler, int reg,
       OrcConstant *constant);
-
-  void *_unused[5];
+  void *target_data;
+  void *_unused[4];
 };
 
 
