@@ -49,6 +49,17 @@ At runtime several environment variables can be used to control ORC.
   </para>
 </formalpara>
 
+<formalpara id="ORC_BACKEND">
+  <title><envar>ORC_BACKEND</envar></title>
+
+  <para>
+    This environment variable can be used to override the default target
+    selection and force a specific target such as "sse" or "avx".
+    This can be useful for benchmarking purposes, e.g. to compare SSE vs. AVX
+    targets, or to work around bugs. Available since Orc 0.4.35.
+  </para>
+</formalpara>
+
 </refsect1>
 
 </refentry>
