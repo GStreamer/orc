@@ -186,7 +186,7 @@ orc_x86_save_accumulators (OrcX86Target *t, OrcCompiler *c)
     if (var->vartype != ORC_VAR_TYPE_ACCUMULATOR)
       continue;
 
-    t->reduce_accumulator (c, var);
+    t->reduce_accumulator (c, i, var);
   }
 }
 
@@ -623,6 +623,26 @@ orc_x86_restore_mxcsr (OrcX86Target *t, OrcCompiler *c)
   t->restore_mxcsr (c);
 }
 
+
+static void
+orc_x86_adjust_alignment (OrcX86Target *t, OrcCompiler *compiler)
+{
+  int i;
+
+  /* Adjust alignment of variables
+   * We only care of array vars, as those require memory access
+   */
+  for (i = ORC_VAR_D1; i <= ORC_VAR_S8; i++) {
+    if (compiler->vars[i].size == 0)
+      continue;
+    if ((compiler->vars[i].alignment % t->register_size) == 0) {
+      compiler->vars[i].is_aligned = TRUE;
+    } else {
+      compiler->vars[i].is_aligned = FALSE;
+    }
+  }
+}
+
 static void
 orc_x86_compile (OrcCompiler *compiler)
 {
@@ -637,8 +657,11 @@ orc_x86_compile (OrcCompiler *compiler)
     orc_x86_assemble_copy (compiler);
     return;
   }
-  is_aligned = compiler->vars[align_var].is_aligned;
 
+  /* Align the compiler variables */
+  orc_x86_adjust_alignment (t, compiler);
+
+  is_aligned = compiler->vars[align_var].is_aligned;
   {
     orc_x86_emit_loop (compiler, 0, 0);
 
@@ -852,15 +875,16 @@ orc_x86_compile (OrcCompiler *compiler)
   orc_x86_do_fixups (compiler);
 }
 
-void
+OrcTarget *
 orc_x86_register_target (OrcX86Target *x86t)
 {
   OrcTarget *t;
 
+  /* FIXME this needs to be freed */
   t = calloc (1, sizeof(OrcTarget));
   t->name = x86t->name;
 #if defined(HAVE_I386) || defined(HAVE_AMD64)
-  t->executable = TRUE;
+  t->executable = x86t->is_executable ();
 #else
   t->executable = FALSE;
 #endif
@@ -871,5 +895,8 @@ orc_x86_register_target (OrcX86Target *x86t)
   t->load_constant = orc_x86_load_constant;
   t->get_flag_name = x86t->get_flag_name;
   t->load_constant_long = x86t->load_constant_long;
+  t->target_data = x86t;
   orc_target_register (t);
+
+  return t;
 }

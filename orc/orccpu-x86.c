@@ -585,6 +585,3 @@ orc_mmx_get_cpu_flags(void)
   orc_x86_detect_cpuid ();
   return orc_x86_mmx_flags;
 }
-
-
-

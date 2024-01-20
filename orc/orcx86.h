@@ -15,6 +15,7 @@ typedef struct _OrcX86Target
   const char *name;
   unsigned int (*get_default_flags)(void);
   const char * (*get_flag_name)(int shift);
+  int (*is_executable)(void);
 
   /* X86 specific */
   void (*validate_registers)(int *regs, int is_64bit);
@@ -24,7 +25,7 @@ typedef struct _OrcX86Target
   int (*use_long_jumps)(int flags);
   int (*loop_shift)(int max_var_size);
   void (*init_accumulator)(OrcCompiler *c, OrcVariable *var);
-  void (*reduce_accumulator)(OrcCompiler *c, OrcVariable *var);
+  void (*reduce_accumulator)(OrcCompiler *c, int i, OrcVariable *var);
   void (*load_constant)(OrcCompiler *c, int reg, int size, orc_uint64 value);
   void (*load_constant_long)(OrcCompiler *c, int reg, OrcConstant *constant);
   void (*move_register_to_memoffset)(OrcCompiler *compiler, int size, int reg1, int offset, int reg2, int aligned, int uncached);
@@ -218,6 +219,8 @@ ORC_API void orc_x86_emit_cpuinsn_branch (OrcCompiler *p, int index, int label);
 ORC_API void orc_x86_emit_cpuinsn_label (OrcCompiler *p, int index, int label);
 ORC_API void orc_x86_emit_cpuinsn_none (OrcCompiler *p, int index);
 ORC_API void orc_x86_emit_cpuinsn_align (OrcCompiler *p, int index, int align_shift);
+
+ORC_API OrcTarget * orc_x86_register_target (OrcX86Target *x86t);
 
 #endif
 
