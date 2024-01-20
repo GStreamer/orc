@@ -273,17 +273,19 @@ orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTar
   compiler->target_flags = flags;
 
   {
-    ORC_LOG("variables");
+    ORC_LOG("Program variables");
     for(i=0;i<ORC_N_VARIABLES;i++){
       if (program->vars[i].size > 0) {
-        ORC_LOG("%d: %s size %d type %d alloc %d", i,
+        ORC_LOG("%d: %s size %d type %d alignment %d is_aligned %d alloc %d", i,
             program->vars[i].name,
             program->vars[i].size,
             program->vars[i].vartype,
+            program->vars[i].alignment,
+            program->vars[i].is_aligned,
             program->vars[i].alloc);
       }
     }
-    ORC_LOG("instructions");
+    ORC_LOG("Program instructions");
     for(i=0;i<program->n_insns;i++){
       ORC_LOG("%d: %s %d %d %d %d", i,
           program->insns[i].opcode->name,
@@ -322,23 +324,24 @@ orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTar
   orc_compiler_rewrite_vars (compiler);
   if (compiler->error) goto error;
 
-#if 0
   {
-    ORC_ERROR("variables");
+    ORC_LOG("Compiler variables");
     for(i=0;i<ORC_N_VARIABLES;i++){
       if (compiler->vars[i].size > 0) {
-        ORC_ERROR("%d: %s size %d type %d alloc %d [%d,%d]", i,
+        ORC_LOG("%d: %s size %d type %d alignment %d is_aligned %d alloc %d [%d,%d]", i,
             compiler->vars[i].name,
             compiler->vars[i].size,
             compiler->vars[i].vartype,
+            compiler->vars[i].alignment,
+            compiler->vars[i].is_aligned,
             compiler->vars[i].alloc,
             compiler->vars[i].first_use,
             compiler->vars[i].last_use);
       }
     }
-    ORC_ERROR("instructions");
+    ORC_LOG("Compiler instructions");
     for(i=0;i<compiler->n_insns;i++){
-      ORC_ERROR("%d: %s %d %d %d %d", i,
+      ORC_LOG("%d: %s %d %d %d %d", i,
           compiler->insns[i].opcode->name,
           compiler->insns[i].dest_args[0],
           compiler->insns[i].dest_args[1],
@@ -346,7 +349,6 @@ orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTar
           compiler->insns[i].src_args[1]);
     }
   }
-#endif
   program->orccode = orc_code_new ();
 
   program->orccode->is_2d = program->is_2d;
