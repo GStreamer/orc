@@ -88,6 +88,11 @@ orc_executor_set_program (OrcExecutor *ex, OrcProgram *program)
 void
 orc_executor_set_array (OrcExecutor *ex, int var, void *ptr)
 {
+  if (ex->program->vars[var].alignment &&
+      (ORC_PTR_TO_INT (ptr) % ex->program->vars[var].alignment)) {
+    ORC_ERROR ("Pointer %p to an array with a different alignment of %d",
+        ptr, ex->program->vars[var].alignment);
+  }
   ex->arrays[var] = ptr;
 }
 
