@@ -409,6 +409,7 @@ orc_avx_init (void)
     avx_get_shift,
     avx_set_mxcsr,
     avx_restore_mxcsr,
+    NULL,
     ORC_AVX_REG_SIZE,
     X86_YMM0,
     ORC_AVX_REG_AMOUNT,

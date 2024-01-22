@@ -64,7 +64,7 @@ sse_is_executable (void)
   /* initializes cache information */
   const int flags = orc_sse_get_cpu_flags ();
 
-  if (orc_x86_sse_flags & ORC_TARGET_SSE_SSE2) {
+  if (flags & ORC_TARGET_SSE_SSE2) {
     return TRUE;
   }
 #endif
@@ -374,6 +374,7 @@ orc_sse_init (void)
     sse_get_shift,
     sse_set_mxcsr,
     sse_restore_mxcsr,
+    NULL,
     16,
     X86_XMM0,
     16,

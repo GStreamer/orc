@@ -9,6 +9,10 @@ ORC_BEGIN_DECLS
 
 #ifdef ORC_ENABLE_UNSTABLE_API
 
+/* This struct is a naive wrapper of on top of the common
+ * code found on MMX, SSE and AVX. This is could be
+ * abstracted even more, but as an initial step is fine.
+ */
 typedef struct _OrcX86Target
 {
   /* Same as OrcTarget */
@@ -31,8 +35,13 @@ typedef struct _OrcX86Target
   void (*move_register_to_memoffset)(OrcCompiler *compiler, int size, int reg1, int offset, int reg2, int aligned, int uncached);
   void (*move_memoffset_to_register)(OrcCompiler *compiler, int size, int offset, int reg1, int reg2, int is_aligned);
   int (*get_shift)(int size);
+  /* These are specific to the implementation. We need to keep private data
+   * and proceed accordingly with a generic prologue, epilogue instead of
+   * a function pointer for each case
+   */
   void (*set_mxcsr)(OrcCompiler *c);
   void (*restore_mxcsr)(OrcCompiler *c);
+  void (*clear_emms)(OrcCompiler *c);
   int register_size;
   int register_start;
   int n_registers;

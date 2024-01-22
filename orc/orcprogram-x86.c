@@ -623,6 +623,13 @@ orc_x86_restore_mxcsr (OrcX86Target *t, OrcCompiler *c)
   t->restore_mxcsr (c);
 }
 
+static void
+orc_x86_clear_emms (OrcX86Target *t, OrcCompiler *c)
+{
+  if (t->clear_emms)
+    t->clear_emms (c);
+}
+
 
 static void
 orc_x86_adjust_alignment (OrcX86Target *t, OrcCompiler *compiler)
@@ -864,6 +871,7 @@ orc_x86_compile (OrcCompiler *compiler)
   if (set_mxcsr) {
     orc_x86_restore_mxcsr (t, compiler);
   }
+  orc_x86_clear_emms (t, compiler);
 
   orc_x86_restore_registers (t, compiler);
 

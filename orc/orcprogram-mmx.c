@@ -65,7 +65,7 @@ mmx_is_executable (void)
   /* initializes cache information */
   const int flags = orc_mmx_get_cpu_flags ();
 
-  if (orc_x86_mmx_flags & ORC_TARGET_MMX_MMX) {
+  if (flags & ORC_TARGET_MMX_MMX) {
     return TRUE;
   }
 #endif
@@ -331,9 +331,8 @@ mmx_get_shift (int size)
 }
 
 static void
-mmx_restore_mxcsr(OrcCompiler *c)
+mmx_clear_emms(OrcCompiler *c)
 {
-  /* FIXME */
   orc_x86_emit_emms (c);
 }
 
@@ -361,6 +360,7 @@ orc_mmx_init (void)
     mmx_get_shift,
     NULL,
     NULL,
+    mmx_clear_emms,
     8,
     X86_MM0,
     ORC_REG_SIZE,
