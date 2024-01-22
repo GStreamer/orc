@@ -20,11 +20,6 @@
 static OrcOpcodeSet *opcode_sets;
 static int n_opcode_sets;
 
-static OrcTarget *targets[ORC_N_TARGETS];
-static int n_targets;
-
-static OrcTarget *default_target;
-
 #define ORC_SB_MAX 127
 #define ORC_SB_MIN (-1-ORC_SB_MAX)
 #define ORC_UB_MAX 255
@@ -44,97 +39,6 @@ static OrcTarget *default_target;
 #define ORC_CLAMP_UW(x) ORC_CLAMP(x,ORC_UW_MIN,ORC_UW_MAX)
 #define ORC_CLAMP_SL(x) ORC_CLAMP(x,ORC_SL_MIN,ORC_SL_MAX)
 #define ORC_CLAMP_UL(x) ORC_CLAMP(x,ORC_UL_MIN,ORC_UL_MAX)
-
-
-void
-orc_target_register (OrcTarget *target)
-{
-  targets[n_targets] = target;
-  n_targets++;
-
-  if (target->executable) {
-    default_target = target;
-  }
-}
-
-OrcTarget *
-orc_target_get_by_name (const char *name)
-{
-  int i;
-
-  if (name == NULL) return orc_target_get_default();
-
-  for(i=0;i<n_targets;i++){
-    if (strcmp (name, targets[i]->name) == 0) {
-      return targets[i];
-    }
-  }
-
-  return NULL;
-}
-
-OrcTarget *
-orc_target_get_default (void)
-{
-  OrcTarget *target = NULL;
-  const char *const name = _orc_getenv ("ORC_TARGET");
-
-  if (name) {
-    target = orc_target_get_by_name (name);
-    if (!target) {
-      ORC_ERROR ("Target '%s' not found, using default", name);
-    }
-  }
-
-  free ((void *)name);
-
-  if (target != NULL) {
-    return target;
-  }
-
-  return default_target;
-}
-
-const char *
-orc_target_get_name (OrcTarget *target)
-{
-  if (target == NULL) return NULL;
-  return target->name;
-}
-
-unsigned int
-orc_target_get_default_flags (OrcTarget *target)
-{
-  if (target == NULL) return 0;
-  return target->get_default_flags();
-}
-
-const char *
-orc_target_get_preamble (OrcTarget *target)
-{
-  if (target->get_asm_preamble == NULL) return "";
-
-  return target->get_asm_preamble ();
-}
-
-const char *
-orc_target_get_asm_preamble (const char *target)
-{
-  OrcTarget *t;
-
-  t = orc_target_get_by_name (target);
-  if (t == NULL) return "";
-
-  return orc_target_get_preamble (t);
-}
-
-const char *
-orc_target_get_flag_name (OrcTarget *target, int shift)
-{
-  if (target->get_flag_name == NULL) return "";
-
-  return target->get_flag_name (shift);
-}
 
 #if 0
 int
@@ -189,33 +93,6 @@ orc_rule_set_new (OrcOpcodeSet *opcode_set, OrcTarget *target,
   return rule_set;
 }
 
-OrcRule *
-orc_target_get_rule (OrcTarget *target, OrcStaticOpcode *opcode,
-    unsigned int target_flags)
-{
-  OrcRule *rule;
-  int i;
-  int j;
-  int k;
-
-  for(k=0;k<n_opcode_sets;k++){
-    j = opcode - opcode_sets[k].opcodes;
-
-    if (j < 0 || j >= opcode_sets[k].n_opcodes) continue;
-    if (opcode_sets[k].opcodes + j != opcode) continue;
-
-    for(i=target->n_rule_sets-1;i>=0;i--){
-      if (target->rule_sets[i].opcode_major != opcode_sets[k].opcode_major) continue;
-      if (target->rule_sets[i].required_target_flags & (~target_flags)) continue;
-
-      rule = target->rule_sets[i].rules + j;
-      if (rule->emit) return rule;
-    }
-  }
-
-  return NULL;
-}
-
 int
 orc_opcode_register_static (OrcStaticOpcode *sopcode, char *prefix)
 {
@@ -261,6 +138,28 @@ orc_opcode_set_get_nth (int opcode_major)
   return opcode_sets + opcode_major;
 }
 
+OrcOpcodeSet *
+orc_opcode_set_find_by_opcode (OrcStaticOpcode * opcode)
+{
+  int k;
+  int j;
+
+  /* Pointer arithmetic to find a pointer inside an array ...
+  */
+  for (k = 0; k < n_opcode_sets; k++) {
+    j = opcode - opcode_sets[k].opcodes;
+
+    if (j < 0 || j >= opcode_sets[k].n_opcodes) continue;
+    if (opcode_sets[k].opcodes + j != opcode) continue;
+
+    return &opcode_sets[k];
+  }
+
+  return NULL;
+}
+
+/* FIXME This is wrongly named, you are finding the index of the opcode on a specific opcode set
+ */
 int
 orc_opcode_set_find_by_name (OrcOpcodeSet *opcode_set, const char *name)
 {

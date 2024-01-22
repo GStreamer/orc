@@ -14,6 +14,7 @@ orc_sources = [
   'orcprogram.c',
   'orcprogram-c.c',
   'orcrule.c',
+  'orctarget.c',
   'orcutils.c',
 ]
 

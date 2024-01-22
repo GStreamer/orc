@@ -57,6 +57,10 @@ ORC_API int orc_opcode_set_find_by_name (OrcOpcodeSet *opcode_set, const char *n
 
 ORC_API int orc_opcode_register_static (OrcStaticOpcode *sopcode, char *prefix);
 
+#ifdef ORC_ENABLE_UNSTABLE_API
+ORC_API OrcOpcodeSet * orc_opcode_set_find_by_opcode (OrcStaticOpcode * opcode);
+#endif
+
 ORC_END_DECLS
 
 #endif
