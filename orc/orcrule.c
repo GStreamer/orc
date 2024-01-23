@@ -35,3 +35,22 @@ orc_rule_register (OrcRuleSet *rule_set,
   rule_set->rules[i].emit_user = emit_user;
 }
 
+OrcRuleSet *
+orc_rule_set_new (OrcOpcodeSet *opcode_set, OrcTarget *target,
+    unsigned int required_flags)
+{
+  OrcRuleSet *rule_set;
+
+  rule_set = target->rule_sets + target->n_rule_sets;
+  target->n_rule_sets++;
+
+  memset (rule_set, 0, sizeof(OrcRuleSet));
+
+  rule_set->opcode_major = opcode_set->opcode_major;
+  rule_set->required_target_flags = required_flags;
+
+  rule_set->rules = malloc (sizeof(OrcRule) * opcode_set->n_opcodes);
+  memset (rule_set->rules, 0, sizeof(OrcRule) * opcode_set->n_opcodes);
+
+  return rule_set;
+}
