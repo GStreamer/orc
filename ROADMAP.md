@@ -17,7 +17,7 @@ Versions
 
 0.4.9999
 --------
-- [ ] Make all .[ch] files to include only functions that belong to that particular component
+- [X] Make all .[ch] files to include only functions that belong to that particular component
 - [ ] Have all code formatted accordingly
 - [ ] Have a pre-commit hook to avoid new commits with wrong format
 - [ ] Avoid using any direct access to a structure from the generated code, use getters/setters instead
@@ -25,7 +25,7 @@ Versions
 - [ ] Put every tool under the tools folder
 - [ ] Have a folder per target
 - [X] Share all program code between mmx, sse and avx
-- [ ] Move target code into a target related file, not a program related file
+- [X] Move target code into a target related file, not a program related file
 - [ ] Properly set the first shift on x86 loops. A variable with alignment 16 on a 32 byte boundary (AVX) should start the loop at 4 shift, not 0
 - [ ] Properly align compiler variables on x86 arch, once a known alignment is know, based on iterations mark the `is_aligned`, not only for one var
 - [ ] Make `orc_compiler_append_code` and therefore `ORC_ASM_CODE` keep track of the current instruction, to put the comment in the correct place
