@@ -38,6 +38,8 @@ void orc_compiler_emit_invariants (OrcCompiler *compiler);
 int orc_program_has_float (OrcCompiler *compiler);
 
 char* _orc_getenv (const char *var);
+void orc_opcode_sys_init (void);
+
 #endif
 
 ORC_END_DECLS

@@ -47,6 +47,7 @@ struct _OrcStaticOpcode {
 
 ORC_API OrcStaticOpcode * orc_opcode_find_by_name (const char *name);
 
+/* FIXME 0.5 This should never be API */
 ORC_API void orc_opcode_init (void);
 
 ORC_API OrcOpcodeSet *orc_opcode_set_get (const char *name);
