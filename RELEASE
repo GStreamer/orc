@@ -1,3 +1,17 @@
+0.4.35
+======
+
+- Add support for AVX / AVX2 (L. E. Segovia)
+- SSE backend improvements (L. E. Segovia)
+- New `orf` and `andf` opcodes for bitwise AND and OR for single precision floats (Jorge Zapata)
+- Add support for `convwf`, int16 to float conversion (Jorge Zapata)
+- Allow backend selection through ORC_TARGET environment variable (L. E. Segovia)
+- Documentation improvements (Jorge Zapata, L. E. Segovia, Tim-Philipp Müller)
+- orconce: Use Win32 once implementation with MSVC (Seungha Yang, L. E. Segovia)
+- orcc: add --binary option to output raw machine code for functions (L. E. Segovia)
+- orcprofile: Implement Windows high-resolution timestamp for MSVC
+  to allow benchmarking on MSVC builds (L. E. Segovia)
+
 0.4.34
 ======
 
