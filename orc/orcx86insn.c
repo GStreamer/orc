@@ -38,6 +38,8 @@
 #define ORC_VEX_WIG 0U
 #define ORC_VEX_W0 (1U << 3)
 #define ORC_VEX_W1 (1U << 5)
+// Special instruction that uses 66 but not the escape 0F
+#define ORC_SKIP_ESCAPE (1U << 6)
 
 static const OrcSysOpcode orc_x86_opcodes[] = {
   { "punpcklbw", ORC_X86_INSN_TYPE_MMXM_MMX, 0, ORC_SIMD_PREFIX_MMX, 0x60 },
@@ -259,12 +261,12 @@ static const OrcSysOpcode orc_x86_opcodes[] = {
   { "push", ORC_X86_INSN_TYPE_STACK, 0, ORC_VEX_SIMD_PREFIX_NONE, 0x50 },
   { "pop", ORC_X86_INSN_TYPE_STACK, 0, ORC_VEX_SIMD_PREFIX_NONE, 0x58 },
   { "movzx", ORC_X86_INSN_TYPE_REGM_REG, 0, ORC_SIMD_PREFIX_ESCAPE_ONLY, 0xb6 },
-  { "movw", ORC_X86_INSN_TYPE_REGM_REG, 0, ORC_VEX_SIMD_PREFIX_66, 0x8b },
+  { "movw", ORC_X86_INSN_TYPE_REGM_REG, ORC_SKIP_ESCAPE, ORC_VEX_SIMD_PREFIX_66, 0x8b },
   { "movl", ORC_X86_INSN_TYPE_REGM_REG, 0, ORC_VEX_SIMD_PREFIX_NONE, 0x8b },
   { "mov", ORC_X86_INSN_TYPE_REGM_REG, 0, ORC_VEX_SIMD_PREFIX_NONE, 0x8b },
   { "mov", ORC_X86_INSN_TYPE_IMM32_REGM_MOV, 0, ORC_VEX_SIMD_PREFIX_NONE, 0xb8 },
   { "movb", ORC_X86_INSN_TYPE_REG8_REGM, 0, ORC_VEX_SIMD_PREFIX_NONE, 0x88 },
-  { "movw", ORC_X86_INSN_TYPE_REG16_REGM, 0, ORC_VEX_SIMD_PREFIX_66, 0x89 },
+  { "movw", ORC_X86_INSN_TYPE_REG16_REGM, ORC_SKIP_ESCAPE, ORC_VEX_SIMD_PREFIX_66, 0x89 },
   { "movl", ORC_X86_INSN_TYPE_REG_REGM, 0, ORC_VEX_SIMD_PREFIX_NONE, 0x89 },
   { "mov", ORC_X86_INSN_TYPE_REG_REGM, 0, ORC_VEX_SIMD_PREFIX_NONE, 0x89 },
   { "test", ORC_X86_INSN_TYPE_REGM_REG, 0, ORC_VEX_SIMD_PREFIX_NONE, 0x85 },
@@ -342,15 +344,14 @@ output_opcode (OrcCompiler *p, const OrcSysOpcode *opcode, int size,
   // Emit opcode in big endian format -- max 3 bytes
   switch (opcode->prefix) {
     case ORC_VEX_SIMD_PREFIX_66:
+      if (!(opcode->flags & ORC_SKIP_ESCAPE))
+        *p->codeptr++ = 0x0F;
+      break;
     case ORC_VEX_SIMD_PREFIX_F2:
     case ORC_VEX_SIMD_PREFIX_F3:
     case ORC_SIMD_PREFIX_ESCAPE_ONLY:
-      *p->codeptr++ = 0x0F;
-      break;
     case ORC_SIMD_PREFIX_MMX:
-      if (reg_type == ORC_X86_SSE_PREFIX) {
-        *p->codeptr++ = 0x0F;
-      }
+      *p->codeptr++ = 0x0F;
       break;
     case ORC_VEX_SIMD_PREFIX_NONE:
       break;
