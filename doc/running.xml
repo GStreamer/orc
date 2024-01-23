@@ -49,8 +49,8 @@ At runtime several environment variables can be used to control ORC.
   </para>
 </formalpara>
 
-<formalpara id="ORC_BACKEND">
-  <title><envar>ORC_BACKEND</envar></title>
+<formalpara id="ORC_TARGET">
+  <title><envar>ORC_TARGET</envar></title>
 
   <para>
     This environment variable can be used to override the default target

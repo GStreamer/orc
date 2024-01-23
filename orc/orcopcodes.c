@@ -76,13 +76,20 @@ orc_target_get_by_name (const char *name)
 OrcTarget *
 orc_target_get_default (void)
 {
-  const char *const envvar = _orc_getenv ("ORC_BACKEND");
+  OrcTarget *target = NULL;
+  const char *const name = _orc_getenv ("ORC_TARGET");
 
-  if (envvar != NULL) {
-    OrcTarget *const target = orc_target_get_by_name (envvar);
+  if (name) {
+    target = orc_target_get_by_name (name);
+    if (!target) {
+      ORC_ERROR ("Target '%s' not found, using default", name);
+    }
+  }
 
-    if (target != NULL)
-      return target;
+  free ((void *)name);
+
+  if (target != NULL) {
+    return target;
   }
 
   return default_target;
