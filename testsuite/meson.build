@@ -50,7 +50,7 @@ foreach test : tests
     )
 endforeach
 
-noinst_bins = ['generate_xml_table', 'generate_xml_table2']
+noinst_bins = []
 
 if backend == 'neon' or backend == 'all'
   noinst_bins += ['compile_opcodes_sys_neon', 'compile_parse_neon']

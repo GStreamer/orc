@@ -21,3 +21,10 @@ tools_variables = [
   'toolsdir=' + ('${prefix}' / get_option('bindir')),
   'orcc=' + ('${toolsdir}' / orcc_filename),
 ]
+
+noinst_bins = ['generate_xml_table', 'generate_xml_table2']
+foreach bin : noinst_bins
+  b = executable(bin, bin + '.c',
+                 install: false,
+                 dependencies: [libm, orc_dep, orc_test_dep])
+endforeach
