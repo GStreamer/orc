@@ -22,7 +22,7 @@ tools_variables = [
   'orcc=' + ('${toolsdir}' / orcc_filename),
 ]
 
-noinst_bins = ['generate_xml_table', 'generate_xml_table2']
+noinst_bins = ['generate_xml_table', 'generate_xml_table2', 'generate-bytecode', 'generate-emulation']
 foreach bin : noinst_bins
   b = executable(bin, bin + '.c',
                  install: false,

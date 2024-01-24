@@ -111,12 +111,12 @@ to not break bytecode ABI.
 
 Once it is done, you need to declare the new opcode in `orc/opcodes.h`  and
 generate the emulation code by calling
-`$build_dir/orc/generate-emulation -o orc/orcemulateopcodes.c`.
+`$build_dir/tools/generate-emulation -o orc/orcemulateopcodes.c`.
 
 This will generate the emulation code needed in case the target platform does not support the
 corresponding opcode. You need at least one target implementation of the new opcode in order to get accepted
 
 Finally, to update the documentation, you first need to add the corresponding opcode at
-`testsuite/generate_xml_table2.c` and generate it by calling
-`$build_dir/orc/testsuite/generate_xml_table2 > doc/opcode_table.xml` and update the target support table
-by generating the table with `$build_dir/orc/testsuite/generate_xml_table > doc/table.xml` 
+`tools/generate_xml_table2.c` and generate it by calling
+`$build_dir/tools/generate_xml_table2 > doc/opcode_table.xml` and update the target support table
+by generating the table with `$build_dir/tools/generate_xml_table > doc/table.xml` 

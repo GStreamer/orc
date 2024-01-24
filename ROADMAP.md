@@ -22,7 +22,7 @@ Versions
 - [ ] Have a pre-commit hook to avoid new commits with wrong format
 - [ ] Avoid using any direct access to a structure from the generated code, use getters/setters instead
 - [ ] Avoid using any direct access to a structure from other components, use getters/setters instead
-- [ ] Put every tool under the tools folder
+- [X] Put every tool under the tools folder
 - [ ] Have a folder per target
 - [X] Share all program code between mmx, sse and avx
 - [X] Move target code into a target related file, not a program related file

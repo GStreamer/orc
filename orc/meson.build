@@ -134,13 +134,3 @@ orc_dep = declare_dependency(include_directories : orc_inc,
                              dependencies : orc_dependencies,
                              compile_args : orc_dep_cargs,
                              link_with : orc_lib)
-
-executable ('generate-bytecode',
-  'generate-bytecode.c',
-  dependencies : orc_dep,
-  install : false)
-
-executable ('generate-emulation',
-  'generate-emulation.c',
-  dependencies : orc_dep,
-  install : false)
