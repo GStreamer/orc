@@ -1,3 +1,9 @@
+0.4.36
+======
+
+- Only use AVX / AVX2 instructions on CPUs that support both AVX and AVX2
+  (fixes crash on machines that only support AVX) (L. E. Segovia)
+
 0.4.35
 ======
 
