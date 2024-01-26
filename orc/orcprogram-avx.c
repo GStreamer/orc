@@ -57,9 +57,8 @@ orc_avx_init (void)
   /* initializes cache information */
   const int flags = orc_sse_get_cpu_flags ();
 
-  if (!(flags & (ORC_TARGET_AVX_AVX | ORC_TARGET_AVX_AVX2))) {
+  if (!(flags & ORC_TARGET_AVX_AVX) || !(flags & ORC_TARGET_AVX_AVX2))
     target.executable = FALSE;
-  }
 #endif
 
   orc_target_register (&target);
