@@ -62,7 +62,7 @@ orc_target_get_by_name (const char *name)
 {
   int i;
 
-  if (name == NULL) return default_target;
+  if (name == NULL) return orc_target_get_default();
 
   for(i=0;i<n_targets;i++){
     if (strcmp (name, targets[i]->name) == 0) {
