@@ -25,9 +25,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
+#include <fcntl.h>
+
+#ifdef _MSC_VER
+#  include <intrin.h>
 #endif
+
 #include <orc/orcdebug.h>
 #include <orc/orcsse.h>
 #include <orc/orcmmx.h>
@@ -35,13 +38,6 @@
 #include <orc/orcutils.h>
 
 #include "orcinternal.h"
-
-#include <fcntl.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <time.h>
-
 
 int orc_x86_sse_flags;
 int orc_x86_mmx_flags;
