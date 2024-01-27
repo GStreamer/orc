@@ -15,6 +15,11 @@
 #include <orc/orcinternal.h>
 
 #undef MMX
+#ifdef MMX
+#  define ORC_REG_SIZE 8
+#else
+#  define ORC_REG_SIZE 16
+#endif
 #define SIZE 65536
 
 #define ORC_SSE_ALIGNED_DEST_CUTOFF 64
@@ -153,15 +158,9 @@ orc_compiler_sse_init (OrcCompiler *compiler)
       compiler->valid_regs[i] = 1;
     }
     compiler->valid_regs[X86_ESP] = 0;
-#ifndef MMX
-    for(i=X86_XMM0;i<X86_XMM0+16;i++){
+    for(i=X86_XMM0;i<X86_XMM0+ORC_REG_SIZE;i++){
       compiler->valid_regs[i] = 1;
     }
-#else
-    for(i=X86_XMM0;i<X86_XMM0+8;i++){
-      compiler->valid_regs[i] = 1;
-    }
-#endif
     compiler->save_regs[X86_EBX] = 1;
     compiler->save_regs[X86_EBP] = 1;
     compiler->save_regs[X86_R12] = 1;
@@ -171,7 +170,7 @@ orc_compiler_sse_init (OrcCompiler *compiler)
 #ifdef HAVE_OS_WIN32
     compiler->save_regs[X86_EDI] = 1;
     compiler->save_regs[X86_ESI] = 1;
-    for(i=X86_XMM0+6;i<X86_XMM0+16;i++){
+    for(i=X86_XMM0+6;i<X86_XMM0+ORC_REG_SIZE;i++){
       compiler->save_regs[i] = 1;
     }
 #endif
@@ -453,7 +452,7 @@ sse_load_constant_long (OrcCompiler *compiler, int reg,
     orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
         offset + 4*i, compiler->exec_reg);
   }
-  orc_x86_emit_mov_memoffset_sse (compiler, 16, offset, compiler->exec_reg,
+  orc_x86_emit_mov_memoffset_sse (compiler, ORC_REG_SIZE, offset, compiler->exec_reg,
       reg, FALSE);
 
 }
@@ -752,20 +751,20 @@ orc_compiler_sse_save_registers (OrcCompiler *compiler)
 {
   int i;
   int saved = 0;
-  for (i = 0; i < 16; ++i) {
+  for (i = 0; i < ORC_REG_SIZE; ++i) {
     if (compiler->save_regs[X86_XMM0 + i] == 1) {
       ++saved;
     }
   }
   if (saved > 0) {
-    orc_x86_emit_mov_imm_reg (compiler, 4, 16 * saved, compiler->gp_tmpreg);
+    orc_x86_emit_mov_imm_reg (compiler, 4, ORC_REG_SIZE * saved, compiler->gp_tmpreg);
     orc_x86_emit_sub_reg_reg (compiler, compiler->is_64bit ? 8 : 4,
         compiler->gp_tmpreg, X86_ESP);
     saved = 0;
-    for (i = 0; i < 16; ++i) {
+    for (i = 0; i < ORC_REG_SIZE; ++i) {
       if (compiler->save_regs[X86_XMM0 + i] == 1) {
-        orc_x86_emit_mov_sse_memoffset (compiler, 16, X86_XMM0 + i,
-            saved * 16, X86_ESP, FALSE, FALSE);
+        orc_x86_emit_mov_sse_memoffset (compiler, ORC_REG_SIZE, X86_XMM0 + i,
+            saved * ORC_REG_SIZE, X86_ESP, FALSE, FALSE);
         ++saved;
       }
     }
@@ -777,15 +776,15 @@ orc_compiler_sse_restore_registers (OrcCompiler *compiler)
 {
   int i;
   int saved = 0;
-  for (i = 0; i < 16; ++i) {
+  for (i = 0; i < ORC_REG_SIZE; ++i) {
     if (compiler->save_regs[X86_XMM0 + i] == 1) {
-      orc_x86_emit_mov_memoffset_sse (compiler, 16, saved * 16, X86_ESP,
+      orc_x86_emit_mov_memoffset_sse (compiler, ORC_REG_SIZE, saved * ORC_REG_SIZE, X86_ESP,
           X86_XMM0 + i, FALSE);
       ++saved;
     }
   }
   if (saved > 0) {
-    orc_x86_emit_mov_imm_reg (compiler, 4, 16 * saved, compiler->gp_tmpreg);
+    orc_x86_emit_mov_imm_reg (compiler, 4, ORC_REG_SIZE * saved, compiler->gp_tmpreg);
     orc_x86_emit_add_reg_reg (compiler, compiler->is_64bit ? 8 : 4,
         compiler->gp_tmpreg, X86_ESP);
   }
