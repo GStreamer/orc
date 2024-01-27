@@ -759,9 +759,7 @@ BINARY(andnb,pandn,0xdf)
 BINARY(avgub,pavgb,0xe0)
 BINARY(cmpeqb,pcmpeqb,0x74)
 BINARY(cmpgtsb,pcmpgtb,0x64)
-BINARY(maxsb,pmaxsb,0x383c)
 BINARY(maxub,pmaxub,0xde)
-BINARY(minsb,pminsb,0x3838)
 BINARY(minub,pminub,0xda)
 /* BINARY(mullb,pmullb,0xd5) */
 /* BINARY(mulhsb,pmulhb,0xe5) */
@@ -783,9 +781,7 @@ BINARY(avguw,pavgw,0xe3)
 BINARY(cmpeqw,pcmpeqw,0x75)
 BINARY(cmpgtsw,pcmpgtw,0x65)
 BINARY(maxsw,pmaxsw,0xee)
-BINARY(maxuw,pmaxuw,0x383e)
 BINARY(minsw,pminsw,0xea)
-BINARY(minuw,pminuw,0x383a)
 BINARY(mullw,pmullw,0xd5)
 BINARY(mulhsw,pmulhw,0xe5)
 BINARY(mulhuw,pmulhuw,0xe4)
@@ -805,11 +801,6 @@ BINARY(andnl,pandn,0xdf)
 /* BINARY(avgul,pavgd,0xe3) */
 BINARY(cmpeql,pcmpeqd,0x76)
 BINARY(cmpgtsl,pcmpgtd,0x66)
-BINARY(maxsl,pmaxsd,0x383d)
-BINARY(maxul,pmaxud,0x383f)
-BINARY(minsl,pminsd,0x3839)
-BINARY(minul,pminud,0x383b)
-BINARY(mulll,pmulld,0x3840)
 /* BINARY(mulhsl,pmulhd,0xe5) */
 /* BINARY(mulhul,pmulhud,0xe4) */
 BINARY(orl,por,0xeb)
@@ -823,10 +814,19 @@ BINARY(andq,pand,0xdb)
 BINARY(andnq,pandn,0xdf)
 BINARY(orq,por,0xeb)
 BINARY(xorq,pxor,0xef)
-BINARY(cmpeqq,pcmpeqq,0x3829)
 BINARY(cmpgtsq,pcmpgtq,0x3837)
 
 #ifndef MMX
+BINARY(maxsb,pmaxsb,0x383c)
+BINARY(minsb,pminsb,0x3838)
+BINARY(maxuw,pmaxuw,0x383e)
+BINARY(minuw,pminuw,0x383a)
+BINARY(maxsl,pmaxsd,0x383d)
+BINARY(maxul,pmaxud,0x383f)
+BINARY(minsl,pminsd,0x3839)
+BINARY(minul,pminud,0x383b)
+BINARY(mulll,pmulld,0x3840)
+BINARY(cmpeqq,pcmpeqq,0x3829)
 BINARY(addq,paddq,0xd4)
 BINARY(subq,psubq,0xfb)
 #endif
@@ -1286,6 +1286,7 @@ sse_rule_convssslw (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_packssdw (p, src, dest);
 }
 
+#ifndef MMX
 static void
 sse_rule_convsuslw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -1294,6 +1295,7 @@ sse_rule_convsuslw (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   orc_sse_emit_packusdw (p, src, dest);
 }
+#endif
 
 static void
 sse_rule_convslq (OrcCompiler *p, void *user, OrcInstruction *insn)
@@ -1760,6 +1762,7 @@ sse_rule_mulhul (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 #endif
 
+#ifndef MMX
 static void
 sse_rule_mulslq (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -1778,7 +1781,6 @@ sse_rule_mulslq (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_pmuldq (p, tmp, dest);
 }
 
-#ifndef MMX
 static void
 sse_rule_mulslq_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -1810,9 +1812,7 @@ sse_rule_mulslq_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_x86_emit_mov_memoffset_reg (p, regsize, offset + 32, p->exec_reg, X86_EAX);
   orc_x86_emit_mov_memoffset_reg (p, regsize, offset + 40, p->exec_reg, X86_EDX);
 }
-#endif
 
-#ifndef MMX
 static void
 sse_rule_mululq (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -3135,7 +3135,6 @@ sse_rule_convdf (OrcCompiler *p, void *user, OrcInstruction *insn)
       p->vars[insn->src_args[0]].alloc,
       p->vars[insn->dest_args[0]].alloc);
 }
-#endif
 
 #define UNARY_SSE41(opcode,insn_name) \
 static void \
@@ -3195,6 +3194,7 @@ sse_rule_convsssql_sse41 (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_sse_emit_movdqa (p, src_backup, X86_XMM0);
   }
 }
+#endif
 
 void
 orc_compiler_sse_register_rules (OrcTarget *target)
@@ -3454,6 +3454,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target,
       ORC_TARGET_SSE_SSE4_1);
 
+#ifndef MMX
   REG(maxsb);
   REG(minsb);
   REG(maxuw);
@@ -3472,11 +3473,10 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "convwf", sse_rule_convwf_sse41, NULL);
   orc_rule_register (rule_set, "convsuslw", sse_rule_convsuslw, NULL);
   orc_rule_register (rule_set, "mulslq", sse_rule_mulslq, NULL);
-#ifndef MMX
   orc_rule_register (rule_set, "mulhsl", sse_rule_mulhsl, NULL);
   orc_rule_register (rule_set, "convsssql", sse_rule_convsssql_sse41, NULL);
-#endif
   REG(cmpeqq);
+#endif
 
   /* SSE 4.2 -- no rules */
   rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target,
