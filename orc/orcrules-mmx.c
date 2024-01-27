@@ -1965,16 +1965,17 @@ mmx_rule_splitlw (OrcCompiler *p, void *user, OrcInstruction *insn)
   /* values of dest are shifted away so don't matter */
 
   /* FIXME slow */
+  if (dest1 != src)
+    orc_mmx_emit_movq (p, src, dest1);
+  if (dest2 != src)
+    orc_mmx_emit_movq (p, src, dest2);
 
   orc_mmx_emit_psrad_imm (p, 16, dest1);
   orc_mmx_emit_packssdw (p, dest1, dest1);
 
-  if (dest2 != src)
-    orc_mmx_emit_movq (p, src, dest2);
   orc_mmx_emit_pslld_imm (p, 16, dest2);
   orc_mmx_emit_psrad_imm (p, 16, dest2);
   orc_mmx_emit_packssdw (p, dest2, dest2);
-
 }
 
 static void
@@ -1990,11 +1991,13 @@ mmx_rule_splitwb (OrcCompiler *p, void *user, OrcInstruction *insn)
   ORC_DEBUG ("got tmp %d", tmp);
   /* FIXME slow */
 
-  orc_mmx_emit_psraw_imm (p, 8, dest1);
-  orc_mmx_emit_packsswb (p, dest1, dest1);
-
+  if (dest1 != src)
+    orc_mmx_emit_movq (p, src, dest1);
   if (dest2 != src)
     orc_mmx_emit_movq (p, src, dest2);
+
+  orc_mmx_emit_psraw_imm (p, 8, dest1);
+  orc_mmx_emit_packsswb (p, dest1, dest1);
 
 #if 0
   orc_mmx_emit_psllw_imm (p, 8, dest2);
