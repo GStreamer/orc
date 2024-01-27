@@ -13,6 +13,11 @@
 #include <orc/orcmmx.h>
 
 #define MMX 1
+#ifdef MMX
+#  define ORC_REG_SIZE 8
+#else
+#  define ORC_REG_SIZE 16
+#endif
 #define SIZE 65536
 
 /* sse rules */
@@ -1666,21 +1671,21 @@ mmx_rule_mulll_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   const int offset = ORC_STRUCT_OFFSET (OrcExecutor, arrays[ORC_VAR_T1]);
 
-  orc_x86_emit_mov_mmx_memoffset (p, 16, p->vars[insn->src_args[0]].alloc,
+  orc_x86_emit_mov_mmx_memoffset (p, ORC_REG_SIZE, p->vars[insn->src_args[0]].alloc,
       offset, p->exec_reg, FALSE, FALSE);
-  orc_x86_emit_mov_mmx_memoffset (p, 16, p->vars[insn->src_args[1]].alloc,
-      offset + 16, p->exec_reg, FALSE, FALSE);
+  orc_x86_emit_mov_mmx_memoffset (p, ORC_REG_SIZE, p->vars[insn->src_args[1]].alloc,
+      offset + ORC_REG_SIZE, p->exec_reg, FALSE, FALSE);
 
   for (int i = 0; i < (1 << p->insn_shift); i++) {
      orc_x86_emit_mov_memoffset_reg (p, 4, offset + 4 * i, p->exec_reg,
          p->gp_tmpreg);
-     orc_x86_emit_imul_memoffset_reg (p, 4, offset + 16 + 4 * i, p->exec_reg,
+     orc_x86_emit_imul_memoffset_reg (p, 4, offset + ORC_REG_SIZE + 4 * i, p->exec_reg,
          p->gp_tmpreg);
      orc_x86_emit_mov_reg_memoffset (p, 4, p->gp_tmpreg, offset + 4 * i,
          p->exec_reg);
   }
 
-  orc_x86_emit_mov_memoffset_mmx (p, 16, offset, p->exec_reg,
+  orc_x86_emit_mov_memoffset_mmx (p, ORC_REG_SIZE, offset, p->exec_reg,
       p->vars[insn->dest_args[0]].alloc, FALSE);
 }
 
