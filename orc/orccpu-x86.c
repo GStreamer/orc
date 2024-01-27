@@ -203,8 +203,9 @@ static void
 orc_x86_detect_cpuid (void)
 {
   static int inited = 0;
-  orc_uint32 ebx, edx;
-  orc_uint32 level;
+  orc_uint32 ebx = 0;
+  orc_uint32 edx = 0;
+  orc_uint32 level = 0;
 
   if (inited) return;
   inited = 1;
@@ -486,7 +487,10 @@ orc_sse_detect_cpuid_intel (orc_uint32 level)
 static void
 orc_sse_detect_cpuid_amd (orc_uint32 level)
 {
-  orc_uint32 eax, ebx, ecx, edx;
+  orc_uint32 eax = 0;
+  orc_uint32 ebx = 0;
+  orc_uint32 ecx = 0;
+  orc_uint32 edx = 0;
 
   if (level >= 1) {
     orc_x86_cpuid_handle_standard_flags ();
