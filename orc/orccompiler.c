@@ -189,9 +189,11 @@ orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
   // Use ORC_N_REGS to ensure forward proofed iteration
   for (i = 0; i < ORC_N_REGS; i++) {
     // Try with up to 64 registers starting from offset
+    // If this lands us within vector range, bail out
     reg = offset + ((roff + i) & 0x3f);
-    if (compiler->valid_regs[reg] &&
-        compiler->alloc_regs[reg] == 0) {
+    if (reg >= compiler->target->data_register_offset && !data_reg)
+      break;
+    if (compiler->valid_regs[reg] && compiler->alloc_regs[reg] == 0) {
       compiler->alloc_regs[reg]++;
       compiler->used_regs[reg] = 1;
       return reg;
@@ -1036,8 +1038,9 @@ orc_compiler_global_reg_alloc (OrcCompiler *compiler)
 
   if (compiler->alloc_loop_counter && !compiler->error) {
     compiler->loop_counter = orc_compiler_allocate_register (compiler, FALSE);
-    /* FIXME massive hack */
-    if (compiler->loop_counter == 0) {
+    // FIXME: If loop_counter is invalid, the counter must be set manually
+    // in the executor 
+    if (compiler->loop_counter == ORC_REG_INVALID) {
       compiler->error = FALSE;
       compiler->result = ORC_COMPILE_RESULT_OK;
     }
