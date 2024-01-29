@@ -67,7 +67,7 @@ if 'sse' in enabled_targets
 endif
 
 if 'mmx' in enabled_targets
-  orc_sources += ['orcmmx.c', 'orcrules-mmx.c', 'orcprogram-mmx.c']
+  orc_sources += ['orcmmx.c', 'orcmmxinsn.c', 'orcrules-mmx.c', 'orcprogram-mmx.c']
 endif
 
 if 'altivec' in enabled_targets

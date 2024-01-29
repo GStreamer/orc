@@ -8,6 +8,7 @@
 #include <orc/orcprogram.h>
 #include <orc/orcutils-private.h>
 #include <orc/orcx86.h>
+#include <orc/orcx86insn.h>
 #include <orc/orcx86-private.h>
 #include <orc/orcinternal.h>
 
@@ -737,8 +738,7 @@ orc_x86_emit_loop (OrcCompiler *compiler, int offset, int update)
     if (insn->flags & ORC_INSN_FLAG_INVARIANT)
       continue;
 
-    ORC_ASM_CODE (compiler, "# %d: %s\n", j, insn->opcode->name);
-
+    orc_x86_emit_cpuinsn_comment (compiler, "# %d: %s\n", j, insn->opcode->name);
     compiler->min_temp_reg = ORC_VEC_REG_BASE;
 
     compiler->insn_shift = compiler->loop_shift;
@@ -830,6 +830,170 @@ orc_x86_adjust_alignment (OrcX86Target *t, OrcCompiler *compiler)
       compiler->vars[i].is_aligned = FALSE;
     }
   }
+}
+
+static void
+orc_x86_emit_prologue (OrcCompiler *compiler)
+{
+  orc_compiler_append_code(compiler,".global %s\n", compiler->program->name);
+  orc_compiler_append_code(compiler,".p2align 4\n");
+  orc_compiler_append_code(compiler,"%s:\n", compiler->program->name);
+  if (compiler->is_64bit) {
+    int i;
+
+    orc_x86_emit_cpuinsn_none(compiler, ORC_X86_endbr64);
+    orc_x86_emit_push (compiler, 8, X86_EBP);
+    if (compiler->use_frame_pointer) {
+      orc_x86_emit_mov_reg_reg (compiler, 8, X86_ESP, X86_EBP);
+    }
+
+    for (i = 0; i < 16; i++) {
+      const int reg = ORC_GP_REG_BASE+i;
+      if (compiler->used_regs[reg] &&
+          compiler->save_regs[reg] && reg != X86_EBP) {
+        orc_x86_emit_push (compiler, 8, ORC_GP_REG_BASE+i);
+      }
+    }
+  } else {
+    orc_x86_emit_cpuinsn_none (compiler, ORC_X86_endbr32);
+    orc_x86_emit_push (compiler, 4, X86_EBP);
+    if (compiler->use_frame_pointer) {
+      orc_x86_emit_mov_reg_reg (compiler, 4, X86_ESP, X86_EBP);
+    }
+    orc_x86_emit_mov_memoffset_reg (compiler, 4, 8, X86_ESP, compiler->exec_reg);
+    if (compiler->used_regs[X86_EDI]) {
+      orc_x86_emit_push (compiler, 4, X86_EDI);
+    }
+    if (compiler->used_regs[X86_ESI]) {
+      orc_x86_emit_push (compiler, 4, X86_ESI);
+    }
+    if (compiler->used_regs[X86_EBX]) {
+      orc_x86_emit_push (compiler, 4, X86_EBX);
+    }
+  }
+
+#if 0
+  orc_x86_emit_rdtsc(compiler);
+  orc_x86_emit_mov_reg_memoffset (compiler, 4, X86_EAX,
+      ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A3]), compiler->exec_reg);
+#endif
+}
+static void
+orc_x86_emit_epilogue (OrcCompiler *compiler)
+{
+#if 0
+  orc_x86_emit_rdtsc(compiler);
+  orc_x86_emit_mov_reg_memoffset (compiler, 4, X86_EAX,
+      ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A4]), compiler->exec_reg);
+#endif
+
+  if (compiler->is_64bit) {
+    int i;
+    for (i = 15; i >= 0; i--) {
+      const int reg = ORC_GP_REG_BASE+i;
+      if (compiler->used_regs[reg] && compiler->save_regs[reg] && reg != X86_EBP) {
+        orc_x86_emit_pop (compiler, 8, reg);
+      }
+    }
+    orc_x86_emit_pop (compiler, 8, X86_EBP);
+  } else {
+    if (compiler->used_regs[X86_EBX]) {
+      orc_x86_emit_pop (compiler, 4, X86_EBX);
+    }
+    if (compiler->used_regs[X86_ESI]) {
+      orc_x86_emit_pop (compiler, 4, X86_ESI);
+    }
+    if (compiler->used_regs[X86_EDI]) {
+      orc_x86_emit_pop (compiler, 4, X86_EDI);
+    }
+    orc_x86_emit_pop (compiler, 4, X86_EBP);
+  }
+  // Remember to yank the higher lanes before returning!
+  // https://stackoverflow.com/a/41349852
+#ifdef ENABLE_TARGET_AVX
+  if (strncmp (compiler->target->name, "avx", 3) == 0) {
+    orc_vex_emit_cpuinsn_none (compiler, ORC_X86_zeroupper_avx,
+        ORC_X86_AVX_VEX128_PREFIX);
+  }
+#endif
+  orc_x86_emit_ret (compiler);
+}
+
+static void
+orc_x86_do_fixups (OrcCompiler *compiler)
+{
+  int i;
+  for(i=0;i<compiler->n_fixups;i++){
+    if (compiler->fixups[i].type == 0) {
+      unsigned char *label = compiler->labels[compiler->fixups[i].label];
+      unsigned char *ptr = compiler->fixups[i].ptr;
+      int diff;
+
+      diff = ((orc_int8)ptr[0]) + (label - ptr);
+      if (diff != (orc_int8)diff) {
+        orc_compiler_error (compiler, "short jump too long %d", diff);
+      }
+
+      ptr[0] = diff;
+    } else if (compiler->fixups[i].type == 1) {
+      unsigned char *label = compiler->labels[compiler->fixups[i].label];
+      unsigned char *ptr = compiler->fixups[i].ptr;
+      int diff;
+
+      diff = ORC_READ_UINT32_LE (ptr) + (label - ptr);
+      ORC_WRITE_UINT32_LE(ptr, diff);
+    }
+  }
+}
+static void
+orc_x86_assemble_copy (OrcCompiler *compiler)
+{
+  OrcInstruction *insn;
+  int shift = 0;
+
+  insn = compiler->program->insns + 0;
+
+  if (strcmp (insn->opcode->name, "copyw") == 0) {
+    shift = 1;
+  } else if (strcmp (insn->opcode->name, "copyl") == 0) {
+    shift = 2;
+  }
+
+  compiler->used_regs[X86_EDI] = TRUE;
+  compiler->used_regs[X86_ESI] = TRUE;
+
+  orc_x86_emit_prologue (compiler);
+
+  orc_x86_emit_mov_memoffset_reg (compiler, 4,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,arrays[insn->dest_args[0]]),
+      compiler->exec_reg, X86_EDI);
+  orc_x86_emit_mov_memoffset_reg (compiler, 4,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,arrays[insn->src_args[0]]),
+      compiler->exec_reg, X86_ESI);
+  orc_x86_emit_mov_memoffset_reg (compiler, 4,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,n), compiler->exec_reg,
+      compiler->gp_tmpreg);
+
+  orc_x86_emit_sar_imm_reg (compiler, 4, 2 - shift, compiler->gp_tmpreg);
+  orc_x86_emit_rep_movs (compiler, 4);
+  if (shift == 0) {
+    orc_x86_emit_mov_memoffset_reg (compiler, 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,n), compiler->exec_reg,
+        compiler->gp_tmpreg);
+    orc_x86_emit_and_imm_reg (compiler, 4, 3, compiler->gp_tmpreg);
+    orc_x86_emit_rep_movs (compiler, 1);
+  }
+  if (shift == 1) {
+    orc_x86_emit_mov_memoffset_reg (compiler, 4,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,n), compiler->exec_reg,
+        compiler->gp_tmpreg);
+    orc_x86_emit_and_imm_reg (compiler, 4, 1, compiler->gp_tmpreg);
+    orc_x86_emit_rep_movs (compiler, 2);
+  }
+
+  orc_x86_emit_epilogue (compiler);
+
+  orc_x86_do_fixups (compiler);
 }
 
 static void
@@ -930,7 +1094,7 @@ orc_x86_compile (OrcCompiler *compiler)
 
     save_loop_shift = compiler->loop_shift;
     while (n_left >= (1 << compiler->loop_shift)) {
-      ORC_ASM_CODE (compiler, "# AVX LOOP SHIFT %d\n", compiler->loop_shift);
+      orc_x86_emit_cpuinsn_comment (compiler, "# AVX LOOP SHIFT %d\n", compiler->loop_shift);
       orc_x86_emit_loop (compiler, compiler->offset, 0);
 
       n_left -= 1 << compiler->loop_shift;
@@ -939,7 +1103,7 @@ orc_x86_compile (OrcCompiler *compiler)
     for (loop_shift = compiler->loop_shift - 1; loop_shift >= 0; loop_shift--) {
       if (n_left >= (1 << loop_shift)) {
         compiler->loop_shift = loop_shift;
-        ORC_ASM_CODE (compiler, "# AVX LOOP SHIFT %d\n", loop_shift);
+        orc_x86_emit_cpuinsn_comment (compiler, "# AVX LOOP SHIFT %d\n", loop_shift);
         orc_x86_emit_loop (compiler, compiler->offset, 0);
         n_left -= 1 << loop_shift;
         compiler->offset += 1 << loop_shift;
@@ -969,7 +1133,7 @@ orc_x86_compile (OrcCompiler *compiler)
 
       for (l = 0; l < save_loop_shift; l++) {
         compiler->loop_shift = l;
-        ORC_ASM_CODE (compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
+        orc_x86_emit_cpuinsn_comment (compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
 
         orc_x86_emit_test_imm_memoffset (compiler, 4, 1 << compiler->loop_shift,
             (int)ORC_STRUCT_OFFSET (OrcExecutor, counter1), compiler->exec_reg);
@@ -995,7 +1159,7 @@ orc_x86_compile (OrcCompiler *compiler)
           compiler->loop_counter);
     }
 
-    ORC_ASM_CODE (compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
+    orc_x86_emit_cpuinsn_comment (compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
     // Instruction fetch windows are 16-byte aligned
     // https://easyperf.net/blog/2018/01/18/Code_alignment_issues
     orc_x86_emit_align (compiler, 4);
@@ -1026,7 +1190,7 @@ orc_x86_compile (OrcCompiler *compiler)
 
       for (l = save_loop_shift - 1; l >= 0; l--) {
         compiler->loop_shift = l;
-        ORC_ASM_CODE (compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
+        orc_x86_emit_cpuinsn_comment (compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
 
         orc_x86_emit_test_imm_memoffset (compiler, 4, 1 << compiler->loop_shift,
             (int)ORC_STRUCT_OFFSET (OrcExecutor, counter3), compiler->exec_reg);

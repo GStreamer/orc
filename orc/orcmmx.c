@@ -17,7 +17,7 @@
  * @short_description: code generation for MMX
  */
 
-
+/* FIXME rename it to orc_mmx prefix */
 const char *
 orc_x86_get_regname_mmx(int i)
 {
@@ -35,6 +35,15 @@ orc_x86_get_regname_mmx(int i)
     default:
       return "ERROR";
   }
+}
+
+const char *
+orc_mmx_get_regname_by_size (int reg, int size)
+{
+  if (reg >= X86_MM0 && reg < X86_MM0 + 16)
+    return orc_x86_get_regname_mmx (reg);
+  else
+    return orc_x86_get_regname_size (reg, size);
 }
 
 #if 0
@@ -172,6 +181,5 @@ orc_x86_emit_mov_mmx_memoffset (OrcCompiler *compiler, int size, int reg1,
       ORC_COMPILER_ERROR(compiler, "bad size");
       break;
   }
-
 }
 

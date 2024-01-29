@@ -8,6 +8,7 @@
 
 #include <orc/orc.h>
 #include <orc/orcmmx.h>
+#include <orc/orcmmxinsn.h>
 #include <orc/orcsse.h>
 
 static OrcProgram *p = NULL;

@@ -1000,12 +1000,12 @@ mmx_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
   /* int imm_code2[] = { 6, 2, 4, 6, 2, 4, 6, 2 }; */
   /* int reg_code[] = { 0xf1, 0xd1, 0xe1, 0xf2, 0xd2, 0xe2, 0xf3, 0xd3 }; */
   /* const char *code[] = { "psllw", "psrlw", "psraw", "pslld", "psrld", "psrad", "psllq", "psrlq" }; */
-  const int opcodes[] = { ORC_X86_psllw, ORC_X86_psrlw, ORC_X86_psraw,
-    ORC_X86_pslld, ORC_X86_psrld, ORC_X86_psrad, ORC_X86_psllq,
-    ORC_X86_psrlq };
-  const int opcodes_imm[] = { ORC_X86_psllw_imm, ORC_X86_psrlw_imm,
-    ORC_X86_psraw_imm, ORC_X86_pslld_imm, ORC_X86_psrld_imm,
-    ORC_X86_psrad_imm, ORC_X86_psllq_imm, ORC_X86_psrlq_imm };
+  const int opcodes[] = { ORC_MMX_psllw, ORC_MMX_psrlw, ORC_MMX_psraw,
+    ORC_MMX_pslld, ORC_MMX_psrld, ORC_MMX_psrad, ORC_MMX_psllq,
+    ORC_MMX_psrlq };
+  const int opcodes_imm[] = { ORC_MMX_psllw_imm, ORC_MMX_psrlw_imm,
+    ORC_MMX_psraw_imm, ORC_MMX_pslld_imm, ORC_MMX_psrld_imm,
+    ORC_MMX_psrad_imm, ORC_MMX_psllq_imm, ORC_MMX_psrlq_imm };
   const int src = p->vars[insn->src_args[0]].alloc;
   const int dest = p->vars[insn->dest_args[0]].alloc;
 
@@ -1014,7 +1014,7 @@ mmx_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
   }
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
-    orc_x86_emit_cpuinsn_imm (p, opcodes_imm[type],
+    orc_mmx_emit_cpuinsn_imm (p, opcodes_imm[type],
         p->vars[insn->src_args[1]].value.i, 0, dest);
   } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
     int tmp = orc_compiler_get_temp_reg (p);
@@ -1025,7 +1025,7 @@ mmx_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
         (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[1]]),
         p->exec_reg, tmp, FALSE);
 
-    orc_x86_emit_cpuinsn_size (p, opcodes[type], 16, tmp, dest);
+    orc_mmx_emit_cpuinsn_mmx (p, opcodes[type], tmp, dest);
   } else {
     orc_compiler_error (p, "code generation rule for %s only works with "
         "constant or parameter shifts", insn->opcode->name);
