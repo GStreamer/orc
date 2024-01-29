@@ -64,8 +64,8 @@ orc_test_init (void)
   // outputs from, floating-point instructions are flushed to zero.
   // Otherwise, outputs from neon float ops do not match emulated code.
   int64_t fpcr_value = 0x1000000;
-#ifdef __GNUC__
-  asm("msr FPCR, %0" : : "r" (fpcr_value));
+#if defined(__GNUC__) || defined(__clang__)
+  __asm__("msr FPCR, %0" : : "r" (fpcr_value));
 #elif _MSC_VER
   __asm msr FPCR, fpcr_value 
 #else
