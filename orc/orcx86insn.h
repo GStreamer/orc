@@ -305,6 +305,7 @@ typedef enum
   ORC_X86_blendvpd_avx,
   ORC_X86_andps,
   ORC_X86_orps,
+  ORC_X86_blendvpd_sse,
 } OrcX86Opcode;
 
 typedef enum {
@@ -1007,6 +1008,8 @@ ORC_API void orc_vex_emit_blend_size (OrcCompiler *p, int opcode, int size,
 #define orc_avx_emit_blendpd(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_X86_blendpd_avx, imm, s1, s2, d, ORC_X86_AVX_VEX256_PREFIX)
 #define orc_avx_emit_pblendd(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_X86_pblendd_avx, imm, s1, s2, d, ORC_X86_AVX_VEX256_PREFIX)
 
+#define orc_sse_emit_blendvpd(p, s1, d) \
+    orc_x86_emit_cpuinsn_size (p, ORC_X86_blendvpd_sse, 1, s1, d)
 #define orc_avx_sse_emit_blendvpd(p, s1, s2, mask, d) \
     orc_vex_emit_blend_size (p, ORC_X86_blendvpd_avx, 1, s1, s2, mask, d, \
         ORC_X86_AVX_VEX128_PREFIX)

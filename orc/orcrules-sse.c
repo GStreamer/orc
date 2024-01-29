@@ -1,9 +1,10 @@
 
 #include "config.h"
 
+#include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <sys/types.h>
 
@@ -3162,6 +3163,39 @@ sse_rule_convwf_sse41 (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_cvtdq2ps (p, dest, dest);
 }
 
+static void
+sse_rule_convsssql_sse41 (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmpc_max = orc_compiler_get_temp_constant (p, 8, INT32_MAX);
+  const int tmpc_min = orc_compiler_get_temp_constant (p, 8, INT32_MIN);
+  const int src_backup = orc_compiler_get_temp_reg (p);
+  const int tmp = orc_compiler_get_temp_reg (p);
+  // Operate over tmp, because we don't know if src or dest are X86_XMM0
+  orc_sse_emit_movdqa (p, src, tmp);
+  if (src == X86_XMM0) {
+    orc_sse_emit_movdqa (p, src, src_backup);
+  } else {
+    orc_sse_emit_movdqa (p, X86_XMM0, src_backup);
+    orc_sse_emit_movdqa (p, src, X86_XMM0);
+  }
+  // Apply the same logic as in AVX, only that
+  // BLENDVPD expects XMM0 to be the mask
+  orc_sse_emit_pcmpgtq (p, tmpc_max, X86_XMM0);
+  orc_sse_emit_blendvpd (p, tmpc_max, tmp);
+  orc_sse_emit_movdqa (p, tmp, X86_XMM0);
+  orc_sse_emit_pcmpgtq (p, tmpc_min, X86_XMM0);
+  orc_sse_emit_blendvpd (p, tmp, tmpc_min);
+  orc_sse_emit_pshufd (p, ORC_SSE_SHUF (3, 1, 2, 0), tmpc_min, dest);
+  // Undo the changes to src or X86_XMM0 (if the latter is not dest)
+  if (src == X86_XMM0 && src != dest) {
+    orc_sse_emit_movdqa (p, src_backup, src);
+  } else if (dest != X86_XMM0) {
+    orc_sse_emit_movdqa (p, src_backup, X86_XMM0);
+  }
+}
+
 void
 orc_compiler_sse_register_rules (OrcTarget *target)
 {
@@ -3440,6 +3474,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "mulslq", sse_rule_mulslq, NULL);
 #ifndef MMX
   orc_rule_register (rule_set, "mulhsl", sse_rule_mulhsl, NULL);
+  orc_rule_register (rule_set, "convsssql", sse_rule_convsssql_sse41, NULL);
 #endif
   REG(cmpeqq);
 
