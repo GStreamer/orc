@@ -7,7 +7,8 @@
 #include <stdarg.h>
 
 #ifdef __APPLE__
-  #include <pthread.h>
+#include <pthread.h>
+#include <AvailabilityMacros.h>
 #endif
 
 #if defined(HAVE_CODEMEM_VIRTUALALLOC)
@@ -64,17 +65,6 @@ int _orc_compiler_flag_randomize;
 
 /* For Windows */
 int _orc_codemem_alignment;
-
-#if defined(MAC_OS_VERSION_11_0) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_11_0
-G_ALWAYS_INLINE
-static void
-orc_pthread_jit_write_protect_np (int protect)
-{
-  if (__builtin_available (macOS 11.0, *))
-    if (pthread_jit_write_protect_supported_np ())
-      pthread_jit_write_protect_np (protect);
-}
-#endif
 
 void
 _orc_compiler_init (void)
@@ -473,7 +463,10 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   orc_code_allocate_codemem (program->orccode, program->orccode->code_size);
 
 #if defined(MAC_OS_VERSION_11_0) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_11_0
-  orc_pthread_jit_write_protect_np (0);
+  if (__builtin_available (macOS 11.0, *)) {
+    if (pthread_jit_write_protect_supported_np ())
+      pthread_jit_write_protect_np (0);
+  }
 #endif
 #if defined(HAVE_CODEMEM_VIRTUALALLOC)
   /* Ensure that code region is writable before memcpy */
@@ -492,7 +485,11 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   }
 
 #if defined(MAC_OS_VERSION_11_0) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_11_0
-  orc_pthread_jit_write_protect_np (1);
+  if (__builtin_available (macOS 11.0, *)) {
+    if (pthread_jit_write_protect_supported_np ()) {
+      pthread_jit_write_protect_np (1);
+    }
+  }
 #endif
 #if defined(HAVE_CODEMEM_VIRTUALALLOC)
   /* Code region is now ready for execution */
