@@ -40,7 +40,7 @@ int use_internal = FALSE;
 const char *init_function = NULL;
 const char *decorator = NULL;
 
-char *target = "sse";
+char *target = NULL;
 
 #define ORC_VERSION(a,b,c,d) ((a)*1000000 + (b)*10000 + (c)*100 + (d))
 #define REQUIRE(a,b,c,d) do { \
