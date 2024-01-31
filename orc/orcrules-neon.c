@@ -1861,8 +1861,8 @@ orc_neon_emit_loadiw (OrcCompiler *compiler, OrcVariable *dest, int value)
       return;
     }
 
-    ORC_ASM_CODE(compiler,"  movi %s, #0x%02x\n",
-        orc_neon64_reg_name_vector (reg, 16, 0), value & 0xff);
+    ORC_ASM_CODE(compiler, "  movi %s, #0x%02x\n",
+                 orc_neon64_reg_name_vector(reg, 2, 1), value & 0xff);
     code = 0x0f008400; /* 16-bit (op==0 && cmode==10x0), x=0 is LSL #0 */
     code |= (reg&0x1f) << 0;
     code |= (value&0x1f) << 5;
@@ -1872,8 +1872,8 @@ orc_neon_emit_loadiw (OrcCompiler *compiler, OrcVariable *dest, int value)
 
     value >>= 8;
     if (value) {
-      ORC_ASM_CODE(compiler,"  orr %s, #0x%02x, lsl #8\n",
-          orc_neon64_reg_name_vector (reg, 16, 0), value & 0xff);
+      ORC_ASM_CODE(compiler, "  orr %s, #0x%02x, lsl #8\n",
+                   orc_neon64_reg_name_vector(reg, 2, 1), value & 0xff);
       code = 0x0f00b400; /* 16-bit (cmode==10x1), x=1 is LSL #8 */
       code |= (reg&0x1f) << 0;
       code |= (value&0x1f) << 5;
