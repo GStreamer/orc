@@ -9,6 +9,10 @@
 #ifdef __APPLE__
 #include <pthread.h>
 #include <AvailabilityMacros.h>
+
+#if defined(MAC_OS_VERSION_11_0) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_11_0
+#include <libkern/OSCacheControl.h>
+#endif
 #endif
 
 #if defined(HAVE_CODEMEM_VIRTUALALLOC)
@@ -488,6 +492,7 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   if (__builtin_available (macOS 11.0, *)) {
     if (pthread_jit_write_protect_supported_np ()) {
       pthread_jit_write_protect_np (1);
+      sys_icache_invalidate (program->orccode->exec, program->orccode->code_size);
     }
   }
 #endif
