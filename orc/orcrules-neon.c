@@ -2561,65 +2561,66 @@ ShiftInfo regshift_info[] = {
 };
 
 static void
-orc_neon_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
+orc_neon_emit_shift(OrcCompiler *const p, int type,
+                    const OrcVariable *const dest,
+                    const OrcVariable *const src, int shift,
+                    int is_quad)
+{
+  orc_uint32 code = 0;
+  if (shift < 0) {
+    ORC_COMPILER_ERROR(p, "shift negative");
+    return;
+  }
+  if (shift >= immshift_info[type].bits) {
+    ORC_COMPILER_ERROR(p, "shift too large");
+    return;
+  }
+  if (p->is_64bit) {
+    code = immshift_info[type].code64;
+    ORC_ASM_CODE(p, "  %s %s, %s, #%d\n", immshift_info[type].name64,
+                 orc_neon64_reg_name_vector(dest->alloc, dest->size, is_quad),
+                 orc_neon64_reg_name_vector(src->alloc, src->size, is_quad),
+                 shift);
+    if (is_quad) {
+      code |= 1 << 30;
+    }
+    code |= (dest->alloc & 0x1f) << 0;
+    code |= (src->alloc & 0x1f) << 5;
+  } else {
+    code = immshift_info[type].code;
+    if (is_quad == 0) {
+      ORC_ASM_CODE(p, "  %s %s, %s, #%d\n", immshift_info[type].name,
+                   orc_neon_reg_name(dest->alloc),
+                   orc_neon_reg_name(src->alloc), shift);
+    } else {
+      ORC_ASM_CODE(p, "  %s %s, %s, #%d\n", immshift_info[type].name,
+                   orc_neon_reg_name_quad(dest->alloc),
+                   orc_neon_reg_name_quad(src->alloc), shift);
+      code |= 0x40;
+    }
+    code |= (dest->alloc & 0xf) << 12;
+    code |= ((dest->alloc >> 4) & 0x1) << 22;
+    code |= (src->alloc & 0xf) << 0;
+    code |= ((src->alloc >> 4) & 0x1) << 5;
+  }
+  if (immshift_info[type].negate) {
+    shift = immshift_info[type].bits - shift;
+  }
+  code |= shift << 16;
+  orc_arm_emit(p, code);
+}
+
+static void
+orc_neon_rule_shift(OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int type = ORC_PTR_TO_INT(user);
   orc_uint32 code;
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
-    int shift = p->vars[insn->src_args[1]].value.i;
-    if (shift < 0) {
-      ORC_COMPILER_ERROR(p, "shift negative");
-      return;
-    }
-    if (shift >= immshift_info[type].bits) {
-      ORC_COMPILER_ERROR(p, "shift too large");
-      return;
-    }
-    if (p->is_64bit) {
-      code = immshift_info[type].code64;
-      if (p->insn_shift <= immshift_info[type].vec_shift) {
-        ORC_ASM_CODE(p,"  %s %s, %s, #%d\n",
-            immshift_info[type].name64,
-            orc_neon64_reg_name_vector (p->vars[insn->dest_args[0]].alloc, 1, 0),
-            orc_neon64_reg_name_vector (p->vars[insn->src_args[0]].alloc, 1, 0),
-            (int)p->vars[insn->src_args[1]].value.i);
-      } else {
-        ORC_ASM_CODE(p,"  %s %s, %s, #%d\n",
-            immshift_info[type].name64,
-            orc_neon64_reg_name_vector (p->vars[insn->dest_args[0]].alloc, 1, 1),
-            orc_neon64_reg_name_vector (p->vars[insn->src_args[0]].alloc, 1, 1),
-            (int)p->vars[insn->src_args[1]].value.i);
-        code |= 1 << 30;
-      }
-      code |= (p->vars[insn->dest_args[0]].alloc&0x1f)<<0;
-      code |= (p->vars[insn->src_args[0]].alloc&0x1f)<<5;
-    } else {
-      code = immshift_info[type].code;
-      if (p->insn_shift <= immshift_info[type].vec_shift) {
-        ORC_ASM_CODE(p,"  %s %s, %s, #%d\n",
-            immshift_info[type].name,
-            orc_neon_reg_name (p->vars[insn->dest_args[0]].alloc),
-            orc_neon_reg_name (p->vars[insn->src_args[0]].alloc),
-            (int)p->vars[insn->src_args[1]].value.i);
-      } else {
-        ORC_ASM_CODE(p,"  %s %s, %s, #%d\n",
-            immshift_info[type].name,
-            orc_neon_reg_name_quad (p->vars[insn->dest_args[0]].alloc),
-            orc_neon_reg_name_quad (p->vars[insn->src_args[0]].alloc),
-            (int)p->vars[insn->src_args[1]].value.i);
-        code |= 0x40;
-      }
-      code |= (p->vars[insn->dest_args[0]].alloc&0xf)<<12;
-      code |= ((p->vars[insn->dest_args[0]].alloc>>4)&0x1)<<22;
-      code |= (p->vars[insn->src_args[0]].alloc&0xf)<<0;
-      code |= ((p->vars[insn->src_args[0]].alloc>>4)&0x1)<<5;
-    }
-    if (immshift_info[type].negate) {
-      shift = immshift_info[type].bits - shift;
-    }
-    code |= shift<<16;
-    orc_arm_emit (p, code);
+    orc_neon_emit_shift(p, type, p->vars + insn->dest_args[0],
+                        p->vars + insn->src_args[0],
+                        (int)p->vars[insn->src_args[1]].value.i,
+                        p->insn_shift > immshift_info[type].vec_shift);
   } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
     OrcVariable tmpreg = { .alloc = p->tmpreg, .size = p->vars[insn->src_args[0]].size };
     orc_neon_emit_loadpb (p, p->tmpreg, insn->src_args[1]);
