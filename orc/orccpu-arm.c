@@ -116,15 +116,18 @@ static unsigned long
 orc_cpu_arm_getflags_cpuinfo ()
 {
   unsigned long ret = 0;
+
+#if defined (_WIN32) && defined (_M_ARM64)
+  /* On Windows, for desktop applications, we are on always on ARMv8 (aarch64)*/
+  ret = ORC_TARGET_ARM_EDSP | ORC_TARGET_NEON_NEON;
+#elif defined (__APPLE__) && defined (__arm64__)
+  ret = ORC_TARGET_ARM_EDSP | ORC_TARGET_NEON_NEON;
+#else
   char *cpuinfo;
   char *cpuinfo_line;
   char **flags;
   char **f;
 
-#if defined (_WIN32) && defined (_M_ARM64)
-  /* On Windows, for desktop applications, we are on always on ARMv8 (aarch64)*/
-  ret = ORC_TARGET_ARM_EDSP | ORC_TARGET_NEON_NEON;
-#else
   cpuinfo = get_proc_cpuinfo();
   if (cpuinfo == NULL) {
     ORC_DEBUG ("Failed to read /proc/cpuinfo");
