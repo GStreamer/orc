@@ -1,3 +1,14 @@
+0.4.37
+======
+
+- enable neon instructions on Apple ARM64 (Aleix Conchillo Flaqué)
+- orcc: Fix regression, was hard-coded to use "sse" as default target (Sebastian Dröge)
+- MMX backend fixes (L. E. Segovia, Jorge Zapata)
+- testsuite: Build fixes for Clang (L. E. Segovia)
+- testsuite, tools: Fix warning caused by inserting unneeded source operands (L. E. Segovia)
+- orccompiler: call sys_icache_invalidate() to invalidate macos inst cache (Aleix Conchillo Flaqué)
+- macOS/iOS version/target check build fixes (Aleix Conchillo Flaqué)
+
 0.4.36
 ======
 
