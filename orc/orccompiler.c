@@ -8,9 +8,11 @@
 
 #ifdef __APPLE__
 #include <pthread.h>
-#include <AvailabilityMacros.h>
 
-#if defined(MAC_OS_VERSION_11_0) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_11_0
+#include <AvailabilityMacros.h>
+#include <TargetConditionals.h>
+
+#if TARGET_OS_OSX
 #include <libkern/OSCacheControl.h>
 #endif
 #endif
@@ -466,11 +468,13 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
   program->orccode->code_size = compiler->codeptr - compiler->code;
   orc_code_allocate_codemem (program->orccode, program->orccode->code_size);
 
+#if defined(__APPLE__) && TARGET_OS_OSX
 #if defined(MAC_OS_VERSION_11_0) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_11_0
   if (__builtin_available (macOS 11.0, *)) {
     if (pthread_jit_write_protect_supported_np ())
       pthread_jit_write_protect_np (0);
   }
+#endif
 #endif
 #if defined(HAVE_CODEMEM_VIRTUALALLOC)
   /* Ensure that code region is writable before memcpy */
@@ -488,6 +492,7 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
     compiler->target->flush_cache (program->orccode);
   }
 
+#if defined(__APPLE__) && TARGET_OS_OSX
 #if defined(MAC_OS_VERSION_11_0) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_11_0
   if (__builtin_available (macOS 11.0, *)) {
     if (pthread_jit_write_protect_supported_np ()) {
@@ -495,6 +500,7 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
       sys_icache_invalidate (program->orccode->exec, program->orccode->code_size);
     }
   }
+#endif
 #endif
 #if defined(HAVE_CODEMEM_VIRTUALALLOC)
   /* Code region is now ready for execution */
