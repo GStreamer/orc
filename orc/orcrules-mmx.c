@@ -1,9 +1,10 @@
 
 #include "config.h"
 
+#include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <sys/types.h>
 
@@ -2844,6 +2845,8 @@ BINARY_F(subf, subps, 0x5c)
 BINARY_F(mulf, mulps, 0x59)
 BINARY_F(divf, divps, 0x5e)
 UNARY_F(sqrtf, sqrtps, 0x51)
+BINARY_F(orf, orps, 0x56)
+BINARY_F(andf, andps, 0x54)
 
 #define UNARY_D(opcode,insn_name,code) \
 static void \
@@ -3091,6 +3094,17 @@ mmx_rule_convdl (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+mmx_rule_convwf (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  orc_mmx_emit_punpcklwd (p, src, dest);
+  orc_mmx_emit_psrad_imm (p, 16, dest);
+  orc_mmx_emit_cvtdq2ps (p, dest, dest);
+}
+
+static void
 mmx_rule_convlf (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   orc_mmx_emit_cvtdq2ps (p,
@@ -3139,6 +3153,48 @@ UNARY_SSE41(convubw,pmovzxbw);
 UNARY_SSE41(convuwl,pmovzxwd);
 UNARY_SSE41(convulq,pmovzxdq);
 
+static void
+mmx_rule_convwf_mmx41 (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+
+  orc_mmx_emit_pmovsxwd (p, src, dest);
+  orc_mmx_emit_cvtdq2ps (p, dest, dest);
+}
+
+static void
+mmx_rule_convsssql_mmx41 (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmpc_max = orc_compiler_get_temp_constant (p, 8, INT32_MAX);
+  const int tmpc_min = orc_compiler_get_temp_constant (p, 8, INT32_MIN);
+  const int src_backup = orc_compiler_get_temp_reg (p);
+  const int tmp = orc_compiler_get_temp_reg (p);
+  // Operate over tmp, because we don't know if src or dest are X86_MM0
+  orc_mmx_emit_movq (p, src, tmp);
+  if (src == X86_MM0) {
+    orc_mmx_emit_movq (p, src, src_backup);
+  } else {
+    orc_mmx_emit_movq (p, X86_MM0, src_backup);
+    orc_mmx_emit_movq (p, src, X86_MM0);
+  }
+  // Apply the same logic as in AVX, only that
+  // BLENDVPD expects XMM0 to be the mask
+  orc_mmx_emit_pcmpgtq (p, tmpc_max, X86_MM0);
+  orc_mmx_emit_blendvpd (p, tmpc_max, tmp);
+  orc_mmx_emit_movq (p, tmp, X86_MM0);
+  orc_mmx_emit_pcmpgtq (p, tmpc_min, X86_MM0);
+  orc_mmx_emit_blendvpd (p, tmp, tmpc_min);
+  orc_mmx_emit_pshufd (p, ORC_MMX_SHUF (3, 1, 2, 0), tmpc_min, dest);
+  // Undo the changes to src or X86_MM0 (if the latter is not dest)
+  if (src == X86_MM0 && src != dest) {
+    orc_mmx_emit_movq (p, src_backup, src);
+  } else if (dest != X86_MM0) {
+    orc_mmx_emit_movq (p, src_backup, X86_MM0);
+  }
+}
 
 void
 orc_compiler_mmx_register_rules (OrcTarget *target)
@@ -3295,7 +3351,10 @@ orc_compiler_mmx_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "cmpltf", mmx_rule_cmpltf, NULL);
   orc_rule_register (rule_set, "cmplef", mmx_rule_cmplef, NULL);
   orc_rule_register (rule_set, "convfl", mmx_rule_convfl, NULL);
+  orc_rule_register (rule_set, "convwf", mmx_rule_convwf, NULL);
   orc_rule_register (rule_set, "convlf", mmx_rule_convlf, NULL);
+  orc_rule_register (rule_set, "orf", mmx_rule_orf, NULL);
+  orc_rule_register (rule_set, "andf", mmx_rule_andf, NULL);
 
   orc_rule_register (rule_set, "addd", mmx_rule_addd, NULL);
   orc_rule_register (rule_set, "subd", mmx_rule_subd, NULL);
@@ -3410,10 +3469,12 @@ orc_compiler_mmx_register_rules (OrcTarget *target)
   orc_rule_register (rule_set, "convubw", mmx_rule_convubw_mmx41, NULL);
   orc_rule_register (rule_set, "convuwl", mmx_rule_convuwl_mmx41, NULL);
   orc_rule_register (rule_set, "convulq", mmx_rule_convulq_mmx41, NULL);
+  orc_rule_register (rule_set, "convwf", mmx_rule_convwf_mmx41, NULL);
   orc_rule_register (rule_set, "convsuslw", mmx_rule_convsuslw, NULL);
   orc_rule_register (rule_set, "mulslq", mmx_rule_mulslq, NULL);
 #ifndef MMX
   orc_rule_register (rule_set, "mulhsl", mmx_rule_mulhsl, NULL);
+  orc_rule_register (rule_set, "convsssql", mmx_rule_convsssql_mmx41, NULL);
 #endif
   REG(cmpeqq);
 
