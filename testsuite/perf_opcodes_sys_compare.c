@@ -66,8 +66,10 @@ test_opcode_src (OrcStaticOpcode *opcode)
 
   if (opcode->dest_size[1] != 0) {
     orc_program_append_dds_str (p, opcode->name, "d1", "d2", "s1");
-  } else {
+  } else if (opcode->src_size[1] != 0) {
     orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
+  } else {
+    orc_program_append_str (p, opcode->name, "d1", "s1", NULL);
   }
 
   perf_mmx = orc_test_performance_full (p, flags, "mmx");

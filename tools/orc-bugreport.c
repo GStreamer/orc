@@ -242,8 +242,10 @@ test_opcode_src (OrcStaticOpcode *opcode)
 
   if (opcode->dest_size[1] != 0) {
     orc_program_append_dds_str (p, opcode->name, "d1", "d2", "s1");
-  } else {
+  } else if (opcode->src_size[1] != 0) {
     orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
+  } else {
+    orc_program_append_str (p, opcode->name, "d1", "s1", NULL);
   }
 
   ret = orc_test_compare_output_full (p, flags);
@@ -396,7 +398,11 @@ test_opcode_inplace (OrcStaticOpcode *opcode)
   sprintf(s, "test_inplace_%s", opcode->name);
   orc_program_set_name (p, s);
 
-  orc_program_append_str (p, opcode->name, "d1", "d1", "s2");
+  if (opcode->src_size[1] != 0) {
+    orc_program_append_str (p, opcode->name, "d1", "d1", "s2");
+  } else {
+    orc_program_append_str (p, opcode->name, "d1", "d1", NULL);
+  }
 
   ret = orc_test_compare_output_full (p, flags);
   if (!ret) {
@@ -444,8 +450,10 @@ test_opcode_src_2d (OrcStaticOpcode *opcode)
 
   if (opcode->dest_size[1] != 0) {
     orc_program_append_dds_str (p, opcode->name, "d1", "d2", "s1");
-  } else {
+  } else if (opcode->src_size[1] != 0) {
     orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
+  } else {
+    orc_program_append_str (p, opcode->name, "d1", "s1", NULL);
   }
 
   ret = orc_test_compare_output_full (p, flags);
@@ -494,8 +502,10 @@ test_opcode_src_const_n (OrcStaticOpcode *opcode)
 
   if (opcode->dest_size[1] != 0) {
     orc_program_append_dds_str (p, opcode->name, "d1", "d2", "s1");
-  } else {
+  } else if (opcode->src_size[1] != 0) {
     orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
+  } else {
+    orc_program_append_str (p, opcode->name, "d1", "s1", NULL);
   }
 
   ret = orc_test_compare_output_full (p, flags);
@@ -545,8 +555,10 @@ test_opcode_src_const_n_2d (OrcStaticOpcode *opcode)
 
   if (opcode->dest_size[1] != 0) {
     orc_program_append_dds_str (p, opcode->name, "d1", "d2", "s1");
-  } else {
+  } else if (opcode->src_size[1] != 0) {
     orc_program_append_str (p, opcode->name, "d1", "s1", "s2");
+  } else {
+    orc_program_append_str (p, opcode->name, "d1", "s1", NULL);
   }
 
   ret = orc_test_compare_output_full (p, flags);
