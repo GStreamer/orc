@@ -1,3 +1,9 @@
+0.4.38 (unreleased)
+======
+
+- orc.m4 for autotools is no longer shipped. If anyone still uses
+  it they can copy it into their source tree.
+
 0.4.37
 ======
 

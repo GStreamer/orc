@@ -209,9 +209,6 @@ pkg.generate (orc_lib,
   extra_cflags: orc_dep_cargs,
   libraries_private : orc_dependencies)
 
-# Install m4 macro that other projects use
-install_data('orc.m4', install_dir : 'share/aclocal')
-
 configure_file(output : 'config.h', configuration : cdata)
 
 # summary
