@@ -619,15 +619,6 @@ print_param_val_float (const int *const var, const int *const var2,
   }
 }
 
-static float
-get_array_val_float (OrcArray *array, int i, int j)
-{
-  void *ptr = ORC_PTR_OFFSET (array->data,
-      i*array->element_size + j*array->stride);
-
-  return *(float *)ptr;
-}
-
 int
 float_compare (OrcArray *array1, OrcArray *array2, int i, int j)
 {
@@ -652,49 +643,6 @@ float_compare (OrcArray *array1, OrcArray *array2, int i, int j)
         return TRUE;
       return FALSE;
   }
-  return FALSE;
-}
-
-int
-check_expected_failure (int flags, OrcProgram *p, OrcArray** src, OrcArray** dest_exec, OrcArray** dest_emul, int i, int j) {
-  OrcTarget *target;
-  unsigned int target_flags;
-
-  target = orc_target_get_default ();
-  target_flags = orc_target_get_default_flags (target);
-
-  if ((flags & ORC_TEST_FLAGS_BACKUP) == 0 && strcmp (orc_target_get_name (target), "neon") == 0 && (target_flags & ORC_TARGET_NEON_NEON)) {
-    if (strstr(p->name, "divf")) {
-
-      float src_val = get_array_val_float (src[1], i, j);
-      float dest_exec_val = get_array_val_float (dest_exec[0], i, j);
-
-      // Dividing by a large number in NEON will result in 0
-      if (fabs(src_val) > 7e37 && fabs(dest_exec_val) == 0.0f) {
-        printf(" NEON divf mismatch expected");
-        return TRUE;
-      }
-
-    } else if (strstr(p->name, "sqrtf")) {
-
-      float src_val = get_array_val_float (src[0], i, j);
-      float dest_exec_val = get_array_val_float (dest_exec[0], i, j);
-      float dest_emul_val = get_array_val_float (dest_emul[0], i, j);
-
-      // sqrt of 0 or small numbers in NEON returns NaN because it uses reciprocal estimate
-      if (fabs(src_val) < 2e-38) {
-        printf(" NEON sqrtf mismatch expected");
-        return TRUE;
-      }
-
-      // sqrt in NEON will sometimes be imprecise because frecps returns 1 on small numbers
-      if (fabs(dest_exec_val - dest_emul_val)/dest_emul_val < 2e-7) {
-        printf(" NEON sqrtf mismatch expected");
-        return TRUE;
-      }
-    }
-  }
-
   return FALSE;
 }
 
@@ -938,9 +886,7 @@ orc_test_compare_output_full_for_target (OrcProgram *program, int flags, const c
               print_array_val_float (dest_exec[l-ORC_VAR_D1], i, j);
               if (!float_compare (dest_emul[l-ORC_VAR_D1], dest_exec[l-ORC_VAR_D1], i, j)) {
                 line_bad = TRUE;
-                if(!check_expected_failure(flags, program, src, dest_exec, dest_emul, i,j)) {
-                  n_lines_bad++;
-                }
+                n_lines_bad++;
               }
             } else {
               a = print_array_val_hex (dest_emul[l-ORC_VAR_D1], i, j);
