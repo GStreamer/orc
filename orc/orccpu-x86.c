@@ -329,13 +329,18 @@ orc_x86_cpuid_handle_standard_flags (void)
     orc_x86_sse_flags |= ORC_TARGET_SSE_SSE4_2;
   }
 
-  if (ecx & (1 << 28)) {
+  // Linux mitigation for GDS requires checking for XSAVE too.
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1854795
+  // https://gitlab.freedesktop.org/gstreamer/orc/-/issues/65
+  const int xsave_enabled = ecx & (1 << 26);
+
+  if (ecx & (1 << 28) && xsave_enabled) {
     orc_x86_sse_flags |= ORC_TARGET_AVX_AVX;
   }
 
   get_cpuid (0x00000007, &eax, &ebx, &ecx, &edx);
 
-  if (ebx & (1 << 5)) {
+  if (ebx & (1 << 5) && xsave_enabled) {
     orc_x86_sse_flags |= ORC_TARGET_AVX_AVX2;
   }
 }
