@@ -64,9 +64,6 @@ debian sid arm64:
   image: 'debian:sid-slim'
   tags:
     - 'gstreamer-arm64-linux-docker'
-  # https://gitlab.freedesktop.org/gstreamer/orc/-/issues/41
-  # https://gitlab.freedesktop.org/gstreamer/orc/-/issues/45
-  allow_failure: true
 
 debian bullseye arm64:
   extends: '.debian'
@@ -81,7 +78,14 @@ debian bookworm arm64:
     - 'gstreamer-arm64-linux-docker'
   # https://gitlab.freedesktop.org/gstreamer/orc/-/issues/41
   # https://gitlab.freedesktop.org/gstreamer/orc/-/issues/45
-  allow_failure: true
+  variables:
+    DEPENDENCIES: >
+      meson
+      ninja-build
+      build-essential
+      gcc-11
+    CC: gcc-11
+    CXX: g++-11
 
 .build windows:
   image: 'registry.freedesktop.org/gstreamer/gstreamer/amd64/windows:2023-04-21.0-main'
