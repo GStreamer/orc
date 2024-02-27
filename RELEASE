@@ -1,8 +1,11 @@
-0.4.38 (unreleased)
+0.4.38
 ======
 
+- x86: account for XSAVE when checking for AVX support, fixing usage on
+  hardened linux kernels where AVX support has been disabled (L. E. Segovia)
+- neon: Use the real intrinsics for divf and sqrtf (L. E. Segovia)
 - orc.m4 for autotools is no longer shipped. If anyone still uses
-  it they can copy it into their source tree.
+  it they can copy it into their source tree (Tim-Philipp Müller)
 
 0.4.37
 ======
