@@ -756,6 +756,8 @@ orc_x86_emit_loop (OrcCompiler *compiler, int offset, int update)
       }
     }
   }
+
+  free (insn_idx);
 }
 
 static void
