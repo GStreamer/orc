@@ -47,6 +47,9 @@
 #if defined(__linux__)
 #include <linux/auxvec.h>
 #endif
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
 
 /***** arm *****/
 
@@ -120,7 +123,7 @@ orc_cpu_arm_getflags_cpuinfo ()
 #if defined (_WIN32) && defined (_M_ARM64)
   /* On Windows, for desktop applications, we are on always on ARMv8 (aarch64)*/
   ret = ORC_TARGET_ARM_EDSP | ORC_TARGET_NEON_NEON;
-#elif defined (__APPLE__) && defined (__arm64__)
+#elif defined (__APPLE__) && defined (__arm64__) && TARGET_OS_OSX
   ret = ORC_TARGET_ARM_EDSP | ORC_TARGET_NEON_NEON;
 #else
   char *cpuinfo;
