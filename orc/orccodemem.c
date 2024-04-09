@@ -37,8 +37,6 @@
 /* See _orc_compiler_init() */
 extern int _orc_codemem_alignment;
 
-typedef struct _OrcCodeRegion OrcCodeRegion;
-
 struct _OrcCodeRegion {
   orc_uint8 *write_ptr;
   orc_uint8 *exec_ptr;

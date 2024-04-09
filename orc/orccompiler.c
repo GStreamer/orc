@@ -112,16 +112,18 @@ _orc_compiler_init (void)
   _orc_codemem_alignment = 15;
 #endif
 
-#ifdef ORC_WINAPI_ONLY_APP
-  if (!_orc_compiler_flag_backup && !_orc_compiler_flag_emulate) {
-    int can_jit = FALSE;
+  int can_jit = TRUE;
 
+  if (!_orc_compiler_flag_backup && !_orc_compiler_flag_emulate) {
     /* If backup code is not enabled and emulation is not enabled, that means
      * we will do JIT compilation and call orc_code_region_allocate_codemem().
-     * When targeting Windows Store apps, the codeGeneration capability must
+     */
+#if defined(HAVE_CODEMEM_VIRTUALALLOC) && defined(ORC_WINAPI_ONLY_APP)
+    /* When targeting Windows Store apps, the codeGeneration capability must
      * be enabled in the app manifest, or passing PAGE_EXECUTE to
      * VirtualProtectFromApp will return NULL. In this case, we must force
      * backup C code, and if that's not available, we must emulate. */
+    can_jit = FALSE;
     void *mem = VirtualAllocFromApp (NULL, page_size, MEM_COMMIT,
         PAGE_READWRITE);
     if (mem) {
@@ -129,16 +131,32 @@ _orc_compiler_init (void)
       if (VirtualProtectFromApp (mem, page_size, PAGE_EXECUTE, &old_protect) > 0)
         can_jit = TRUE;
       VirtualFree (mem, 0, MEM_RELEASE);
-    }
-
-    if (!can_jit) {
+    } else {
       ORC_WARNING ("Unable to allocate executable pages: using backup code or "
         "emulation: codeGeneration capability isn't set in the app manifest?");
+    }
+#elif defined(HAVE_CODEMEM_MMAP)
+    /* In this case, we need to check that we can mmap pages as executable.
+     * This is not the case under the combination of SELinux and sandboxing
+     * profiles.
+     */
+    can_jit = FALSE;
+    OrcCodeRegion *region = orc_code_region_alloc();
+    if (region) {
+      can_jit = TRUE;
+      // FIXME: the file descriptor should be kept somewhere
+      // Currently the underlying mmap'd pages are leaked
+      free(region);
+    } else {
+      ORC_WARNING ("Unable to allocate executable pages: using backup code or emulation");
+    }
+#endif
+
+    if (!can_jit) {
       _orc_compiler_flag_backup = TRUE;
       _orc_compiler_flag_emulate = TRUE;
     }
   }
-#endif
 }
 
 int
