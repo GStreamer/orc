@@ -65,16 +65,31 @@ static OrcCodeRegion **orc_code_regions;
 static int orc_code_n_regions;
 
 
+OrcCodeRegion *
+orc_code_region_alloc (void)
+{
+  OrcCodeRegion *region;
+
+  region = malloc(sizeof(OrcCodeRegion));
+  memset (region, 0, sizeof(OrcCodeRegion));
+
+  if (!orc_code_region_allocate_codemem (region)) {
+    free(region);
+    return NULL;
+  }
+
+  return region;
+}
+
 static OrcCodeRegion *
 orc_code_region_new (void)
 {
   OrcCodeRegion *region;
   OrcCodeChunk *chunk;
 
-  region = malloc(sizeof(OrcCodeRegion));
-  memset (region, 0, sizeof(OrcCodeRegion));
+  region = orc_code_region_alloc();
 
-  if (!orc_code_region_allocate_codemem (region);) {
+  if (!region) {
     return NULL;
   }
 
