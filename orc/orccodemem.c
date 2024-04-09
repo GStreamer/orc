@@ -74,7 +74,9 @@ orc_code_region_new (void)
   region = malloc(sizeof(OrcCodeRegion));
   memset (region, 0, sizeof(OrcCodeRegion));
 
-  orc_code_region_allocate_codemem (region);
+  if (!orc_code_region_allocate_codemem (region);) {
+    return NULL;
+  }
 
   chunk = malloc(sizeof(OrcCodeChunk));
   memset (chunk, 0, sizeof(OrcCodeChunk));
@@ -143,13 +145,18 @@ orc_code_region_get_free_chunk (int size)
     }
   }
 
-  orc_code_regions = realloc (orc_code_regions,
-      sizeof(void *)*(orc_code_n_regions+1));
-  if (!orc_code_regions)
+  region = orc_code_region_new ();
+  if (!region)
     return NULL;
 
-  orc_code_regions[orc_code_n_regions] = orc_code_region_new ();
-  region = orc_code_regions[orc_code_n_regions];
+  orc_code_regions = realloc (orc_code_regions,
+      sizeof(void *)*(orc_code_n_regions+1));
+  if (!orc_code_regions) {
+    free(region);
+    return NULL;
+  }
+
+  orc_code_regions[orc_code_n_regions] = region;
   orc_code_n_regions++;
 
   for(chunk = region->chunks; chunk; chunk = chunk->next) {
