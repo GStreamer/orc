@@ -236,12 +236,22 @@ orc_executor_emulate (OrcExecutor *ex)
   OrcInstruction *insn;
   OrcStaticOpcode *opcode;
   OrcOpcodeExecutor *opcode_ex;
-  void *tmpspace[ORC_N_COMPILER_VARIABLES] = { 0 };
+  char name_placeholder[40];
+  const char* name = name_placeholder;
+  void *tmpspace[ORC_N_COMPILER_VARIABLES] = {0};
+
+  memset(name_placeholder, '\0', sizeof(name_placeholder));
 
   if (ex->program) {
     code = ex->program->orccode;
+    if (ex->program->name == NULL) {
+      sprintf(name_placeholder, "<unnamed program @ %p>", ex->program);
+    } else {
+      name = ex->program->name;
+    }
   } else {
     code = (OrcCode *)ex->arrays[ORC_VAR_A2];
+    sprintf(name_placeholder, "<unnamed source @ %p>", ex);
   }
 
   ex->accumulators[0] = 0;
@@ -312,13 +322,13 @@ orc_executor_emulate (OrcExecutor *ex)
       } else if (var->vartype == ORC_VAR_TYPE_SRC) {
         if (ORC_PTR_TO_INT(ex->arrays[insn->src_args[k]]) & (var->size - 1)) {
           ORC_ERROR("Unaligned array for src%d, program %s",
-              (insn->src_args[k]-ORC_VAR_S1), ex->program->name);
+              (insn->src_args[k]-ORC_VAR_S1), name);
         }
         opcode_ex[j].src_ptrs[k] = ex->arrays[insn->src_args[k]];
       } else if (var->vartype == ORC_VAR_TYPE_DEST) {
         if (ORC_PTR_TO_INT(ex->arrays[insn->src_args[k]]) & (var->size - 1)) {
           ORC_ERROR("Unaligned array for dest%d, program %s",
-              (insn->src_args[k]-ORC_VAR_D1), ex->program->name);
+              (insn->src_args[k]-ORC_VAR_D1), name);
         }
         opcode_ex[j].src_ptrs[k] = ex->arrays[insn->src_args[k]];
       }
@@ -336,7 +346,7 @@ orc_executor_emulate (OrcExecutor *ex)
       } else if (var->vartype == ORC_VAR_TYPE_DEST) {
         if (ORC_PTR_TO_INT(ex->arrays[insn->dest_args[k]]) & (var->size - 1)) {
           ORC_ERROR("Unaligned array for dest%d, program %s",
-              (insn->dest_args[k]-ORC_VAR_D1), ex->program->name);
+              (insn->dest_args[k]-ORC_VAR_D1), name);
         }
         opcode_ex[j].dest_ptrs[k] = ex->arrays[insn->dest_args[k]];
       }
