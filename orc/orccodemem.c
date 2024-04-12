@@ -348,9 +348,12 @@ orc_code_region_allocate_codemem (OrcCodeRegion *region)
       "is probably because the Hardened Runtime is enabled without "
       "the com.apple.security.cs.allow-jit entitlement.");
 #else
-  ORC_ERROR("Failed to create write and exec mmap regions.  This "
-      "is probably because SELinux execmem check is enabled (good) "
-      "and $TMPDIR and $HOME are mounted noexec (bad).");
+  ORC_ERROR(
+      "Failed to create write+exec mappings. This "
+      "is probably because SELinux execmem check is enabled (good), "
+      "$XDG_RUNTIME_DIR, $HOME, $TMPDIR, $HOME and /tmp are mounted noexec (good), "
+      "and anonymous mappings cannot be created (really bad)."
+      );
 #endif
   return FALSE;
 }
