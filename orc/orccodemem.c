@@ -187,7 +187,7 @@ orc_code_allocate_codemem (OrcCode *code, int size)
   OrcCodeRegion *region;
   OrcCodeChunk *chunk;
   int aligned_size =
-      (size + _orc_codemem_alignment) & (~_orc_codemem_alignment);
+      (MAX(1, size) + _orc_codemem_alignment) & (~_orc_codemem_alignment);
 
   orc_global_mutex_lock ();
   chunk = orc_code_region_get_free_chunk (aligned_size);
