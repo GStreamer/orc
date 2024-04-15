@@ -10,6 +10,10 @@
 #include <orc/orcx86-private.h>
 #include <orc/orcinternal.h>
 
+#if defined(_WIN32)
+#include <windows.h>
+#endif
+
 #define ORC_X86_ALIGNED_DEST_CUTOFF 64
 #define LABEL_REGION1_SKIP 1
 #define LABEL_INNER_LOOP_START 2
@@ -1051,6 +1055,30 @@ orc_x86_compile (OrcCompiler *compiler)
   orc_x86_do_fixups (compiler);
 }
 
+static void
+orc_x86_flush_cache (OrcCode *code)
+{
+#if defined(__APPLE__)
+  sys_dcache_flush(code->code, code->code_size);
+  sys_icache_invalidate(code->exec, code->code_size);
+#elif defined (_WIN32)
+  HANDLE h_proc = GetCurrentProcess();
+
+  FlushInstructionCache(h_proc, code->code, code->code_size);
+
+  if ((void *) code->exec != (void *) code->code)
+    FlushInstructionCache(h_proc, code->exec, code->code_size);
+#elif __has_builtin(__builtin_clear_cache)
+  __builtin_clear_cache (code->code, code->code + code->code_size);
+  if ((void *) code->exec != (void *) code->code)
+    __builtin_clear_cache (code->exec, code->exec + code->code_size);
+#else
+  __clear_cache (code->code, code->code + code->code_size);
+  if ((void *) code->exec != (void *) code->code)
+    __clear_cache (code->exec, code->exec + code->code_size);
+#endif
+}
+
 void
 orc_x86_register_extension (OrcTarget *t, OrcX86Target *x86t)
 {
@@ -1069,6 +1097,7 @@ orc_x86_register_extension (OrcTarget *t, OrcX86Target *x86t)
   t->load_constant = orc_x86_load_constant;
   t->get_flag_name = x86t->get_flag_name;
   t->load_constant_long = x86t->load_constant_long;
+  t->flush_cache = orc_x86_flush_cache;
   t->target_data = x86t;
   orc_target_register (t);
 }

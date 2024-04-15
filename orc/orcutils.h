@@ -254,6 +254,10 @@ typedef unsigned int orc_bool;
 #endif
 #endif
 
+#ifndef __has_builtin
+#define __has_builtin(x) 0
+#endif
+
 ORC_BEGIN_DECLS
 
 #ifdef ORC_ENABLE_UNSTABLE_API
