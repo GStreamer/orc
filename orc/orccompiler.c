@@ -21,11 +21,17 @@
 
 #if defined(HAVE_CODEMEM_VIRTUALALLOC)
 #include <windows.h>
-  #ifdef ORC_WINAPI_ONLY_APP
-    #define _virtualprotect VirtualProtectFromApp
-  #else
-    #define _virtualprotect VirtualProtect
-  #endif
+#ifdef ORC_WINAPI_ONLY_APP
+#  define _virtualprotect VirtualProtectFromApp
+#else
+#  define _virtualprotect VirtualProtect
+#endif
+#elif defined(HAVE_CODEMEM_MMAP)
+#include <errno.h>
+#include <stdio.h>
+#include <sys/mman.h>
+#define PAGE_READWRITE PROT_READ | PROT_WRITE
+#define PAGE_EXECUTE_READ PROT_READ | PROT_EXEC
 #endif
 
 #include <orc/orcprogram.h>
@@ -283,11 +289,12 @@ orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
   return 0;
 }
 
-#if defined(HAVE_CODEMEM_VIRTUALALLOC)
+#if defined(HAVE_CODEMEM_VIRTUALALLOC) || defined(HAVE_CODEMEM_MMAP)
 static orc_bool
 _set_virtual_protect (void * mem, size_t size, int code_protect)
 {
   char *msg;
+#if defined(HAVE_CODEMEM_VIRTUALALLOC)
   DWORD old_protect;
 
   /* No code, so we 'succeed' */
@@ -305,7 +312,22 @@ _set_virtual_protect (void * mem, size_t size, int code_protect)
       GetLastError (), 0, (LPTSTR) &msg, 0, NULL);
   ORC_ERROR ("Couldn't set memory protect on %p from %x to %x: %s", mem,
       old_protect, code_protect, msg);
-  LocalFree (msg);
+  LocalFree(msg);
+#elif defined(HAVE_CODEMEM_MMAP)
+  /* No code, so we 'succeed' */
+  if (size == 0)
+    return TRUE;
+
+  if (!mem)
+    return FALSE;
+
+  if (mprotect (mem, size, code_protect) == 0)
+    return TRUE;
+
+  msg = strerror (errno);
+  ORC_ERROR ("Couldn't set memory protect on %p to %x: %s", mem,
+      code_protect, msg);
+#endif
 
   return FALSE;
 }
@@ -585,10 +607,10 @@ orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTar
   }
 #endif
 #endif
-#if defined(HAVE_CODEMEM_VIRTUALALLOC)
+#if defined(HAVE_CODEMEM_VIRTUALALLOC) || defined(HAVE_CODEMEM_MMAP)
   /* Ensure that code region is writable before memcpy */
-  _set_virtual_protect (program->orccode->code, program->orccode->code_size,
-      PAGE_READWRITE);
+  _set_virtual_protect(program->orccode->code, program->orccode->code_size,
+                       PAGE_READWRITE);
 #endif
 #if defined(_WIN64) && defined(ORC_SUPPORTS_BACKTRACE_FROM_JIT)
   if (compiler->use_frame_pointer) {
@@ -640,10 +662,10 @@ orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTar
   }
 #endif
 #endif
-#if defined(HAVE_CODEMEM_VIRTUALALLOC)
+#if defined(HAVE_CODEMEM_VIRTUALALLOC) || defined(HAVE_CODEMEM_MMAP)
   /* Code region is now ready for execution */
  if (!_set_virtual_protect (program->orccode->exec, program->orccode->code_size,
-       PAGE_EXECUTE))
+       PAGE_EXECUTE_READ))
    /* Can't set code as executable, force emulation */
    program->orccode->exec = (void *)orc_executor_emulate;
 #endif
