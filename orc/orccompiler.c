@@ -598,6 +598,13 @@ orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTar
 #endif
 
   orc_code_allocate_codemem (program->orccode, program->orccode->code_size);
+  if (program->orccode->chunk == NULL) {
+    program->code_exec = (void *)orc_executor_emulate;
+    program->orccode->exec = (void *)orc_executor_emulate;
+    orc_compiler_error (compiler, "Cannot reserve executable memory, using emulation");
+    compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
+    goto error;
+  }
 
 #if defined(__APPLE__) && (!defined(TARGET_OS_OSX) || TARGET_OS_OSX)
 #if defined(MAC_OS_VERSION_11_0) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_11_0
