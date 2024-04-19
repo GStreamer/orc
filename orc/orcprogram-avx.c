@@ -46,11 +46,13 @@ avx_get_flag_name (const int shift)
     "ssse3",
     "sse41",
     "sse42",
+    "sse4a",
+    "sse5",
     "frame_pointer",
     "short_jumps",
     "64bit",
     "avx",
-    "avx2",
+    "avx2"
   };
 
   if (shift >= 0 && shift < sizeof (flags) / sizeof (flags[0])) {
