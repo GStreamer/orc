@@ -246,6 +246,14 @@ typedef unsigned int orc_bool;
 #endif
 #endif
 
+#ifndef ORC_DEPRECATED
+#if defined(_MSC_VER)
+#define ORC_DEPRECATED __declspec(deprecated)
+#else
+#define ORC_DEPRECATED __attribute__((deprecated))
+#endif
+#endif
+
 ORC_BEGIN_DECLS
 
 #ifdef ORC_ENABLE_UNSTABLE_API

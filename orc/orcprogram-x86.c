@@ -7,6 +7,7 @@
 
 #include <orc/orcprogram.h>
 #include <orc/orcx86.h>
+#include <orc/orcx86-private.h>
 #include <orc/orcinternal.h>
 
 #define ORC_X86_ALIGNED_DEST_CUTOFF 64
@@ -1035,13 +1036,11 @@ orc_x86_compile (OrcCompiler *compiler)
   orc_x86_do_fixups (compiler);
 }
 
-OrcTarget *
-orc_x86_register_target (OrcX86Target *x86t)
+void
+orc_x86_register_extension (OrcTarget *t, OrcX86Target *x86t)
 {
-  OrcTarget *t;
-
-  /* FIXME this needs to be freed */
-  t = calloc (1, sizeof(OrcTarget));
+  ORC_ASSERT (t != NULL && x86t != NULL);
+  memset (t, 0, sizeof (OrcTarget));
   t->name = x86t->name;
 #if defined(HAVE_I386) || defined(HAVE_AMD64)
   t->executable = x86t->is_executable ();
@@ -1057,6 +1056,4 @@ orc_x86_register_target (OrcX86Target *x86t)
   t->load_constant_long = x86t->load_constant_long;
   t->target_data = x86t;
   orc_target_register (t);
-
-  return t;
 }

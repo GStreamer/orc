@@ -8,6 +8,7 @@
 
 #include <orc/orcprogram.h>
 #include <orc/orcx86.h>
+#include <orc/orcx86-private.h>
 #include <orc/orcmmx.h>
 #include <orc/orcutils.h>
 #include <orc/orcdebug.h>
@@ -367,8 +368,8 @@ orc_mmx_init (void)
     13,
   };
   // clang-format on
-  OrcTarget *t;
+  static OrcTarget t;
 
-  t = orc_x86_register_target (&target);
-  orc_compiler_mmx_register_rules (t);
+  orc_x86_register_extension (&t, &target);
+  orc_compiler_mmx_register_rules (&t);
 }

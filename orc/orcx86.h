@@ -229,8 +229,6 @@ ORC_API void orc_x86_emit_cpuinsn_label (OrcCompiler *p, int index, int label);
 ORC_API void orc_x86_emit_cpuinsn_none (OrcCompiler *p, int index);
 ORC_API void orc_x86_emit_cpuinsn_align (OrcCompiler *p, int index, int align_shift);
 
-ORC_API OrcTarget * orc_x86_register_target (OrcX86Target *x86t);
-
 #endif
 
 ORC_END_DECLS

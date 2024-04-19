@@ -9,6 +9,7 @@
 #include <string.h>
 #include <sys/types.h>
 
+#include <orc/orcx86-private.h>
 #include <orc/orcavx.h>
 #include <orc/orcavx-internal.h>
 #include <orc/orcinternal.h>
@@ -418,8 +419,8 @@ orc_avx_init (void)
     16,
   };
   // clang-format on
-  OrcTarget *t;
+  static OrcTarget t;
 
-  t = orc_x86_register_target (&target);
-  orc_compiler_avx_register_rules (t);
+  orc_x86_register_extension (&t, &target);
+  orc_compiler_avx_register_rules (&t);
 }
