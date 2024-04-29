@@ -35,6 +35,50 @@
 #include <valgrind/valgrind.h>
 #endif
 
+#if defined(_WIN64)
+#if defined(_M_ARM64)
+#define THUNK_SIZE 20
+typedef struct {
+  orc_uint32 FunctionLength : 18;
+  orc_uint32 Version : 2;
+  orc_uint32 HasExceptionHandler : 1;
+  orc_uint32 PackedEpilog : 1;
+  orc_uint32 EpilogCount : 5;
+  orc_uint32 CodeWords : 5;
+  orc_uint8  UnwindCode[4];
+  orc_uint32 ExceptionHandler;
+} UNWIND_INFO;
+#else // _M_X64
+#define THUNK_SIZE 12
+#define UWOP_SET_FPREG 3
+#define UWOP_PUSH_NONVOL 0
+#define UWOP_REG_RBP 5
+typedef union {
+  struct {
+    orc_uint8 CodeOffset;
+    orc_uint8 UnwindOp : 4;
+    orc_uint8 OpInfo : 4;
+  };
+  orc_uint16 FrameOffset;
+} UNWIND_CODE;
+typedef struct {
+  orc_uint8   Version : 3;
+  orc_uint8   Flags : 5;
+  orc_uint8   SizeOfProlog;
+  orc_uint8   CountOfCodes;
+  orc_uint8   FrameRegister : 4;
+  orc_uint8   FrameOffset : 4;
+  UNWIND_CODE UnwindCode[2];
+  orc_uint32  ExceptionHandler;
+} UNWIND_INFO;
+#endif // defined(_M_ARM64)
+typedef struct {
+  RUNTIME_FUNCTION function_table;
+  UNWIND_INFO unwind_info;
+  orc_uint8 thunk[THUNK_SIZE];
+} OrcUnwindInfo;
+#endif
+
 /**
  * SECTION:orccompiler
  * @title: OrcCompiler
@@ -71,6 +115,16 @@ int _orc_compiler_flag_randomize;
 
 /* For Windows */
 int _orc_codemem_alignment;
+
+#if defined(_WIN64)
+static DWORD orc_exception_handler(PEXCEPTION_RECORD exceptionRecord,
+                                   PEXCEPTION_REGISTRATION_RECORD _unused,
+                                   PCONTEXT context,
+                                   PEXCEPTION_REGISTRATION_RECORD *_unused2)
+{
+  return ExceptionContinueSearch;
+}
+#endif
 
 void
 _orc_compiler_init (void)
@@ -425,7 +479,95 @@ orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTar
     goto error;
   }
 
+#if defined(_WIN64) && defined(ORC_SUPPORTS_BACKTRACE_FROM_JIT)
+  OrcUnwindInfo table;
+  // The structures must be DWORD aligned in memory.
+  const unsigned char *alignas_offset =
+      (unsigned char *)((DWORD64)(compiler->codeptr + 3) & (~3));
+
+  if (compiler->use_frame_pointer) {
+    memset(&table, 0, sizeof(OrcUnwindInfo));
+    const DWORD64 start_of_orcunwindinfo = alignas_offset - compiler->code;
+
+    table.function_table.BeginAddress = 0;
+
+    // The following Arm64 block is based on the Firefox changeset:
+    // https://hg.mozilla.org/mozilla-central/rev/4d932b82695c
+    // which I fixed to work with pure C.
+
+    // The program counter (and the stack pointer, on Arm64) must be modified
+    // for the handler to be recognised as valid.
+#ifdef _M_ARM64
+    table.function_table.UnwindData =
+        start_of_orcunwindinfo + ORC_STRUCT_OFFSET(OrcUnwindInfo, unwind_info);
+
+    // one 32-bit word gives us up to 4 codes
+    table.unwind_info.CodeWords = 1;
+    // alloc_s small stack of size 1*16
+    table.unwind_info.UnwindCode[0] = 0x1;
+    // end
+    table.unwind_info.UnwindCode[1] = 0xe4;
+
+    // xip0/r16 should be safe to clobber: Windows just used it to call the thunk.
+    const orc_uint8 reg = 16;
+
+    const void *handler = (void *)&orc_exception_handler;
+    const uint16_t *addr = (uint16_t *)&handler;
+
+    // Say `handler` is 0x4444333322221111, then:
+    table.thunk[0] = 0xd2800000 | addr[0] << 5 | reg;  // mov  xip0, 1111
+    table.thunk[1] = 0xf2a00000 | addr[1] << 5 | reg;  // movk xip0, 2222 lsl #0x10
+    table.thunk[2] = 0xf2c00000 | addr[2] << 5 | reg;  // movk xip0, 3333 lsl #0x20
+    table.thunk[3] = 0xf2e00000 | addr[3] << 5 | reg;  // movk xip0, 4444 lsl #0x30
+    table.thunk[4] = 0xd61f0000 | reg << 5;                // br xip0
+#else
+    table.function_table.EndAddress = compiler->codeptr - compiler->code;
+    table.function_table.UnwindInfoAddress =
+        start_of_orcunwindinfo + ORC_STRUCT_OFFSET(OrcUnwindInfo, unwind_info);
+
+    table.unwind_info.Version = 1;
+    // We handle the exception (let the UCRT terminate the app)
+    table.unwind_info.Flags = UNW_FLAG_EHANDLER;
+    table.unwind_info.SizeOfProlog = 8;
+    // See below
+    table.unwind_info.CountOfCodes = 2;
+    // RAX = 50, RBP = 55
+    // https://learn.microsoft.com/en-us/cpp/build/exception-handling-x64?view=msvc-170#operation-info
+    // https://www.felixcloutier.com/x86/mov
+    table.unwind_info.FrameRegister = UWOP_REG_RBP;
+    // No offset from RSP
+    table.unwind_info.FrameOffset = 0;
+    // Bytes 0-4 are the ENDBR64 CET instruction
+    // The docs kind of lie when they say that offsets are not allowed
+    // until SET_FPREG. I guess they apply to OpInfo instead?
+    table.unwind_info.UnwindCode[0].CodeOffset = 5;
+    table.unwind_info.UnwindCode[0].UnwindOp = UWOP_SET_FPREG;
+    table.unwind_info.UnwindCode[0].OpInfo = 0;  // mov rbp, rsp
+    table.unwind_info.UnwindCode[1].CodeOffset = 4;
+    table.unwind_info.UnwindCode[1].UnwindOp = UWOP_PUSH_NONVOL;
+    table.unwind_info.UnwindCode[1].OpInfo = UWOP_REG_RBP; // push rbp
+    // Same as above -- the exception handler is required, and must do
+    // something to actually be dispatched.
+    table.unwind_info.ExceptionHandler =
+        start_of_orcunwindinfo + ORC_STRUCT_OFFSET(OrcUnwindInfo, thunk);
+    // mov %rax, (address of handler as imm64)
+    // jmp %rax
+    static const orc_uint8 thunk[THUNK_SIZE] = {
+      0x48, 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xe0,
+    };
+    memcpy (&table.thunk, &thunk, THUNK_SIZE);
+    memcpy (&table.thunk[2], &orc_exception_handler, 8);
+#endif
+
+    program->orccode->code_size = (unsigned char *)alignas_offset -
+                                  compiler->code + sizeof(OrcUnwindInfo);
+  } else {
+    program->orccode->code_size = compiler->codeptr - compiler->code;
+  }
+#else
   program->orccode->code_size = compiler->codeptr - compiler->code;
+#endif
+
   orc_code_allocate_codemem (program->orccode, program->orccode->code_size);
 
 #if defined(__APPLE__) && TARGET_OS_OSX
@@ -441,7 +583,36 @@ orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTar
   _set_virtual_protect (program->orccode->code, program->orccode->code_size,
       PAGE_READWRITE);
 #endif
-  memcpy (program->orccode->code, compiler->code, program->orccode->code_size);
+#if defined(_WIN64) && defined(ORC_SUPPORTS_BACKTRACE_FROM_JIT)
+  if (compiler->use_frame_pointer) {
+    void *const program_unwind_info =
+        program->orccode->code + (alignas_offset - compiler->code);
+    PRUNTIME_FUNCTION const runtime_function_address =
+          (PRUNTIME_FUNCTION)((orc_uint8*)program_unwind_info +
+                              ORC_STRUCT_OFFSET(OrcUnwindInfo, function_table));
+    const size_t real_code_size = compiler->codeptr - compiler->code;
+    memcpy (program->orccode->code, compiler->code, real_code_size);
+    memcpy (program_unwind_info, &table, sizeof (OrcUnwindInfo));
+    if (RtlAddFunctionTable (runtime_function_address, 1, (DWORD64)program->orccode->code)) {
+      DWORD64 dyn_base = 0;
+      PRUNTIME_FUNCTION const p = RtlLookupFunctionEntry (
+          (DWORD64)program->orccode->code + 20, &dyn_base, NULL);
+      if (p != runtime_function_address) {
+        ORC_ERROR ("Runtime function for program %s %p is bogus "
+                    "(dynbase=%llx, info=%p, expected=%p)",
+                    program->name, program->orccode->code, dyn_base, p,
+                    runtime_function_address);
+      }
+    } else {
+      ORC_WARNING ("Unable to install unwind info for program %s %p",
+                  program->name, program->orccode->code);
+    }
+  } else {
+    memcpy(program->orccode->code, compiler->code, program->orccode->code_size);
+  }
+#else
+  memcpy(program->orccode->code, compiler->code, program->orccode->code_size);
+#endif
 
 #ifdef VALGRIND_DISCARD_TRANSLATIONS
   VALGRIND_DISCARD_TRANSLATIONS (program->orccode->exec,

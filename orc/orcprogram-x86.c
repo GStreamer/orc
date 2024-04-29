@@ -82,6 +82,9 @@ orc_x86_compiler_init (OrcCompiler *c)
       c->valid_regs[i] = 1;
     }
     c->valid_regs[X86_ESP] = 0;
+    if (c->use_frame_pointer) {
+      c->valid_regs[X86_EBP] = 0;
+    }
 
     orc_x86_validate_registers (t, c);
 

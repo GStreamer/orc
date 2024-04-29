@@ -110,6 +110,14 @@ if host_os == 'windows'
   if cc.compiles(code, name : 'building for UWP')
     cdata.set('ORC_WINAPI_ONLY_APP', true)
   endif
+
+  # RtlAddFunctionTable is only available for UWP starting with
+  # Windows SDK 10.0.22621.0. A simple check is to validate if it's usable.
+  if cc.has_function('RtlAddFunctionTable', prefix: '#include <windows.h>') \
+    and cc.has_function('RtlLookupFunctionEntry', prefix: '#include <windows.h>') \
+    and cc.has_function('RtlDeleteFunctionTable', prefix: '#include <windows.h>') 
+    cdata.set('ORC_SUPPORTS_BACKTRACE_FROM_JIT', true)
+  endif
 else
   # If it is not windows, we just assume it is a unix of sorts for now.
   cdata.set('HAVE_CODEMEM_MMAP', true)

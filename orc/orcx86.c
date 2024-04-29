@@ -453,11 +453,16 @@ orc_x86_emit_prologue (OrcCompiler *compiler)
   if (compiler->is_64bit) {
     int i;
 
-    orc_x86_emit_cpuinsn_none (compiler, ORC_X86_endbr64);
+    orc_x86_emit_cpuinsn_none(compiler, ORC_X86_endbr64);
+    orc_x86_emit_push (compiler, 8, X86_EBP);
+    if (compiler->use_frame_pointer) {
+      orc_x86_emit_mov_reg_reg (compiler, 8, X86_ESP, X86_EBP);
+    }
 
-    for(i=0;i<16;i++){
-      if (compiler->used_regs[ORC_GP_REG_BASE+i] &&
-          compiler->save_regs[ORC_GP_REG_BASE+i]) {
+    for (i = 0; i < 16; i++) {
+      const int reg = ORC_GP_REG_BASE+i;
+      if (compiler->used_regs[reg] &&
+          compiler->save_regs[reg] && reg != X86_EBP) {
         orc_x86_emit_push (compiler, 8, ORC_GP_REG_BASE+i);
       }
     }
@@ -497,12 +502,13 @@ orc_x86_emit_epilogue (OrcCompiler *compiler)
 
   if (compiler->is_64bit) {
     int i;
-    for(i=15;i>=0;i--){
-      if (compiler->used_regs[ORC_GP_REG_BASE+i] &&
-          compiler->save_regs[ORC_GP_REG_BASE+i]) {
-        orc_x86_emit_pop (compiler, 8, ORC_GP_REG_BASE+i);
+    for (i = 15; i >= 0; i--) {
+      const int reg = ORC_GP_REG_BASE+i;
+      if (compiler->used_regs[reg] && compiler->save_regs[reg] && reg != X86_EBP) {
+        orc_x86_emit_pop (compiler, 8, reg);
       }
     }
+    orc_x86_emit_pop (compiler, 8, X86_EBP);
   } else {
     if (compiler->used_regs[X86_EBX]) {
       orc_x86_emit_pop (compiler, 4, X86_EBX);
