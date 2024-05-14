@@ -5,7 +5,7 @@
 #include <orc/orcutils.h>
 #include <orc/orcdebug.h>
 
-#if (!defined(_MSC_VER) || defined(__clang__)) && !defined(__STDC_NO_ATOMICS)
+#if (!defined(_MSC_VER) || defined(__clang__)) && !defined(__STDC_NO_ATOMICS__)
 // For MSVC, we need the Win32-based version, as C11 atomics
 // end up preferring the actually more unlikely jump -- therefore
 // triplicating the number of memory accesses.
