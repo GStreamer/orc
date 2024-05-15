@@ -522,7 +522,12 @@ orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTar
     table.thunk[4] = 0xd61f0000 | reg << 5;                // br xip0
 #else
     table.function_table.EndAddress = compiler->codeptr - compiler->code;
+#ifdef __MINGW32__
+    // They're the same member, but MSYS2 only defines the former under x86.
+    table.function_table.UnwindData =
+#else
     table.function_table.UnwindInfoAddress =
+#endif
         start_of_orcunwindinfo + ORC_STRUCT_OFFSET(OrcUnwindInfo, unwind_info);
 
     table.unwind_info.Version = 1;
