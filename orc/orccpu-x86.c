@@ -30,6 +30,7 @@
 #endif
 
 #include <fcntl.h>
+#include <immintrin.h>
 
 #ifdef _MSC_VER
 #  include <intrin.h>
@@ -300,6 +301,19 @@ orc_x86_cpuid_get_branding_string (void)
   _orc_cpu_name = orc_x86_processor_string;
 }
 
+// Checks if XMM and YMM state are enabled in XCR0.
+// See 14.3 DETECTION OF INTEL® AVX INSTRUCTIONS on the
+// Intel® 64 and IA-32 Architectures Software Developer’s Manual
+#if !defined(_MSC_VER) || defined(__clang__)
+#define ORC_TARGET_XSAVE __attribute__((target("xsave")))
+#else
+#define ORC_TARGET_XSAVE
+#endif
+static orc_bool ORC_TARGET_XSAVE check_xcr0_ymm()
+{
+  return (_xgetbv(0) & 6U) != 0U;
+}
+
 static void
 orc_x86_cpuid_handle_standard_flags (void)
 {
@@ -329,19 +343,24 @@ orc_x86_cpuid_handle_standard_flags (void)
     orc_x86_sse_flags |= ORC_TARGET_SSE_SSE4_2;
   }
 
-  // Linux mitigation for GDS requires checking for XSAVE too.
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1854795
   // https://gitlab.freedesktop.org/gstreamer/orc/-/issues/65
-  const int xsave_enabled = ecx & (1 << 26);
+  const int osxsave_enabled = ecx & (1 << 27);
+  const int avx_instructions_supported = ecx & (1 << 28);
 
-  if (ecx & (1 << 28) && xsave_enabled) {
-    orc_x86_sse_flags |= ORC_TARGET_AVX_AVX;
-  }
 
   get_cpuid (0x00000007, &eax, &ebx, &ecx, &edx);
 
-  if (ebx & (1 << 5) && xsave_enabled) {
-    orc_x86_sse_flags |= ORC_TARGET_AVX_AVX2;
+  const int avx2_instructions_supported = ebx & (1 << 5);
+
+  if (check_xcr0_ymm() && osxsave_enabled) {
+    if (avx_instructions_supported) {
+      orc_x86_sse_flags |= ORC_TARGET_AVX_AVX;
+    }
+
+    if (avx2_instructions_supported) {
+      orc_x86_sse_flags |= ORC_TARGET_AVX_AVX2;
+    }
   }
 }
 
