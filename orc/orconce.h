@@ -106,7 +106,7 @@ static inline orc_bool orc_once_enter(OrcOnce *once, void **value) {
 
   /* we use 0 for not initialized, 1 for initialized and 3 for currently
    * being initialized */
-  inited = __sync_val_compare_and_swap(&once->inited, 3, 0);
+  inited = __sync_val_compare_and_swap(&once->inited, 0, 3);
   /* if the value was previously initialized then just return here */
   if (inited == 1) {
     *value = once->value;
