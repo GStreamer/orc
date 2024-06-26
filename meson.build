@@ -156,7 +156,7 @@ opt_tools = get_option('tools')
 if cc.compiles ('''#include <Availability.h>
 #include <TargetConditionals.h>
 #if defined(APPLE)
-# if TARGET_OS_OSX
+# if !defined(TARGET_OS_OSX) || TARGET_OS_OSX
 # error "Targeting macOS device"
 # endif
 #else

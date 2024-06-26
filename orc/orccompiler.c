@@ -12,7 +12,9 @@
 #include <AvailabilityMacros.h>
 #include <TargetConditionals.h>
 
-#if TARGET_OS_OSX
+/* TARGET_OS_OSX is not defined on older macOS, but is always defined
+   to 0 for Apple mobile targets. */
+#if !defined(TARGET_OS_OSX) || TARGET_OS_OSX
 #include <libkern/OSCacheControl.h>
 #endif
 #endif
@@ -575,7 +577,7 @@ orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTar
 
   orc_code_allocate_codemem (program->orccode, program->orccode->code_size);
 
-#if defined(__APPLE__) && TARGET_OS_OSX
+#if defined(__APPLE__) && (!defined(TARGET_OS_OSX) || TARGET_OS_OSX)
 #if defined(MAC_OS_VERSION_11_0) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_11_0
   if (__builtin_available (macOS 11.0, *)) {
     if (pthread_jit_write_protect_supported_np ())
@@ -628,7 +630,7 @@ orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTar
     compiler->target->flush_cache (program->orccode);
   }
 
-#if defined(__APPLE__) && TARGET_OS_OSX
+#if defined(__APPLE__) && (!defined(TARGET_OS_OSX) || TARGET_OS_OSX)
 #if defined(MAC_OS_VERSION_11_0) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_11_0
   if (__builtin_available (macOS 11.0, *)) {
     if (pthread_jit_write_protect_supported_np ()) {
