@@ -424,17 +424,25 @@ orc_parse_get_error_where (OrcParser *parser)
 static void
 orc_parse_add_error_valist (OrcParser *parser, const char *format, va_list args)
 {
-  char text[ORC_ERROR_LENGTH] = { '\0' };
-
   if (parser->error_program != parser->program) {
     parser->error_program = parser->program;
   }
 
-  vsprintf (text, format, args);
+#ifdef HAVE_VASPRINTF
+  char *text;
+  vasprintf (&text, format, args);
+#else
+  char text[ORC_ERROR_LENGTH] = { '\0' };
+  vsnprintf (text, sizeof (text), format, args);
+#endif
 
   orc_vector_append (&parser->errors,
                      orc_parse_error_new (orc_parse_get_error_where (parser),
                                           parser->line_number, -1, text));
+
+#ifdef HAVE_VASPRINTF
+  free (text);
+#endif
 }
 
 static void
