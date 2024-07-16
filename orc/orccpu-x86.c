@@ -345,15 +345,19 @@ orc_x86_cpuid_handle_standard_flags (void)
 
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1854795
   // https://gitlab.freedesktop.org/gstreamer/orc/-/issues/65
-  const int osxsave_enabled = ecx & (1 << 27);
+  orc_bool osxsave_enabled = (ecx & (1 << 27)) != 0;
   const int avx_instructions_supported = ecx & (1 << 28);
-
 
   get_cpuid (0x00000007, &eax, &ebx, &ecx, &edx);
 
   const int avx2_instructions_supported = ebx & (1 << 5);
 
-  if (check_xcr0_ymm() && osxsave_enabled) {
+  // If xgetbv is available, validate YMM state available
+  if (osxsave_enabled) {
+    osxsave_enabled = check_xcr0_ymm();
+  }
+
+  if (osxsave_enabled) {
     if (avx_instructions_supported) {
       orc_x86_sse_flags |= ORC_TARGET_AVX_AVX;
     }
