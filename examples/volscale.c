@@ -145,7 +145,7 @@ do_volume_c (orc_int16 *dest, const orc_int32 *vols, const orc_int16 *samp, int 
 
 
 static void
-do_volume_backup (OrcExecutor *ex)
+do_volume_backup (OrcExecutor * ORC_RESTRICT ex)
 {
   orc_int16 *dest;
   orc_int32 *vols;
