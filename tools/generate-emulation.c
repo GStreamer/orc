@@ -102,7 +102,7 @@ main (int argc, char *argv[])
       OrcStaticOpcode *opcode = opcode_set->opcodes + i;
 
       fprintf(output,
-          "void emulate_%s (OrcOpcodeExecutor *ex, int i, int n);\n",
+          "ORC_INTERNAL void emulate_%s (OrcOpcodeExecutor *ex, int i, int n);\n",
           opcode->name);
     }
     fprintf(output, "\n");

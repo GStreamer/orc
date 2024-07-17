@@ -31,11 +31,9 @@ orc_headers = [
   'orcconstant.h',
   'orccpu.h',
   'orcdebug.h',
-  'orcemulateopcodes.h', # FIXME: this probably shouldn't be installed, symbols are not exported or useful
   'orcexecutor.h',
   'orcfunctions.h',
   'orcinstruction.h',
-  'orcinternal.h', # FIXME: this probably shouldn't be installed, symbols are not exported or useful
   'orclimits.h',
   'orcmmx.h',
   'orcneon.h',

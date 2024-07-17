@@ -10,16 +10,16 @@ ORC_BEGIN_DECLS
 #ifdef ORC_ENABLE_UNSTABLE_API
 
 /* The function prototypes need to be visible to orc.c */
-void orc_mmx_init (void);
-void orc_sse_init (void);
-void orc_avx_init (void);
-void orc_arm_init (void);
-void orc_powerpc_init (void);
-void orc_c_init (void);
-void orc_neon_init (void);
-void orc_c64x_init (void);
-void orc_c64x_c_init (void);
-void orc_mips_init (void);
+ORC_INTERNAL void orc_mmx_init (void);
+ORC_INTERNAL void orc_sse_init (void);
+ORC_INTERNAL void orc_avx_init (void);
+ORC_INTERNAL void orc_arm_init (void);
+ORC_INTERNAL void orc_powerpc_init (void);
+ORC_INTERNAL void orc_c_init (void);
+ORC_INTERNAL void orc_neon_init (void);
+ORC_INTERNAL void orc_c64x_init (void);
+ORC_INTERNAL void orc_c64x_c_init (void);
+ORC_INTERNAL void orc_mips_init (void);
 
 typedef struct _OrcCodeRegion OrcCodeRegion;
 typedef struct _OrcCodeChunk OrcCodeChunk;
@@ -39,11 +39,11 @@ ORC_INTERNAL extern int _orc_cpu_model;
 ORC_INTERNAL extern int _orc_cpu_stepping;
 ORC_INTERNAL extern const char *_orc_cpu_name;
 
-void orc_compiler_emit_invariants (OrcCompiler *compiler);
-int orc_program_has_float (OrcCompiler *compiler);
+ORC_INTERNAL void orc_compiler_emit_invariants (OrcCompiler *compiler);
+ORC_INTERNAL int orc_program_has_float (OrcCompiler *compiler);
 
-char* _orc_getenv (const char *var);
-void orc_opcode_sys_init (void);
+ORC_INTERNAL char* _orc_getenv (const char *var);
+ORC_INTERNAL void orc_opcode_sys_init (void);
 
 #endif
 
