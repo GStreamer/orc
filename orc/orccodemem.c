@@ -218,7 +218,7 @@ orc_code_allocate_codemem (OrcCode *code, int size)
 void
 orc_code_chunk_free (OrcCodeChunk *chunk)
 {
-  if (_orc_compiler_flag_debug) {
+  if (orc_compiler_is_debug ()) {
     /* If debug is turned on, don't free code */
     return;
   }
@@ -244,7 +244,7 @@ orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
   char *filename;
   int exec_prot = PROT_READ | PROT_EXEC;
 
-  if (_orc_compiler_flag_debug)
+  if (orc_compiler_is_debug ())
     exec_prot |= PROT_WRITE;
 
   filename = malloc (strlen ("/orcexec..") +
@@ -260,7 +260,7 @@ orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
     free (filename);
     return FALSE;
   }
-  if (force_unlink || !_orc_compiler_flag_debug) {
+  if (force_unlink || !orc_compiler_is_debug ()) {
     unlink (filename);
   }
 

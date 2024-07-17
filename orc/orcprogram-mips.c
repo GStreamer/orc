@@ -101,7 +101,7 @@ orc_compiler_orc_mips_get_default_flags (void)
 {
   unsigned int flags = ORC_TARGET_MIPS_DSP2;
 
-  if (_orc_compiler_flag_debug) {
+  if (orc_compiler_is_debug ()) {
     flags |= ORC_TARGET_MIPS_FRAME_POINTER;
   }
   return flags;

@@ -28,7 +28,7 @@ sse_get_default_flags (void)
 #if defined(HAVE_AMD64)
   flags |= ORC_TARGET_SSE_64BIT;
 #endif
-  if (_orc_compiler_flag_debug) {
+  if (orc_compiler_is_debug ()) {
     flags |= ORC_TARGET_SSE_FRAME_POINTER;
   }
   

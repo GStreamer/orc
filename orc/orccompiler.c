@@ -110,10 +110,10 @@ static int orc_compiler_new_temporary (OrcCompiler *compiler, int size);
 static void orc_compiler_check_sizes (OrcCompiler *compiler);
 
 static char **_orc_compiler_flag_list;
-int _orc_compiler_flag_backup;
-int _orc_compiler_flag_emulate;
-int _orc_compiler_flag_debug;
-int _orc_compiler_flag_randomize;
+static orc_bool _orc_compiler_flag_backup;
+static orc_bool _orc_compiler_flag_emulate;
+static orc_bool _orc_compiler_flag_debug;
+static orc_bool _orc_compiler_flag_randomize;
 
 /* For Windows */
 int _orc_codemem_alignment;
@@ -127,6 +127,12 @@ static DWORD orc_exception_handler(PEXCEPTION_RECORD exceptionRecord,
   return ExceptionContinueSearch;
 }
 #endif
+
+orc_bool
+orc_compiler_is_debug ()
+{
+  return _orc_compiler_flag_debug != FALSE;
+}
 
 void
 _orc_compiler_init (void)
@@ -215,7 +221,7 @@ _orc_compiler_init (void)
   }
 }
 
-int
+orc_bool
 orc_compiler_flag_check (const char *flag)
 {
   int i;

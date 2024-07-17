@@ -29,13 +29,15 @@ typedef struct _OrcCodeChunk OrcCodeChunk;
 OrcCodeRegion * orc_code_region_alloc (void);
 void orc_code_chunk_free (OrcCodeChunk *chunk);
 
-extern int _orc_data_cache_size_level1;
-extern int _orc_data_cache_size_level2;
-extern int _orc_data_cache_size_level3;
-extern int _orc_cpu_family;
-extern int _orc_cpu_model;
-extern int _orc_cpu_stepping;
-extern const char *_orc_cpu_name;
+ORC_INTERNAL orc_bool orc_compiler_is_debug ();
+
+ORC_INTERNAL extern int _orc_data_cache_size_level1;
+ORC_INTERNAL extern int _orc_data_cache_size_level2;
+ORC_INTERNAL extern int _orc_data_cache_size_level3;
+ORC_INTERNAL extern int _orc_cpu_family;
+ORC_INTERNAL extern int _orc_cpu_model;
+ORC_INTERNAL extern int _orc_cpu_stepping;
+ORC_INTERNAL extern const char *_orc_cpu_name;
 
 void orc_compiler_emit_invariants (OrcCompiler *compiler);
 int orc_program_has_float (OrcCompiler *compiler);
