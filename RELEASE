@@ -2,7 +2,7 @@
 ======
 
 - Security: Fix error message printing buffer overflow leading to possible
-  code executation in orcc with specific input files (CVE-2024-40897). This
+  code execution in orcc with specific input files (CVE-2024-40897). This
   only affects developers and CI environments using orcc, not users of liborc
   (Sebastian Dröge, L. E. Segovia)
 - div255w: fix off-by-one error in the implementations (L. E. Segovia)
