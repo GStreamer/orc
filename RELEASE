@@ -1,3 +1,25 @@
+0.4.39
+======
+
+- Security: Fix error message printing buffer overflow leading to possible
+  code executation in orcc with specific input files (CVE-2024-40897). This
+  only affects developers and CI environments using orcc, not users of liborc
+  (Sebastian Dröge, L. E. Segovia)
+- div255w: fix off-by-one error in the implementations (L. E. Segovia)
+- x86: only run AVX detection if xgetbv is available (L. E. Segovia)
+- x86: fix AVX detection by implementing the check recommended by Intel (L. E. Segovia)
+- Only enable JIT compilation on Apple arm64 if running on macOS, fixes crashes on iOS (Piotr Brzeziński)
+- Fix potential crash in emulation mode if logging is enabled (L. E. Segovia)
+- Handle undefined TARGET_OS_OSX correctly (Joshua Root)
+- orconce: Fix typo in GCC __sync-based implementation (Jakub Vaněk)
+- orconce: Fix usage of __STDC_NO_ATOMICS__ (Alexander Slobodeniuk)
+- Fix build with MSVC 17.10 + C11 (L. E. Segovia)
+- Support stack unwinding on Windows (L. E. Segovia)
+- Major opcode and instruction set code clean-ups and refactoring (Jorge Zapata)
+- Refactor allocation and chunk initialization of code regions (L. E. Segovia)
+- Fall back to emulation on Linux if JIT support is not available,
+  e.g. because of SELinux sandboxing or noexec mounting) (L. E. Segovia)
+
 0.4.38
 ======
 
