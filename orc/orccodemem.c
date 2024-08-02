@@ -15,7 +15,6 @@
 
 #ifdef HAVE_CODEMEM_MMAP
 #include <sys/mman.h>
-#include <sys/errno.h>
 #endif
 
 #ifdef HAVE_CODEMEM_VIRTUALALLOC
