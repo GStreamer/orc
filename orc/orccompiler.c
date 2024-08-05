@@ -1490,7 +1490,8 @@ orc_compiler_error_valist (OrcCompiler *compiler, const char *fmt,
   if (compiler->error_msg) return;
 
 #ifdef HAVE_VASPRINTF
-  vasprintf (&s, fmt, args);
+  if (vasprintf (&s, fmt, args) < 0)
+    ORC_ASSERT (0);
 #elif defined(_UCRT)
   s = malloc (ORC_COMPILER_ERROR_BUFFER_SIZE);
   vsnprintf_s (s, ORC_COMPILER_ERROR_BUFFER_SIZE, _TRUNCATE, fmt, args);

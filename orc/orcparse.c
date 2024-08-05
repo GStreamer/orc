@@ -430,7 +430,8 @@ orc_parse_add_error_valist (OrcParser *parser, const char *format, va_list args)
 
 #ifdef HAVE_VASPRINTF
   char *text = NULL;
-  vasprintf (&text, format, args);
+  if (vasprintf (&text, format, args) < 0)
+    ORC_ASSERT (0);
 #elif defined(_UCRT)
   char text[ORC_ERROR_LENGTH] = { '\0' };
   vsnprintf_s (text, ORC_ERROR_LENGTH, _TRUNCATE, format, args);
