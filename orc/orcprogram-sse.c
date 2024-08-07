@@ -91,7 +91,7 @@ sse_validate_registers (int *regs, int is_64bit)
 static void
 sse_saveable_registers (int *regs, int is_64bit)
 {
-#ifdef HAVE_OS_WIN32
+#if defined(_WIN32) || defined(__CYGWIN__)
   if (is_64bit) {
     int i;
     for(i = X86_XMM0 + 6; i < X86_XMM0 + 16; i++){

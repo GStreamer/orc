@@ -92,7 +92,7 @@ mmx_validate_registers (int *regs, int is_64bit)
 static void
 mmx_saveable_registers (int *regs, int is_64bit)
 {
-#ifdef HAVE_OS_WIN32
+#if defined(_WIN32) || defined(__CYGWIN__)
   if (is_64bit) {
     int i;
     for(i = X86_MM0 + 6; i < X86_MM0 + ORC_REG_SIZE; i++){

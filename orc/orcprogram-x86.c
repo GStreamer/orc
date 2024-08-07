@@ -27,7 +27,7 @@ orc_x86_validate_registers (OrcX86Target *t, OrcCompiler *c)
   t->validate_registers (c->valid_regs, c->is_64bit);
 }
 
-#ifdef HAVE_OS_WIN32
+#if defined(_WIN32) || defined(__CYGWIN__)
 static void
 orc_x86_saveable_registers (OrcX86Target *t, OrcCompiler *c)
 {
@@ -95,7 +95,7 @@ orc_x86_compiler_init (OrcCompiler *c)
     c->save_regs[X86_R13] = 1;
     c->save_regs[X86_R14] = 1;
     c->save_regs[X86_R15] = 1;
-#ifdef HAVE_OS_WIN32
+#if defined(_WIN32) || defined(__CYGWIN__)
     c->save_regs[X86_EDI] = 1;
     c->save_regs[X86_ESI] = 1;
     // When present, the upper portions of YMM0-YMM15 and ZMM0-ZMM15 are also
@@ -123,7 +123,7 @@ orc_x86_compiler_init (OrcCompiler *c)
   }
 
   if (c->is_64bit) {
-#ifdef HAVE_OS_WIN32
+#if defined(_WIN32) || defined(__CYGWIN__)
     c->exec_reg = X86_ECX;
     c->gp_tmpreg = X86_EDX;
 #else

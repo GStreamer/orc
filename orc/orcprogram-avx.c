@@ -96,7 +96,7 @@ avx_validate_registers (int *regs, int is_64bit)
 static void
 avx_saveable_registers (int *regs, int is_64bit)
 {
-#ifdef HAVE_OS_WIN32
+#if defined(_WIN32) || defined(__CYGWIN__)
   if (is_64bit) {
     int i;
     for (i = 6; i < ORC_AVX_REG_AMOUNT; i++) {
