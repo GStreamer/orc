@@ -442,6 +442,20 @@ orc_x86_get_shift (OrcX86Target *t, int size)
   return t->get_shift(size);
 }
 
+static inline orc_bool
+has_valid_alignment (const OrcVariable *var)
+{
+  return (var->alignment % var->size) == 0;
+}
+
+static inline orc_bool
+can_be_validly_aligned (const OrcVariable *var, const OrcX86Target *t)
+{
+  const orc_bool alignment_matches_register =
+      (var->alignment % t->register_size) == 0;
+  return alignment_matches_register && has_valid_alignment (var);
+}
+
 static void
 orc_x86_emit_split_3_regions (OrcX86Target *t, OrcCompiler *compiler)
 {
@@ -795,7 +809,7 @@ orc_x86_adjust_alignment (OrcX86Target *t, OrcCompiler *compiler)
   for (i = ORC_VAR_D1; i <= ORC_VAR_S8; i++) {
     if (compiler->vars[i].size == 0)
       continue;
-    if ((compiler->vars[i].alignment % t->register_size) == 0) {
+    if (can_be_validly_aligned (&compiler->vars[i], t)) {
       compiler->vars[i].is_aligned = TRUE;
     } else {
       compiler->vars[i].is_aligned = FALSE;
@@ -950,7 +964,8 @@ orc_x86_compile (OrcCompiler *compiler)
       }
 
       compiler->loop_shift = save_loop_shift;
-      compiler->vars[align_var].is_aligned = TRUE;
+      /* Consider as aligned only if the alignment allows so */
+      compiler->vars[align_var].is_aligned = has_valid_alignment (&compiler->vars[align_var]);
     }
 
     orc_x86_emit_label (compiler, LABEL_REGION1_SKIP);
