@@ -236,6 +236,69 @@ orc_code_chunk_free (OrcCodeChunk *chunk)
 }
 
 #ifdef HAVE_CODEMEM_MMAP
+static int
+orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
+    const char *dir, int force_unlink)
+{
+  int fd;
+  int n;
+  char *filename;
+  mode_t mask;
+  int exec_prot = PROT_READ | PROT_EXEC;
+
+  if (_orc_compiler_flag_debug)
+    exec_prot |= PROT_WRITE;
+
+  filename = malloc (strlen ("/orcexec..") +
+      strlen (dir) + 6 + 1);
+
+  if (filename == NULL)
+    return FALSE;
+
+  sprintf(filename, "%s/orcexec.XXXXXX", dir);
+  mask = umask (0066);
+  fd = mkstemp (filename);
+  umask (mask);
+  if (fd == -1) {
+    ORC_WARNING ("failed to create temp file '%s'. err=%i", filename, errno);
+    free (filename);
+    return FALSE;
+  }
+  if (force_unlink || !_orc_compiler_flag_debug) {
+    unlink (filename);
+  }
+
+  n = ftruncate (fd, SIZE);
+  if (n < 0) {
+    ORC_WARNING("failed to expand file to size");
+    close (fd);
+    free (filename);
+    return FALSE;
+  }
+
+  region->exec_ptr = mmap (NULL, SIZE, exec_prot, MAP_SHARED, fd, 0);
+  if (region->exec_ptr == MAP_FAILED) {
+    ORC_WARNING("failed to create exec map '%s'. err=%i", filename, errno);
+    close (fd);
+    free (filename);
+    return FALSE;
+  }
+  region->write_ptr = mmap (NULL, SIZE, PROT_READ|PROT_WRITE,
+      MAP_SHARED, fd, 0);
+  if (region->write_ptr == MAP_FAILED) {
+    ORC_WARNING ("failed to create write map '%s'. err=%i", filename, errno);
+    free (filename);
+    munmap (region->exec_ptr, SIZE);
+    close (fd);
+    return FALSE;
+  }
+  region->size = SIZE;
+
+  free (filename);
+  close (fd);
+  return TRUE;
+}
+
 #ifndef MAP_ANONYMOUS
 #define MAP_ANONYMOUS MAP_ANON
 #endif
@@ -245,32 +308,60 @@ orc_code_chunk_free (OrcCodeChunk *chunk)
 #endif
 
 static int
-orc_code_region_allocate_codemem (OrcCodeRegion *region)
+orc_code_region_allocate_codemem_anon_map (OrcCodeRegion *region)
 {
-  const char *msg = NULL;
-  region->exec_ptr = mmap (NULL, SIZE, PROT_READ|PROT_WRITE,
-    MAP_PRIVATE|MAP_ANONYMOUS|MAP_JIT, -1, 0);
+  region->exec_ptr = mmap (NULL, SIZE, PROT_READ|PROT_WRITE|PROT_EXEC,
+      MAP_PRIVATE|MAP_ANONYMOUS|MAP_JIT, -1, 0);
   if (region->exec_ptr == MAP_FAILED) {
-    msg = strerror(errno);
-    ORC_ERROR("Failed to create mapping, err=%s", msg);
-#ifdef __APPLE__
-    ORC_ERROR("This is probably because the Hardened Runtime is enabled "
-              "without the com.apple.security.cs.allow-jit entitlement."
-              );
-#else
-    ORC_ERROR(
-        "This is probably because SELinux execmem check is enabled (good), "
-        "and anonymous mappings cannot be created (really bad)."
-        );
-#endif
+    ORC_WARNING("failed to create write/exec map. err=%i", errno);
     return FALSE;
   }
   region->write_ptr = region->exec_ptr;
   region->size = SIZE;
   return TRUE;
 }
-#elif defined(HAVE_CODEMEM_VIRTUALALLOC)
-static int
+
+int
+orc_code_region_allocate_codemem (OrcCodeRegion *region)
+{
+  const char *tmpdir;
+
+  tmpdir = getenv ("XDG_RUNTIME_DIR");
+  if (tmpdir && orc_code_region_allocate_codemem_dual_map (region,
+        tmpdir, FALSE)) return TRUE;
+
+  tmpdir = getenv ("HOME");
+  if (tmpdir && orc_code_region_allocate_codemem_dual_map (region,
+        tmpdir, FALSE)) return TRUE;
+
+  tmpdir = getenv ("TMPDIR");
+  if (tmpdir && orc_code_region_allocate_codemem_dual_map (region,
+        tmpdir, FALSE)) return TRUE;
+
+  if (orc_code_region_allocate_codemem_dual_map (region,
+        "/tmp", FALSE)) return TRUE;
+
+  if (orc_code_region_allocate_codemem_anon_map (region)) return TRUE;
+
+#ifdef __APPLE__
+  ORC_ERROR("Failed to create write and exec mmap regions.  This "
+      "is probably because the Hardened Runtime is enabled without "
+      "the com.apple.security.cs.allow-jit entitlement.");
+#else
+  ORC_ERROR(
+      "Failed to create write+exec mappings. This "
+      "is probably because SELinux execmem check is enabled (good), "
+      "$XDG_RUNTIME_DIR, $HOME, $TMPDIR, $HOME and /tmp are mounted noexec (good), "
+      "and anonymous mappings cannot be created (really bad)."
+      );
+#endif
+  return FALSE;
+}
+
+#endif
+
+#ifdef HAVE_CODEMEM_VIRTUALALLOC
+int
 orc_code_region_allocate_codemem (OrcCodeRegion *region)
 {
   /* On UWP, we can't allocate memory as executable from the start. We can only
@@ -286,8 +377,10 @@ orc_code_region_allocate_codemem (OrcCodeRegion *region)
   region->size = SIZE;
   return TRUE;
 }
-#elif defined(HAVE_CODEMEM_MALLOC)
-static int
+#endif
+
+#ifdef HAVE_CODEMEM_MALLOC
+int
 orc_code_region_allocate_codemem (OrcCodeRegion *region)
 {
   void *write_ptr;
