@@ -195,7 +195,8 @@ orc_code_allocate_codemem (OrcCode *code, int size)
     orc_global_mutex_unlock ();
 
     ORC_ERROR ("Failed to get free chunk memory");
-    return;
+    /* TODO: error out more gracefully? */
+    ORC_ASSERT (0);
   }
 
   region = chunk->region;
