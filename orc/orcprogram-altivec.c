@@ -108,7 +108,7 @@ orc_compiler_powerpc_get_default_flags (void)
 {
   unsigned int flags = 0;
 
-#ifdef __powerpc64__
+#if defined(__powerpc64__) || defined(__ppc64__)
   flags |= ORC_TARGET_POWERPC_64BIT;
 #endif
 #if defined(__LITTLE_ENDIAN__)
