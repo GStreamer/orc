@@ -9,6 +9,7 @@
 #include <string.h>
 #include <sys/types.h>
 
+#include <orc/orcx86.h>
 #include <orc/orcx86-private.h>
 #include <orc/orcavx.h>
 #include <orc/orcavx-internal.h>
