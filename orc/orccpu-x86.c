@@ -38,8 +38,6 @@
 #if __GNUC__ >= 8 && __GNUC__ < 9
 // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=71659
 #  include <xsaveintrin.h>
-#elif __GNUC__ < 8
-#  define ORC_NEEDS_ASM_XSAVE 1
 #endif
 #endif
 
