@@ -119,8 +119,10 @@ orc_compiler_powerpc_get_default_flags (void)
   flags |= orc_powerpc_cpu_flags;
 #else
   flags |= ORC_TARGET_POWERPC_ALTIVEC;
+#ifndef __APPLE__
   flags |= ORC_TARGET_POWERPC_VSX;
   flags |= ORC_TARGET_POWERPC_V207;
+#endif
 #endif
 
   return flags;
