@@ -5,6 +5,7 @@
 
 #include <orc/orc.h>
 #include <orc/orcbytecode.h>
+#include <orc/orcutils-private.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -188,7 +189,7 @@ bytecode_append_byte (OrcBytecode *bytecode, int byte)
 {
   if (bytecode->length >= bytecode->alloc_len) {
     bytecode->alloc_len += 256;
-    bytecode->bytecode = realloc (bytecode->bytecode, bytecode->alloc_len);
+    bytecode->bytecode = orc_realloc (bytecode->bytecode, bytecode->alloc_len);
   }
   bytecode->bytecode[bytecode->length] = byte;
   bytecode->length++;

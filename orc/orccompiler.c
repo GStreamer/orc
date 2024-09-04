@@ -1319,7 +1319,7 @@ orc_compiler_append_code (OrcCompiler *p, const char *fmt, ...)
   va_end (varargs);
 
   n = strlen (tmp);
-  p->asm_code = realloc (p->asm_code, p->asm_code_len + n + 1);
+  p->asm_code = orc_realloc (p->asm_code, p->asm_code_len + n + 1);
   memcpy (p->asm_code + p->asm_code_len, tmp, n + 1);
   p->asm_code_len += n;
 }

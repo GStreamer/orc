@@ -35,6 +35,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
@@ -88,6 +89,20 @@ _strndup (const char *s, int n)
   return r;
 }
 
+void *
+orc_realloc(void *ptr, size_t size)
+{
+  void *ret;
+
+  ret = realloc(ptr, size);
+  if (ret == NULL) {
+    ORC_ERROR ("orc_realloc(%p, %zu): %s", ptr, size, strerror(errno));
+    ORC_ASSERT (0);
+  }
+
+  return ret;
+}
+
 char **
 strsplit (const char *s, char delimiter)
 {
@@ -104,7 +119,7 @@ strsplit (const char *s, char delimiter)
 
     list[n] = _strndup (tok, s - tok);
     while (*s && *s == delimiter) s++;
-    list = realloc (list, (n + 2) * sizeof(char *));
+    list = orc_realloc (list, (n + 2) * sizeof(char *));
     n++;
   }
 
@@ -225,7 +240,7 @@ void
 orc_vector_extend (OrcVector *vector)
 {
   vector->n_items_alloc += ORC_VECTOR_ITEM_CHUNK;
-  vector->items = realloc (vector->items, sizeof(void *) * vector->n_items_alloc);
+  vector->items = orc_realloc (vector->items, sizeof(void *) * vector->n_items_alloc);
 }
 
 void

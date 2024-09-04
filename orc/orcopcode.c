@@ -5,6 +5,7 @@
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
 #include <orc/orcinternal.h>
+#include <orc/orcutils-private.h>
 
 /**
  * SECTION:orcopcode
@@ -34,7 +35,7 @@ orc_opcode_register (const char *name, int n_dest, int n_src,
 
   if (n_opcodes == n_opcodes_alloc) {
     n_opcodes_alloc += 100;
-    opcode_list = realloc(opcode_list, sizeof(OrcOpcode) * n_opcodes_alloc);
+    opcode_list = orc_realloc(opcode_list, sizeof(OrcOpcode) * n_opcodes_alloc);
   }
 
   opcode = opcode_list + n_opcodes;
@@ -63,8 +64,8 @@ orc_opcode_register_static (OrcStaticOpcode *sopcode, char *prefix)
   major = n_opcode_sets;
 
   n_opcode_sets++;
-  opcode_sets = realloc (opcode_sets, sizeof(OrcOpcodeSet)*n_opcode_sets);
-  
+  opcode_sets = orc_realloc (opcode_sets, sizeof(OrcOpcodeSet)*n_opcode_sets);
+
   memset (opcode_sets + major, 0, sizeof(OrcOpcodeSet));
   strncpy(opcode_sets[major].prefix, prefix, sizeof(opcode_sets[major].prefix)-1);
   opcode_sets[major].n_opcodes = n;

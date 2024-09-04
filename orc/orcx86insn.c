@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include <orc/orc.h>
+#include <orc/orcutils-private.h>
 #include <orc/orcx86.h>
 #include <orc/orcavx.h>
 #include <orc/orcsse.h>
@@ -1084,7 +1085,7 @@ orc_x86_get_output_insn (OrcCompiler *p)
   OrcX86Insn *xinsn;
   if (p->n_output_insns >= p->n_output_insns_alloc) {
     p->n_output_insns_alloc += 10;
-    p->output_insns = realloc (p->output_insns,
+    p->output_insns = orc_realloc (p->output_insns,
         sizeof(OrcX86Insn) * p->n_output_insns_alloc);
   }
 
