@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #include <orc/orcprogram.h>
+#include <orc/orcutils-private.h>
 #include <orc/orcdebug.h>
 
 /**
@@ -21,7 +22,7 @@ orc_executor_new (OrcProgram *program)
 {
   OrcExecutor *ex;
 
-  ex = malloc(sizeof(OrcExecutor));
+  ex = orc_malloc(sizeof(OrcExecutor));
   memset(ex,0,sizeof(OrcExecutor));
 
   orc_executor_set_program (ex, program);
@@ -278,11 +279,11 @@ orc_executor_emulate (OrcExecutor *ex)
     OrcCodeVariable *var = code->vars + i;
 
     if (var->size) {
-      tmpspace[i] = malloc(ORC_MAX_VAR_SIZE * CHUNK_SIZE);
+      tmpspace[i] = orc_malloc(ORC_MAX_VAR_SIZE * CHUNK_SIZE);
     }
   }
 
-  opcode_ex = malloc(sizeof(OrcOpcodeExecutor)*code->n_insns);
+  opcode_ex = orc_malloc(sizeof(OrcOpcodeExecutor)*code->n_insns);
 
   for(j=0;j<code->n_insns;j++){
     insn = code->insns + j;

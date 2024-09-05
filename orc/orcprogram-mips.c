@@ -31,6 +31,7 @@
 
 #include <orc/orcmips.h>
 #include <orc/orcdebug.h>
+#include <orc/orcutils-private.h>
 #include <orc/orcinternal.h>
 #include <stdlib.h>
 #include <string.h>
@@ -415,7 +416,7 @@ get_optimised_instruction_order (OrcCompiler *compiler)
   if (compiler->n_insns == 0)
     return NULL;
 
-  instruction_idx = malloc (compiler->n_insns * sizeof(int));
+  instruction_idx = orc_malloc (compiler->n_insns * sizeof(int));
   for (i=0; i<compiler->n_insns; i++)
     instruction_idx[i] = i;
 

@@ -14,6 +14,7 @@
 
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
+#include <orc/orcutils-private.h>
 #include <orc/orconce.h>
 
 #include "orcinternal.h"
@@ -109,7 +110,7 @@ _orc_getenv (const char *key)
     return NULL;
 
   /* max size of len is 32767, cannot overflow */
-  value = malloc (sizeof (value) * len);
+  value = orc_malloc (sizeof (value) * len);
 
   if (GetEnvironmentVariableA (key, value, len) != (len - 1)) {
     free (value);

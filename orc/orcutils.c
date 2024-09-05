@@ -47,6 +47,21 @@
  * @short_description: Orc utility functions
  */
 
+void *
+orc_malloc(size_t size)
+{
+  void *ret;
+
+  ret = malloc(size);
+
+  if (ret == NULL) {
+    ORC_ERROR ("orc_malloc(%zu): %s", size, strerror(errno));
+    ORC_ASSERT (0);
+  }
+
+  return ret;
+}
+
 #if defined(__arm__) || defined(__aarch64__) || defined(__mips__)
 char *
 get_proc_cpuinfo (void)
@@ -82,7 +97,7 @@ char *
 _strndup (const char *s, int n)
 {
   char *r;
-  r = malloc (n+1);
+  r = orc_malloc (n+1);
   memcpy(r,s,n);
   r[n]=0;
 
@@ -112,7 +127,7 @@ strsplit (const char *s, char delimiter)
 
   while (*s == ' ') s++;
 
-  list = malloc (1 * sizeof(char *));
+  list = orc_malloc (1 * sizeof(char *));
   while (*s) {
     tok = s;
     while (*s && *s != delimiter) s++;

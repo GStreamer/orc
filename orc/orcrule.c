@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #include <orc/orcprogram.h>
+#include <orc/orcutils-private.h>
 #include <orc/orcdebug.h>
 
 /**
@@ -49,7 +50,7 @@ orc_rule_set_new (OrcOpcodeSet *opcode_set, OrcTarget *target,
   rule_set->opcode_major = opcode_set->opcode_major;
   rule_set->required_target_flags = required_flags;
 
-  rule_set->rules = malloc (sizeof(OrcRule) * opcode_set->n_opcodes);
+  rule_set->rules = orc_malloc (sizeof(OrcRule) * opcode_set->n_opcodes);
   memset (rule_set->rules, 0, sizeof(OrcRule) * opcode_set->n_opcodes);
 
   return rule_set;

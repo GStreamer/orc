@@ -7,6 +7,7 @@
 
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
+#include <orc/orcutils-private.h>
 #include <orc/orcinternal.h>
 
 #ifdef _WIN64
@@ -17,7 +18,7 @@ OrcCode *
 orc_code_new (void)
 {
   OrcCode *code;
-  code = malloc(sizeof(OrcCode));
+  code = orc_malloc(sizeof(OrcCode));
   memset (code, 0, sizeof(OrcCode));
   return code;
 }

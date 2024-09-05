@@ -431,11 +431,11 @@ orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTar
   program->orccode->exec = program->code_exec;
 
   program->orccode->n_insns = compiler->n_insns;
-  program->orccode->insns = malloc(sizeof(OrcInstruction) * compiler->n_insns);
+  program->orccode->insns = orc_malloc(sizeof(OrcInstruction) * compiler->n_insns);
   memcpy (program->orccode->insns, compiler->insns,
       sizeof(OrcInstruction) * compiler->n_insns);
 
-  program->orccode->vars = malloc (sizeof(OrcCodeVariable) * ORC_N_COMPILER_VARIABLES);
+  program->orccode->vars = orc_malloc (sizeof(OrcCodeVariable) * ORC_N_COMPILER_VARIABLES);
   memset (program->orccode->vars, 0,
       sizeof(OrcCodeVariable) * ORC_N_COMPILER_VARIABLES);
   for(i=0;i<ORC_N_COMPILER_VARIABLES;i++){
@@ -469,7 +469,7 @@ orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTar
   if (compiler->error) goto error;
 
   ORC_INFO("allocating code memory");
-  compiler->code = malloc(65536);
+  compiler->code = orc_malloc(65536);
   compiler->codeptr = compiler->code;
 
   if (compiler->error) goto error;
@@ -1263,7 +1263,7 @@ orc_compiler_dup_temporary (OrcCompiler *compiler, int var, int j)
 
   compiler->vars[i].vartype = ORC_VAR_TYPE_TEMP;
   compiler->vars[i].size = compiler->vars[var].size;
-  compiler->vars[i].name = malloc (strlen(compiler->vars[var].name) + 10);
+  compiler->vars[i].name = orc_malloc (strlen(compiler->vars[var].name) + 10);
   sprintf(compiler->vars[i].name, "%s.dup%d", compiler->vars[var].name, j);
   compiler->n_dup_vars++;
 
@@ -1277,7 +1277,7 @@ orc_compiler_new_temporary (OrcCompiler *compiler, int size)
 
   compiler->vars[i].vartype = ORC_VAR_TYPE_TEMP;
   compiler->vars[i].size = size;
-  compiler->vars[i].name = malloc (10);
+  compiler->vars[i].name = orc_malloc (10);
   sprintf(compiler->vars[i].name, "tmp%d", i);
   compiler->n_dup_vars++;
 
@@ -1500,10 +1500,10 @@ orc_compiler_error_valist (OrcCompiler *compiler, const char *fmt,
   if (vasprintf (&s, fmt, args) < 0)
     ORC_ASSERT (0);
 #elif defined(_UCRT)
-  s = malloc (ORC_COMPILER_ERROR_BUFFER_SIZE);
+  s = orc_malloc (ORC_COMPILER_ERROR_BUFFER_SIZE);
   vsnprintf_s (s, ORC_COMPILER_ERROR_BUFFER_SIZE, _TRUNCATE, fmt, args);
 #else
-  s = malloc (ORC_COMPILER_ERROR_BUFFER_SIZE);
+  s = orc_malloc (ORC_COMPILER_ERROR_BUFFER_SIZE);
   vsnprintf (s, ORC_COMPILER_ERROR_BUFFER_SIZE, fmt, args);
 #endif
   compiler->error_msg = s;

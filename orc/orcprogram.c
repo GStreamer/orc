@@ -36,10 +36,10 @@ orc_program_new (void)
    */
   orc_init ();
 
-  p = malloc(sizeof(OrcProgram));
+  p = orc_malloc(sizeof(OrcProgram));
   memset (p, 0, sizeof(OrcProgram));
 
-  p->name = malloc (40);
+  p->name = orc_malloc (40);
   sprintf(p->name, "func_%p", p);
 
   return p;
@@ -364,7 +364,7 @@ orc_program_dup_temporary (OrcProgram *program, int var, int j)
 
   program->vars[i].vartype = ORC_VAR_TYPE_TEMP;
   program->vars[i].size = program->vars[var].size;
-  program->vars[i].name = malloc (strlen(program->vars[var].name) + 10);
+  program->vars[i].name = orc_malloc (strlen(program->vars[var].name) + 10);
   sprintf(program->vars[i].name, "%s.dup%d", program->vars[var].name, j);
   program->n_temp_vars++;
 
@@ -1303,7 +1303,7 @@ orc_program_compile_full (OrcProgram *program, OrcTarget *target,
 {
   OrcCompiler *compiler;
 
-  compiler = malloc (sizeof(OrcCompiler));
+  compiler = orc_malloc (sizeof(OrcCompiler));
   memset (compiler, 0, sizeof(OrcCompiler));
   return orc_compiler_compile_program (compiler, program, target, flags);
 }

@@ -68,7 +68,7 @@ orc_code_region_alloc (void)
 {
   OrcCodeRegion *region;
 
-  region = malloc(sizeof(OrcCodeRegion));
+  region = orc_malloc(sizeof(OrcCodeRegion));
   memset (region, 0, sizeof(OrcCodeRegion));
 
   if (!orc_code_region_allocate_codemem (region)) {
@@ -91,7 +91,7 @@ orc_code_region_new (void)
     return NULL;
   }
 
-  chunk = malloc(sizeof(OrcCodeChunk));
+  chunk = orc_malloc(sizeof(OrcCodeChunk));
   memset (chunk, 0, sizeof(OrcCodeChunk));
 
   chunk->offset = 0;
@@ -109,7 +109,7 @@ orc_code_chunk_split (OrcCodeChunk *chunk, int size)
 {
   OrcCodeChunk *newchunk;
 
-  newchunk = malloc(sizeof(OrcCodeChunk));
+  newchunk = orc_malloc(sizeof(OrcCodeChunk));
   memset (newchunk, 0, sizeof(OrcCodeChunk));
 
   newchunk->region = chunk->region;
