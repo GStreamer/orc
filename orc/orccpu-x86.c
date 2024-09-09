@@ -317,17 +317,24 @@ orc_x86_cpuid_get_branding_string (void)
 // Checks if XMM and YMM state are enabled in XCR0.
 // See 14.3 DETECTION OF INTEL® AVX INSTRUCTIONS on the
 // Intel® 64 and IA-32 Architectures Software Developer’s Manual
+#define XSAVE_SUPPORT_XMM 1U << 1
+#define XSAVE_SUPPORT_YMM 1U << 2
+// On a kernel with Gather Data Sampling mitigation, the former will
+// be disabled -- both bits must be enabled, otherwise it'll hit an
+// undefined opcode trap.
+// See https://docs.kernel.org/admin-guide/hw-vuln/gather_data_sampling.html
+#define XSAVE_SUPPORT_AVX (XSAVE_SUPPORT_YMM | XSAVE_SUPPORT_XMM)
 #ifdef ORC_NEEDS_ASM_XSAVE
 static orc_bool check_xcr0_ymm()
 {
   uint32_t xcr0;
   __asm__ ("xgetbv" : "=a" (xcr0) : "c" (0) : "%edx" );
-  return ((xcr0 & 6U) == 6U);
+  return ((xcr0 & XSAVE_SUPPORT_AVX) == XSAVE_SUPPORT_AVX);
 }
 #else
 static orc_bool ORC_TARGET_XSAVE check_xcr0_ymm()
 {
-  return (_xgetbv(0) & 6U) != 0U;
+  return (_xgetbv(0) & XSAVE_SUPPORT_AVX) == XSAVE_SUPPORT_AVX;
 }
 #endif
 
@@ -362,14 +369,16 @@ orc_x86_cpuid_handle_standard_flags (void)
 
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1854795
   // https://gitlab.freedesktop.org/gstreamer/orc/-/issues/65
-  orc_bool osxsave_enabled = (ecx & (1 << 27)) != 0;
-  const int avx_instructions_supported = ecx & (1 << 28);
+  // check for xsave enabled (bit 26) and xsave available (bit 27)
+  const orc_uint32 xsave_bits = (1U << 26) | (1U << 27);
+  orc_bool osxsave_enabled = (ecx & xsave_bits) == xsave_bits;
+  const orc_bool avx_instructions_supported = (ecx & (1 << 28)) != 0;
 
   get_cpuid (0x00000007, &eax, &ebx, &ecx, &edx);
 
-  const int avx2_instructions_supported = ebx & (1 << 5);
+  const orc_bool avx2_instructions_supported = (ebx & (1 << 5)) != 0;
 
-  // If xgetbv is available, validate YMM state available
+  // If xgetbv is available, validate XMM and YMM state available
   if (osxsave_enabled) {
     osxsave_enabled = check_xcr0_ymm();
   }
@@ -379,7 +388,7 @@ orc_x86_cpuid_handle_standard_flags (void)
       orc_x86_sse_flags |= ORC_TARGET_AVX_AVX;
     }
 
-    if (avx2_instructions_supported) {
+    if (avx_instructions_supported && avx2_instructions_supported) {
       orc_x86_sse_flags |= ORC_TARGET_AVX_AVX2;
     }
   }
