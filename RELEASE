@@ -1,3 +1,22 @@
+0.4.40
+======
+
+- Security: Minor follow-up fixes for CVE-2024-40897 (Sebastian Dröge)
+- powerpc: fix div255w which still used the inexact substitution (L. E. Segovia)
+- x86: work around old GCC versions (pre 9.0) having broken xgetbv
+  implementations (L. E. Segovia)
+- x86: consider MSYS2/Cygwin as Windows for ABI purposes only (L. E. Segovia)
+- x86: handle unnatural and misaligned array pointers (L. E. Segovia)
+- orccodemem: Assorted memory mapping fixes (L. E. Segovia)
+- Fix include header use from C++ (Kleis Auke Wolthuizen)
+- Some compatibility fixes for Musl (L. E. Segovia)
+- ppc: Disable VSX and ISA 2.07 for Apple targets (L. E. Segovia)
+- ppc: Allow detection of ppc64 in Mac OS (L. E. Segovia)
+- x86: Fix non-C11 typedefs (L. E. Segovia)
+- meson: Fix detecting XSAVE on older AppleClang (L. E. Segovia)
+- x86: try fixing AVX detection again by adding check for XSAVE (L. E. Segovia)
+- Check return values of malloc() and realloc() (Vladimir D. Seleznev)
+
 0.4.39
 ======
 
