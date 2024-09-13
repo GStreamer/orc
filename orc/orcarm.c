@@ -1077,7 +1077,7 @@ orc_arm64_emit_am (OrcCompiler *p, OrcArm64RegBits bits, OrcArm64DP opcode,
           return;
         }
         if (val & 0xfff) {
-          ORC_WARNING("offset is trucated %llx", val);
+          ORC_WARNING("offset is truncated %llx", val);
         }
         imm >>= 12;
         shift = 1;
