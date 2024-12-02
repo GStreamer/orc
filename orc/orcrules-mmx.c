@@ -819,9 +819,9 @@ BINARY(andq,pand,0xdb)
 BINARY(andnq,pandn,0xdf)
 BINARY(orq,por,0xeb)
 BINARY(xorq,pxor,0xef)
-BINARY(cmpgtsq,pcmpgtq,0x3837)
 
 #ifndef MMX
+BINARY(cmpgtsq,pcmpgtq,0x3837)
 BINARY(maxsb,pmaxsb,0x383c)
 BINARY(minsb,pminsb,0x3838)
 BINARY(maxuw,pmaxuw,0x383e)
@@ -3482,11 +3482,13 @@ orc_compiler_mmx_register_rules (OrcTarget *target)
   REG(cmpeqq);
 #endif
 
-  /* SSE 4.2 -- no rules */
+  /* SSE 4.2 */
   rule_set = orc_rule_set_new (orc_opcode_set_get("sys"), target,
       ORC_TARGET_MMX_SSE4_2);
 
+#ifndef MMX
   REG(cmpgtsq);
+#endif
 
   /* SSE 4a -- no rules */
 }
