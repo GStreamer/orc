@@ -54,42 +54,42 @@ orc_headers = [
 ]
 install_headers(orc_headers, subdir : 'orc-' + orc_api + '/orc')
 
-if 'avx' in enabled_backends or 'sse' in enabled_backends or 'mmx' in enabled_backends
+if 'avx' in enabled_targets or 'sse' in enabled_targets or 'mmx' in enabled_targets
   orc_sources += ['orcx86.c', 'orcx86insn.c', 'orcprogram-x86.c']
 endif
 
-if 'avx' in enabled_backends
+if 'avx' in enabled_targets
   orc_sources += ['orcavx.c', 'orcrules-avx.c', 'orcprogram-avx.c']
 endif
 
-if 'sse' in enabled_backends
+if 'sse' in enabled_targets
   orc_sources += ['orcsse.c', 'orcrules-sse.c', 'orcprogram-sse.c']
 endif
 
-if 'mmx' in enabled_backends
+if 'mmx' in enabled_targets
   orc_sources += ['orcmmx.c', 'orcrules-mmx.c', 'orcprogram-mmx.c']
 endif
 
-if 'altivec' in enabled_backends
+if 'altivec' in enabled_targets
   orc_sources += ['orcrules-altivec.c', 'orcprogram-altivec.c', 'orcpowerpc.c']
 endif
 
-if 'neon' in enabled_backends
+if 'neon' in enabled_targets
   orc_sources += ['orcprogram-neon.c', 'orcrules-neon.c', 'orcarm.c']
 endif
 
-# ARM backend is disabled until it has decent coverage
-if 'arm' in enabled_backends
+# ARM target is disabled until it has decent coverage
+if 'arm' in enabled_targets
   # we assume it is ok to include the same file (orcarm) twice
-  # in case all backends are selected (ie neon and arm)
+  # in case all targets are selected (ie neon and arm)
   # orc_sources += ['orcprogram-arm.c', 'orcrules-arm.c', 'orcarm.c']
 endif
 
-if 'c64x' in enabled_backends
+if 'c64x' in enabled_targets
   orc_sources += ['orcprogram-c64x-c.c']
 endif
 
-if 'mips' in enabled_backends
+if 'mips' in enabled_targets
   orc_sources += ['orcmips.c', 'orcprogram-mips.c', 'orcrules-mips.c']
 endif
 

@@ -11,13 +11,13 @@ tests = [
   'test_parse'
 ]
 
-runnable_backends = []
+runnable_targets = []
 
 # Enable per-target runs only for Intel
 if cpu_family == 'x86' or cpu_family == 'x86_64'
-  foreach i : enabled_backends
+  foreach i : enabled_targets
     if ['mmx', 'sse'].contains(i)
-      runnable_backends += [i]
+      runnable_targets += [i]
     endif
   endforeach
 endif
@@ -27,7 +27,7 @@ foreach test : tests
                  install: false,
                  dependencies: [libm, orc_dep, orc_test_dep])
 
-  foreach i: runnable_backends
+  foreach i: runnable_targets
     test(
       test,
       t,
@@ -52,15 +52,15 @@ endforeach
 
 noinst_bins = []
 
-if backend == 'neon' or backend == 'all'
+if target == 'neon' or target == 'all'
   noinst_bins += ['compile_opcodes_sys_neon', 'compile_parse_neon']
 endif
 
-if backend == 'c64x' or backend == 'all'
+if target == 'c64x' or target == 'all'
   noinst_bins += ['compile_opcodes_sys_c64x']
 endif
 
-if backend == 'mips' or backend == 'all'
+if target == 'mips' or target == 'all'
   noinst_bins += ['compile_opcodes_sys_mips']
 endif
 

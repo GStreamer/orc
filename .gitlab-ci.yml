@@ -63,7 +63,7 @@ alpine 3.20 ppc64le:
     - 'orc-alpine-ppc64'
   script:
     - apk add git build-base linux-headers meson
-    - meson setup $MESON_ARGS -Dorc-backend=altivec build/
+    - meson setup $MESON_ARGS -Dorc-target=altivec build/
     - meson compile --verbose -C build/
     - meson test -C build/
     - ORC_DEBUG=2 ./build/tools/orc-bugreport

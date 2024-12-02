@@ -24,7 +24,7 @@ if not meson.is_cross_build()
 
   endforeach
 
-  if backend == 'mmx' or backend == 'all'
+  if target == 'mmx' or target == 'all'
     executable ('volscale', 'volscale.c',
                 install: false,
                 dependencies: [libm, orc_dep, orc_test_dep])

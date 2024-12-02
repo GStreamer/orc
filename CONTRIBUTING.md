@@ -88,7 +88,7 @@ and write:
 ### Registering the target
 
 You need to call up your target registration function in `orc_init` inside the 
-file `orc.c`. Make sure to guard it with `#ifdef ENABLE_BACKEND_YOUR_ARCH_HERE`
+file `orc.c`. Make sure to guard it with `#ifdef ENABLE_TARGET_<YOUR_ARCH_HERE>`
 so that it's only inserted if your new backend is being built.
 
 The target registration function must create the `OrcTarget` structure described

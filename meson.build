@@ -41,20 +41,20 @@ if cc.has_argument('-fvisibility=hidden')
   add_project_arguments('-fvisibility=hidden', language: 'c')
 endif
 
-all_backends = ['avx', 'sse', 'mmx']
-extra_backends = ['altivec', 'neon', 'mips', 'c64x'] # 'arm'
-enabled_backends = []
+all_targets = ['avx', 'sse', 'mmx']
+extra_targets = ['altivec', 'neon', 'mips', 'c64x'] # 'arm'
+enabled_targets = []
 
 host_system = host_machine.system()
 if host_system != 'windows'
-  all_backends += extra_backends
+  all_targets += extra_targets
 endif
 
-backend = get_option('orc-backend')
-foreach b : all_backends
-  if backend == 'all' or backend == b
-    cdata.set('ENABLE_BACKEND_' + b.to_upper(), 1)
-    enabled_backends += [b]
+target = get_option('orc-target')
+foreach b : all_targets
+  if target == 'all' or target == b
+    cdata.set('ENABLE_TARGET_' + b.to_upper(), 1)
+    enabled_targets += [b]
   endif
 endforeach
 
@@ -240,14 +240,14 @@ configure_file(output : 'config.h', configuration : cdata)
 
 # summary
 summary({
-  'AVX': 'avx' in enabled_backends,
-  'SSE': 'sse' in enabled_backends,
-  'MMX': 'mmx' in enabled_backends,
-  'NEON': 'neon' in enabled_backends,
-  'MIPS': 'mips' in enabled_backends,
-  'c64x': 'c64x' in enabled_backends,
-  'Altivec': 'altivec' in enabled_backends,
-  }, section: 'Backends', bool_yn: true)
+  'AVX': 'avx' in enabled_targets,
+  'SSE': 'sse' in enabled_targets,
+  'MMX': 'mmx' in enabled_targets,
+  'NEON': 'neon' in enabled_targets,
+  'MIPS': 'mips' in enabled_targets,
+  'c64x': 'c64x' in enabled_targets,
+  'Altivec': 'altivec' in enabled_targets,
+  }, section: 'Targets', bool_yn: true)
 
 if not have_docs
   doc_summary = [have_docs, gtk_doc_disabled_reason]
