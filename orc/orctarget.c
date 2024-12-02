@@ -43,7 +43,12 @@ orc_target_get_by_name (const char *name)
 OrcTarget *
 orc_target_get_default (void)
 {
-  const char *const envvar = _orc_getenv ("ORC_BACKEND");
+  const char *envvar = _orc_getenv ("ORC_TARGET");
+
+  if (!envvar) {
+    /* Since version 0.4.39, ORC_BACKEND was used instead */
+    envvar = _orc_getenv ("ORC_BACKEND");
+  }
 
   if (envvar != NULL) {
     OrcTarget *const target = orc_target_get_by_name (envvar);
