@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <stdio.h>
 #ifndef _MSC_VER
@@ -13,6 +16,7 @@
 
 static OrcProgram *p = NULL;
 
+#if ENABLE_TARGET_MMX
 static void
 mmx_rule_mulhslw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
@@ -39,6 +43,19 @@ mmx_rule_mulhslw (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+mmx_register_rules (void)
+{
+  OrcRuleSet *rule_set;
+
+  rule_set = orc_rule_set_new (orc_opcode_set_get("pulse"),
+      orc_target_get_by_name ("mmx"), ORC_TARGET_MMX_MMX);
+
+  orc_rule_register (rule_set, "mulhslw", mmx_rule_mulhslw, NULL);
+}
+#endif
+
+#if ENABLE_TARGET_SSE
+static void
 sse_rule_mulhslw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   int tmp1 = X86_XMM4;
@@ -64,17 +81,6 @@ sse_rule_mulhslw (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
-mmx_register_rules (void)
-{
-  OrcRuleSet *rule_set;
-
-  rule_set = orc_rule_set_new (orc_opcode_set_get("pulse"),
-      orc_target_get_by_name ("mmx"), ORC_TARGET_MMX_MMX);
-
-  orc_rule_register (rule_set, "mulhslw", mmx_rule_mulhslw, NULL);
-}
-
-static void
 sse_register_rules (void)
 {
   OrcRuleSet *rule_set;
@@ -84,6 +90,7 @@ sse_register_rules (void)
 
   orc_rule_register (rule_set, "mulhslw", sse_rule_mulhslw, NULL);
 }
+#endif
 
 /* calculate the high 32 bits of a 32x16 signed multiply */
 static void
@@ -123,8 +130,13 @@ static void
 register_instr (void)
 {
   orc_opcode_register_static (opcodes, "pulse");
+#if ENABLE_TARGET_MMX
   mmx_register_rules ();
+#endif
+
+#if ENABLE_TARGET_SSE
   sse_register_rules ();
+#endif
 }
 
 static void
