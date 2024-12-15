@@ -52,15 +52,15 @@ endforeach
 
 noinst_bins = []
 
-if target == 'neon' or target == 'all'
+if enabled_targets.contains('neon')
   noinst_bins += ['compile_opcodes_sys_neon', 'compile_parse_neon']
 endif
 
-if target == 'c64x' or target == 'all'
+if enabled_targets.contains('c64x')
   noinst_bins += ['compile_opcodes_sys_c64x']
 endif
 
-if target == 'mips' or target == 'all'
+if enabled_targets.contains('mips')
   noinst_bins += ['compile_opcodes_sys_mips']
 endif
 
