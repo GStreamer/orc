@@ -904,17 +904,17 @@ sse_rule_signX_ssse3 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   const int src = p->vars[insn->src_args[0]].alloc;
   const int dest = p->vars[insn->dest_args[0]].alloc;
-  const int opcodes[] = { ORC_X86_psignb, ORC_X86_psignw, ORC_X86_psignd };
+  const int opcodes[] = { ORC_SSE_psignb, ORC_SSE_psignw, ORC_SSE_psignd };
   const int type = ORC_PTR_TO_INT (user);
 
   const int tmpc = orc_compiler_get_temp_constant (p, 1 << type, 1);
 
   if (src == dest) {
-    orc_x86_emit_cpuinsn_size (p, opcodes[type], 16, src, tmpc);
+    orc_sse_emit_cpuinsn_sse (p, opcodes[type], src, tmpc);
     orc_sse_emit_movdqa (p, tmpc, dest);
   } else {
     orc_sse_emit_movdqa (p, tmpc, dest);
-    orc_x86_emit_cpuinsn_size (p, opcodes[type], 16, src, dest);
+    orc_sse_emit_cpuinsn_sse (p, opcodes[type], src, dest);
   }
 }
 #endif
@@ -1000,12 +1000,12 @@ sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
   /* int imm_code2[] = { 6, 2, 4, 6, 2, 4, 6, 2 }; */
   /* int reg_code[] = { 0xf1, 0xd1, 0xe1, 0xf2, 0xd2, 0xe2, 0xf3, 0xd3 }; */
   /* const char *code[] = { "psllw", "psrlw", "psraw", "pslld", "psrld", "psrad", "psllq", "psrlq" }; */
-  const int opcodes[] = { ORC_X86_psllw, ORC_X86_psrlw, ORC_X86_psraw,
-    ORC_X86_pslld, ORC_X86_psrld, ORC_X86_psrad, ORC_X86_psllq,
-    ORC_X86_psrlq };
-  const int opcodes_imm[] = { ORC_X86_psllw_imm, ORC_X86_psrlw_imm,
-    ORC_X86_psraw_imm, ORC_X86_pslld_imm, ORC_X86_psrld_imm,
-    ORC_X86_psrad_imm, ORC_X86_psllq_imm, ORC_X86_psrlq_imm };
+  const int opcodes[] = { ORC_SSE_psllw, ORC_SSE_psrlw, ORC_SSE_psraw,
+    ORC_SSE_pslld, ORC_SSE_psrld, ORC_SSE_psrad, ORC_SSE_psllq,
+    ORC_SSE_psrlq };
+  const int opcodes_imm[] = { ORC_SSE_psllw_imm, ORC_SSE_psrlw_imm,
+    ORC_SSE_psraw_imm, ORC_SSE_pslld_imm, ORC_SSE_psrld_imm,
+    ORC_SSE_psrad_imm, ORC_SSE_psllq_imm, ORC_SSE_psrlq_imm };
   const int src = p->vars[insn->src_args[0]].alloc;
   const int dest = p->vars[insn->dest_args[0]].alloc;
 
@@ -1014,7 +1014,7 @@ sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
   }
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
-    orc_x86_emit_cpuinsn_imm (p, opcodes_imm[type],
+    orc_sse_emit_cpuinsn_imm (p, opcodes_imm[type],
         p->vars[insn->src_args[1]].value.i, 0, dest);
   } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
     int tmp = orc_compiler_get_temp_reg (p);
@@ -1025,7 +1025,7 @@ sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
         (int)ORC_STRUCT_OFFSET(OrcExecutor, params[insn->src_args[1]]),
         p->exec_reg, tmp, FALSE);
 
-    orc_x86_emit_cpuinsn_size (p, opcodes[type], 16, tmp, dest);
+    orc_sse_emit_cpuinsn_sse (p, opcodes[type], tmp, dest);
   } else {
     orc_compiler_error (p, "code generation rule for %s only works with "
         "constant or parameter shifts", insn->opcode->name);
