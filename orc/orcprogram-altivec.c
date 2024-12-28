@@ -347,7 +347,7 @@ orc_compiler_powerpc_assemble (OrcCompiler *compiler)
 
   powerpc_emit_prologue (compiler);
 
-  if (orc_program_has_float (compiler)) {
+  if (orc_compiler_has_float (compiler)) {
     int tmp = POWERPC_V0;
 
     set_vscr = TRUE;

@@ -1298,6 +1298,18 @@ orc_compiler_dump_asm (OrcCompiler *compiler)
 }
 #endif
 
+int
+orc_compiler_has_float (OrcCompiler *compiler)
+{
+  int j;
+  for(j=0;j<compiler->n_insns;j++){
+    OrcInstruction *insn = compiler->insns + j;
+    OrcStaticOpcode *opcode = insn->opcode;
+    if (opcode->flags & ORC_STATIC_OPCODE_FLOAT) return TRUE;
+  }
+  return FALSE;
+}
+
 /**
  * orc_compiler_append_code:
  * @p: an OrcCompiler object

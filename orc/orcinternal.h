@@ -40,7 +40,7 @@ ORC_INTERNAL extern int _orc_cpu_stepping;
 ORC_INTERNAL extern const char *_orc_cpu_name;
 
 ORC_INTERNAL void orc_compiler_emit_invariants (OrcCompiler *compiler);
-ORC_INTERNAL int orc_program_has_float (OrcCompiler *compiler);
+ORC_INTERNAL int orc_compiler_has_float (OrcCompiler *compiler);
 
 ORC_INTERNAL char* _orc_getenv (const char *var);
 ORC_INTERNAL void orc_opcode_sys_init (void);

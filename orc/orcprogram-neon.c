@@ -810,7 +810,7 @@ orc_compiler_neon_assemble (OrcCompiler *compiler)
 
   orc_neon_emit_prologue (compiler);
 
-	if (!compiler->is_64bit && orc_program_has_float (compiler)) {
+	if (!compiler->is_64bit && orc_compiler_has_float (compiler)) {
     set_fpscr = TRUE;
     ORC_ASM_CODE (compiler,"  vmrs %s, fpscr\n", orc_arm_reg_name (compiler->gp_tmpreg));
     orc_arm_emit (compiler, 0xeef10a10 | ((compiler->gp_tmpreg&0xf)<<12));

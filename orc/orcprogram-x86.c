@@ -1035,7 +1035,7 @@ orc_x86_compile (OrcCompiler *compiler)
 
   orc_x86_save_registers (t, compiler);
 
-  if (t->set_mxcsr && orc_program_has_float (compiler)) {
+  if (t->set_mxcsr && orc_compiler_has_float (compiler)) {
     set_mxcsr = TRUE;
     orc_x86_set_mxcsr (t, compiler);
   }

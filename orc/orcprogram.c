@@ -1228,18 +1228,6 @@ orc_program_take_code (OrcProgram *program)
   return code;
 }
 
-int
-orc_program_has_float (OrcCompiler *compiler)
-{
-  int j;
-  for(j=0;j<compiler->n_insns;j++){
-    OrcInstruction *insn = compiler->insns + j;
-    OrcStaticOpcode *opcode = insn->opcode;
-    if (opcode->flags & ORC_STATIC_OPCODE_FLOAT) return TRUE;
-  }
-  return FALSE;
-}
-
 /**
  * orc_program_compile:
  * @program: the OrcProgram to compile
