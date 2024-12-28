@@ -11,8 +11,8 @@ Versions
 - [ ] Reduce the API to the minimum to run orcc and the generated code
 - [ ] Remove orc-stdint.h.
 - [ ] For `ORC_ENABLE_UNSTABLE_API`, create a private header and keep the symbol there
-- [ ] Make the `OrcX86OpcodeIdx` to not include the accepted type of data (mem, registers, etc)
-- [ ] The `OrcX86Insn` and `OrcX86Opcode` have redundant fields. The instruction should include the prefix stuff, not the opcode
+- [X] Make the `OrcX86OpcodeIdx` to not include the accepted type of data (mem, registers, etc)
+- [X] The `OrcX86Insn` and `OrcX86Opcode` have redundant fields. The instruction should include the prefix stuff, not the opcode
 - [ ] (Improve)[https://gitlab.freedesktop.org/gstreamer/orc/-/issues/55] the accumulator implementation to support not only addition but other (already existed) opcodes 
 
 0.4.9999
