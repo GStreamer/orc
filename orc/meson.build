@@ -59,7 +59,7 @@ if 'avx' in enabled_targets or 'sse' in enabled_targets or 'mmx' in enabled_targ
 endif
 
 if 'avx' in enabled_targets
-  orc_sources += ['orcavx.c', 'orcrules-avx.c', 'orcprogram-avx.c']
+  orc_sources += ['orcavx.c', 'orcavxinsn.c', 'orcrules-avx.c', 'orcprogram-avx.c']
 endif
 
 if 'sse' in enabled_targets
