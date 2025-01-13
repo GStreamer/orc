@@ -629,16 +629,16 @@ orc_avx_emit_broadcast (OrcCompiler *const compiler, const int s1, const int d,
 {
   switch (size) {
     case 1:
-      orc_avx_emit_pbroadcastb (compiler, s1, d);
+      orc_avx_emit_pbroadcastb (compiler, ORC_AVX_SSE_REG (s1), d);
       break;
     case 2:
-      orc_avx_emit_pbroadcastw (compiler, s1, d);
+      orc_avx_emit_pbroadcastw (compiler, ORC_AVX_SSE_REG (s1), d);
       break;
     case 4:
-      orc_avx_emit_pbroadcastd (compiler, s1, d);
+      orc_avx_emit_pbroadcastd (compiler, ORC_AVX_SSE_REG (s1), d);
       break;
     case 8:
-      orc_avx_emit_pbroadcastq (compiler, s1, d);
+      orc_avx_emit_pbroadcastq (compiler, ORC_AVX_SSE_REG (s1), d);
       break;
     case 16:
       orc_avx_emit_permute2i128 (compiler, ORC_AVX_PERMUTE (0, 0), s1, s1, d);

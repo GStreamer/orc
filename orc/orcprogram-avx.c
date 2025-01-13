@@ -12,6 +12,7 @@
 #include <orc/orcx86.h>
 #include <orc/orcx86-private.h>
 #include <orc/orcavx.h>
+#include <orc/orcavxinsn.h>
 #include <orc/orcavx-internal.h>
 #include <orc/orcinternal.h>
 #include <orc/orcprogram.h>
@@ -170,42 +171,42 @@ avx_reduce_accumulator (OrcCompiler *compiler, int i, OrcVariable *var)
   const int tmp = orc_compiler_get_temp_reg (compiler);
 
   // duplicate the high lane
-  orc_avx_emit_extractf128_si256 (compiler, 1, src, tmp);
+  orc_avx_emit_extractf128_si256 (compiler, 1, src, ORC_AVX_SSE_REG (tmp));
 
   // Pairwise summation
   if (var->size == 2) {
-    orc_avx_sse_emit_paddw (compiler, src, tmp, src);
+    orc_avx_sse_emit_paddw (compiler, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (src));
   } else {
-    orc_avx_sse_emit_paddd (compiler, src, tmp, src);
+    orc_avx_sse_emit_paddd (compiler, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (src));
   }
 
   // Duplicate the high half now
-  orc_avx_sse_emit_pshufd (compiler, ORC_AVX_SSE_SHUF (3, 2, 3, 2), src,
-      tmp);
+  orc_avx_sse_emit_pshufd (compiler, ORC_AVX_SSE_SHUF (3, 2, 3, 2), ORC_AVX_SSE_REG (src),
+      ORC_AVX_SSE_REG (tmp));
 
   // Pairwise summation
   if (var->size == 2) {
-    orc_avx_sse_emit_paddw (compiler, src, tmp, src);
+    orc_avx_sse_emit_paddw (compiler, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (src));
   } else {
-    orc_avx_sse_emit_paddd (compiler, src, tmp, src);
+    orc_avx_sse_emit_paddd (compiler, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (src));
   }
 
   // Combine the remaining two pairs in the low half
-  orc_avx_sse_emit_pshufd (compiler, ORC_AVX_SSE_SHUF (1, 1, 1, 1), src,
-      tmp);
+  orc_avx_sse_emit_pshufd (compiler, ORC_AVX_SSE_SHUF (1, 1, 1, 1), ORC_AVX_SSE_REG (src),
+      ORC_AVX_SSE_REG (tmp));
 
   // Pairwise summation
   if (var->size == 2) {
-    orc_avx_sse_emit_paddw (compiler, src, tmp, src);
+    orc_avx_sse_emit_paddw (compiler, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (src));
   } else {
-    orc_avx_sse_emit_paddd (compiler, src, tmp, src);
+    orc_avx_sse_emit_paddd (compiler, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (src));
   }
 
   // Reduce the last pair if it's 16-bit
   if (var->size == 2) {
     orc_avx_sse_emit_pshuflw (compiler, ORC_AVX_SSE_SHUF (1, 1, 1, 1),
-        src, tmp);
-    orc_avx_sse_emit_paddw (compiler, src, tmp, src);
+        ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_paddw (compiler, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (src));
   }
 
   if (var->size == 2) {
@@ -237,14 +238,14 @@ orc_avx_load_constant (OrcCompiler *compiler, int reg, int size,
     // Store the upper half
     if (value >> 32) {
       orc_x86_emit_mov_imm_reg (compiler, 4, value >> 32, compiler->gp_tmpreg);
-      orc_avx_sse_emit_pinsrd_register (compiler, 1,  reg, compiler->gp_tmpreg, reg);
+      orc_avx_sse_emit_pinsrd_register (compiler, 1, ORC_AVX_SSE_REG (reg), compiler->gp_tmpreg, ORC_AVX_SSE_REG (reg));
     } else {
       orc_avx_emit_pxor (compiler, reg, reg, reg);
     }
 
     // Store the lower half
     orc_x86_emit_mov_imm_reg (compiler, 4, value >> 0, compiler->gp_tmpreg);
-    orc_avx_sse_emit_pinsrd_register (compiler, 0,  reg, compiler->gp_tmpreg, reg);
+    orc_avx_sse_emit_pinsrd_register (compiler, 0,  ORC_AVX_SSE_REG (reg), compiler->gp_tmpreg, ORC_AVX_SSE_REG (reg));
 
     // broadcast mm0 to the rest
     orc_avx_emit_broadcast (compiler, reg, reg, size);
@@ -321,7 +322,7 @@ orc_avx_load_constant (OrcCompiler *compiler, int reg, int size,
   }
 
   orc_x86_emit_mov_imm_reg (compiler, 4, value, compiler->gp_tmpreg);
-  orc_avx_sse_emit_movd_load_register (compiler, compiler->gp_tmpreg, reg);
+  orc_avx_sse_emit_movd_load_register (compiler, compiler->gp_tmpreg, ORC_AVX_SSE_REG (reg));
   orc_avx_emit_broadcast (compiler, reg, reg, 4);
 }
 
@@ -336,7 +337,7 @@ avx_load_constant_long (OrcCompiler *compiler, int reg, OrcConstant *constant)
   for (int i = 0; i < 4; i++) {
     orc_x86_emit_mov_imm_reg (compiler, 4, constant->full_value[i],
         compiler->gp_tmpreg);
-    orc_avx_sse_emit_pinsrd_register (compiler, i, reg, compiler->gp_tmpreg, reg);
+    orc_avx_sse_emit_pinsrd_register (compiler, i, ORC_AVX_SSE_REG (reg), compiler->gp_tmpreg, ORC_AVX_SSE_REG (reg));
   }
 
   orc_avx_emit_broadcast (compiler, reg, reg, 16);

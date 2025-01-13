@@ -12,10 +12,10 @@
 #include <sys/types.h>
 
 #include <orc/orcavx.h>
+#include <orc/orcsse.h>
+#include <orc/orcavxinsn.h>
 #include <orc/orcdebug.h>
 #include <orc/orccompiler.h>
-
-#define SIZE 65536
 
 /* avx/avx2 rules */
 // rules for calculating vector width:
@@ -48,7 +48,8 @@ avx_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
       orc_avx_sse_emit_pinsrd_memoffset (compiler, 1,
           ORC_STRUCT_OFFSET (OrcExecutor,
               params[insn->src_args[0] + (ORC_N_PARAMS)]),
-          REGISTER_RULE, compiler->exec_reg, REGISTER_RULE);
+          ORC_AVX_SSE_REG (REGISTER_RULE), compiler->exec_reg,
+          ORC_AVX_SSE_REG (REGISTER_RULE));
       // Now treat the REGISTER_RULE as YMM, and unpack
       orc_avx_emit_broadcast (compiler, REGISTER_RULE, REGISTER_RULE, 8);
     } else {
@@ -172,7 +173,8 @@ avx_rule_loadupib_avx2 (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     orc_avx_emit_punpcklbw (compiler, dest->alloc, tmp, dest->alloc);
     orc_avx_emit_permute2i128 (compiler, ORC_AVX_PERMUTE(2, 0), dest->alloc, tmp2, dest->alloc);
   } else {
-    orc_avx_sse_emit_punpcklbw (compiler, dest->alloc, tmp, dest->alloc);
+    orc_avx_sse_emit_punpcklbw (compiler, ORC_AVX_SSE_REG (dest->alloc),
+        ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest->alloc));
   }
 
   src->update_type = 1;
@@ -218,7 +220,8 @@ avx_rule_loadupdb_avx2 (OrcCompiler *compiler, void *user, OrcInstruction *insn)
         orc_avx_emit_punpcklbw (compiler, dest->alloc, dest->alloc, dest->alloc);
         orc_avx_emit_permute2i128 (compiler, ORC_AVX_PERMUTE(2, 0), dest->alloc, tmp, dest->alloc);
       } else {
-        orc_avx_sse_emit_punpcklbw (compiler, dest->alloc, dest->alloc, dest->alloc);
+        orc_avx_sse_emit_punpcklbw (compiler, ORC_AVX_SSE_REG (dest->alloc),
+            ORC_AVX_SSE_REG (dest->alloc), ORC_AVX_SSE_REG (dest->alloc));
       }
       break;
     case 2:
@@ -227,7 +230,8 @@ avx_rule_loadupdb_avx2 (OrcCompiler *compiler, void *user, OrcInstruction *insn)
         orc_avx_emit_punpcklwd (compiler, dest->alloc, dest->alloc, dest->alloc);
         orc_avx_emit_permute2i128 (compiler, ORC_AVX_PERMUTE(2, 0), dest->alloc, tmp, dest->alloc);
       } else {
-        orc_avx_sse_emit_punpcklwd (compiler, dest->alloc, dest->alloc, dest->alloc);
+        orc_avx_sse_emit_punpcklwd (compiler, ORC_AVX_SSE_REG (dest->alloc),
+            ORC_AVX_SSE_REG (dest->alloc), ORC_AVX_SSE_REG (dest->alloc));
       }
       break;
     case 4:
@@ -236,7 +240,8 @@ avx_rule_loadupdb_avx2 (OrcCompiler *compiler, void *user, OrcInstruction *insn)
         orc_avx_emit_punpckldq (compiler, dest->alloc, dest->alloc, dest->alloc);
         orc_avx_emit_permute2i128 (compiler, ORC_AVX_PERMUTE(2, 0), dest->alloc, tmp, dest->alloc);
       } else {
-        orc_avx_sse_emit_punpckldq (compiler, dest->alloc, dest->alloc, dest->alloc);
+        orc_avx_sse_emit_punpckldq (compiler, ORC_AVX_SSE_REG (dest->alloc),
+            ORC_AVX_SSE_REG (dest->alloc), ORC_AVX_SSE_REG (dest->alloc));
       }
       break;
   }
@@ -298,8 +303,10 @@ avx_rule_ldresnearl_avx2 (OrcCompiler *compiler, void *user,
 
         orc_avx_emit_por (compiler, tmp, dest->alloc, dest->alloc);
       } else {
-        orc_avx_sse_emit_pslldq_imm (compiler, 4 * shift_in_dwords, tmp, tmp);
-        orc_avx_sse_emit_por (compiler, tmp, dest->alloc, dest->alloc);
+        orc_avx_sse_emit_pslldq_imm (compiler, 4 * shift_in_dwords,
+            ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+        orc_avx_sse_emit_por (compiler, ORC_AVX_SSE_REG (tmp),
+            ORC_AVX_SSE_REG (dest->alloc), ORC_AVX_SSE_REG (dest->alloc));
       }
     }
 
@@ -343,40 +350,50 @@ avx_rule_ldreslinl_avx2 (OrcCompiler *compiler, void *user,
         FALSE);
 
     // Unsigned extend a and b to 16 bits (see below)
-    orc_avx_sse_emit_pxor (compiler, tmp2, tmp2, tmp2);
-    orc_avx_sse_emit_punpcklbw (compiler, tmp, tmp2, tmp);
+    orc_avx_sse_emit_pxor (compiler, ORC_AVX_SSE_REG (tmp2),
+        ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_punpcklbw (compiler, ORC_AVX_SSE_REG (tmp),
+        ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp));
     // Key insight here: a * (256 - i) + b * i
     // = a * 256 - a * i + b * i
     // = (a * 256) + (b - a) * i
     // === tmp2 <- (b - a)
     // with b in tmp2, a in tmp
-    orc_avx_sse_emit_pshufd (compiler, ORC_AVX_SSE_SHUF (3, 2, 3, 2), tmp,
-        tmp2);
+    orc_avx_sse_emit_pshufd (compiler, ORC_AVX_SSE_SHUF (3, 2, 3, 2),
+        ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp2));
     // only the low quad is active as per src->ptr_register above
-    orc_avx_sse_emit_psubw (compiler, tmp2, tmp, tmp2);
+    orc_avx_sse_emit_psubw (compiler, ORC_AVX_SSE_REG (tmp2),
+        ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp2));
 
     // Load offset -- time to calculate tmp
-    orc_avx_sse_emit_movd_load_register (compiler, src->ptr_offset, tmp);
+    orc_avx_sse_emit_movd_load_register (compiler, src->ptr_offset,
+        ORC_AVX_SSE_REG (tmp));
     // tmp is i32 in the emulator
     // but when using it we only care about the low 24 bits
     // due to & 0xFF windowing we only care about 0.24 -> 8..15
     // hence why only the low word is used
-    orc_avx_sse_emit_pshuflw (compiler, ORC_AVX_SSE_SHUF (0, 0, 0, 0), tmp,
-        tmp);
+    orc_avx_sse_emit_pshuflw (compiler, ORC_AVX_SSE_SHUF (0, 0, 0, 0),
+        ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
     // i <-tmp >> 8
-    orc_avx_sse_emit_psrlw_imm (compiler, 8, tmp, tmp);
+    orc_avx_sse_emit_psrlw_imm (compiler, 8, ORC_AVX_SSE_REG (tmp),
+        ORC_AVX_SSE_REG (tmp));
     // (...) <- (-a + b) * i
-    orc_avx_sse_emit_pmullw (compiler, tmp, tmp2, tmp);
+    orc_avx_sse_emit_pmullw (compiler, ORC_AVX_SSE_REG (tmp),
+        ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp));
     // (...) <- (...) >> 8
-    orc_avx_sse_emit_psraw_imm (compiler, 8, tmp, tmp);
+    orc_avx_sse_emit_psraw_imm (compiler, 8, ORC_AVX_SSE_REG (tmp),
+        ORC_AVX_SSE_REG (tmp));
     // var32.x4 <- (orc_uint8) (...)
-    orc_avx_sse_emit_pxor (compiler, tmp2, tmp2, tmp2);
-    orc_avx_sse_emit_packsswb (compiler, tmp, tmp2, tmp);
+    orc_avx_sse_emit_pxor (compiler, ORC_AVX_SSE_REG (tmp2),
+        ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_packsswb (compiler, ORC_AVX_SSE_REG (tmp),
+        ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp));
 
     // Insert into the destination
     orc_x86_emit_mov_memoffset_avx (compiler, 4, 0, src->ptr_register,
         dest->alloc, FALSE);
-    orc_avx_sse_emit_paddb (compiler, tmp, dest->alloc, dest->alloc);
+    orc_avx_sse_emit_paddb (compiler, ORC_AVX_SSE_REG (tmp),
+      ORC_AVX_SSE_REG (dest->alloc), ORC_AVX_SSE_REG (dest->alloc));
 
     // offset <- offset + i
     if (compiler->vars[increment_var].vartype == ORC_VAR_TYPE_PARAM) {
@@ -438,18 +455,22 @@ avx_rule_ldreslinl_avx2 (OrcCompiler *compiler, void *user,
 
       // tmp2 contains at this moment the correct odd interpolated pixels
       // interleave ab with cd
-      orc_avx_sse_emit_punpckldq (compiler, tmp, tmp2, tmp);
+      orc_avx_sse_emit_punpckldq (compiler, ORC_AVX_SSE_REG (tmp),
+          ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp));
       // copy tmp to tmp2
-      orc_avx_sse_emit_movdqa (compiler, tmp, tmp2);
+      orc_avx_sse_emit_movdqa (compiler, ORC_AVX_SSE_REG (tmp),
+          ORC_AVX_SSE_REG (tmp2));
       // Insert the pixels in place
       switch (i) {
         case 0:
           // dest <- tmp[0..64]
-          orc_avx_sse_emit_movdqa (compiler, tmp, dest->alloc);
+          orc_avx_sse_emit_movdqa (compiler, ORC_AVX_SSE_REG (tmp),
+              ORC_AVX_SSE_REG (dest->alloc));
           break;
         case 2:
           // dest <- tmp[0..64] dest[0..64]
-          orc_avx_sse_emit_punpcklqdq (compiler, dest->alloc, tmp, dest->alloc);
+          orc_avx_sse_emit_punpcklqdq (compiler, ORC_AVX_SSE_REG (dest->alloc),
+              ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest->alloc));
           break;
         case 4:
           // dest <- dest[255...192] tmp[0..64] dest[0..127]
@@ -470,37 +491,37 @@ avx_rule_ldreslinl_avx2 (OrcCompiler *compiler, void *user,
           break;
       }
 
-      orc_avx_sse_emit_pxor (compiler, tmp3, tmp3, tmp3);
+      orc_avx_sse_emit_pxor (compiler, ORC_AVX_SSE_REG (tmp3), ORC_AVX_SSE_REG (tmp3), ORC_AVX_SSE_REG (tmp3));
       // Unsigned extend ac to 16 bits
-      orc_avx_sse_emit_punpcklbw (compiler, tmp, tmp3, tmp);
+      orc_avx_sse_emit_punpcklbw (compiler, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp3), ORC_AVX_SSE_REG (tmp));
       // Unsigned extend bd to 16 bits
-      orc_avx_sse_emit_punpckhbw (compiler, tmp2, tmp3, tmp2);
+      orc_avx_sse_emit_punpckhbw (compiler, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp3), ORC_AVX_SSE_REG (tmp2));
 
       // tmp2 <- (b - a, d - c)
-      orc_avx_sse_emit_psubw (compiler, tmp2, tmp, tmp2);
+      orc_avx_sse_emit_psubw (compiler, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp2));
 
       // tmp4 now has the (offset + i, offset + i + 1)
       // (from the previous iteration, from the earlier addition)
-      orc_avx_sse_emit_pinsrw_register (compiler, 1, offset, src->ptr_offset,
-          offset);
+      orc_avx_sse_emit_pinsrw_register (compiler, 1, ORC_AVX_SSE_REG (offset), src->ptr_offset,
+          ORC_AVX_SSE_REG (offset));
 
       // (offset+i, offset+i, offset+i+1, offset+i+1, 0, 0, 0, 0)
-      orc_avx_sse_emit_pshuflw (compiler, ORC_AVX_SSE_SHUF (1, 1, 0, 0), offset,
+      orc_avx_sse_emit_pshuflw (compiler, ORC_AVX_SSE_SHUF (1, 1, 0, 0), ORC_AVX_SSE_REG (offset),
           offset);
       // (o+i, o+i, o+i, o+i, o+i+1, o+i+1, o+i+1, o+i+1)
-      orc_avx_sse_emit_pshufd (compiler, ORC_AVX_SSE_SHUF (1, 1, 0, 0), offset,
+      orc_avx_sse_emit_pshufd (compiler, ORC_AVX_SSE_SHUF (1, 1, 0, 0), ORC_AVX_SSE_REG (offset),
           offset);
 
       // i <-tmp >> 8
-      orc_avx_sse_emit_psrlw_imm (compiler, 8, offset, offset);
+      orc_avx_sse_emit_psrlw_imm (compiler, 8, ORC_AVX_SSE_REG (offset), ORC_AVX_SSE_REG (offset));
       // (...) <- (b - a, d - c) * i
-      orc_avx_sse_emit_pmullw (compiler, tmp2, offset, tmp2);
+      orc_avx_sse_emit_pmullw (compiler, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (offset), ORC_AVX_SSE_REG (tmp2));
       // (...) <- (...) >> 8
-      orc_avx_sse_emit_psraw_imm (compiler, 8, tmp2, tmp2);
+      orc_avx_sse_emit_psraw_imm (compiler, 8, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
       // var32.x4 <- (orc_uint8) (...)
       orc_avx_emit_pxor (compiler, tmp, tmp, tmp);
-      orc_avx_sse_emit_packsswb (compiler, tmp2, tmp, tmp2);
-      orc_avx_sse_emit_punpcklqdq (compiler, tmp2, tmp2, tmp2);
+      orc_avx_sse_emit_packsswb (compiler, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp2));
+      orc_avx_sse_emit_punpcklqdq (compiler, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
 
       // store the next two pixels
       // interpolant goes in the middle
@@ -508,7 +529,7 @@ avx_rule_ldreslinl_avx2 (OrcCompiler *compiler, void *user,
         case 0:
           break;
         case 2:
-          orc_avx_sse_emit_pslldq_imm (compiler, 8, tmp2, tmp2);
+          orc_avx_sse_emit_pslldq_imm (compiler, 8, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
           break;
         case 4:
           orc_avx_emit_permute4x64_imm (compiler, ORC_AVX_SSE_SHUF(2, 1, 3, 3), tmp2, tmp2);
@@ -531,7 +552,7 @@ avx_rule_ldreslinl_avx2 (OrcCompiler *compiler, void *user,
         // ptr0[i] = var32;
         // (note: this means the space making happens elsewhere -- somewhere with
         // lqdq ;) )
-        orc_avx_sse_emit_por (compiler, tmp2, dest->alloc, dest->alloc);
+        orc_avx_sse_emit_por (compiler, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (dest->alloc), ORC_AVX_SSE_REG (dest->alloc));
       }
 
       // offset <- offset + i
@@ -576,8 +597,8 @@ avx_rule_copyx (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_movdqa (p, p->vars[insn->src_args[0]].alloc,
         p->vars[insn->dest_args[0]].alloc);
   } else {
-    orc_avx_sse_emit_movdqa (p, p->vars[insn->src_args[0]].alloc,
-        p->vars[insn->dest_args[0]].alloc);
+    orc_avx_sse_emit_movdqa (p, ORC_AVX_SSE_REG (p->vars[insn->src_args[0]].alloc),
+        ORC_AVX_SSE_REG (p->vars[insn->dest_args[0]].alloc));
   }
 }
 
@@ -591,8 +612,24 @@ avx_rule_copyx (OrcCompiler *p, void *user, OrcInstruction *insn)
       orc_avx_emit_##insn_name (p, p->vars[insn->src_args[0]].alloc, \
           p->vars[insn->dest_args[0]].alloc); \
     } else { \
-      orc_avx_sse_emit_##insn_name (p, p->vars[insn->src_args[0]].alloc, \
-          p->vars[insn->dest_args[0]].alloc); \
+      orc_avx_sse_emit_##insn_name (p, \
+          ORC_AVX_SSE_REG (p->vars[insn->src_args[0]].alloc), \
+          ORC_AVX_SSE_REG (p->vars[insn->dest_args[0]].alloc)); \
+    } \
+  }
+
+#define UNARY_W_SSE(opcode, insn_name, width) \
+  static void avx_rule_##opcode (OrcCompiler *p, void *user, \
+      OrcInstruction *insn) \
+  { \
+    const int size = p->vars[insn->src_args[0]].size << p->loop_shift; \
+    if (size >= width) { \
+      orc_avx_emit_##insn_name (p, p->vars[insn->src_args[0]].alloc, \
+          ORC_AVX_SSE_REG (p->vars[insn->dest_args[0]].alloc)); \
+    } else { \
+      orc_avx_sse_emit_##insn_name (p, \
+          ORC_AVX_SSE_REG (p->vars[insn->src_args[0]].alloc), \
+          ORC_AVX_SSE_REG (p->vars[insn->dest_args[0]].alloc)); \
     } \
   }
 
@@ -610,9 +647,27 @@ avx_rule_copyx (OrcCompiler *p, void *user, OrcInstruction *insn)
           p->vars[insn->src_args[1]].alloc, \
           p->vars[insn->dest_args[0]].alloc); \
     } else { \
-      orc_avx_sse_emit_##insn_name (p, p->vars[insn->src_args[0]].alloc, \
-          p->vars[insn->src_args[1]].alloc, \
+      orc_avx_sse_emit_##insn_name (p, \
+          ORC_AVX_SSE_REG (p->vars[insn->src_args[0]].alloc), \
+          ORC_AVX_SSE_REG (p->vars[insn->src_args[1]].alloc), \
+          ORC_AVX_SSE_REG (p->vars[insn->dest_args[0]].alloc)); \
+    } \
+  }
+
+// Unary opcode, AVX2 only, narrowing to SSE at width bytes, SSE src
+#define UNARY_AVX2_ONLY_W_SSE(opcode, insn_name, width) \
+  static void avx_rule_##opcode##_avx2 (OrcCompiler *p, void *user, \
+      OrcInstruction *insn) \
+  { \
+    const int size = p->vars[insn->src_args[0]].size << p->loop_shift; \
+    if (size >= width) { \
+      orc_avx_emit_##insn_name (p, \
+          ORC_AVX_SSE_REG (p->vars[insn->src_args[0]].alloc), \
           p->vars[insn->dest_args[0]].alloc); \
+    } else { \
+      orc_avx_sse_emit_##insn_name (p, \
+          ORC_AVX_SSE_REG (p->vars[insn->src_args[0]].alloc), \
+          ORC_AVX_SSE_REG (p->vars[insn->dest_args[0]].alloc)); \
     } \
   }
 
@@ -626,8 +681,9 @@ avx_rule_copyx (OrcCompiler *p, void *user, OrcInstruction *insn)
       orc_avx_emit_##insn_name (p, p->vars[insn->src_args[0]].alloc, \
           p->vars[insn->dest_args[0]].alloc); \
     } else { \
-      orc_avx_sse_emit_##insn_name (p, p->vars[insn->src_args[0]].alloc, \
-          p->vars[insn->dest_args[0]].alloc); \
+      orc_avx_sse_emit_##insn_name (p, \
+          ORC_AVX_SSE_REG (p->vars[insn->src_args[0]].alloc), \
+          ORC_AVX_SSE_REG (p->vars[insn->dest_args[0]].alloc)); \
     } \
   }
 
@@ -644,9 +700,10 @@ avx_rule_copyx (OrcCompiler *p, void *user, OrcInstruction *insn)
           p->vars[insn->src_args[1]].alloc, \
           p->vars[insn->dest_args[0]].alloc); \
     } else { \
-      orc_avx_sse_emit_##insn_name (p, p->vars[insn->src_args[0]].alloc, \
-          p->vars[insn->src_args[1]].alloc, \
-          p->vars[insn->dest_args[0]].alloc); \
+      orc_avx_sse_emit_##insn_name (p, \
+          ORC_AVX_SSE_REG (p->vars[insn->src_args[0]].alloc), \
+          ORC_AVX_SSE_REG (p->vars[insn->src_args[1]].alloc), \
+          ORC_AVX_SSE_REG (p->vars[insn->dest_args[0]].alloc)); \
     } \
   }
 
@@ -737,7 +794,7 @@ avx_rule_accw (OrcCompiler *p, void *user, OrcInstruction *insn)
   if (size >= 2) {
     orc_avx_emit_paddw (p, dest, src, dest);
   } else {
-    orc_avx_sse_emit_paddw (p, dest, src, dest);
+    orc_avx_sse_emit_paddw (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -748,7 +805,7 @@ avx_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int dest = p->vars[insn->dest_args[0]].alloc;
 
   if (p->loop_shift == 0) {
-    orc_avx_sse_emit_pslldq_imm (p, 12, src, src);
+    orc_avx_sse_emit_pslldq_imm (p, 12, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (src));
   }
 
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
@@ -757,7 +814,7 @@ avx_rule_accl (OrcCompiler *p, void *user, OrcInstruction *insn)
   if (size >= 4) {
     orc_avx_emit_paddd (p, dest, src, dest);
   } else {
-    orc_avx_sse_emit_paddd (p, dest, src, dest);
+    orc_avx_sse_emit_paddd (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -780,17 +837,17 @@ avx_rule_accsadubl (OrcCompiler *p, void *user, OrcInstruction *insn)
   //  - if shift <= 3, we need to shift the whole halves
 
   if (p->loop_shift <= 2) { // <= 32b
-    orc_avx_sse_emit_pslldq_imm (p, 16 - (1 << p->loop_shift), src1, tmp);
-    orc_avx_sse_emit_pslldq_imm (p, 16 - (1 << p->loop_shift), src2, tmp2);
-    orc_avx_sse_emit_psadbw (p, tmp, tmp2, tmp);
-    orc_avx_sse_emit_paddd (p, dest, tmp, dest);
+    orc_avx_sse_emit_pslldq_imm (p, 16 - (1 << p->loop_shift), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_pslldq_imm (p, 16 - (1 << p->loop_shift), ORC_AVX_SSE_REG (src2), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_psadbw (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_paddd (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   } else if (p->loop_shift == 3) {
-    orc_avx_sse_emit_psadbw (p, src1, src2, tmp);
-    orc_avx_sse_emit_pslldq_imm (p, 8, tmp, tmp); // zonk out the upper garbage
-    orc_avx_sse_emit_paddd (p, dest, tmp, dest);
+    orc_avx_sse_emit_psadbw (p, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (src2), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_pslldq_imm (p, 8, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp)); // zonk out the upper garbage
+    orc_avx_sse_emit_paddd (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   } else if (p->loop_shift == 4) {                // 128b
-    orc_avx_sse_emit_psadbw (p, src1, src2, tmp);
-    orc_avx_sse_emit_paddd (p, dest, tmp, dest);
+    orc_avx_sse_emit_psadbw (p, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (src2), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_paddd (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   } else {
     orc_avx_emit_psadbw (p, src1, src2, tmp);
     orc_avx_emit_paddd (p, dest, tmp, dest);
@@ -802,7 +859,8 @@ avx_rule_signX_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   const int src = p->vars[insn->src_args[0]].alloc;
   const int dest = p->vars[insn->dest_args[0]].alloc;
-  const int opcodes[] = { ORC_X86_psignb, ORC_X86_psignw, ORC_X86_psignd };
+  const int opcodes[] = { ORC_AVX_psignb, ORC_AVX_psignw, ORC_AVX_psignd };
+  const int opcodes_sse[] = { ORC_AVX_SSE_psignb, ORC_AVX_SSE_psignw, ORC_AVX_SSE_psignd };
   const int type = ORC_PTR_TO_INT (user);
 
   const int tmpc = orc_compiler_get_temp_constant (p, 1 << type, 1);
@@ -810,11 +868,9 @@ avx_rule_signX_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
   if (size >= 32) {
-    orc_vex_emit_cpuinsn_size (p, opcodes[type], 32, tmpc, src, dest,
-        ORC_X86_AVX_VEX256_PREFIX);
+    orc_vex_emit_cpuinsn_avx (p, opcodes[type], tmpc, src, 0, dest);
   } else {
-    orc_vex_emit_cpuinsn_size (p, opcodes[type], 16, tmpc, src, dest,
-        ORC_X86_AVX_VEX128_PREFIX);
+    orc_vex_emit_cpuinsn_avx (p, opcodes_sse[type], ORC_AVX_SSE_REG (tmpc), ORC_AVX_SSE_REG (src), 0, ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -822,16 +878,16 @@ static void
 avx_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   const int type = ORC_PTR_TO_INT (user);
-  /* int imm_code1[] = { 0x71, 0x71, 0x71, 0x72, 0x72, 0x72, 0x73, 0x73 }; */
-  /* int imm_code2[] = { 6, 2, 4, 6, 2, 4, 6, 2 }; */
-  /* int reg_code[] = { 0xf1, 0xd1, 0xe1, 0xf2, 0xd2, 0xe2, 0xf3, 0xd3 }; */
-  /* const char *code[] = { "psllw", "psrlw", "psraw", "pslld", "psrld",
-   * "psrad", "psllq", "psrlq" }; */
-  const int opcodes[] = { ORC_X86_psllw, ORC_X86_psrlw, ORC_X86_psraw,
-    ORC_X86_pslld, ORC_X86_psrld, ORC_X86_psrad, ORC_X86_psllq, ORC_X86_psrlq };
-  const int opcodes_imm[] = { ORC_X86_psllw_imm, ORC_X86_psrlw_imm,
-    ORC_X86_psraw_imm, ORC_X86_pslld_imm, ORC_X86_psrld_imm, ORC_X86_psrad_imm,
-    ORC_X86_psllq_imm, ORC_X86_psrlq_imm };
+  const int opcodes[] = { ORC_AVX_psllw, ORC_AVX_psrlw, ORC_AVX_psraw,
+    ORC_AVX_pslld, ORC_AVX_psrld, ORC_AVX_psrad, ORC_AVX_psllq, ORC_AVX_psrlq };
+  const int opcodes_sse[] = { ORC_AVX_SSE_psllw, ORC_AVX_SSE_psrlw, ORC_AVX_SSE_psraw,
+    ORC_AVX_SSE_pslld, ORC_AVX_SSE_psrld, ORC_AVX_SSE_psrad, ORC_AVX_SSE_psllq, ORC_AVX_SSE_psrlq };
+  const int opcodes_imm[] = { ORC_AVX_psllw_imm, ORC_AVX_psrlw_imm,
+    ORC_AVX_psraw_imm, ORC_AVX_pslld_imm, ORC_AVX_psrld_imm, ORC_AVX_psrad_imm,
+    ORC_AVX_psllq_imm, ORC_AVX_psrlq_imm };
+  const int opcodes_sse_imm[] = { ORC_AVX_SSE_psllw_imm, ORC_AVX_SSE_psrlw_imm,
+    ORC_AVX_SSE_psraw_imm, ORC_AVX_SSE_pslld_imm, ORC_AVX_SSE_psrld_imm, ORC_AVX_SSE_psrad_imm,
+    ORC_AVX_SSE_psllq_imm, ORC_AVX_SSE_psrlq_imm };
   const int src = p->vars[insn->src_args[0]].alloc;
   const int dest = p->vars[insn->dest_args[0]].alloc;
 
@@ -842,12 +898,10 @@ avx_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
     // Here we need a explicit source
     if (size >= 32) {
       orc_vex_emit_cpuinsn_imm (p, opcodes_imm[type],
-        p->vars[insn->src_args[1]].value.i, src, 0, dest,
-        ORC_X86_AVX_VEX256_PREFIX);
+        p->vars[insn->src_args[1]].value.i, src, 0, dest);
     } else {
-      orc_vex_emit_cpuinsn_imm (p, opcodes_imm[type],
-        p->vars[insn->src_args[1]].value.i, src, 0, dest,
-        ORC_X86_AVX_VEX128_PREFIX);
+      orc_vex_emit_cpuinsn_imm (p, opcodes_sse_imm[type],
+        p->vars[insn->src_args[1]].value.i, ORC_AVX_SSE_REG (src), 0, ORC_AVX_SSE_REG (dest));
     }
   } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
     int tmp = orc_compiler_get_temp_reg (p);
@@ -859,11 +913,9 @@ avx_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
         p->exec_reg, tmp, FALSE);
 
     if (size >= 32) {
-      orc_vex_emit_cpuinsn_size (p, opcodes[type], 16, src, tmp, dest,
-        ORC_X86_AVX_VEX256_PREFIX);
+      orc_vex_emit_cpuinsn_avx (p, opcodes[type], src, ORC_AVX_SSE_REG (tmp), 0, dest);
     } else {
-      orc_vex_emit_cpuinsn_size (p, opcodes[type], 16, src, tmp, dest,
-        ORC_X86_AVX_VEX128_PREFIX);
+      orc_vex_emit_cpuinsn_avx (p, opcodes_sse[type], ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), 0, ORC_AVX_SSE_REG (dest));
     }
   } else {
     orc_compiler_error (p,
@@ -888,8 +940,8 @@ avx_rule_shlb (OrcCompiler *p, void *user, OrcInstruction *insn)
       orc_avx_emit_psllw_imm (p, p->vars[insn->src_args[1]].value.i, src, dest);
       orc_avx_emit_pand (p, dest, tmp, dest);
     } else {
-      orc_avx_sse_emit_psllw_imm (p, p->vars[insn->src_args[1]].value.i, src, dest);
-      orc_avx_sse_emit_pand (p, dest, tmp, dest);
+      orc_avx_sse_emit_psllw_imm (p, p->vars[insn->src_args[1]].value.i, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+      orc_avx_sse_emit_pand (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     }
   } else {
     orc_compiler_error (p,
@@ -921,16 +973,16 @@ avx_rule_shrsb (OrcCompiler *p, void *user, OrcInstruction *insn)
 
       orc_avx_emit_por (p, dest, tmp, dest);
     } else {
-      orc_avx_sse_emit_movdqa (p, src, tmp);
-      orc_avx_sse_emit_psllw_imm (p, 8, src, tmp);
-      orc_avx_sse_emit_psraw_imm (p, p->vars[insn->src_args[1]].value.i, tmp, tmp);
-      orc_avx_sse_emit_psrlw_imm (p, 8, tmp, tmp);
+      orc_avx_sse_emit_movdqa (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp));
+      orc_avx_sse_emit_psllw_imm (p, 8, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp));
+      orc_avx_sse_emit_psraw_imm (p, p->vars[insn->src_args[1]].value.i, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+      orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
 
-      orc_avx_sse_emit_psraw_imm (p, 8 + p->vars[insn->src_args[1]].value.i, src,
-          dest);
-      orc_avx_sse_emit_psllw_imm (p, 8, dest, dest);
+      orc_avx_sse_emit_psraw_imm (p, 8 + p->vars[insn->src_args[1]].value.i, ORC_AVX_SSE_REG (src),
+          ORC_AVX_SSE_REG (dest));
+      orc_avx_sse_emit_psllw_imm (p, 8, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
 
-      orc_avx_sse_emit_por (p, dest, tmp, dest);
+      orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     }
   } else {
     orc_compiler_error (p,
@@ -955,9 +1007,9 @@ avx_rule_shrub (OrcCompiler *p, void *user, OrcInstruction *insn)
       orc_avx_emit_psrlw_imm (p, p->vars[insn->src_args[1]].value.i, src, dest);
       orc_avx_emit_pand (p, dest, tmp, dest);
     } else {
-      orc_avx_sse_emit_psrlw_imm (p, p->vars[insn->src_args[1]].value.i, src,
-          dest);
-      orc_avx_sse_emit_pand (p, dest, tmp, dest);
+      orc_avx_sse_emit_psrlw_imm (p, p->vars[insn->src_args[1]].value.i, ORC_AVX_SSE_REG (src),
+          ORC_AVX_SSE_REG (dest));
+      orc_avx_sse_emit_pand (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     }
   } else {
     orc_compiler_error (p,
@@ -986,14 +1038,14 @@ avx_rule_shrsq (OrcCompiler *p, void *user, OrcInstruction *insn)
       orc_avx_emit_psrlq_imm (p, p->vars[insn->src_args[1]].value.i, src, dest);
       orc_avx_emit_por (p, dest, tmp, dest);
     } else {
-      orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (3, 3, 1, 1), src, tmp);
-      orc_avx_sse_emit_psrad_imm (p, 31, tmp, tmp);
+      orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (3, 3, 1, 1), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp));
+      orc_avx_sse_emit_psrad_imm (p, 31, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
       orc_avx_sse_emit_psllq_imm (p, 64 - p->vars[insn->src_args[1]].value.i,
-          tmp, tmp);
+          ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
 
-      orc_avx_sse_emit_psrlq_imm (p, p->vars[insn->src_args[1]].value.i, src,
-          dest);
-      orc_avx_sse_emit_por (p, dest, tmp, dest);
+      orc_avx_sse_emit_psrlq_imm (p, p->vars[insn->src_args[1]].value.i, ORC_AVX_SSE_REG (src),
+          ORC_AVX_SSE_REG (dest));
+      orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     }
   } else {
     orc_compiler_error (p,
@@ -1017,7 +1069,7 @@ avx_rule_convssswb (OrcCompiler *p, void *user, OrcInstruction *insn)
     // packsswb does quad interleave ><
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
   } else {
-    orc_avx_sse_emit_packsswb (p, src, src, dest);
+    orc_avx_sse_emit_packsswb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1033,7 +1085,7 @@ avx_rule_convsuswb (OrcCompiler *p, void *user, OrcInstruction *insn)
     // packsswb does quad interleave ><
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
   } else {
-    orc_avx_sse_emit_packuswb (p, src, src, dest);
+    orc_avx_sse_emit_packuswb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1056,13 +1108,13 @@ avx_rule_convuuswb (OrcCompiler *p, void *user, OrcInstruction *insn)
     // same as above
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
   } else {
-    orc_avx_sse_emit_movdqa (p, src, tmp);
-    orc_avx_sse_emit_psrlw_imm (p, 15, src, tmp);
-    orc_avx_sse_emit_psllw_imm (p, 14, tmp, tmp);
-    orc_avx_sse_emit_por (p, src, tmp, dest);
-    orc_avx_sse_emit_psllw_imm (p, 1, tmp, tmp);
-    orc_avx_sse_emit_pxor (p, dest, tmp, dest);
-    orc_avx_sse_emit_packuswb (p, dest, dest, dest);
+    orc_avx_sse_emit_movdqa (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psrlw_imm (p, 15, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psllw_imm (p, 14, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psllw_imm (p, 1, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_packuswb (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1080,9 +1132,9 @@ avx_rule_convwb (OrcCompiler *p, void *user, OrcInstruction *insn)
     // same as above
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
   } else {
-    orc_avx_sse_emit_psllw_imm (p, 8, src, dest);
-    orc_avx_sse_emit_psrlw_imm (p, 8, dest, dest);
-    orc_avx_sse_emit_packuswb (p, dest, dest, dest);
+    orc_avx_sse_emit_psllw_imm (p, 8, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_packuswb (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1099,8 +1151,8 @@ avx_rule_convhwb (OrcCompiler *p, void *user, OrcInstruction *insn)
     // same as above
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
   } else {
-    orc_avx_sse_emit_psrlw_imm (p, 8, src, dest);
-    orc_avx_sse_emit_packuswb (p, dest, dest, dest);
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_packuswb (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1118,9 +1170,9 @@ avx_rule_convlw (OrcCompiler *p, void *user, OrcInstruction *insn)
     // same as above
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
   } else {
-    orc_avx_sse_emit_pslld_imm (p, 16, src, dest);
-    orc_avx_sse_emit_psrad_imm (p, 16, dest, dest);
-    orc_avx_sse_emit_packssdw (p, dest, dest, dest);
+    orc_avx_sse_emit_pslld_imm (p, 16, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psrad_imm (p, 16, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_packssdw (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1137,8 +1189,8 @@ avx_rule_convhlw (OrcCompiler *p, void *user, OrcInstruction *insn)
     // same as above
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
   } else {
-    orc_avx_sse_emit_psrad_imm (p, 16, src, dest);
-    orc_avx_sse_emit_packssdw (p, dest, dest, dest);
+    orc_avx_sse_emit_psrad_imm (p, 16, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_packssdw (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1156,8 +1208,8 @@ avx_rule_convql (OrcCompiler *p, void *user, OrcInstruction *insn)
     // same as above
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
   } else {
-    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 0, 2, 0), src, dest);
-    orc_avx_sse_emit_punpcklqdq (p, dest, zero, dest);
+    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 0, 2, 0), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_punpcklqdq (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (zero), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1173,8 +1225,8 @@ avx_rule_splatw3q (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_pshuflw (p, ORC_AVX_SSE_SHUF (3, 3, 3, 3), src, dest);
     orc_avx_emit_pshufhw (p, ORC_AVX_SSE_SHUF (3, 3, 3, 3), dest, dest);
   } else {
-    orc_avx_sse_emit_pshuflw (p, ORC_AVX_SSE_SHUF (3, 3, 3, 3), src, dest);
-    orc_avx_sse_emit_pshufhw (p, ORC_AVX_SSE_SHUF (3, 3, 3, 3), dest, dest);
+    orc_avx_sse_emit_pshuflw (p, ORC_AVX_SSE_SHUF (3, 3, 3, 3), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_pshufhw (p, ORC_AVX_SSE_SHUF (3, 3, 3, 3), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1188,11 +1240,11 @@ avx_rule_splatbw (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
   if (size >= 16) {
-    orc_avx_sse_emit_punpckhbw (p, src, src, tmp);
-    orc_avx_sse_emit_punpcklbw (p, src, src, dest);
+    orc_avx_sse_emit_punpckhbw (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_punpcklbw (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
     orc_avx_emit_permute2i128 (p, ORC_AVX_PERMUTE(2, 0), dest, tmp, dest);
   } else {
-    orc_avx_sse_emit_punpcklbw (p, src, src, dest);
+    orc_avx_sse_emit_punpcklbw (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1206,13 +1258,13 @@ avx_rule_splatbl (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
   if (size >= 8) {
-    orc_avx_sse_emit_punpcklbw (p, src, src, dest);
-    orc_avx_sse_emit_punpckhwd (p, dest, dest, tmp);
-    orc_avx_sse_emit_punpcklwd (p, dest, dest, dest);
+    orc_avx_sse_emit_punpcklbw (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_punpckhwd (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_punpcklwd (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
     orc_avx_emit_permute2i128 (p, ORC_AVX_PERMUTE(2, 0), dest, tmp, dest);
   } else {
-    orc_avx_sse_emit_punpcklbw (p, src, src, dest);
-    orc_avx_sse_emit_punpcklwd (p, dest, dest, dest);
+    orc_avx_sse_emit_punpcklbw (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_punpcklwd (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1228,8 +1280,8 @@ avx_rule_div255w (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_pmulhuw(p, src, tmpc, dest);
     orc_avx_emit_psrlw_imm (p, 7, dest, dest);
   } else {
-    orc_avx_sse_emit_pmulhuw(p, src, tmpc, dest);
-    orc_avx_sse_emit_psrlw_imm (p, 7, dest, dest);
+    orc_avx_sse_emit_pmulhuw(p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmpc), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psrlw_imm (p, 7, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1277,32 +1329,32 @@ avx_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_pand (p, l, j, l);
     orc_avx_emit_pxor (p, a, l, dest);
   } else {
-    orc_avx_sse_emit_movdqa (p, src1, divisor);
-    orc_avx_sse_emit_psllw_imm (p, 8, src1, divisor);
-    orc_avx_sse_emit_psrlw_imm (p, 1, divisor, divisor);
+    orc_avx_sse_emit_movdqa (p, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (divisor));
+    orc_avx_sse_emit_psllw_imm (p, 8, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (divisor));
+    orc_avx_sse_emit_psrlw_imm (p, 1, ORC_AVX_SSE_REG (divisor), ORC_AVX_SSE_REG (divisor));
 
-    orc_avx_sse_emit_psrlw_imm (p, 8, tmp, j);
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (j));
 
-    orc_avx_sse_emit_pxor (p, src0, tmp, dest);
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
 
     for (int i = 0; i < 7; i++) {
-      orc_avx_sse_emit_pxor (p, divisor, tmp, l);
-      orc_avx_sse_emit_pcmpgtw (p, l, dest, l);
-      orc_avx_sse_emit_movdqa (p, l, j2);
-      orc_avx_sse_emit_pandn (p, l, divisor, l);
-      orc_avx_sse_emit_psubw (p, dest, l, dest);
-      orc_avx_sse_emit_psrlw_imm (p, 1, divisor, divisor);
+      orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (divisor), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (l));
+      orc_avx_sse_emit_pcmpgtw (p, ORC_AVX_SSE_REG (l), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (l));
+      orc_avx_sse_emit_movdqa (p, ORC_AVX_SSE_REG (l), ORC_AVX_SSE_REG (j2));
+      orc_avx_sse_emit_pandn (p, ORC_AVX_SSE_REG (l), ORC_AVX_SSE_REG (divisor), ORC_AVX_SSE_REG (l));
+      orc_avx_sse_emit_psubw (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (l), ORC_AVX_SSE_REG (dest));
+      orc_avx_sse_emit_psrlw_imm (p, 1, ORC_AVX_SSE_REG (divisor), ORC_AVX_SSE_REG (divisor));
 
-      orc_avx_sse_emit_pand (p, j2, j, j2);
-      orc_avx_sse_emit_pxor (p, a, j2, a);
-      orc_avx_sse_emit_psrlw_imm (p, 1, j, j);
+      orc_avx_sse_emit_pand (p, ORC_AVX_SSE_REG (j2), ORC_AVX_SSE_REG (j), ORC_AVX_SSE_REG (j2));
+      orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (a), ORC_AVX_SSE_REG (j2), ORC_AVX_SSE_REG (a));
+      orc_avx_sse_emit_psrlw_imm (p, 1, ORC_AVX_SSE_REG (j), ORC_AVX_SSE_REG (j));
     }
 
-    orc_avx_sse_emit_movdqa (p, divisor, l);
-    orc_avx_sse_emit_pxor (p, l, tmp, l);
-    orc_avx_sse_emit_pcmpgtw (p, l, dest, l);
-    orc_avx_sse_emit_pand (p, l, j, l);
-    orc_avx_sse_emit_pxor (p, a, l, dest);
+    orc_avx_sse_emit_movdqa (p, ORC_AVX_SSE_REG (divisor), ORC_AVX_SSE_REG (l));
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (l), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (l));
+    orc_avx_sse_emit_pcmpgtw (p, ORC_AVX_SSE_REG (l), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (l));
+    orc_avx_sse_emit_pand (p, ORC_AVX_SSE_REG (l), ORC_AVX_SSE_REG (j), ORC_AVX_SSE_REG (l));
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (a), ORC_AVX_SSE_REG (l), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1322,28 +1374,28 @@ avx_rule_mulsbw (OrcCompiler *p, void *user, OrcInstruction *insn)
     // src0 == dest, so don't assume we can read dest post-facto
     orc_avx_emit_movdqa (p, src0, tmp2);
 
-    orc_avx_sse_emit_pxor (p, tmp, tmp, tmp);
-    orc_avx_sse_emit_punpcklbw (p, tmp, src1, tmp);
-    orc_avx_sse_emit_psraw_imm (p, 8, tmp, tmp);
-    orc_avx_sse_emit_punpcklbw (p, tmp2, tmp2, dest);
-    orc_avx_sse_emit_psraw_imm (p, 8, dest, dest);
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_punpcklbw (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psraw_imm (p, 8, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_punpcklbw (p, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psraw_imm (p, 8, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
 
-    orc_avx_sse_emit_pxor (p, tmp3, tmp3, tmp3);
-    orc_avx_sse_emit_punpckhbw (p, tmp3, src1, tmp3);
-    orc_avx_sse_emit_psraw_imm (p, 8, tmp3, tmp3);
-    orc_avx_sse_emit_punpckhbw (p, tmp2, tmp2, tmp2);
-    orc_avx_sse_emit_psraw_imm (p, 8, tmp2, tmp2);
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (tmp3), ORC_AVX_SSE_REG (tmp3), ORC_AVX_SSE_REG (tmp3));
+    orc_avx_sse_emit_punpckhbw (p, ORC_AVX_SSE_REG (tmp3), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp3));
+    orc_avx_sse_emit_psraw_imm (p, 8, ORC_AVX_SSE_REG (tmp3), ORC_AVX_SSE_REG (tmp3));
+    orc_avx_sse_emit_punpckhbw (p, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_psraw_imm (p, 8, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
 
     orc_avx_emit_permute2i128 (p, ORC_AVX_PERMUTE(2, 0), dest, tmp2, dest);
     orc_avx_emit_permute2i128 (p, ORC_AVX_PERMUTE(2, 0), tmp, tmp3, tmp);
     orc_avx_emit_pmullw (p, dest, tmp, dest);
   } else {
-    orc_avx_sse_emit_pxor (p, tmp, tmp, tmp);
-    orc_avx_sse_emit_punpcklbw (p, tmp, src1, tmp);
-    orc_avx_sse_emit_psraw_imm (p, 8, tmp, tmp);
-    orc_avx_sse_emit_punpcklbw (p, src0, src0, dest);
-    orc_avx_sse_emit_psraw_imm (p, 8, dest, dest);
-    orc_avx_sse_emit_pmullw (p, dest, tmp, dest);
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_punpcklbw (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psraw_imm (p, 8, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_punpcklbw (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psraw_imm (p, 8, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_pmullw (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1363,28 +1415,28 @@ avx_rule_mulubw (OrcCompiler *p, void *user, OrcInstruction *insn)
     // src0 == dest, so don't assume we can read dest post-facto
     orc_avx_emit_movdqa (p, src0, tmp2);
 
-    orc_avx_sse_emit_pxor (p, tmp, tmp, tmp);
-    orc_avx_sse_emit_punpcklbw (p, tmp, src1, tmp);
-    orc_avx_sse_emit_psrlw_imm (p, 8, tmp, tmp);
-    orc_avx_sse_emit_punpcklbw (p, tmp2, tmp2, dest);
-    orc_avx_sse_emit_psrlw_imm (p, 8, dest, dest);
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_punpcklbw (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_punpcklbw (p, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
 
-    orc_avx_sse_emit_pxor (p, tmp3, tmp3, tmp3);
-    orc_avx_sse_emit_punpckhbw (p, tmp3, src1, tmp3);
-    orc_avx_sse_emit_psrlw_imm (p, 8, tmp3, tmp3);
-    orc_avx_sse_emit_punpckhbw (p, tmp2, tmp2, tmp2);
-    orc_avx_sse_emit_psrlw_imm (p, 8, tmp2, tmp2);
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (tmp3), ORC_AVX_SSE_REG (tmp3), ORC_AVX_SSE_REG (tmp3));
+    orc_avx_sse_emit_punpckhbw (p, ORC_AVX_SSE_REG (tmp3), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp3));
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (tmp3), ORC_AVX_SSE_REG (tmp3));
+    orc_avx_sse_emit_punpckhbw (p, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
 
     orc_avx_emit_permute2i128 (p, ORC_AVX_PERMUTE(2, 0), dest, tmp2, dest);
     orc_avx_emit_permute2i128 (p, ORC_AVX_PERMUTE(2, 0), tmp, tmp3, tmp);
     orc_avx_emit_pmullw (p, dest, tmp, dest);
   } else {
-    orc_avx_sse_emit_pxor (p, tmp, tmp, tmp);
-    orc_avx_sse_emit_punpcklbw (p, tmp, src1, tmp);
-    orc_avx_sse_emit_psrlw_imm (p, 8, tmp, tmp);
-    orc_avx_sse_emit_punpcklbw (p, src0, src0, dest);
-    orc_avx_sse_emit_psrlw_imm (p, 8, dest, dest);
-    orc_avx_sse_emit_pmullw (p, dest, tmp, dest);
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_punpcklbw (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_punpcklbw (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_pmullw (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1415,19 +1467,19 @@ avx_rule_mullb (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_por (p, dest, tmp, dest);
   } else {
     // src0 == dest, so don't assume we can read dest post-facto
-    orc_avx_sse_emit_movdqa (p, src0, tmp);
+    orc_avx_sse_emit_movdqa (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (tmp));
 
-    orc_avx_sse_emit_pmullw (p, src0, src1, dest);
-    orc_avx_sse_emit_psllw_imm (p, 8, dest, dest);
-    orc_avx_sse_emit_psrlw_imm (p, 8, dest, dest);
+    orc_avx_sse_emit_pmullw (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psllw_imm (p, 8, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
 
-    orc_avx_sse_emit_movdqa (p, src1, tmp2);
-    orc_avx_sse_emit_psraw_imm (p, 8, tmp2, tmp2);
-    orc_avx_sse_emit_psraw_imm (p, 8, tmp, tmp);
-    orc_avx_sse_emit_pmullw (p, tmp, tmp2, tmp);
-    orc_avx_sse_emit_psllw_imm (p, 8, tmp, tmp);
+    orc_avx_sse_emit_movdqa (p, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_psraw_imm (p, 8, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_psraw_imm (p, 8, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_pmullw (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psllw_imm (p, 8, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
 
-    orc_avx_sse_emit_por (p, dest, tmp, dest);
+    orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1461,23 +1513,23 @@ avx_rule_mulhsb (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_psllw_imm (p, 8, tmp2, tmp2);
     orc_avx_emit_por (p, dest, tmp2, dest);
   } else {
-    orc_avx_sse_emit_movdqa (p, src0, tmp2);
+    orc_avx_sse_emit_movdqa (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (tmp2));
 
-    orc_avx_sse_emit_psllw_imm (p, 8, src1, tmp);
-    orc_avx_sse_emit_psraw_imm (p, 8, tmp, tmp);
+    orc_avx_sse_emit_psllw_imm (p, 8, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psraw_imm (p, 8, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
 
-    orc_avx_sse_emit_psllw_imm (p, 8, src0, dest);
-    orc_avx_sse_emit_psraw_imm (p, 8, dest, dest);
+    orc_avx_sse_emit_psllw_imm (p, 8, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psraw_imm (p, 8, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
 
-    orc_avx_sse_emit_pmullw (p, dest, tmp, dest);
-    orc_avx_sse_emit_psrlw_imm (p, 8, dest, dest);
+    orc_avx_sse_emit_pmullw (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
 
-    orc_avx_sse_emit_psraw_imm (p, 8, src1, tmp);
-    orc_avx_sse_emit_psraw_imm (p, 8, tmp2, tmp2);
-    orc_avx_sse_emit_pmullw (p, tmp2, tmp, tmp2);
-    orc_avx_sse_emit_psrlw_imm (p, 8, tmp2, tmp2);
-    orc_avx_sse_emit_psllw_imm (p, 8, tmp2, tmp2);
-    orc_avx_sse_emit_por (p, dest, tmp2, dest);
+    orc_avx_sse_emit_psraw_imm (p, 8, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psraw_imm (p, 8, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_pmullw (p, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_psllw_imm (p, 8, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1511,23 +1563,23 @@ avx_rule_mulhub (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_psllw_imm (p, 8, tmp2, tmp2);
     orc_avx_emit_por (p, dest, tmp2, dest);
   } else {
-    orc_avx_sse_emit_movdqa (p, src0, tmp2);
+    orc_avx_sse_emit_movdqa (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (tmp2));
 
-    orc_avx_sse_emit_psllw_imm (p, 8, src1, tmp);
-    orc_avx_sse_emit_psrlw_imm (p, 8, tmp, tmp);
+    orc_avx_sse_emit_psllw_imm (p, 8, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
 
-    orc_avx_sse_emit_psllw_imm (p, 8, src0, dest);
-    orc_avx_sse_emit_psrlw_imm (p, 8, dest, dest);
+    orc_avx_sse_emit_psllw_imm (p, 8, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
 
-    orc_avx_sse_emit_pmullw (p, dest, tmp, dest);
-    orc_avx_sse_emit_psrlw_imm (p, 8, dest, dest);
+    orc_avx_sse_emit_pmullw (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
 
-    orc_avx_sse_emit_psrlw_imm (p, 8, src1, tmp);
-    orc_avx_sse_emit_psrlw_imm (p, 8, tmp2, tmp2);
-    orc_avx_sse_emit_pmullw (p, tmp2, tmp, tmp2);
-    orc_avx_sse_emit_psrlw_imm (p, 8, tmp2, tmp2);
-    orc_avx_sse_emit_psllw_imm (p, 8, tmp2, tmp2);
-    orc_avx_sse_emit_por (p, dest, tmp2, dest);
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_pmullw (p, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_psllw_imm (p, 8, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1550,9 +1602,9 @@ avx_rule_mulswl (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_punpcklwd (p, dest, tmp, dest);
     orc_avx_emit_permute2i128 (p, ORC_AVX_PERMUTE(2, 0), dest, tmp2, dest);
   } else {
-    orc_avx_sse_emit_pmulhw (p, src0, src1, tmp);
-    orc_avx_sse_emit_pmullw (p, src0, src1, dest);
-    orc_avx_sse_emit_punpcklwd (p, dest, tmp, dest);
+    orc_avx_sse_emit_pmulhw (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_pmullw (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_punpcklwd (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1575,9 +1627,9 @@ avx_rule_muluwl (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_punpcklwd (p, dest, tmp, dest);
     orc_avx_emit_permute2i128 (p, ORC_AVX_PERMUTE(2, 0), dest, tmp2, dest);
   } else {
-    orc_avx_sse_emit_pmulhuw (p, src0, src1, tmp);
-    orc_avx_sse_emit_pmullw (p, src0, src1, dest);
-    orc_avx_sse_emit_punpcklwd (p, dest, tmp, dest);
+    orc_avx_sse_emit_pmulhuw (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_pmullw (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_punpcklwd (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1600,13 +1652,13 @@ avx_rule_mulhsl_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 0, 3, 1), tmp2, tmp2);
     orc_avx_emit_punpckldq (p, dest, tmp2, dest);
   } else {
-    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 3, 0, 1), src0, tmp);
-    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 3, 0, 1), src1, tmp2);
-    orc_avx_sse_emit_pmuldq (p, src0, src1, dest);
-    orc_avx_sse_emit_pmuldq (p, tmp2, tmp, tmp2);
-    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 0, 3, 1), dest, dest);
-    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 0, 3, 1), tmp2, tmp2);
-    orc_avx_sse_emit_punpckldq (p, dest, tmp2, dest);
+    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 3, 0, 1), ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 3, 0, 1), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_pmuldq (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_pmuldq (p, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 0, 3, 1), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 0, 3, 1), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_punpckldq (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1629,13 +1681,13 @@ avx_rule_mulhul (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 0, 3, 1), tmp2, tmp2);
     orc_avx_emit_punpckldq (p, dest, tmp2, dest);
   } else {
-    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 3, 0, 1), src0, tmp);
-    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 3, 0, 1), src1, tmp2);
-    orc_avx_sse_emit_pmuludq (p, src0, src1, dest);
-    orc_avx_sse_emit_pmuludq (p, tmp2, tmp, tmp2);
-    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 0, 3, 1), dest, dest);
-    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 0, 3, 1), tmp2, tmp2);
-    orc_avx_sse_emit_punpckldq (p, dest, tmp2, dest);
+    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 3, 0, 1), ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 3, 0, 1), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_pmuludq (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_pmuludq (p, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 0, 3, 1), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 0, 3, 1), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_punpckldq (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1650,20 +1702,20 @@ avx_rule_mulslq_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
   if (size >= 16) {
-    orc_avx_sse_emit_punpckhdq (p, src0, src0, tmp2);
-    orc_avx_sse_emit_punpckldq (p, src0, src0, dest);
+    orc_avx_sse_emit_punpckhdq (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_punpckldq (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (dest));
     orc_avx_emit_permute2i128 (p, ORC_AVX_PERMUTE(2, 0), dest, tmp2, dest);
 
-    orc_avx_sse_emit_punpckhdq (p, src1, src1, tmp2);
-    orc_avx_sse_emit_punpckldq (p, src1, src1, tmp);
+    orc_avx_sse_emit_punpckhdq (p, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_punpckldq (p, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
     orc_avx_emit_permute2i128 (p, ORC_AVX_PERMUTE(2, 0), tmp, tmp2, tmp);
 
     orc_avx_emit_pmuldq (p, dest, tmp, dest);
   } else {
-    orc_avx_sse_emit_movdqa (p, src1, tmp);
-    orc_avx_sse_emit_punpckldq (p, src0, src0, dest);
-    orc_avx_sse_emit_punpckldq (p, tmp, tmp, tmp);
-    orc_avx_sse_emit_pmuldq (p, dest, tmp, dest);
+    orc_avx_sse_emit_movdqa (p, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_punpckldq (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_punpckldq (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_pmuldq (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1678,20 +1730,20 @@ avx_rule_mululq (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
   if (size >= 16) {
-    orc_avx_sse_emit_punpckhdq (p, src0, src0, tmp2);
-    orc_avx_sse_emit_punpckldq (p, src0, src0, dest);
+    orc_avx_sse_emit_punpckhdq (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_punpckldq (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (dest));
     orc_avx_emit_permute2i128 (p, ORC_AVX_PERMUTE(2, 0), dest, tmp2, dest);
 
-    orc_avx_sse_emit_punpckhdq (p, src1, src1, tmp2);
-    orc_avx_sse_emit_punpckldq (p, src1, src1, tmp);
+    orc_avx_sse_emit_punpckhdq (p, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_punpckldq (p, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
     orc_avx_emit_permute2i128 (p, ORC_AVX_PERMUTE(2, 0), tmp, tmp2, tmp);
 
     orc_avx_emit_pmuludq (p, dest, tmp, dest);
   } else {
-    orc_avx_sse_emit_movdqa (p, src1, tmp);
-    orc_avx_sse_emit_punpckldq (p, src0, src0, dest);
-    orc_avx_sse_emit_punpckldq (p, tmp, tmp, tmp);
-    orc_avx_sse_emit_pmuludq (p, dest, tmp, dest);
+    orc_avx_sse_emit_movdqa (p, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_punpckldq (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_punpckldq (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_pmuludq (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1715,9 +1767,9 @@ avx_rule_select0lw (OrcCompiler *p, void *user, OrcInstruction *insn)
     // here we need to consolidate the low lanes of each now
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
   } else {
-    orc_avx_sse_emit_pslld_imm (p, 16, src, dest);
-    orc_avx_sse_emit_psrad_imm (p, 16, dest, dest);
-    orc_avx_sse_emit_packssdw (p, dest, dest, dest);
+    orc_avx_sse_emit_pslld_imm (p, 16, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psrad_imm (p, 16, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_packssdw (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1738,8 +1790,8 @@ avx_rule_select1lw (OrcCompiler *p, void *user, OrcInstruction *insn)
     // same as above
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
   } else {
-    orc_avx_sse_emit_psrad_imm (p, 16, src, dest);
-    orc_avx_sse_emit_packssdw (p, dest, dest, dest);
+    orc_avx_sse_emit_psrad_imm (p, 16, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_packssdw (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1762,8 +1814,8 @@ avx_rule_select0ql (OrcCompiler *p, void *user, OrcInstruction *insn)
     // full interleave required again
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF(3, 1, 2, 0), dest, dest);
   } else {
-    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 0, 2, 0), src, dest);
-    orc_avx_sse_emit_punpcklqdq (p, dest, zero, dest);
+    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 0, 2, 0), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_punpcklqdq (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (zero), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1783,8 +1835,8 @@ avx_rule_select1ql (OrcCompiler *p, void *user, OrcInstruction *insn)
     // full interleave required again
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF(3, 1, 2, 0), dest, dest);
   } else {
-    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (3, 1, 3, 1), src, dest);
-    orc_avx_sse_emit_punpcklqdq (p, dest, zero, dest);
+    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (3, 1, 3, 1), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_punpcklqdq (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (zero), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1806,9 +1858,9 @@ avx_rule_select0wb (OrcCompiler *p, void *user, OrcInstruction *insn)
     // full interleave required again
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
   } else {
-    orc_avx_sse_emit_psllw_imm (p, 8, src, dest);
-    orc_avx_sse_emit_psraw_imm (p, 8, dest, dest);
-    orc_avx_sse_emit_packsswb (p, dest, dest, dest);
+    orc_avx_sse_emit_psllw_imm (p, 8, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psraw_imm (p, 8, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_packsswb (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1828,8 +1880,8 @@ avx_rule_select1wb (OrcCompiler *p, void *user, OrcInstruction *insn)
     // full interleave required again
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
   } else {
-    orc_avx_sse_emit_psraw_imm (p, 8, src, dest);
-    orc_avx_sse_emit_packsswb (p, dest, dest, dest);
+    orc_avx_sse_emit_psraw_imm (p, 8, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_packsswb (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1854,10 +1906,10 @@ avx_rule_splitql (OrcCompiler *p, void *user, OrcInstruction *insn)
         tmp, dest1);
     orc_avx_emit_permute2i128 (p, ORC_AVX_PERMUTE(ORC_AVX_ZERO_LANE, 1), tmp, tmp, dest2);
   } else {
-    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (3, 1, 3, 1), src, dest1);
-    orc_avx_sse_emit_punpcklqdq (p, dest1, zero, dest1);
-    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 0, 2, 0), src, dest2);
-    orc_avx_sse_emit_punpcklqdq (p, dest2, zero, dest2);
+    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (3, 1, 3, 1), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest1));
+    orc_avx_sse_emit_punpcklqdq (p, ORC_AVX_SSE_REG (dest1), ORC_AVX_SSE_REG (zero), ORC_AVX_SSE_REG (dest1));
+    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 0, 2, 0), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest2));
+    orc_avx_sse_emit_punpcklqdq (p, ORC_AVX_SSE_REG (dest2), ORC_AVX_SSE_REG (zero), ORC_AVX_SSE_REG (dest2));
   }
 }
 
@@ -1887,11 +1939,11 @@ avx_rule_splitlw (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest2,
         dest2);
   } else {
-    orc_avx_sse_emit_psrad_imm (p, 16, src, dest1);
-    orc_avx_sse_emit_packssdw (p, dest1, dest1, dest1);
-    orc_avx_sse_emit_pslld_imm (p, 16, src, dest2);
-    orc_avx_sse_emit_psrad_imm (p, 16, dest2, dest2);
-    orc_avx_sse_emit_packssdw (p, dest2, dest2, dest2);
+    orc_avx_sse_emit_psrad_imm (p, 16, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest1));
+    orc_avx_sse_emit_packssdw (p, ORC_AVX_SSE_REG (dest1), ORC_AVX_SSE_REG (dest1), ORC_AVX_SSE_REG (dest1));
+    orc_avx_sse_emit_pslld_imm (p, 16, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest2));
+    orc_avx_sse_emit_psrad_imm (p, 16, ORC_AVX_SSE_REG (dest2), ORC_AVX_SSE_REG (dest2));
+    orc_avx_sse_emit_packssdw (p, ORC_AVX_SSE_REG (dest2), ORC_AVX_SSE_REG (dest2), ORC_AVX_SSE_REG (dest2));
   }
 }
 
@@ -1920,10 +1972,10 @@ avx_rule_splitwb (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest2,
         dest2);
   } else {
-    orc_avx_sse_emit_psraw_imm (p, 8, src, dest1);
-    orc_avx_sse_emit_packsswb (p, dest1, dest1, dest1);
-    orc_avx_sse_emit_pand (p, src, tmp, dest2);
-    orc_avx_sse_emit_packuswb (p, dest2, dest2, dest2);
+    orc_avx_sse_emit_psraw_imm (p, 8, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest1));
+    orc_avx_sse_emit_packsswb (p, ORC_AVX_SSE_REG (dest1), ORC_AVX_SSE_REG (dest1), ORC_AVX_SSE_REG (dest1));
+    orc_avx_sse_emit_pand (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest2));
+    orc_avx_sse_emit_packuswb (p, ORC_AVX_SSE_REG (dest2), ORC_AVX_SSE_REG (dest2), ORC_AVX_SSE_REG (dest2));
   }
 }
 
@@ -1937,11 +1989,11 @@ avx_rule_mergebw (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
   if (size >= 16) {
-    orc_avx_sse_emit_punpckhbw (p, src0, src1, tmp);
-    orc_avx_sse_emit_punpcklbw (p, src0, src1, dest);
+    orc_avx_sse_emit_punpckhbw (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_punpcklbw (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
     orc_avx_emit_permute2i128 (p, ORC_AVX_PERMUTE (2, 0), dest, tmp, dest);
   } else {
-    orc_avx_sse_emit_punpcklbw (p, src0, src1, dest);
+    orc_avx_sse_emit_punpcklbw (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1955,11 +2007,11 @@ avx_rule_mergewl (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
   if (size >= 16) {
-    orc_avx_sse_emit_punpckhwd (p, src0, src1, tmp);
-    orc_avx_sse_emit_punpcklwd (p, src0, src1, dest);
+    orc_avx_sse_emit_punpckhwd (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_punpcklwd (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
     orc_avx_emit_permute2i128 (p, ORC_AVX_PERMUTE (2, 0), dest, tmp, dest);
   } else {
-    orc_avx_sse_emit_punpcklwd (p, src0, src1, dest);
+    orc_avx_sse_emit_punpcklwd (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1973,11 +2025,11 @@ avx_rule_mergelq (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
   if (size >= 16) {
-    orc_avx_sse_emit_punpckhdq (p, src0, src1, tmp);
-    orc_avx_sse_emit_punpckldq (p, src0, src1, dest);
+    orc_avx_sse_emit_punpckhdq (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_punpckldq (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
     orc_avx_emit_permute2i128 (p, ORC_AVX_PERMUTE (2, 0), dest, tmp, dest);
   } else {
-    orc_avx_sse_emit_punpckldq (p, src0, src1, dest);
+    orc_avx_sse_emit_punpckldq (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -1995,10 +2047,10 @@ avx_rule_swapw (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_psrlw_imm (p, 8, src, dest);
     orc_avx_emit_por (p, dest, tmp, dest);
   } else {
-    orc_avx_sse_emit_movdqa (p, src, tmp);
-    orc_avx_sse_emit_psllw_imm (p, 8, src, tmp);
-    orc_avx_sse_emit_psrlw_imm (p, 8, src, dest);
-    orc_avx_sse_emit_por (p, dest, tmp, dest);
+    orc_avx_sse_emit_movdqa (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psllw_imm (p, 8, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -2018,12 +2070,12 @@ avx_rule_swapl (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_psrlw_imm (p, 8, dest, dest);
     orc_avx_emit_por (p, dest, tmp, dest);
   } else {
-    orc_avx_sse_emit_pslld_imm (p, 16, src, tmp);
-    orc_avx_sse_emit_psrld_imm (p, 16, src, dest);
-    orc_avx_sse_emit_por (p, dest, tmp, dest);
-    orc_avx_sse_emit_psllw_imm (p, 8, dest, tmp);
-    orc_avx_sse_emit_psrlw_imm (p, 8, dest, dest);
-    orc_avx_sse_emit_por (p, dest, tmp, dest);
+    orc_avx_sse_emit_pslld_imm (p, 16, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psrld_imm (p, 16, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psllw_imm (p, 8, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -2040,9 +2092,9 @@ avx_rule_swapwl (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_psrld_imm (p, 16, src, dest);
     orc_avx_emit_por (p, dest, tmp, dest);
   } else {
-    orc_avx_sse_emit_pslld_imm (p, 16, src, tmp);
-    orc_avx_sse_emit_psrld_imm (p, 16, src, dest);
-    orc_avx_sse_emit_por (p, dest, tmp, dest);
+    orc_avx_sse_emit_pslld_imm (p, 16, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psrld_imm (p, 16, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -2065,15 +2117,15 @@ avx_rule_swapq (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_psrlw_imm (p, 8, dest, dest);
     orc_avx_emit_por (p, dest, tmp, dest);
   } else {
-    orc_avx_sse_emit_psllq_imm (p, 32, src, tmp);
-    orc_avx_sse_emit_psrlq_imm (p, 32, src, dest);
-    orc_avx_sse_emit_por (p, dest, tmp, dest);
-    orc_avx_sse_emit_pslld_imm (p, 16, dest, tmp);
-    orc_avx_sse_emit_psrld_imm (p, 16, dest, dest);
-    orc_avx_sse_emit_por (p, dest, tmp, dest);
-    orc_avx_sse_emit_psllw_imm (p, 8, dest, tmp);
-    orc_avx_sse_emit_psrlw_imm (p, 8, dest, dest);
-    orc_avx_sse_emit_por (p, dest, tmp, dest);
+    orc_avx_sse_emit_psllq_imm (p, 32, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psrlq_imm (p, 32, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_pslld_imm (p, 16, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psrld_imm (p, 16, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psllw_imm (p, 8, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psrlw_imm (p, 8, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -2087,7 +2139,7 @@ avx_rule_swaplq (OrcCompiler *p, void *user, OrcInstruction *insn)
   if (size >= 32) {
     orc_avx_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 3, 0, 1), src, dest);
   } else {
-    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 3, 0, 1), src, dest);
+    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (2, 3, 0, 1), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -2104,7 +2156,7 @@ avx_rule_swapw_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
     if (size >= 32) {
       orc_avx_emit_pshufb (p, src, tmp, dest);
     } else {
-      orc_avx_sse_emit_pshufb (p, src, tmp, dest);
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     }
   } else {
     avx_rule_swapw (p, user, insn);
@@ -2124,7 +2176,7 @@ avx_rule_swapl_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
     if (size >= 32) {
       orc_avx_emit_pshufb (p, src, tmp, dest);
     } else {
-      orc_avx_sse_emit_pshufb (p, src, tmp, dest);
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     }
   } else {
     avx_rule_swapl (p, user, insn);
@@ -2144,7 +2196,7 @@ avx_rule_swapwl_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
     if (size >= 32) {
       orc_avx_emit_pshufb (p, src, tmp, dest);
     } else {
-      orc_avx_sse_emit_pshufb (p, src, tmp, dest);
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     }
   } else {
     avx_rule_swapwl (p, user, insn);
@@ -2164,7 +2216,7 @@ avx_rule_swapq_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
     if (size >= 32) {
       orc_avx_emit_pshufb (p, src, tmp, dest);
     } else {
-      orc_avx_sse_emit_pshufb (p, src, tmp, dest);
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     }
   } else {
     avx_rule_swapq (p, user, insn);
@@ -2188,8 +2240,8 @@ avx_rule_splitlw_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
       orc_avx_emit_pshufb (p, src, tmp1, dest1);
       orc_avx_emit_pshufb (p, src, tmp2, dest2);
     } else {
-      orc_avx_sse_emit_pshufb (p, src, tmp1, dest1);
-      orc_avx_sse_emit_pshufb (p, src, tmp2, dest2);
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp1), ORC_AVX_SSE_REG (dest1));
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (dest2));
     }
   } else {
     avx_rule_splitlw (p, user, insn);
@@ -2213,8 +2265,8 @@ avx_rule_splitwb_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
       orc_avx_emit_pshufb (p, src, tmp1, dest1);
       orc_avx_emit_pshufb (p, src, tmp2, dest2);
     } else {
-      orc_avx_sse_emit_pshufb (p, src, tmp1, dest1);
-      orc_avx_sse_emit_pshufb (p, src, tmp2, dest2);
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp1), ORC_AVX_SSE_REG (dest1));
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (dest2));
     }
   } else {
     avx_rule_splitwb (p, user, insn);
@@ -2234,7 +2286,7 @@ avx_rule_select0lw_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
     if (size >= 32) {
       orc_avx_emit_pshufb (p, src, tmp, dest);
     } else {
-      orc_avx_sse_emit_pshufb (p, src, tmp, dest);
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     }
   } else {
     avx_rule_select0lw (p, user, insn);
@@ -2254,7 +2306,7 @@ avx_rule_select1lw_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
     if (size >= 32) {
       orc_avx_emit_pshufb (p, src, tmp, dest);
     } else {
-      orc_avx_sse_emit_pshufb (p, src, tmp, dest);
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     }
   } else {
     avx_rule_select1lw (p, user, insn);
@@ -2274,7 +2326,7 @@ avx_rule_select0wb_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
     if (size >= 32) {
       orc_avx_emit_pshufb (p, src, tmp, dest);
     } else {
-      orc_avx_sse_emit_pshufb (p, src, tmp, dest);
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     }
   } else {
     avx_rule_select0wb (p, user, insn);
@@ -2294,7 +2346,7 @@ avx_rule_select1wb_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
     if (size >= 32) {
       orc_avx_emit_pshufb (p, src, tmp, dest);
     } else {
-      orc_avx_sse_emit_pshufb (p, src, tmp, dest);
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     }
   } else {
     avx_rule_select1wb (p, user, insn);
@@ -2320,11 +2372,11 @@ avx_rule_avgsb_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_pxor (p, src1, tmp, src1);
     orc_avx_emit_pxor (p, dest, tmp, dest);
   } else {
-    orc_avx_sse_emit_pxor (p, src1, tmp, src1);
-    orc_avx_sse_emit_pxor (p, src0, tmp, dest);
-    orc_avx_sse_emit_pavgb (p, dest, src1, dest);
-    orc_avx_sse_emit_pxor (p, src1, tmp, src1);
-    orc_avx_sse_emit_pxor (p, dest, tmp, dest);
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (src1));
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_pavgb (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (src1));
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -2345,11 +2397,11 @@ avx_rule_avgsw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_pxor (p, src1, tmp, src1);
     orc_avx_emit_pxor (p, dest, tmp, dest);
   } else {
-    orc_avx_sse_emit_pxor (p, src1, tmp, src1);
-    orc_avx_sse_emit_pxor (p, src0, tmp, dest);
-    orc_avx_sse_emit_pavgw (p, dest, src1, dest);
-    orc_avx_sse_emit_pxor (p, src1, tmp, src1);
-    orc_avx_sse_emit_pxor (p, dest, tmp, dest);
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (src1));
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_pavgw (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (src1));
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -2372,11 +2424,11 @@ avx_rule_avgsl (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_por (p, src0, src1, dest);
     orc_avx_emit_psubd (p, dest, tmp, dest);
   } else {
-    orc_avx_sse_emit_pxor (p, src0, src1, tmp);
-    orc_avx_sse_emit_psrad_imm (p, 1, tmp, tmp);
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psrad_imm (p, 1, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
 
-    orc_avx_sse_emit_por (p, src0, src1, dest);
-    orc_avx_sse_emit_psubd (p, dest, tmp, dest);
+    orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psubd (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -2400,12 +2452,12 @@ avx_rule_avgul (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_por (p, src0, src1, dest);
     orc_avx_emit_psubd (p, dest, tmp, dest);
   } else {
-    orc_avx_sse_emit_movdqa (p, src0, tmp);
-    orc_avx_sse_emit_pxor (p, tmp, src1, tmp);
-    orc_avx_sse_emit_psrld_imm (p, 1, tmp, tmp);
+    orc_avx_sse_emit_movdqa (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psrld_imm (p, 1, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
 
-    orc_avx_sse_emit_por (p, src0, src1, dest);
-    orc_avx_sse_emit_psubd (p, dest, tmp, dest);
+    orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_psubd (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -2493,21 +2545,21 @@ avx_rule_addssl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_pandn (p, s, t, s);
     orc_avx_emit_por (p, dest, s, dest);
   } else {
-    orc_avx_sse_emit_movdqa (p, src0, s);
-    orc_avx_sse_emit_movdqa (p, src0, t);
-    orc_avx_sse_emit_pxor (p, src0, src1, s);
-    orc_avx_sse_emit_paddd (p, src0, src1, dest);
-    orc_avx_sse_emit_pxor (p, t, dest, t);
+    orc_avx_sse_emit_movdqa (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (s));
+    orc_avx_sse_emit_movdqa (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (t));
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (s));
+    orc_avx_sse_emit_paddd (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (t), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (t));
     int tmp = orc_compiler_get_constant (p, 4, 0xffffffff);
-    orc_avx_sse_emit_pxor (p, t, tmp, t);
-    orc_avx_sse_emit_por (p, s, t, s);
-    orc_avx_sse_emit_psrad_imm (p, 31, s, s);
-    orc_avx_sse_emit_psrad_imm (p, 31, src1, t);
-    orc_avx_sse_emit_pand (p, dest, s, dest);
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (t), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (t));
+    orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (s), ORC_AVX_SSE_REG (t), ORC_AVX_SSE_REG (s));
+    orc_avx_sse_emit_psrad_imm (p, 31, ORC_AVX_SSE_REG (s), ORC_AVX_SSE_REG (s));
+    orc_avx_sse_emit_psrad_imm (p, 31, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (t));
+    orc_avx_sse_emit_pand (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (s), ORC_AVX_SSE_REG (dest));
     tmp = orc_compiler_get_constant (p, 4, 0x7fffffff);
-    orc_avx_sse_emit_pxor (p, t, tmp, t);
-    orc_avx_sse_emit_pandn (p, s, t, s);
-    orc_avx_sse_emit_por (p, dest, s, dest);
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (t), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (t));
+    orc_avx_sse_emit_pandn (p, ORC_AVX_SSE_REG (s), ORC_AVX_SSE_REG (t), ORC_AVX_SSE_REG (s));
+    orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (s), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -2548,29 +2600,29 @@ avx_rule_subssl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
 
     orc_avx_emit_por (p, dest, tmp2, dest);
   } else {
-    orc_avx_sse_emit_pxor (p, tmp, src1, tmp);
-    orc_avx_sse_emit_pxor (p, tmp, src0, tmp2);
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (tmp2));
     // Exchanging the ops here breaks the need for movdqa
-    orc_avx_sse_emit_por (p, tmp, src0, tmp);
-    orc_avx_sse_emit_psrad_imm (p, 1, tmp2, tmp2);
-    orc_avx_sse_emit_psubd (p, tmp, tmp2, tmp);
+    orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psrad_imm (p, 1, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_psubd (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp));
 
-    orc_avx_sse_emit_psrad_imm (p, 30, tmp, tmp);
-    orc_avx_sse_emit_pslld_imm (p, 30, tmp, tmp);
-    orc_avx_sse_emit_pslld_imm (p, 1, tmp, tmp2);
-    orc_avx_sse_emit_pxor (p, tmp, tmp2, tmp3);
-    orc_avx_sse_emit_psrad_imm (p, 31, tmp3,
-        tmp3); /*  tmp3 is mask: ~0 is for clamping */
+    orc_avx_sse_emit_psrad_imm (p, 30, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_pslld_imm (p, 30, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_pslld_imm (p, 1, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp3));
+    orc_avx_sse_emit_psrad_imm (p, 31, ORC_AVX_SSE_REG (tmp3),
+        ORC_AVX_SSE_REG (tmp3)); /*  tmp3 is mask: ~0 is for clamping */
 
-    orc_avx_sse_emit_psrad_imm (p, 31, tmp2, tmp2);
+    orc_avx_sse_emit_psrad_imm (p, 31, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
     tmp = orc_compiler_get_constant (p, 4, 0x80000000);
-    orc_avx_sse_emit_pxor (p, tmp2, tmp, tmp2); /*  clamped value */
-    orc_avx_sse_emit_pand (p, tmp2, tmp3, tmp2);
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp2)); /*  clamped value */
+    orc_avx_sse_emit_pand (p, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp3), ORC_AVX_SSE_REG (tmp2));
 
-    orc_avx_sse_emit_psubd (p, src0, src1, dest);
-    orc_avx_sse_emit_pandn (p, tmp3, dest, dest);
+    orc_avx_sse_emit_psubd (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_pandn (p, ORC_AVX_SSE_REG (tmp3), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
 
-    orc_avx_sse_emit_por (p, dest, tmp2, dest);
+    orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -2622,15 +2674,15 @@ avx_rule_addusl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_paddd (p, dest, src1, dest);
     orc_avx_emit_por (p, dest, tmp, dest);
   } else {
-    orc_avx_sse_emit_pand (p, src0, src1, tmp);
+    orc_avx_sse_emit_pand (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
 
-    orc_avx_sse_emit_pxor (p, src1, src0, tmp2);
-    orc_avx_sse_emit_psrld_imm (p, 1, tmp2, tmp2);
-    orc_avx_sse_emit_paddd (p, tmp, tmp2, tmp);
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_psrld_imm (p, 1, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
+    orc_avx_sse_emit_paddd (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp));
 
-    orc_avx_sse_emit_psrad_imm (p, 31, tmp, tmp);
-    orc_avx_sse_emit_paddd (p, dest, src1, dest);
-    orc_avx_sse_emit_por (p, dest, tmp, dest);
+    orc_avx_sse_emit_psrad_imm (p, 31, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_paddd (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -2658,17 +2710,17 @@ avx_rule_subusl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_psubd (p, src0, src1, dest);
     orc_avx_emit_pand (p, tmp2, dest, dest);
   } else {
-    orc_avx_sse_emit_psrld_imm (p, 1, src1, tmp2);
+    orc_avx_sse_emit_psrld_imm (p, 1, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp2));
 
-    orc_avx_sse_emit_psrld_imm (p, 1, src0, tmp);
-    orc_avx_sse_emit_psubd (p, tmp2, tmp, tmp2);
+    orc_avx_sse_emit_psrld_imm (p, 1, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_psubd (p, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp2));
 
     /* turn overflow bit into mask */
-    orc_avx_sse_emit_psrad_imm (p, 31, tmp2, tmp2);
+    orc_avx_sse_emit_psrad_imm (p, 31, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (tmp2));
 
     /* compute the difference, then and over the mask */
-    orc_avx_sse_emit_psubd (p, src0, src1, dest);
-    orc_avx_sse_emit_pand (p, tmp2, dest, dest);
+    orc_avx_sse_emit_psubd (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_pand (p, ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -2701,7 +2753,7 @@ avx_rule_minf (OrcCompiler *p, void *user, OrcInstruction *insn)
     if (size >= 32) {
       orc_avx_emit_minps (p, src1, src0, dest);
     } else {
-      orc_avx_sse_emit_minps (p, src1, src0, dest);
+      orc_avx_sse_emit_minps (p, src1, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (dest));
     }
   } else {
     const int tmp = orc_compiler_get_temp_reg (p);
@@ -2721,14 +2773,14 @@ avx_rule_minf (OrcCompiler *p, void *user, OrcInstruction *insn)
       // src1 = min(src0, src1)
       // if src1 contains a SNaN, it is returned
       // if src0 contains a NaN, the second operand is returned
-      orc_avx_sse_emit_minps (p, src1, src0, tmp);
+      orc_avx_sse_emit_minps (p, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (tmp));
       // dest = min(src1, src0)
       // if src0 contains a SNaN, it is returned
       // if src1 contains a NaN, the second operand is returned
-      orc_avx_sse_emit_minps (p, src0, src1, dest);
+      orc_avx_sse_emit_minps (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
       // OR the results to combine NaNs
       // 4-23 Vol. 2B Intel Intrinsics Manual
-      orc_avx_sse_emit_por (p, dest, tmp, dest);
+      orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     }
   }
 }
@@ -2747,6 +2799,7 @@ avx_rule_mind (OrcCompiler *p, void *user, OrcInstruction *insn)
     if (size >= 32) {
       orc_avx_emit_minpd (p, src0, src1, dest);
     } else {
+      /* FIXME, should be sse version right? */
       orc_avx_emit_minpd (p, src0, src1, dest);
     }
   } else {
@@ -2767,14 +2820,14 @@ avx_rule_mind (OrcCompiler *p, void *user, OrcInstruction *insn)
       // src1 = min(src0, src1)
       // if src1 contains a SNaN, it is returned
       // if src0 contains a NaN, the second operand is returned
-      orc_avx_sse_emit_minpd (p, src1, src0, tmp);
+      orc_avx_sse_emit_minpd (p, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (tmp));
       // dest = min(src1, src0)
       // if src0 contains a SNaN, it is returned
       // if src1 contains a NaN, the second operand is returned
-      orc_avx_sse_emit_minpd (p, src0, src1, dest);
+      orc_avx_sse_emit_minpd (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
       // OR the results to combine NaNs
       // 4-23 Vol. 2B Intel Intrinsics Manual
-      orc_avx_sse_emit_por (p, tmp, dest, dest);
+      orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
     }
   }
 }
@@ -2793,7 +2846,7 @@ avx_rule_maxf (OrcCompiler *p, void *user, OrcInstruction *insn)
     if (size >= 32) {
       orc_avx_emit_maxps (p, src0, src1, dest);
     } else {
-      orc_avx_sse_emit_maxps (p, src0, src1, dest);
+      orc_avx_sse_emit_maxps (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
     }
   } else {
     const int tmp = orc_compiler_get_temp_reg (p);
@@ -2813,14 +2866,14 @@ avx_rule_maxf (OrcCompiler *p, void *user, OrcInstruction *insn)
       // src1 = max(src0, src1)
       // if src1 contains a SNaN, it is returned
       // if src0 contains a NaN, the second operand is returned
-      orc_avx_sse_emit_maxps (p, src0, src1, tmp);
+      orc_avx_sse_emit_maxps (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
       // dest = max(src1, src0)
       // if src0 contains a SNaN, it is returned
       // if src1 contains a NaN, the second operand is returned
-      orc_avx_sse_emit_maxps (p, src1, src0, dest);
+      orc_avx_sse_emit_maxps (p, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (dest));
       // OR the results to combine NaNs
       // 4-12 Vol. 2B Intel Intrinsics Manual
-      orc_avx_sse_emit_por (p, dest, tmp, dest);
+      orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     }
   }
 }
@@ -2839,7 +2892,7 @@ avx_rule_maxd (OrcCompiler *p, void *user, OrcInstruction *insn)
     if (size >= 32) {
       orc_avx_emit_maxpd (p, src0, src1, dest);
     } else {
-      orc_avx_sse_emit_maxpd (p, src0, src1, dest);
+      orc_avx_sse_emit_maxpd (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (dest));
     }
   } else {
     const int tmp = orc_compiler_get_temp_reg (p);
@@ -2859,14 +2912,14 @@ avx_rule_maxd (OrcCompiler *p, void *user, OrcInstruction *insn)
       // src1 = max(src0, src1)
       // if src1 contains a SNaN, it is returned
       // if src0 contains a NaN, the second operand is returned
-      orc_avx_sse_emit_maxpd (p, src0, src1, tmp);
+      orc_avx_sse_emit_maxpd (p, ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (tmp));
       // dest = max(src1, src0)
       // if src0 contains a SNaN, it is returned
       // if src1 contains a NaN, the second operand is returned
-      orc_avx_sse_emit_maxpd (p, src1, src0, dest);
+      orc_avx_sse_emit_maxpd (p, ORC_AVX_SSE_REG (src1), ORC_AVX_SSE_REG (src0), ORC_AVX_SSE_REG (dest));
       // OR the results to combine NaNs
       // 4-12 Vol. 2B Intel Intrinsics Manual
-      orc_avx_sse_emit_por (p, dest, tmp, dest);
+      orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     }
   }
 }
@@ -2906,16 +2959,16 @@ avx_rule_convfl (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_paddd (p, dest, tmp, dest);
   } else {
     // extract the sign bit before we do anything (see later)
-    orc_avx_sse_emit_psrad_imm (p, 31, src, tmp);
+    orc_avx_sse_emit_psrad_imm (p, 31, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp));
     // convert from float (YMM) to integer (YMM)
-    orc_avx_sse_emit_cvttps2dq (p, src, dest);
+    orc_avx_sse_emit_cvttps2dq (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
     // DENORMAL CHECK -- cvt* is not IEEE 754 compliant
     // if the resulting integer is 0 (positive)
-    orc_avx_sse_emit_pcmpeqd (p, tmpc, dest, tmpc);
+    orc_avx_sse_emit_pcmpeqd (p, ORC_AVX_SSE_REG (tmpc), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmpc));
     // and the sign bit of the source is not true...
-    orc_avx_sse_emit_pandn (p, tmp, tmpc, tmp);
+    orc_avx_sse_emit_pandn (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmpc), ORC_AVX_SSE_REG (tmp));
     // set all the matching integers to -1
-    orc_avx_sse_emit_paddd (p, dest, tmp, dest);
+    orc_avx_sse_emit_paddd (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -2939,18 +2992,18 @@ avx_rule_convdl (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_cvttpd2dq (p, src, dest);
   } else {
     // extract high halves from all operands
-    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (3, 1, 3, 1), src, tmp);
+    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (3, 1, 3, 1), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp));
     // convert from double (YMM) to integer (XMM)
-    orc_avx_sse_emit_cvttpd2dq (p, src, dest);
+    orc_avx_sse_emit_cvttpd2dq (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
   }
   // DENORMAL CHECK -- cvt* is not IEEE 754 compliant
   // if the conversion resulted in an invalid integer...
-  orc_avx_sse_emit_psrad_imm (p, 31, tmp, tmp);
-  orc_avx_sse_emit_pcmpeqd (p, tmpc, dest, tmpc);
+  orc_avx_sse_emit_psrad_imm (p, 31, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+  orc_avx_sse_emit_pcmpeqd (p, ORC_AVX_SSE_REG (tmpc), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmpc));
   // and the resulting integer is 0 (positive)
-  orc_avx_sse_emit_pandn (p, tmp, tmpc, tmp);
+  orc_avx_sse_emit_pandn (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmpc), ORC_AVX_SSE_REG (tmp));
   // set all the matching integers to -1
-  orc_avx_sse_emit_paddd (p, dest, tmp, dest);
+  orc_avx_sse_emit_paddd (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
 }
 
 // convert int32_t to float
@@ -2965,11 +3018,11 @@ avx_rule_convwf (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
   if (size >= 16) {
-    orc_avx_emit_pmovsxwd (p, src, dest);
+    orc_avx_emit_pmovsxwd (p, ORC_AVX_SSE_REG (src), dest);
     orc_avx_emit_cvtdq2ps (p, dest, dest);
   } else {
-    orc_avx_sse_emit_pmovsxwd (p, src, dest);
-    orc_avx_sse_emit_cvtdq2ps (p, dest, dest);
+    orc_avx_sse_emit_pmovsxwd (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_cvtdq2ps (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -2978,16 +3031,16 @@ UNARY_W (convld, cvtdq2pd, 16);
 // convert float to double, upper lane of src is ignored
 UNARY_W (convfd, cvtps2pd, 16);
 // convert two doubles to floats
-UNARY (convdf, cvtpd2ps);
+UNARY_W_SSE (convdf, cvtpd2ps, 32);
 
 // convert to signed
-UNARY_AVX2_ONLY_W (convsbw, pmovsxbw, 16);
-UNARY_AVX2_ONLY_W (convswl, pmovsxwd, 16);
-UNARY_AVX2_ONLY_W (convslq, pmovsxdq, 16);
+UNARY_AVX2_ONLY_W_SSE (convsbw, pmovsxbw, 16);
+UNARY_AVX2_ONLY_W_SSE (convswl, pmovsxwd, 16);
+UNARY_AVX2_ONLY_W_SSE (convslq, pmovsxdq, 16);
 // convert to unsigned
-UNARY_AVX2_ONLY_W (convubw, pmovzxbw, 16);
-UNARY_AVX2_ONLY_W (convuwl, pmovzxwd, 16);
-UNARY_AVX2_ONLY_W (convulq, pmovzxdq, 16);
+UNARY_AVX2_ONLY_W_SSE (convubw, pmovzxbw, 16);
+UNARY_AVX2_ONLY_W_SSE (convuwl, pmovzxwd, 16);
+UNARY_AVX2_ONLY_W_SSE (convulq, pmovzxdq, 16);
 
 // clamp(a) from word to byte
 static void
@@ -3003,6 +3056,7 @@ avx_rule_convssslw_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
     // full interleave required again
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF(3, 1, 2, 0), dest, dest);
   } else {
+    /* FIXME, should be sse version right? */
     orc_avx_emit_packssdw (p, dest, src, dest);
   }
 }
@@ -3020,7 +3074,7 @@ avx_rule_convsuslw_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
     // full interleave required again
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF(3, 1, 2, 0), dest, dest);
   } else {
-    orc_avx_sse_emit_packusdw (p, dest, src, dest);
+    orc_avx_sse_emit_packusdw (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (dest));
   }
 }
 
@@ -3043,11 +3097,11 @@ avx_rule_convsssql_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_pshufd (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
   } else {
-    orc_avx_sse_emit_pcmpgtq (p, src, tmpc_max, tmp);
-    orc_avx_sse_emit_blendvpd (p, src, tmpc_max, tmp, dest);
-    orc_avx_sse_emit_pcmpgtq (p, dest, tmpc_min, tmp);
-    orc_avx_sse_emit_blendvpd (p, tmpc_min, dest, tmp, dest);
-    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
+    orc_avx_sse_emit_pcmpgtq (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmpc_max), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_blendvpd (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmpc_max), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_pcmpgtq (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmpc_min), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_blendvpd (p, ORC_AVX_SSE_REG (tmpc_min), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
   }
 }
 
