@@ -260,7 +260,7 @@ orc_avx_load_constant (OrcCompiler *compiler, int reg, int size,
     value |= (value << 16);
   }
 
-  orc_x86_emit_cpuinsn_comment (compiler, "# loading constant %" PRIu64 " 0x%16" PRIx64 "\n",
+  orc_x86_emit_cpuinsn_comment (compiler, "# loading constant %" PRIu64 " 0x%16" PRIx64,
       value, value);
 
   if (value == 0) {
@@ -329,7 +329,7 @@ orc_avx_load_constant (OrcCompiler *compiler, int reg, int size,
 static void
 avx_load_constant_long (OrcCompiler *compiler, int reg, OrcConstant *constant)
 {
-  orc_x86_emit_cpuinsn_comment (compiler, "# loading constant %08x %08x %08x %08x\n",
+  orc_x86_emit_cpuinsn_comment (compiler, "# loading constant %08x %08x %08x %08x",
       constant->full_value[0], constant->full_value[1], constant->full_value[2],
       constant->full_value[3]);
 

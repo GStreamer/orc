@@ -738,7 +738,7 @@ orc_x86_emit_loop (OrcCompiler *compiler, int offset, int update)
     if (insn->flags & ORC_INSN_FLAG_INVARIANT)
       continue;
 
-    orc_x86_emit_cpuinsn_comment (compiler, "# %d: %s\n", j, insn->opcode->name);
+    orc_x86_emit_cpuinsn_comment (compiler, "# %d: %s", j, insn->opcode->name);
     compiler->min_temp_reg = ORC_VEC_REG_BASE;
 
     compiler->insn_shift = compiler->loop_shift;
@@ -1094,7 +1094,7 @@ orc_x86_compile (OrcCompiler *compiler)
 
     save_loop_shift = compiler->loop_shift;
     while (n_left >= (1 << compiler->loop_shift)) {
-      orc_x86_emit_cpuinsn_comment (compiler, "# AVX LOOP SHIFT %d\n", compiler->loop_shift);
+      orc_x86_emit_cpuinsn_comment (compiler, "# AVX LOOP SHIFT %d", compiler->loop_shift);
       orc_x86_emit_loop (compiler, compiler->offset, 0);
 
       n_left -= 1 << compiler->loop_shift;
@@ -1103,7 +1103,7 @@ orc_x86_compile (OrcCompiler *compiler)
     for (loop_shift = compiler->loop_shift - 1; loop_shift >= 0; loop_shift--) {
       if (n_left >= (1 << loop_shift)) {
         compiler->loop_shift = loop_shift;
-        orc_x86_emit_cpuinsn_comment (compiler, "# AVX LOOP SHIFT %d\n", loop_shift);
+        orc_x86_emit_cpuinsn_comment (compiler, "# AVX LOOP SHIFT %d", loop_shift);
         orc_x86_emit_loop (compiler, compiler->offset, 0);
         n_left -= 1 << loop_shift;
         compiler->offset += 1 << loop_shift;
@@ -1133,7 +1133,7 @@ orc_x86_compile (OrcCompiler *compiler)
 
       for (l = 0; l < save_loop_shift; l++) {
         compiler->loop_shift = l;
-        orc_x86_emit_cpuinsn_comment (compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
+        orc_x86_emit_cpuinsn_comment (compiler, "# LOOP SHIFT %d", compiler->loop_shift);
 
         orc_x86_emit_test_imm_memoffset (compiler, 4, 1 << compiler->loop_shift,
             (int)ORC_STRUCT_OFFSET (OrcExecutor, counter1), compiler->exec_reg);
@@ -1159,7 +1159,7 @@ orc_x86_compile (OrcCompiler *compiler)
           compiler->loop_counter);
     }
 
-    orc_x86_emit_cpuinsn_comment (compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
+    orc_x86_emit_cpuinsn_comment (compiler, "# LOOP SHIFT %d", compiler->loop_shift);
     // Instruction fetch windows are 16-byte aligned
     // https://easyperf.net/blog/2018/01/18/Code_alignment_issues
     orc_x86_emit_align (compiler, 4);
@@ -1190,7 +1190,7 @@ orc_x86_compile (OrcCompiler *compiler)
 
       for (l = save_loop_shift - 1; l >= 0; l--) {
         compiler->loop_shift = l;
-        orc_x86_emit_cpuinsn_comment (compiler, "# LOOP SHIFT %d\n", compiler->loop_shift);
+        orc_x86_emit_cpuinsn_comment (compiler, "# LOOP SHIFT %d", compiler->loop_shift);
 
         orc_x86_emit_test_imm_memoffset (compiler, 4, 1 << compiler->loop_shift,
             (int)ORC_STRUCT_OFFSET (OrcExecutor, counter3), compiler->exec_reg);

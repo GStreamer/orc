@@ -225,7 +225,7 @@ orc_mmx_load_constant (OrcCompiler *compiler, int reg, int size,
     value |= (value << 16);
   }
 
-  orc_x86_emit_cpuinsn_comment (compiler, "# loading constant %d 0x%08x\n", (int)value, (int)value);
+  orc_x86_emit_cpuinsn_comment (compiler, "# loading constant %d 0x%08x", (int)value, (int)value);
   if (value == 0) {
     orc_mmx_emit_pxor(compiler, reg, reg);
     return;
@@ -287,7 +287,7 @@ mmx_load_constant_long (OrcCompiler *compiler, int reg,
 
   /* FIXME this is slower than it could be */
 
-  orc_x86_emit_cpuinsn_comment (compiler, "# loading constant %08x %08x %08x %08x\n",
+  orc_x86_emit_cpuinsn_comment (compiler, "# loading constant %08x %08x %08x %08x",
       constant->full_value[0], constant->full_value[1],
       constant->full_value[2], constant->full_value[3]);
 
