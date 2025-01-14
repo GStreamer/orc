@@ -1415,43 +1415,6 @@ orc_x86_emit_cpuinsn_size (OrcCompiler *p, int index, int size, int src, int des
 }
 
 void
-orc_x86_emit_cpuinsn_load_memoffset (OrcCompiler *p, int index, int size,
-    int imm, int offset, int src, int dest)
-{
-  OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcX86InsnOpcode *opcode = orc_x86_opcodes + index;
-
-  orc_x86_insn_from_opcode (xinsn, opcode, size);
-  xinsn->imm = imm;
-#if 0
-  xinsn->src[0] = src;
-  xinsn->dest = dest;
-  xinsn->type = ORC_X86_RM_MEMOFFSET;
-#endif
-  xinsn->offset = offset;
-
-  printf("LOAD MEMOFFSET\n");
-}
-
-void
-orc_x86_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index, int size,
-    int imm, int offset, int src, int dest)
-{
-  OrcX86Insn *xinsn = orc_x86_get_output_insn (p);
-  const OrcX86InsnOpcode *opcode = orc_x86_opcodes + index;
-
-  orc_x86_insn_from_opcode (xinsn, opcode, size);
-  xinsn->imm = imm;
-#if 0
-  xinsn->src[0] = src;
-  xinsn->dest = dest;
-  xinsn->type = ORC_X86_RM_MEMOFFSET;
-#endif
-  xinsn->offset = offset;
-  printf("STORE MEMOFFSET\n");
-}
-
-void
 orc_x86_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int size,
     int imm, int offset, int src, int src_index, int shift, int dest)
 {
@@ -1880,8 +1843,8 @@ orc_x86_emit_dec_memoffset (OrcCompiler *compiler, int size,
     orc_x86_emit_cpuinsn_imm_memoffset (compiler, ORC_X86_add_imm8_rm, size,
         -1, offset, reg);
   } else {
-    orc_x86_emit_cpuinsn_load_memoffset (compiler, ORC_X86_dec, size,
-        0, offset, reg, -1);
+    orc_x86_emit_cpuinsn_memoffset (compiler, ORC_X86_dec, size,
+        offset, reg);
   }
 }
 

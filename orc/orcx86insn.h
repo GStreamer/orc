@@ -575,10 +575,6 @@ ORC_API void orc_x86_emit_rep_movs (OrcCompiler *compiler, int size);
 
 ORC_API void orc_x86_emit_cpuinsn_size (OrcCompiler *p, int opcode, int size,
     int src, int dest);
-ORC_API void orc_x86_emit_cpuinsn_load_memoffset (OrcCompiler *p, int index, int size,
-    int imm, int offset, int src, int dest);
-ORC_API void orc_x86_emit_cpuinsn_store_memoffset (OrcCompiler *p, int size, int index,
-    int imm, int offset, int src, int dest);
 ORC_API void orc_x86_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int size,
     int imm, int offset, int src, int src_index, int shift, int dest);
 ORC_API void orc_x86_emit_cpuinsn_load_register (OrcCompiler *p, int index, int imm,
