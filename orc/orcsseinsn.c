@@ -444,7 +444,6 @@ orc_sse_emit_cpuinsn_load_mem (OrcCompiler *p, int index,
         src);
     xinsn->encoding = ORC_X86_INSN_ENCODING_M;
   }
-  orc_x86_insn_need_rex (p, xinsn);
   return xinsn;
 }
 
@@ -641,7 +640,6 @@ orc_sse_emit_cpuinsn_sse (OrcCompiler *p, int index, int src, int dest)
     xinsn->imm = opcode->extension;
   }
 
-  orc_x86_insn_need_rex (p, xinsn);
   //xinsn->size = 16;
 }
 
@@ -682,7 +680,6 @@ orc_sse_emit_cpuinsn_size (OrcCompiler *p, int index, int size, int src, int des
     else
       xinsn->encoding = ORC_X86_INSN_ENCODING_MR;
   }
-  orc_x86_insn_need_rex (p, xinsn);
 }
 
 /* FIXME Immediate forced to be 8
@@ -741,7 +738,6 @@ orc_sse_emit_cpuinsn_imm (OrcCompiler *p, int index, int imm, int src, int dest)
   }
   orc_x86_insn_operand_set (&xinsn->operands[0],
       ORC_X86_INSN_OPERAND_TYPE_REG, ORC_X86_INSN_OPERAND_SIZE_NONE, dest);
-  orc_x86_insn_need_rex (p, xinsn);
 }
 
 /* FIXME this is used for ldmxcsr, so no target register is set, is it used for the memory reg? */
@@ -812,5 +808,4 @@ orc_sse_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index, int size,
     xinsn->encoding = ORC_X86_INSN_ENCODING_MRI;
   }
   xinsn->offset = offset;
-  orc_x86_insn_need_rex (p, xinsn);
 }

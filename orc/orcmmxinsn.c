@@ -318,7 +318,6 @@ orc_mmx_emit_cpuinsn_mmx (OrcCompiler *p, int index, int src, int dest)
     else
       xinsn->encoding = ORC_X86_INSN_ENCODING_MR;
   }
-  orc_x86_insn_need_rex (p, xinsn);
 }
 
 void
@@ -358,7 +357,6 @@ orc_mmx_emit_cpuinsn_size (OrcCompiler *p, int index, int size, int src, int des
   }
   /* FIXME why this? */
   xinsn->size = size;
-  orc_x86_insn_need_rex (p, xinsn);
 }
 
 /* FIXME rename this function, we are assuming an imm of imm8 */
@@ -410,7 +408,6 @@ orc_mmx_emit_cpuinsn_imm (OrcCompiler *p, int index, int imm, int src, int dest)
       ORC_X86_INSN_OPERAND_TYPE_REG, ORC_X86_INSN_OPERAND_SIZE_NONE, dest);
   /* FIXME why this? */
   xinsn->size = 4;
-  orc_x86_insn_need_rex (p, xinsn);
 }
 
 /* FIXME refactor this, imm is conditional used
@@ -460,7 +457,6 @@ orc_mmx_emit_cpuinsn_load_memoffset (OrcCompiler *p, int index, int size,
   xinsn->offset = offset;
   /* FIXME why this? */
   xinsn->size = size;
-  orc_x86_insn_need_rex (p, xinsn);
 }
 
 void
@@ -506,7 +502,6 @@ orc_mmx_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int size,
   xinsn->shift = shift;
   /* FIXME why this? */
   xinsn->size = size;
-  orc_x86_insn_need_rex (p, xinsn);
 }
 
 /* FIXME the size is useless */
@@ -549,5 +544,4 @@ orc_mmx_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index, int size,
     xinsn->encoding = ORC_X86_INSN_ENCODING_MRI;
   }
   xinsn->offset = offset;
-  orc_x86_insn_need_rex (p, xinsn);
 }

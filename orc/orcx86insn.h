@@ -304,7 +304,6 @@ typedef enum _OrcX86InsnOpcodeType {
 
 typedef enum _OrcX86InsnPrefix {
   ORC_X86_INSN_PREFIX_NO_PREFIX,
-  ORC_X86_INSN_PREFIX_REX,
   ORC_X86_INSN_PREFIX_VEX128,
   ORC_X86_INSN_PREFIX_VEX256,
 } OrcX86InsnPrefix;

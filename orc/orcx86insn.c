@@ -245,20 +245,72 @@ orc_x86_emit_modrm_reg (OrcCompiler *compiler, int rm, int reg)
   *compiler->codeptr++ = X86_MODRM(3, rm, reg);
 }
 
-/* FIXME homogenize with orc_x86_insn_get_vex_rex */
-void
-orc_x86_emit_rex (OrcCompiler *compiler, int size, int reg1, int reg2, int reg3)
+static unsigned char
+orc_x86_insn_get_rex (OrcCompiler *compiler, orc_bool needs_rexw, int reg, int sib, int mr)
 {
-  int rex = 0x40;
+  unsigned char rex = 0x40;
 
-  if (compiler->is_64bit) {
-    if (size >= 8) rex |= 0x08; // REX.W determines if 64-bit operand
-    if (reg1 & 8) rex |= 0x4; // ModR/M[reg] expands to 64-bit mode operands (R)
-    if (reg2 & 8) rex |= 0x2; // SIB index field extension (X)
-    if (reg3 & 8) rex |= 0x1; // ModR/M[r/m] or extension expands to 64-bit mode operands (B)
+  if (needs_rexw) rex |= 0x08; // REX.W determines if 64-bit operand
+  if (reg & 8) rex |= 0x4; // ModR/M[reg] expands to 64-bit mode operands (R)
+  if (sib & 8) rex |= 0x2; // SIB index field extension (X)
+  if (mr & 8) rex |= 0x1; // ModR/M[r/m] or extension expands to 64-bit mode operands (B)
 
-    if (rex != 0x40) *compiler->codeptr++ = rex;
+  return rex;
+}
+
+static orc_bool
+orc_x86_insn_need_rex_w (const OrcX86Insn *xinsn)
+{
+  int i;
+
+  /* If any of the registers is of 64-bit size use REX.W */
+  for (i = 0; i < 4; i++) {
+    const OrcX86InsnOperand *op = &xinsn->operands[i];
+
+    if (op->type == ORC_X86_INSN_OPERAND_TYPE_REG &&
+        op->size == ORC_X86_INSN_OPERAND_SIZE_64)
+      return TRUE;
   }
+  return FALSE;
+}
+
+static orc_bool
+orc_x86_insn_need_rex_rxb (const OrcX86Insn *xinsn)
+{
+  int i;
+
+  /* If any of the registers is a extended register REX.RXB */
+  for (i = 0; i < 4; i++) {
+    const OrcX86InsnOperand *op = &xinsn->operands[i];
+
+    /* These type of operands do not trigger a REX prefix */
+    if (op->type == ORC_X86_INSN_OPERAND_TYPE_IMM ||
+        op->type == ORC_X86_INSN_OPERAND_TYPE_NONE)
+      continue;
+
+    if (op->reg & 8) {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+static orc_bool
+orc_x86_insn_need_rex (OrcCompiler *c, const OrcX86Insn *xinsn)
+{
+  /* No REX for non-64 bits */
+  if (!c->is_64bit)
+    return FALSE;
+
+  if (!orc_x86_insn_need_rex_w (xinsn) && !orc_x86_insn_need_rex_rxb (xinsn))
+    return FALSE;
+
+  /* Disable REX for M encoding or push/pop */
+  if (xinsn->encoding == ORC_X86_INSN_ENCODING_M ||
+      xinsn->opcode_type == ORC_X86_INSN_OPCODE_TYPE_STACK) {
+    return FALSE;
+  }
+  return TRUE;
 }
 
 static void
@@ -409,21 +461,28 @@ static const orc_uint8 nop_codes[][16] = {
 static void
 orc_x86_insn_output_rex (OrcCompiler *p, const OrcX86Insn *xinsn)
 {
+  orc_bool needs_rexw;
+
+  if (!orc_x86_insn_need_rex (p, xinsn))
+    return;
+
+  needs_rexw = orc_x86_insn_need_rex_w (xinsn);
+
   switch (xinsn->encoding) {
     case ORC_X86_INSN_ENCODING_RM:
     case ORC_X86_INSN_ENCODING_RMI:
-      orc_x86_emit_rex (p, xinsn->size, xinsn->operands[0].reg, 0, xinsn->operands[1].reg);
+      *p->codeptr++ = orc_x86_insn_get_rex (p, needs_rexw, xinsn->operands[0].reg, 0, xinsn->operands[1].reg);
       break;
 
     case ORC_X86_INSN_ENCODING_MI:
     case ORC_X86_INSN_ENCODING_MR:
     case ORC_X86_INSN_ENCODING_MRI:
-      orc_x86_emit_rex (p, xinsn->size, xinsn->operands[1].reg, 0, xinsn->operands[0].reg);
+      *p->codeptr++ = orc_x86_insn_get_rex (p, needs_rexw, xinsn->operands[1].reg, 0, xinsn->operands[0].reg);
       break;
 
     case ORC_X86_INSN_ENCODING_O:
     case ORC_X86_INSN_ENCODING_OI:
-      orc_x86_emit_rex (p, xinsn->size, 0, 0, xinsn->operands[0].reg);
+      *p->codeptr++ = orc_x86_insn_get_rex (p, needs_rexw, 0, 0, xinsn->operands[0].reg);
       break;
 
     default:
@@ -547,8 +606,7 @@ static void
 orc_x86_insn_output_op (OrcCompiler *p, const OrcX86Insn *xinsn)
 {
   /* First the escape sequence */
-  if (xinsn->prefix == ORC_X86_INSN_PREFIX_NO_PREFIX ||
-      xinsn->prefix == ORC_X86_INSN_PREFIX_REX) {
+  if (xinsn->prefix == ORC_X86_INSN_PREFIX_NO_PREFIX) {
     switch (xinsn->opcode_escape) {
       case ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_NONE:
         break;
@@ -822,6 +880,7 @@ orc_x86_insn_output_vex (OrcCompiler *p, const OrcX86Insn *xinsn)
       }
     }
   }
+
   /* Check if we need to use W based on the VEX flags */
   if (xinsn->opcode_flags & ORC_X86_INSN_OPCODE_FLAG_VEX_W1) {
     use_vex3 = TRUE;
@@ -847,13 +906,6 @@ orc_x86_insn_output_machine_code (OrcCompiler *p, const OrcX86Insn *xinsn)
 {
   switch (xinsn->prefix) {
     case ORC_X86_INSN_PREFIX_NO_PREFIX:
-      orc_x86_insn_output_prefix (p, xinsn);
-      orc_x86_insn_output_opcode (p, xinsn);
-      orc_x86_insn_output_modrm (p, xinsn);
-      orc_x86_insn_output_immediate (p, xinsn);
-      break;
-
-    case ORC_X86_INSN_PREFIX_REX:
       orc_x86_insn_output_prefix (p, xinsn);
       orc_x86_insn_output_rex (p, xinsn);
       orc_x86_insn_output_opcode (p, xinsn);
@@ -915,12 +967,19 @@ orc_x86_recalc_offsets (OrcCompiler *p)
 static void
 orc_x86_insn_set_size_modes (OrcCompiler *c, OrcX86Insn *xinsn)
 {
+  int i;
+
   /* By defaut the operand size in 64-bits and 32-bits is 32-bits, if we need
    * 16-bits use the operand size prefix.
    */
+  for (i = 0; i < 4; i++) {
+    const OrcX86InsnOperand *op = &xinsn->operands[i];
 
-  if (xinsn->size == 2) {
-    xinsn->opcode_prefix = ORC_X86_INSN_OPCODE_PREFIX_0X66;
+    if (op->type == ORC_X86_INSN_OPERAND_TYPE_REG && op->size == ORC_X86_INSN_OPERAND_SIZE_16) {
+      xinsn->opcode_prefix = ORC_X86_INSN_OPCODE_PREFIX_0X66;
+      ORC_DEBUG ("Setting operand size to 16-bits for instruction '%s'", xinsn->name);
+      break;
+    }
   }
 }
 
@@ -1027,38 +1086,6 @@ orc_x86_get_output_insn (OrcCompiler *p)
   memset (xinsn, 0, sizeof(OrcX86Insn));
   p->n_output_insns++;
   return xinsn;
-}
-
-void
-orc_x86_insn_need_rex (OrcCompiler *c, OrcX86Insn *xinsn)
-{
-  /* No REX for non-64 bits */
-  if (!c->is_64bit)
-    return;
-
-  /* Always REX for 64 bits register sizes */
-  if (xinsn->size >= 8) {
-    xinsn->prefix = ORC_X86_INSN_PREFIX_REX;
-  } else {
-    int i;
-
-    /* If any of the registers used is a 64-bit register, use REX */
-    for (i = 0; i < 4; i++) {
-      const OrcX86InsnOperand *op = &xinsn->operands[i];
-
-      if ((op->type == ORC_X86_INSN_OPERAND_TYPE_REG ||
-          op->type == ORC_X86_INSN_OPERAND_TYPE_OFF) && (op->reg & 8)) {
-        xinsn->prefix = ORC_X86_INSN_PREFIX_REX;
-        break;
-      }
-    }
-  }
-
-  /* Disable REX for M encoding or push/pop */
-  if (xinsn->encoding == ORC_X86_INSN_ENCODING_M ||
-      xinsn->opcode_type == ORC_X86_INSN_OPCODE_TYPE_STACK) {
-    xinsn->prefix = ORC_X86_INSN_PREFIX_NO_PREFIX;
-  }
 }
 
 orc_bool
@@ -1410,7 +1437,6 @@ orc_x86_emit_cpuinsn_size (OrcCompiler *p, int index, int size, int src, int des
       xinsn->encoding = ORC_X86_INSN_ENCODING_MR;
   }
 
-  orc_x86_insn_need_rex (p, xinsn);
   orc_x86_insn_set_size_modes (p, xinsn);
 }
 
@@ -1450,7 +1476,6 @@ orc_x86_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int size,
   xinsn->offset = offset;
   xinsn->index_reg = src_index;
   xinsn->shift = shift;
-  orc_x86_insn_need_rex (p, xinsn);
   orc_x86_insn_set_size_modes (p, xinsn);
 }
 
@@ -1494,7 +1519,6 @@ orc_x86_emit_cpuinsn_imm_reg (OrcCompiler *p, int index, int size, int imm,
   }
 
   xinsn->imm = imm;
-  orc_x86_insn_need_rex (p, xinsn);
   orc_x86_insn_set_size_modes (p, xinsn);
 }
 
@@ -1522,7 +1546,6 @@ orc_x86_emit_cpuinsn_imm_memoffset (OrcCompiler *p, int index, int size,
 
   xinsn->offset = offset;
   xinsn->encoding = ORC_X86_INSN_ENCODING_MI;
-  orc_x86_insn_need_rex (p, xinsn);
   orc_x86_insn_set_size_modes (p, xinsn);
 }
 
@@ -1568,7 +1591,6 @@ orc_x86_emit_cpuinsn_reg_memoffset_s (OrcCompiler *p, int index, int size,
   orc_x86_insn_from_opcode (xinsn, opcode, size);
   xinsn->encoding = ORC_X86_INSN_ENCODING_MR;
   xinsn->offset = offset;
-  orc_x86_insn_need_rex (p, xinsn);
   orc_x86_insn_set_size_modes (p, xinsn);
 }
 
@@ -1597,7 +1619,6 @@ orc_x86_emit_cpuinsn_memoffset_reg (OrcCompiler *p, int index, int size,
   orc_x86_insn_from_opcode (xinsn, opcode, size);
   xinsn->offset = offset;
   xinsn->encoding = ORC_X86_INSN_ENCODING_RM;
-  orc_x86_insn_need_rex (p, xinsn);
   orc_x86_insn_set_size_modes (p, xinsn);
 }
 
@@ -1624,7 +1645,6 @@ orc_x86_emit_cpuinsn_none (OrcCompiler *p, int index)
 
   xinsn = orc_x86_get_output_insn (p);
   orc_x86_insn_from_opcode (xinsn, opcode, 4);
-  orc_x86_insn_need_rex (p, xinsn);
 }
 
 void
@@ -1645,7 +1665,6 @@ orc_x86_emit_cpuinsn_memoffset (OrcCompiler *p, int index, int size,
       opsize, srcdest);
   xinsn->offset = offset;
   xinsn->encoding = ORC_X86_INSN_ENCODING_M;
-  orc_x86_insn_need_rex (p, xinsn);
 }
 
 void

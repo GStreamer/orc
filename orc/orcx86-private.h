@@ -22,6 +22,5 @@ ORC_INTERNAL OrcX86InsnOperandSize orc_x86_insn_size_to_operand_size (int size);
 ORC_INTERNAL void orc_x86_insn_operand_set (OrcX86InsnOperand * op, OrcX86InsnOperandType type, OrcX86InsnOperandSize size, int reg);
 ORC_INTERNAL void orc_x86_emit_align (OrcCompiler *p, int align_shift);
 ORC_INTERNAL void orc_x86_emit_label (OrcCompiler *p, int label);
-ORC_INTERNAL void orc_x86_insn_need_rex (OrcCompiler *c, OrcX86Insn *xinsn);
 
 ORC_END_DECLS
