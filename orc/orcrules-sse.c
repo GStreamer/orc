@@ -871,7 +871,7 @@ sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
   }
 
   if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_CONST) {
-    orc_sse_emit_cpuinsn_imm (p, opcodes_imm[type],
+    orc_sse_emit_cpuinsn_imm (p, opcodes_imm[type], 0,
         p->vars[insn->src_args[1]].value.i, 0, dest);
   } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
     int tmp = orc_compiler_get_temp_reg (p);

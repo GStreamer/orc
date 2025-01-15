@@ -898,10 +898,10 @@ avx_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
     // Here we need a explicit source
     if (size >= 32) {
       orc_vex_emit_cpuinsn_imm (p, opcodes_imm[type],
-        p->vars[insn->src_args[1]].value.i, src, 0, dest);
+        0, p->vars[insn->src_args[1]].value.i, src, 0, dest);
     } else {
       orc_vex_emit_cpuinsn_imm (p, opcodes_sse_imm[type],
-        p->vars[insn->src_args[1]].value.i, ORC_AVX_SSE_REG (src), 0, ORC_AVX_SSE_REG (dest));
+        0, p->vars[insn->src_args[1]].value.i, ORC_AVX_SSE_REG (src), 0, ORC_AVX_SSE_REG (dest));
     }
   } else if (p->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
     int tmp = orc_compiler_get_temp_reg (p);

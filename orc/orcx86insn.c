@@ -734,9 +734,8 @@ orc_x86_insn_get_vex_vvvv (const OrcX86Insn *xinsn)
   return vvvv;
 }
 
-/* FIXME missing the size parameter to be passed */
 static unsigned char
-orc_x86_insn_get_vex_rex (OrcCompiler *compiler, int size, int reg, int sib, int rm)
+orc_x86_insn_get_vex_rex (OrcCompiler *compiler, int reg, int sib, int rm)
 {
   // In protected and compatibility modes the bit must be set to ‘1’
   // otherwise the instruction is LES or LDS.
@@ -799,27 +798,27 @@ orc_x86_insn_output_vex3 (OrcCompiler *p, const OrcX86Insn *xinsn)
     switch (xinsn->encoding) {
       case ORC_X86_INSN_ENCODING_RM:
       case ORC_X86_INSN_ENCODING_RMI:
-        byte2 |= orc_x86_insn_get_vex_rex (p, xinsn->size, xinsn->operands[0].reg, 0, xinsn->operands[1].reg);
+        byte2 |= orc_x86_insn_get_vex_rex (p, xinsn->operands[0].reg, 0, xinsn->operands[1].reg);
         break;
   
       case ORC_X86_INSN_ENCODING_MI:
       case ORC_X86_INSN_ENCODING_MR:
       case ORC_X86_INSN_ENCODING_MRI:
-        byte2 |= orc_x86_insn_get_vex_rex (p, xinsn->size, xinsn->operands[1].reg, 0, xinsn->operands[0].reg);
+        byte2 |= orc_x86_insn_get_vex_rex (p, xinsn->operands[1].reg, 0, xinsn->operands[0].reg);
         break;
   
       case ORC_X86_INSN_ENCODING_O:
-        byte2 |= orc_x86_insn_get_vex_rex (p, xinsn->size, 0, 0, xinsn->operands[0].reg);
+        byte2 |= orc_x86_insn_get_vex_rex (p, 0, 0, xinsn->operands[0].reg);
         break;
   
       case ORC_X86_INSN_ENCODING_VMI:
-        byte2 |= orc_x86_insn_get_vex_rex (p, xinsn->size, 0, 0, xinsn->operands[1].reg);
+        byte2 |= orc_x86_insn_get_vex_rex (p, 0, 0, xinsn->operands[1].reg);
         break;
   
       case ORC_X86_INSN_ENCODING_RVM:
       case ORC_X86_INSN_ENCODING_RVMI:
       case ORC_X86_INSN_ENCODING_RVMR:
-        byte2 |= orc_x86_insn_get_vex_rex (p, xinsn->size, xinsn->operands[0].reg, 0, xinsn->operands[2].reg);
+        byte2 |= orc_x86_insn_get_vex_rex (p, xinsn->operands[0].reg, 0, xinsn->operands[2].reg);
         break;
   
       default:
@@ -1298,6 +1297,8 @@ OrcX86InsnOperandSize
 orc_x86_insn_size_to_operand_size (int size)
 {
   switch (size) {
+    case 0:
+      return ORC_X86_INSN_OPERAND_SIZE_NONE;
     case 1:
       return ORC_X86_INSN_OPERAND_SIZE_8;
     case 2:

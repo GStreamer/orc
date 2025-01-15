@@ -350,16 +350,17 @@ ORC_API void orc_vex_emit_cpuinsn_size (OrcCompiler *const p, const int index,
     const int size, const int src0, const int src1, const int src2,
     const int dest);
 ORC_API void orc_vex_emit_cpuinsn_imm (OrcCompiler *const p, const int index,
-    const int imm, const int src0, const int src1, const int dest);
+    const int size, const int imm, const int src0, const int src1,
+    const int dest);
 ORC_API void orc_vex_emit_cpuinsn_load_memoffset (OrcCompiler *const p,
-    const int index, const int size, const int imm, const int offset,
+    const int index, const int imm, const int offset,
     const int src0, const int src1, const int dest);
 ORC_API void orc_vex_emit_cpuinsn_store_memoffset (OrcCompiler *const p,
-    const int index, const int size, const int imm, const int offset,
+    const int index, const int imm, const int offset,
     const int src, const int dest);
 ORC_API void orc_vex_emit_cpuinsn_load_memindex (OrcCompiler *const p,
-    const int index, const int size, const int imm, const int offset,
-    const int src, const int src_index, const int shift, int dest);
+    const int index, const int imm, const int offset, const int src,
+    const int src_index, const int shift, int dest);
 
 #define orc_avx_sse_emit_punpcklbw(p,s1,s2,d) orc_vex_emit_cpuinsn_avx(p, ORC_AVX_SSE_punpcklbw, s1, s2, 0, d)
 #define orc_avx_emit_punpcklbw(p,s1,s2,d) orc_vex_emit_cpuinsn_avx(p, ORC_AVX_punpcklbw, s1, s2, 0, d)
@@ -576,78 +577,78 @@ ORC_API void orc_vex_emit_cpuinsn_load_memindex (OrcCompiler *const p,
 #define orc_avx_sse_emit_maxpd(p,s1,s2,d) orc_vex_emit_cpuinsn_avx(p, ORC_AVX_SSE_maxpd, s1, s2, 0, d)
 #define orc_avx_emit_maxpd(p,s1,s2,d) orc_vex_emit_cpuinsn_avx(p, ORC_AVX_maxpd, s1, s2, 0, d)
 
-#define orc_avx_sse_emit_psraw_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_psraw_imm, imm, s1, 0, d)
-#define orc_avx_emit_psraw_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_psraw_imm, imm, s1, 0, d)
-#define orc_avx_sse_emit_psrlw_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_psrlw_imm, imm, s1, 0, d)
-#define orc_avx_emit_psrlw_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_psrlw_imm, imm, s1, 0, d)
-#define orc_avx_sse_emit_psllw_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_psllw_imm, imm, s1, 0, d)
-#define orc_avx_emit_psllw_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_psllw_imm, imm, s1, 0, d)
-#define orc_avx_emit_psrad_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_psrad_imm, imm, s1, 0, d)
-#define orc_avx_sse_emit_psrad_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_psrad_imm, imm, s1, 0, d)
-#define orc_avx_sse_emit_psrld_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_psrld_imm, imm, s1, 0, d)
-#define orc_avx_emit_psrld_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_psrld_imm, imm, s1, 0, d)
-#define orc_avx_sse_emit_pslld_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_pslld_imm, imm, s1, 0, d)
-#define orc_avx_emit_pslld_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_pslld_imm, imm, s1, 0, d)
-#define orc_avx_sse_emit_psrlq_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_psrlq_imm, imm, s1, 0, d)
-#define orc_avx_emit_psrlq_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_psrlq_imm, imm, s1, 0, d)
-#define orc_avx_sse_emit_psllq_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_psllq_imm, imm, s1, 0, d)
-#define orc_avx_emit_psllq_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_psllq_imm, imm, s1, 0, d)
-#define orc_avx_sse_emit_pslldq_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_pslldq_imm, imm, s1, 0, d)
-#define orc_avx_emit_pslldq_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_pslldq_imm, imm, s1, 0, d)
-#define orc_avx_sse_emit_pshufd(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_pshufd, imm, s1, 0, d)
-#define orc_avx_emit_pshufd(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_pshufd, imm, s1, 0, d)
-#define orc_avx_sse_emit_pshuflw(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_pshuflw, imm, s1, 0, d)
-#define orc_avx_emit_pshuflw(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_pshuflw, imm, s1, 0, d)
-#define orc_avx_sse_emit_pshufhw(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_pshufhw, imm, s1, 0, d)
-#define orc_avx_emit_pshufhw(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_pshufhw, imm, s1, 0, d)
+#define orc_avx_sse_emit_psraw_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_psraw_imm, 0, imm, s1, 0, d)
+#define orc_avx_emit_psraw_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_psraw_imm, 0, imm, s1, 0, d)
+#define orc_avx_sse_emit_psrlw_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_psrlw_imm, 0, imm, s1, 0, d)
+#define orc_avx_emit_psrlw_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_psrlw_imm, 0, imm, s1, 0, d)
+#define orc_avx_sse_emit_psllw_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_psllw_imm, 0, imm, s1, 0, d)
+#define orc_avx_emit_psllw_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_psllw_imm, 0, imm, s1, 0, d)
+#define orc_avx_emit_psrad_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_psrad_imm, 0, imm, s1, 0, d)
+#define orc_avx_sse_emit_psrad_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_psrad_imm, 0, imm, s1, 0, d)
+#define orc_avx_sse_emit_psrld_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_psrld_imm, 0, imm, s1, 0, d)
+#define orc_avx_emit_psrld_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_psrld_imm, 0, imm, s1, 0, d)
+#define orc_avx_sse_emit_pslld_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_pslld_imm, 0, imm, s1, 0, d)
+#define orc_avx_emit_pslld_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_pslld_imm, 0, imm, s1, 0, d)
+#define orc_avx_sse_emit_psrlq_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_psrlq_imm, 0, imm, s1, 0, d)
+#define orc_avx_emit_psrlq_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_psrlq_imm, 0, imm, s1, 0, d)
+#define orc_avx_sse_emit_psllq_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_psllq_imm, 0, imm, s1, 0, d)
+#define orc_avx_emit_psllq_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_psllq_imm, 0, imm, s1, 0, d)
+#define orc_avx_sse_emit_pslldq_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_pslldq_imm, 0, imm, s1, 0, d)
+#define orc_avx_emit_pslldq_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_pslldq_imm, 0, imm, s1, 0, d)
+#define orc_avx_sse_emit_pshufd(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_pshufd, 0, imm, s1, 0, d)
+#define orc_avx_emit_pshufd(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_pshufd, 0, imm, s1, 0, d)
+#define orc_avx_sse_emit_pshuflw(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_pshuflw, 0, imm, s1, 0, d)
+#define orc_avx_emit_pshuflw(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_pshuflw, 0, imm, s1, 0, d)
+#define orc_avx_sse_emit_pshufhw(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_pshufhw, 0, imm, s1, 0, d)
+#define orc_avx_emit_pshufhw(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_pshufhw, 0, imm, s1, 0, d)
 
-#define orc_avx_sse_emit_pinsrb_memoffset(p,imm,offset,s1,s2,d) orc_vex_emit_cpuinsn_load_memoffset(p, ORC_AVX_SSE_pinsrb, 4, imm, offset, s1, s2, d)
-#define orc_avx_sse_emit_pinsrw_memoffset(p,imm,offset,s1,s2,d) orc_vex_emit_cpuinsn_load_memoffset(p, ORC_AVX_SSE_pinsrw, 4, imm, offset, s1, s2, d)
-#define orc_avx_sse_emit_movd_load_memoffset(p,offset,s1,d) orc_vex_emit_cpuinsn_load_memoffset(p, ORC_AVX_SSE_movd_load, 4, 0, offset, s1, 0, d)
-#define orc_avx_sse_emit_pinsrd_memoffset(p,imm,offset,s1,s2,d) orc_vex_emit_cpuinsn_load_memoffset(p, ORC_AVX_SSE_pinsrd, 4, imm, offset, s1, s2, d)
-#define orc_avx_sse_emit_movq_load_memoffset(p,offset,s1,d) orc_vex_emit_cpuinsn_load_memoffset(p, ORC_AVX_SSE_movq_load, 4, 0, offset, s1, 0, d)
-#define orc_avx_sse_emit_movdqa_load_memoffset(p,offset,s1,d) orc_vex_emit_cpuinsn_load_memoffset(p, ORC_AVX_SSE_movdqa_load, 4, 0, offset, s1, 0, d)
-#define orc_avx_emit_movdqa_load_memoffset(p,offset,s1,d) orc_vex_emit_cpuinsn_load_memoffset(p, ORC_AVX_movdqa_load, 4, 0, offset, s1, 0, d)
-#define orc_avx_sse_emit_movdqu_load_memoffset(p,offset,s1,d) orc_vex_emit_cpuinsn_load_memoffset(p, ORC_AVX_SSE_movdqu_load, 4, 0, offset, s1, 0, d)
-#define orc_avx_emit_movdqu_load_memoffset(p,offset,s1,d) orc_vex_emit_cpuinsn_load_memoffset(p, ORC_AVX_movdqu_load, 4, 0, offset, s1, 0, d)
+#define orc_avx_sse_emit_pinsrb_memoffset(p,imm,offset,s1,s2,d) orc_vex_emit_cpuinsn_load_memoffset(p, ORC_AVX_SSE_pinsrb, imm, offset, s1, s2, d)
+#define orc_avx_sse_emit_pinsrw_memoffset(p,imm,offset,s1,s2,d) orc_vex_emit_cpuinsn_load_memoffset(p, ORC_AVX_SSE_pinsrw, imm, offset, s1, s2, d)
+#define orc_avx_sse_emit_movd_load_memoffset(p,offset,s1,d) orc_vex_emit_cpuinsn_load_memoffset(p, ORC_AVX_SSE_movd_load, 0, offset, s1, 0, d)
+#define orc_avx_sse_emit_pinsrd_memoffset(p,imm,offset,s1,s2,d) orc_vex_emit_cpuinsn_load_memoffset(p, ORC_AVX_SSE_pinsrd, imm, offset, s1, s2, d)
+#define orc_avx_sse_emit_movq_load_memoffset(p,offset,s1,d) orc_vex_emit_cpuinsn_load_memoffset(p, ORC_AVX_SSE_movq_load, 0, offset, s1, 0, d)
+#define orc_avx_sse_emit_movdqa_load_memoffset(p,offset,s1,d) orc_vex_emit_cpuinsn_load_memoffset(p, ORC_AVX_SSE_movdqa_load, 0, offset, s1, 0, d)
+#define orc_avx_emit_movdqa_load_memoffset(p,offset,s1,d) orc_vex_emit_cpuinsn_load_memoffset(p, ORC_AVX_movdqa_load, 0, offset, s1, 0, d)
+#define orc_avx_sse_emit_movdqu_load_memoffset(p,offset,s1,d) orc_vex_emit_cpuinsn_load_memoffset(p, ORC_AVX_SSE_movdqu_load, 0, offset, s1, 0, d)
+#define orc_avx_emit_movdqu_load_memoffset(p,offset,s1,d) orc_vex_emit_cpuinsn_load_memoffset(p, ORC_AVX_movdqu_load, 0, offset, s1, 0, d)
 
-#define orc_avx_sse_emit_pextrb_memoffset(p,imm,offset,a,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_SSE_pextrb, 8, imm, offset, a, b)
-#define orc_avx_sse_emit_pextrw_memoffset(p,imm,offset,a,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_SSE_pextrw_mem, 16, imm, offset, a, b)
-#define orc_avx_sse_emit_movd_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_SSE_movd_store, 16, 0, a, offset, b)
-#define orc_avx_sse_emit_movq_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_SSE_movq_store, 16, 0, a, offset, b)
-#define orc_avx_sse_emit_movdqa_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_SSE_movdqa_store, 16, 0, a, offset, b)
-#define orc_avx_emit_movdqa_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_movdqa_store, 32, 0, a, offset, b)
-#define orc_avx_sse_emit_movdqu_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_SSE_movdqu_store, 16, 0, a, offset, b)
-#define orc_avx_emit_movdqu_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_movdqu_store, 32, 0, a, offset, b)
-#define orc_avx_sse_emit_movntdq_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_SSE_movntdq_store, 16, 0, a, offset, b)
-#define orc_avx_emit_movntdq_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_movntdq_store, 32, 0, a, offset, b)
+#define orc_avx_sse_emit_pextrb_memoffset(p,imm,offset,a,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_SSE_pextrb, imm, offset, a, b)
+#define orc_avx_sse_emit_pextrw_memoffset(p,imm,offset,a,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_SSE_pextrw_mem, imm, offset, a, b)
+#define orc_avx_sse_emit_movd_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_SSE_movd_store, 0, a, offset, b)
+#define orc_avx_sse_emit_movq_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_SSE_movq_store, 0, a, offset, b)
+#define orc_avx_sse_emit_movdqa_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_SSE_movdqa_store, 0, a, offset, b)
+#define orc_avx_emit_movdqa_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_movdqa_store, 0, a, offset, b)
+#define orc_avx_sse_emit_movdqu_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_SSE_movdqu_store, 0, a, offset, b)
+#define orc_avx_emit_movdqu_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_movdqu_store, 0, a, offset, b)
+#define orc_avx_sse_emit_movntdq_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_SSE_movntdq_store, 0, a, offset, b)
+#define orc_avx_emit_movntdq_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_AVX_movntdq_store, 0, a, offset, b)
 
-#define orc_avx_sse_emit_movd_load_memindex(p,offset,a,a_index,shift,b) orc_vex_emit_cpuinsn_load_memindex(p, ORC_AVX_SSE_movd_load, 4, 0, offset, a, a_index, shift, b)
-#define orc_avx_sse_emit_movq_load_memindex(p,offset,a,a_index,shift,b) orc_vex_emit_cpuinsn_load_memindex(p, ORC_AVX_SSE_movq_load, 4, 0, offset, a, a_index, shift, b)
-#define orc_avx_sse_emit_movdqa_load_memindex(p,offset,a,a_index,shift,b) orc_vex_emit_cpuinsn_load_memindex(p, ORC_AVX_SSE_movdqa_load, 4, 0, offset, a, a_index, shift, b)
-#define orc_avx_emit_movdqa_load_memindex(p,offset,a,a_index,shift,b) orc_vex_emit_cpuinsn_load_memindex(p, ORC_AVX_movdqa_load, 4, 0, offset, a, a_index, shift, b)
-#define orc_avx_sse_emit_movdqu_load_memindex(p,offset,a,a_index,shift,b) orc_vex_emit_cpuinsn_load_memindex(p, ORC_AVX_SSE_movdqu_load, 4, 0, offset, a, a_index, shift, b)
-#define orc_avx_emit_movdqu_load_memindex(p,offset,a,a_index,shift,b) orc_vex_emit_cpuinsn_load_memindex(p, ORC_AVX_movdqu_load, 4, 0, offset, a, a_index, shift, b)
+#define orc_avx_sse_emit_movd_load_memindex(p,offset,a,a_index,shift,b) orc_vex_emit_cpuinsn_load_memindex(p, ORC_AVX_SSE_movd_load, 0, offset, a, a_index, shift, b)
+#define orc_avx_sse_emit_movq_load_memindex(p,offset,a,a_index,shift,b) orc_vex_emit_cpuinsn_load_memindex(p, ORC_AVX_SSE_movq_load, 0, offset, a, a_index, shift, b)
+#define orc_avx_sse_emit_movdqa_load_memindex(p,offset,a,a_index,shift,b) orc_vex_emit_cpuinsn_load_memindex(p, ORC_AVX_SSE_movdqa_load, 0, offset, a, a_index, shift, b)
+#define orc_avx_emit_movdqa_load_memindex(p,offset,a,a_index,shift,b) orc_vex_emit_cpuinsn_load_memindex(p, ORC_AVX_movdqa_load, 0, offset, a, a_index, shift, b)
+#define orc_avx_sse_emit_movdqu_load_memindex(p,offset,a,a_index,shift,b) orc_vex_emit_cpuinsn_load_memindex(p, ORC_AVX_SSE_movdqu_load, 0, offset, a, a_index, shift, b)
+#define orc_avx_emit_movdqu_load_memindex(p,offset,a,a_index,shift,b) orc_vex_emit_cpuinsn_load_memindex(p, ORC_AVX_movdqu_load, 0, offset, a, a_index, shift, b)
 
-#define orc_avx_sse_emit_pinsrw_register(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_pinsrw, imm, s1, s2, d)
+#define orc_avx_sse_emit_pinsrw_register(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_pinsrw, 4, imm, s1, s2, d)
 #define orc_avx_sse_emit_movd_load_register(p,a,b) orc_vex_emit_cpuinsn_size(p, ORC_AVX_SSE_movd_load, 4, a, 0, 0, b)
 
 
-#define orc_avx_emit_permute2f128(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_vperm2f128, imm, s1, s2, d)
-#define orc_avx_emit_permute2i128(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_vperm2i128, imm, s1, s2, d)
+#define orc_avx_emit_permute2f128(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_vperm2f128, 0, imm, s1, s2, d)
+#define orc_avx_emit_permute2i128(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_vperm2i128, 0, imm, s1, s2, d)
 
-#define orc_avx_emit_pbroadcastb(p,s1,d) orc_vex_emit_cpuinsn_size(p, ORC_AVX_vpbroadcastb, 1, s1, 0, 0, d)
-#define orc_avx_emit_pbroadcastw(p,s1,d) orc_vex_emit_cpuinsn_size(p, ORC_AVX_vpbroadcastw, 2, s1, 0, 0, d)
-#define orc_avx_emit_pbroadcastd(p,s1,d) orc_vex_emit_cpuinsn_size(p, ORC_AVX_vpbroadcastd, 4, s1, 0, 0, d)
-#define orc_avx_emit_pbroadcastq(p,s1,d) orc_vex_emit_cpuinsn_size(p, ORC_AVX_vpbroadcastq, 8, s1, 0, 0, d)
+#define orc_avx_emit_pbroadcastb(p,s1,d) orc_vex_emit_cpuinsn_avx(p, ORC_AVX_vpbroadcastb, s1, 0, 0, d)
+#define orc_avx_emit_pbroadcastw(p,s1,d) orc_vex_emit_cpuinsn_avx(p, ORC_AVX_vpbroadcastw, s1, 0, 0, d)
+#define orc_avx_emit_pbroadcastd(p,s1,d) orc_vex_emit_cpuinsn_avx(p, ORC_AVX_vpbroadcastd, s1, 0, 0, d)
+#define orc_avx_emit_pbroadcastq(p,s1,d) orc_vex_emit_cpuinsn_avx(p, ORC_AVX_vpbroadcastq, s1, 0, 0, d)
 
-#define orc_avx_sse_emit_shufps_imm(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_shufps_imm, imm, s1, s2, d)
-#define orc_avx_emit_insertf128_si256(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_insertf128_avx, imm, s1, s2, d)
-#define orc_avx_emit_extractf128_si256(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_vextractf128, imm, s1, 0, d)
+#define orc_avx_sse_emit_shufps_imm(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_SSE_shufps_imm, 0, imm, s1, s2, d)
+#define orc_avx_emit_insertf128_si256(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_insertf128_avx, 0, imm, s1, s2, d)
+#define orc_avx_emit_extractf128_si256(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_vextractf128, 0, imm, s1, 0, d)
 
-#define orc_avx_emit_permute4x64_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_vpermq, imm, s1, 0, d)
-#define orc_avx_emit_blendpd(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_blendpd, imm, s1, s2, d)
-#define orc_avx_emit_pblendd(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_vpblendd, imm, s1, s2, d)
+#define orc_avx_emit_permute4x64_imm(p,imm,s1,d) orc_vex_emit_cpuinsn_imm(p,  ORC_AVX_vpermq, 0, imm, s1, 0, d)
+#define orc_avx_emit_blendpd(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_blendpd, 0, imm, s1, s2, d)
+#define orc_avx_emit_pblendd(p,imm,s1,s2,d) orc_vex_emit_cpuinsn_imm(p, ORC_AVX_vpblendd, 0, imm, s1, s2, d)
 
 #define orc_avx_sse_emit_blendvpd(p, s1, s2, mask, d) \
     orc_vex_emit_cpuinsn_avx (p, ORC_AVX_SSE_vblendvpd, s1, s2, mask, d)
@@ -655,7 +656,7 @@ ORC_API void orc_vex_emit_cpuinsn_load_memindex (OrcCompiler *const p,
     orc_vex_emit_cpuinsn_avx (p, ORC_AVX_vblendvpd, s1, s2, mask, d)
 
 #define orc_avx_sse_emit_pinsrd_register(p, imm, s1, s2, d) \
-  orc_vex_emit_cpuinsn_imm (p, ORC_AVX_SSE_pinsrd, imm, s1, s2, d)
+  orc_vex_emit_cpuinsn_imm (p, ORC_AVX_SSE_pinsrd, 4, imm, s1, s2, d)
 
 
 #endif

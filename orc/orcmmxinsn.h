@@ -13,7 +13,7 @@ typedef enum _OrcMMXInsnOperandFlag {
 
 #define ORC_MMX_INSN_OPERAND_FLAG_LAST 1
 
-typedef enum _OrcMMXOpcodeIdx {
+typedef enum _OrcMMXInsnIdx {
   ORC_MMX_punpcklbw,
   ORC_MMX_punpcklwd,
   ORC_MMX_punpckldq,
@@ -108,19 +108,18 @@ typedef enum _OrcMMXOpcodeIdx {
   ORC_MMX_pabsw,
   ORC_MMX_pabsd,
   ORC_MMX_palignr,
-} OrcMMXOpcodeIdx;
-
+} OrcMMXInsnIdx;
 
 ORC_API void orc_mmx_emit_cpuinsn_none (OrcCompiler *p, int index);
 ORC_API void orc_mmx_emit_cpuinsn_mmx (OrcCompiler *p, int index, int src, int dest);
 ORC_API void orc_mmx_emit_cpuinsn_size (OrcCompiler *p, int index, int size, int src, int dest);
-ORC_API void orc_mmx_emit_cpuinsn_imm (OrcCompiler *p, int index, int imm, int src, int dest);
-ORC_API void orc_mmx_emit_cpuinsn_load_memoffset (OrcCompiler *p, int index, int size,
-    int imm, int offset, int src, int dest);
-ORC_API void orc_mmx_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int size,
-    int imm, int offset, int src, int src_index, int shift, int dest);
-ORC_API void orc_mmx_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index, int size,
-    int imm, int offset, int src, int dest);
+ORC_API void orc_mmx_emit_cpuinsn_imm (OrcCompiler *p, int index, int size, int imm, int src, int dest);
+ORC_API void orc_mmx_emit_cpuinsn_load_memoffset (OrcCompiler *p, int index, int imm,
+    int offset, int src, int dest);
+ORC_API void orc_mmx_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int imm,
+    int offset, int src, int src_index, int shift, int dest);
+ORC_API void orc_mmx_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index, int imm,
+    int offset, int src, int dest);
 
 /* 0 */
 #define orc_mmx_emit_punpcklbw(p,a,b) orc_mmx_emit_cpuinsn_mmx(p, ORC_MMX_punpcklbw, a, b)
@@ -137,28 +136,27 @@ ORC_API void orc_mmx_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index, in
 #define orc_mmx_emit_punpckhdq(p,a,b) orc_mmx_emit_cpuinsn_mmx(p, ORC_MMX_punpckhdq, a, b)
 #define orc_mmx_emit_packssdw(p,a,b) orc_mmx_emit_cpuinsn_mmx(p, ORC_MMX_packssdw, a, b)
 #define orc_mmx_emit_movd_load_register(p,a,b) orc_mmx_emit_cpuinsn_size(p, ORC_MMX_movd_load, 4, a, b)
-#define orc_mmx_emit_movd_load_memoffset(p,offset,a,b) orc_mmx_emit_cpuinsn_load_memoffset(p, ORC_MMX_movd_load, 4, 0, offset, a, b)
-#define orc_mmx_emit_movd_load_memindex(p,offset,a,a_index,shift,b) orc_mmx_emit_cpuinsn_load_memindex(p, ORC_MMX_movd_load, 4, 0, offset, a, a_index, shift, b)
+#define orc_mmx_emit_movd_load_memoffset(p,offset,a,b) orc_mmx_emit_cpuinsn_load_memoffset(p, ORC_MMX_movd_load, 0, offset, a, b)
+#define orc_mmx_emit_movd_load_memindex(p,offset,a,a_index,shift,b) orc_mmx_emit_cpuinsn_load_memindex(p, ORC_MMX_movd_load, 0, offset, a, a_index, shift, b)
 #define orc_mmx_emit_movq(p,a,b) orc_mmx_emit_cpuinsn_mmx(p, ORC_MMX_movq_mmx_load, a, b)
 #define orc_mmx_emit_movq_load_register(p,a,b) orc_mmx_emit_cpuinsn_size(p, ORC_MMX_movq_mmx_load, 8, a, b)
-#define orc_mmx_emit_movq_load_memoffset(p,offset,a,b) orc_mmx_emit_cpuinsn_load_memoffset(p, ORC_MMX_movq_mmx_load, 4, 0, offset, a, b)
-#define orc_mmx_emit_movq_load_memindex(p,offset,a,a_index,shift,b) orc_mmx_emit_cpuinsn_load_memindex(p, ORC_MMX_movq_mmx_load, 8, 0, offset, a, a_index, shift, b)
-#define orc_mmx_emit_psrlw_imm(p,imm,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_psrlw_imm, imm, 0, b)
-#define orc_mmx_emit_psraw_imm(p,imm,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_psraw_imm, imm, 0, b)
-#define orc_mmx_emit_psllw_imm(p,imm,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_psllw_imm, imm, 0, b)
-#define orc_mmx_emit_psrld_imm(p,imm,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_psrld_imm, imm, 0, b)
-#define orc_mmx_emit_psrad_imm(p,imm,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_psrad_imm, imm, 0, b)
-#define orc_mmx_emit_pslld_imm(p,imm,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_pslld_imm, imm, 0, b)
+#define orc_mmx_emit_movq_load_memoffset(p,offset,a,b) orc_mmx_emit_cpuinsn_load_memoffset(p, ORC_MMX_movq_mmx_load, 0, offset, a, b)
+#define orc_mmx_emit_movq_load_memindex(p,offset,a,a_index,shift,b) orc_mmx_emit_cpuinsn_load_memindex(p, ORC_MMX_movq_mmx_load, 0, offset, a, a_index, shift, b)
+#define orc_mmx_emit_psrlw_imm(p,imm,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_psrlw_imm, 0, imm, 0, b)
+#define orc_mmx_emit_psraw_imm(p,imm,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_psraw_imm, 0, imm, 0, b)
+#define orc_mmx_emit_psllw_imm(p,imm,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_psllw_imm, 0, imm, 0, b)
+#define orc_mmx_emit_psrld_imm(p,imm,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_psrld_imm, 0, imm, 0, b)
+#define orc_mmx_emit_psrad_imm(p,imm,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_psrad_imm, 0, imm, 0, b)
+#define orc_mmx_emit_pslld_imm(p,imm,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_pslld_imm, 0, imm, 0, b)
 /* 20 */
-#define orc_mmx_emit_psrlq_imm(p,imm,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_psrlq_imm, imm, 0, b)
-#define orc_mmx_emit_psllq_imm(p,imm,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_psllq_imm, imm, 0, b)
+#define orc_mmx_emit_psrlq_imm(p,imm,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_psrlq_imm, 0, imm, 0, b)
+#define orc_mmx_emit_psllq_imm(p,imm,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_psllq_imm, 0, imm, 0, b)
 #define orc_mmx_emit_pcmpeqb(p,a,b) orc_mmx_emit_cpuinsn_mmx(p, ORC_MMX_pcmpeqb, a, b)
 #define orc_mmx_emit_pcmpeqw(p,a,b) orc_mmx_emit_cpuinsn_mmx(p, ORC_MMX_pcmpeqw, a, b)
 #define orc_mmx_emit_pcmpeqd(p,a,b) orc_mmx_emit_cpuinsn_mmx(p, ORC_MMX_pcmpeqd, a, b)
 #define orc_mmx_emit_emms(p) orc_mmx_emit_cpuinsn_none (p, ORC_MMX_emms)
-/* FIXME movd of size 8? should be 4? */
-#define orc_mmx_emit_movd_store_memoffset(p,a,offset,b) orc_mmx_emit_cpuinsn_store_memoffset(p, ORC_MMX_movd_store, 8, 0, a, offset, b)
-#define orc_mmx_emit_movq_store_memoffset(p,a,offset,b) orc_mmx_emit_cpuinsn_store_memoffset(p, ORC_MMX_movq_mmx_store, 8, 0, a, offset, b)
+#define orc_mmx_emit_movd_store_memoffset(p,a,offset,b) orc_mmx_emit_cpuinsn_store_memoffset(p, ORC_MMX_movd_store, 0, a, offset, b)
+#define orc_mmx_emit_movq_store_memoffset(p,a,offset,b) orc_mmx_emit_cpuinsn_store_memoffset(p, ORC_MMX_movq_mmx_store, 0, a, offset, b)
 #define orc_mmx_emit_movd_store_memindex(p,a,offset,b,b_index,shift) orc_mmx_emit_cpuinsn_store_memindex(p, ORC_MMX_movd_store, 0, a, offset, b, b_index, shift)
 #define orc_mmx_emit_movq_store_memindex(p,a,offset,b,b_index,shift) orc_mmx_emit_cpuinsn_store_memindex(p, ORC_MMX_movq_mmx_store, 0, a, offset, b, b_index, shift)
 #define orc_mmx_emit_movd_store_register(p,a,b) orc_mmx_emit_cpuinsn_size(p, ORC_MMX_movd_store, 4, a, b)
@@ -196,10 +194,10 @@ ORC_API void orc_mmx_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index, in
 #define orc_mmx_emit_paddb(p,a,b) orc_mmx_emit_cpuinsn_mmx(p, ORC_MMX_paddb, a, b)
 #define orc_mmx_emit_paddw(p,a,b) orc_mmx_emit_cpuinsn_mmx(p, ORC_MMX_paddw, a, b)
 #define orc_mmx_emit_paddd(p,a,b) orc_mmx_emit_cpuinsn_mmx(p, ORC_MMX_paddd, a, b)
-#define orc_mmx_emit_pshufw(p,imm,a,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_pshufw, imm, a, b)
-#define orc_mmx_emit_pinsrw_memoffset(p,imm,offset,a,b) orc_mmx_emit_cpuinsn_load_memoffset(p, ORC_MMX_pinsrw, 4, imm, offset, a, b)
+#define orc_mmx_emit_pshufw(p,imm,a,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_pshufw, 0, imm, a, b)
+#define orc_mmx_emit_pinsrw_memoffset(p,imm,offset,a,b) orc_mmx_emit_cpuinsn_load_memoffset(p, ORC_MMX_pinsrw, imm, offset, a, b)
 #define orc_mmx_emit_pinsrw_memindex(p,imm,offset,a,a_index,shift,b) orc_mmx_emit_cpuinsn_load_memindex(p, ORC_MMX_pinsrw, 4, imm, offset, a, a_index, shift, b)
-#define orc_mmx_emit_pinsrw_register(p,imm,a,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_pinsrw, imm, a, b)
+#define orc_mmx_emit_pinsrw_register(p,s,imm,a,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_pinsrw, s, imm, a, b)
 /* 60 */
 #define orc_mmx_emit_pminub(p,a,b) orc_mmx_emit_cpuinsn_mmx(p, ORC_MMX_pminub, a, b)
 #define orc_mmx_emit_pmaxub(p,a,b) orc_mmx_emit_cpuinsn_mmx(p, ORC_MMX_pmaxub, a, b)
@@ -228,7 +226,7 @@ ORC_API void orc_mmx_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index, in
 #define orc_mmx_emit_pabsb(p,a,b) orc_mmx_emit_cpuinsn_mmx(p, ORC_MMX_pabsb, a, b)
 #define orc_mmx_emit_pabsw(p,a,b) orc_mmx_emit_cpuinsn_mmx(p, ORC_MMX_pabsw, a, b)
 #define orc_mmx_emit_pabsd(p,a,b) orc_mmx_emit_cpuinsn_mmx(p, ORC_MMX_pabsd, a, b)
-#define orc_mmx_emit_palignr(p,imm,a,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_salignr, imm, a, b)
+#define orc_mmx_emit_palignr(p,s,imm,a,b) orc_mmx_emit_cpuinsn_imm(p, ORC_MMX_salignr, s, imm, a, b)
 
 #endif
 

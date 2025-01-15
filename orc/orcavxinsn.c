@@ -652,7 +652,7 @@ orc_avx_emit_broadcast (OrcCompiler *const compiler, const int s1, const int d,
 void
 orc_avx_set_mxcsr (OrcCompiler *compiler)
 {
-  orc_vex_emit_cpuinsn_store_memoffset (compiler, ORC_AVX_stmxcsr, 4, 0,
+  orc_vex_emit_cpuinsn_store_memoffset (compiler, ORC_AVX_stmxcsr, 0,
       (int)ORC_STRUCT_OFFSET (OrcExecutor, params[ORC_VAR_A4]),
       0, compiler->exec_reg);
 
@@ -671,7 +671,7 @@ orc_avx_set_mxcsr (OrcCompiler *compiler)
       (int)ORC_STRUCT_OFFSET (OrcExecutor, params[ORC_VAR_A4]),
       compiler->exec_reg);
 
-  orc_vex_emit_cpuinsn_store_memoffset (compiler, ORC_AVX_ldmxcsr, 4, 0,
+  orc_vex_emit_cpuinsn_store_memoffset (compiler, ORC_AVX_ldmxcsr, 0,
       (int)ORC_STRUCT_OFFSET (OrcExecutor, params[ORC_VAR_A4]),
       0, compiler->exec_reg);
 }
@@ -679,7 +679,7 @@ orc_avx_set_mxcsr (OrcCompiler *compiler)
 void
 orc_avx_restore_mxcsr (OrcCompiler *compiler)
 {
-  orc_vex_emit_cpuinsn_store_memoffset (compiler, ORC_AVX_ldmxcsr, 4, 0,
+  orc_vex_emit_cpuinsn_store_memoffset (compiler, ORC_AVX_ldmxcsr, 0,
       (int)ORC_STRUCT_OFFSET (OrcExecutor, params[ORC_VAR_A4]),
       0, compiler->exec_reg);
 }
@@ -776,6 +776,7 @@ orc_avx_insn_from_opcode (OrcX86Insn *insn, int index, const OrcAVXInsnOp *op)
   }
 }
 
+/* FIXME support the size */
 static orc_bool
 orc_avx_insn_validate_operands (const OrcAVXInsnOp *op, int index, const int dest,
     const int src0, const int src1, const int src2)
@@ -956,6 +957,10 @@ orc_vex_emit_cpuinsn_avx (OrcCompiler *const p, const int index,
   }
 }
 
+/*
+ * Used in
+ * vmovd (SSE_REGM32)
+ */
 void
 orc_vex_emit_cpuinsn_size (OrcCompiler *const p, const int index,
     const int size, const int src0, const int src1, const int src2,
@@ -975,11 +980,17 @@ orc_vex_emit_cpuinsn_size (OrcCompiler *const p, const int index,
   orc_avx_insn_set_operands (op, xinsn, opsize, dest, src0, src1, src2);
 }
 
+/*
+ * Used in
+ * vpinsrw (SSE_SSE_REG32M16_IMM8)
+ */
 void
-orc_vex_emit_cpuinsn_imm (OrcCompiler *const p, const int index, const int imm, const int src0, const int src1, const int dest)
+orc_vex_emit_cpuinsn_imm (OrcCompiler *const p, const int index, const int size,
+    const int imm, const int src0, const int src1, const int dest)
 {
   OrcX86Insn *xinsn;
   const OrcAVXInsnOp *op = orc_avx_ops + index;
+  const OrcX86InsnOperandSize opsize = orc_x86_insn_size_to_operand_size (size);
 
   if (!orc_avx_insn_validate_operands (op, index, dest, src0, src1,
       0))
@@ -987,22 +998,26 @@ orc_vex_emit_cpuinsn_imm (OrcCompiler *const p, const int index, const int imm, 
 
   xinsn = orc_x86_get_output_insn (p);
   orc_avx_insn_from_opcode (xinsn, index, op);
-  orc_avx_insn_set_operands (op, xinsn,
-      p->is_64bit ? ORC_X86_INSN_OPERAND_SIZE_64 : ORC_X86_INSN_OPERAND_SIZE_32,
-      dest, src0, src1, 0);
+  orc_avx_insn_set_operands (op, xinsn, opsize, dest, src0, src1, 0);
   orc_avx_insn_set_imm (xinsn, op->operands, imm);
 }
 
+/*
+ * Used in
+ * vpinsrb (SSE_SSE_REGM32_IMM8)
+ * vpinsrd (SSE_SSE_REGM32TO64_IMM8)
+ * vmovd (SSE_REGM32)
+ * vpinsrw (SSE_SSE_REG32M16_IMM8)
+ */
 void
 orc_vex_emit_cpuinsn_load_memoffset (OrcCompiler *const p, const int index,
-    const int size, const int imm, const int offset, const int src0,
-    const int src1, const int dest)
+    const int imm, const int offset, const int src0, const int src1,
+    const int dest)
 {
   OrcX86Insn *xinsn;
   const OrcAVXInsnOp *op = orc_avx_ops + index;
 
   /* TODO missing checks */
-  /* TODO use the size for the operands */
 
   xinsn = orc_x86_get_output_insn (p);
   orc_avx_insn_from_opcode (xinsn, index, op);
@@ -1014,9 +1029,16 @@ orc_vex_emit_cpuinsn_load_memoffset (OrcCompiler *const p, const int index,
   xinsn->offset = offset;
 }
 
+/*
+ * Used in 
+ * vmovd (REGM32_SSE)
+ * vpextrw (REG32TO64_SSE_IMM8)
+ * vpextrb (REGM32TO64_SSE_IMM8)
+ * vpextrw (REGM32TO64_SSE_IMM8)
+ */
 void
 orc_vex_emit_cpuinsn_store_memoffset (OrcCompiler *const p, const int index,
-    const int size, const int imm, const int offset, const int src,
+    const int imm, const int offset, const int src,
     const int dest)
 {
   OrcX86Insn *xinsn;
@@ -1024,7 +1046,6 @@ orc_vex_emit_cpuinsn_store_memoffset (OrcCompiler *const p, const int index,
 
   /* dest memory */
   /* TODO missing checks */
-  /* TODO use the size for the operands */
   xinsn = orc_x86_get_output_insn (p);
   orc_avx_insn_from_opcode (xinsn, index, op);
   orc_avx_insn_set_operands (op, xinsn, ORC_X86_INSN_OPERAND_SIZE_NONE, dest, src, 0, 0);
@@ -1035,16 +1056,23 @@ orc_vex_emit_cpuinsn_store_memoffset (OrcCompiler *const p, const int index,
   xinsn->offset = offset;
 }
 
+/*
+ * Used in
+ * vpinsrb (SSE_SSE_REGM32_IMM8)
+ * vpinsrd (SSE_SSE_REGM32TO64_IMM8)
+ * vmovd (SSE_REGM32)
+ * vpinsrw (SSE_SSE_REG32M16_IMM8)
+ */
 void
-orc_vex_emit_cpuinsn_load_memindex (OrcCompiler *const p, const int index, const int size,
-    const int imm, const int offset, const int src, const int src_index, const int shift, int dest)
+orc_vex_emit_cpuinsn_load_memindex (OrcCompiler *const p, const int index,
+    const int imm, const int offset, const int src, const int src_index,
+    const int shift, int dest)
 {
   OrcX86Insn *xinsn;
   const OrcAVXInsnOp *op = orc_avx_ops + index;
 
   /* TODO missing checks */
   /* TODO missing src_index check */
-  /* TODO use the size for the operands */
 
   xinsn = orc_x86_get_output_insn (p);
   orc_avx_insn_from_opcode (xinsn, index, op);

@@ -9,15 +9,9 @@
 #include <orc/orcsse.h>
 #include <orc/orcsseinsn.h>
 
-#define ORC_SSE_INSN_TYPE_REGM64_SSE (\
-  ORC_X86_INSN_OPERAND_REGM_REG |     \
-  ORC_X86_INSN_OPERAND_OP1_64         \
-), ORC_SSE_INSN_OPERAND_OP2_XMM
-
-#define ORC_SSE_INSN_TYPE_SSE_REG32M16_IMM8 (\
+#define ORC_SSE_INSN_TYPE_SSE_REG32M_IMM8 (\
   ORC_X86_INSN_OPERAND_REG_REGM_IMM |        \
   ORC_X86_INSN_OPERAND_OP2_32 |              \
-  ORC_X86_INSN_OPERAND_OP2_16 |              \
   ORC_X86_INSN_OPERAND_OP3_8                 \
 ), ORC_SSE_INSN_OPERAND_OP1_XMM
 
@@ -162,9 +156,9 @@ static OrcSSEInsnOp orc_sse_ops[] = {
   /* Missing SHUFPD */
   { "cvtdq2pd"  , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM     , ORC_X86_INSN_OPCODE_PREFIX_0XF3, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0xe6 },
   /* Missing CVTPD2DQ */
+  /* 30 */
   { "cvttpd2dq" , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM     , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0xe6 },
 
-  /* 30 */
   /* MMX ones, not all */
   { "punpcklbw" , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM, ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x60 },
   { "punpcklwd" , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM, ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x61 },
@@ -175,8 +169,8 @@ static OrcSSEInsnOp orc_sse_ops[] = {
   { "pcmpgtd"   , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM, ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x66 },
   { "packuswb"  , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM, ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x67 },
   { "punpckhbw" , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM, ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x68 },
-  { "punpckhwd" , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM, ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x69 },
   /* 40 */
+  { "punpckhwd" , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM, ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x69 },
   { "punpckhdq" , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM, ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x6a },
   { "packssdw"  , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM, ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x6b },
   { "movd"      , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_REGM32, ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x6e },
@@ -194,7 +188,7 @@ static OrcSSEInsnOp orc_sse_ops[] = {
   { "pcmpeqd"   , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM, ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x76 },
   { "movd"      , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_REGM32_SSE, ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x7e },
   { "movq"      , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM, ORC_X86_INSN_OPCODE_PREFIX_0XF3, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x7e },
-  { "pinsrw"    , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_REG32M16_IMM8, ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0xc4 },
+  { "pinsrw"    , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_REG32_IMM8, ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0xc4 },
   { "pextrw"    , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_REG32TO64_SSE_IMM8, ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0xc5 },
   /* Missing PEXTRW ORC_X86_INSN_OPCODE_PREFIX_0X66 ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0xc5 */
   { "psrlw"     , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM, ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0xd1 },
@@ -245,8 +239,8 @@ static OrcSSEInsnOp orc_sse_ops[] = {
   { "paddd"     , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM     , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0xfe },
   /* SSE2 for SSE only */
   { "punpcklqdq", ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM     , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x6c },
-  { "punpckhqdq", ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM     , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x6d },
   /* 100 */
+  { "punpckhqdq", ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM     , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x6d },
   { "movdqa"    , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM     , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x6f },
   { "pshufd"    , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM_IMM8, ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x70 },
   { "movdqa"    , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSEM_SSE     , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x7f },
@@ -258,13 +252,13 @@ static OrcSSEInsnOp orc_sse_ops[] = {
   /* Missing MOVDQ2Q */
   { "movdqu"    , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM     , ORC_X86_INSN_OPCODE_PREFIX_0XF3, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x6f },
   { "movdqu"    , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSEM_SSE     , ORC_X86_INSN_OPCODE_PREFIX_0XF3, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x7f },
+  /* 110 */
   { "pshufhw"   , ORC_TARGET_SSE_SSE2, ORC_SSE_INSN_TYPE_SSE_SSEM_IMM8, ORC_X86_INSN_OPCODE_PREFIX_0XF3, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x70 },
   /* Missing MOVQ2DQ */
   /* SSE with SSE3 */
   /* Missing MOVDDUP */
   /* Missing MOVSLDUP */
   /* Missing MOVSHDUP */
-  /* 110 */
   { "pshufb"    , ORC_TARGET_SSE_SSE3, ORC_SSE_INSN_TYPE_SSE_SSEM     , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F38, 0x00 },
   { "phaddw"    , ORC_TARGET_SSE_SSE3, ORC_SSE_INSN_TYPE_SSE_SSEM     , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F38, 0x01 },
   { "phaddd"    , ORC_TARGET_SSE_SSE3, ORC_SSE_INSN_TYPE_SSE_SSEM     , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F38, 0x02 },
@@ -274,8 +268,8 @@ static OrcSSEInsnOp orc_sse_ops[] = {
   { "phsubd"    , ORC_TARGET_SSE_SSE3, ORC_SSE_INSN_TYPE_SSE_SSEM     , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F38, 0x06 },
   { "phsubsw"   , ORC_TARGET_SSE_SSE3, ORC_SSE_INSN_TYPE_SSE_SSEM     , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F38, 0x07 },
   { "psignb"    , ORC_TARGET_SSE_SSE3, ORC_SSE_INSN_TYPE_SSE_SSEM     , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F38, 0x08 },
-  { "psignw"    , ORC_TARGET_SSE_SSE3, ORC_SSE_INSN_TYPE_SSE_SSEM     , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F38, 0x09 },
   /* 120 */
+  { "psignw"    , ORC_TARGET_SSE_SSE3, ORC_SSE_INSN_TYPE_SSE_SSEM     , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F38, 0x09 },
   { "psignd"    , ORC_TARGET_SSE_SSE3, ORC_SSE_INSN_TYPE_SSE_SSEM     , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F38, 0x0a },
   { "pmulhrsw"  , ORC_TARGET_SSE_SSE3, ORC_SSE_INSN_TYPE_SSE_SSEM     , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F38, 0x0b },
   { "palignr"   , ORC_TARGET_SSE_SSE3, ORC_SSE_INSN_TYPE_SSE_SSEM_IMM8, ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F3A, 0x0f },
@@ -308,7 +302,7 @@ static OrcSSEInsnOp orc_sse_ops[] = {
   /* Missing EXTRACTPS */
   /* Missing PTEST */
   /* 130 */
-  { "pinsrb"    , ORC_TARGET_SSE_SSE4_1, ORC_SSE_INSN_TYPE_SSE_REG32_IMM8    , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F3A, 0x20 },
+  { "pinsrb"    , ORC_TARGET_SSE_SSE4_1, ORC_SSE_INSN_TYPE_SSE_REG32M_IMM8   , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F3A, 0x20 },
   { "pmovsxbw"  , ORC_TARGET_SSE_SSE4_1, ORC_SSE_INSN_TYPE_SSE_SSEM          , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F38, 0x20 },
   /* Missing INSERTPS */
   { "pmovsxbd"  , ORC_TARGET_SSE_SSE4_1, ORC_SSE_INSN_TYPE_SSE_SSEM          , ORC_X86_INSN_OPCODE_PREFIX_0X66, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F38, 0x21 },
@@ -561,9 +555,9 @@ orc_x86_emit_mov_sse_memoffset (OrcCompiler *compiler, int size, int reg1, int o
 void
 orc_sse_set_mxcsr (OrcCompiler *compiler)
 {
-  orc_sse_emit_cpuinsn_load_memoffset (compiler, ORC_SSE_stmxcsr, 4, 0,
+  orc_sse_emit_cpuinsn_store_memoffset (compiler, ORC_SSE_stmxcsr, 0,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A4]),
-      compiler->exec_reg, 0);
+      0, compiler->exec_reg);
 
   orc_x86_emit_mov_memoffset_reg (compiler, 4,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A4]),
@@ -580,17 +574,17 @@ orc_sse_set_mxcsr (OrcCompiler *compiler)
       (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A4]),
       compiler->exec_reg);
 
-  orc_sse_emit_cpuinsn_load_memoffset (compiler, ORC_SSE_ldmxcsr, 4, 0,
+  orc_sse_emit_cpuinsn_store_memoffset (compiler, ORC_SSE_ldmxcsr, 0,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A4]),
-      compiler->exec_reg, 0);
+      0, compiler->exec_reg);
 }
 
 void
 orc_sse_restore_mxcsr (OrcCompiler *compiler)
 {
-  orc_sse_emit_cpuinsn_load_memoffset (compiler, ORC_SSE_ldmxcsr, 4, 0,
+  orc_sse_emit_cpuinsn_store_memoffset (compiler, ORC_SSE_ldmxcsr, 0,
       (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A4]),
-      compiler->exec_reg, 0);
+      0, compiler->exec_reg);
 }
 
 void
@@ -639,8 +633,6 @@ orc_sse_emit_cpuinsn_sse (OrcCompiler *p, int index, int src, int dest)
         ORC_X86_INSN_OPERAND_TYPE_IMM, ORC_X86_INSN_OPERAND_SIZE_8, 0);
     xinsn->imm = opcode->extension;
   }
-
-  //xinsn->size = 16;
 }
 
 void
@@ -682,15 +674,31 @@ orc_sse_emit_cpuinsn_size (OrcCompiler *p, int index, int size, int src, int des
   }
 }
 
-/* FIXME Immediate forced to be 8
- * FIXME Register forced to be 32 bits, this applies to pinsrw but not to pextrw
+/*
+ * Used in
+ * ORC_SSE_palignr (SSE_SSEM_IMM8)
+ * ORC_SSE_pshufhw (SSE_SSEM_IMM8)
+ * ORC_SSE_pshuflw (SSE_SSEM_IMM8)
+ * ORC_SSE_pslldq (SSE_IMM8) 
+ * ORC_SSE_psrlldq (SSE_IMM8)
+ * ORC_SSE_pshufd (SSE_SSEM_IMM8)
+ * ORC_SSE_pinsrw (SSE_REG32M_IMM8)
+ * ORC_SSE_pextrw (REGM32TO64_SSE_IMM8)
+ * ORC_SSE_psllq_imm (SSE_IMM8) 
+ * ORC_SSE_psrlq_imm (SSE_IMM8)
+ * ORC_SSE_pslld_imm (SSE_IMM8)
+ * ORC_SSE_psrad_imm (SSE_IMM8)
+ * ORC_SSE_psrld_imm (SSE_IMM8)
+ * ORC_SSE_psllw_imm (SSE_IMM8)
+ * ORC_SSE_psraw_imm (SSE_IMM8)
+ * ORC_SSE_psrlw_imm (SSE_IMM8)
  */
 void
-orc_sse_emit_cpuinsn_imm (OrcCompiler *p, int index, int imm, int src, int dest)
+orc_sse_emit_cpuinsn_imm (OrcCompiler *p, int index, int size, int imm, int src, int dest)
 {
   OrcX86Insn *xinsn;
   const OrcSSEInsnOp *opcode = orc_sse_ops + index;
-  const OrcX86InsnOperandSize opsize = ORC_X86_INSN_OPERAND_SIZE_32;
+  const OrcX86InsnOperandSize opsize = orc_x86_insn_size_to_operand_size (size);
   orc_bool has_src = FALSE;
   orc_bool has_imm1;
   orc_bool has_imm2;
@@ -740,10 +748,19 @@ orc_sse_emit_cpuinsn_imm (OrcCompiler *p, int index, int imm, int src, int dest)
       ORC_X86_INSN_OPERAND_TYPE_REG, ORC_X86_INSN_OPERAND_SIZE_NONE, dest);
 }
 
-/* FIXME this is used for ldmxcsr, so no target register is set, is it used for the memory reg? */
+/*
+ * Used in
+ * ORC_SSE_movhps_load (SSE_REGM)
+ * ORC_SSE_movd_load (SSE_REGM32)
+ * ORC_SSE_movq_sse_load (SSE_SSEM)
+ * ORC_SSE_pinsrw (SSE_REG32M_IMM8)
+ * ORC_SSE_movdqa_load (SSE_SSEM)
+ * ORC_SSE_movdqu_load (SSE_SSEM)
+ * ORC_SSE_pinsrb SSE_REG32M_IMM8)
+ */
 void
-orc_sse_emit_cpuinsn_load_memoffset (OrcCompiler *p, int index, int size,
-    int imm, int offset, int src, int dest)
+orc_sse_emit_cpuinsn_load_memoffset (OrcCompiler *p, int index, int imm,
+    int offset, int src, int dest)
 {
   OrcX86Insn *xinsn;
   xinsn = orc_sse_emit_cpuinsn_load_mem (p, index,
@@ -753,9 +770,18 @@ orc_sse_emit_cpuinsn_load_memoffset (OrcCompiler *p, int index, int size,
   }
 }
 
+/*
+ * Used in
+ * ORC_SSE_movhps_load (SSE_REGM)
+ * ORC_SSE_movd_load (SSE_REGM32)
+ * ORC_SSE_movq_sse_load (SSE_SSEM)
+ * ORC_SSE_pinsrw (SSE_REG32M16_IMM8)
+ * ORC_SSE_movdqa_load (SSE_SSEM)
+ * ORC_SSE_movdqu_load (SSE_SSEM)
+ */
 void
-orc_sse_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int size,
-    int imm, int offset, int src, int src_index, int shift, int dest)
+orc_sse_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int imm,
+    int offset, int src, int src_index, int shift, int dest)
 {
   OrcX86Insn *xinsn;
 
@@ -768,22 +794,35 @@ orc_sse_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int size,
   }
 }
 
-/* FIXME the size is useless */
+/*
+ * Used in
+ * ORC_SSE_movdqa_store (SSEM_SSE)
+ * ORC_SSE_movntdq_store (SSEM_SSE)
+ * ORC_SSE_movdqu_store (SSEM_SSE)
+ * ORC_SSE_pextrb (REGM32TO64_SSE_IMM8)
+ * ORC_SSE_pextrw_mem (REGM32TO64_SSE_IMM8)
+ * ORC_SSE_stmxcsr (M32)
+ * ORC_SSE_ldmxcsr (M32)
+ */
 void
-orc_sse_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index, int size,
+orc_sse_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index,
     int imm, int offset, int src, int dest)
 {
   OrcX86Insn *xinsn;
   const OrcSSEInsnOp *opcode = orc_sse_ops + index;
+  orc_bool has_src = FALSE;
 
   /* checks */
   if (!orc_x86_insn_validate_operand1_mem (dest, opcode->operands)) {
-    ORC_ERROR ("Dest register %s not validated for opcode %s",
-        orc_sse_get_regname_by_size (dest, size), opcode->name);
+    ORC_ERROR ("Dest register %d not validated for opcode %s", dest,
+        opcode->name);
   }
 
-  if (!orc_sse_insn_validate_operand2_sse (src, opcode->sse_operands)) {
-    ORC_ERROR ("Src register %d not validated for opcode %d", src, index);
+  if (opcode->operands & ORC_X86_INSN_OPERAND_OP2_REG) {
+    if (!orc_sse_insn_validate_operand2_sse (src, opcode->sse_operands)) {
+      ORC_ERROR ("Src register %d not validated for opcode %d", src, index);
+    }
+    has_src = TRUE;
   }
 
   if ((opcode->operands & ORC_X86_INSN_OPERAND_OP3_IMM) &&
@@ -798,14 +837,18 @@ orc_sse_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index, int size,
       ORC_X86_INSN_OPERAND_TYPE_OFF,
       p->is_64bit ? ORC_X86_INSN_OPERAND_SIZE_64 : ORC_X86_INSN_OPERAND_SIZE_32,
       dest);
-  orc_x86_insn_operand_set (&xinsn->operands[1],
-      ORC_X86_INSN_OPERAND_TYPE_REG, ORC_X86_INSN_OPERAND_SIZE_NONE, src);
-  xinsn->encoding = ORC_X86_INSN_ENCODING_MR;
+  xinsn->encoding = ORC_X86_INSN_ENCODING_M;
 
-  if (opcode->operands & ORC_X86_INSN_OPERAND_OP3_IMM) {
-    orc_x86_insn_operand_set (&xinsn->operands[2],
-        ORC_X86_INSN_OPERAND_TYPE_IMM, ORC_X86_INSN_OPERAND_SIZE_8, 0);
-    xinsn->encoding = ORC_X86_INSN_ENCODING_MRI;
+  if (has_src) {
+    orc_x86_insn_operand_set (&xinsn->operands[1],
+        ORC_X86_INSN_OPERAND_TYPE_REG, ORC_X86_INSN_OPERAND_SIZE_NONE, src);
+    xinsn->encoding = ORC_X86_INSN_ENCODING_MR;
+  
+    if (opcode->operands & ORC_X86_INSN_OPERAND_OP3_IMM) {
+      orc_x86_insn_operand_set (&xinsn->operands[2],
+          ORC_X86_INSN_OPERAND_TYPE_IMM, ORC_X86_INSN_OPERAND_SIZE_8, 0);
+      xinsn->encoding = ORC_X86_INSN_ENCODING_MRI;
+    }
   }
   xinsn->offset = offset;
 }

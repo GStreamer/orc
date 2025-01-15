@@ -463,7 +463,7 @@ typedef struct _OrcX86Insn {
   const char *name;
   // Immediate mode operand
   int imm;
-  // Operand size
+  // Size of jmp or align
   int size;
   // Label for the function (if this is a preamble)
   int label;

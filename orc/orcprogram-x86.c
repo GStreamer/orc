@@ -878,6 +878,7 @@ orc_x86_emit_prologue (OrcCompiler *compiler)
       ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A3]), compiler->exec_reg);
 #endif
 }
+
 static void
 orc_x86_emit_epilogue (OrcCompiler *compiler)
 {
