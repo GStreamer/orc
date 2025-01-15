@@ -106,6 +106,7 @@ orc_target_c_get_asm_preamble (void)
 {
   return "\n"
     "/* begin Orc C target preamble */\n"
+    "#include <math.h>\n"
     "#define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))\n"
     "#define ORC_ABS(a) ((a)<0 ? -(a) : (a))\n"
     "#define ORC_MIN(a,b) ((a)<(b) ? (a) : (b))\n"

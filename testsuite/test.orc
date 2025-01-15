@@ -2806,3 +2806,11 @@ x4 addb argb, x, c128
 mulslq t1, d1, p1
 shrsq t1, t1, 27
 convql d1, t1
+
+.function sqrt_nx
+.dest 4 dst float
+.source 4 src float
+.floatparam 4 k
+.temp 4 tmp
+sqrtf tmp, src
+mulf dst, tmp, k

@@ -2678,7 +2678,7 @@ BINARY (addf, addps)
 BINARY (subf, subps)
 BINARY (mulf, mulps)
 BINARY (divf, divps)
-BINARY (sqrtf, sqrtps)
+UNARY (sqrtf, sqrtps)
 BINARY (orf, orps)
 BINARY (andf, andps)
 
