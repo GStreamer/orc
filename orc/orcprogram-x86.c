@@ -1073,10 +1073,10 @@ orc_x86_flush_cache (OrcCode *code)
 
   if ((void *) code->exec != (void *) code->code)
     FlushInstructionCache(h_proc, code->exec, code->code_size);
-#elif __has_builtin(__builtin_clear_cache)
-  __builtin_clear_cache (code->code, code->code + code->code_size);
+#elif __has_builtin(__builtin___clear_cache)
+  __builtin___clear_cache ((char*)code->code, (char*)code->code + code->code_size);
   if ((void *) code->exec != (void *) code->code)
-    __builtin_clear_cache (code->exec, code->exec + code->code_size);
+    __builtin___clear_cache ((char*)code->exec, (char*)code->exec + code->code_size);
 #else
   __clear_cache (code->code, code->code + code->code_size);
   if ((void *) code->exec != (void *) code->code)
