@@ -21,8 +21,8 @@ cc = meson.get_compiler('c')
 # Error out if a function's missing
 add_project_arguments(cc.get_supported_arguments([
   '-we4013',
-  '-Wno-implicit-int',
-  '-Wno-implicit-function-declaration',
+  '-Werror=implicit-int',
+  '-Werror=implicit-function-declaration',
 ]), language : 'c')
 
 orc_inc = include_directories('.')

@@ -11,6 +11,10 @@
 #include <orc/orcx86-private.h>
 #include <orc/orcinternal.h>
 
+#if defined(__APPLE__)
+#include  <libkern/OSCacheControl.h>
+#endif
+
 #if defined(_WIN32)
 #include <windows.h>
 #endif
