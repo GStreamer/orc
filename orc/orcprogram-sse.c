@@ -376,6 +376,7 @@ orc_sse_init (void)
     sse_set_mxcsr,
     sse_restore_mxcsr,
     NULL,
+    NULL,
     16,
     X86_XMM0,
     16,

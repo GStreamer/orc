@@ -812,6 +812,12 @@ orc_x86_clear_emms (OrcX86Target *t, OrcCompiler *c)
     t->clear_emms (c);
 }
 
+static void
+orc_x86_zeroupper (OrcX86Target *t, OrcCompiler *c)
+{
+  if (t->zeroupper)
+    t->zeroupper (c);
+}
 
 static void
 orc_x86_adjust_alignment (OrcX86Target *t, OrcCompiler *compiler)
@@ -882,6 +888,9 @@ orc_x86_emit_prologue (OrcCompiler *compiler)
 static void
 orc_x86_emit_epilogue (OrcCompiler *compiler)
 {
+  OrcX86Target *t;
+
+  t = compiler->target->target_data;
 #if 0
   orc_x86_emit_rdtsc(compiler);
   orc_x86_emit_mov_reg_memoffset (compiler, 4, X86_EAX,
@@ -911,14 +920,7 @@ orc_x86_emit_epilogue (OrcCompiler *compiler)
   }
   // Remember to yank the higher lanes before returning!
   // https://stackoverflow.com/a/41349852
-#if 0
-#ifdef ENABLE_TARGET_AVX
-  if (strncmp (compiler->target->name, "avx", 3) == 0) {
-    orc_vex_emit_cpuinsn_none (compiler, ORC_X86_zeroupper_avx,
-        ORC_X86_AVX_VEX128_PREFIX);
-  }
-#endif
-#endif
+  orc_x86_zeroupper (t, compiler);
   orc_x86_emit_ret (compiler);
 }
 

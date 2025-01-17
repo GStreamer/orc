@@ -42,6 +42,7 @@ typedef struct _OrcX86Target
   void (*set_mxcsr)(OrcCompiler *c);
   void (*restore_mxcsr)(OrcCompiler *c);
   void (*clear_emms)(OrcCompiler *c);
+  void (*zeroupper)(OrcCompiler *c);
   int register_size;
   int register_start;
   int n_registers;

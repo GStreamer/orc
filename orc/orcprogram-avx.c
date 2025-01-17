@@ -356,6 +356,12 @@ avx_move_memoffset_to_register (OrcCompiler *compiler, int size, int offset, int
 
 }
 
+static void
+avx_zeroupper (OrcCompiler *compiler)
+{
+  orc_vex_emit_cpuinsn_none (compiler, ORC_AVX_vzeroupper);
+}
+
 static int
 avx_get_shift (int size)
 {
@@ -415,6 +421,7 @@ orc_avx_init (void)
     avx_set_mxcsr,
     avx_restore_mxcsr,
     NULL,
+    avx_zeroupper,
     ORC_AVX_REG_SIZE,
     X86_YMM0,
     ORC_AVX_REG_AMOUNT,

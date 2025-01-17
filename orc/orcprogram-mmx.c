@@ -362,6 +362,7 @@ orc_mmx_init (void)
     NULL,
     NULL,
     mmx_clear_emms,
+    NULL,
     8,
     X86_MM0,
     ORC_REG_SIZE,
