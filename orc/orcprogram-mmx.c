@@ -310,7 +310,7 @@ mmx_move_register_to_memoffset (OrcCompiler *compiler, int size, int reg1, int o
 static void
 mmx_move_memoffset_to_register (OrcCompiler *compiler, int size, int offset, int reg1, int reg2, int is_aligned)
 {
-  orc_x86_emit_mov_memoffset_mmx (compiler, size, reg1, offset, reg2, is_aligned);
+  orc_x86_emit_mov_memoffset_mmx (compiler, size, offset, reg1, reg2, is_aligned);
 }
 
 static int
