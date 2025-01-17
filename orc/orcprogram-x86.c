@@ -67,12 +67,18 @@ orc_x86_compiler_max_loop_shift (OrcX86Target *t, OrcCompiler *c)
 {
   int i;
   int n = 2;
+  const int max_elements = (t->register_size / c->max_var_size);
 
-  for (i = 1; i; i++) {
-    if ((t->register_size / c->max_var_size) == n)
-      break;
-    n *= 2;
-  } 
+  if (max_elements <= 1) {
+    // MMX fits just the one element
+    i = 0;
+  } else {
+    for (i = 1; i; i++) {
+      if (max_elements == n)
+        break;
+      n *= 2;
+    }
+  }
   c->loop_shift = i;
 }
 
