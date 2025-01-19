@@ -1180,6 +1180,28 @@ avx_rule_convhwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+avx_rule_convusslw (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+  const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
+
+  orc_avx_load_constant (p, tmp, 4, INT16_MAX);
+  if (size >= 16) {
+    orc_avx_emit_pminud (p, src, tmp, dest);
+    orc_avx_emit_pxor (p, tmp, tmp, tmp);
+    orc_avx_emit_packssdw (p, dest, tmp, dest);
+    // same as above
+    orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
+  } else {
+    orc_avx_sse_emit_pminud (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_packssdw (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+  }
+}
+
+static void
 avx_rule_convlw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   const int src = p->vars[insn->src_args[0]].alloc;
@@ -3256,6 +3278,7 @@ orc_compiler_avx_register_rules (OrcTarget *target)
   /* slow rules */
   REGISTER_RULE_WITH_GENERIC (avgsb, avgsb_slow);
   REGISTER_RULE_WITH_GENERIC (avgsw, avgsw_slow);
+  REGISTER_RULE (convusslw);
   REGISTER_RULE (convlw);
   REGISTER_RULE (swapw);
   REGISTER_RULE (swapl);
