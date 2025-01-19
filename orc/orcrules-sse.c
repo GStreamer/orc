@@ -1069,6 +1069,23 @@ sse_rule_convuuswb (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+sse_rule_convusswb (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+
+  if (src != dest) {
+    orc_sse_emit_movdqa (p, src, dest);
+  }
+
+  orc_sse_load_constant (p, tmp, 2, INT8_MAX); // set all of dest to 127
+  orc_sse_emit_pminuw (p, tmp, dest);
+  orc_sse_emit_pxor (p, tmp, tmp);
+  orc_sse_emit_packuswb (p, tmp, dest);
+}
+
+static void
 sse_rule_convwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   const int src = p->vars[insn->src_args[0]].alloc;
@@ -3307,6 +3324,7 @@ orc_compiler_sse_register_rules (OrcTarget *target)
   REG(minsl);
   REG(minul);
   REG(mulll);
+  orc_rule_register (rule_set, "convusswb", sse_rule_convusswb, NULL);
   orc_rule_register (rule_set, "convsbw", sse_rule_convsbw_sse41, NULL);
   orc_rule_register (rule_set, "convswl", sse_rule_convswl_sse41, NULL);
   orc_rule_register (rule_set, "convslq", sse_rule_convslq_sse41, NULL);
