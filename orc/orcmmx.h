@@ -200,7 +200,7 @@ ORC_API void orc_mmx_load_constant (OrcCompiler *compiler, int reg, int size,
 
 #define orc_mmx_emit_pinsrw_memindex(p,imm,offset,a,a_index,shift,b) orc_x86_emit_cpuinsn_load_memindex(p, ORC_X86_pinsrw, 4, imm, offset, a, a_index, shift, b)
 #define orc_mmx_emit_movd_load_memindex(p,offset,a,a_index,shift,b) orc_x86_emit_cpuinsn_load_memindex(p, ORC_X86_movd_load, 4, 0, offset, a, a_index, shift, b)
-#define orc_mmx_emit_movq_load_memindex(p,offset,a,a_index,shift,b) orc_x86_emit_cpuinsn_load_memindex(p, ORC_X86_movq_mmx_load, 4, 0, offset, a, a_index, shift, b)
+#define orc_mmx_emit_movq_load_memindex(p,offset,a,a_index,shift,b) orc_x86_emit_cpuinsn_load_memindex(p, ORC_X86_movq_mmx_load, 8, 0, offset, a, a_index, shift, b)
 
 #define orc_mmx_emit_pextrw_memindex(p,imm,a,offset,b,b_index,shift) orc_x86_emit_cpuinsn_store_memindex(p, ORC_X86_pextrw, imm, a, offset, b, b_index, shift)
 #define orc_mmx_emit_movd_store_memindex(p,a,offset,b,b_index,shift) orc_x86_emit_cpuinsn_store_memindex(p, ORC_X86_movd_store, 0, a, offset, b, b_index, shift)
@@ -208,11 +208,11 @@ ORC_API void orc_mmx_load_constant (OrcCompiler *compiler, int reg, int size,
 
 #define orc_mmx_emit_pinsrw_register(p,imm,a,b) orc_x86_emit_cpuinsn_imm(p, ORC_X86_pinsrw, imm, a, b)
 #define orc_mmx_emit_movd_load_register(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_movd_load, 4, a, b)
-#define orc_mmx_emit_movq_load_register(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_movq_mmx_load, 4, a, b)
+#define orc_mmx_emit_movq_load_register(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_movq_mmx_load, 8, a, b)
 
 #define orc_mmx_emit_pextrw_register(p,imm,a,b) orc_x86_emit_cpuinsn_imm(p, ORC_X86_pextrw, imm, a, b)
 #define orc_mmx_emit_movd_store_register(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_movd_store, 4, a, b)
-#define orc_mmx_emit_movq_store_register(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_movq_mmx_store, 4, a, b)
+#define orc_mmx_emit_movq_store_register(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_movq_mmx_store, 8, a, b)
 
 
 #define orc_mmx_emit_pshufw(p,imm,a,b) orc_x86_emit_cpuinsn_imm(p, ORC_X86_pshufw, imm, a, b)
