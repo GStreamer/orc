@@ -1180,6 +1180,35 @@ avx_rule_convhwb (OrcCompiler *p, void *user, OrcInstruction *insn)
 }
 
 static void
+avx_rule_convussql_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
+{
+  const int src = p->vars[insn->src_args[0]].alloc;
+  const int dest = p->vars[insn->dest_args[0]].alloc;
+  const int tmp = orc_compiler_get_temp_reg (p);
+  const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
+  const int tmpc = orc_compiler_get_temp_reg(p);
+  orc_avx_load_constant (p, tmpc, 8, (orc_uint64)INT32_MAX);
+
+  if (size >= 32) {
+    orc_avx_emit_pcmpgtq (p, src, tmpc, tmp);
+    orc_avx_emit_blendvpd (p, tmpc, src, tmp, dest);
+    orc_avx_load_constant (p, tmpc, 8, (orc_uint64)INT32_MIN);
+    orc_avx_emit_pcmpgtq (p, dest, tmpc, tmp);
+    orc_avx_emit_blendvpd (p, dest, tmpc, tmp, dest);
+    // full interleave required again
+    orc_avx_emit_pshufd (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
+    orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
+  } else {
+    orc_avx_sse_emit_pcmpgtq (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmpc), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_blendvpd (p, ORC_AVX_SSE_REG (tmpc), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+    orc_avx_load_constant (p, tmpc, 8, (orc_uint64)INT32_MIN);
+    orc_avx_sse_emit_pcmpgtq (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmpc), ORC_AVX_SSE_REG (tmp));
+    orc_avx_sse_emit_blendvpd (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmpc), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+    orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
+  }
+}
+
+static void
 avx_rule_convusslw (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   const int src = p->vars[insn->src_args[0]].alloc;
@@ -3420,6 +3449,7 @@ orc_compiler_avx_register_rules (OrcTarget *target)
   REGISTER_RULE_WITH_GENERIC (convulq, convulq_avx2);
   REGISTER_RULE_WITH_GENERIC (convssslw, convssslw_avx2);
   REGISTER_RULE_WITH_GENERIC (convsuslw, convsuslw_avx2);
+  REGISTER_RULE_WITH_GENERIC (convussql, convussql_avx2);
   REGISTER_RULE_WITH_GENERIC (convsssql, convsssql_avx2);
   REGISTER_RULE_WITH_GENERIC (mulslq, mulslq_avx2);
   REGISTER_RULE_WITH_GENERIC (mulhsl, mulhsl_avx2);
