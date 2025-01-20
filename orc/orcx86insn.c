@@ -565,7 +565,11 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
       src_op[0] = 0;
       break;
     case ORC_X86_INSN_TYPE_REG_REGM:
-      sprintf(src_op, "%%%s, ", orc_x86_get_regname (operand1));
+      if (xinsn->type == ORC_X86_RM_REG) {
+        sprintf(src_op, "%%%s, ", orc_x86_get_regname_size (operand1, xinsn->size));
+      } else {
+        sprintf(src_op, "%%%s, ", orc_x86_get_regname (operand1));
+      }
       break;
     case ORC_X86_INSN_TYPE_REG8_REGM:
       sprintf(src_op, "%%%s, ", orc_x86_get_regname_8 (operand1));
@@ -714,7 +718,7 @@ orc_x86_insn_output_asm (OrcCompiler *p, OrcX86Insn *xinsn)
     case ORC_X86_INSN_TYPE_REG_REGM:
     case ORC_X86_INSN_TYPE_IMM8_MMX_REG_REV:
       if (xinsn->type == ORC_X86_RM_REG) {
-        sprintf(dst_op, "%%%s", orc_x86_get_regname (xinsn->dest));
+        sprintf(dst_op, "%%%s", orc_x86_get_regname_size (xinsn->dest, xinsn->size));
       } else if (xinsn->type == ORC_X86_RM_MEMOFFSET) {
         sprintf(dst_op, "%d(%%%s)", xinsn->offset,
             orc_x86_get_regname_ptr (p, xinsn->dest));
