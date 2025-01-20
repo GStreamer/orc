@@ -148,13 +148,14 @@ typedef enum _OrcSSEInsnIdx {
   ORC_SSE_punpckhwd,
   ORC_SSE_punpckhdq,
   ORC_SSE_packssdw,
+  ORC_SSE_movq_rm_r,
   ORC_SSE_movd_load,
   ORC_SSE_psrlw_imm,
   ORC_SSE_psraw_imm,
   ORC_SSE_psllw_imm,
   ORC_SSE_psrld_imm,
-  ORC_SSE_psrad_imm,
   /* 50 */
+  ORC_SSE_psrad_imm,
   ORC_SSE_pslld_imm,
   ORC_SSE_psrlq_imm,
   ORC_SSE_psllq_imm,
@@ -163,10 +164,11 @@ typedef enum _OrcSSEInsnIdx {
   ORC_SSE_pcmpeqd,
   ORC_SSE_movd_store,
   ORC_SSE_movq_sse_load,
+  ORC_SSE_movq_r_rm,
   ORC_SSE_pinsrw,
   ORC_SSE_pextrw,
-  ORC_SSE_psrlw,
   /* 60 */
+  ORC_SSE_psrlw,
   ORC_SSE_psrld,
   ORC_SSE_psrlq,
   ORC_SSE_paddq,
@@ -175,10 +177,10 @@ typedef enum _OrcSSEInsnIdx {
   ORC_SSE_psubusb,
   ORC_SSE_psubusw,
   ORC_SSE_pminub,
+  /* 70 */
   ORC_SSE_pand,
   ORC_SSE_paddusb,
   ORC_SSE_paddusw,
-  /* 70 */
   ORC_SSE_pmaxub,
   ORC_SSE_pandn,
   ORC_SSE_pavgb,
@@ -187,9 +189,9 @@ typedef enum _OrcSSEInsnIdx {
   ORC_SSE_pavgw,
   ORC_SSE_pmulhuw,
   ORC_SSE_pmulhw,
+  /* 80 */
   ORC_SSE_psubsb,
   ORC_SSE_psubsw,
-  /* 80 */
   ORC_SSE_pminsw,
   ORC_SSE_por,
   ORC_SSE_paddsb,
@@ -198,9 +200,9 @@ typedef enum _OrcSSEInsnIdx {
   ORC_SSE_pxor,
   ORC_SSE_psllw,
   ORC_SSE_pslld,
+  /* 90 */
   ORC_SSE_psllq,
   ORC_SSE_pmuludq,
-  /* 90 */
   ORC_SSE_pmaddwd,
   ORC_SSE_psadbw,
   ORC_SSE_psubb,
@@ -209,9 +211,9 @@ typedef enum _OrcSSEInsnIdx {
   ORC_SSE_psubq,
   ORC_SSE_paddb,
   ORC_SSE_paddw,
+  /* 100 */
   ORC_SSE_paddd,
   ORC_SSE_punpcklqdq,
-  /* 100 */
   ORC_SSE_punpckhqdq,
   ORC_SSE_movdqa_load,
   ORC_SSE_pshufd,
@@ -220,9 +222,9 @@ typedef enum _OrcSSEInsnIdx {
   ORC_SSE_pslldq_imm,
   ORC_SSE_movntdq_store,
   ORC_SSE_pshuflw,
+  /* 110 */
   ORC_SSE_movdqu_load,
   ORC_SSE_movdqu_store,
-  /* 110 */
   ORC_SSE_pshufhw,
   ORC_SSE_pshufb,
   ORC_SSE_phaddw,
@@ -231,9 +233,9 @@ typedef enum _OrcSSEInsnIdx {
   ORC_SSE_pmaddubsw,
   ORC_SSE_phsubw,
   ORC_SSE_phsubd,
+  /* 120 */
   ORC_SSE_phsubsw,
   ORC_SSE_psignb,
-  /* 120 */
   ORC_SSE_psignw,
   ORC_SSE_psignd,
   ORC_SSE_pmulhrsw,
@@ -242,20 +244,21 @@ typedef enum _OrcSSEInsnIdx {
   ORC_SSE_pabsw,
   ORC_SSE_pabsd,
   ORC_SSE_pextrb,
+  /* 130 */
   ORC_SSE_blendvpd_sse,
   ORC_SSE_pextrw_mem,
-  /* 130 */
   ORC_SSE_pinsrb,
   ORC_SSE_pmovsxbw,
   ORC_SSE_pmovsxbd,
+  ORC_SSE_pinsrd,
   ORC_SSE_pmovsxbq,
   ORC_SSE_pmovsxwd,
   ORC_SSE_pmovsxwq,
   ORC_SSE_pmovsxdq,
+  /* 140 */
   ORC_SSE_pmuldq,
   ORC_SSE_pcmpeqq,
   ORC_SSE_packusdw,
-  /* 140 */
   ORC_SSE_pmovzxbw,
   ORC_SSE_pmovzxbd,
   ORC_SSE_pmovzxbq,
@@ -263,16 +266,17 @@ typedef enum _OrcSSEInsnIdx {
   ORC_SSE_pmovzxwq,
   ORC_SSE_pmovzxdq,
   ORC_SSE_pminsb,
+  /* 150 */
   ORC_SSE_pminsd,
   ORC_SSE_pminuw,
   ORC_SSE_pminud,
-  /* 150 */
   ORC_SSE_pmaxsb,
   ORC_SSE_pmaxsd,
   ORC_SSE_pmaxuw,
   ORC_SSE_pmaxud,
   ORC_SSE_pmulld,
   ORC_SSE_phminposuw,
+  /* 160 */
   ORC_SSE_pcmpgtq,
 } OrcSSEInsnIdx;
 
@@ -352,7 +356,7 @@ ORC_API void orc_sse_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index, in
 #define orc_sse_emit_movd_load_memoffset(p,offset,a,b) orc_sse_emit_cpuinsn_load_memoffset(p, ORC_SSE_movd_load, 0, offset, a, b)
 #define orc_sse_emit_movq_load_memoffset(p,offset,a,b) orc_sse_emit_cpuinsn_load_memoffset(p, ORC_SSE_movq_sse_load, 0, offset, a, b)
 #define orc_sse_emit_movq_load_memindex(p,offset,a,a_index,shift,b) orc_sse_emit_cpuinsn_load_memindex(p, ORC_SSE_movq_sse_load, 0, offset, a, a_index, shift, b)
-#define orc_sse_emit_movq_load_register(p,a,b) orc_sse_emit_cpuinsn_size(p, ORC_SSE_movq_sse_load, 4, a, b)
+#define orc_sse_emit_movq_load_register(p,a,b) orc_sse_emit_cpuinsn_size(p, ORC_SSE_movq_rm_r, 8, a, b)
 #define orc_sse_emit_psrlw_imm(p,imm,b) orc_sse_emit_cpuinsn_imm(p, ORC_SSE_psrlw_imm, 0, imm, 0, b)
 #define orc_sse_emit_psraw_imm(p,imm,b) orc_sse_emit_cpuinsn_imm(p, ORC_SSE_psraw_imm, 0, imm, 0, b)
 #define orc_sse_emit_psllw_imm(p,imm,b) orc_sse_emit_cpuinsn_imm(p, ORC_SSE_psllw_imm, 0, imm, 0, b)
@@ -370,9 +374,10 @@ ORC_API void orc_sse_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index, in
 #define orc_sse_emit_movd_store_register(p,a,b) orc_sse_emit_cpuinsn_size(p, ORC_SSE_movd_store, 4, a, b)
 #define orc_sse_emit_movq_store_memoffset(p,a,offset,b) orc_sse_emit_cpuinsn_store_memoffset(p, ORC_SSE_movq_sse_store, 0, a, offset, b)
 #define orc_sse_emit_movq_store_memindex(p,a,offset,b,b_index,shift) orc_sse_emit_cpuinsn_store_memindex(p, ORC_SSE_movq_sse_store, 0, a, offset, b, b_index, shift)
-#define orc_sse_emit_movq_store_register(p,a,b) orc_sse_emit_cpuinsn_size(p, ORC_SSE_movq_sse_store, 4, a, b)
+#define orc_sse_emit_movq_store_register(p,a,b) orc_sse_emit_cpuinsn_size(p, ORC_SSE_movq_r_rm, 8, a, b)
 #define orc_sse_emit_pinsrw_memoffset(p,imm,offset,a,b) orc_sse_emit_cpuinsn_load_memoffset(p, ORC_SSE_pinsrw, imm, offset, a, b)
 #define orc_sse_emit_pinsrw_memindex(p,imm,offset,a,a_index,shift,b) orc_sse_emit_cpuinsn_load_memindex(p, ORC_SSE_pinsrw, imm, offset, a, a_index, shift, b)
+#define orc_sse_emit_pinsrd_register(p,imm,a,b) orc_sse_emit_cpuinsn_imm(p, ORC_SSE_pinsrd, 4, imm, a, b)
 #define orc_sse_emit_pinsrw_register(p,imm,a,b) orc_sse_emit_cpuinsn_imm(p, ORC_SSE_pinsrw, 4, imm, a, b)
 #define orc_sse_emit_pextrw_register(p,s,imm,a,b) orc_sse_emit_cpuinsn_imm(p, ORC_SSE_pextrw, s, imm, a, b)
 #define orc_sse_emit_psrlw(p,a,b) orc_sse_emit_cpuinsn_sse(p, ORC_SSE_psrlw, a, b)

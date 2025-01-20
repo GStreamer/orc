@@ -1,5 +1,6 @@
 #include "config.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -203,21 +204,47 @@ orc_sse_load_constant (OrcCompiler *compiler, int reg, int size, orc_uint64 valu
   int i;
 
   if (size == 8) {
-    int offset = ORC_STRUCT_OFFSET(OrcExecutor,arrays[ORC_VAR_T1]);
+    if (value == 0) {
+      orc_sse_emit_pxor (compiler, reg, reg);
+      return;
+    } else if (value == UINT64_MAX) {
+      orc_sse_emit_pcmpeqb (compiler, reg, reg);
+      return;
+    }
 
-    /* FIXME how ugly and slow! */
-    orc_x86_emit_mov_imm_reg (compiler, 4, value>>0,
-        compiler->gp_tmpreg);
-    orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
-        offset + 0, compiler->exec_reg);
+    if (compiler->is_64bit) {
+      orc_x86_emit_mov_imm_reg64 (compiler, 8, value, compiler->gp_tmpreg);
+      orc_sse_emit_movq_load_register (compiler, compiler->gp_tmpreg, reg);
+    } else {
+      if (compiler->target_flags & ORC_TARGET_SSE_SSE4_1) {
+        // Store the upper half
+        if (value >> 32) {
+          orc_x86_emit_mov_imm_reg (compiler, 4, value >> 32, compiler->gp_tmpreg);
+          orc_sse_emit_pinsrd_register (compiler, 1, compiler->gp_tmpreg, reg);
+        } else {
+          orc_sse_emit_pxor (compiler, reg, reg);
+        }
 
-    orc_x86_emit_mov_imm_reg (compiler, 4, value>>32,
-        compiler->gp_tmpreg);
-    orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
-        offset + 4, compiler->exec_reg);
+        // Store the lower half
+        orc_x86_emit_mov_imm_reg (compiler, 4, value >> 0, compiler->gp_tmpreg);
+        orc_sse_emit_pinsrd_register (compiler, 0, compiler->gp_tmpreg, reg);
+      } else {
+        const int offset = ORC_STRUCT_OFFSET(OrcExecutor,arrays[ORC_VAR_T1]);
 
-    orc_x86_emit_mov_memoffset_sse (compiler, 8, offset, compiler->exec_reg,
-        reg, FALSE);
+        orc_x86_emit_mov_imm_reg (compiler, 4, value>>0,
+            compiler->gp_tmpreg);
+        orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
+            offset + 0, compiler->exec_reg);
+
+        orc_x86_emit_mov_imm_reg (compiler, 4, value>>32,
+            compiler->gp_tmpreg);
+        orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
+            offset + 4, compiler->exec_reg);
+        orc_x86_emit_mov_memoffset_sse (compiler, 8, offset, compiler->exec_reg,
+            reg, FALSE);
+      }
+    }
+
     orc_sse_emit_pshufd (compiler, ORC_SSE_SHUF(1,0,1,0), reg, reg);
     return;
   }
