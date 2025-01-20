@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-#include <stdlib.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -131,6 +131,8 @@ static OrcX86InsnOpcode orc_x86_opcodes[] = {
   { "rdtsc"    , ORC_X86_INSN_OPCODE_TYPE_OTHER , ORC_X86_INSN_OPERAND_NONE       , ORC_X86_INSN_OPCODE_PREFIX_NONE, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x31 },
   { "endbr64"  , ORC_X86_INSN_OPCODE_TYPE_OTHER , ORC_X86_INSN_OPERAND_NONE       , ORC_X86_INSN_OPCODE_PREFIX_0XF3, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x1efa },
   { "endbr32"  , ORC_X86_INSN_OPCODE_TYPE_OTHER , ORC_X86_INSN_OPERAND_NONE       , ORC_X86_INSN_OPCODE_PREFIX_0XF3, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_0X0F, 0x1efb },
+  /* 80 */
+  { "mov"      , ORC_X86_INSN_OPCODE_TYPE_OTHER , ORC_X86_INSN_TYPE_REG64_IMM64   , ORC_X86_INSN_OPCODE_PREFIX_NONE, ORC_X86_INSN_OPCODE_ESCAPE_SEQUENCE_NONE, 0xb8 },
 };
 /* clang-format on */
 
@@ -351,7 +353,7 @@ orc_x86_insn_output_opcode_other_stack_asm (OrcCompiler *p, OrcX86Insn *xinsn)
         break;
 
       case ORC_X86_INSN_OPERAND_TYPE_IMM:
-        sprintf(op_str, "$%d", xinsn->imm);
+        sprintf(op_str, "$%" PRIi64, xinsn->imm);
         break;
 
       case ORC_X86_INSN_OPERAND_TYPE_IDX:
@@ -518,6 +520,16 @@ orc_x86_insn_output_immediate (OrcCompiler *p, const OrcX86Insn *xinsn)
         *p->codeptr++ = (xinsn->imm >> 8) & 0xff;
         *p->codeptr++ = (xinsn->imm >> 16) & 0xff;
         *p->codeptr++ = (xinsn->imm >> 24) & 0xff;
+        break;
+      case ORC_X86_INSN_OPERAND_SIZE_64:
+        *p->codeptr++ = xinsn->imm & 0xff;
+        *p->codeptr++ = (xinsn->imm >> 8) & 0xff;
+        *p->codeptr++ = (xinsn->imm >> 16) & 0xff;
+        *p->codeptr++ = (xinsn->imm >> 24) & 0xff;
+        *p->codeptr++ = (xinsn->imm >> 32) & 0xff;
+        *p->codeptr++ = (xinsn->imm >> 40) & 0xff;
+        *p->codeptr++ = (xinsn->imm >> 48) & 0xff;
+        *p->codeptr++ = (xinsn->imm >> 56) & 0xff;
         break;
       default:
         ORC_ERROR ("Unsupported size %d", xinsn->operands[i].size);
@@ -1481,7 +1493,7 @@ orc_x86_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int size,
 }
 
 void
-orc_x86_emit_cpuinsn_imm_reg (OrcCompiler *p, int index, int size, int imm,
+orc_x86_emit_cpuinsn_imm_reg (OrcCompiler *p, int index, int size, orc_int64 imm,
     int dest)
 {
   OrcX86Insn *xinsn;

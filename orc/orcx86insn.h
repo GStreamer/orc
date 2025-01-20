@@ -285,7 +285,8 @@ typedef enum _OrcX86InsnOperands {
   ORC_X86_INSN_TYPE_REGM8_REG8           = (ORC_X86_INSN_OPERAND_REGM_REG | ORC_X86_INSN_OPERAND_OP1_8 | ORC_X86_INSN_OPERAND_OP2_8), /* For example MOV r/m8, r8 */
   ORC_X86_INSN_TYPE_REGM16TO64_IMM8      = (ORC_X86_INSN_OPERAND_REGM_IMM | ORC_X86_INSN_OPERAND_OP1_16TO64 | ORC_X86_INSN_OPERAND_OP2_8), /* For example SHR r/m32, imm8 */
   ORC_X86_INSN_TYPE_REGM32TO64_IMM32     = (ORC_X86_INSN_OPERAND_REGM_IMM | ORC_X86_INSN_OPERAND_OP1_32 | ORC_X86_INSN_OPERAND_OP1_64 | ORC_X86_INSN_OPERAND_OP2_32),  /* For example ADD r/m32, imm32 */
-  ORC_X86_INSN_TYPE_REGM32_IMM32         = (ORC_X86_INSN_OPERAND_REGM_IMM | ORC_X86_INSN_OPERAND_OP1_32 | ORC_X86_INSN_OPERAND_OP2_32)  /* For example TEST r/m32, imm32 */
+  ORC_X86_INSN_TYPE_REGM32_IMM32         = (ORC_X86_INSN_OPERAND_REGM_IMM | ORC_X86_INSN_OPERAND_OP1_32 | ORC_X86_INSN_OPERAND_OP2_32),  /* For example TEST r/m32, imm32 */
+  ORC_X86_INSN_TYPE_REG64_IMM64          = (ORC_X86_INSN_OPERAND_REG_IMM | ORC_X86_INSN_OPERAND_OP1_64 | ORC_X86_INSN_OPERAND_OP2_64), /* For example MOV r64, imm64 */
 } OrcX86InsnOperands;
 /* clang-format on */
 
@@ -417,6 +418,8 @@ typedef enum _OrcX86OpcodeIdx {
   ORC_X86_rdtsc,
   ORC_X86_endbr64,
   ORC_X86_endbr32,
+  /* 80 */
+  ORC_X86_mov_imm64_r,
 } OrcX86OpcodeIdx;
 
 typedef enum _OrcX86InsnOperandType {
@@ -462,7 +465,7 @@ typedef struct _OrcX86InsnOperand {
 typedef struct _OrcX86Insn {
   const char *name;
   // Immediate mode operand
-  int imm;
+  orc_int64 imm;
   // Size of jmp or align
   int size;
   // Label for the function (if this is a preamble)
@@ -499,7 +502,9 @@ ORC_API void orc_x86_emit_push (OrcCompiler *compiler, int size, int reg);
 ORC_API void orc_x86_emit_pop (OrcCompiler *compiler, int size, int reg);
 
 #define orc_x86_emit_mov_imm_reg(p,size,value,reg) \
-  orc_x86_emit_cpuinsn_imm_reg (p, ORC_X86_mov_imm32_r, size, value, reg)
+  orc_x86_emit_cpuinsn_imm_reg(p, ORC_X86_mov_imm32_r, size, value, reg)
+#define orc_x86_emit_mov_imm_reg64(p,size,value,reg) \
+  orc_x86_emit_cpuinsn_imm_reg(p, ORC_X86_mov_imm64_r, size, value, reg)
 #define orc_x86_emit_test_reg_reg(p,size,src,dest) \
   orc_x86_emit_cpuinsn_size (p, ORC_X86_test, size, src, dest)
 #define orc_x86_emit_sar_imm_reg(p,size,value,reg) do { \
@@ -578,7 +583,7 @@ ORC_API void orc_x86_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int 
     int imm, int offset, int src, int src_index, int shift, int dest);
 ORC_API void orc_x86_emit_cpuinsn_load_register (OrcCompiler *p, int index, int imm,
     int src, int dest);
-ORC_API void orc_x86_emit_cpuinsn_imm_reg (OrcCompiler *p, int index, int size, int imm,
+ORC_API void orc_x86_emit_cpuinsn_imm_reg (OrcCompiler *p, int index, int size, orc_int64 imm,
     int dest);
 ORC_API void orc_x86_emit_cpuinsn_imm_memoffset (OrcCompiler *p, int index, int size,
     int imm, int offset, int dest);
