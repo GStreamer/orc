@@ -235,17 +235,22 @@ orc_avx_load_constant (OrcCompiler *compiler, int reg, int size,
       return;
     }
 
-    // Store the upper half
-    if (value >> 32) {
-      orc_x86_emit_mov_imm_reg (compiler, 4, value >> 32, compiler->gp_tmpreg);
-      orc_avx_sse_emit_pinsrd_register (compiler, 1, ORC_AVX_SSE_REG (reg), compiler->gp_tmpreg, ORC_AVX_SSE_REG (reg));
+    if (compiler->is_64bit) {
+      orc_x86_emit_mov_imm_reg64 (compiler, 8, value, compiler->gp_tmpreg);
+      orc_avx_sse_emit_movq_load_register (compiler, compiler->gp_tmpreg, ORC_AVX_SSE_REG (reg));
     } else {
-      orc_avx_emit_pxor (compiler, reg, reg, reg);
-    }
+      // Store the upper half
+      if (value >> 32) {
+        orc_x86_emit_mov_imm_reg (compiler, 4, value >> 32, compiler->gp_tmpreg);
+        orc_avx_sse_emit_pinsrd_register (compiler, 1, ORC_AVX_SSE_REG (reg), compiler->gp_tmpreg, ORC_AVX_SSE_REG (reg));
+      } else {
+        orc_avx_emit_pxor (compiler, reg, reg, reg);
+      }
 
-    // Store the lower half
-    orc_x86_emit_mov_imm_reg (compiler, 4, value >> 0, compiler->gp_tmpreg);
-    orc_avx_sse_emit_pinsrd_register (compiler, 0,  ORC_AVX_SSE_REG (reg), compiler->gp_tmpreg, ORC_AVX_SSE_REG (reg));
+      // Store the lower half
+      orc_x86_emit_mov_imm_reg (compiler, 4, value >> 0, compiler->gp_tmpreg);
+      orc_avx_sse_emit_pinsrd_register (compiler, 0,  ORC_AVX_SSE_REG (reg), compiler->gp_tmpreg, ORC_AVX_SSE_REG (reg));
+    }
 
     // broadcast mm0 to the rest
     orc_avx_emit_broadcast (compiler, reg, reg, size);

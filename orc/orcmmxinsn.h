@@ -1,6 +1,8 @@
 #ifndef ORC_MMX_INSN_H_
 #define ORC_MMX_INSN_H_
 
+#include <orc/orcutils.h>
+
 ORC_BEGIN_DECLS
 
 #ifdef ORC_ENABLE_UNSTABLE_API

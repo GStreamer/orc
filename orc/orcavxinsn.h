@@ -110,10 +110,11 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_SSE_punpckhdq,
   ORC_AVX_SSE_packssdw,
   ORC_AVX_SSE_movd_load,
+  ORC_AVX_SSE_movq_rm_r,
   ORC_AVX_SSE_psrlw_imm,
   ORC_AVX_SSE_psraw_imm,
-  ORC_AVX_SSE_psllw_imm,
   /* 80 */
+  ORC_AVX_SSE_psllw_imm,
   ORC_AVX_SSE_psrld_imm,
   ORC_AVX_SSE_psrad_imm,
   ORC_AVX_SSE_pslld_imm,
@@ -123,8 +124,9 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_SSE_pcmpeqw,
   ORC_AVX_SSE_pcmpeqd,
   ORC_AVX_vzeroupper,
-  ORC_AVX_SSE_movd_store,
   /* 90 */
+  ORC_AVX_SSE_movd_store,
+  ORC_AVX_SSE_movq_r_rm,
   ORC_AVX_SSE_movq_load,
   ORC_AVX_SSE_pinsrw,
   ORC_AVX_SSE_pextrw,
@@ -133,9 +135,9 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_SSE_psrlq,
   ORC_AVX_SSE_paddq,
   ORC_AVX_SSE_pmullw,
+  /* 100 */
   ORC_AVX_SSE_movq_store,
   ORC_AVX_SSE_psubusb,
-  /* 100 */
   ORC_AVX_SSE_psubusw,
   ORC_AVX_SSE_pminub,
   ORC_AVX_SSE_pand,
@@ -144,9 +146,9 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_SSE_pmaxub,
   ORC_AVX_SSE_pandn,
   ORC_AVX_SSE_pavgb,
+  /* 110 */
   ORC_AVX_SSE_psraw,
   ORC_AVX_SSE_psrad,
-  /* 110 */
   ORC_AVX_SSE_pavgw,
   ORC_AVX_SSE_pmulhuw,
   ORC_AVX_SSE_pmulhw,
@@ -155,9 +157,9 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_SSE_pminsw,
   ORC_AVX_SSE_por,
   ORC_AVX_SSE_paddsb,
+  /* 120 */
   ORC_AVX_SSE_paddsw,
   ORC_AVX_SSE_pmaxsw,
-  /* 120 */
   ORC_AVX_SSE_pxor,
   ORC_AVX_SSE_psllw,
   ORC_AVX_SSE_pslld,
@@ -166,9 +168,9 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_SSE_psadbw,
   ORC_AVX_SSE_psubb,
   ORC_AVX_SSE_psubw,
+  /* 130 */
   ORC_AVX_SSE_psubd,
   ORC_AVX_SSE_psubq,
-  /* 130 */
   ORC_AVX_SSE_paddb,
   ORC_AVX_SSE_paddw,
   ORC_AVX_SSE_paddd,
@@ -177,9 +179,9 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_SSE_movdqa_load,
   ORC_AVX_SSE_pshufd,
   ORC_AVX_movdqa_store,
+  /* 140 */
   ORC_AVX_SSE_movdqa_store,
   ORC_AVX_SSE_pslldq_imm,
-  /* 140 */
   ORC_AVX_movntdq_store,
   ORC_AVX_SSE_movntdq_store,
   ORC_AVX_SSE_pshuflw,
@@ -188,9 +190,9 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_movdqu_store,
   ORC_AVX_SSE_movdqu_store,
   ORC_AVX_SSE_pshufhw,
+  /* 150 */
   ORC_AVX_SSE_pshufb,
   ORC_AVX_SSE_psignb,
-  /* 150 */
   ORC_AVX_SSE_psignw,
   ORC_AVX_SSE_psignd,
   ORC_AVX_SSE_pabsb,
@@ -199,9 +201,9 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_SSE_pextrb,
   ORC_AVX_SSE_pextrw_mem,
   ORC_AVX_SSE_pinsrb,
+  /* 160 */
   ORC_AVX_SSE_pmovsxbw,
   ORC_AVX_SSE_pinsrd,
-  /* 160 */
   ORC_AVX_SSE_pmovsxwd,
   ORC_AVX_SSE_pmovsxdq,
   ORC_AVX_SSE_pmuldq,
@@ -210,9 +212,9 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_SSE_packusdw,
   ORC_AVX_SSE_pmovzxbw,
   ORC_AVX_SSE_pmovzxwd,
+  /* 170 */
   ORC_AVX_SSE_pmovzxdq,
   ORC_AVX_SSE_pminsb,
-  /* 170 */
   ORC_AVX_SSE_pminsd,
   ORC_AVX_SSE_pminuw,
   ORC_AVX_SSE_pminud,
@@ -221,10 +223,10 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_SSE_pmaxuw,
   ORC_AVX_SSE_pmaxud,
   ORC_AVX_SSE_pmulld,
+  /* 180 */
   ORC_AVX_SSE_pcmpgtq,
   /* AVX2 only */
   ORC_AVX_vpermq,
-  /* 180 */
   ORC_AVX_vpblendd,
   ORC_AVX_vpbroadcastd,
   ORC_AVX_vpbroadcastq,
@@ -233,9 +235,9 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_punpcklbw,
   ORC_AVX_punpcklwd,
   ORC_AVX_punpckldq,
+  /* 190 */
   ORC_AVX_packsswb,
   ORC_AVX_pcmpgtb,
-  /* 190 */
   ORC_AVX_pcmpgtw,
   ORC_AVX_pcmpgtd,
   ORC_AVX_packuswb,
@@ -244,9 +246,9 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_punpckhdq,
   ORC_AVX_packssdw,
   ORC_AVX_psrlw_imm,
+  /* 200 */
   ORC_AVX_psraw_imm,
   ORC_AVX_psllw_imm,
-  /* 200 */
   ORC_AVX_psrld_imm,
   ORC_AVX_psrad_imm,
   ORC_AVX_pslld_imm,
@@ -255,9 +257,9 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_pcmpeqb,
   ORC_AVX_pcmpeqw,
   ORC_AVX_pcmpeqd,
+  /* 210 */
   ORC_AVX_psrlw,
   ORC_AVX_psrld,
-  /* 210 */
   ORC_AVX_psrlq,
   ORC_AVX_paddq,
   ORC_AVX_pmullw,
@@ -266,9 +268,9 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_pminub,
   ORC_AVX_pand,
   ORC_AVX_paddusb,
+  /* 220 */
   ORC_AVX_paddusw,
   ORC_AVX_pmaxub,
-  /* 220 */
   ORC_AVX_pandn,
   ORC_AVX_pavgb,
   ORC_AVX_psraw,
@@ -277,9 +279,9 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_pmulhuw,
   ORC_AVX_pmulhw,
   ORC_AVX_psubsb,
+  /* 230 */
   ORC_AVX_psubsw,
   ORC_AVX_pminsw,
-  /* 230 */
   ORC_AVX_por,
   ORC_AVX_paddsb,
   ORC_AVX_paddsw,
@@ -288,9 +290,9 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_psllw,
   ORC_AVX_pslld,
   ORC_AVX_psllq,
+  /* 240 */
   ORC_AVX_pmuludq,
   ORC_AVX_pmaddwd,
-  /* 240 */
   ORC_AVX_psadbw,
   ORC_AVX_psubb,
   ORC_AVX_psubw,
@@ -299,9 +301,9 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_paddb,
   ORC_AVX_paddw,
   ORC_AVX_paddd,
+  /* 250 */
   ORC_AVX_punpcklqdq,
   ORC_AVX_punpckhqdq,
-  /* 250 */
   ORC_AVX_pshufd,
   ORC_AVX_psrldq_imm,
   ORC_AVX_pslldq_imm,
@@ -310,9 +312,9 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_pshufb,
   ORC_AVX_psignb,
   ORC_AVX_psignw,
+  /* 260 */
   ORC_AVX_psignd,
   ORC_AVX_pabsb,
-  /* 260 */
   ORC_AVX_pabsw,
   ORC_AVX_pabsd,
   ORC_AVX_pmovsxbw,
@@ -321,9 +323,9 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_pmovsxwd,
   ORC_AVX_pmovsxwq,
   ORC_AVX_pmovsxdq,
+  /* 270 */
   ORC_AVX_pmuldq,
   ORC_AVX_pcmpeqq,
-  /* 270 */
   ORC_AVX_pmovzxbw,
   ORC_AVX_pmovzxbd,
   ORC_AVX_pmovzxbq,
@@ -332,9 +334,9 @@ typedef enum _OrcAVXInsnOpcodeIdx {
   ORC_AVX_pmovzxdq,
   ORC_AVX_pminsb,
   ORC_AVX_pminsd,
+  /* 280 */
   ORC_AVX_pminuw,
   ORC_AVX_pminud,
-  /* 280 */
   ORC_AVX_pmaxsb,
   ORC_AVX_pmaxsd,
   ORC_AVX_pmaxuw,
@@ -658,7 +660,7 @@ ORC_API void orc_vex_emit_cpuinsn_load_memindex (OrcCompiler *const p,
 #define orc_avx_sse_emit_pinsrd_register(p, imm, s1, s2, d) \
   orc_vex_emit_cpuinsn_imm (p, ORC_AVX_SSE_pinsrd, 4, imm, s1, s2, d)
 
-
+#define orc_avx_sse_emit_movq_load_register(p, s1, d) orc_vex_emit_cpuinsn_size (p, ORC_AVX_SSE_movq_rm_r, 8, s1, 0, 0, d)
 #endif
 
 ORC_END_DECLS
