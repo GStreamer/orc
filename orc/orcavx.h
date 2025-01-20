@@ -310,7 +310,7 @@ ORC_API void orc_avx_restore_mxcsr (OrcCompiler *compiler);
 
 #define orc_avx_sse_emit_pextrb_memoffset(p,imm,offset,a,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_X86_pextrb, 8, imm, offset, a, b, ORC_X86_AVX_VEX128_PREFIX)
 #define orc_avx_sse_emit_pextrw_memoffset(p,imm,offset,a,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_X86_pextrw, 16, imm, offset, a, b, ORC_X86_AVX_VEX128_PREFIX)
-#define orc_avx_sse_emit_movd_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_X86_movd_store, 16, 0, a, offset, b, ORC_X86_AVX_VEX128_PREFIX)
+#define orc_avx_sse_emit_movd_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_X86_movd_store, 4, 0, a, offset, b, ORC_X86_AVX_VEX128_PREFIX)
 #define orc_avx_sse_emit_movq_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_X86_movq_sse_store, 16, 0, a, offset, b, ORC_X86_AVX_VEX128_PREFIX)
 #define orc_avx_sse_emit_movdqa_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_X86_movdqa_store, 16, 0, a, offset, b, ORC_X86_AVX_VEX128_PREFIX)
 #define orc_avx_emit_movdqa_store_memoffset(p,a,offset,b) orc_vex_emit_cpuinsn_store_memoffset(p, ORC_X86_movdqa_store, 32, 0, a, offset, b, ORC_X86_AVX_VEX256_PREFIX)

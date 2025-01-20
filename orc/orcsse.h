@@ -205,7 +205,7 @@ ORC_API void orc_sse_load_constant (OrcCompiler *compiler, int reg, int size,
 #define orc_sse_emit_movhps_load_memoffset(p,offset,a,b) orc_x86_emit_cpuinsn_load_memoffset(p, ORC_X86_movhps_load, 4, 0, offset, a, b)
 #define orc_sse_emit_pextrb_memoffset(p,imm,offset,a,b) orc_x86_emit_cpuinsn_store_memoffset(p, ORC_X86_pextrb, 8, imm, offset, a,b)
 #define orc_sse_emit_pextrw_memoffset(p,imm,offset,a,b) orc_x86_emit_cpuinsn_store_memoffset(p, ORC_X86_pextrw, 16, imm, offset, a, b)
-#define orc_sse_emit_movd_store_memoffset(p,a,offset,b) orc_x86_emit_cpuinsn_store_memoffset(p, ORC_X86_movd_store, 16, 0, a, offset, b)
+#define orc_sse_emit_movd_store_memoffset(p,a,offset,b) orc_x86_emit_cpuinsn_store_memoffset(p, ORC_X86_movd_store, 4, 0, a, offset, b)
 #define orc_sse_emit_movq_store_memoffset(p,a,offset,b) orc_x86_emit_cpuinsn_store_memoffset(p, ORC_X86_movq_sse_store, 16, 0, a, offset, b)
 #define orc_sse_emit_movdqa_store_memoffset(p,a,offset,b) orc_x86_emit_cpuinsn_store_memoffset(p, ORC_X86_movdqa_store, 16, 0, a, offset, b)
 #define orc_sse_emit_movdqu_store_memoffset(p,a,offset,b) orc_x86_emit_cpuinsn_store_memoffset(p, ORC_X86_movdqu_store, 16, 0, a, offset, b)
@@ -218,7 +218,7 @@ ORC_API void orc_sse_load_constant (OrcCompiler *compiler, int reg, int size,
 #define orc_sse_emit_movhps_load_memindex(p,offset,a,a_index,shift,b) orc_x86_emit_cpuinsn_load_memindex(p, ORC_X86_movhps_load, 4, 0, offset, a, a_index, shift, b)
 
 #define orc_sse_emit_pextrw_memindex(p,imm,a,offset,b,b_index,shift) orc_x86_emit_cpuinsn_store_memindex(p, ORC_X86_pextrw, imm, a, offset, b, b_index, shift)
-#define orc_sse_emit_movd_store_memindex(p,a,offset,b,b_index,shift) orc_x86_emit_cpuinsn_store_memindex(p, ORC_X86_movd_store, 0, a, offset, b, b_index, shift)
+#define orc_sse_emit_movd_store_memindex(p,a,offset,b,b_index,shift) orc_x86_emit_cpuinsn_store_memindex(p, ORC_X86_movd_store, 4, a, offset, b, b_index, shift)
 #define orc_sse_emit_movq_store_memindex(p,a,offset,b,b_index,shift) orc_x86_emit_cpuinsn_store_memindex(p, ORC_X86_movq_sse_store, 0, a, offset, b, b_index, shift)
 #define orc_sse_emit_movdqa_store_memindex(p,a,offset,b,b_index,shift) orc_x86_emit_cpuinsn_store_memindex(p, ORC_X86_movdqa_store, 0, a, offset, b, b_index, shift)
 #define orc_sse_emit_movdqu_store_memindex(p,a,offset,b,b_index,shift) orc_x86_emit_cpuinsn_store_memindex(p, ORC_X86_movdqu_store, 0, a, offset, b, b_index, shift)
@@ -226,10 +226,10 @@ ORC_API void orc_sse_load_constant (OrcCompiler *compiler, int reg, int size,
 
 #define orc_sse_emit_pinsrw_register(p,imm,a,b) orc_x86_emit_cpuinsn_imm(p, ORC_X86_pinsrw, imm, a, b)
 #define orc_sse_emit_movd_load_register(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_movd_load, 4, a, b)
-#define orc_sse_emit_movq_load_register(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_movq_sse_load, 4, a, b)
+#define orc_sse_emit_movq_load_register(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_movq_sse_load, 8, a, b)
 #define orc_sse_emit_pextrw_register(p,imm,a,b) orc_x86_emit_cpuinsn_imm(p, ORC_X86_pextrw, imm, a, b)
 #define orc_sse_emit_movd_store_register(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_movd_store, 4, a, b)
-#define orc_sse_emit_movq_store_register(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_movq_sse_store, 4, a, b)
+#define orc_sse_emit_movq_store_register(p,a,b) orc_x86_emit_cpuinsn_size(p, ORC_X86_movq_sse_store, 8, a, b)
 
 #define orc_sse_emit_blendvpd(p, s1, d) orc_x86_emit_cpuinsn_size (p, ORC_X86_blendvpd_sse, 1, s1, d)
 
