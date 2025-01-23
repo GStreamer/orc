@@ -54,6 +54,8 @@ default:
     when: 'always'
     paths:
       - "build/meson-logs/*txt"
+      - "build/*.bin"
+      - "build/*.S"
 
 alpine 3.20 ppc64le:
   stage: build
@@ -72,6 +74,8 @@ alpine 3.20 ppc64le:
     when: 'always'
     paths:
       - "build/meson-logs/*txt"
+      - "build/*.bin"
+      - "build/*.S"
 
 debian sid:
   extends: '.debian'
@@ -118,6 +122,8 @@ debian bookworm arm64:
     when: 'always'
     paths:
       - "build/meson-logs/*txt"
+      - "build/*.bin"
+      - "build/*.S"
   variables:
     # Make sure any failure in PowerShell scripts is fatal
     # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-6
@@ -209,6 +215,8 @@ macos arm64:
     when: 'always'
     paths:
       - "build/meson-logs/*txt"
+      - "build/*.bin"
+      - "build/*.S"
   before_script:
     - pip3 install --upgrade pip
     - export PATH=${PATH}:/Users/gst-ci/Library/Python/3.9/bin
@@ -235,6 +243,8 @@ macos x86_64:
     when: 'always'
     paths:
       - "build/meson-logs/*txt"
+      - "build/*.bin"
+      - "build/*.S"
   before_script:
     - pip3 install --upgrade pip
     # Need to install certificates for python
@@ -261,6 +271,8 @@ ios cross-arm64:
     when: 'always'
     paths:
       - "build/meson-logs/*txt"
+      - "build/*.bin"
+      - "build/*.S"
   before_script:
     - pip3 install --upgrade pip
     # Need to install certificates for python
@@ -305,6 +317,8 @@ ios cross-arm64:
     when: 'always'
     paths:
       - "build/meson-logs/*.txt"
+      - "build/*.bin"
+      - "build/*.S"
   variables:
     ANDROID_SDK: '/android/sdk'
     ANDROID_NDK: '/android/ndk'
