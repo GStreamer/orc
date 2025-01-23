@@ -429,7 +429,7 @@ test_opcode_src_2d (OrcStaticOpcode *opcode)
     flags = ORC_TEST_FLAGS_FLOAT;
   }
 
-  sprintf(s, "test_s_%s", opcode->name);
+  sprintf(s, "test_s_2d_%s", opcode->name);
   orc_program_set_name (p, s);
   orc_program_set_2d (p);
 
@@ -491,7 +491,7 @@ test_opcode_src_const_n (OrcStaticOpcode *opcode)
     flags = ORC_TEST_FLAGS_FLOAT;
   }
 
-  sprintf(s, "test_s_%s", opcode->name);
+  sprintf(s, "test_s_const_n_%s", opcode->name);
   orc_program_set_name (p, s);
   orc_program_set_constant_n (p, 8);
 
@@ -553,7 +553,7 @@ test_opcode_src_const_n_2d (OrcStaticOpcode *opcode)
     flags = ORC_TEST_FLAGS_FLOAT;
   }
 
-  sprintf(s, "test_s_%s", opcode->name);
+  sprintf(s, "test_s_const_n_2d_%s", opcode->name);
   orc_program_set_name (p, s);
   orc_program_set_2d (p);
   orc_program_set_constant_n (p, 8);
