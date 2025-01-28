@@ -267,7 +267,7 @@ orc_powerpc_emit_loop (OrcCompiler* compiler, int update)
 
     ORC_ASM_CODE(compiler,"# %d: %s\n", j, insn->opcode->name);
 
-    compiler->min_temp_reg = ORC_VEC_REG_BASE;
+    orc_compiler_reset_temp_regs (compiler, ORC_VEC_REG_BASE);
 
     compiler->insn_shift = compiler->loop_shift;
     if (insn->flags & ORC_INSTRUCTION_FLAG_X2) {
