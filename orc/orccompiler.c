@@ -1011,6 +1011,12 @@ orc_compiler_get_temp_reg (OrcCompiler *compiler)
   return 0;
 }
 
+void
+orc_compiler_reset_temp_regs (OrcCompiler *compiler, int start)
+{
+  compiler->min_temp_reg = start;
+}
+
 static void
 orc_compiler_rewrite_vars (OrcCompiler *compiler)
 {
