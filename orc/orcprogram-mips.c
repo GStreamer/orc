@@ -459,7 +459,7 @@ orc_mips_emit_loop (OrcCompiler *compiler, int unroll)
 
       orc_compiler_append_code(compiler,"/* %d: %s */\n", i, insn->opcode->name);
 
-      compiler->min_temp_reg = ORC_MIPS_T3;
+      orc_compiler_reset_temp_regs (compiler, ORC_MIPS_T3);
 
       rule = insn->rule;
       if (rule && rule->emit) {
