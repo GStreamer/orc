@@ -135,6 +135,7 @@ struct _OrcCompiler {
   void *output_insns;
   int n_output_insns;
   int n_output_insns_alloc;
+  int temp_regs[ORC_N_REGS];
 };
 
 

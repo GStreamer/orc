@@ -391,6 +391,10 @@ orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTar
     compiler->valid_regs[i] = 1;
   }
 
+  /* Reset temp registers */
+  for (i = 0; i < ORC_N_REGS; i++)
+    compiler->temp_regs[i] = 0;
+
   orc_compiler_check_sizes (compiler);
   if (compiler->error) goto error;
 
@@ -970,9 +974,15 @@ orc_compiler_get_temp_reg (OrcCompiler *compiler)
 {
   int j;
 
+  ORC_DEBUG("at insn %d %s", compiler->insn_index,
+      compiler->insns[compiler->insn_index].opcode->name);
+
+  /* Mark old temp registers as unused */
   for(j=0;j<ORC_N_REGS;j++){
-    compiler->alloc_regs[j] = 0;
+    compiler->alloc_regs[j] = compiler->temp_regs[j];
   }
+
+  /* Mark variables using a temp register as used */
   for(j=0;j<ORC_N_COMPILER_VARIABLES;j++){
     if (!compiler->vars[j].alloc) continue;
 
@@ -987,24 +997,25 @@ orc_compiler_get_temp_reg (OrcCompiler *compiler)
       compiler->alloc_regs[compiler->vars[j].alloc] = 1;
     }
   }
+
+  /* Mark constants using a temp register as used */
   for(j=0;j<compiler->n_constants;j++){
     if (compiler->constants[j].alloc_reg) {
       compiler->alloc_regs[compiler->constants[j].alloc_reg] = 1;
     }
   }
 
-  ORC_DEBUG("at insn %d %s", compiler->insn_index,
-      compiler->insns[compiler->insn_index].opcode->name);
-
-  // Use ORC_N_REGS to ensure forward proofed iteration
   for (j = compiler->min_temp_reg; j < ORC_N_REGS; j++) {
     if (compiler->valid_regs[j] && !compiler->alloc_regs[j]) {
-      compiler->min_temp_reg = j+1;
-      if (compiler->max_used_temp_reg < j) compiler->max_used_temp_reg = j;
+      ORC_DEBUG("Available register %d found", j);
+      compiler->temp_regs[j] = 1;
       return j;
     }
   }
 
+  ORC_ERROR("No temporary register available at insn %d %s",
+      compiler->insn_index,
+      compiler->insns[compiler->insn_index].opcode->name);
   orc_compiler_error (compiler, "no temporary register available");
   compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
 
@@ -1014,6 +1025,10 @@ orc_compiler_get_temp_reg (OrcCompiler *compiler)
 void
 orc_compiler_reset_temp_regs (OrcCompiler *compiler, int start)
 {
+  int i;
+
+  for (i = compiler->min_temp_reg; i < ORC_N_REGS; i++)
+    compiler->temp_regs[i] = 0;
   compiler->min_temp_reg = start;
 }
 
@@ -1473,9 +1488,12 @@ orc_compiler_get_constant_reg (OrcCompiler *compiler)
 {
   int j;
 
+  /* Mark temp registers as used */
   for(j=0;j<ORC_N_REGS;j++){
-    compiler->alloc_regs[j] = 0;
+    compiler->alloc_regs[j] = compiler->temp_regs[j];
   }
+
+  /* Mark variables using a temp register as used */
   for(j=0;j<ORC_N_COMPILER_VARIABLES;j++){
     if (!compiler->vars[j].alloc) continue;
 
@@ -1489,24 +1507,23 @@ orc_compiler_get_constant_reg (OrcCompiler *compiler)
       compiler->alloc_regs[compiler->vars[j].alloc] = 1;
     }
   }
+
+  /* Mark constants using a temp register as used */
   for(j=0;j<compiler->n_constants;j++){
     if (compiler->constants[j].alloc_reg) {
       compiler->alloc_regs[compiler->constants[j].alloc_reg] = 1;
     }
   }
-  if (compiler->max_used_temp_reg < compiler->min_temp_reg)
-    compiler->max_used_temp_reg = compiler->min_temp_reg;
 
-  for(j=ORC_VEC_REG_BASE;j<=compiler->max_used_temp_reg;j++) {
-    compiler->alloc_regs[j] = 1;
-  }
-
-  for(j=compiler->max_used_temp_reg;j<ORC_VEC_REG_BASE+32;j++){
+  for (j = compiler->min_temp_reg; j < ORC_N_REGS; j++) {
     if (compiler->valid_regs[j] && !compiler->alloc_regs[j]) {
+      compiler->temp_regs[j] = 1;
+      ORC_DEBUG("Available register %d found", j);
       return j;
     }
   }
 
+  ORC_WARNING("No temporary register available for a constant");
   return 0;
 }
 
