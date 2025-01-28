@@ -241,6 +241,7 @@ sse_rule_loadupib (OrcCompiler *compiler, void *user, OrcInstruction *insn)
 
   orc_sse_emit_pavgb (compiler, dest->alloc, tmp);
   orc_sse_emit_punpcklbw (compiler, tmp, dest->alloc);
+  orc_compiler_release_temp_reg (compiler, tmp);
 
   src->update_type = 1;
 }
@@ -466,6 +467,7 @@ sse_rule_ldresnearl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
       src->ptr_register, 2);
   orc_x86_emit_and_imm_reg (compiler, 4, 0xffff, src->ptr_offset);
 
+  orc_compiler_release_temp_reg (compiler, tmp);
   src->update_type = 0;
 }
 
@@ -591,10 +593,14 @@ sse_rule_ldreslinl (OrcCompiler *compiler, void *user, OrcInstruction *insn)
       orc_x86_emit_add_reg_reg_shift (compiler, 8, compiler->gp_tmpreg,
           src->ptr_register, 2);
       orc_x86_emit_and_imm_reg (compiler, 4, 0xffff, src->ptr_offset);
+      orc_compiler_release_temp_reg (compiler, tmp3);
+      orc_compiler_release_temp_reg (compiler, tmp4);
     }
   }
 
   src->update_type = 0;
+  orc_compiler_release_temp_reg (compiler, tmp);
+  orc_compiler_release_temp_reg (compiler, tmp2);
 }
 
 static void
@@ -807,6 +813,7 @@ sse_rule_absb_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_pcmpgtb (p, src, tmp);
   orc_sse_emit_pxor (p, tmp, dest);
   orc_sse_emit_psubb (p, tmp, dest);
+  orc_compiler_release_temp_reg (p, tmp);
 }
 
 static void
@@ -826,7 +833,7 @@ sse_rule_absw_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_psraw_imm (p, 15, tmp);
   orc_sse_emit_pxor (p, tmp, dest);
   orc_sse_emit_psubw (p, tmp, dest);
-
+  orc_compiler_release_temp_reg (p, tmp);
 }
 
 static void
@@ -846,7 +853,7 @@ sse_rule_absl_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_psrad_imm (p, 31, tmp);
   orc_sse_emit_pxor (p, tmp, dest);
   orc_sse_emit_psubd (p, tmp, dest);
-
+  orc_compiler_release_temp_reg (p, tmp);
 }
 
 static void
@@ -883,6 +890,7 @@ sse_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
         p->exec_reg, tmp, FALSE);
 
     orc_sse_emit_cpuinsn_sse (p, opcodes[type], tmp, dest);
+    orc_compiler_release_temp_reg (p, tmp);
   } else {
     orc_compiler_error (p, "code generation rule for %s only works with "
         "constant or parameter shifts", insn->opcode->name);
@@ -938,6 +946,7 @@ sse_rule_shrsb (OrcCompiler *p, void *user, OrcInstruction *insn)
         "constant shifts", insn->opcode->name);
     p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
+  orc_compiler_release_temp_reg (p, tmp);
 }
 
 static void
@@ -985,6 +994,7 @@ sse_rule_shrsq (OrcCompiler *p, void *user, OrcInstruction *insn)
         "constant shifts", insn->opcode->name);
     p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
+  orc_compiler_release_temp_reg (p, tmp);
 }
 
 static void
@@ -1013,6 +1023,7 @@ sse_rule_convubw (OrcCompiler *p, void *user, OrcInstruction *insn)
   }
   orc_sse_emit_pxor (p, tmp, tmp);
   orc_sse_emit_punpcklbw (p, tmp, dest);
+  orc_compiler_release_temp_reg (p, tmp);
 }
 
 static void
@@ -1054,6 +1065,7 @@ sse_rule_convuuswb (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_psllw_imm (p, 1, tmp);
   orc_sse_emit_pxor (p, tmp, dest);
   orc_sse_emit_packuswb (p, dest, dest);
+  orc_compiler_release_temp_reg (p, tmp);
 }
 
 static void
@@ -1106,6 +1118,7 @@ sse_rule_convuwl (OrcCompiler *p, void *user, OrcInstruction *insn)
   }
   orc_sse_emit_pxor (p, tmp, tmp);
   orc_sse_emit_punpcklwd (p, tmp, dest);
+  orc_compiler_release_temp_reg (p, tmp);
 }
 
 static void
@@ -1163,6 +1176,7 @@ sse_rule_convslq (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_movdqa (p, src, tmp);
   orc_sse_emit_psrad_imm (p, 31, tmp);
   orc_sse_emit_punpckldq (p, tmp, dest);
+  orc_compiler_release_temp_reg (p, tmp);
 }
 
 static void
@@ -1294,6 +1308,11 @@ sse_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_pxor (p, l, a);
 
   orc_sse_emit_movdqa (p, a, dest);
+  orc_compiler_release_temp_reg (p, a);
+  orc_compiler_release_temp_reg (p, j);
+  orc_compiler_release_temp_reg (p, j2);
+  orc_compiler_release_temp_reg (p, l);
+  orc_compiler_release_temp_reg (p, divisor);
 }
 #else
 static void
@@ -1354,6 +1373,7 @@ sse_rule_mulsbw (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_punpcklbw (p, dest, dest);
   orc_sse_emit_psraw_imm (p, 8, dest);
   orc_sse_emit_pmullw (p, tmp, dest);
+  orc_compiler_release_temp_reg (p, tmp);
 }
 
 static void
@@ -1373,6 +1393,7 @@ sse_rule_mulubw (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_punpcklbw (p, dest, dest);
   orc_sse_emit_psrlw_imm (p, 8, dest);
   orc_sse_emit_pmullw (p, tmp, dest);
+  orc_compiler_release_temp_reg (p, tmp);
 }
 
 static void
@@ -1401,6 +1422,8 @@ sse_rule_mullb (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_psllw_imm (p, 8, tmp);
 
   orc_sse_emit_por (p, tmp, dest);
+  orc_compiler_release_temp_reg (p, tmp);
+  orc_compiler_release_temp_reg (p, tmp2);
 }
 
 static void
@@ -1434,6 +1457,8 @@ sse_rule_mulhsb (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_psrlw_imm (p, 8, tmp2);
   orc_sse_emit_psllw_imm (p, 8, tmp2);
   orc_sse_emit_por (p, tmp2, dest);
+  orc_compiler_release_temp_reg (p, tmp);
+  orc_compiler_release_temp_reg (p, tmp2);
 }
 
 static void
@@ -1467,6 +1492,8 @@ sse_rule_mulhub (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_psrlw_imm (p, 8, tmp2);
   orc_sse_emit_psllw_imm (p, 8, tmp2);
   orc_sse_emit_por (p, tmp2, dest);
+  orc_compiler_release_temp_reg (p, tmp);
+  orc_compiler_release_temp_reg (p, tmp2);
 }
 
 static void
@@ -1485,6 +1512,7 @@ sse_rule_mulswl (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_pmulhw (p, src1, tmp);
   orc_sse_emit_pmullw (p, src1, dest);
   orc_sse_emit_punpcklwd (p, tmp, dest);
+  orc_compiler_release_temp_reg (p, tmp);
 }
 
 static void
@@ -1503,6 +1531,7 @@ sse_rule_muluwl (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_pmulhuw (p, src1, tmp);
   orc_sse_emit_pmullw (p, src1, dest);
   orc_sse_emit_punpcklwd (p, tmp, dest);
+  orc_compiler_release_temp_reg (p, tmp);
 }
 
 static void
@@ -1548,6 +1577,8 @@ sse_rule_mulhsl (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,3,1), dest, dest);
   orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,3,1), tmp2, tmp2);
   orc_sse_emit_punpckldq (p, tmp2, dest);
+  orc_compiler_release_temp_reg (p, tmp);
+  orc_compiler_release_temp_reg (p, tmp2);
 }
 
 static void
@@ -1600,6 +1631,8 @@ sse_rule_mulhul (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,3,1), dest, dest);
   orc_sse_emit_pshufd (p, ORC_SSE_SHUF(2,0,3,1), tmp2, tmp2);
   orc_sse_emit_punpckldq (p, tmp2, dest);
+  orc_compiler_release_temp_reg (p, tmp);
+  orc_compiler_release_temp_reg (p, tmp2);
 }
 
 static void
@@ -1618,6 +1651,7 @@ sse_rule_mulslq (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_punpckldq (p, dest, dest);
   orc_sse_emit_punpckldq (p, tmp, tmp);
   orc_sse_emit_pmuldq (p, tmp, dest);
+  orc_compiler_release_temp_reg (p, tmp);
 }
 
 static void
@@ -1668,6 +1702,7 @@ sse_rule_mululq (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_punpckldq (p, dest, dest);
   orc_sse_emit_punpckldq (p, tmp, tmp);
   orc_sse_emit_pmuludq (p, tmp, dest);
+  orc_compiler_release_temp_reg (p, tmp);
 }
 
 static void
@@ -1910,6 +1945,7 @@ sse_rule_swapl (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_psllw_imm (p, 8, tmp);
   orc_sse_emit_psrlw_imm (p, 8, dest);
   orc_sse_emit_por (p, tmp, dest);
+  orc_compiler_release_temp_reg (p, tmp);
 }
 
 static void
@@ -1952,6 +1988,7 @@ sse_rule_swapq (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_psllw_imm (p, 8, tmp);
   orc_sse_emit_psrlw_imm (p, 8, dest);
   orc_sse_emit_por (p, tmp, dest);
+  orc_compiler_release_temp_reg (p, tmp);
 }
 
 static void
@@ -2264,6 +2301,7 @@ sse_rule_maxsb_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_pand (p, tmp, dest);
   orc_sse_emit_pandn (p, src1, tmp);
   orc_sse_emit_por (p, tmp, dest);
+  orc_compiler_release_temp_reg (p, tmp);
 }
 
 static void
@@ -2283,6 +2321,7 @@ sse_rule_minsb_slow (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_pand (p, tmp, dest);
   orc_sse_emit_pandn (p, src1, tmp);
   orc_sse_emit_por (p, tmp, dest);
+  orc_compiler_release_temp_reg (p, tmp);
 }
 
 static void
