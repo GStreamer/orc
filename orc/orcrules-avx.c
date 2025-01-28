@@ -2149,18 +2149,19 @@ avx_rule_swapw_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   const int src = p->vars[insn->src_args[0]].alloc;
   const int dest = p->vars[insn->dest_args[0]].alloc;
-  const int tmp = orc_compiler_try_get_constant_long (p, 0x02030001, 0x06070405,
-      0x0a0b0809, 0x0e0f0c0d);
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
-  if (tmp != ORC_REG_INVALID) {
-    if (size >= 32) {
-      orc_avx_emit_pshufb (p, src, tmp, dest);
-    } else {
-      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
-    }
-  } else {
+  if (size >= 32) {
     avx_rule_swapw (p, user, insn);
+  } else {
+    const int tmp = orc_compiler_try_get_constant_long (p, 0x02030001,
+        0x06070405, 0x0a0b0809, 0x0e0f0c0d);
+    if (tmp != ORC_REG_INVALID) {
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src),
+          ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+    } else {
+      avx_rule_swapw (p, user, insn);
+    }
   }
 }
 
@@ -2169,18 +2170,19 @@ avx_rule_swapl_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   const int src = p->vars[insn->src_args[0]].alloc;
   const int dest = p->vars[insn->dest_args[0]].alloc;
-  const int tmp = orc_compiler_try_get_constant_long (p, 0x00010203, 0x04050607,
-      0x08090a0b, 0x0c0d0e0f);
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
-  if (tmp != ORC_REG_INVALID) {
-    if (size >= 32) {
-      orc_avx_emit_pshufb (p, src, tmp, dest);
-    } else {
-      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
-    }
-  } else {
+  if (size >= 32) {
     avx_rule_swapl (p, user, insn);
+  } else {
+    const int tmp = orc_compiler_try_get_constant_long (p, 0x00010203,
+      0x04050607, 0x08090a0b, 0x0c0d0e0f);
+    if (tmp != ORC_REG_INVALID) {
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp),
+          ORC_AVX_SSE_REG (dest));
+    } else {
+      avx_rule_swapl (p, user, insn);
+    }
   }
 }
 
@@ -2189,18 +2191,19 @@ avx_rule_swapwl_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   const int src = p->vars[insn->src_args[0]].alloc;
   const int dest = p->vars[insn->dest_args[0]].alloc;
-  const int tmp = orc_compiler_try_get_constant_long (p, 0x01000302, 0x05040706,
-      0x09080b0a, 0x0d0c0f0e);
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
-  if (tmp != ORC_REG_INVALID) {
-    if (size >= 32) {
-      orc_avx_emit_pshufb (p, src, tmp, dest);
-    } else {
-      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
-    }
-  } else {
+  if (size >= 32) {
     avx_rule_swapwl (p, user, insn);
+  } else {
+    const int tmp = orc_compiler_try_get_constant_long (p, 0x01000302,
+        0x05040706, 0x09080b0a, 0x0d0c0f0e);
+    if (tmp != ORC_REG_INVALID) {
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp),
+          ORC_AVX_SSE_REG (dest));
+    } else {
+      avx_rule_swapwl (p, user, insn);
+    }
   }
 }
 
@@ -2209,18 +2212,19 @@ avx_rule_swapq_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   const int src = p->vars[insn->src_args[0]].alloc;
   const int dest = p->vars[insn->dest_args[0]].alloc;
-  const int tmp = orc_compiler_try_get_constant_long (p, 0x04050607, 0x00010203,
-      0x0c0d0e0f, 0x08090a0b);
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
-  if (tmp != ORC_REG_INVALID) {
-    if (size >= 32) {
-      orc_avx_emit_pshufb (p, src, tmp, dest);
-    } else {
-      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
-    }
-  } else {
+  if (size >= 32) {
     avx_rule_swapq (p, user, insn);
+  } else {
+    const int tmp = orc_compiler_try_get_constant_long (p, 0x04050607,
+        0x00010203, 0x0c0d0e0f, 0x08090a0b);
+    if (tmp != ORC_REG_INVALID) {
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp),
+          ORC_AVX_SSE_REG (dest));
+    } else {
+      avx_rule_swapq (p, user, insn);
+    }
   }
 }
 
@@ -2230,22 +2234,23 @@ avx_rule_splitlw_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int src = p->vars[insn->src_args[0]].alloc;
   const int dest1 = p->vars[insn->dest_args[0]].alloc;
   const int dest2 = p->vars[insn->dest_args[1]].alloc;
-  const int tmp1 = orc_compiler_try_get_constant_long (p, 0x07060302,
-      0x0f0e0b0a, 0x07060302, 0x0f0e0b0a);
-  const int tmp2 = orc_compiler_try_get_constant_long (p, 0x05040100,
-      0x0d0c0908, 0x05040100, 0x0d0c0908);
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
-  if (tmp1 != ORC_REG_INVALID && tmp2 != ORC_REG_INVALID) {
-    if (size >= 32) {
-      orc_avx_emit_pshufb (p, src, tmp1, dest1);
-      orc_avx_emit_pshufb (p, src, tmp2, dest2);
-    } else {
-      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp1), ORC_AVX_SSE_REG (dest1));
-      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (dest2));
-    }
-  } else {
+  if (size >= 32) {
     avx_rule_splitlw (p, user, insn);
+  } else {
+    const int tmp1 = orc_compiler_try_get_constant_long (p, 0x07060302,
+        0x0f0e0b0a, 0x07060302, 0x0f0e0b0a);
+    const int tmp2 = orc_compiler_try_get_constant_long (p, 0x05040100,
+        0x0d0c0908, 0x05040100, 0x0d0c0908);
+    if (tmp1 != ORC_REG_INVALID && tmp2 != ORC_REG_INVALID) {
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp1),
+          ORC_AVX_SSE_REG (dest1));
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp2),
+          ORC_AVX_SSE_REG (dest2));
+    } else {
+      avx_rule_splitlw (p, user, insn);
+    }
   }
 }
 
@@ -2255,22 +2260,23 @@ avx_rule_splitwb_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int src = p->vars[insn->src_args[0]].alloc;
   const int dest1 = p->vars[insn->dest_args[0]].alloc;
   const int dest2 = p->vars[insn->dest_args[1]].alloc;
-  const int tmp1 = orc_compiler_try_get_constant_long (p, 0x07050301,
-      0x0f0d0b09, 0x07050301, 0x0f0d0b09);
-  const int tmp2 = orc_compiler_try_get_constant_long (p, 0x06040200,
-      0x0e0c0a08, 0x06040200, 0x0e0c0a08);
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
-  if (tmp1 != ORC_REG_INVALID && tmp2 != ORC_REG_INVALID) {
-    if (size >= 32) {
-      orc_avx_emit_pshufb (p, src, tmp1, dest1);
-      orc_avx_emit_pshufb (p, src, tmp2, dest2);
-    } else {
-      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp1), ORC_AVX_SSE_REG (dest1));
-      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (dest2));
-    }
-  } else {
+  if (size >= 32) {
     avx_rule_splitwb (p, user, insn);
+  } else {
+    const int tmp1 = orc_compiler_try_get_constant_long (p, 0x07050301,
+        0x0f0d0b09, 0x07050301, 0x0f0d0b09);
+    const int tmp2 = orc_compiler_try_get_constant_long (p, 0x06040200,
+        0x0e0c0a08, 0x06040200, 0x0e0c0a08);
+    if (tmp1 != ORC_REG_INVALID && tmp2 != ORC_REG_INVALID) {
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src),
+          ORC_AVX_SSE_REG (tmp1), ORC_AVX_SSE_REG (dest1));
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src),
+          ORC_AVX_SSE_REG (tmp2), ORC_AVX_SSE_REG (dest2));
+    } else {
+      avx_rule_splitwb (p, user, insn);
+    }
   }
 }
 
@@ -2279,18 +2285,19 @@ avx_rule_select0lw_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   const int src = p->vars[insn->src_args[0]].alloc;
   const int dest = p->vars[insn->dest_args[0]].alloc;
-  const int tmp = orc_compiler_try_get_constant_long (p, 0x05040100, 0x0d0c0908,
-      0x05040100, 0x0d0c0908);
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
-  if (tmp != ORC_REG_INVALID) {
-    if (size >= 32) {
-      orc_avx_emit_pshufb (p, src, tmp, dest);
-    } else {
-      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
-    }
-  } else {
+  if (size >= 32) {
     avx_rule_select0lw (p, user, insn);
+  } else {
+    const int tmp = orc_compiler_try_get_constant_long (p, 0x05040100,
+        0x0d0c0908, 0x05040100, 0x0d0c0908);
+    if (tmp != ORC_REG_INVALID) {
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src),
+          ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+    } else {
+      avx_rule_select0lw (p, user, insn);
+    }
   }
 }
 
@@ -2299,18 +2306,19 @@ avx_rule_select1lw_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   const int src = p->vars[insn->src_args[0]].alloc;
   const int dest = p->vars[insn->dest_args[0]].alloc;
-  const int tmp = orc_compiler_try_get_constant_long (p, 0x07060302, 0x0f0e0b0a,
-      0x07060302, 0x0f0e0b0a);
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
-  if (tmp != ORC_REG_INVALID) {
-    if (size >= 32) {
-      orc_avx_emit_pshufb (p, src, tmp, dest);
-    } else {
-      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
-    }
-  } else {
+  if (size >= 32) {
     avx_rule_select1lw (p, user, insn);
+  } else {
+    const int tmp = orc_compiler_try_get_constant_long (p, 0x07060302,
+        0x0f0e0b0a, 0x07060302, 0x0f0e0b0a);
+    if (tmp != ORC_REG_INVALID) {
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src),
+          ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+    } else {
+      avx_rule_select1lw (p, user, insn);
+    }
   }
 }
 
@@ -2319,18 +2327,19 @@ avx_rule_select0wb_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   const int src = p->vars[insn->src_args[0]].alloc;
   const int dest = p->vars[insn->dest_args[0]].alloc;
-  const int tmp = orc_compiler_try_get_constant_long (p, 0x06040200, 0x0e0c0a08,
-      0x06040200, 0x0e0c0a08);
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
-  if (tmp != ORC_REG_INVALID) {
-    if (size >= 32) {
-      orc_avx_emit_pshufb (p, src, tmp, dest);
-    } else {
-      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
-    }
-  } else {
+  if (size >= 32) {
     avx_rule_select0wb (p, user, insn);
+  } else {
+    const int tmp = orc_compiler_try_get_constant_long (p, 0x06040200,
+        0x0e0c0a08, 0x06040200, 0x0e0c0a08);
+    if (tmp != ORC_REG_INVALID) {
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src),
+          ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+    } else {
+      avx_rule_select0wb (p, user, insn);
+    }
   }
 }
 
@@ -2339,18 +2348,19 @@ avx_rule_select1wb_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
 {
   const int src = p->vars[insn->src_args[0]].alloc;
   const int dest = p->vars[insn->dest_args[0]].alloc;
-  const int tmp = orc_compiler_try_get_constant_long (p, 0x07050301, 0x0f0d0b09,
-      0x07050301, 0x0f0d0b09);
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
-  if (tmp != ORC_REG_INVALID) {
-    if (size >= 32) {
-      orc_avx_emit_pshufb (p, src, tmp, dest);
-    } else {
-      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
-    }
-  } else {
+  if (size >= 32) {
     avx_rule_select1wb (p, user, insn);
+  } else {
+    const int tmp = orc_compiler_try_get_constant_long (p, 0x07050301,
+        0x0f0d0b09, 0x07050301, 0x0f0d0b09);
+    if (tmp != ORC_REG_INVALID) {
+      orc_avx_sse_emit_pshufb (p, ORC_AVX_SSE_REG (src),
+          ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
+    } else {
+      avx_rule_select1wb (p, user, insn);
+    }
   }
 }
 
