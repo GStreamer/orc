@@ -242,7 +242,6 @@ orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
   int fd;
   int n;
   char *filename;
-  mode_t mask;
   int exec_prot = PROT_READ | PROT_EXEC;
 
   if (_orc_compiler_flag_debug)
@@ -255,9 +254,7 @@ orc_code_region_allocate_codemem_dual_map (OrcCodeRegion *region,
     return FALSE;
 
   sprintf(filename, "%s/orcexec.XXXXXX", dir);
-  mask = umask (0066);
   fd = mkstemp (filename);
-  umask (mask);
   if (fd == -1) {
     ORC_WARNING ("failed to create temp file '%s'. err=%i", filename, errno);
     free (filename);

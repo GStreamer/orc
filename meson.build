@@ -82,6 +82,19 @@ threads = dependency('threads')
 
 libm = cc.find_library('m', required : false)
 
+# glibc <= 2.06 has mkstemp(2) with permissions 0666
+glibc_needs_posix = '''#ifdef __GLIBC__
+#include <features.h>
+#if !__GLIBC_PREREQ(2, 7)
+  #error Too old glibc
+#endif
+#endif
+int main () { return 0; }
+'''
+if not cc.compiles(glibc_needs_posix, name: 'Has glibc >= 2.07 (or no glibc at all)')
+  error('This requires glibc >= 2.07 to avoid a mkstemp(2) permissions bug, aborting')
+endif
+
 librt = []
 if cc.has_function('clock_gettime')
   cdata.set('HAVE_CLOCK_GETTIME', true)
