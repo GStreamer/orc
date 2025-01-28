@@ -1023,6 +1023,13 @@ orc_compiler_get_temp_reg (OrcCompiler *compiler)
 }
 
 void
+orc_compiler_release_temp_reg (OrcCompiler *compiler, int reg)
+{
+  ORC_DEBUG("Releasing register %d", reg);
+  compiler->temp_regs[reg] = 0;
+}
+
+void
 orc_compiler_reset_temp_regs (OrcCompiler *compiler, int start)
 {
   int i;

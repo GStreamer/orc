@@ -164,6 +164,7 @@ ORC_API void orc_compiler_append_code (OrcCompiler *p, const char *fmt, ...) ORC
 ORC_API orc_bool orc_compiler_flag_check (const char *flag);
 ORC_API OrcCompileResult orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTarget *target, unsigned int flags);
 
+ORC_API void orc_compiler_release_temp_reg (OrcCompiler *compiler, int reg);
 ORC_API void orc_compiler_reset_temp_regs (OrcCompiler *compiler, int start);
 
 #endif
