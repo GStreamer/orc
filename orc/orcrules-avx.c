@@ -1293,7 +1293,7 @@ avx_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int src0 = p->vars[insn->src_args[0]].alloc;
   const int src1 = p->vars[insn->src_args[1]].alloc;
   const int dest = p->vars[insn->dest_args[0]].alloc;
-  const int a = orc_compiler_get_constant (p, 2, 0x00ff);
+  const int a = orc_compiler_get_temp_reg (p);
   const int j = orc_compiler_get_temp_reg (p);
   const int j2 = orc_compiler_get_temp_reg (p);
   const int l = orc_compiler_get_temp_reg (p);
@@ -1301,6 +1301,7 @@ avx_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int tmp = orc_compiler_get_constant (p, 2, 0x8000);
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
+  orc_avx_load_constant (p, a, 2, 0x00ff);
   if (size >= 32) {
     orc_avx_emit_movdqa (p, src1, divisor);
     orc_avx_emit_psllw_imm (p, 8, src1, divisor);
