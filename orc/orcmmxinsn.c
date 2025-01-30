@@ -170,9 +170,8 @@ static OrcMMXInsnOp orc_mmx_opcodes[] = {
   /* missing MASKMOVQ 0xf7 */
 
   /* MMX with SSE2 */
-  /* FIXME there is no SSE2 in MMX target */
-  { "psubq"        , ORC_TARGET_MMX_SSSE3 , ORC_MMX_INSN_TYPE_MMX_MMXM, 0xfb },
-  { "pmuludq"      , ORC_TARGET_MMX_SSSE3 , ORC_MMX_INSN_TYPE_MMX_MMXM, 0xf4 },
+  { "psubq"        , ORC_TARGET_MMX_SSE2 , ORC_MMX_INSN_TYPE_MMX_MMXM, 0xfb },
+  { "pmuludq"      , ORC_TARGET_MMX_SSE2 , ORC_MMX_INSN_TYPE_MMX_MMXM, 0xf4 },
   /* 70 */
 
   /* MMX with SSE3 */
