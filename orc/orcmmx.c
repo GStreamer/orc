@@ -9,6 +9,9 @@
 
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
+#include <orc/orcx86.h>
+#include <orc/orcx86insn.h>
+#include <orc/orcx86-private.h>
 #include <orc/orcmmx.h>
 
 /**
@@ -182,4 +185,82 @@ orc_x86_emit_mov_mmx_memoffset (OrcCompiler *compiler, int size, int reg1,
       break;
   }
 }
+
+unsigned int
+orc_mmx_get_cpu_flags (void)
+{
+  unsigned int flags = 0;
+#if defined(HAVE_AMD64) || defined(HAVE_I386)
+  OrcX86CPUVendor vendor = 0;
+  orc_uint32 level = 0;
+  orc_uint32 eax, ebx, ecx, edx;
+
+  orc_x86_cpu_detect (&level, &vendor);
+  /* The AMD specific case */
+  if (vendor == ORC_X86_CPU_VENDOR_AMD && level >= 1) {
+    orc_x86_cpu_get_cpuid (0x80000001, &eax, &ebx, &ecx, &edx);
+
+    if (edx & (1<<22)) {
+      flags |= ORC_TARGET_MMX_MMXEXT;
+    }
+    if (edx & (1U<<31)) {
+      flags |= ORC_TARGET_MMX_3DNOW;
+    }
+    if (edx & (1U<<30)) {
+      flags |= ORC_TARGET_MMX_3DNOWEXT;
+    }
+  }
+  orc_x86_cpu_get_cpuid (0x00000001, &eax, &ebx, &ecx, &edx);
+
+  if (edx & (1<<23)) {
+    flags |= ORC_TARGET_MMX_MMX;
+  }
+  if (edx & (1<<26)) {
+    flags |= ORC_TARGET_MMX_SSE2;
+  }
+  if (ecx & (1<<0)) {
+    flags |= ORC_TARGET_MMX_SSE3;
+  }
+  if (ecx & (1<<9)) {
+    flags |= ORC_TARGET_MMX_SSSE3;
+  }
+  if (ecx & (1<<19)) {
+    flags |= ORC_TARGET_MMX_SSE4_1;
+  }
+  if (ecx & (1<<20)) {
+    flags |= ORC_TARGET_MMX_SSE4_2;
+  }
+
+  /* unset the flags */
+  if (orc_compiler_flag_check ("-mmx")) {
+    flags &= ~ORC_TARGET_MMX_MMX;
+  }
+  if (orc_compiler_flag_check ("-mmxext")) {
+    flags &= ~ORC_TARGET_MMX_MMXEXT;
+  }
+  if (orc_compiler_flag_check ("-3dnow")) {
+    flags &= ~ORC_TARGET_MMX_3DNOW;
+  }
+  if (orc_compiler_flag_check ("-3dnowext")) {
+    flags &= ~ORC_TARGET_MMX_3DNOWEXT;
+  }
+  if (orc_compiler_flag_check ("-sse2")) {
+    flags &= ~ORC_TARGET_MMX_SSE2;
+  }
+  if (orc_compiler_flag_check ("-sse3")) {
+    flags &= ~ORC_TARGET_MMX_SSE3;
+  }
+  if (orc_compiler_flag_check ("-ssse3")) {
+    flags &= ~ORC_TARGET_MMX_SSSE3;
+  }
+  if (orc_compiler_flag_check ("-sse41")) {
+    flags &= ~ORC_TARGET_MMX_SSE4_1;
+  }
+  if (orc_compiler_flag_check ("-sse42")) {
+    flags &= ~ORC_TARGET_MMX_SSE4_2;
+  }
+#endif
+  return flags;
+}
+
 

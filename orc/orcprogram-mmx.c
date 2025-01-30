@@ -17,8 +17,6 @@
 
 #define ORC_REG_SIZE 8
 
-extern int orc_x86_mmx_flags;
-
 /* TODO To be placed in a common header for private stuff */
 void orc_compiler_mmx_register_rules (OrcTarget *target);
 
@@ -36,7 +34,7 @@ mmx_get_default_flags (void)
   }
   
 #if defined(HAVE_AMD64) || defined(HAVE_I386)
-  flags |= orc_x86_mmx_flags;
+  flags |= orc_mmx_get_cpu_flags ();
 #else
   flags |= ORC_TARGET_MMX_MMX;
   flags |= ORC_TARGET_MMX_3DNOW;
@@ -49,8 +47,18 @@ static const char *
 mmx_get_flag_name (int shift)
 {
   static const char *flags[] = {
-    "mmx", "mmxext", "3dnow", "3dnowext", "smmx3", "mmx41", "",
-    "frame_pointer", "short_jumps", "64bit"
+    "mmx",
+    "mmxext",
+    "3dnow",
+    "3dnowext",
+    "ssse3",
+    "sse41",
+    "sse42",
+    "frame_pointer",
+    "short_jumps",
+    "64bit"
+    "sse2",
+    "sse3",
   };
 
   if (shift >= 0 && shift < sizeof(flags)/sizeof(flags[0])) {

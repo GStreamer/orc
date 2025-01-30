@@ -32,7 +32,7 @@ avx_get_default_flags (void)
   }
 
 #if defined(HAVE_I386) || defined(HAVE_AMD64)
-  flags |= orc_sse_get_cpu_flags ();
+  flags |= orc_avx_get_cpu_flags ();
 #else
   flags |= ORC_TARGET_AVX_AVX;
   flags |= ORC_TARGET_AVX_AVX2;
@@ -45,13 +45,14 @@ static const char *
 avx_get_flag_name (const int shift)
 {
   static const char *flags[] = {
-    "sse2",
-    "sse3",
-    "ssse3",
-    "sse41",
-    "sse42",
-    "sse4a",
-    "sse5",
+    /* To keep backwards compatibility */
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
     "frame_pointer",
     "short_jumps",
     "64bit",
@@ -71,7 +72,7 @@ avx_is_executable (void)
 {
 #if defined(HAVE_I386) || defined(HAVE_AMD64)
   /* initializes cache information */
-  const int flags = orc_sse_get_cpu_flags ();
+  const int flags = orc_avx_get_cpu_flags ();
 
   if ((flags & ORC_TARGET_AVX_AVX) && (flags & ORC_TARGET_AVX_AVX2)) {
     return TRUE;

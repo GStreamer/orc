@@ -71,6 +71,8 @@ ORC_API void orc_avx_emit_broadcast (OrcCompiler *compiler, int s1, int d,
 ORC_API void orc_avx_set_mxcsr (OrcCompiler *compiler);
 ORC_API void orc_avx_restore_mxcsr (OrcCompiler *compiler);
 
+ORC_API unsigned int orc_avx_get_cpu_flags (void);
+
 #endif
 
 ORC_END_DECLS

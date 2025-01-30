@@ -48,7 +48,9 @@ typedef enum {
   ORC_TARGET_MMX_SSE4_2 = (1<<6),
   ORC_TARGET_MMX_FRAME_POINTER = (1<<7),
   ORC_TARGET_MMX_SHORT_JUMPS = (1<<8),
-  ORC_TARGET_MMX_64BIT = (1<<9)
+  ORC_TARGET_MMX_64BIT = (1<<9),
+  ORC_TARGET_MMX_SSE2 = (1<<10),
+  ORC_TARGET_MMX_SSE3 = (1<<11),
 } OrcTargetMMXFlags;
 
 typedef enum {
@@ -62,9 +64,17 @@ typedef enum {
   ORC_TARGET_SSE_FRAME_POINTER = (1<<7),
   ORC_TARGET_SSE_SHORT_JUMPS = (1<<8),
   ORC_TARGET_SSE_64BIT = (1<<9),
+  ORC_TARGET_SSE_SSE = (1<<12), /* 10 and 11 were used for AVX */
+} OrcTargetSSEFlags;
+
+typedef enum _OrcTargetAVXFlags {
+  /* This was shared with SSE, keep the API */
+  ORC_TARGET_AVX_FRAME_POINTER = (1<<7),
+  ORC_TARGET_AVX_SHORT_JUMPS = (1<<8),
+  ORC_TARGET_AVX_64BIT = (1<<9),
   ORC_TARGET_AVX_AVX = (1<<10),
   ORC_TARGET_AVX_AVX2 = (1<<11),
-} OrcTargetSSEFlags;
+} OrcTargetAVXFlags;
 
 
 /**

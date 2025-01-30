@@ -15,8 +15,6 @@
 #include <orc/orcdebug.h>
 #include <orc/orcinternal.h>
 
-extern int orc_x86_sse_flags;
-
 /* TODO To be placed in a common header for private stuff */
 void orc_compiler_sse_register_rules (OrcTarget *target);
 
@@ -34,7 +32,7 @@ sse_get_default_flags (void)
   }
   
 #if defined(HAVE_AMD64) || defined(HAVE_I386)
-  flags |= orc_x86_sse_flags;
+  flags |= orc_sse_get_cpu_flags ();
 #else
   flags |= ORC_TARGET_SSE_SSE2;
   flags |= ORC_TARGET_SSE_SSE3;
@@ -48,8 +46,20 @@ static const char *
 sse_get_flag_name (int shift)
 {
   static const char *flags[] = {
-    "sse2", "sse3", "ssse3", "sse41", "sse42", "sse4a", "sse5",
-    "frame_pointer", "short_jumps", "64bit"
+    "sse2",
+    "sse3",
+    "ssse3",
+    "sse41",
+    "sse42",
+    "sse4a",
+    "sse5",
+    "frame_pointer",
+    "short_jumps",
+    "64bit"
+    /* To keep backwards compatibility */
+    "",
+    "",
+    "sse",
   };
 
   if (shift >= 0 && shift < sizeof(flags)/sizeof(flags[0])) {

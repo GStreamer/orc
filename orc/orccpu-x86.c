@@ -48,6 +48,9 @@
 #endif
 
 #include <orc/orcdebug.h>
+#include <orc/orcx86.h>
+#include <orc/orcx86insn.h>
+#include <orc/orcx86-private.h>
 #include <orc/orcsse.h>
 #include <orc/orcmmx.h>
 #include <orc/orcprogram.h>
@@ -55,15 +58,12 @@
 
 #include "orcinternal.h"
 
-int orc_x86_sse_flags;
-int orc_x86_mmx_flags;
-static orc_uint32 orc_x86_vendor;
-static int orc_x86_microarchitecture;
-
+static char orc_x86_cpu_string[49];
+static int orc_x86_cpu_microarchitecture;
 
 #if defined(_MSC_VER)
-static void
-get_cpuid (orc_uint32 op, orc_uint32 *a, orc_uint32 *b, orc_uint32 *c, orc_uint32 *d)
+void
+orc_x86_cpu_get_cpuid (orc_uint32 op, orc_uint32 *a, orc_uint32 *b, orc_uint32 *c, orc_uint32 *d)
 {
   int tmp[4];
   __cpuid(tmp, op);
@@ -90,6 +90,7 @@ get_cpuid_ecx (orc_uint32 op, orc_uint32 init_ecx, orc_uint32 *a, orc_uint32 *b,
   *d = 0;
 #endif
 }
+
 #elif defined(__GNUC__) || defined(__clang__) || defined (__SUNPRO_C)
 
 static void
@@ -112,8 +113,8 @@ get_cpuid_ecx (orc_uint32 op, orc_uint32 init_ecx, orc_uint32 *a, orc_uint32 *b,
 #endif
 }
 
-static void
-get_cpuid (orc_uint32 op, orc_uint32 *a, orc_uint32 *b,
+void
+orc_x86_cpu_get_cpuid (orc_uint32 op, orc_uint32 *a, orc_uint32 *b,
     orc_uint32 *c, orc_uint32 *d)
 {
   get_cpuid_ecx (op, 0, a, b, c, d);
@@ -121,8 +122,8 @@ get_cpuid (orc_uint32 op, orc_uint32 *a, orc_uint32 *b,
 
 #else
 
-/* FIXME generate a get_cpuid() function at runtime. */
-#error Need get_cpuid() function.
+/* FIXME generate a orc_x86_cpu_get_cpuid() function at runtime. */
+#error Need orc_x86_cpu_get_cpuid() function.
 
 #endif
 
@@ -211,186 +212,45 @@ handle_cache_descriptor (unsigned int desc)
   }
 }
 
-static void orc_sse_detect_cpuid_intel (orc_uint32 level);
-static void orc_sse_detect_cpuid_amd (orc_uint32 level);
-static void orc_sse_detect_cpuid_generic (orc_uint32 level);
-
-static void
-orc_x86_detect_cpuid (void)
-{
-  static int inited = 0;
-  orc_uint32 ebx = 0;
-  orc_uint32 edx = 0;
-  orc_uint32 level = 0;
-
-  if (inited) return;
-  inited = 1;
-
-  get_cpuid (0x00000000, &level, &ebx, &orc_x86_vendor, &edx);
-
-  ORC_DEBUG("cpuid %d %08x %08x %08x", level, ebx, edx, orc_x86_vendor);
-
-#define ORC_X86_GenuineIntel (('n'<<0)|('t'<<8)|('e'<<16)|('l'<<24))
-#define ORC_X86_AuthenticAMD (('c'<<0)|('A'<<8)|('M'<<16)|('D'<<24))
-#define ORC_X86_HygonGenuine (('u'<<0)|('i'<<8)|('n'<<16)|('e'<<24))
-#define ORC_X86_CentaurHauls (('a'<<0)|('u'<<8)|('l'<<16)|('s'<<24))
-#define ORC_X86_CyrixInstead (('t'<<0)|('e'<<8)|('a'<<16)|('d'<<24))
-#define ORC_X86_GenuineTMx86 (('M'<<0)|('x'<<8)|('8'<<16)|('6'<<24))
-#define ORC_X86_Geode_by_NSC ((' '<<0)|('N'<<8)|('S'<<16)|('6'<<24))
-#define ORC_X86_NexGenDriven (('i'<<0)|('v'<<8)|('e'<<16)|('n'<<24))
-#define ORC_X86_RiseRiseRise (('R'<<0)|('i'<<8)|('s'<<16)|('e'<<24))
-#define ORC_X86_SiS_SiS_SiS_ (('S'<<0)|('i'<<8)|('S'<<16)|(' '<<24))
-#define ORC_X86_UMC_UMC_UMC_ (('U'<<0)|('M'<<8)|('C'<<16)|(' '<<24))
-#define ORC_X86_VIA_VIA_VIA_ (('V'<<0)|('I'<<8)|('A'<<16)|(' '<<24))
-
-  switch (orc_x86_vendor) {
-    case ORC_X86_GenuineIntel:
-      orc_sse_detect_cpuid_intel (level);
-      break;
-    case ORC_X86_AuthenticAMD:
-    case ORC_X86_HygonGenuine:
-      orc_sse_detect_cpuid_amd (level);
-      break;
-    default:
-      ORC_INFO("unhandled vendor %08x %08x %08x", ebx, edx, orc_x86_vendor);
-      orc_sse_detect_cpuid_generic (level);
-      break;
-  }
-
-  if (orc_compiler_flag_check ("-sse2")) {
-    orc_x86_sse_flags &= ~ORC_TARGET_SSE_SSE2;
-  }
-  if (orc_compiler_flag_check ("-sse3")) {
-    orc_x86_sse_flags &= ~ORC_TARGET_SSE_SSE3;
-  }
-  if (orc_compiler_flag_check ("-ssse3")) {
-    orc_x86_sse_flags &= ~ORC_TARGET_SSE_SSSE3;
-  }
-  if (orc_compiler_flag_check ("-sse41")) {
-    orc_x86_sse_flags &= ~ORC_TARGET_SSE_SSE4_1;
-  }
-  if (orc_compiler_flag_check ("-sse42")) {
-    orc_x86_sse_flags &= ~ORC_TARGET_SSE_SSE4_2;
-  }
-  if (orc_compiler_flag_check ("-sse4a")) {
-    orc_x86_sse_flags &= ~ORC_TARGET_SSE_SSE4A;
-  }
-  if (orc_compiler_flag_check ("-sse5")) {
-    orc_x86_sse_flags &= ~ORC_TARGET_SSE_SSE5;
-  }
-  if (orc_compiler_flag_check ("-avx")) {
-    orc_x86_sse_flags &= ~ORC_TARGET_AVX_AVX;
-  }
-  if (orc_compiler_flag_check ("-avx2")) {
-    orc_x86_sse_flags &= ~ORC_TARGET_AVX_AVX2;
-  }
-}
-
-static char orc_x86_processor_string[49];
-
 static void
 orc_x86_cpuid_get_branding_string (void)
 {
-  get_cpuid (0x80000002,
-      (orc_uint32 *)(orc_x86_processor_string+0),
-      (orc_uint32 *)(orc_x86_processor_string+4),
-      (orc_uint32 *)(orc_x86_processor_string+8),
-      (orc_uint32 *)(orc_x86_processor_string+12));
-  get_cpuid (0x80000003,
-      (orc_uint32 *)(orc_x86_processor_string+16),
-      (orc_uint32 *)(orc_x86_processor_string+20),
-      (orc_uint32 *)(orc_x86_processor_string+24),
-      (orc_uint32 *)(orc_x86_processor_string+28));
-  get_cpuid (0x80000004,
-      (orc_uint32 *)(orc_x86_processor_string+32),
-      (orc_uint32 *)(orc_x86_processor_string+36),
-      (orc_uint32 *)(orc_x86_processor_string+40),
-      (orc_uint32 *)(orc_x86_processor_string+44));
+  orc_x86_cpu_get_cpuid (0x80000002,
+      (orc_uint32 *)(orc_x86_cpu_string+0),
+      (orc_uint32 *)(orc_x86_cpu_string+4),
+      (orc_uint32 *)(orc_x86_cpu_string+8),
+      (orc_uint32 *)(orc_x86_cpu_string+12));
+  orc_x86_cpu_get_cpuid (0x80000003,
+      (orc_uint32 *)(orc_x86_cpu_string+16),
+      (orc_uint32 *)(orc_x86_cpu_string+20),
+      (orc_uint32 *)(orc_x86_cpu_string+24),
+      (orc_uint32 *)(orc_x86_cpu_string+28));
+  orc_x86_cpu_get_cpuid (0x80000004,
+      (orc_uint32 *)(orc_x86_cpu_string+32),
+      (orc_uint32 *)(orc_x86_cpu_string+36),
+      (orc_uint32 *)(orc_x86_cpu_string+40),
+      (orc_uint32 *)(orc_x86_cpu_string+44));
 
-  ORC_INFO ("processor string '%s'", orc_x86_processor_string);
+  ORC_INFO ("processor string '%s'", orc_x86_cpu_string);
 
-  _orc_cpu_name = orc_x86_processor_string;
+  _orc_cpu_name = orc_x86_cpu_string;
 }
 
-// Checks if XMM and YMM state are enabled in XCR0.
-// See 14.3 DETECTION OF INTEL® AVX INSTRUCTIONS on the
-// Intel® 64 and IA-32 Architectures Software Developer’s Manual
-#define XSAVE_SUPPORT_XMM 1U << 1
-#define XSAVE_SUPPORT_YMM 1U << 2
-// On a kernel with Gather Data Sampling mitigation, the former will
-// be disabled -- both bits must be enabled, otherwise it'll hit an
-// undefined opcode trap.
-// See https://docs.kernel.org/admin-guide/hw-vuln/gather_data_sampling.html
-#define XSAVE_SUPPORT_AVX (XSAVE_SUPPORT_YMM | XSAVE_SUPPORT_XMM)
 #ifdef ORC_NEEDS_ASM_XSAVE
-static orc_bool check_xcr0_ymm()
+static orc_uint32
+get_xcr0 (void)
 {
-  uint32_t xcr0;
+  orc_uint32 xcr0;
   __asm__ ("xgetbv" : "=a" (xcr0) : "c" (0) : "%edx" );
-  return ((xcr0 & XSAVE_SUPPORT_AVX) == XSAVE_SUPPORT_AVX);
+  return xcr0;
 }
 #else
-static orc_bool ORC_TARGET_XSAVE check_xcr0_ymm()
+static orc_uint32 ORC_TARGET_XSAVE
+get_xcr0 (void)
 {
-  return (_xgetbv(0) & XSAVE_SUPPORT_AVX) == XSAVE_SUPPORT_AVX;
+  return _xgetbv(0);
 }
 #endif
-
-static void
-orc_x86_cpuid_handle_standard_flags (void)
-{
-  orc_uint32 eax, ebx, ecx, edx;
-
-  get_cpuid (0x00000001, &eax, &ebx, &ecx, &edx);
-
-  if (edx & (1<<23)) {
-    orc_x86_mmx_flags |= ORC_TARGET_MMX_MMX;
-  }
-  if (edx & (1<<26)) {
-    orc_x86_sse_flags |= ORC_TARGET_SSE_SSE2;
-    orc_x86_mmx_flags |= ORC_TARGET_MMX_MMXEXT;
-  }
-  if (ecx & (1<<0)) {
-    orc_x86_sse_flags |= ORC_TARGET_SSE_SSE3;
-  }
-  if (ecx & (1<<9)) {
-    orc_x86_sse_flags |= ORC_TARGET_SSE_SSSE3;
-    orc_x86_mmx_flags |= ORC_TARGET_MMX_SSSE3;
-  }
-  if (ecx & (1<<19)) {
-    orc_x86_sse_flags |= ORC_TARGET_SSE_SSE4_1;
-    orc_x86_mmx_flags |= ORC_TARGET_MMX_SSE4_1;
-  }
-  if (ecx & (1<<20)) {
-    orc_x86_sse_flags |= ORC_TARGET_SSE_SSE4_2;
-  }
-
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1854795
-  // https://gitlab.freedesktop.org/gstreamer/orc/-/issues/65
-  // check for xsave enabled (bit 26) and xsave available (bit 27)
-  const orc_uint32 xsave_bits = (1U << 26) | (1U << 27);
-  orc_bool osxsave_enabled = (ecx & xsave_bits) == xsave_bits;
-  const orc_bool avx_instructions_supported = (ecx & (1 << 28)) != 0;
-
-  get_cpuid (0x00000007, &eax, &ebx, &ecx, &edx);
-
-  const orc_bool avx2_instructions_supported = (ebx & (1 << 5)) != 0;
-
-  // If xgetbv is available, validate XMM and YMM state available
-  if (osxsave_enabled) {
-    osxsave_enabled = check_xcr0_ymm();
-  }
-
-  if (osxsave_enabled) {
-    if (avx_instructions_supported) {
-      orc_x86_sse_flags |= ORC_TARGET_AVX_AVX;
-    }
-
-    if (avx_instructions_supported && avx2_instructions_supported) {
-      orc_x86_sse_flags |= ORC_TARGET_AVX_AVX2;
-    }
-  }
-}
 
 static void
 orc_x86_cpuid_handle_family_model_stepping (void)
@@ -401,7 +261,7 @@ orc_x86_cpuid_handle_family_model_stepping (void)
   int ext_family_id;
   int ext_model_id;
 
-  get_cpuid (0x00000001, &eax, &ebx, &ecx, &edx);
+  orc_x86_cpu_get_cpuid (0x00000001, &eax, &ebx, &ecx, &edx);
 
   family_id = (eax>>8)&0xf;
   model_id = (eax>>4)&0xf;
@@ -417,56 +277,53 @@ orc_x86_cpuid_handle_family_model_stepping (void)
 }
 
 static void
-orc_sse_detect_cpuid_generic (orc_uint32 level)
+orc_x86_cpu_generic_detect (orc_uint32 level)
 {
   if (level >= 1) {
-    orc_x86_cpuid_handle_standard_flags ();
     orc_x86_cpuid_handle_family_model_stepping ();
   }
 }
 
 static void
-orc_sse_detect_cpuid_intel (orc_uint32 level)
+orc_x86_cpu_intel_detect (orc_uint32 level)
 {
   orc_uint32 eax, ebx, ecx, edx;
 
   if (level >= 1) {
 
-    orc_x86_cpuid_handle_standard_flags ();
     orc_x86_cpuid_handle_family_model_stepping ();
 
-    orc_x86_microarchitecture = ORC_X86_UNKNOWN;
+    orc_x86_cpu_microarchitecture = ORC_X86_UNKNOWN;
     if (_orc_cpu_family == 6) {
       switch (_orc_cpu_model) {
         case 6: /* Mendocino */
         case 11: /* Tualatin-256 */
-          orc_x86_microarchitecture = ORC_X86_P6;
+          orc_x86_cpu_microarchitecture = ORC_X86_P6;
           break;
         case 15:
         case 22:
-          orc_x86_microarchitecture = ORC_X86_CORE;
+          orc_x86_cpu_microarchitecture = ORC_X86_CORE;
           break;
         case 23:
         case 29:
-          orc_x86_microarchitecture = ORC_X86_PENRYN;
+          orc_x86_cpu_microarchitecture = ORC_X86_PENRYN;
           break;
         case 26:
-          orc_x86_microarchitecture = ORC_X86_NEHALEM;
+          orc_x86_cpu_microarchitecture = ORC_X86_NEHALEM;
           break;
         case 28:
-          orc_x86_microarchitecture = ORC_X86_BONNELL;
+          orc_x86_cpu_microarchitecture = ORC_X86_BONNELL;
           break;
-          /* orc_x86_microarchitecture = ORC_X86_WESTMERE; */
-          /* orc_x86_microarchitecture = ORC_X86_SANDY_BRIDGE; */
+          /* orc_x86_cpu_microarchitecture = ORC_X86_WESTMERE; */
+          /* orc_x86_cpu_microarchitecture = ORC_X86_SANDY_BRIDGE; */
       }
     } else if (_orc_cpu_family == 15) {
-      orc_x86_microarchitecture = ORC_X86_NETBURST;
+      orc_x86_cpu_microarchitecture = ORC_X86_NETBURST;
     }
-
   }
 
   if (level >= 2) {
-    get_cpuid (0x00000002, &eax, &ebx, &ecx, &edx);
+    orc_x86_cpu_get_cpuid (0x00000002, &eax, &ebx, &ecx, &edx);
 
     if ((eax&0x80000000) == 0) {
       handle_cache_descriptor ((eax>>8)&0xff);
@@ -532,16 +389,15 @@ orc_sse_detect_cpuid_intel (orc_uint32 level)
 
   }
 
-  get_cpuid (0x80000000, &level, &ebx, &ecx, &edx);
+  orc_x86_cpu_get_cpuid (0x80000000, &level, &ebx, &ecx, &edx);
 
   if (level >= 4) {
     orc_x86_cpuid_get_branding_string ();
   }
-
 }
   
 static void
-orc_sse_detect_cpuid_amd (orc_uint32 level)
+orc_x86_cpu_amd_detect (orc_uint32 level)
 {
   orc_uint32 eax = 0;
   orc_uint32 ebx = 0;
@@ -549,62 +405,40 @@ orc_sse_detect_cpuid_amd (orc_uint32 level)
   orc_uint32 edx = 0;
 
   if (level >= 1) {
-    orc_x86_cpuid_handle_standard_flags ();
     orc_x86_cpuid_handle_family_model_stepping ();
 
-    orc_x86_microarchitecture = ORC_X86_UNKNOWN;
+    orc_x86_cpu_microarchitecture = ORC_X86_UNKNOWN;
     switch (_orc_cpu_family) {
       case 5:
         /* Don't know if 8 is correct */
         if (_orc_cpu_model < 8) {
-          orc_x86_microarchitecture = ORC_X86_K5;
+          orc_x86_cpu_microarchitecture = ORC_X86_K5;
         } else {
-          orc_x86_microarchitecture = ORC_X86_K6;
+          orc_x86_cpu_microarchitecture = ORC_X86_K6;
         }
         break;
       case 6:
-        orc_x86_microarchitecture = ORC_X86_K7;
+        orc_x86_cpu_microarchitecture = ORC_X86_K7;
         break;
       case 0xf:
-        orc_x86_microarchitecture = ORC_X86_K8;
+        orc_x86_cpu_microarchitecture = ORC_X86_K8;
         break;
       case 0x10:
-        orc_x86_microarchitecture = ORC_X86_K10;
+        orc_x86_cpu_microarchitecture = ORC_X86_K10;
         break;
       default:
         break;
     }
   }
 
-  get_cpuid (0x80000000, &level, &ebx, &ecx, &edx);
-
-  if (level >= 1) {
-    get_cpuid (0x80000001, &eax, &ebx, &ecx, &edx);
-
-    /* AMD flags */
-    if (ecx & (1<<6)) {
-      orc_x86_sse_flags |= ORC_TARGET_SSE_SSE4A;
-    }
-    if (ecx & (1<<11)) {
-      orc_x86_sse_flags |= ORC_TARGET_SSE_SSE5;
-    }
-    if (edx & (1<<22)) {
-      orc_x86_mmx_flags |= ORC_TARGET_MMX_MMXEXT;
-    }
-    if (edx & (1U<<31)) {
-      orc_x86_mmx_flags |= ORC_TARGET_MMX_3DNOW;
-    }
-    if (edx & (1U<<30)) {
-      orc_x86_mmx_flags |= ORC_TARGET_MMX_3DNOWEXT;
-    }
-  }
+  orc_x86_cpu_get_cpuid (0x80000000, &level, &ebx, &ecx, &edx);
 
   if (level >= 4) {
     orc_x86_cpuid_get_branding_string ();
   }
 
   if (level >= 6) {
-    get_cpuid (0x80000005, &eax, &ebx, &ecx, &edx);
+    orc_x86_cpu_get_cpuid (0x80000005, &eax, &ebx, &ecx, &edx);
 
     _orc_data_cache_size_level1 = ((ecx>>24)&0xff) * 1024;
     ORC_INFO ("L1 D-cache: %d kbytes, %d-way, %d lines/tag, %d line size",
@@ -612,23 +446,87 @@ orc_sse_detect_cpuid_amd (orc_uint32 level)
     ORC_INFO ("L1 I-cache: %d kbytes, %d-way, %d lines/tag, %d line size",
         (edx>>24)&0xff, (edx>>16)&0xff, (edx>>8)&0xff, edx&0xff);
 
-    get_cpuid (0x80000006, &eax, &ebx, &ecx, &edx);
+    orc_x86_cpu_get_cpuid (0x80000006, &eax, &ebx, &ecx, &edx);
     _orc_data_cache_size_level2 = ((ecx>>16)&0xffff) * 1024;
     ORC_INFO ("L2 cache: %d kbytes, %d assoc, %d lines/tag, %d line size",
         (ecx>>16)&0xffff, (ecx>>12)&0xf, (ecx>>8)&0xf, ecx&0xff);
   }
 }
 
-unsigned int
-orc_sse_get_cpu_flags(void)
+void
+orc_x86_cpu_detect (orc_uint32 *level, OrcX86CPUVendor *vendor)
 {
-  orc_x86_detect_cpuid ();
-  return orc_x86_sse_flags;
+  static OrcX86CPUVendor orc_x86_cpu_vendor = 0;
+  static orc_uint32 orc_x86_cpu_level = 0;
+  static int inited = 0;
+  orc_uint32 ebx = 0;
+  orc_uint32 edx = 0;
+  orc_uint32 vendor_id = 0;
+
+  if (inited)
+    goto done;
+
+  inited = 1;
+
+  orc_x86_cpu_get_cpuid (0x00000000, &orc_x86_cpu_level, &ebx, &vendor_id, &edx);
+
+  ORC_DEBUG("cpuid %d %08x %08x %08x", orc_x86_cpu_level, ebx, edx, vendor_id);
+
+#define ORC_X86_GenuineIntel (('n'<<0)|('t'<<8)|('e'<<16)|('l'<<24))
+#define ORC_X86_AuthenticAMD (('c'<<0)|('A'<<8)|('M'<<16)|('D'<<24))
+#define ORC_X86_HygonGenuine (('u'<<0)|('i'<<8)|('n'<<16)|('e'<<24))
+#define ORC_X86_CentaurHauls (('a'<<0)|('u'<<8)|('l'<<16)|('s'<<24))
+#define ORC_X86_CyrixInstead (('t'<<0)|('e'<<8)|('a'<<16)|('d'<<24))
+#define ORC_X86_GenuineTMx86 (('M'<<0)|('x'<<8)|('8'<<16)|('6'<<24))
+#define ORC_X86_Geode_by_NSC ((' '<<0)|('N'<<8)|('S'<<16)|('6'<<24))
+#define ORC_X86_NexGenDriven (('i'<<0)|('v'<<8)|('e'<<16)|('n'<<24))
+#define ORC_X86_RiseRiseRise (('R'<<0)|('i'<<8)|('s'<<16)|('e'<<24))
+#define ORC_X86_SiS_SiS_SiS_ (('S'<<0)|('i'<<8)|('S'<<16)|(' '<<24))
+#define ORC_X86_UMC_UMC_UMC_ (('U'<<0)|('M'<<8)|('C'<<16)|(' '<<24))
+#define ORC_X86_VIA_VIA_VIA_ (('V'<<0)|('I'<<8)|('A'<<16)|(' '<<24))
+
+  switch (vendor_id) {
+    case ORC_X86_GenuineIntel:
+      orc_x86_cpu_vendor = ORC_X86_CPU_VENDOR_INTEL;
+      orc_x86_cpu_intel_detect (orc_x86_cpu_level);
+      break;
+    case ORC_X86_AuthenticAMD:
+    case ORC_X86_HygonGenuine:
+      orc_x86_cpu_vendor = ORC_X86_CPU_VENDOR_AMD;
+      orc_x86_cpu_amd_detect (orc_x86_cpu_level);
+      break;
+    default:
+      orc_x86_cpu_vendor = ORC_X86_CPU_VENDOR_GENERIC;
+      ORC_INFO("unhandled vendor %08x %08x %08x", ebx, edx, vendor_id);
+      orc_x86_cpu_generic_detect (orc_x86_cpu_level);
+      break;
+  }
+
+done:
+  if (vendor) *vendor = orc_x86_cpu_vendor;
+  if (level) *level = orc_x86_cpu_level;
 }
 
-unsigned int
-orc_mmx_get_cpu_flags(void)
+#define XSAVE_ENABLED 1U << 26
+#define XSAVE_AVAILABLE 1U << 27
+#define XSAVE_BITS (XSAVE_ENABLED | XSAVE_AVAILABLE)
+
+orc_bool
+orc_x86_cpu_is_xsave_enabled (void)
 {
-  orc_x86_detect_cpuid ();
-  return orc_x86_mmx_flags;
+  orc_uint32 eax, ebx, ecx, edx;
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1854795
+  // https://gitlab.freedesktop.org/gstreamer/orc/-/issues/65
+  // check for xsave enabled (bit 26) and xsave available (bit 27)
+  orc_bool osxsave_enabled;
+
+  orc_x86_cpu_get_cpuid (0x00000001, &eax, &ebx, &ecx, &edx);
+  osxsave_enabled = (ecx & XSAVE_BITS) == XSAVE_BITS;
+  return osxsave_enabled;
+}
+
+orc_uint32
+orc_x86_cpu_get_xcr0 (void)
+{
+  return get_xcr0 ();
 }
