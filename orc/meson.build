@@ -109,7 +109,7 @@ endif
 
 orc_c_args = ['-DORC_ENABLE_UNSTABLE_API', '-D_GNU_SOURCE']
 
-orc_dependencies = [libm, librt, liblog]
+orc_dependencies = [libm, librt, liblog, atomic_dep]
 if host_os != 'windows'
   # winpthread may be detected but we don't use it
   orc_dependencies += threads
