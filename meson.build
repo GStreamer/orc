@@ -105,6 +105,12 @@ if not cc.compiles(glibc_needs_posix, name: 'Has glibc >= 2.07 (or no glibc at a
   error('This requires glibc >= 2.07 to avoid a mkstemp(2) permissions bug, aborting')
 endif
 
+# Check for libatomic for use of C11 atomics: some architectures need
+# to link explicitly to this library.
+# TODO: Once meson 1.7 is in use, this can be updated to
+# dependency('atomic')
+atomic_dep = cc.find_library('atomic', required: false)
+
 librt = []
 if cc.has_function('clock_gettime')
   cdata.set('HAVE_CLOCK_GETTIME', true)
