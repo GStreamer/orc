@@ -1,5 +1,5 @@
 project ('orc', 'c', version : '0.4.40.1',
-                     meson_version : '>= 0.55.0',
+                     meson_version : '>= 0.60.0',
                      default_options : ['buildtype=debugoptimized',
                                         'warning_level=1'] )
 
@@ -50,7 +50,17 @@ if host_system != 'windows'
   all_targets += extra_targets
 endif
 
+# To be removed once the orc-target option becomes mainstream
+backend = get_option('orc-backend')
+if backend != 'all'
+  warning('Setting old orc-backend option, please update your tools to use orc-target instead')
+endif
+
 target = get_option('orc-target')
+if target == 'all' and backend != 'all'
+  target = backend
+endif
+
 foreach b : all_targets
   if target == 'all' or target == b
     cdata.set('ENABLE_TARGET_' + b.to_upper(), 1)
