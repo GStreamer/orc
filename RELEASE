@@ -1,3 +1,24 @@
+0.4.41
+======
+
+ - orccodemem: Don't modify the process umask, which caused race conditions
+   with other threads (L. E. Segovia)
+ - Require glibc >= 2.07 (L. E. Segovia)
+ - x86: various SSE and MMX fixes (L. E. Segovia)
+ - avx: Fix sqrtps encoding causing an illegal instruction crash (L. E. Segovia)
+ - Hide internal symbols from ABI and do not install internal headers
+   (L. E. Segovia)
+ - Rename backend to target, including orc-backend meson option and ORC_BACKEND
+   environment variable (Jorge Zapata)
+ - Testsuite, tools: Disambiguate OrcProgram naming conventions (L. E. Segovia)
+ - Build: Fix _clear_cache call for Clang and error out on implicit function
+   declarations (Sam James)
+ - opcodes: Use MIN instead of CLAMP for known unsigned values to fix
+   compiler warnings (Edward Hervey)
+ - Spelling fix in debug log message (Marc Leeman)
+ - ci improvements: Upload the generated .S and .bin and include Windows
+   artifacts (Jorge Zapata)
+
 0.4.40
 ======
 
