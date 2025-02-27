@@ -2,6 +2,8 @@
 #include "config.h"
 #endif
 
+#include <inttypes.h>
+
 #include <orc/orc.h>
 #include <orc/orcx86.h>
 #include <orc/orcx86-private.h>
@@ -371,12 +373,12 @@ orc_mmx_emit_cpuinsn_imm (OrcCompiler *p, int index, int size, int imm,
   orc_bool has_src;
 
   /* checks */
-  has_imm1 = orc_x86_insn_validate_operand1_imm (opcode->operands);
-  has_imm2 = orc_x86_insn_validate_operand2_imm (opcode->operands);
-  has_imm3 = orc_x86_insn_validate_operand3_imm (opcode->operands);
+  has_imm1 = orc_x86_insn_validate_operand1_imm (imm, opcode->operands);
+  has_imm2 = orc_x86_insn_validate_operand2_imm (imm, opcode->operands);
+  has_imm3 = orc_x86_insn_validate_operand3_imm (imm, opcode->operands);
 
   if (!has_imm1 && !has_imm2 && !has_imm3) {
-    ORC_ERROR ("Setting an imm %d in a wrong opcode %d", imm, index);
+    ORC_ERROR ("Setting an imm %" PRIi64 " in a wrong opcode %d (%s)", imm, index, opcode->name);
   }
 
   if (!orc_mmx_insn_validate_operand1_reg (dest, opsize, opcode->mmx_operands, opcode->operands)) {
@@ -427,8 +429,8 @@ orc_mmx_emit_cpuinsn_load_memoffset (OrcCompiler *p, int index, int imm,
   }
 
   if ((opcode->operands & ORC_X86_INSN_OPERAND_OP3_IMM) &&
-      !orc_x86_insn_validate_operand3_imm (opcode->operands)) {
-    ORC_ERROR ("Setting an imm %d in a wrong opcode %d", imm, index);
+      !orc_x86_insn_validate_operand3_imm (imm, opcode->operands)) {
+    ORC_ERROR ("Setting an imm %" PRIi64 " in a wrong opcode %d (%s)", imm, index, opcode->name);
   }
 
   xinsn = orc_x86_get_output_insn (p);
@@ -467,8 +469,8 @@ orc_mmx_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int imm,
   }
 
   if ((opcode->operands & ORC_X86_INSN_OPERAND_OP3_IMM) &&
-      !orc_x86_insn_validate_operand3_imm (opcode->operands)) {
-    ORC_ERROR ("Setting an imm %d in a wrong opcode %d", imm, index);
+      !orc_x86_insn_validate_operand3_imm (imm, opcode->operands)) {
+    ORC_ERROR ("Setting an imm %" PRIi64 " in a wrong opcode %d (%s)", imm, index, opcode->name);
   }
 
   xinsn = orc_x86_get_output_insn (p);
@@ -509,8 +511,8 @@ orc_mmx_emit_cpuinsn_store_memoffset (OrcCompiler *p, int index, int imm,
   }
 
   if ((opcode->operands & ORC_X86_INSN_OPERAND_OP3_IMM) &&
-      !orc_x86_insn_validate_operand3_imm (opcode->operands)) {
-    ORC_ERROR ("Setting an imm %d in a wrong opcode %d", imm, index);
+      !orc_x86_insn_validate_operand3_imm (imm, opcode->operands)) {
+    ORC_ERROR ("Setting an imm %" PRIi64 " in a wrong opcode %d (%s)", imm, index, opcode->name);
   }
 
   xinsn = orc_x86_get_output_insn (p);

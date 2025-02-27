@@ -1,5 +1,6 @@
 #include "config.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -200,7 +201,7 @@ orc_mmx_load_constant (OrcCompiler *compiler, int reg, int size,
     int offset = ORC_STRUCT_OFFSET(OrcExecutor,arrays[ORC_VAR_T1]);
 
     /* FIXME how ugly and slow! */
-    orc_x86_emit_mov_imm_reg (compiler, 4, value>>0,
+    orc_x86_emit_mov_imm_reg (compiler, 4, value & UINT32_MAX,
         compiler->gp_tmpreg);
     orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
         offset + 0, compiler->exec_reg);

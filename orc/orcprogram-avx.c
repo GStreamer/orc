@@ -4,6 +4,7 @@
 #endif
 
 #include <inttypes.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -248,7 +249,7 @@ orc_avx_load_constant (OrcCompiler *compiler, int reg, int size,
       }
 
       // Store the lower half
-      orc_x86_emit_mov_imm_reg (compiler, 4, value >> 0, compiler->gp_tmpreg);
+      orc_x86_emit_mov_imm_reg (compiler, 4, value & UINT32_MAX, compiler->gp_tmpreg);
       orc_avx_sse_emit_pinsrd_register (compiler, 0,  ORC_AVX_SSE_REG (reg), compiler->gp_tmpreg, ORC_AVX_SSE_REG (reg));
     }
 

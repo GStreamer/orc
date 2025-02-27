@@ -226,12 +226,12 @@ orc_sse_load_constant (OrcCompiler *compiler, int reg, int size, orc_uint64 valu
         }
 
         // Store the lower half
-        orc_x86_emit_mov_imm_reg (compiler, 4, value >> 0, compiler->gp_tmpreg);
+        orc_x86_emit_mov_imm_reg (compiler, 4, value & UINT32_MAX, compiler->gp_tmpreg);
         orc_sse_emit_pinsrd_register (compiler, 0, compiler->gp_tmpreg, reg);
       } else {
         const int offset = ORC_STRUCT_OFFSET(OrcExecutor,arrays[ORC_VAR_T1]);
 
-        orc_x86_emit_mov_imm_reg (compiler, 4, value>>0,
+        orc_x86_emit_mov_imm_reg (compiler, 4, value & UINT32_MAX,
             compiler->gp_tmpreg);
         orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
             offset + 0, compiler->exec_reg);

@@ -3,6 +3,7 @@
 #endif
 
 #include <inttypes.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -1349,6 +1350,43 @@ orc_x86_insn_validate_no_operands (int operands)
   return TRUE;
 }
 
+static orc_bool
+orc_x86_in_range(orc_int64 imm, orc_int64 int_min, orc_int64 int_max, orc_uint64 uint_max)
+{
+  if ((imm >= int_min && imm <= int_max) ||
+      ((orc_uint64)imm >= 0 && (orc_uint64)imm <= uint_max))
+    return TRUE;
+  return FALSE;
+}
+
+static orc_bool
+orc_x86_validate_imm_value (orc_int64 imm, OrcX86InsnOperandSize size)
+{
+  switch (size) {
+    case ORC_X86_INSN_OPERAND_SIZE_8:
+      if (!orc_x86_in_range (imm, INT8_MIN, INT8_MAX, UINT8_MAX)) {
+        ORC_ERROR ("Immediate value %" PRIi64 " exceeds range for imm8", imm);
+        return FALSE;
+      }
+      break;
+    case ORC_X86_INSN_OPERAND_SIZE_16:
+      if (!orc_x86_in_range (imm, INT16_MIN, INT16_MAX, UINT16_MAX)) {
+        ORC_ERROR ("Immediate value %" PRIi64 " exceeds range for imm16", imm);
+        return FALSE;
+      }
+      break;
+    case ORC_X86_INSN_OPERAND_SIZE_32:
+      if (!orc_x86_in_range (imm, INT32_MIN, INT32_MAX, UINT32_MAX)) {
+        ORC_ERROR ("Immediate value %" PRIi64 " exceeds range for imm32", imm);
+        return FALSE;
+      }
+      break;
+    default:
+      break;
+  }
+  return TRUE;
+}
+
 orc_bool
 orc_x86_insn_validate_operand1_reg (int reg, OrcX86InsnOperandSize size, int operands)
 {
@@ -1367,12 +1405,11 @@ orc_x86_insn_validate_operand1_mem (int reg, int operands)
     return FALSE;
 }
 
-/* FIXME validate the actual imm */
 orc_bool
-orc_x86_insn_validate_operand1_imm (int operands)
+orc_x86_insn_validate_operand1_imm (orc_int64 imm, int operands)
 {
   if (operands & ORC_X86_INSN_OPERAND_OP1_IMM)
-    return TRUE;
+    return orc_x86_validate_imm_value (imm, orc_x86_insn_operand1_size_from_operands (operands));
   else
     return FALSE;
 }
@@ -1395,22 +1432,20 @@ orc_x86_insn_validate_operand2_mem (int reg, int operands)
     return FALSE;
 }
 
-/* FIXME validate the actual imm */
 orc_bool
-orc_x86_insn_validate_operand2_imm (int operands)
+orc_x86_insn_validate_operand2_imm (orc_int64 imm, int operands)
 {
   if (operands & ORC_X86_INSN_OPERAND_OP2_IMM)
-    return TRUE;
+    return orc_x86_validate_imm_value (imm, orc_x86_insn_operand2_size_from_operands (operands));
   else
     return FALSE;
 }
 
-/* FIXME validate the actual imm */
 orc_bool
-orc_x86_insn_validate_operand3_imm (int operands)
+orc_x86_insn_validate_operand3_imm (orc_int64 imm, int operands)
 {
   if (operands & ORC_X86_INSN_OPERAND_OP3_IMM)
-    return TRUE;
+    return orc_x86_validate_imm_value (imm, orc_x86_insn_operand3_size_from_operands (operands));
   else
     return FALSE;
 }
@@ -1463,7 +1498,7 @@ orc_x86_emit_cpuinsn_load_memindex (OrcCompiler *p, int index, int size,
   orc_bool has_imm3;
 
   /* checks */
-  has_imm3 = orc_x86_insn_validate_operand3_imm (opcode->operands);
+  has_imm3 = orc_x86_insn_validate_operand3_imm (imm, opcode->operands);
 
   if (!orc_x86_insn_validate_operand1_reg (dest, opsize, opcode->operands)) {
     ORC_ERROR ("Dest register %d not validated for opcode %d", dest, index);
@@ -1503,10 +1538,10 @@ orc_x86_emit_cpuinsn_imm_reg (OrcCompiler *p, int index, int size, orc_int64 imm
   orc_bool has_imm2;
 
   /* checks */
-  has_imm1 = orc_x86_insn_validate_operand1_imm (opcode->operands);
-  has_imm2 = orc_x86_insn_validate_operand2_imm (opcode->operands);
+  has_imm1 = orc_x86_insn_validate_operand1_imm (imm, opcode->operands);
+  has_imm2 = orc_x86_insn_validate_operand2_imm (imm, opcode->operands);
   if (!has_imm1 && !has_imm2) {
-    ORC_ERROR ("Setting an imm %d in a wrong opcode %d", imm, index);
+    ORC_ERROR ("Setting an imm %" PRIi64 " in a wrong opcode %d (%s)", imm, index, opcode->name);
   }
 
   if (!has_imm1 && !orc_x86_insn_validate_operand1_reg (dest, opsize, opcode->operands)) {
@@ -1544,8 +1579,8 @@ orc_x86_emit_cpuinsn_imm_memoffset (OrcCompiler *p, int index, int size,
   const OrcX86InsnOpcode *opcode = orc_x86_opcodes + index;
 
   /* checks */
-  if (!orc_x86_insn_validate_operand2_imm (opcode->operands))
-    ORC_ERROR ("Setting an imm %d in a wrong opcode %d", imm, index);
+  if (!orc_x86_insn_validate_operand2_imm (imm, opcode->operands))
+    ORC_ERROR ("Setting an imm %" PRIi64 " in a wrong opcode %d (%s)", imm, index, opcode->name);
   else if (!orc_x86_insn_validate_operand1_mem (dest, opcode->operands))
     ORC_ERROR ("Setting a memoffset reg %d in a wrong opcode %d", dest, index);
 
