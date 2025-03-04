@@ -846,7 +846,8 @@ orc_x86_insn_output_vex3 (OrcCompiler *p, const OrcX86Insn *xinsn)
   byte2 |= xinsn->opcode_escape;
 
   // Set REX.W if forced
-  if (xinsn->opcode_flags & ORC_X86_INSN_OPCODE_FLAG_VEX_W1) {
+  if (xinsn->opcode_flags & ORC_X86_INSN_OPCODE_FLAG_VEX_W1 ||
+    orc_x86_insn_need_rex_w (xinsn)) {
     byte3 |= 1 << 7;
   }
   // TODO Clear REX.W if forced
@@ -880,7 +881,7 @@ orc_x86_insn_output_vex (OrcCompiler *p, const OrcX86Insn *xinsn)
 
   if (p->is_64bit) {
     int i;
-    /* Check if we need to use X̅, B̅, or W registers */
+    /* Check if we need to use X̅, B̅ registers */
     for (i = 0; i < 4; i++) {
       const OrcX86InsnOperand *op = &xinsn->operands[i];
 
@@ -891,6 +892,11 @@ orc_x86_insn_output_vex (OrcCompiler *p, const OrcX86Insn *xinsn)
         goto done;
       }
     }
+
+    /* Check if we need REX.W */
+    use_vex3 = orc_x86_insn_need_rex_w (xinsn);
+    if (use_vex3)
+      goto done;
   }
 
   /* Check if we need to use W based on the VEX flags */
