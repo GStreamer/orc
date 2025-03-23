@@ -4,6 +4,7 @@ orc_sources = [
   'orccode.c',
   'orccodemem.c',
   'orccompiler.c',
+  'orcconstant.c',
   'orccpu.c',
   'orcdebug.c',
   'orcemulateopcodes.c',
