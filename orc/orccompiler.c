@@ -1376,119 +1376,316 @@ orc_compiler_label_new (OrcCompiler *compiler)
   return compiler->n_labels++;
 }
 
+/* Compatibility function to be removed once the deprecated
+ * APIs are removed
+ */
 static void
-orc_compiler_load_constant (OrcCompiler *compiler, int reg, int size,
-    int value)
+orc_compiler_constant_from_u128 (OrcConstant *cnst, 
+    orc_uint32 a, orc_uint32 b, orc_uint32 c, orc_uint32 d)
 {
-  compiler->target->load_constant (compiler, reg, size, value);
+  cnst->type = ORC_CONST_FULL;
+  cnst->v[0].x2[0] = a;
+  cnst->v[0].x2[1] = b;
+  cnst->v[1].x2[0] = c;
+  cnst->v[1].x2[1] = d;
 }
 
 static void
-orc_compiler_load_constant_long (OrcCompiler *compiler, int reg,
-    OrcConstant *constant)
+orc_compiler_constant_from_splat (OrcConstant *cnst, int size, orc_uint64 value)
 {
-  compiler->target->load_constant_long (compiler, reg, constant);
+  switch (size) {
+    case 1:
+      cnst->type = ORC_CONST_SPLAT_B;
+      cnst->v[0].x8[0] = value & 0xff;
+      break;
+
+    case 2:
+      cnst->type = ORC_CONST_SPLAT_W;
+      cnst->v[0].x4[0] = value & 0xffff;
+      break;
+
+    case 4:
+      cnst->type = ORC_CONST_SPLAT_L;
+      cnst->v[0].x2[0] = value & 0xffffffff;
+      break;
+
+    case 8:
+      cnst->type = ORC_CONST_SPLAT_Q;
+      cnst->v[0].i = value;
+      break;
+
+    default:
+      ORC_ASSERT(0);
+  }
 }
 
+/**
+ * orc_compiler_load_constant:
+ *
+ * Loads a constant into a register
+ *
+ * @c: The compiler that loads the constant
+ * @reg: The register to load the constant into
+ * @cnst: The #OrcConstant to load
+ *
+ * Loads a constant into the register provided
+ */
+void
+orc_compiler_load_constant (OrcCompiler *c, int reg, OrcConstant *cnst)
+{
+  /* TODO we should check if the desired constant already exists, if so,
+   * just move the constant register into reg, instead of loading again.
+   * This will require a generic (per-target) mov operation
+   */
+  c->target->load_constant_long (c, reg, cnst);
+}
+
+/**
+ * orc_compiler_load_constant:
+ *
+ * Loads a constant into a register
+ *
+ * @c: The compiler that loads the constant
+ * @size: The size of the value to load. One, two, four or eight bytes
+ * @value: The constant value to load
+ *
+ * Loads a constant into the preovided register @reg, splatting the value into
+ * the whole register. The @size defines what will be splatted
+ * into registry from @value.
+ */
+void
+orc_compiler_load_constant_from_size_and_value (OrcCompiler *c, int reg,
+    int size, orc_uint64 value)
+{
+  OrcConstant cnst = { 0 };
+
+  orc_compiler_constant_from_splat (&cnst, size, value);
+  orc_compiler_load_constant (c, reg, &cnst);
+}
+
+/**
+ * orc_compiler_get_temp_constant:
+ *
+ * Loads a temporary constant into a register
+ *
+ * @compiler: The compiler that loads the temporary constant
+ * @size: The size of the value. One, two or four bytes
+ * @value: The constant value
+ * @returns: The register with the constant stored or #ORC_REG_INVALID
+ *
+ * Gets a constant as a registry splatting the value into
+ * the whole register. The @size defines what will be splatted
+ * into registry from @value.
+ *
+ * Temporary constants are generated inplace on every call
+ * This is different from general constants that will be generate
+ * code at the beginning of the generated code.
+ *
+ * This function is deprecated and orc_compiler_get_temp_constant_full()
+ * should be used.
+ */
 int
 orc_compiler_get_temp_constant (OrcCompiler *compiler, int size, int value)
 {
-  int tmp;
+  OrcConstant cnst = { 0 };
 
-  tmp = orc_compiler_get_temp_reg (compiler);
-  orc_compiler_load_constant (compiler, tmp, size, value);
-  return tmp;
+  orc_compiler_constant_from_splat (&cnst, size, value);
+  return orc_compiler_get_temp_constant_full (compiler, &cnst);
 }
 
+/**
+ * orc_compiler_get_constant:
+ *
+ * Loads a constant into a register
+ *
+ * @compiler: The compiler that loads the constant
+ * @size: The size of the value. One, two or four bytes
+ * @value: The constant value
+ * @returns: The register with the constant stored or #ORC_REG_INVALID
+ *
+ * Gets a constant as a registry splatting the value into
+ * the whole register. The @size defines what will be splatted
+ * into registry from @value.
+ *
+ * In case a constant can not be generated, due to missing temporary
+ * registers, or too many compiler constants #ORC_REG_INVALID will
+ * be returned. Failing will trigger an orc_compiler_error()
+ *
+ * This function is deprecated and orc_compiler_get_constant_full()
+ * should be used.
+ */
 int
 orc_compiler_get_constant (OrcCompiler *compiler, int size, int value)
 {
-  int i;
-  int tmp;
-  unsigned int v = value;
+  OrcConstant cnst = { 0 };
 
-  if (size < 4) {
-    if (size < 2) {
-      v &= 0xff;
-      v |= (v<<8);
-    }
-    v &= 0xffff;
-    v |= (v<<16);
-  }
-
-  for(i=0;i<compiler->n_constants;i++){
-    if (compiler->constants[i].is_long == FALSE &&
-        compiler->constants[i].value == v) {
-      break;
-    }
-  }
-  if (i == compiler->n_constants) {
-    compiler->n_constants++;
-    compiler->constants[i].value = v;
-    compiler->constants[i].alloc_reg = 0;
-    compiler->constants[i].use_count = 0;
-    compiler->constants[i].is_long = FALSE;
-  }
-
-  compiler->constants[i].use_count++;
-
-  if (compiler->constants[i].alloc_reg != 0) {;
-    return compiler->constants[i].alloc_reg;
-  }
-  tmp = orc_compiler_get_temp_reg (compiler);
-  orc_compiler_load_constant (compiler, tmp, size, value);
-  return tmp;
+  orc_compiler_constant_from_splat (&cnst, size, value);
+  return orc_compiler_get_constant_full (compiler, &cnst);
 }
 
+/**
+ * orc_compiler_get_constant_long:
+ *
+ * Loads a 128-bit constant into a register
+ *
+ * @compiler: The compiler that loads the constant
+ * @a: The first 32-bits of the value to load as a constant
+ * @b: The second 32-bits of the value to load as a constant
+ * @c: The third 32-bits of the value to load as a constant
+ * @d: The fourth 32-bits of the value to load as a constant
+ * @returns: The register with the constant stored or #ORC_REG_INVALID
+ *
+ * Gets a constant as a registry filling 128-bits only of the whole
+ * register.
+ *
+ * In case a constant can not be generated, due to missing temporary
+ * registers, or too many compiler constants #ORC_REG_INVALID will
+ * be returned. Failing will trigger an orc_compiler_error()
+ *
+ * This function is deprecated and orc_compiler_get_constant_full()
+ * should be used. Note that @a, @b, @c, and @d are stored in little-endian
+ * form in a 128-bits little-endian memory area, therefore, they are stored
+ * like [@a, @b, @c, @d] being @a at memory address 0, @b at memory address
+ * 32, @c at memory address 64, and @d at memory address 96
+ */
 int
 orc_compiler_get_constant_long (OrcCompiler *compiler,
     orc_uint32 a, orc_uint32 b, orc_uint32 c, orc_uint32 d)
 {
-  int tmp;
+  OrcConstant cnst = { 0 };
 
-  tmp = orc_compiler_try_get_constant_long (compiler, a, b, c, d);
-  if (tmp == ORC_REG_INVALID) {
-    tmp = orc_compiler_get_temp_reg (compiler);
-    orc_compiler_load_constant_long (compiler, tmp,
-        &compiler->constants[compiler->n_constants - 1]);
-  }
-  return tmp;
+  orc_compiler_constant_from_u128 (&cnst, a, b, c, d);
+  return orc_compiler_get_constant_full (compiler, &cnst);
 }
 
+/**
+ * orc_compiler_try_get_constant_long:
+ *
+ * Tries to load a 128-bit constant into a register
+ *
+ * @compiler: The compiler that loads the constant
+ * @a: The first 32-bits of the value to load as a constant
+ * @b: The second 32-bits of the value to load as a constant
+ * @c: The third 32-bits of the value to load as a constant
+ * @d: The fourth 32-bits of the value to load as a constant
+ * @returns: The register with the constant stored or #ORC_REG_INVALID
+ *
+ * Similar to orc_compiler_get_constant_long() but will not trigger
+ * an orc_compiler_error() if failing. This is useful for rules that
+ * have different altrnatives of implementation depending if the constant
+ * can be loaded or not.
+ *
+ * This function is deprecated and orc_compiler_try_get_constant_full()
+ * should be used. Note that @a, @b, @c, and @d are stored in little-endian
+ * form in a 128-bits little-endian memory area, therefore, they are stored
+ * like [@a, @b, @c, @d] being @a at memory address 0, @b at memory address
+ * 32, @c at memory address 64, and @d at memory address 96
+ */
 int
 orc_compiler_try_get_constant_long (OrcCompiler *compiler,
     orc_uint32 a, orc_uint32 b, orc_uint32 c, orc_uint32 d)
 {
+  OrcConstant cnst = { 0 };
+
+  orc_compiler_constant_from_u128 (&cnst, a, b, c, d);
+  return orc_compiler_try_get_constant_full (compiler, &cnst);
+}
+
+/**
+ * orc_compiler_get_temp_constant_full:
+ *
+ * Loads an #OrcConstant into a register
+ *
+ * @c: The compiler that loads the constant
+ * @cnst: The constant to load
+ * @returns: The register with the constant stored or #ORC_REG_INVALID
+ *
+ * Temporary constants are generated inplace on every call
+ * This is different from general constants that will be generate
+ * code at the beginning of the generated code.
+ */
+int
+orc_compiler_get_temp_constant_full (OrcCompiler *c, OrcConstant *cnst)
+{
+  int tmp;
+
+  tmp = orc_compiler_get_temp_reg (c);
+  orc_compiler_load_constant (c, tmp, cnst);
+  return tmp;
+}
+
+/**
+ * orc_compiler_try_get_constant_full:
+ *
+ * Tries to load an #OrcConstant into a register
+ *
+ * @c: The compiler that loads the constant
+ * @cnst: The constant to load
+ * @returns: The register with the constant stored or #ORC_REG_INVALID
+ *
+ * Similar to orc_compiler_get_constant_full() but will not trigger
+ * an orc_compiler_error() if failing. This is useful for rules that
+ * have different altrnatives of implementation depending if the constant
+ * can be loaded or not.
+ *
+ */
+int
+orc_compiler_try_get_constant_full (OrcCompiler *c, OrcConstant *cnst)
+{
   int i;
 
-  for(i=0;i<compiler->n_constants;i++){
-    if (compiler->constants[i].is_long == TRUE &&
-        compiler->constants[i].full_value[0] == a &&
-        compiler->constants[i].full_value[1] == b &&
-        compiler->constants[i].full_value[2] == c &&
-        compiler->constants[i].full_value[3] == d) {
-      break;
+  /* Search for a constant equal to the requested */
+  for (i = 0; i < c->n_constants; i++) {
+    if (orc_constant_is_equal (cnst, &c->constants[i], c->target->extra.data.register_size)) {
+      ORC_DEBUG ("Same constant found at %d, reusing register %d", i,
+          c->constants[i].alloc_reg);
+      c->constants[i].use_count++;
+      return c->constants[i].alloc_reg;
     }
   }
-  if (i == compiler->n_constants) {
-    compiler->n_constants++;
-    compiler->constants[i].full_value[0] = a;
-    compiler->constants[i].full_value[1] = b;
-    compiler->constants[i].full_value[2] = c;
-    compiler->constants[i].full_value[3] = d;
-    compiler->constants[i].is_long = TRUE;
-    compiler->constants[i].alloc_reg = 0;
-    compiler->constants[i].use_count = 0;
-  }
 
-  compiler->constants[i].use_count++;
-
-  if (compiler->constants[i].alloc_reg != 0) {;
-    return compiler->constants[i].alloc_reg;
+  /* Check that we can allocate more constants */
+  if (c->n_constants == ORC_N_CONSTANTS) {
+    ORC_WARNING ("Max number of constants reached");
+    return ORC_REG_INVALID;
   }
+  /* As someone requested a constant, and the compiler is a two-step
+   * compiler, reserve a new constant so in the next compilation
+   * the constant will be available
+   */
+
+  memcpy (c->constants + c->n_constants, cnst, sizeof(OrcConstant));
+  c->constants[c->n_constants].use_count = 1;
+  c->n_constants++;
+
   return ORC_REG_INVALID;
 }
 
+/**
+ * orc_compiler_get_constant_full:
+ *
+ * Loads an #OrcConstant into a register
+ *
+ * @c: The compiler that loads the constant
+ * @cnst: The constant to load
+ * @returns: The register with the constant stored or #ORC_REG_INVALID
+ *
+ */
+int
+orc_compiler_get_constant_full (OrcCompiler *c, OrcConstant *cnst)
+{
+  int tmp;
+
+  tmp = orc_compiler_try_get_constant_full (c, cnst);
+  if (tmp)
+    return tmp;
+
+  /* We can not assume that cnst is the last requested compiler constant
+   * as it might fail due to no more compiler constants available.
+   * Load directly the constant
+   */
+  return orc_compiler_get_temp_constant_full (c, cnst);
+}
 
 int
 orc_compiler_get_constant_reg (OrcCompiler *compiler)

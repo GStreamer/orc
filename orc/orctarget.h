@@ -104,7 +104,12 @@ struct _OrcTarget {
   void (*load_constant_long)(OrcCompiler *compiler, int reg,
       OrcConstant *constant);
   void *target_data;
-  void *_unused[4];
+  union {
+    void *padding[4];
+    struct {
+      int register_size;
+    } data;
+  } extra;
 };
 
 

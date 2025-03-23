@@ -166,6 +166,12 @@ ORC_API OrcCompileResult orc_compiler_compile_program (OrcCompiler *compiler, Or
 
 ORC_API void orc_compiler_release_temp_reg (OrcCompiler *compiler, int reg);
 ORC_API void orc_compiler_reset_temp_regs (OrcCompiler *compiler, int start);
+ORC_API int orc_compiler_get_temp_constant_full (OrcCompiler *c, OrcConstant *cnst);
+ORC_API int orc_compiler_try_get_constant_full (OrcCompiler *c, OrcConstant *cnst);
+ORC_API int orc_compiler_get_constant_full (OrcCompiler *c, OrcConstant *cnst);
+ORC_API void orc_compiler_load_constant (OrcCompiler *c, int reg, OrcConstant *cnst);
+ORC_API void  orc_compiler_load_constant_from_size_and_value (OrcCompiler *c,
+    int reg, int size, orc_uint64 value);
 
 #endif
 
