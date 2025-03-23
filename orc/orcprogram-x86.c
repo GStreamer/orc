@@ -230,22 +230,6 @@ orc_x86_init_accumulators (OrcX86Target *t, OrcCompiler *c)
 }
 
 static void
-orc_x86_load_constant_uint64 (OrcX86Target *t, OrcCompiler *c, int reg, int size,
-    orc_uint64 value)
-{
-  t->load_constant (c, reg, size, value);
-}
-
-static void
-orc_x86_load_constant (OrcCompiler *c, int reg, int size, int value)
-{
-  OrcX86Target *t;
-
-  t = c->target->target_data;
-  orc_x86_load_constant_uint64 (t, c, reg, size, value);
-}
-
-static void
 orc_x86_load_constant_long (OrcX86Target *t, OrcCompiler *c, int reg,
     OrcConstant *constant)
 {
@@ -262,13 +246,8 @@ orc_x86_init_constants (OrcX86Target *t, OrcCompiler *c)
     if (!c->constants[i].alloc_reg)
       continue;
 
-    if (c->constants[i].is_long) {
-      orc_x86_load_constant_long (t, c, c->constants[i].alloc_reg,
-          c->constants + i);
-    } else {
-      orc_x86_load_constant_uint64 (t, c, c->constants[i].alloc_reg, 4,
-          c->constants[i].value);
-    }
+    orc_x86_load_constant_long (t, c, c->constants[i].alloc_reg,
+        c->constants + i);
   }
 }
 
@@ -1275,10 +1254,10 @@ orc_x86_register_extension (OrcTarget *t, OrcX86Target *x86t)
   t->get_default_flags = x86t->get_default_flags;
   t->compiler_init = orc_x86_compiler_init;
   t->compile = orc_x86_compile;
-  t->load_constant = orc_x86_load_constant;
   t->get_flag_name = x86t->get_flag_name;
   t->load_constant_long = x86t->load_constant_long;
   t->flush_cache = orc_x86_flush_cache;
   t->target_data = x86t;
+  t->extra.data.register_size = x86t->register_size;
   orc_target_register (t);
 }
