@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 #include <sys/types.h>
 
@@ -199,115 +200,178 @@ mmx_reduce_accumulator (OrcCompiler *compiler, int i, OrcVariable *var)
   }
 }
 
-void
-orc_mmx_load_constant (OrcCompiler *compiler, int reg, int size,
-    orc_uint64 value)
+static void
+orc_mmx_load_constant_full_u64 (OrcCompiler *c, int reg, orc_uint64 value)
 {
-  int i;
-
-  if (size == 8) {
+  orc_x86_emit_cpuinsn_comment (c, "# loading full u64 constant %" PRIu64
+      " 0x%16" PRIx64, value, value);
+  if (c->is_64bit) {
+    orc_x86_emit_mov_imm_reg64 (c, 8, value, c->gp_tmpreg);
+    orc_mmx_emit_movq_load_register (c, c->gp_tmpreg, reg);
+  } else {
     int offset = ORC_STRUCT_OFFSET(OrcExecutor,arrays[ORC_VAR_T1]);
 
-    /* FIXME how ugly and slow! */
-    orc_x86_emit_mov_imm_reg (compiler, 4, value & UINT32_MAX,
-        compiler->gp_tmpreg);
-    orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
-        offset + 0, compiler->exec_reg);
+    orc_x86_emit_mov_imm_reg (c, 4, value & UINT32_MAX,
+        c->gp_tmpreg);
+    orc_x86_emit_mov_reg_memoffset (c, 4, c->gp_tmpreg,
+        offset + 0, c->exec_reg);
 
-    orc_x86_emit_mov_imm_reg (compiler, 4, value>>32,
-        compiler->gp_tmpreg);
-    orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
-        offset + 4, compiler->exec_reg);
+    orc_x86_emit_mov_imm_reg (c, 4, value>>32,
+        c->gp_tmpreg);
+    orc_x86_emit_mov_reg_memoffset (c, 4, c->gp_tmpreg,
+        offset + 4, c->exec_reg);
 
-    orc_x86_emit_mov_memoffset_mmx (compiler, 8, offset, compiler->exec_reg,
+    orc_x86_emit_mov_memoffset_mmx (c, 8, offset, c->exec_reg,
         reg, FALSE);
-    return;
   }
-
-  if (size == 1) {
-    value &= 0xff;
-    value |= (value << 8);
-    value |= (value << 16);
-  }
-  if (size == 2) {
-    value &= 0xffff;
-    value |= (value << 16);
-  }
-
-  orc_x86_emit_cpuinsn_comment (compiler, "# loading constant %d 0x%08x", (int)value, (int)value);
-  if (value == 0) {
-    orc_mmx_emit_pxor(compiler, reg, reg);
-    return;
-  }
-  if (value == 0xffffffff) {
-    orc_mmx_emit_pcmpeqb (compiler, reg, reg);
-    return;
-  }
-  if (compiler->target_flags & ORC_TARGET_MMX_SSSE3) {
-    if (value == 0x01010101) {
-      orc_mmx_emit_pcmpeqb (compiler, reg, reg);
-      orc_mmx_emit_pabsb (compiler, reg, reg);
-      return;
-    }
-  }
-
-  for(i=1;i<32;i++){
-    orc_uint32 v;
-    v = (0xffffffff<<i);
-    if (value == v) {
-      orc_mmx_emit_pcmpeqb (compiler, reg, reg);
-      orc_mmx_emit_pslld_imm (compiler, i, reg);
-      return;
-    }
-    v = (0xffffffff>>i);
-    if (value == v) {
-      orc_mmx_emit_pcmpeqb (compiler, reg, reg);
-      orc_mmx_emit_psrld_imm (compiler, i, reg);
-      return;
-    }
-  }
-  for(i=1;i<16;i++){
-    orc_uint32 v;
-    v = (0xffff & (0xffff<<i)) | (0xffff0000 & (0xffff0000<<i));
-    if (value == v) {
-      orc_mmx_emit_pcmpeqb (compiler, reg, reg);
-      orc_mmx_emit_psllw_imm (compiler, i, reg);
-      return;
-    }
-    v = (0xffff & (0xffff>>i)) | (0xffff0000 & (0xffff0000>>i));
-    if (value == v) {
-      orc_mmx_emit_pcmpeqb (compiler, reg, reg);
-      orc_mmx_emit_psrlw_imm (compiler, i, reg);
-      return;
-    }
-  }
-
-  orc_x86_emit_mov_imm_reg (compiler, 4, value, compiler->gp_tmpreg);
-  orc_mmx_emit_movd_load_register (compiler, compiler->gp_tmpreg, reg);
-  orc_mmx_emit_pshufw (compiler, ORC_MMX_SHUF(1,0,1,0), reg, reg);
 }
 
-void
-mmx_load_constant_long (OrcCompiler *compiler, int reg,
-    OrcConstant *constant)
+static void
+orc_mmx_load_constant_full_u32 (OrcCompiler *c, int reg, orc_uint32 value)
+{
+  orc_x86_emit_cpuinsn_comment (c, "# loading full u32 constant %d 0x%08x", value, value);
+  orc_x86_emit_mov_imm_reg (c, 4, value, c->gp_tmpreg);
+  orc_mmx_emit_movd_load_register (c, c->gp_tmpreg, reg);
+  orc_mmx_emit_pshufw (c, ORC_MMX_SHUF(1,0,1,0), reg, reg);
+}
+
+static orc_bool
+orc_mmx_load_constant_u8 (OrcCompiler *c, int reg, orc_uint8 value)
+{
+  orc_x86_emit_cpuinsn_comment (c, "# loading u8 constant %d 0x%02x", value, value);
+  if (value == 0) {
+    orc_mmx_emit_pxor (c, reg, reg);
+    return TRUE;
+  } else if (value == UINT8_MAX) {
+    orc_mmx_emit_pcmpeqb (c, reg, reg);
+    return TRUE;
+  } else if (c->target_flags & ORC_TARGET_MMX_SSSE3) {
+    if (value == 1) {
+      orc_mmx_emit_pcmpeqb (c, reg, reg);
+      orc_mmx_emit_pabsb (c, reg, reg);
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+static orc_bool
+orc_mmx_load_constant_u16 (OrcCompiler *c, int reg, orc_uint16 value)
 {
   int i;
-  int offset = ORC_STRUCT_OFFSET(OrcExecutor,arrays[ORC_VAR_T1]);
 
-  /* FIXME this is slower than it could be */
-
-  orc_x86_emit_cpuinsn_comment (compiler, "# loading constant %08x %08x %08x %08x",
-      constant->full_value[0], constant->full_value[1],
-      constant->full_value[2], constant->full_value[3]);
-
-  for(i=0;i<4;i++){
-    orc_x86_emit_mov_imm_reg (compiler, 4, constant->full_value[i],
-        compiler->gp_tmpreg);
-    orc_x86_emit_mov_reg_memoffset (compiler, 4, compiler->gp_tmpreg,
-        offset + 4*i, compiler->exec_reg);
+  orc_x86_emit_cpuinsn_comment (c, "# loading u16 constant %d 0x%04x", value, value);
+  if (value == 0) {
+    orc_mmx_emit_pxor (c, reg, reg);
+    return TRUE;
+  } else if (value == UINT16_MAX) {
+    orc_mmx_emit_pcmpeqb (c, reg, reg);
+    return TRUE;
+  } else if (c->target_flags & ORC_TARGET_MMX_SSSE3) {
+    if (value == 1) {
+      orc_mmx_emit_pcmpeqb (c, reg, reg);
+      orc_mmx_emit_pabsw (c, reg, reg);
+      return TRUE;
+    }
   }
-  orc_x86_emit_mov_memoffset_mmx (compiler, ORC_REG_SIZE, offset, compiler->exec_reg,
-      reg, FALSE);
+
+  for (i = 1; i < 16; i++) {
+    orc_uint16 v;
+    v = 0xffff << i;
+    if (value == v) {
+      orc_mmx_emit_pcmpeqb (c, reg, reg);
+      orc_mmx_emit_psllw_imm (c, i, reg);
+      return TRUE;
+    }
+    v = 0xffff >> i;
+    if (value == v) {
+      orc_mmx_emit_pcmpeqb (c, reg, reg);
+      orc_mmx_emit_psrlw_imm (c, i, reg);
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+
+static orc_bool
+orc_mmx_load_constant_u32 (OrcCompiler *c, int reg, orc_uint32 value)
+{
+  int i;
+
+  orc_x86_emit_cpuinsn_comment (c, "# loading u32 constant %d 0x%08x", value, value);
+  if (value == 0) {
+    orc_mmx_emit_pxor (c, reg, reg);
+    return TRUE;
+  } else if (value == UINT32_MAX) {
+    orc_mmx_emit_pcmpeqb (c, reg, reg);
+    return TRUE;
+  } else if (c->target_flags & ORC_TARGET_MMX_SSSE3) {
+    if (value == 1) {
+      orc_mmx_emit_pcmpeqb (c, reg, reg);
+      orc_mmx_emit_pabsd (c, reg, reg);
+      return TRUE;
+    }
+  }
+
+  for (i = 1; i < 32; i++) {
+    orc_uint32 v;
+    v = 0xffffffff << i;
+    if (value == v) {
+      orc_mmx_emit_pcmpeqb (c, reg, reg);
+      orc_mmx_emit_pslld_imm (c, i, reg);
+      return TRUE;
+    }
+    v = 0xffffffff >> i;
+    if (value == v) {
+      orc_mmx_emit_pcmpeqb (c, reg, reg);
+      orc_mmx_emit_psrld_imm (c, i, reg);
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+static void
+orc_mmx_load_constant_long (OrcCompiler *c, int reg, OrcConstant *cnst)
+{
+  switch (cnst->type) {
+    case ORC_CONST_ZERO:
+      orc_mmx_emit_pxor (c, reg, reg);
+      break;
+
+    case ORC_CONST_SPLAT_B:
+      if (!orc_mmx_load_constant_u8 (c, reg, cnst->v[0].x8[0])) {
+        OrcConstant r;
+        orc_constant_resolve (cnst, &r, 8);
+        orc_mmx_load_constant_full_u32 (c, reg, r.v[0].x2[0]);
+      }
+      break;
+
+    case ORC_CONST_SPLAT_W:
+      if (!orc_mmx_load_constant_u16 (c, reg, cnst->v[0].x4[0])) {
+        OrcConstant r;
+        orc_constant_resolve (cnst, &r, 8);
+        orc_mmx_load_constant_full_u32 (c, reg, r.v[0].x2[0]);
+      }
+      break;
+    case ORC_CONST_SPLAT_L:
+      if (!orc_mmx_load_constant_u32 (c, reg, cnst->v[0].x2[0])) {
+        orc_mmx_load_constant_full_u32 (c, reg, cnst->v[0].x2[0]);
+      }
+      break;
+
+    case ORC_CONST_FULL:
+    case ORC_CONST_SPLAT_Q:
+      orc_mmx_load_constant_full_u64 (c, reg, cnst->v[0].i);
+      break;
+
+    default:
+      ORC_COMPILER_ERROR (c, "Unsupported constant type %d", cnst->type);
+      break;
+  }
 }
 
 static void
@@ -363,8 +427,8 @@ orc_mmx_init (void)
     mmx_loop_shift,
     mmx_init_accumulator,
     mmx_reduce_accumulator,
-    orc_mmx_load_constant,
-    mmx_load_constant_long,
+    NULL,
+    orc_mmx_load_constant_long,
     mmx_move_register_to_memoffset,
     mmx_move_memoffset_to_register,
     mmx_get_shift,

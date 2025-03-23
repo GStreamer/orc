@@ -54,7 +54,8 @@ mmx_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
       }
     }
   } else if (src->vartype == ORC_VAR_TYPE_CONST) {
-    orc_mmx_load_constant (compiler, dest->alloc, size, src->value.i);
+    orc_compiler_load_constant_from_size_and_value (compiler, dest->alloc,
+        size, src->value.i);
   } else {
     ORC_ASSERT(0);
   }
@@ -1089,7 +1090,8 @@ mmx_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_mmx_emit_psllw_imm (p, 8, divisor);
   orc_mmx_emit_psrlw_imm (p, 1, divisor);
 
-  orc_mmx_load_constant (p, a, 2, 0x00ff);
+  /* FIXME use an orc_compiler_get_constant to be able to cache it */
+  orc_compiler_load_constant_from_size_and_value (p, a, 2, 0x00ff);
   orc_mmx_emit_movq (p, tmp, j);
   orc_mmx_emit_psrlw_imm (p, 8, j);
 

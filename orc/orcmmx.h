@@ -42,9 +42,6 @@ void orc_x86_emit_mov_mmx_memoffset (OrcCompiler *compiler, int size, int reg1, 
 
 ORC_API unsigned int orc_mmx_get_cpu_flags (void);
 
-ORC_API void orc_mmx_load_constant (OrcCompiler *compiler, int reg, int size,
-    orc_uint64 value);
-
 #endif
 
 ORC_END_DECLS
