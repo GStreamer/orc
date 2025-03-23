@@ -62,9 +62,6 @@ ORC_API void orc_x86_emit_mov_memindex_avx (OrcCompiler *compiler, int size,
 ORC_API void orc_x86_emit_mov_avx_memoffset (OrcCompiler *compiler, int size,
     int reg1, int offset, int reg2, int aligned, int uncached);
 
-ORC_API void orc_avx_load_constant (OrcCompiler *compiler, int reg, int size,
-    orc_uint64 value);
-
 ORC_API void orc_avx_emit_broadcast (OrcCompiler *compiler, int s1, int d,
     int size);
 

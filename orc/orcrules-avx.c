@@ -61,7 +61,8 @@ avx_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
       orc_avx_emit_broadcast (compiler, REGISTER_RULE, REGISTER_RULE, size);
     }
   } else if (src->vartype == ORC_VAR_TYPE_CONST) {
-    orc_avx_load_constant (compiler, dest->alloc, size, src->value.i);
+    orc_compiler_load_constant_from_size_and_value (compiler, dest->alloc,
+        size, src->value.i);
   } else {
     ORC_ERROR ("Unknown variable type %d", src->vartype);
     ORC_ASSERT (0);
@@ -1098,14 +1099,14 @@ avx_rule_convusswb (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
   if (size >= 16) {
-    orc_avx_load_constant (p, tmp, 2, INT8_MAX); // set all of dest to 127
+    orc_compiler_load_constant_from_size_and_value (p, tmp, 2, INT8_MAX); // set all of dest to 127
     orc_avx_emit_pminuw (p, src, tmp, dest);
     orc_avx_emit_pxor (p, tmp, tmp, tmp);
     orc_avx_emit_packuswb (p, dest, tmp, dest);
     // packsswb does quad interleave ><
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
   } else {
-    orc_avx_load_constant (p, tmp, 2, INT8_MAX); // set all of dest to 127
+    orc_compiler_load_constant_from_size_and_value (p, tmp, 2, INT8_MAX); // set all of dest to 127
     orc_avx_sse_emit_pminuw (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmp));
     orc_avx_sse_emit_packuswb (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
@@ -1187,12 +1188,12 @@ avx_rule_convussql_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int tmp = orc_compiler_get_temp_reg (p);
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
   const int tmpc = orc_compiler_get_temp_reg(p);
-  orc_avx_load_constant (p, tmpc, 8, (orc_uint64)INT32_MAX);
+  orc_compiler_load_constant_from_size_and_value (p, tmpc, 8, (orc_uint64)INT32_MAX);
 
   if (size >= 32) {
     orc_avx_emit_pcmpgtq (p, src, tmpc, tmp);
     orc_avx_emit_blendvpd (p, tmpc, src, tmp, dest);
-    orc_avx_load_constant (p, tmpc, 8, (orc_uint64)INT32_MIN);
+    orc_compiler_load_constant_from_size_and_value (p, tmpc, 8, (orc_uint64)INT32_MIN);
     orc_avx_emit_pcmpgtq (p, dest, tmpc, tmp);
     orc_avx_emit_blendvpd (p, dest, tmpc, tmp, dest);
     // full interleave required again
@@ -1201,7 +1202,7 @@ avx_rule_convussql_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
   } else {
     orc_avx_sse_emit_pcmpgtq (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmpc), ORC_AVX_SSE_REG (tmp));
     orc_avx_sse_emit_blendvpd (p, ORC_AVX_SSE_REG (tmpc), ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
-    orc_avx_load_constant (p, tmpc, 8, (orc_uint64)INT32_MIN);
+    orc_compiler_load_constant_from_size_and_value (p, tmpc, 8, (orc_uint64)INT32_MIN);
     orc_avx_sse_emit_pcmpgtq (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmpc), ORC_AVX_SSE_REG (tmp));
     orc_avx_sse_emit_blendvpd (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmpc), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     orc_avx_sse_emit_pshufd (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (dest));
@@ -1216,7 +1217,7 @@ avx_rule_convusslw (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int tmp = orc_compiler_get_temp_reg (p);
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
-  orc_avx_load_constant (p, tmp, 4, INT16_MAX);
+  orc_compiler_load_constant_from_size_and_value (p, tmp, 4, INT16_MAX);
   if (size >= 16) {
     orc_avx_emit_pminud (p, src, tmp, dest);
     orc_avx_emit_pxor (p, tmp, tmp, tmp);
@@ -1238,7 +1239,7 @@ avx_rule_convuuslw (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int tmp = orc_compiler_get_temp_reg (p);
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
-  orc_avx_load_constant (p, tmp, 4, UINT16_MAX);
+  orc_compiler_load_constant_from_size_and_value (p, tmp, 4, UINT16_MAX);
   if (size >= 16) {
     orc_avx_emit_pminud (p, src, tmp, dest);
     orc_avx_emit_pxor (p, tmp, tmp, tmp);
@@ -1300,7 +1301,7 @@ avx_rule_convsusql_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
   if (size >= 32) {
-    orc_avx_load_constant (p, tmpc, 8, UINT32_MAX);
+    orc_compiler_load_constant_from_size_and_value (p, tmpc, 8, UINT32_MAX);
     orc_avx_emit_pcmpgtq (p, src, tmpc, tmp);
     orc_avx_emit_blendvpd(p, src, tmpc, tmp, dest);
     orc_avx_emit_pxor (p, tmpc, tmpc, tmpc);
@@ -1310,7 +1311,7 @@ avx_rule_convsusql_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_pshufd (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
   } else {
-    orc_avx_load_constant (p, tmpc, 8, UINT32_MAX);
+    orc_compiler_load_constant_from_size_and_value (p, tmpc, 8, UINT32_MAX);
     orc_avx_sse_emit_pcmpgtq (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmpc), ORC_AVX_SSE_REG (tmp));
     orc_avx_sse_emit_blendvpd(p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmpc), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     orc_avx_sse_emit_pxor (p, ORC_AVX_SSE_REG (tmpc), ORC_AVX_SSE_REG (tmpc), ORC_AVX_SSE_REG (tmpc));
@@ -1331,9 +1332,9 @@ avx_rule_convuusql_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
   if (size >= 32) {
-    orc_avx_load_constant (p, tmpsub, 8, INT64_MIN);
+    orc_compiler_load_constant_from_size_and_value (p, tmpsub, 8, INT64_MIN);
     orc_avx_emit_psubq (p, src, tmpsub, tmp);
-    orc_avx_load_constant (p, tmpc, 8, UINT32_MAX);
+    orc_compiler_load_constant_from_size_and_value (p, tmpc, 8, UINT32_MAX);
     // tmpc = uint32_max - int64_min
     orc_avx_emit_psubq (p, tmpc, tmpsub, tmpsub);
     orc_avx_emit_pcmpgtq (p, tmp, tmpsub, tmp);
@@ -1342,9 +1343,9 @@ avx_rule_convuusql_avx2 (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_avx_emit_pshufd (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
     orc_avx_emit_permute4x64_imm (p, ORC_AVX_SSE_SHUF (3, 1, 2, 0), dest, dest);
   } else {
-    orc_avx_load_constant (p, tmpsub, 8, INT64_MIN);
+    orc_compiler_load_constant_from_size_and_value (p, tmpsub, 8, INT64_MIN);
     orc_avx_sse_emit_psubq (p, ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmpsub), ORC_AVX_SSE_REG (tmp));
-    orc_avx_load_constant (p, tmpc, 8, UINT32_MAX);
+    orc_compiler_load_constant_from_size_and_value (p, tmpc, 8, UINT32_MAX);
     // tmpc = uint32_max - int64_min
     orc_avx_sse_emit_psubq (p, ORC_AVX_SSE_REG (tmpc), ORC_AVX_SSE_REG (tmpsub), ORC_AVX_SSE_REG (tmpsub));
     orc_avx_sse_emit_pcmpgtq (p, ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (tmpsub), ORC_AVX_SSE_REG (tmp));
@@ -1460,7 +1461,8 @@ avx_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
   const int tmp = orc_compiler_get_constant (p, 2, 0x8000);
   const int size = p->vars[insn->src_args[0]].size << p->loop_shift;
 
-  orc_avx_load_constant (p, a, 2, 0x00ff);
+  /* FIXME use an orc_compiler_get_constant to be able to cache it */
+  orc_compiler_load_constant_from_size_and_value (p, a, 2, 0x00ff);
   if (size >= 32) {
     orc_avx_emit_movdqa (p, src1, divisor);
     orc_avx_emit_psllw_imm (p, 8, src1, divisor);

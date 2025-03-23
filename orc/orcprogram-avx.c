@@ -224,130 +224,222 @@ avx_reduce_accumulator (OrcCompiler *compiler, int i, OrcVariable *var)
   }
 }
 
-void
-orc_avx_load_constant (OrcCompiler *compiler, int reg, int size,
-    orc_uint64 value)
+static void
+orc_avx_load_constant_full (OrcCompiler *c, int reg, OrcConstant *cnst)
 {
-  if (size == 8) {
-    if (value == 0) {
-      orc_avx_emit_pxor (compiler, reg, reg, reg);
-      return;
-    } else if (value == UINT64_MAX) {
-      orc_avx_emit_pcmpeqb (compiler, reg, reg, reg);
-      return;
+  orc_x86_emit_cpuinsn_comment (c, "# loading full constant %" PRIu64
+      " %" PRIu64 " 0x%16" PRIx64 " 0x%16", cnst->v[0].i, cnst->v[0].i,
+      cnst->v[1].i, cnst->v[1].i);
+
+  /* The rules for AVX are currently loading 128-bit (SSE) constants only */
+  if (!cnst->v[2].i && !cnst->v[3].i) {
+    int i;
+    for (i = 0; i < 4; i++) {
+      orc_x86_emit_mov_imm_reg (c, 4, cnst->v[i/2].x2[i%2],
+          c->gp_tmpreg);
+      orc_avx_sse_emit_pinsrd_register (c, i, ORC_AVX_SSE_REG (reg),
+          c->gp_tmpreg, ORC_AVX_SSE_REG (reg));
     }
-
-    if (compiler->is_64bit) {
-      orc_x86_emit_mov_imm_reg64 (compiler, 8, value, compiler->gp_tmpreg);
-      orc_avx_sse_emit_movq_load_register (compiler, compiler->gp_tmpreg, ORC_AVX_SSE_REG (reg));
-    } else {
-      // Store the upper half
-      if (value >> 32) {
-        orc_x86_emit_mov_imm_reg (compiler, 4, value >> 32, compiler->gp_tmpreg);
-        orc_avx_sse_emit_pinsrd_register (compiler, 1, ORC_AVX_SSE_REG (reg), compiler->gp_tmpreg, ORC_AVX_SSE_REG (reg));
-      } else {
-        orc_avx_emit_pxor (compiler, reg, reg, reg);
-      }
-
-      // Store the lower half
-      orc_x86_emit_mov_imm_reg (compiler, 4, value & UINT32_MAX, compiler->gp_tmpreg);
-      orc_avx_sse_emit_pinsrd_register (compiler, 0,  ORC_AVX_SSE_REG (reg), compiler->gp_tmpreg, ORC_AVX_SSE_REG (reg));
-    }
-
-    // broadcast mm0 to the rest
-    orc_avx_emit_broadcast (compiler, reg, reg, size);
-    return;
-  } else if (size == 1) {
-    // Synthesize a MMX "vector"
-    value &= 0xff;
-    value |= (value << 8);
-    value |= (value << 16);
-  } else if (size == 2) {
-    // Same as above
-    value &= 0xffff;
-    value |= (value << 16);
+    orc_avx_emit_broadcast (c, reg, reg, 16);
+  } else {
+    ORC_ERROR ("Unsupported size of constant loading");
   }
-
-  orc_x86_emit_cpuinsn_comment (compiler, "# loading constant %" PRIu64 " 0x%16" PRIx64,
-      value, value);
-
-  if (value == 0) {
-    orc_avx_emit_pxor (compiler, reg, reg, reg);
-    return;
-  } else if (value == UINT32_MAX) {
-    orc_avx_emit_pcmpeqb (compiler, reg, reg, reg);
-    return;
-  } else if (value == 0x01010101) {
-    orc_avx_emit_pcmpeqb (compiler, reg, reg, reg);
-    // Force two-complement wraparound
-    orc_avx_emit_pabsb (compiler, reg, reg);
-    return;
-  } else if (value == 0x00010001) {
-    orc_avx_emit_pcmpeqw (compiler, reg, reg, reg);
-    // Force two-complement wraparound
-    orc_avx_emit_pabsw (compiler, reg, reg);
-    return;
-  } else if (value == 0x00000001) {
-    orc_avx_emit_pcmpeqd (compiler, reg, reg, reg);
-    // Force two-complement wraparound
-    orc_avx_emit_pabsd (compiler, reg, reg);
-    return;
-  }
-
-  // Shifted UINT32_MAX masks
-  for (orc_uint32 i = 1; i < 32; i++) {
-    const orc_uint32 v = (0xffffffff << i);
-    if (value == v) {
-      orc_avx_emit_pcmpeqb (compiler, reg, reg, reg);
-      orc_avx_emit_pslld_imm (compiler, i, reg, reg);
-      return;
-    }
-    const orc_uint32 v2 = (0xffffffff >> i);
-    if (value == v2) {
-      orc_avx_emit_pcmpeqb (compiler, reg, reg, reg);
-      orc_avx_emit_psrld_imm (compiler, i, reg, reg);
-      return;
-    }
-  }
-
-  // Shifted UINT16_MAX masks
-  for (orc_uint32 i = 1; i < 16; i++) {
-    const orc_uint32 v1
-        = (0xffff & (0xffff << i)) | (0xffff0000 & (0xffff0000 << i));
-    if (value == v1) {
-      orc_avx_emit_pcmpeqb (compiler, reg, reg, reg);
-      orc_avx_emit_psllw_imm (compiler, i, reg, reg);
-      return;
-    }
-    const orc_uint32 v2
-        = (0xffff & (0xffff >> i)) | (0xffff0000 & (0xffff0000 >> i));
-    if (value == v2) {
-      orc_avx_emit_pcmpeqb (compiler, reg, reg, reg);
-      orc_avx_emit_psrlw_imm (compiler, i, reg, reg);
-      return;
-    }
-  }
-
-  orc_x86_emit_mov_imm_reg (compiler, 4, value, compiler->gp_tmpreg);
-  orc_avx_sse_emit_movd_load_register (compiler, compiler->gp_tmpreg, ORC_AVX_SSE_REG (reg));
-  orc_avx_emit_broadcast (compiler, reg, reg, 4);
 }
 
-
 static void
-avx_load_constant_long (OrcCompiler *compiler, int reg, OrcConstant *constant)
+orc_avx_load_constant_u8 (OrcCompiler *c, int reg, orc_uint8 value)
 {
-  orc_x86_emit_cpuinsn_comment (compiler, "# loading constant %08x %08x %08x %08x",
-      constant->full_value[0], constant->full_value[1], constant->full_value[2],
-      constant->full_value[3]);
-
-  for (int i = 0; i < 4; i++) {
-    orc_x86_emit_mov_imm_reg (compiler, 4, constant->full_value[i],
-        compiler->gp_tmpreg);
-    orc_avx_sse_emit_pinsrd_register (compiler, i, ORC_AVX_SSE_REG (reg), compiler->gp_tmpreg, ORC_AVX_SSE_REG (reg));
+  orc_x86_emit_cpuinsn_comment (c, "# loading u8 constant %d 0x%02x", value, value);
+  if (value == 0) {
+    orc_avx_emit_pxor (c, reg, reg, reg);
+    return;
+  } else if (value == UINT8_MAX) {
+    orc_avx_emit_pcmpeqb (c, reg, reg, reg);
+    return;
+  } else  if (value == 1) {
+    if (c->target_flags & ORC_TARGET_AVX_AVX2) {
+      orc_avx_emit_pcmpeqb (c, reg, reg, reg);
+      orc_avx_emit_pabsb (c, reg, reg);
+      return;
+    }
   }
 
-  orc_avx_emit_broadcast (compiler, reg, reg, 16);
+  /* default case */
+  orc_x86_emit_mov_imm_reg (c, 4, value, c->gp_tmpreg);
+  orc_avx_sse_emit_movd_load_register (c, c->gp_tmpreg, ORC_AVX_SSE_REG (reg));
+  orc_avx_emit_broadcast (c, reg, reg, 1);
+}
+
+static void
+orc_avx_load_constant_u16 (OrcCompiler *c, int reg, orc_uint16 value)
+{
+  int i;
+
+  orc_x86_emit_cpuinsn_comment (c, "# loading u16 constant %d 0x%04x", value, value);
+  if (value == 0) {
+    orc_avx_emit_pxor (c, reg, reg, reg);
+    return;
+  } else if (value == UINT16_MAX) {
+    orc_avx_emit_pcmpeqb (c, reg, reg, reg);
+    return;
+  } else if (value == 1) {
+    if (c->target_flags & ORC_TARGET_AVX_AVX2) {
+      orc_avx_emit_pcmpeqb (c, reg, reg, reg);
+      orc_avx_emit_pabsw (c, reg, reg);
+      return;
+    }
+  }
+
+  for (i = 1; i < 16; i++) {
+    orc_uint16 v;
+    v = 0xffff << i;
+    if (value == v) {
+      orc_avx_emit_pcmpeqb (c, reg, reg, reg);
+      orc_avx_emit_psllw_imm (c, i, reg, reg);
+      return;
+    }
+    v = 0xffff >> i;
+    if (value == v) {
+      orc_avx_emit_pcmpeqb (c, reg, reg, reg);
+      orc_avx_emit_psrlw_imm (c, i, reg, reg);
+      return;
+    }
+  }
+
+  /* default case */
+  orc_x86_emit_mov_imm_reg (c, 4, value, c->gp_tmpreg);
+  orc_avx_sse_emit_movd_load_register (c, c->gp_tmpreg, ORC_AVX_SSE_REG (reg));
+  orc_avx_emit_broadcast (c, reg, reg, 2);
+}
+
+static void
+orc_avx_load_constant_u32 (OrcCompiler *c, int reg, orc_uint32 value)
+{
+  int i;
+
+  orc_x86_emit_cpuinsn_comment (c, "# loading u32 constant %d 0x%08x", value, value);
+  if (value == 0) {
+    orc_avx_emit_pxor (c, reg, reg, reg);
+    return;
+  } else if (value == UINT32_MAX) {
+    orc_avx_emit_pcmpeqb (c, reg, reg, reg);
+    return;
+  } else if (value == 1) {
+    if (c->target_flags & ORC_TARGET_AVX_AVX2) {
+      orc_avx_emit_pcmpeqb (c, reg, reg, reg);
+      orc_avx_emit_pabsd (c, reg, reg);
+      return;
+    }
+  }
+
+  for (i = 1; i < 32; i++) {
+    orc_uint32 v;
+    v = 0xffffffff << i;
+    if (value == v) {
+      orc_avx_emit_pcmpeqb (c, reg, reg, reg);
+      orc_avx_emit_pslld_imm (c, i, reg, reg);
+      return;
+    }
+    v = 0xffffffff >> i;
+    if (value == v) {
+      orc_avx_emit_pcmpeqb (c, reg, reg, reg);
+      orc_avx_emit_psrld_imm (c, i, reg, reg);
+      return;
+    }
+  }
+
+  /* default case */
+  orc_x86_emit_mov_imm_reg (c, 4, value, c->gp_tmpreg);
+  orc_avx_sse_emit_movd_load_register (c, c->gp_tmpreg, ORC_AVX_SSE_REG (reg));
+  orc_avx_emit_broadcast (c, reg, reg, 4);
+}
+
+static void
+orc_avx_load_constant_u64 (OrcCompiler *c, int reg, orc_uint64 value)
+{
+  int i;
+
+  orc_x86_emit_cpuinsn_comment (c, "# loading u64 constant %" PRIu64
+      " 0x%16" PRIx64, value, value);
+  if (value == 0) {
+    orc_avx_emit_pxor (c, reg, reg, reg);
+    return;
+  } else if (value == UINT64_MAX) {
+    orc_avx_emit_pcmpeqb (c, reg, reg, reg);
+    return;
+  }
+
+  for (i = 1; i < 64; i++) {
+    orc_uint64 v;
+    v = 0xffffffffffffffffUL << i;
+    if (value == v) {
+      orc_avx_emit_pcmpeqb (c, reg, reg, reg);
+      orc_avx_emit_psllq_imm (c, i, reg, reg);
+      return;
+    }
+    v = 0xffffffffffffffffUL >> i;
+    if (value == v) {
+      orc_avx_emit_pcmpeqb (c, reg, reg, reg);
+      orc_avx_emit_psrlq_imm (c, i, reg, reg);
+      return;
+    }
+  }
+
+  /* default case */
+  if (c->is_64bit) {
+    orc_x86_emit_mov_imm_reg64 (c, 8, value, c->gp_tmpreg);
+    orc_avx_sse_emit_movq_load_register (c, c->gp_tmpreg, ORC_AVX_SSE_REG (reg));
+  } else {
+    // Store the upper half
+    if (value >> 32) {
+      orc_x86_emit_mov_imm_reg (c, 4, value >> 32, c->gp_tmpreg);
+      orc_avx_sse_emit_pinsrd_register (c, 1, ORC_AVX_SSE_REG (reg), c->gp_tmpreg, ORC_AVX_SSE_REG (reg));
+    } else {
+      orc_avx_emit_pxor (c, reg, reg, reg);
+    }
+
+    // Store the lower half
+    orc_x86_emit_mov_imm_reg (c, 4, value & UINT32_MAX, c->gp_tmpreg);
+    orc_avx_sse_emit_pinsrd_register (c, 0,  ORC_AVX_SSE_REG (reg), c->gp_tmpreg, ORC_AVX_SSE_REG (reg));
+  }
+
+  // broadcast mm0 to the rest
+  orc_avx_emit_broadcast (c, reg, reg, 8);
+}
+
+static void
+orc_avx_load_constant_long (OrcCompiler *c, int reg, OrcConstant *cnst)
+{
+  switch (cnst->type) {
+    case ORC_CONST_ZERO:
+      orc_avx_emit_pxor (c, reg, reg, reg);
+      break;
+
+    case ORC_CONST_SPLAT_B:
+      orc_avx_load_constant_u8 (c, reg, cnst->v[0].x8[0]);
+      break;
+
+    case ORC_CONST_SPLAT_W:
+      orc_avx_load_constant_u16 (c, reg, cnst->v[0].x4[0]);
+      break;
+
+    case ORC_CONST_SPLAT_L:
+      orc_avx_load_constant_u32 (c, reg, cnst->v[0].x2[0]);
+      break;
+
+    case ORC_CONST_SPLAT_Q:
+      orc_avx_load_constant_u64 (c, reg, cnst->v[0].i);
+      break;
+
+    case ORC_CONST_SPLAT_DQ:
+    case ORC_CONST_FULL:
+      orc_avx_load_constant_full (c, reg, cnst);
+      break;
+
+    default:
+      ORC_COMPILER_ERROR (c, "Unsupported constant type %d", cnst->type);
+      break;
+  }
 }
 
 static void
@@ -420,8 +512,8 @@ orc_avx_init (void)
     avx_loop_shift,
     avx_init_accumulator,
     avx_reduce_accumulator,
-    orc_avx_load_constant,
-    avx_load_constant_long,
+    NULL,
+    orc_avx_load_constant_long,
     avx_move_register_to_memoffset,
     avx_move_memoffset_to_register,
     avx_get_shift,
