@@ -290,9 +290,6 @@ ORC_API void orc_x86_emit_mov_sse_memoffset (OrcCompiler *compiler, int size, in
 ORC_API void orc_sse_set_mxcsr (OrcCompiler *compiler);
 ORC_API void orc_sse_restore_mxcsr (OrcCompiler *compiler);
 
-ORC_API void orc_sse_load_constant (OrcCompiler *compiler, int reg, int size,
-    orc_uint64 value);
-
 ORC_API void orc_sse_emit_cpuinsn_sse (OrcCompiler *p, int index, int src, int dest);
 ORC_API void orc_sse_emit_cpuinsn_size (OrcCompiler *p, int index, int size, int src, int dest);
 ORC_API void orc_sse_emit_cpuinsn_imm (OrcCompiler *p, int index, int size, int imm, int src, int dest);

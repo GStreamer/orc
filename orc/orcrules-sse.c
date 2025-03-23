@@ -52,7 +52,8 @@ sse_rule_loadpX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
       }
     }
   } else if (src->vartype == ORC_VAR_TYPE_CONST) {
-    orc_sse_load_constant (compiler, dest->alloc, size, src->value.i);
+    orc_compiler_load_constant_from_size_and_value (compiler, dest->alloc,
+        size, src->value.i);
   } else {
     ORC_ASSERT(0);
   }
@@ -1079,7 +1080,7 @@ sse_rule_convusswb (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_sse_emit_movdqa (p, src, dest);
   }
 
-  orc_sse_load_constant (p, tmp, 2, INT8_MAX); // set all of dest to 127
+  orc_compiler_load_constant_from_size_and_value (p, tmp, 2, INT8_MAX); // set all of dest to 127
   orc_sse_emit_pminuw (p, tmp, dest);
   orc_sse_emit_pxor (p, tmp, tmp);
   orc_sse_emit_packuswb (p, tmp, dest);
@@ -1149,7 +1150,7 @@ sse_rule_convusslw (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_sse_emit_movdqa (p, src, dest);
   }
 
-  orc_sse_load_constant (p, tmp, 4, INT16_MAX);
+  orc_compiler_load_constant_from_size_and_value (p, tmp, 4, INT16_MAX);
   orc_sse_emit_pminud (p, tmp, dest);
   orc_sse_emit_pxor (p, tmp, tmp);
   orc_sse_emit_packssdw (p, tmp, dest);
@@ -1166,7 +1167,7 @@ sse_rule_convuuslw (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_sse_emit_movdqa (p, src, dest);
   }
 
-  orc_sse_load_constant (p, tmp, 4, UINT16_MAX);
+  orc_compiler_load_constant_from_size_and_value (p, tmp, 4, UINT16_MAX);
   orc_sse_emit_pminud (p, tmp, dest);
   orc_sse_emit_pxor (p, tmp, tmp);
   orc_sse_emit_packusdw (p, tmp, dest);
@@ -1332,7 +1333,8 @@ sse_rule_divluw (OrcCompiler *p, void *user, OrcInstruction *insn)
   orc_sse_emit_psllw_imm (p, 8, divisor);
   orc_sse_emit_psrlw_imm (p, 1, divisor);
 
-  orc_sse_load_constant (p, a, 2, 0x00ff);
+  /* FIXME use an orc_compiler_get_constant to be able to cache it */
+  orc_compiler_load_constant_from_size_and_value (p, a, 2, 0x00ff);
   orc_sse_emit_movdqa (p, tmp, j);
   orc_sse_emit_psrlw_imm (p, 8, j);
 
