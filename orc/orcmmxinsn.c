@@ -31,6 +31,11 @@
   ORC_X86_INSN_OPERAND_OP2_32         \
 ), ORC_MMX_INSN_OPERAND_OP1_MM
 
+#define ORC_MMX_INSN_TYPE_MMX_REGM64 (\
+  ORC_X86_INSN_OPERAND_REG_REGM |     \
+  ORC_X86_INSN_OPERAND_OP2_64         \
+), ORC_MMX_INSN_OPERAND_OP1_MM
+
 /* For example MOVD r/m32, mm */
 #define ORC_MMX_INSN_TYPE_REGM32_MMX (\
   ORC_X86_INSN_OPERAND_REGM_REG |     \
@@ -101,6 +106,7 @@ static OrcMMXInsnOp orc_mmx_opcodes[] = {
   { "punpckhdq"    , ORC_TARGET_MMX_MMX   , ORC_MMX_INSN_TYPE_MMX_MMXM, 0x6a },
   { "packssdw"     , ORC_TARGET_MMX_MMX   , ORC_MMX_INSN_TYPE_MMX_MMXM, 0x6b },
   { "movd"         , ORC_TARGET_MMX_MMX   , ORC_MMX_INSN_TYPE_MMX_REGM32, 0x6e },
+  { "movq"         , ORC_TARGET_MMX_MMX   , ORC_MMX_INSN_TYPE_MMX_REGM64, 0x6e },
   { "movq"         , ORC_TARGET_MMX_MMX   , ORC_MMX_INSN_TYPE_MMX_MMXM, 0x6f },
   { "psrlw"        , ORC_TARGET_MMX_MMX   , ORC_MMX_INSN_TYPE_MMX_IMM8, 0x71, 2 },
   { "psraw"        , ORC_TARGET_MMX_MMX   , ORC_MMX_INSN_TYPE_MMX_IMM8, 0x71, 4 },
