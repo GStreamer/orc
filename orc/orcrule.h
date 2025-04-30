@@ -38,6 +38,17 @@ struct _OrcRuleSet {
   int n_rules;
 };
 
+ORC_END_DECLS
+
+/* FIXME we need to include orctarget.h here as it has the typedef. There is a
+ * circular dependency between OrcTarget and OrcRule. Check orc_rule_set_new
+ * and orc_target_add_rule_set comments
+ */
+
+#include <orc/orctarget.h>
+
+ORC_BEGIN_DECLS
+
 ORC_API OrcRuleSet * orc_rule_set_new (OrcOpcodeSet *opcode_set, OrcTarget *target,
     unsigned int required_flags);
 

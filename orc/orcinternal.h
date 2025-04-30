@@ -4,10 +4,42 @@
 
 #include <orc/orcutils.h>
 #include <orc/orclimits.h>
+#include <orc/orcrule.h>
 
 ORC_BEGIN_DECLS
 
-#ifdef ORC_ENABLE_UNSTABLE_API
+/* orctarget.c */
+
+/**
+ * OrcTarget:
+ *
+ */
+struct _OrcTarget {
+  const char *name;
+  orc_bool executable;
+  int data_register_offset;
+
+  unsigned int (*get_default_flags)(void);
+  void (*compiler_init)(OrcCompiler *compiler);
+  void (*compile)(OrcCompiler *compiler);
+
+  OrcRuleSet rule_sets[ORC_N_RULE_SETS];
+  int n_rule_sets;
+
+  const char * (*get_asm_preamble)(void);
+  void (*load_constant)(OrcCompiler *compiler, int reg, int size, int value);
+  const char * (*get_flag_name)(int shift);
+  void (*flush_cache) (OrcCode *code);
+  void (*load_constant_long)(OrcCompiler *compiler, int reg,
+      OrcConstant *constant);
+  void *target_data;
+  union {
+    void *padding[4];
+    struct {
+      int register_size;
+    } data;
+  } extra;
+};
 
 /* The function prototypes need to be visible to orc.c */
 ORC_INTERNAL void orc_mmx_init (void);
@@ -44,8 +76,6 @@ ORC_INTERNAL int orc_compiler_has_float (OrcCompiler *compiler);
 
 ORC_INTERNAL char* _orc_getenv (const char *var);
 ORC_INTERNAL void orc_opcode_sys_init (void);
-
-#endif
 
 ORC_END_DECLS
 

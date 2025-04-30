@@ -8,6 +8,7 @@
 #include <orc/orc.h>
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
+#include <orc/orcinternal.h>
 
 static const char *c_get_type_name (int size);
 static void c_get_name_int (char *name, OrcCompiler *p, OrcInstruction *insn, int var);

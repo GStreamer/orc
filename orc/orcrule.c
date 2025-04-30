@@ -36,22 +36,23 @@ orc_rule_register (OrcRuleSet *rule_set,
   rule_set->rules[i].emit_user = emit_user;
 }
 
+/**
+ * orc_rule_set_new:
+ *
+ * Adds a new #OrcRuleSet to the target
+ *
+ * @opcode_set: The #OrcOpcodeSet the #OrcRuleSet will implement by registering
+ * #OrcRules with orc_rule_register()
+ * @target: The #OrcTarget to register the #OrcRuleSet in
+ * @required_flags: The #OrcTarget flags the #OrcRuleSet must implement to use
+ * the #OrcRules
+ * @returns: The #OrcRuleSet just created
+ *
+ * Deprecated: 0.4.42: Use orc_target_add_rule_set()
+ */
 OrcRuleSet *
 orc_rule_set_new (OrcOpcodeSet *opcode_set, OrcTarget *target,
     unsigned int required_flags)
 {
-  OrcRuleSet *rule_set;
-
-  rule_set = target->rule_sets + target->n_rule_sets;
-  target->n_rule_sets++;
-
-  memset (rule_set, 0, sizeof(OrcRuleSet));
-
-  rule_set->opcode_major = opcode_set->opcode_major;
-  rule_set->required_target_flags = required_flags;
-
-  rule_set->rules = orc_malloc (sizeof(OrcRule) * opcode_set->n_opcodes);
-  memset (rule_set->rules, 0, sizeof(OrcRule) * opcode_set->n_opcodes);
-
-  return rule_set;
+  return orc_target_add_rule_set (target, opcode_set, required_flags);
 }

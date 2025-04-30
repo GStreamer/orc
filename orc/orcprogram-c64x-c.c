@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include <orc/orc.h>
+#include <orc/orcinternal.h>
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
 

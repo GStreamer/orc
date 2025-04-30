@@ -665,16 +665,16 @@ orc_test_compare_output_full (OrcProgram *program, int flags)
 }
 
 static void
-dump_program (const OrcProgram *const program, const OrcTarget *const target)
+dump_program (const OrcProgram *const program, OrcTarget *target)
 {
   char fname[256] = { 0 };
-  snprintf (fname, 256, "%s-%s.S", program->name, target->name);
+  snprintf (fname, 256, "%s-%s.S", program->name, orc_target_get_name (target));
   FILE *f = fopen (fname, "w");
   ORC_ASSERT (f);
   fprintf (f, "%s\n", program->asm_code);
   fclose (f);
 
-  snprintf (fname, 256, "%s-%s.bin", program->name, target->name);
+  snprintf (fname, 256, "%s-%s.bin", program->name, orc_target_get_name (target));
   f = fopen (fname, "wb");
   ORC_ASSERT (f);
   fwrite (program->orccode->code, 1, program->orccode->code_size, f);

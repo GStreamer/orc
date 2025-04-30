@@ -461,9 +461,9 @@ main (int argc, char *argv[])
 
       for (i = 0; i < n_programs; i++) {
         char output_file[255] = { 0 };
-        const OrcTarget *const t = orc_target_get_by_name (target);
+        OrcTarget *t = orc_target_get_by_name (target);
         const int l = snprintf (output_file, 255, "%s_%s.bin", programs[i]->name,
-            t->name);
+            orc_target_get_name (t));
         ORC_ASSERT (l > 0);
         FILE *output = fopen (output_file, "wb");
 

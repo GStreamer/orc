@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <orc/orcdebug.h>
+#include <orc/orcutils.h>
+#include <orc/orcutils-private.h>
 #include <orc/orctarget.h>
 #include <orc/orcinternal.h>
 
@@ -16,6 +19,11 @@ static OrcTarget *default_target;
 void
 orc_target_register (OrcTarget *target)
 {
+  if (n_targets == ORC_N_TARGETS) {
+    ORC_ERROR ("Can not register more targets");
+    return;
+  }
+
   targets[n_targets] = target;
   n_targets++;
 
@@ -128,4 +136,40 @@ orc_target_get_rule (OrcTarget *target, OrcStaticOpcode *opcode,
   }
 
   return NULL;
+}
+
+/**
+ * orc_target_add_rule_set:
+ *
+ * Adds a new #OrcRuleSet to the target
+ *
+ * @target: The #OrcTarget to register the #OrcRuleSet in
+ * @opcode_set: The #OrcOpcodeSet the #OrcRuleSet will implement by registering
+ * #OrcRules with orc_rule_register()
+ * @required_flags: The #OrcTarget flags the #OrcRuleSet must implement to use
+ * the #OrcRules
+ * @returns: The #OrcRuleSet just created
+ */
+OrcRuleSet * orc_target_add_rule_set (OrcTarget *target,
+    OrcOpcodeSet *opcode_set, unsigned int required_flags)
+{
+  OrcRuleSet *rule_set;
+
+  if (target->n_rule_sets == ORC_N_RULE_SETS) {
+    ORC_ERROR ("Can not allocate more rule sets");
+    return NULL;
+  }
+
+  rule_set = target->rule_sets + target->n_rule_sets;
+  target->n_rule_sets++;
+
+  memset (rule_set, 0, sizeof(OrcRuleSet));
+
+  rule_set->opcode_major = opcode_set->opcode_major;
+  rule_set->required_target_flags = required_flags;
+
+  rule_set->rules = orc_malloc (sizeof(OrcRule) * opcode_set->n_opcodes);
+  memset (rule_set->rules, 0, sizeof(OrcRule) * opcode_set->n_opcodes);
+
+  return rule_set;
 }

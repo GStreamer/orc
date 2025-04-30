@@ -77,42 +77,6 @@ typedef enum _OrcTargetAVXFlags {
 } OrcTargetAVXFlags;
 
 
-/**
- * OrcTarget:
- *
- */
-struct _OrcTarget {
-  const char *name;
-  orc_bool executable;
-  int data_register_offset;
-
-  unsigned int (*get_default_flags)(void);
-  void (*compiler_init)(OrcCompiler *compiler);
-  void (*compile)(OrcCompiler *compiler);
-
-  OrcRuleSet rule_sets[ORC_N_RULE_SETS];
-  int n_rule_sets;
-
-  const char * (*get_asm_preamble)(void);
-  void (*load_constant)(OrcCompiler *compiler, int reg, int size, int value);
-  const char * (*get_flag_name)(int shift);
-  void (*flush_cache) (OrcCode *code);
-  /* FIXME or you either support the size, or provide a better function to also
-   * handle 64 bits constants, but there is no need to add another API for
-   * one specific case. Use a _full passing also the size.
-   */
-  void (*load_constant_long)(OrcCompiler *compiler, int reg,
-      OrcConstant *constant);
-  void *target_data;
-  union {
-    void *padding[4];
-    struct {
-      int register_size;
-    } data;
-  } extra;
-};
-
-
 ORC_API OrcRule *    orc_target_get_rule (OrcTarget *target,
                                           OrcStaticOpcode *opcode,
                                           unsigned int target_flags);
@@ -128,6 +92,11 @@ ORC_API const char * orc_target_c_get_typedefs (void);
 
 ORC_API void         orc_target_register (OrcTarget *target);
 ORC_API OrcTarget *  orc_target_get_by_name (const char *target_name);
+
+#ifdef ORC_ENABLE_UNSTABLE_API
+ORC_API OrcRuleSet * orc_target_add_rule_set (OrcTarget *target,
+    OrcOpcodeSet *opcode_set, unsigned int required_flags);
+#endif
 
 ORC_END_DECLS
 
