@@ -158,27 +158,12 @@ orc_compiler_c_get_default_flags (void)
   return 0;
 }
 
-static const char *varnames[] = {
-  "d1", "d2", "d3", "d4",
-  "s1", "s2", "s3", "s4",
-  "s5", "s6", "s7", "s8",
-  "a1", "a2", "a3", "d4",
-  "c1", "c2", "c3", "c4",
-  "c5", "c6", "c7", "c8",
-  "p1", "p2", "p3", "p4",
-  "p5", "p6", "p7", "p8",
-  "t1", "t2", "t3", "t4",
-  "t5", "t6", "t7", "t8",
-  "t9", "t10", "t11", "t12",
-  "t13", "t14", "t15", "t16",
-};
-
 static void
 get_varname (char *s, OrcCompiler *compiler, int var)
 {
   if (compiler->target_flags & ORC_TARGET_C_NOEXEC) {
     if (var < 48) {
-      strcpy (s, varnames[var]);
+      strcpy (s, orc_variable_id_get_name (var));
     } else {
       sprintf(s, "t%d", var-32);
     }
@@ -200,7 +185,7 @@ get_varname_stride (char *s, OrcCompiler *compiler, int var)
     /* FIXME: correct varnames bound */
     /* https://bugzilla.gnome.org/show_bug.cgi?id=759840 */
     ORC_ASSERT (var < 48);
-    sprintf(s, "%s_stride", varnames[var]);
+    sprintf(s, "%s_stride", orc_variable_id_get_name (var));
   } else {
     sprintf(s, "ex->params[%d]", var);
   }
@@ -436,7 +421,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
         if (var->size == 2) {
           if (compiler->target_flags & ORC_TARGET_C_NOEXEC) {
             ORC_ASM_CODE(compiler,"  *%s = (%s & 0xffff);\n",
-                varnames[i], varname);
+                orc_variable_id_get_name (i), varname);
           } else if (compiler->target_flags & ORC_TARGET_C_OPCODE) {
             ORC_ASM_CODE(compiler,"  ((orc_union32 *)ex->dest_ptrs[%d])->i = "
                 "(%s + ((orc_union32 *)ex->dest_ptrs[%d])->i) & 0xffff;\n",
@@ -448,7 +433,7 @@ orc_compiler_c_assemble (OrcCompiler *compiler)
         } else {
           if (compiler->target_flags & ORC_TARGET_C_NOEXEC) {
             ORC_ASM_CODE(compiler,"  *%s = %s;\n",
-                varnames[i], varname);
+                orc_variable_id_get_name (i), varname);
           } else if (compiler->target_flags & ORC_TARGET_C_OPCODE) {
             ORC_ASM_CODE(compiler,"  ((orc_union32 *)ex->dest_ptrs[%d])->i += (orc_uint%d)%s;\n",
                 i - ORC_VAR_A1, var->size * 8, varname);
@@ -477,7 +462,7 @@ c_get_name_int (char *name, OrcCompiler *p, OrcInstruction *insn, int var)
 {
   if (p->vars[var].vartype == ORC_VAR_TYPE_PARAM) {
     if (p->target_flags & ORC_TARGET_C_NOEXEC) {
-      sprintf(name,"%s", varnames[var]);
+      sprintf(name,"%s", orc_variable_id_get_name (var));
     } else if (p->target_flags & ORC_TARGET_C_OPCODE) {
       sprintf(name,"((orc_union64 *)(ex->src_ptrs[%d]))->i",
           var - ORC_VAR_P1 + p->program->n_src_vars);
@@ -814,7 +799,7 @@ c_rule_loadpX (OrcCompiler *p, void *user, OrcInstruction *insn)
 
   if (p->vars[insn->src_args[0]].vartype == ORC_VAR_TYPE_PARAM) {
     if (p->target_flags & ORC_TARGET_C_NOEXEC) {
-      ORC_ASM_CODE(p,"    %s = %s;\n", dest, varnames[insn->src_args[0]]);
+      ORC_ASM_CODE(p,"    %s = %s;\n", dest, orc_variable_id_get_name (insn->src_args[0]));
     } else if (p->target_flags & ORC_TARGET_C_OPCODE) {
       ORC_ASM_CODE(p,"    %s = ((orc_union64 *)(ex->src_ptrs[%d]))->i;\n",
           dest, insn->src_args[0] - ORC_VAR_P1 + p->program->n_src_vars);

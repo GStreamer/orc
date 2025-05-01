@@ -82,12 +82,12 @@ typedef enum {
   ORC_VAR_TYPE_ACCUMULATOR
 } OrcVarType;
 
-enum {
+typedef enum _OrcParamType {
   ORC_PARAM_TYPE_INT = 0,
   ORC_PARAM_TYPE_FLOAT,
   ORC_PARAM_TYPE_INT64,
   ORC_PARAM_TYPE_DOUBLE
-};
+} OrcParamType;
 
 
 /**
@@ -130,6 +130,12 @@ struct _OrcVariable {
   int has_parameter;
   int parameter;
 };
+
+#ifdef ORC_ENABLE_UNSTABLE_API
+
+ORC_API const char * orc_variable_id_get_name (OrcVariableId id);
+
+#endif
 
 ORC_END_DECLS
 

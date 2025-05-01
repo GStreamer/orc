@@ -19,6 +19,7 @@ orc_sources = [
   'orcrule.c',
   'orctarget.c',
   'orcutils.c',
+  'orcvariable.c',
 ]
 
 orc_headers = [
