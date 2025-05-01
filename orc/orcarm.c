@@ -11,8 +11,9 @@
 
 #include <orc/orcdebug.h>
 #include <orc/orcprogram.h>
-#include <orc/orcarm.h>
 #include <orc/orcutils.h>
+#include <orc/orcinternal.h>
+#include <orc/orcarm.h>
 
 #if defined(HAVE_ARM) || defined(HAVE_AARCH64)
 #if defined(__APPLE__)

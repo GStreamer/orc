@@ -7,9 +7,11 @@
 
 #include <sys/types.h>
 
-#include <orc/orcpowerpc.h>
 #include <orc/orcprogram.h>
+#include <orc/orcinternal.h>
 #include <orc/orcdebug.h>
+
+#include <orc/orcpowerpc.h>
 
 /**
  * SECTION:orcpowerpc

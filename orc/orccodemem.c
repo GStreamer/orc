@@ -26,8 +26,8 @@
   #endif
 #endif
 
-#include <orc/orcinternal.h>
 #include <orc/orcprogram.h>
+#include <orc/orcinternal.h>
 #include <orc/orcutils-private.h>
 #include <orc/orcdebug.h>
 

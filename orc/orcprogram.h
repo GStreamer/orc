@@ -96,14 +96,6 @@ struct _OrcProgram {
   unsigned int current_line;
 };
 
-#define ORC_SRC_ARG(p,i,n) ((p)->vars[(i)->src_args[(n)]].alloc)
-#define ORC_DEST_ARG(p,i,n) ((p)->vars[(i)->dest_args[(n)]].alloc)
-#define ORC_SRC_TYPE(p,i,n) ((p)->vars[(i)->src_args[(n)]].vartype)
-#define ORC_DEST_TYPE(p,i,n) ((p)->vars[(i)->dest_args[(n)]].vartype)
-#define ORC_SRC_VAL(p,insn,n) ((p)->vars[(insn)->src_args[(n)]].value.i)
-#define ORC_DEST_VAL(p,insn,n) ((p)->vars[(insn)->dest_args[(n)]].value.i)
-
-
 ORC_API OrcProgram * orc_program_new (void);
 ORC_API OrcProgram * orc_program_new_ds (int size1, int size2);
 ORC_API OrcProgram * orc_program_new_dss (int size1, int size2, int size3);

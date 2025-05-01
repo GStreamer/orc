@@ -12,9 +12,6 @@
 
 ORC_BEGIN_DECLS
 
-typedef struct _OrcFixup OrcFixup;
-
-
 #define ORC_ENABLE_ASM_CODE
 #ifdef ORC_ENABLE_ASM_CODE
 #define ORC_ASM_CODE(compiler,...) orc_compiler_append_code(compiler, __VA_ARGS__)
@@ -23,10 +20,9 @@ typedef struct _OrcFixup OrcFixup;
 #endif
 
 
-#define ORC_COMPILER_ERROR(compiler, ...) do { \
-  compiler->error = TRUE; \
-  compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE; \
-  orc_debug_print(ORC_DEBUG_WARNING, __FILE__, ORC_FUNCTION, __LINE__, __VA_ARGS__); \
+#define ORC_COMPILER_ERROR(compiler, fmt, ...) do { \
+  orc_compiler_error (compiler, fmt, ##__VA_ARGS__); \
+  orc_debug_print(ORC_DEBUG_WARNING, __FILE__, ORC_FUNCTION, __LINE__, fmt, ##__VA_ARGS__); \
 } while (0)
 
 #if 0
@@ -46,98 +42,6 @@ typedef enum {
 
 #define ORC_COMPILE_RESULT_IS_SUCCESSFUL(x) ((x) < 0x100)
 #define ORC_COMPILE_RESULT_IS_FATAL(x) ((x) >= 0x200)
-
-/**
- * OrcFixup:
- *
- * The OrcFixup structure has no public members
- */
-struct _OrcFixup {
-  /*< private >*/
-  unsigned char *ptr;
-  int type;
-  int label;
-};
-
-/**
- * OrcCompiler:
- *
- * The OrcCompiler structure has no public members
- */
-struct _OrcCompiler {
-  /*< private >*/
-  OrcProgram *program;
-  OrcTarget *target;
-
-  unsigned int target_flags;
-
-  OrcInstruction insns[ORC_N_INSNS];
-  int n_insns;
-
-  OrcVariable vars[ORC_N_COMPILER_VARIABLES];
-  int n_temp_vars;
-  int n_dup_vars;
-
-  unsigned char *code;
-  unsigned char *codeptr;
-  
-  OrcConstant constants[ORC_N_CONSTANTS];
-  int n_constants;
-
-  OrcFixup fixups[ORC_N_FIXUPS];
-  int n_fixups;
-  unsigned char *labels[ORC_N_LABELS];
-  int labels_int[ORC_N_LABELS];
-  int n_labels;
-
-  int error;
-  char *error_msg;
-  OrcCompileResult result;
-
-  int valid_regs[ORC_N_REGS];
-  int save_regs[ORC_N_REGS];
-  int used_regs[ORC_N_REGS];
-  int alloc_regs[ORC_N_REGS];
-
-  // 1 << loop shift means how many of these fit into a vector
-  int loop_shift;
-  int long_jumps;
-  int use_frame_pointer;
-
-  char *asm_code;
-  int asm_code_len;
-
-  int is_64bit;
-  int tmpreg;
-  int tmpreg2;
-  int exec_reg;
-  int gp_tmpreg;
-
-  int insn_index;
-  int unroll_index;
-  int need_mask_regs;
-  int unroll_shift;
-
-  int alloc_loop_counter;
-  int allow_gp_on_stack;
-  int loop_counter;
-  int size_region;
-  int has_iterator_opcode;
-
-  int offset;
-  int min_temp_reg;
-  int max_used_temp_reg;
-
-  int insn_shift; /* used when emitting rules */
-  int max_var_size; /* size of largest var */
-  int load_params;
-
-  void *output_insns;
-  int n_output_insns;
-  int n_output_insns_alloc;
-  int temp_regs[ORC_N_REGS];
-};
-
 
 ORC_API int orc_compiler_label_new (OrcCompiler *compiler);
 
@@ -161,6 +65,21 @@ ORC_API void orc_compiler_append_code (OrcCompiler *p, const char *fmt, ...) ORC
  
 #ifdef ORC_ENABLE_UNSTABLE_API
 
+/* We check if orcinternal.h was included before to avoid redefining
+ * the following macros. You need to first include orccompiler.h and
+ * then orcinternal.h, not the other way around
+ */
+#ifdef _ORC_INTERNAL_H_
+#error "Include orccompiler.h before including orcinternal.h"
+#endif
+
+#define ORC_SRC_ARG(p,i,n) (orc_compiler_get_variable ((p), (i)->src_args[(n)])->alloc)
+#define ORC_DEST_ARG(p,i,n) (orc_compiler_get_variable ((p), (i)->dest_args[(n)])->alloc)
+#define ORC_SRC_TYPE(p,i,n) (orc_compiler_get_variable ((p), (i)->src_args[(n)])->vartype)
+#define ORC_DEST_TYPE(p,i,n) (orc_compiler_get_variable ((p), (i)->dest_args[(n)])->vartype)
+#define ORC_SRC_VAL(p,insn,n) (orc_compiler_get_variable ((p), (insn)->src_args[(n)])->value.i)
+#define ORC_DEST_VAL(p,insn,n) (orc_compiler_get_variable ((p), (insn)->dest_args[(n)])->value.i)
+
 ORC_API orc_bool orc_compiler_flag_check (const char *flag);
 ORC_API OrcCompileResult orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTarget *target, unsigned int flags);
 
@@ -172,6 +91,7 @@ ORC_API int orc_compiler_get_constant_full (OrcCompiler *c, OrcConstant *cnst);
 ORC_API void orc_compiler_load_constant (OrcCompiler *c, int reg, OrcConstant *cnst);
 ORC_API void  orc_compiler_load_constant_from_size_and_value (OrcCompiler *c,
     int reg, int size, orc_uint64 value);
+ORC_API const OrcVariable * orc_compiler_get_variable (OrcCompiler *c, OrcVariableId idx);
 
 #endif
 

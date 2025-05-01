@@ -1799,3 +1799,11 @@ orc_compiler_emit_invariants (OrcCompiler *compiler)
     }
   }
 }
+
+const OrcVariable *
+orc_compiler_get_variable (OrcCompiler *c, OrcVariableId idx)
+{
+  if (idx < 0 || idx > ORC_N_VARIABLES)
+    return NULL;
+  return &c->vars[idx];
+}

@@ -28,8 +28,9 @@
 */
 #include "config.h"
 
-#include <orc/orcmips.h>
 #include <orc/orcdebug.h>
+#include <orc/orcmips.h>
+#include <orc/orcinternal.h>
 
 #define MIPS_IMMEDIATE_INSTRUCTION(opcode,rs,rt,immediate) \
     (((opcode) & 0x3f) << 26 \

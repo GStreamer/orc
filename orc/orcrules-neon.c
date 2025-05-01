@@ -8,6 +8,7 @@
 #include <sys/types.h>
 
 #include <orc/orcprogram.h>
+#include <orc/orcinternal.h>
 #include <orc/orcarm.h>
 #include <orc/orcdebug.h>
 

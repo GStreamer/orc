@@ -9,6 +9,7 @@
 
 #include <orc/orc.h>
 #include <orc/orcutils-private.h>
+#include <orc/orcinternal.h>
 #include <orc/orcx86.h>
 #include <orc/orcx86-private.h>
 #include <orc/orcx86insn.h>

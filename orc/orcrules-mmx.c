@@ -10,6 +10,7 @@
 
 #include <orc/orcprogram.h>
 #include <orc/orcdebug.h>
+#include <orc/orcinternal.h>
 #include <orc/orcmmx.h>
 
 #define ORC_REG_SIZE 8

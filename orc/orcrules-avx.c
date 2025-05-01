@@ -16,6 +16,7 @@
 #include <orc/orcavxinsn.h>
 #include <orc/orcdebug.h>
 #include <orc/orccompiler.h>
+#include <orc/orcinternal.h>
 
 /* avx/avx2 rules */
 // rules for calculating vector width:
