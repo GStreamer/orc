@@ -3,6 +3,7 @@
 #define _ORC_EXECUTOR_H_
 
 #include <orc/orclimits.h>
+#include <orc/orcvariable.h>
 #include <orc/orcutils.h>
 
 ORC_BEGIN_DECLS
