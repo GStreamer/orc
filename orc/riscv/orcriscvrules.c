@@ -415,7 +415,34 @@ orc_riscv_rule_muluX (OrcCompiler *c, void *user, OrcInstruction *insn)
   orc_riscv_insn_emit_vmul_vv (c, dest, tmp1, tmp2);
 }
 
-void
+static void
+orc_riscv_rule_accX (OrcCompiler *c, void *user, OrcInstruction *insn)
+{
+  const OrcRiscvRegister src = ORC_SRC_ARG (c, insn, 0);
+  const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
+
+  orc_riscv_insn_emit_vadd_vv (c, dest, src, dest);
+}
+
+static void
+orc_riscv_rule_accsadubl (OrcCompiler *c, void *user, OrcInstruction *insn)
+{
+  const OrcRiscvRegister src1 = ORC_SRC_ARG (c, insn, 0);
+  const OrcRiscvRegister src2 = ORC_SRC_ARG (c, insn, 1);
+  const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
+  const OrcRiscvRegister tmp1 = ORC_RISCV_V1;
+  const OrcRiscvRegister tmp2 = ORC_RISCV_V2;
+
+  orc_riscv_insn_emit_vext_z4 (c, tmp1, src1);
+  orc_riscv_insn_emit_vext_z4 (c, tmp2, src2);
+  orc_riscv_insn_emit_vadd_vv (c, dest, dest, tmp1);
+  orc_riscv_insn_emit_vadd_vv (c, dest, dest, tmp2);
+  orc_riscv_insn_emit_vmin_vv (c, tmp1, tmp2, tmp1);
+  orc_riscv_insn_emit_vsub_vv (c, dest, dest, tmp1);
+  orc_riscv_insn_emit_vsub_vv (c, dest, dest, tmp1);
+}
+
+static void
 orc_riscv_rule_mergebw (OrcCompiler *c, void *user, OrcInstruction *insn)
 {
   const OrcRiscvRegister src1 = ORC_SRC_ARG (c, insn, 0);
@@ -1115,6 +1142,10 @@ orc_riscv_rules_init (OrcTarget *target)
   REG (mulubw, muluX, 16, FALSE);
   REG (muluwl, muluX, 32, FALSE);
   REG (mululq, muluX, 64, FALSE);
+
+  REG (accw, accX, 16, FALSE);
+  REG (accl, accX, 32, FALSE);
+  REG (accsadubl, accsadubl, 32, TRUE);
 
   REG (splatw3q, splatw3q, 64, FALSE);
   REG (splatbw, splatbw, 16, FALSE);

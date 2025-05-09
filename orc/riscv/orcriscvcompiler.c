@@ -389,6 +389,31 @@ orc_riscv_compiler_emit_full_loop (OrcCompiler *c)
   orc_riscv_compiler_add_label (c, LABEL_END);
 }
 
+static void
+orc_riscv_compiler_save_accumulators (OrcCompiler *c)
+{
+  for (int i = 0; i < ORC_N_COMPILER_VARIABLES; i++) {
+    if (c->vars[i].vartype == ORC_VAR_TYPE_ACCUMULATOR) {
+      const OrcRiscvSEW sew = orc_riscv_bytes_to_sew (c->vars[i].size);
+      const OrcRiscvVtype vtype = orc_riscv_compiler_compute_vtype (c, sew, 0);
+      const OrcRiscvRegister reg = c->vars[i].alloc;
+      const int offset =
+          ORC_STRUCT_OFFSET (OrcExecutor, accumulators[i - ORC_VAR_A1]);
+
+      orc_riscv_insn_emit_vsetvli (c, c->gp_tmpreg, ORC_RISCV_ZERO, vtype);
+      orc_riscv_insn_emit_vand_vi (c, ORC_RISCV_V0, ORC_RISCV_V0, 0);
+      orc_riscv_insn_emit_vredsum_vv (c, reg, ORC_RISCV_V0, reg);
+      orc_riscv_insn_emit_vmv_xs (c, c->gp_tmpreg, reg);
+
+      if (c->vars[i].size == 2) {
+        orc_riscv_insn_emit_sh (c, c->exec_reg, c->gp_tmpreg, offset);
+      } else {
+        orc_riscv_insn_emit_sw (c, c->exec_reg, c->gp_tmpreg, offset);
+      }
+    }
+  }
+}
+
 void
 orc_riscv_compiler_assemble (OrcCompiler *c)
 {
@@ -397,6 +422,6 @@ orc_riscv_compiler_assemble (OrcCompiler *c)
   orc_riscv_compiler_load_constants (c);
   orc_riscv_compiler_emit_full_loop (c);
   orc_riscv_compiler_do_fixups (c);
-  /* TODO: save accumulators */
+  orc_riscv_compiler_save_accumulators (c);
   orc_riscv_compiler_emit_epilogue (c);
 }
