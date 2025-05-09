@@ -49,6 +49,7 @@ ORC_API void orc_riscv_insn_emit_and (OrcCompiler *c, OrcRiscvRegister rd, OrcRi
 ORC_API void orc_riscv_insn_emit_xor (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, OrcRiscvRegister rs2);
 ORC_API void orc_riscv_insn_emit_slt (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, OrcRiscvRegister rs2);
 ORC_API void orc_riscv_insn_emit_sra (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, OrcRiscvRegister rs2);
+ORC_API void orc_riscv_insn_emit_srli (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, int imm);
 ORC_API void orc_riscv_insn_emit_sb (OrcCompiler *c, OrcRiscvRegister rs1, OrcRiscvRegister rs2, int imm);
 ORC_API void orc_riscv_insn_emit_lb (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, int imm);
 ORC_API void orc_riscv_insn_emit_sh (OrcCompiler *c, OrcRiscvRegister rs1, OrcRiscvRegister rs2, int imm);
@@ -72,6 +73,7 @@ ORC_API void orc_riscv_insn_emit_bgeu (OrcCompiler *c, OrcRiscvRegister rs1, Orc
 ORC_API void orc_riscv_insn_emit_bgeuz (OrcCompiler *c, OrcRiscvRegister rs1, int label);
 ORC_API void orc_riscv_insn_emit_jal (OrcCompiler *c, OrcRiscvRegister rd, int imm);
 ORC_API void orc_riscv_insn_emit_jalr (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, int imm);
+ORC_API void orc_riscv_insn_emit_ret (OrcCompiler *c);
 ORC_API void orc_riscv_insn_emit_csrrw (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, int csr);
 ORC_API void orc_riscv_insn_emit_csrrs (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, int csr);
 ORC_API void orc_riscv_insn_emit_csrrc (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, int csr);
