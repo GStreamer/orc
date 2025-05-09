@@ -40,6 +40,9 @@ ORC_TEST_API
 OrcTestResult orc_test_gcc_compile_mips (OrcProgram *p);
 
 ORC_TEST_API
+OrcTestResult orc_test_gcc_compile_riscv (OrcProgram *p);
+
+ORC_TEST_API
 void          orc_test_random_bits (void *data, int n_bytes);
 
 ORC_TEST_API

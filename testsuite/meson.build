@@ -65,6 +65,10 @@ if enabled_targets.contains('mips')
   noinst_bins += ['compile_opcodes_sys_mips']
 endif
 
+if enabled_targets.contains('riscv')
+  noinst_bins += ['compile_opcodes_sys_riscv', 'compile_parse_riscv']
+endif
+
 foreach bin : noinst_bins
   b = executable(bin, bin + '.c',
                  gnu_symbol_visibility: 'inlineshidden',
