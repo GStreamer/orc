@@ -657,7 +657,792 @@ orc_riscv_insn_emit_vadd_vi (OrcCompiler *c,
     OrcRiscvRegister vd, OrcRiscvRegister vs2, int imm)
 {
   ORC_ASM_CODE (c, "  vadd.vi %s, %s, %d\n", NAME (vd), NAME (vs2), imm);
-  /* TODO: emit machine code */
+  orc_riscv_insn_vop (c, 0b000000, 1, VREG (vs2), imm & 0b11111, OPIVI,
+      VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vadd_vim (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, int imm)
+{
+  ORC_ASM_CODE (c, "  vadd.vi %s, %s, %d, v0.t\n", NAME (vd), NAME (vs2), imm);
+  orc_riscv_insn_vop (c, 0b000000, 0, VREG (vs2), imm & 0b11111, OPIVI,
+      VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vdiv_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vdiv.vv %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b100001, 1, VREG (vs2), VREG (vs1), OPMVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vdivu_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vdivu.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b100000, 1, VREG (vs2), VREG (vs1), OPMVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vdivu_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vdivu.vx %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b100000, 1, VREG (vs2), XREG (rs1), OPMVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vaadd_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vaadd.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b001001, 1, VREG (vs2), VREG (vs1), OPMVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vaaddu_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vaaddu.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b001000, 1, VREG (vs2), VREG (vs1), OPMVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vsll_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vsll.vv %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b100101, 1, VREG (vs2), VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vsll_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vsll.vx %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b100101, 1, VREG (vs2), XREG (rs1), OPIVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vsll_vi (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, int imm)
+{
+  ORC_ASM_CODE (c, "  vsll.vi %s, %s, %d\n", NAME (vd), NAME (vs2), imm);
+  orc_riscv_insn_vop (c, 0b100101, 1, VREG (vs2), imm & 0b11111, OPIVI,
+      VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vwsll_vi (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, int imm)
+{
+  ORC_ASM_CODE (c, "  vwsll.vv %s, %s, %d\n", NAME (vd), NAME (vs2), imm);
+  orc_riscv_insn_vop (c, 0b110101, 1, VREG (vs2), imm & 0b11111, OPIVI,
+      VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vsrl_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vsrl.vv %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b101000, 1, VREG (vs2), VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vsrl_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vsrl.vx %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b101000, 1, VREG (vs2), XREG (rs1), OPIVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vsrl_vi (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, int imm)
+{
+  ORC_ASM_CODE (c, "  vsrl.vi %s, %s, %d\n", NAME (vd), NAME (vs2), imm);
+  orc_riscv_insn_vop (c, 0b101000, 1, VREG (vs2), imm & 0b11111, OPIVI,
+      VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vnsrl_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vnsrl.wx %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b101100, 1, VREG (vs2), XREG (rs1), OPIVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vnsrl_vi (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, int imm)
+{
+  ORC_ASM_CODE (c, "  vnsrl.wi %s, %s, %d\n", NAME (vd), NAME (vs2), imm);
+  orc_riscv_insn_vop (c, 0b101100, 1, VREG (vs2), imm & 0b11111, OPIVI,
+      VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vsra_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vsra.vv %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b101001, 1, VREG (vs2), VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vsra_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vsra.vx %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b101001, 1, VREG (vs2), XREG (rs1), OPIVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vsra_vi (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, int imm)
+{
+  ORC_ASM_CODE (c, "  vsra.vi %s, %s, %d\n", NAME (vd), NAME (vs2), imm);
+  orc_riscv_insn_vop (c, 0b101001, 1, VREG (vs2), imm & 0b11111, OPIVI,
+      VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmv_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vmv.v.v %s, %s\n", NAME (vd), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b010111, 1, 0, VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmv_vvm (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vmv.v.v %s, %s\n", NAME (vd), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b010111, 0, 0, VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmv_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vmv.v.x %s, %s\n", NAME (vd), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b010111, 1, 0, XREG (rs1), OPIVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmv_vi (OrcCompiler *c, OrcRiscvRegister vd, int imm)
+{
+  ORC_ASM_CODE (c, "  vmv.v.i %s, %d\n", NAME (vd), imm);
+  orc_riscv_insn_vop (c, 0b010111, 1, 0, imm & 0b11111, OPIVI, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vnmv_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vnmv.v.v %s, %s\n", NAME (vd), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b010111, 1, 0, VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vwmv_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vwmv.v.v %s, %s\n", NAME (vd), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b010111, 1, 0, VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vsadd_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vsadd.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs1), NAME (vs2));
+  orc_riscv_insn_vop (c, 0b100001, 1, VREG (vs1), VREG (vs2), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vsaddu_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vsaddu.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs1), NAME (vs2));
+  orc_riscv_insn_vop (c, 0b100000, 1, VREG (vs1), VREG (vs2), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vsub_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vsub.vv %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b000010, 1, VREG (vs2), VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vsub_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vsub.vx %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b000010, 1, VREG (vs2), XREG (rs1), OPIVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vssubu_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vssubu.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b100010, 1, VREG (vs2), VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vssub_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vssub.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b100011, 1, VREG (vs2), VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vand_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vand.vv %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b001001, 1, VREG (vs2), VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vand_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister rs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vand.vx %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b001001, 1, VREG (vs2), XREG (rs1), OPIVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vandn_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vandn.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b001001, 1, VREG (vs2), VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vand_vi (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, int imm)
+{
+  ORC_ASM_CODE (c, "  vand.vi %s, %s, %d\n", NAME (vd), NAME (vs2), imm);
+  orc_riscv_insn_vop (c, 0b001001, 1, imm & 0b11111, VREG (vs2), OPIVI,
+      VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vor_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vor.vv %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b001010, 1, VREG (vs2), VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vor_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister rs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vor.vx %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b001010, 1, VREG (vs2), XREG (rs1), OPIVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vxor_vi (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, int imm)
+{
+  ORC_ASM_CODE (c, "  vxor.vi %s, %s, %d\n", NAME (vd), NAME (vs2), imm);
+  orc_riscv_insn_vop (c, 0b001011, 1, VREG (vs2), imm & 0b11111, OPIVI,
+      VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vxor_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vxor.vv %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b001011, 1, VREG (vs2), VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vxor_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister rs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vxor.vx %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b001011, 1, VREG (vs2), XREG (rs1), OPIVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmax_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vmax.vv %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b000111, 1, VREG (vs2), VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmaxu_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vmaxu.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b000110, 1, VREG (vs2), VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmax_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister rs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vmax.vx %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b000111, 1, VREG (vs2), XREG (rs1), OPIVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmaxu_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister rs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vmax.vx %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b000111, 1, VREG (vs2), XREG (rs1), OPIVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmin_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vmin.vv %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b000101, 1, VREG (vs2), VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vminu_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vminu.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b000100, 1, VREG (vs2), VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmin_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister rs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vmin.vx %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b000101, 1, VREG (vs2), XREG (rs1), OPIVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vminu_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister rs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vminu.vx %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b000100, 1, VREG (vs2), XREG (rs1), OPIVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vneg (OrcCompiler *c, OrcRiscvRegister vd,
+    OrcRiscvRegister vs2)
+{
+  orc_riscv_insn_emit_vxor_vi (c, vd, vs2, -1);
+}
+
+
+void
+orc_riscv_insn_emit_vmsne_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vmsne.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b011001, 1, VREG (vs2), VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmsne_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vmsne.vx %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b011001, 1, VREG (vs2), XREG (rs1), OPIVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmslt_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vmslt.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b011011, 1, VREG (vs2), VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmslt_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vmslt.vx %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b011011, 1, VREG (vs2), XREG (rs1), OPIVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmsle_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vmsle.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b011101, 1, VREG (vs2), VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmsgt_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vmsgt.vx %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b011111, 1, VREG (vs2), XREG (rs1), OPIVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmseq_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vmseq.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b011000, 1, VREG (vs2), VREG (vs1), OPIVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmseq_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vmseq.vx %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b011000, 1, VREG (vs2), XREG (rs1), OPIVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vrev8 (OrcCompiler *c, OrcRiscvRegister vd,
+    OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vrev8.v %s, %s\n", NAME (vd), NAME (vs2));
+  orc_riscv_insn_vop (c, 0b010010, 1, VREG (vs2), 0b01001, OPMVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmul_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vmul.vv %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b100101, 1, VREG (vs2), VREG (vs1), OPMVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmul_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister rs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vmul.vx %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b100101, 1, VREG (vs2), XREG (rs1), OPMVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmulh_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vmulh.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b100111, 1, VREG (vs2), VREG (vs1), OPMVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmulhu_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vmulhu.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b100100, 1, VREG (vs2), VREG (vs1), OPMVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vnclip_vi (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, int imm)
+{
+  ORC_ASM_CODE (c, "  vnclip.wi %s, %s, %d\n", NAME (vd), NAME (vs1), imm);
+  orc_riscv_insn_vop (c, 0b101111, 1, VREG (vs1), imm & 0b11111, OPIVI,
+      VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vnclip_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister rs2)
+{
+  ORC_ASM_CODE (c, "  vnclip.wx %s, %s, %s\n",
+      NAME (vd), NAME (vs1), NAME (rs2));
+  orc_riscv_insn_vop (c, 0b101111, 1, XREG (rs2), VREG (vs1), OPIVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vnclipu_vx (OrcCompiler *c, OrcRiscvRegister vd,
+    OrcRiscvRegister rs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vnclipu.wx %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b101110, 1, VREG (vs2), XREG (rs1), OPIVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vnclipu_vi (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, int imm)
+{
+  ORC_ASM_CODE (c, "  vnclipu.wi %s, %s, %d\n", NAME (vd), NAME (vs1), imm);
+  orc_riscv_insn_vop (c, 0b101110, 1, VREG (vs1), imm & 0b11111, OPIVI,
+      VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vnsra_vi (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, int imm)
+{
+  ORC_ASM_CODE (c, "  vnsra.wi %s, %s, %d\n", NAME (vd), NAME (vs2), imm);
+  orc_riscv_insn_vop (c, 0b101101, 1, VREG (vs2), imm & 0b11111, OPIVI,
+      VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vwadd_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister rs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vwadd.vx %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b110001, 1, VREG (vs2), XREG (rs1), OPMVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vwaddu_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister rs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vwaddu.wx %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b110100, 1, VREG (vs2), XREG (rs1), OPMVX, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vext_z2 (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vzext.vf2 %s, %s\n", NAME (vd), NAME (vs2));
+  orc_riscv_insn_vop (c, 0b010010, 1, VREG (vs2), 0b00110, OPMVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vext_z4 (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vzext.vf4 %s, %s\n", NAME (vd), NAME (vs2));
+  orc_riscv_insn_vop (c, 0b010010, 1, VREG (vs2), 0b00100, OPMVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vext_s2 (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vsext.vf2 %s, %s\n", NAME (vd), NAME (vs2));
+  orc_riscv_insn_vop (c, 0b010010, 1, VREG (vs2), 0b00111, OPMVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vext_s4 (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vsext.vf4 %s, %s\n", NAME (vd), NAME (vs2));
+  orc_riscv_insn_vop (c, 0b010010, 1, VREG (vs2), 0b00101, OPMVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vfadd_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vfadd.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b000000, 1, VREG (vs2), VREG (vs1), OPFVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vfadd_vvm (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vfadd.vv %s, %s, %s, v0.t\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b000000, 0, VREG (vs2), VREG (vs1), OPFVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vfsub_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vfsub.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b000010, 1, VREG (vs2), VREG (vs1), OPFVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vfdiv_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vfdiv.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b100000, 1, VREG (vs2), VREG (vs1), OPFVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vfmul_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vfmul.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b100100, 1, VREG (vs2), VREG (vs1), OPFVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vfsqrt_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vfsqrt.v %s, %s\n", NAME (vd), NAME (vs2));
+  orc_riscv_insn_vop (c, 0b010011, 1, VREG (vs2), 0b00000, OPFVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmaxf_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vfmax.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b000110, 1, VREG (vs2), VREG (vs1), OPFVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vminf_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vfmin.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b000100, 1, VREG (vs2), VREG (vs1), OPFVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmflt_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vmflt.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b011011, 1, VREG (vs2), VREG (vs1), OPFVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmfle_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vmfle.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b011001, 1, VREG (vs2), VREG (vs1), OPFVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmfeq_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vmfeq.vv %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b011000, 1, VREG (vs2), VREG (vs1), OPFVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vfcvt_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vfcvt.x.f.v %s, %s\n", NAME (vd), NAME (vs2));
+  orc_riscv_insn_vop (c, 0b010010, 1, VREG (vs2), 0b00001, OPFVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vfxcvt_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vfcvt.f.x.v %s, %s\n", NAME (vd), NAME (vs2));
+  orc_riscv_insn_vop (c, 0b010010, 1, VREG (vs2), 0b00011, OPFVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vfxncvt_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vfncvt.x.f.w %s, %s\n", NAME (vd), NAME (vs2));
+  orc_riscv_insn_vop (c, 0b010010, 1, VREG (vs2), 0b10001, OPFVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vffncvt_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vfncvt.f.f.w %s, %s\n", NAME (vd), NAME (vs2));
+  orc_riscv_insn_vop (c, 0b010010, 1, VREG (vs2), 0b10100, OPFVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vxfncvt_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vfwcvt.f.x.v %s, %s\n", NAME (vd), NAME (vs2));
+  orc_riscv_insn_vop (c, 0b010010, 1, VREG (vs2), 0b01011, OPFVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vffwcvt_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vfwcvt.f.f.v %s, %s\n", NAME (vd), NAME (vs2));
+  orc_riscv_insn_vop (c, 0b010010, 1, VREG (vs2), 0b01100, OPFVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vredsum_vv (OrcCompiler *c, OrcRiscvRegister vd,
+    OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vredsum.vs %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (vs1));
+  orc_riscv_insn_vop (c, 0b000000, 1, VREG (vs2), VREG (vs1), OPMVV, VREG (vd));
+}
+
+void
+orc_riscv_insn_emit_vmv_xs (OrcCompiler *c, OrcRiscvRegister rd,
+    OrcRiscvRegister vs2)
+{
+  ORC_ASM_CODE (c, "  vmv.x.s %s, %s\n", NAME (rd), NAME (vs2));
+  orc_riscv_insn_vop (c, 0b010000, 1, VREG (vs2), 0, OPMVV, XREG (rd));
+}
+
+void
+orc_riscv_insn_emit_vmv_sx (OrcCompiler *c, OrcRiscvRegister vd,
+    OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vmv.s.x %s, %s\n", NAME (vd), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b010000, 1, 0, XREG (rs1), OPMVX, VREG (vd));
 }
 
 void
