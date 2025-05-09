@@ -178,6 +178,7 @@ ORC_INTERNAL void orc_neon_init (void);
 ORC_INTERNAL void orc_c64x_init (void);
 ORC_INTERNAL void orc_c64x_c_init (void);
 ORC_INTERNAL void orc_mips_init (void);
+ORC_INTERNAL void orc_riscv_init (void);
 
 typedef struct _OrcCodeRegion OrcCodeRegion;
 typedef struct _OrcCodeChunk OrcCodeChunk;

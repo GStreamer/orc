@@ -121,6 +121,8 @@ endif
 orc_lib_args = orc_c_args + ['-DBUILDING_ORC']
 orc_static_cargs = ['-DORC_STATIC_COMPILATION']
 
+subdir('riscv')
+
 orc_lib = library ('orc-' + orc_api,
   orc_sources,
   version : libversion,

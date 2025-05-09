@@ -37,7 +37,7 @@ if cc.has_link_argument('-Wl,-Bsymbolic-functions')
 endif
 
 all_targets = ['avx', 'sse', 'mmx']
-extra_targets = ['altivec', 'neon', 'mips', 'c64x'] # 'arm'
+extra_targets = ['altivec', 'neon', 'mips', 'c64x', 'riscv'] # 'arm'
 enabled_targets = []
 
 host_system = host_machine.system()
@@ -79,6 +79,8 @@ elif cpu_family == 'aarch64' and host_system != 'windows'
   cdata.set('HAVE_AARCH64', true)
 elif cpu_family == 'mips' and host_machine.endian() == 'little'
   cdata.set('HAVE_MIPSEL', true)
+elif cpu_family.startswith('riscv')
+  cdata.set('HAVE_RISCV', true)
 else
   warning(cpu_family + ' with ' + host_system + ' isn\'t a supported configuration for optimization')
 endif
@@ -258,6 +260,7 @@ summary({
   'MIPS': 'mips' in enabled_targets,
   'c64x': 'c64x' in enabled_targets,
   'Altivec': 'altivec' in enabled_targets,
+  'RISCV': 'riscv' in enabled_targets,
   }, section: 'Targets', bool_yn: true)
 
 if not have_docs

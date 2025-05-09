@@ -62,7 +62,7 @@ orc_malloc(size_t size)
   return ret;
 }
 
-#if defined(__arm__) || defined(__aarch64__) || defined(__mips__)
+#if defined(__arm__) || defined(__aarch64__) || defined(__mips__) || defined(__riscv)
 char *
 get_proc_cpuinfo (void)
 {

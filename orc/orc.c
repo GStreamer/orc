@@ -74,6 +74,9 @@ orc_init (void)
 #ifdef ENABLE_TARGET_MIPS
       orc_mips_init();
 #endif
+#ifdef ENABLE_TARGET_RISCV
+      orc_riscv_init();
+#endif
 
       inited = TRUE;
     }
