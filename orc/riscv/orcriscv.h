@@ -111,6 +111,37 @@ typedef enum {
   ORC_RISCV_OUTER_COUNTER = ORC_RISCV_T3,
 } OrcRiscvRegister;
 
+typedef enum {
+  ORC_RISCV_SEW_8,
+  ORC_RISCV_SEW_16,
+  ORC_RISCV_SEW_32,
+  ORC_RISCV_SEW_64,
+  ORC_RISCV_SEW_NOT_APPLICABLE,
+} OrcRiscvSEW;
+
+typedef enum {
+  ORC_RISCV_LMUL_1,
+  ORC_RISCV_LMUL_2,
+  ORC_RISCV_LMUL_4,
+  ORC_RISCV_LMUL_8,
+  ORC_RISCV_LMUL_RESERVED,
+  ORC_RISCV_LMUL_F8,
+  ORC_RISCV_LMUL_F4,
+  ORC_RISCV_LMUL_F2,
+} OrcRiscvLMUL;
+
+typedef struct {
+  OrcRiscvLMUL vlmul : 3;
+  OrcRiscvSEW vsew : 3;
+  orc_bool vta : 1;
+  orc_bool vma : 1;
+} OrcRiscvVtype;
+
+typedef struct {
+  OrcRiscvSEW element_width;
+  orc_bool needs_mask_reg;
+} OrcRiscvRuleInfo;
+
 #endif /* ORC_ENABLE_UNSTABLE_API */
 
 ORC_END_DECLS

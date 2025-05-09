@@ -89,6 +89,20 @@ orc_riscv_compiler_add_fixup (OrcCompiler *c, int label)
   ORC_ASSERT (FALSE);           /* TODO */
 }
 
+OrcRiscvVtype
+orc_riscv_compiler_compute_vtype (OrcCompiler *c, OrcRiscvSEW element_width,
+    int insn_shift)
+{
+  OrcRiscvVtype vtype = { };
+
+  vtype.vsew = element_width;
+  vtype.vlmul = (c->loop_shift + insn_shift + vtype.vsew - 3) & 0x7;
+  vtype.vma = TRUE;
+  vtype.vta = TRUE;
+
+  return vtype;
+}
+
 void
 orc_riscv_compiler_assemble (OrcCompiler *c)
 {

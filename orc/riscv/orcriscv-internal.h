@@ -30,6 +30,7 @@
 #define _ORC_RISCV_INTERNAL_H_
 
 #include <orc/orcutils.h>
+#include <orc/riscv/orcriscv.h>
 
 ORC_BEGIN_DECLS
 
@@ -41,6 +42,7 @@ ORC_BEGIN_DECLS
 ORC_INTERNAL void orc_riscv_compiler_assemble (OrcCompiler * c);
 ORC_INTERNAL void orc_riscv_compiler_init (OrcCompiler * c);
 ORC_INTERNAL void orc_riscv_compiler_add_fixup (OrcCompiler *c, int label);
+ORC_INTERNAL OrcRiscvVtype orc_riscv_compiler_compute_vtype (OrcCompiler *c, OrcRiscvSEW element_width, int insn_shift);
 
 /* orcriscvrules.c */
 ORC_INTERNAL void orc_riscv_rules_init (OrcTarget * target);

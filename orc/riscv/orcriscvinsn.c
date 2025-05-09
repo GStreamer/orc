@@ -352,6 +352,132 @@ orc_riscv_insn_emit_csrrc (OrcCompiler *c, OrcRiscvRegister rd,
   /* TODO: emit machine code */
 }
 
+static const char *
+orc_riscv_lmul_str (OrcRiscvVtype vtype)
+{
+  switch (vtype.vlmul) {
+    case ORC_RISCV_LMUL_1:
+      return "m1";
+    case ORC_RISCV_LMUL_2:
+      return "m2";
+    case ORC_RISCV_LMUL_4:
+      return "m4";
+    case ORC_RISCV_LMUL_8:
+      return "m8";
+    case ORC_RISCV_LMUL_F8:
+      return "mf8";
+    case ORC_RISCV_LMUL_F4:
+      return "mf4";
+    case ORC_RISCV_LMUL_F2:
+      return "mf2";
+    default:
+      ORC_ASSERT ("Invalid LMUL");
+      return NULL;              /* unreachable */
+  }
+}
+
+void
+orc_riscv_insn_emit_vsetvli (OrcCompiler *c,
+    OrcRiscvRegister rd, OrcRiscvRegister rs1, OrcRiscvVtype vtype)
+{
+  ORC_ASSERT (vtype.vsew <= ORC_RISCV_SEW_64);
+  ORC_ASM_CODE (c, "  vsetvli %s, %s, e%d, %s, %s, %s\n",
+      NAME (rd),
+      NAME (rs1),
+      8 << vtype.vsew,
+      orc_riscv_lmul_str (vtype),
+      vtype.vta ? "ta" : "tu", vtype.vma ? "ma" : "mu");
+  /* TODO: emit machine code */
+}
+
+void
+orc_riscv_insn_emit_vle8 (OrcCompiler *c, OrcRiscvRegister vd,
+    OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vle8.v %s, (%s)\n", NAME (vd), NAME (rs1));
+  /* TODO: emit machine code */
+}
+
+void
+orc_riscv_insn_emit_vle16 (OrcCompiler *c, OrcRiscvRegister vd,
+    OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vle16.v %s, (%s)\n", NAME (vd), NAME (rs1));
+  /* TODO: emit machine code */
+}
+
+void
+orc_riscv_insn_emit_vle32 (OrcCompiler *c, OrcRiscvRegister vd,
+    OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vle32.v %s, (%s)\n", NAME (vd), NAME (rs1));
+  /* TODO: emit machine code */
+}
+
+void
+orc_riscv_insn_emit_vle64 (OrcCompiler *c, OrcRiscvRegister vd,
+    OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vle64.v %s, (%s)\n", NAME (vd), NAME (rs1));
+  /* TODO: emit machine code */
+}
+
+void
+orc_riscv_insn_emit_vse8 (OrcCompiler *c, OrcRiscvRegister vs3,
+    OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vse8.v %s, (%s)\n", NAME (vs3), NAME (rs1));
+  /* TODO: emit machine code */
+}
+
+void
+orc_riscv_insn_emit_vse16 (OrcCompiler *c,
+    OrcRiscvRegister vs3, OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vse16.v %s, (%s)\n", NAME (vs3), NAME (rs1));
+  /* TODO: emit machine code */
+}
+
+void
+orc_riscv_insn_emit_vse32 (OrcCompiler *c,
+    OrcRiscvRegister vs3, OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vse32.v %s, (%s)\n", NAME (vs3), NAME (rs1));
+  /* TODO: emit machine code */
+}
+
+void
+orc_riscv_insn_emit_vse64 (OrcCompiler *c,
+    OrcRiscvRegister vs3, OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vse64.v %s, (%s)\n", NAME (vs3), NAME (rs1));
+  /* TODO: emit machine code */
+}
+
+void
+orc_riscv_insn_emit_vadd_vv (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
+{
+  ORC_ASM_CODE (c, "  vadd.vv %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (vs1));
+  /* TODO: emit machine code */
+}
+
+void
+orc_riscv_insn_emit_vadd_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vadd.vx %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (rs1));
+  /* TODO: emit machine code */
+}
+
+void
+orc_riscv_insn_emit_vadd_vi (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, int imm)
+{
+  ORC_ASM_CODE (c, "  vadd.vi %s, %s, %d\n", NAME (vd), NAME (vs2), imm);
+  /* TODO: emit machine code */
+}
+
 void
 orc_riscv_insn_emit_shift_add (OrcCompiler *c, OrcRiscvRegister rd,
     orc_uint32 imm)
