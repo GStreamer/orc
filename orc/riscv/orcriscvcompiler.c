@@ -30,6 +30,7 @@
 #include <orc/orcdebug.h>
 #include <orc/orcinternal.h>
 #include <orc/orclimits.h>
+#include <orc/orcprogram.h>
 #include <orc/orcutils.h>
 
 #include <orc/riscv/orcriscv-internal.h>
@@ -83,10 +84,44 @@ orc_riscv_compiler_init (OrcCompiler *c)
   c->load_params = TRUE;
 }
 
+static void
+orc_riscv_compiler_add_label (OrcCompiler *c, int label)
+{
+  ORC_ASSERT (label < ORC_N_LABELS);
+  ORC_ASM_CODE (c, ".L%s_%d:\n", c->program->name, label);
+  c->labels[label] = c->codeptr;
+}
+
 void
 orc_riscv_compiler_add_fixup (OrcCompiler *c, int label)
 {
-  ORC_ASSERT (FALSE);           /* TODO */
+  ORC_ASSERT (c->n_fixups < ORC_N_FIXUPS);
+  c->fixups[c->n_fixups].ptr = c->codeptr;
+  c->fixups[c->n_fixups].label = label;
+  c->fixups[c->n_fixups].type = 0;
+  c->n_fixups++;
+}
+
+static void
+orc_riscv_compiler_do_fixups (OrcCompiler *c)
+{
+  for (int i = 0; i < c->n_fixups; i++) {
+    const void *label = c->labels[c->fixups[i].label];
+    const void *ptr = c->fixups[i].ptr;
+    const int diff = label - ptr;
+
+    orc_uint32 code = ORC_READ_UINT32_LE (ptr);
+
+    /* We only need to support branch-type fixups */
+    ORC_ASSERT (diff < 4096);
+    ORC_ASSERT (diff >= -4096);
+    code |= (0b1000000000000 & diff) << (31 - 12);
+    code |= (0b0100000000000 & diff) >> (11 - 7);
+    code |= (0b0011111100000 & diff) << (25 - 5);
+    code |= (0b0000000011110 & diff) << (8 - 1);
+
+    ORC_WRITE_UINT32_LE (ptr, code);
+  }
 }
 
 OrcRiscvVtype
