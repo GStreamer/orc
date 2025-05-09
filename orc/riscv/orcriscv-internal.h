@@ -40,6 +40,7 @@ ORC_BEGIN_DECLS
 /* orcriscvcompiler.c */
 ORC_INTERNAL void orc_riscv_compiler_assemble (OrcCompiler * c);
 ORC_INTERNAL void orc_riscv_compiler_init (OrcCompiler * c);
+ORC_INTERNAL void orc_riscv_compiler_add_fixup (OrcCompiler *c, int label);
 
 /* orcriscvrules.c */
 ORC_INTERNAL void orc_riscv_rules_init (OrcTarget * target);

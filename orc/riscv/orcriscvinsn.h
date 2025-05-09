@@ -30,4 +30,59 @@
 #ifndef _ORC_RISCV_INSN_H_
 #define _ORC_RISCV_INSN_H_
 
+#include <orc/orc.h>
+#include <orc/orcutils.h>
+#include <orc/riscv/orcriscv.h>
+
+ORC_BEGIN_DECLS
+
+#ifdef ORC_ENABLE_UNSTABLE_API
+
+/* Scalar instructions */
+ORC_API void orc_riscv_insn_emit_add (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, OrcRiscvRegister rs2);
+ORC_API void orc_riscv_insn_emit_addi (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, int imm);
+ORC_API void orc_riscv_insn_emit_sub (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, OrcRiscvRegister rs2);
+ORC_API void orc_riscv_insn_emit_sll (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, OrcRiscvRegister rs2);
+ORC_API void orc_riscv_insn_emit_slli (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, int imm);
+ORC_API void orc_riscv_insn_emit_or (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, OrcRiscvRegister rs2);
+ORC_API void orc_riscv_insn_emit_and (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, OrcRiscvRegister rs2);
+ORC_API void orc_riscv_insn_emit_xor (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, OrcRiscvRegister rs2);
+ORC_API void orc_riscv_insn_emit_slt (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, OrcRiscvRegister rs2);
+ORC_API void orc_riscv_insn_emit_sra (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, OrcRiscvRegister rs2);
+ORC_API void orc_riscv_insn_emit_sb (OrcCompiler *c, OrcRiscvRegister rs1, OrcRiscvRegister rs2, int imm);
+ORC_API void orc_riscv_insn_emit_lb (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, int imm);
+ORC_API void orc_riscv_insn_emit_sh (OrcCompiler *c, OrcRiscvRegister rs1, OrcRiscvRegister rs2, int imm);
+ORC_API void orc_riscv_insn_emit_lh (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, int imm);
+ORC_API void orc_riscv_insn_emit_sw (OrcCompiler *c, OrcRiscvRegister rs1, OrcRiscvRegister rs2, int imm);
+ORC_API void orc_riscv_insn_emit_lw (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, int imm);
+ORC_API void orc_riscv_insn_emit_sd (OrcCompiler *c, OrcRiscvRegister rs1, OrcRiscvRegister rs2, int imm);
+ORC_API void orc_riscv_insn_emit_ld (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, int imm);
+ORC_API void orc_riscv_insn_emit_lui (OrcCompiler *c, OrcRiscvRegister rd, int imm);
+ORC_API void orc_riscv_insn_emit_beq (OrcCompiler *c, OrcRiscvRegister rs1, OrcRiscvRegister rs2, int label);
+ORC_API void orc_riscv_insn_emit_beqz (OrcCompiler *c, OrcRiscvRegister rs1, int label);
+ORC_API void orc_riscv_insn_emit_bne (OrcCompiler *c, OrcRiscvRegister rs1, OrcRiscvRegister rs2, int label);
+ORC_API void orc_riscv_insn_emit_bnez (OrcCompiler *c, OrcRiscvRegister rs1, int label);
+ORC_API void orc_riscv_insn_emit_blt (OrcCompiler *c, OrcRiscvRegister rs1, OrcRiscvRegister rs2, int label);
+ORC_API void orc_riscv_insn_emit_bltz (OrcCompiler *c, OrcRiscvRegister rs1, int label);
+ORC_API void orc_riscv_insn_emit_bltu (OrcCompiler *c, OrcRiscvRegister rs1, OrcRiscvRegister rs2, int label);
+ORC_API void orc_riscv_insn_emit_bltuz (OrcCompiler *c, OrcRiscvRegister rs1, int label);
+ORC_API void orc_riscv_insn_emit_bge (OrcCompiler *c, OrcRiscvRegister rs1, OrcRiscvRegister rs2, int label);
+ORC_API void orc_riscv_insn_emit_bgez (OrcCompiler *c, OrcRiscvRegister rs1, int label);
+ORC_API void orc_riscv_insn_emit_bgeu (OrcCompiler *c, OrcRiscvRegister rs1, OrcRiscvRegister rs2, int label);
+ORC_API void orc_riscv_insn_emit_bgeuz (OrcCompiler *c, OrcRiscvRegister rs1, int label);
+ORC_API void orc_riscv_insn_emit_jal (OrcCompiler *c, OrcRiscvRegister rd, int imm);
+ORC_API void orc_riscv_insn_emit_jalr (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, int imm);
+ORC_API void orc_riscv_insn_emit_csrrw (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, int csr);
+ORC_API void orc_riscv_insn_emit_csrrs (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, int csr);
+ORC_API void orc_riscv_insn_emit_csrrc (OrcCompiler *c, OrcRiscvRegister rd, OrcRiscvRegister rs1, int csr);
+
+/* Pseudoinstructions */
+ORC_API void orc_riscv_insn_emit_shift_add (OrcCompiler *c, OrcRiscvRegister rd, orc_uint32 imm);
+ORC_API void orc_riscv_insn_emit_load_word (OrcCompiler *c, OrcRiscvRegister rd, orc_uint32 imm);
+ORC_API void orc_riscv_insn_emit_load_immediate (OrcCompiler *c, OrcRiscvRegister rd, orc_uint64 imm);
+
+#endif /* ORC_ENABLE_UNSTABLE_API */
+
+ORC_END_DECLS
+
 #endif /* _ORC_RISCV_INSN_H_ */

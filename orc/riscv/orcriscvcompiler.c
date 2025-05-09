@@ -84,6 +84,12 @@ orc_riscv_compiler_init (OrcCompiler *c)
 }
 
 void
+orc_riscv_compiler_add_fixup (OrcCompiler *c, int label)
+{
+  ORC_ASSERT (FALSE);           /* TODO */
+}
+
+void
 orc_riscv_compiler_assemble (OrcCompiler *c)
 {
   ORC_ASSERT (FALSE);           /* TODO */
