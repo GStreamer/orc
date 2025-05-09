@@ -35,6 +35,7 @@
 
 #include <orc/riscv/orcriscv-internal.h>
 #include <orc/riscv/orcriscv.h>
+#include <orc/riscv/orcriscvinsn.h>
 
 void
 orc_riscv_compiler_init (OrcCompiler *c)
@@ -138,8 +139,54 @@ orc_riscv_compiler_compute_vtype (OrcCompiler *c, OrcRiscvSEW element_width,
   return vtype;
 }
 
+static void
+orc_riscv_compiler_emit_prologue (OrcCompiler *c)
+{
+  int stack_size = 0;
+
+  orc_compiler_append_code (c, ".section .text\n");
+  orc_compiler_append_code (c, ".global %s\n", c->program->name);
+  orc_compiler_append_code (c, "%s:\n", c->program->name);
+
+  for (int i = 0; i < 32; i++) {
+    if (c->used_regs[ORC_GP_REG_BASE + i] && c->save_regs[ORC_GP_REG_BASE + i]) {
+      stack_size += c->is_64bit ? 8 : 4;
+      orc_riscv_insn_emit_sd (c, ORC_RISCV_SP, ORC_GP_REG_BASE + i,
+          -stack_size);
+    }
+  }
+
+  if (stack_size > 0) {
+    orc_riscv_insn_emit_addi (c, ORC_RISCV_SP, ORC_RISCV_SP, -stack_size);
+  }
+}
+
+static void
+orc_riscv_compiler_emit_epilogue (OrcCompiler *c)
+{
+  int stack_size = 0;
+
+  for (int i = 31, stack_size = 0; i >= 0; i--) {
+    if (c->used_regs[ORC_GP_REG_BASE + i] && c->save_regs[ORC_GP_REG_BASE + i]) {
+      orc_riscv_insn_emit_ld (c, ORC_GP_REG_BASE + i, ORC_RISCV_SP, stack_size);
+      stack_size += c->is_64bit ? 8 : 4;
+    }
+  }
+
+  if (stack_size > 0) {
+    orc_riscv_insn_emit_addi (c, ORC_RISCV_SP, ORC_RISCV_SP, stack_size);
+  }
+
+  orc_riscv_insn_emit_ret (c);
+}
+
 void
 orc_riscv_compiler_assemble (OrcCompiler *c)
 {
-  ORC_ASSERT (FALSE);           /* TODO */
+  orc_riscv_compiler_emit_prologue (c);
+  /* TODO: load constants */
+  /* TODO: emit loop */
+  orc_riscv_compiler_do_fixups (c);
+  /* TODO: save accumulators */
+  orc_riscv_compiler_emit_epilogue (c);
 }
