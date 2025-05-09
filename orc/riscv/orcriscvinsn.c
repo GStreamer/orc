@@ -1,5 +1,5 @@
 /*
-  Copyright © 2024-2025 Samsung Electronics
+  Copyright © 2024 Samsung Electronics
 
   Author: Maksymilian Knust, m.knust@samsung.com
   Author: Filip Wasil, f.wasil@samsung.com
@@ -24,67 +24,34 @@
   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
   IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
+
 */
 
-#include <orc/orccompiler.h>
 #include <orc/orcdebug.h>
-#include <orc/orcinternal.h>
 #include <orc/orclimits.h>
 #include <orc/orcutils.h>
 
-#include <orc/riscv/orcriscv-internal.h>
 #include <orc/riscv/orcriscv.h>
 
-void
-orc_riscv_compiler_init (OrcCompiler *c)
+static const char *
+riscv_reg_name (OrcRiscvRegister reg)
 {
-  if (c->target_flags & ORC_TARGET_RISCV_64BIT) {
-    c->is_64bit = TRUE;
-  } else {
-    ORC_COMPILER_ERROR (c, "RV32 is currently unsupported");    /* FIXME */
-  }
+  static const char *names[] = {
+    [ORC_GP_REG_BASE] = "zero",
+    "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0",
+    "s1", "a0", "a1", "a2", "a3", "a4", "a5", "a6",
+    "a7", "s2", "s3", "s4", "s5", "s6", "s7", "s8",
+    "s9", "s10", "s11", "t3", "t4", "t5", "t6",
 
-  for (int i = ORC_GP_REG_BASE; i < ORC_GP_REG_BASE + 32; i++) {
-    c->valid_regs[i] = 1;
-  }
+    [ORC_VEC_REG_BASE] = "v0",
+    "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8",
+    "v9", "v10", "v11", "v12", "v13", "v14", "v15", "v16",
+    "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24",
+    "v25", "v26", "v27", "v28", "v29", "v30", "v31"
+  };
 
-  c->gp_tmpreg = ORC_RISCV_T0;
-  c->valid_regs[c->gp_tmpreg] = 0;
+  ORC_ASSERT (reg < ARRAY_SIZE (names));
+  ORC_ASSERT (names[reg] != NULL);
 
-  c->loop_counter = ORC_RISCV_INNER_COUNTER;
-  c->valid_regs[ORC_RISCV_INNER_COUNTER] = 0;
-  c->valid_regs[ORC_RISCV_OUTER_COUNTER] = 0;
-  c->valid_regs[ORC_RISCV_VECTOR_LENGTH] = 0;
-
-  c->exec_reg = ORC_RISCV_A0;
-  c->valid_regs[c->exec_reg] = 0;
-
-  c->valid_regs[ORC_RISCV_ZERO] = 0;
-  c->valid_regs[ORC_RISCV_SP] = 0;
-
-  c->save_regs[ORC_RISCV_RA] = 1;
-  c->save_regs[ORC_RISCV_GP] = 1;
-  c->save_regs[ORC_RISCV_TP] = 1;
-  c->save_regs[ORC_RISCV_S0] = 1;
-  c->save_regs[ORC_RISCV_S1] = 1;
-
-  for (int i = ORC_RISCV_S2; i <= ORC_RISCV_S11; i++) {
-    c->save_regs[i] = 1;
-  }
-
-  if (c->target_flags & ORC_TARGET_RISCV_V) {
-    for (int i = ORC_VEC_REG_BASE + 8; i < ORC_VEC_REG_BASE + 32; i++) {
-      c->valid_regs[i] = 1;
-    }
-  }
-
-  c->min_temp_reg = ORC_VEC_REG_BASE;
-
-  c->load_params = TRUE;
-}
-
-void
-orc_riscv_compiler_assemble (OrcCompiler *c)
-{
-  ORC_ASSERT (FALSE);           /* TODO */
+  return names[reg];
 }

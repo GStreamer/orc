@@ -46,6 +46,8 @@ orc_headers = [
   'orcparse.h',
   'orcpowerpc.h',
   'orcprogram.h',
+  'riscv/orcriscv.h',
+  'riscv/orcriscvinsn.h',
   'orcrule.h',
   'orcsseinsn.h',
   'orcsse.h',
