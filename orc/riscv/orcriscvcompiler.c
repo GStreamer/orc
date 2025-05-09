@@ -37,6 +37,13 @@
 #include <orc/riscv/orcriscv.h>
 #include <orc/riscv/orcriscvinsn.h>
 
+typedef enum
+{
+  LABEL_END,
+  LABEL_INNER_LOOP,
+  LABEL_OUTER_LOOP,
+} OrcRiscvLabel;
+
 void
 orc_riscv_compiler_init (OrcCompiler *c)
 {
@@ -180,12 +187,215 @@ orc_riscv_compiler_emit_epilogue (OrcCompiler *c)
   orc_riscv_insn_emit_ret (c);
 }
 
+static OrcRiscvSEW
+orc_riscv_bytes_to_sew (int bytes)
+{
+  switch (bytes) {
+    case 1:
+      return ORC_RISCV_SEW_8;
+    case 2:
+      return ORC_RISCV_SEW_16;
+    case 4:
+      return ORC_RISCV_SEW_32;
+    case 8:
+      return ORC_RISCV_SEW_64;
+    default:
+      ORC_ASSERT (FALSE);
+      return ORC_RISCV_SEW_NOT_APPLICABLE;
+  }
+}
+
+static void
+orc_riscv_compiler_load_constants (OrcCompiler *c)
+{
+  for (int i = 0; i < ORC_N_COMPILER_VARIABLES; i++) {
+    OrcVariable *var = c->vars + i;
+    if (var->name == NULL)
+      continue;
+    switch (var->vartype) {
+      case ORC_VAR_TYPE_SRC:
+      case ORC_VAR_TYPE_DEST:
+        orc_riscv_insn_emit_ld (c, var->ptr_register, c->exec_reg,
+            ORC_STRUCT_OFFSET (OrcExecutor, arrays[i]));
+        break;
+      case ORC_VAR_TYPE_ACCUMULATOR:
+        orc_riscv_insn_emit_vsetvli (c, c->gp_tmpreg, ORC_RISCV_ZERO,
+            orc_riscv_compiler_compute_vtype (c,
+                orc_riscv_bytes_to_sew (c->vars[i].size), 0));
+        orc_riscv_insn_emit_vmv_vx (c, var->alloc, ORC_RISCV_ZERO);
+        break;
+      default:
+        break;
+    }
+
+    if (var->ptr_offset)
+      orc_riscv_insn_emit_addi (c, var->ptr_offset, ORC_RISCV_ZERO, 0);
+  }
+
+  orc_compiler_emit_invariants (c);
+}
+
+static void
+orc_riscv_compiler_emit_loop (OrcCompiler *c, OrcRiscvVtype vtype)
+{
+  for (int i = 0; i < c->n_insns; i++) {
+    OrcInstruction *insn = c->insns + i;
+
+    if (insn->flags & ORC_INSN_FLAG_INVARIANT)
+      continue;
+
+    orc_compiler_append_code (c, "/* %d: %s */\n", i, insn->opcode->name);
+
+    if (insn->rule && insn->rule->emit) {
+      OrcRiscvRuleInfo *info = insn->rule->emit_user;
+
+      OrcRiscvVtype old_vtype = vtype;
+
+      c->insn_shift = 0;
+      if (insn->flags & ORC_INSTRUCTION_FLAG_X2)
+        c->insn_shift = 1;
+      if (insn->flags & ORC_INSTRUCTION_FLAG_X4)
+        c->insn_shift = 2;
+
+      if (info->element_width != ORC_RISCV_SEW_NOT_APPLICABLE) {
+        vtype =
+            orc_riscv_compiler_compute_vtype (c, info->element_width,
+            c->insn_shift);
+      } else {
+        vtype = orc_riscv_compiler_compute_vtype (c, old_vtype.vsew, 0);
+      }
+
+      if (*(orc_uint8 *) & old_vtype != *(orc_uint8 *) & vtype) {
+        if (c->insn_shift)
+          orc_riscv_insn_emit_vsetvli (c, c->gp_tmpreg, ORC_RISCV_ZERO, vtype);
+        else
+          orc_riscv_insn_emit_vsetvli (c, ORC_RISCV_ZERO,
+              ORC_RISCV_VECTOR_LENGTH, vtype);
+      }
+
+      insn->rule->emit (c, insn->rule->emit_user, insn);
+    } else {
+      ORC_COMPILER_ERROR (c, "No rule for %s\n", insn->opcode->name);
+    }
+  }
+
+  orc_compiler_append_code (c, "/* loop tail */\n");
+
+  for (int i = 0, length_shift = 0; i < 4; i++) {
+    for (int j = 0; j < ORC_N_COMPILER_VARIABLES; j++) {
+      const OrcVariable *var = c->vars + j;
+
+      if (var->size != 1 << i)
+        continue;
+      if (!var->name)
+        continue;
+      if (!var->ptr_register)
+        continue;
+      if (var->vartype != ORC_VAR_TYPE_SRC && var->vartype != ORC_VAR_TYPE_DEST)
+        continue;
+
+      if (length_shift != i) {
+        orc_riscv_insn_emit_slli (c, ORC_RISCV_VECTOR_LENGTH,
+            ORC_RISCV_VECTOR_LENGTH, i - length_shift);
+        length_shift = i;
+      }
+
+      orc_riscv_insn_emit_add (c, var->ptr_register, var->ptr_register,
+          ORC_RISCV_VECTOR_LENGTH);
+    }
+  }
+}
+
+static OrcRiscvVtype
+orc_riscv_compiler_compute_initial_vtype (OrcCompiler *c)
+{
+  for (int i = 0; i < c->n_insns; i++) {
+    const OrcRiscvRuleInfo *info = c->insns[i].rule->emit_user;
+
+    if (info->element_width != ORC_RISCV_SEW_NOT_APPLICABLE)
+      return orc_riscv_compiler_compute_vtype (c, info->element_width, 0);
+  }
+
+  return orc_riscv_compiler_compute_vtype (c, ORC_RISCV_SEW_8, 0);
+}
+
+static void
+orc_riscv_compiler_add_strides (OrcCompiler *c)
+{
+  for (int i = 0; i < ORC_N_COMPILER_VARIABLES; i++) {
+    if (c->vars[i].name == NULL)
+      continue;
+    switch (c->vars[i].vartype) {
+      case ORC_VAR_TYPE_SRC:
+      case ORC_VAR_TYPE_DEST:
+        orc_riscv_insn_emit_ld (c, c->gp_tmpreg, c->exec_reg,
+            ORC_STRUCT_OFFSET (OrcExecutor, n));
+
+        if (c->vars[i].size != 1)
+          orc_riscv_insn_emit_slli (c, c->gp_tmpreg, c->gp_tmpreg,
+              orc_riscv_bytes_to_sew (c->vars[i].size));
+
+        orc_riscv_insn_emit_sub (c, c->vars[i].ptr_register,
+            c->vars[i].ptr_register, c->gp_tmpreg);
+        orc_riscv_insn_emit_lw (c, c->gp_tmpreg, c->exec_reg,
+            ORC_STRUCT_OFFSET (OrcExecutor, params[i]));
+        orc_riscv_insn_emit_add (c, c->vars[i].ptr_register,
+            c->vars[i].ptr_register, c->gp_tmpreg);
+        break;
+      default:
+        ORC_COMPILER_ERROR (c, "bad vartype");
+        break;
+    }
+  }
+}
+
+static void
+orc_riscv_compiler_emit_full_loop (OrcCompiler *c)
+{
+  OrcRiscvVtype initial = orc_riscv_compiler_compute_initial_vtype (c);
+
+  if (c->program->is_2d) {
+    orc_riscv_insn_emit_lw (c, ORC_RISCV_OUTER_COUNTER, c->exec_reg,
+        ORC_STRUCT_OFFSET (OrcExecutorAlt, m));
+    orc_riscv_insn_emit_beq (c, ORC_RISCV_OUTER_COUNTER, ORC_RISCV_ZERO,
+        LABEL_END);
+    orc_riscv_compiler_add_label (c, LABEL_OUTER_LOOP);
+  }
+
+  orc_riscv_insn_emit_lw (c, c->loop_counter, c->exec_reg,
+      ORC_STRUCT_OFFSET (OrcExecutor, n));
+
+  orc_riscv_insn_emit_beq (c, c->loop_counter, ORC_RISCV_ZERO, LABEL_END);
+  orc_riscv_compiler_add_label (c, LABEL_INNER_LOOP);
+
+  orc_riscv_insn_emit_vsetvli (c, ORC_RISCV_VECTOR_LENGTH, c->loop_counter,
+      initial);
+  orc_riscv_insn_emit_sub (c, c->loop_counter, c->loop_counter,
+      ORC_RISCV_VECTOR_LENGTH);
+
+  orc_riscv_compiler_emit_loop (c, initial);
+
+  orc_riscv_insn_emit_bne (c, c->loop_counter, ORC_RISCV_ZERO,
+      LABEL_INNER_LOOP);
+
+  if (c->program->is_2d) {
+    orc_riscv_compiler_add_strides (c);
+    orc_riscv_insn_emit_addi (c, ORC_RISCV_OUTER_COUNTER,
+        ORC_RISCV_OUTER_COUNTER, -1);
+    orc_riscv_insn_emit_bne (c, ORC_RISCV_OUTER_COUNTER, ORC_RISCV_ZERO,
+        LABEL_OUTER_LOOP);
+  }
+
+  orc_riscv_compiler_add_label (c, LABEL_END);
+}
+
 void
 orc_riscv_compiler_assemble (OrcCompiler *c)
 {
+  c->loop_shift = 3 - orc_riscv_bytes_to_sew (c->max_var_size);
   orc_riscv_compiler_emit_prologue (c);
-  /* TODO: load constants */
-  /* TODO: emit loop */
+  orc_riscv_compiler_load_constants (c);
+  orc_riscv_compiler_emit_full_loop (c);
   orc_riscv_compiler_do_fixups (c);
   /* TODO: save accumulators */
   orc_riscv_compiler_emit_epilogue (c);
