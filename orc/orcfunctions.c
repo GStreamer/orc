@@ -49,7 +49,7 @@ typedef unsigned long orc_uint64;
 #endif
 typedef union { orc_int16 i; orc_int8 x2[2]; } orc_union16;
 typedef union { orc_int32 i; float f; orc_int16 x2[2]; orc_int8 x4[4]; } orc_union32;
-typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 x4[4]; } orc_union64;
+typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 x4[4]; orc_int8 x8[8]; } orc_union64;
 #endif
 #ifndef ORC_RESTRICT
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
@@ -84,7 +84,9 @@ void orc_memset (void * ORC_RESTRICT d1, int p1, int n);
 
 
 /* begin Orc C target preamble */
-#define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
+#include <math.h>
+#define ORC_CLAMP_U(x,a,b) (((x)>(b) ? (b) : (x)))
+#define ORC_CLAMP_S(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
 #define ORC_ABS(a) ((a)<0 ? -(a) : (a))
 #define ORC_MIN(a,b) ((a)<(b) ? (a) : (b))
 #define ORC_MAX(a,b) ((a)>(b) ? (a) : (b))
@@ -100,12 +102,12 @@ void orc_memset (void * ORC_RESTRICT d1, int p1, int n);
 #define ORC_SL_MIN (-1-ORC_SL_MAX)
 #define ORC_UL_MAX 4294967295U
 #define ORC_UL_MIN 0
-#define ORC_CLAMP_SB(x) ORC_CLAMP(x,ORC_SB_MIN,ORC_SB_MAX)
-#define ORC_CLAMP_UB(x) ORC_CLAMP(x,ORC_UB_MIN,ORC_UB_MAX)
-#define ORC_CLAMP_SW(x) ORC_CLAMP(x,ORC_SW_MIN,ORC_SW_MAX)
-#define ORC_CLAMP_UW(x) ORC_CLAMP(x,ORC_UW_MIN,ORC_UW_MAX)
-#define ORC_CLAMP_SL(x) ORC_CLAMP(x,ORC_SL_MIN,ORC_SL_MAX)
-#define ORC_CLAMP_UL(x) ORC_CLAMP(x,ORC_UL_MIN,ORC_UL_MAX)
+#define ORC_CLAMP_SB(x) ORC_CLAMP_S(x,ORC_SB_MIN,ORC_SB_MAX)
+#define ORC_CLAMP_UB(x) ORC_CLAMP_U(x,ORC_UB_MIN,ORC_UB_MAX)
+#define ORC_CLAMP_SW(x) ORC_CLAMP_S(x,ORC_SW_MIN,ORC_SW_MAX)
+#define ORC_CLAMP_UW(x) ORC_CLAMP_U(x,ORC_UW_MIN,ORC_UW_MAX)
+#define ORC_CLAMP_SL(x) ORC_CLAMP_S(x,ORC_SL_MIN,ORC_SL_MAX)
+#define ORC_CLAMP_UL(x) ORC_CLAMP_U(x,ORC_UL_MIN,ORC_UL_MAX)
 #define ORC_SWAP_W(x) ((((x)&0xffU)<<8) | (((x)&0xff00U)>>8))
 #define ORC_SWAP_L(x) ((((x)&0xffU)<<24) | (((x)&0xff00U)<<8) | (((x)&0xff0000U)>>8) | (((x)&0xff000000U)>>24))
 #define ORC_SWAP_Q(x) ((((x)&ORC_UINT64_C(0xff))<<56) | (((x)&ORC_UINT64_C(0xff00))<<40) | (((x)&ORC_UINT64_C(0xff0000))<<24) | (((x)&ORC_UINT64_C(0xff000000))<<8) | (((x)&ORC_UINT64_C(0xff00000000))>>8) | (((x)&ORC_UINT64_C(0xff0000000000))>>24) | (((x)&ORC_UINT64_C(0xff000000000000))>>40) | (((x)&ORC_UINT64_C(0xff00000000000000))>>56))
@@ -119,6 +121,8 @@ void orc_memset (void * ORC_RESTRICT d1, int p1, int n);
 #define ORC_RESTRICT restrict
 #elif defined(__GNUC__) && __GNUC__ >= 4
 #define ORC_RESTRICT __restrict__
+#elif defined(_MSC_VER)
+#define ORC_RESTRICT __restrict
 #else
 #define ORC_RESTRICT
 #endif

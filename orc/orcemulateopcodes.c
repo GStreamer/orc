@@ -9,6 +9,7 @@
 
 
 /* begin Orc C target preamble */
+#include <math.h>
 #define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
 #define ORC_ABS(a) ((a)<0 ? -(a) : (a))
 #define ORC_MIN(a,b) ((a)<(b) ? (a) : (b))
@@ -1351,7 +1352,7 @@ emulate_div255w (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadw */
     var32 = ptr4[i];
     /* 1: div255w */
-    var33.i = (((orc_uint16)var32.i) * 0x8081u) >> 23u;
+    var33.i = (((orc_uint16)var32.i) * 0x8081u) >> 23;
     /* 2: storew */
     ptr0[i] = var33;
   }
@@ -3610,7 +3611,7 @@ emulate_convusslw (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadl */
     var32 = ptr4[i];
     /* 1: convusslw */
-    var33.i = ORC_CLAMP((orc_uint32)var32.i,0,ORC_SW_MAX);
+    var33.i = ORC_MIN((orc_uint32)var32.i, ORC_SW_MAX);
     /* 2: storew */
     ptr0[i] = var33;
   }
@@ -3634,7 +3635,7 @@ emulate_convuuslw (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadl */
     var32 = ptr4[i];
     /* 1: convuuslw */
-    var33.i = ORC_CLAMP_UW((orc_uint32)var32.i);
+    var33.i = ORC_MIN((orc_uint32)var32.i, ORC_UW_MAX);
     /* 2: storew */
     ptr0[i] = var33;
   }
@@ -3730,7 +3731,7 @@ emulate_convussql (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadq */
     var32 = ptr4[i];
     /* 1: convussql */
-    var33.i = ORC_CLAMP_SL((orc_uint64)var32.i);
+    var33.i = ORC_MIN((orc_uint64)var32.i, ORC_SL_MAX);
     /* 2: storel */
     ptr0[i] = var33;
   }
@@ -3754,7 +3755,7 @@ emulate_convuusql (OrcOpcodeExecutor *ex, int offset, int n)
     /* 0: loadq */
     var32 = ptr4[i];
     /* 1: convuusql */
-    var33.i = ORC_CLAMP_UL((orc_uint64)var32.i);
+    var33.i = ORC_MIN((orc_uint64)var32.i, ORC_UL_MAX);
     /* 2: storel */
     ptr0[i] = var33;
   }
