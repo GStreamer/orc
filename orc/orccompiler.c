@@ -1636,7 +1636,7 @@ orc_compiler_try_get_constant_full (OrcCompiler *c, OrcConstant *cnst)
 
   /* Search for a constant equal to the requested */
   for (i = 0; i < c->n_constants; i++) {
-    if (orc_constant_is_equal (cnst, &c->constants[i], c->target->extra.data.register_size)) {
+    if (orc_constant_is_equal (cnst, &c->constants[i], c->target->register_size)) {
       ORC_DEBUG ("Same constant found at %d, reusing register %d", i,
           c->constants[i].alloc_reg);
       c->constants[i].use_count++;

@@ -1258,6 +1258,6 @@ orc_x86_register_extension (OrcTarget *t, OrcX86Target *x86t)
   t->load_constant_long = x86t->load_constant_long;
   t->flush_cache = orc_x86_flush_cache;
   t->target_data = x86t;
-  t->extra.data.register_size = x86t->register_size;
+  t->register_size = x86t->register_size;
   orc_target_register (t);
 }

@@ -46,11 +46,6 @@ orc_init (void)
     if (!inited) {
       /* Validate extensions for API/ABI compatibility */
       ORC_ASSERT(sizeof(OrcExecutor) == sizeof(OrcExecutorAlt));
-      {
-        OrcTarget *t = NULL;
-        ORC_ASSERT(sizeof(t->extra.padding) >= sizeof(t->extra.data));
-      }
-
       _orc_debug_init();
       _orc_compiler_init();
       orc_opcode_init();

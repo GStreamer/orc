@@ -162,12 +162,9 @@ struct _OrcTarget {
   void (*load_constant_long)(OrcCompiler *compiler, int reg,
       OrcConstant *constant);
   void *target_data;
-  union {
-    void *padding[4];
-    struct {
-      int register_size;
-    } data;
-  } extra;
+  void *padding[4];
+  /* Until here is for ABI compatibility for 0.4.41 */
+  int register_size;
 };
 
 /* The function prototypes need to be visible to orc.c */
