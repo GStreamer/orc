@@ -16,11 +16,20 @@
 #include <orc/orcneon.h>
 
 #define SIZE 65536
+#define MAX_UNROLL 16
+
+enum RegionFlags {
+  FLAG_NUNROLL = (1 << 0),
+  FLAG_REGION1 = (1 << 1),
+  FLAG_REGION2 = (1 << 2),
+  FLAG_REGION3 = (1 << 3),
+};
 
 static void orc_neon_emit_loop (OrcCompiler *compiler, int unroll_index);
 
 extern void orc_compiler_neon_register_rules (OrcTarget *target);
 static unsigned int orc_compiler_neon_get_default_flags (void);
+static enum RegionFlags orc_compiler_neon_calc_regions (const OrcCompiler *compiler);
 
 static void orc_compiler_neon_init (OrcCompiler *compiler);
 static void orc_compiler_neon_assemble (OrcCompiler *compiler);
@@ -157,6 +166,43 @@ orc_compiler_neon_get_default_flags (void)
   flags |= ORC_TARGET_NEON_64BIT;
 #endif
   flags |= ORC_TARGET_NEON_NEON;
+
+  return flags;
+}
+
+static enum RegionFlags
+orc_compiler_neon_calc_regions (const OrcCompiler *compiler)
+{
+  enum RegionFlags flags = 0;
+
+  // NOTE: Assume aligned if we know the input size
+  const int constant_n        = compiler->program->constant_n;
+  const orc_bool vectorizable = compiler->loop_shift > 0;
+  const int num_loops         = constant_n >> compiler->loop_shift;
+  const orc_bool n_unrollable = constant_n && (num_loops < MAX_UNROLL);
+  const int elm_per_loop      = 1 << compiler->loop_shift;
+  const int remaining         = constant_n & (elm_per_loop - 1);
+  const orc_bool aligned      = compiler->has_iterator_opcode || (constant_n > 0);
+  const orc_bool enough_n     = constant_n >= elm_per_loop;
+
+  if (!vectorizable)
+    return FLAG_REGION2; // Only region 2
+
+  orc_bool region1 = !aligned;
+  orc_bool region2 = !constant_n || enough_n;
+  orc_bool region3 = !n_unrollable || remaining;
+
+  if (region1)
+    flags |= FLAG_REGION1;
+
+  if (region2)
+    flags |= FLAG_REGION2;
+
+  if (region3)
+    flags |= FLAG_REGION3;
+
+  if (n_unrollable)
+    flags |= FLAG_NUNROLL;
 
   return flags;
 }
@@ -816,7 +862,8 @@ orc_neon_emit_loop (OrcCompiler *compiler, int unroll_index)
   OrcStaticOpcode *opcode;
   OrcRule *rule;
 
-  orc_compiler_append_code(compiler,"# LOOP shift %d\n", compiler->loop_shift);
+  orc_compiler_append_code(compiler,"# LOOP shift %d (%d)\n",
+      compiler->loop_shift, unroll_index);
   for(j=0;j<compiler->n_insns;j++){
     compiler->insn_index = j;
     insn = compiler->insns + j;
@@ -1189,10 +1236,22 @@ orc_compiler_neon_assemble_32 (OrcCompiler *compiler)
 static void
 orc_compiler_neon_assemble_64 (OrcCompiler *compiler)
 {
+  const enum RegionFlags region_flags = orc_compiler_neon_calc_regions (compiler);
+  const orc_bool region1 = region_flags & FLAG_REGION1;
+  const orc_bool region2 = region_flags & FLAG_REGION2;
+  const orc_bool region3 = region_flags & FLAG_REGION3;
+  const orc_bool nunroll = region_flags & FLAG_NUNROLL;
   int align_var;
 
   align_var = get_align_var (compiler);
   if (compiler->error) return;
+
+  ORC_DEBUG ("Neon compiler regions = [ %s %s %s %s ]"
+      , region1 ? "region1":"-------"
+      , region2 ? "region2":"-------"
+      , region3 ? "region3":"-------"
+      , nunroll ? "nunroll":"-------"
+  );
 
   compiler->vars[align_var].is_aligned = FALSE;
 
@@ -1215,7 +1274,32 @@ orc_compiler_neon_assemble_64 (OrcCompiler *compiler)
     orc_arm_emit_label (compiler, LABEL_OUTER_LOOP);
   }
 
-  if (compiler->loop_shift > 0) {
+  if (!region1 && nunroll) {
+    const int constant_n = compiler->program->constant_n;
+    const int num_loops = constant_n >> compiler->loop_shift;
+    const int remaining = constant_n & ((1 << compiler->loop_shift) - 1);
+    ORC_DEBUG("unrolled loops     = %d", num_loops);
+    ORC_DEBUG("remaining elements = %d", remaining);
+
+    orc_neon_load_constants_inner (compiler);
+
+    for (int i = 0; i < num_loops; i++) {
+      orc_neon_emit_loop (compiler, i);
+    }
+
+    if (region3) {
+      orc_arm64_emit_mov_imm (compiler, ORC_ARM64_REG_32, ORC_ARM64_IP0, remaining);
+      orc_arm_emit_label (compiler, LABEL_REGION3_LOOP);
+      orc_arm64_emit_subs_imm (compiler, ORC_ARM64_REG_32, ORC_ARM64_IP0, ORC_ARM64_IP0, 1);
+
+      int save_loop_shift = compiler->loop_shift; // Ugly, but...uff
+      compiler->loop_shift = 0;
+      orc_neon_emit_loop (compiler, -1);
+      compiler->loop_shift = save_loop_shift;
+
+      orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION3_LOOP);
+    }
+  } else if (compiler->loop_shift > 0) {
     if (compiler->n_insns < ORC_NEON_LONG_PROGRAM_CUTOFF)
       orc_neon64_short_unaligned_loop (compiler);
 
