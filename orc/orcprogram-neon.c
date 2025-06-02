@@ -24,6 +24,8 @@ static unsigned int orc_compiler_neon_get_default_flags (void);
 
 static void orc_compiler_neon_init (OrcCompiler *compiler);
 static void orc_compiler_neon_assemble (OrcCompiler *compiler);
+static void orc_compiler_neon_assemble_32 (OrcCompiler *compiler);
+static void orc_compiler_neon_assemble_64 (OrcCompiler *compiler);
 
 static void orc_neon_save_accumulators (OrcCompiler *compiler);
 static void neon_add_strides (OrcCompiler *compiler);
@@ -794,316 +796,10 @@ orc_neon64_loop_caches (OrcCompiler *compiler)
 static void
 orc_compiler_neon_assemble (OrcCompiler *compiler)
 {
-  int align_var;
-  int align_shift;
-  int var_size_shift;
-  int i;
-	int set_fpscr = FALSE;
-
-  align_var = get_align_var (compiler);
-  if (compiler->error) return;
-
-  var_size_shift = get_shift (compiler->vars[align_var].size);
-  align_shift = 4;
-
-  compiler->vars[align_var].is_aligned = FALSE;
-
-  orc_neon_emit_prologue (compiler);
-
-	if (!compiler->is_64bit && orc_compiler_has_float (compiler)) {
-    set_fpscr = TRUE;
-    ORC_ASM_CODE (compiler,"  vmrs %s, fpscr\n", orc_arm_reg_name (compiler->gp_tmpreg));
-    orc_arm_emit (compiler, 0xeef10a10 | ((compiler->gp_tmpreg&0xf)<<12));
-    ORC_ASM_CODE (compiler,"  push %s\n", orc_arm_reg_name (compiler->gp_tmpreg));
-    orc_arm_emit (compiler, 0xe52d0004 | ((compiler->gp_tmpreg&0xf)<<12));
-
-    orc_arm_emit_load_imm (compiler, compiler->gp_tmpreg, 1<<24);
-    ORC_ASM_CODE (compiler,"  vmsr fpscr, %s\n", orc_arm_reg_name (compiler->gp_tmpreg));
-    orc_arm_emit (compiler, 0xeee10a10 | ((compiler->gp_tmpreg&0xf)<<12));
-  }
-
-  orc_neon_load_constants_outer (compiler);
-
-  if (compiler->is_64bit) {
-    if (compiler->program->is_2d) {
-      if (compiler->program->constant_m > 0) {
-        orc_arm64_emit_mov_imm (compiler, 32, ORC_ARM64_IP1, compiler->program->constant_m);
-        orc_arm64_emit_store_reg (compiler, 32, ORC_ARM64_IP1, compiler->exec_reg,
-            (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]));
-      } else {
-        orc_arm64_emit_load_reg (compiler, 32, ORC_ARM64_IP1, compiler->exec_reg,
-            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A1]));
-        orc_arm64_emit_store_reg (compiler, 32, ORC_ARM64_IP1, compiler->exec_reg,
-            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A2]));
-      }
-
-      orc_arm_emit_label (compiler, LABEL_OUTER_LOOP);
-    }
-
-    if (compiler->loop_shift > 0) {
-      orc_neon64_loop_shift (compiler);
-
-      orc_neon_load_constants_inner (compiler);
-
-      orc_neon64_loop_shift_remainder (compiler, counter1,
-          LABEL_REGION1_LOOP, LABEL_REGION1_SKIP);
-      compiler->vars[align_var].is_aligned = TRUE;
-
-      orc_arm64_emit_load_reg (compiler, 32, ORC_ARM64_IP0, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
-
-      orc_neon64_loop_caches (compiler);
-
-      compiler->vars[align_var].is_aligned = FALSE;
-      orc_neon64_loop_shift_remainder (compiler, counter3,
-          LABEL_REGION3_LOOP, LABEL_REGION3_SKIP);
-    } else {
-      orc_neon_load_constants_inner (compiler);
-
-      orc_arm64_emit_load_reg (compiler, 32, ORC_ARM64_IP0, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
-
-      orc_neon64_loop_caches (compiler);
-    }
-
-    if (compiler->program->is_2d) {
-      neon_add_strides (compiler);
-
-      orc_arm64_emit_load_reg (compiler, 32, ORC_ARM64_IP1, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A2]));
-      orc_arm64_emit_subs_imm (compiler, 32, ORC_ARM64_IP1, ORC_ARM64_IP1, 1);
-      orc_arm64_emit_store_reg (compiler, 32, ORC_ARM64_IP1, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]));
-      orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_OUTER_LOOP);
-    }
-  } else {
-    if (compiler->program->is_2d) {
-      if (compiler->program->constant_m > 0) {
-        orc_arm_emit_load_imm (compiler, ORC_ARM_A3, compiler->program->constant_m);
-        orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
-            (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]));
-      } else {
-        orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
-            (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A1]));
-        orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
-            (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]));
-      }
-
-      orc_arm_emit_label (compiler, LABEL_OUTER_LOOP);
-    }
-
-    if (compiler->loop_shift > 0 && compiler->n_insns < 5) {
-      orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
-
-      orc_arm_emit_cmp_imm (compiler, ORC_ARM_A3, ORC_NEON_ALIGNED_DEST_CUTOFF);
-      orc_arm_emit_branch (compiler, ORC_ARM_COND_GT, LABEL_REGION0_SKIP);
-
-      orc_arm_emit_asr_imm (compiler, ORC_ARM_A2, ORC_ARM_A3,
-          compiler->loop_shift);
-      orc_arm_emit_store_reg (compiler, ORC_ARM_A2, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
-
-      orc_arm_emit_and_imm (compiler, ORC_ARM_A3, ORC_ARM_A3,
-          (1<<compiler->loop_shift)-1);
-      orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3));
-
-      orc_neon_load_constants_inner (compiler);
-      orc_arm_emit_load_reg (compiler, ORC_ARM_IP, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
-      orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
-      orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, LABEL_REGION2_SKIP);
-
-      compiler->size_region = 0;
-      orc_arm_emit_label (compiler, LABEL_REGION0_LOOP);
-
-      orc_neon_emit_loop (compiler, -1);
-      orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
-      orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION0_LOOP);
-      orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, LABEL_REGION2_SKIP);
-      orc_arm_emit_label (compiler, LABEL_REGION0_SKIP);
-    }
-
-    if (compiler->loop_shift > 0) {
-      orc_arm_emit_load_imm (compiler, ORC_ARM_IP, 1<<align_shift);
-
-      orc_arm_emit_load_reg (compiler, ORC_ARM_A2, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,arrays[align_var]));
-      orc_arm_emit_sub (compiler, ORC_ARM_IP, ORC_ARM_IP, ORC_ARM_A2);
-      orc_arm_emit_and_imm (compiler, ORC_ARM_IP, ORC_ARM_IP,
-          (1<<align_shift)-1);
-      if (var_size_shift > 0) {
-        orc_arm_emit_asr_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, var_size_shift);
-      }
-
-      orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
-      orc_arm_emit_cmp (compiler, ORC_ARM_A3, ORC_ARM_IP);
-      orc_arm_emit_branch (compiler, ORC_ARM_COND_LE, LABEL_ONE_REGION);
-
-      orc_arm_emit_store_reg (compiler, ORC_ARM_IP, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1));
-      orc_arm_emit_sub (compiler, ORC_ARM_A2, ORC_ARM_A3, ORC_ARM_IP);
-
-      orc_arm_emit_asr_imm (compiler, ORC_ARM_A3, ORC_ARM_A2,
-          compiler->loop_shift + compiler->unroll_shift);
-      orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
-
-      orc_arm_emit_and_imm (compiler, ORC_ARM_A3, ORC_ARM_A2,
-          (1<<(compiler->loop_shift + compiler->unroll_shift))-1);
-      orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3));
-
-      orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, LABEL_ONE_REGION_AFTER);
-      orc_arm_emit_label (compiler, LABEL_ONE_REGION);
-
-      orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1));
-
-      orc_arm_emit_load_imm (compiler, ORC_ARM_A3, 0);
-      orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
-      orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3));
-
-      orc_arm_emit_label (compiler, LABEL_ONE_REGION_AFTER);
-    }
-
-    orc_neon_load_constants_inner (compiler);
-
-    if (compiler->loop_shift > 0) {
-      int save_loop_shift = compiler->loop_shift;
-      compiler->loop_shift = 0;
-
-      orc_arm_emit_load_reg (compiler, ORC_ARM_IP, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1));
-
-      orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
-      orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, LABEL_REGION1_SKIP);
-
-      orc_arm_emit_label (compiler, LABEL_REGION1_LOOP);
-      orc_neon_emit_loop (compiler, -1);
-      orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
-      orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION1_LOOP);
-      orc_arm_emit_label (compiler, LABEL_REGION1_SKIP);
-
-      compiler->loop_shift = save_loop_shift;
-      compiler->vars[align_var].is_aligned = TRUE;
-    }
-
-    if (compiler->loop_shift > 0) {
-      orc_arm_emit_load_reg (compiler, ORC_ARM_IP, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
-    } else {
-      orc_arm_emit_load_reg (compiler, ORC_ARM_IP, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
-    }
-
-    orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
-    orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, LABEL_REGION2_SKIP);
-
-    orc_arm_emit_asr_imm (compiler, compiler->gp_tmpreg, ORC_ARM_IP,
-        17 + var_size_shift - compiler->loop_shift - compiler->unroll_shift);
-    orc_arm_emit_cmp_imm (compiler, compiler->gp_tmpreg, 0);
-    orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, LABEL_REGION2_MEDIUM);
-
-    /* N is larger than L2 cache size */
-    compiler->size_region = 3;
-    orc_arm_emit_label (compiler, LABEL_REGION2_LOOP_LARGE);
-    for(i=0;i<(1<<compiler->unroll_shift);i++){
-      orc_neon_emit_loop (compiler, i);
-    }
-    orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
-    orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION2_LOOP_LARGE);
-    orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, LABEL_REGION2_SKIP);
-
-    orc_arm_emit_label (compiler, LABEL_REGION2_MEDIUM);
-    orc_arm_emit_asr_imm (compiler, compiler->gp_tmpreg, ORC_ARM_IP,
-        13 + var_size_shift - compiler->loop_shift - compiler->unroll_shift);
-    orc_arm_emit_cmp_imm (compiler, compiler->gp_tmpreg, 0);
-    orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, LABEL_REGION2_SMALL);
-
-    /* N is smaller than L2 cache size */
-    compiler->size_region = 2;
-    orc_arm_emit_label (compiler, LABEL_REGION2_LOOP_MEDIUM);
-    for(i=0;i<(1<<compiler->unroll_shift);i++){
-      orc_neon_emit_loop (compiler, i);
-    }
-    orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
-    orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION2_LOOP_MEDIUM);
-    orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, LABEL_REGION2_SKIP);
-
-    orc_arm_emit_label (compiler, LABEL_REGION2_SMALL);
-    /* N is smaller than L2 cache size */
-    compiler->size_region = 1;
-    orc_arm_emit_label (compiler, LABEL_REGION2_LOOP_SMALL);
-    for(i=0;i<(1<<compiler->unroll_shift);i++){
-      orc_neon_emit_loop (compiler, i);
-    }
-    orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
-    orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION2_LOOP_SMALL);
-
-    orc_arm_emit_label (compiler, LABEL_REGION2_SKIP);
-
-    if (compiler->loop_shift > 0) {
-      int save_loop_shift = compiler->loop_shift;
-
-      compiler->loop_shift = 0;
-
-      compiler->vars[align_var].is_aligned = FALSE;
-
-      orc_arm_emit_load_reg (compiler, ORC_ARM_IP, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3));
-
-      orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
-      orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, LABEL_REGION3_SKIP);
-
-      orc_arm_emit_label (compiler, LABEL_REGION3_LOOP);
-      orc_neon_emit_loop (compiler, -1);
-      orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
-      orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION3_LOOP);
-      orc_arm_emit_label (compiler, LABEL_REGION3_SKIP);
-
-      compiler->loop_shift = save_loop_shift;
-    }
-
-    if (compiler->program->is_2d) {
-      neon_add_strides (compiler);
-
-      orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A2]));
-      orc_arm_emit_sub_imm (compiler, ORC_ARM_A3, ORC_ARM_A3, 1, TRUE);
-      orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
-          (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]));
-      orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_OUTER_LOOP);
-    }
-  }
-
-  orc_neon_save_accumulators (compiler);
-
-  if (set_fpscr) {
-    ORC_ASM_CODE (compiler,"  pop %s\n", orc_arm_reg_name (compiler->gp_tmpreg));
-    orc_arm_emit (compiler, 0xe49d0004 | ((compiler->gp_tmpreg&0xf)<<12));
-
-    ORC_ASM_CODE (compiler,"  vmsr fpscr, %s\n", orc_arm_reg_name (compiler->gp_tmpreg));
-    orc_arm_emit (compiler, 0xeee10a10 | ((compiler->gp_tmpreg&0xf)<<12));
-  }
-
-  orc_neon_emit_epilogue (compiler);
-
-  orc_arm_emit_align (compiler, 4);
-
-  if (!compiler->is_64bit) {
-    orc_arm_emit_label (compiler, 20);
-    orc_arm_emit_data (compiler, 0x07060706);
-    orc_arm_emit_data (compiler, 0x07060706);
-    orc_arm_emit_data (compiler, 0x0f0e0f0e);
-    orc_arm_emit_data (compiler, 0x0f0e0f0e);
-  }
-
-  orc_arm_do_fixups (compiler);
+  if (compiler->is_64bit)
+    orc_compiler_neon_assemble_64 (compiler);
+  else
+    orc_compiler_neon_assemble_32 (compiler);
 }
 
 static void
@@ -1224,6 +920,340 @@ orc_neon_emit_loop (OrcCompiler *compiler, int unroll_index)
       }
     }
   }
+}
+
+static void
+orc_compiler_neon_assemble_32 (OrcCompiler *compiler)
+{
+  int align_var;
+  int align_shift;
+  int var_size_shift;
+  int i;
+  int set_fpscr = FALSE;
+
+  align_var = get_align_var (compiler);
+  if (compiler->error) return;
+
+  var_size_shift = get_shift (compiler->vars[align_var].size);
+  align_shift = 4;
+
+  compiler->vars[align_var].is_aligned = FALSE;
+
+  orc_neon_emit_prologue (compiler);
+
+  if (orc_compiler_has_float (compiler)) {
+    set_fpscr = TRUE;
+    ORC_ASM_CODE (compiler,"  vmrs %s, fpscr\n", orc_arm_reg_name (compiler->gp_tmpreg));
+    orc_arm_emit (compiler, 0xeef10a10 | ((compiler->gp_tmpreg&0xf)<<12));
+    ORC_ASM_CODE (compiler,"  push %s\n", orc_arm_reg_name (compiler->gp_tmpreg));
+    orc_arm_emit (compiler, 0xe52d0004 | ((compiler->gp_tmpreg&0xf)<<12));
+
+    orc_arm_emit_load_imm (compiler, compiler->gp_tmpreg, 1<<24);
+    ORC_ASM_CODE (compiler,"  vmsr fpscr, %s\n", orc_arm_reg_name (compiler->gp_tmpreg));
+    orc_arm_emit (compiler, 0xeee10a10 | ((compiler->gp_tmpreg&0xf)<<12));
+  }
+
+  orc_neon_load_constants_outer (compiler);
+
+  if (compiler->program->is_2d) {
+    if (compiler->program->constant_m > 0) {
+      orc_arm_emit_load_imm (compiler, ORC_ARM_A3, compiler->program->constant_m);
+      orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+          (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]));
+    } else {
+      orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+          (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A1]));
+      orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+          (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]));
+    }
+
+    orc_arm_emit_label (compiler, LABEL_OUTER_LOOP);
+  }
+
+  if (compiler->loop_shift > 0 && compiler->n_insns < 5) {
+    orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
+
+    orc_arm_emit_cmp_imm (compiler, ORC_ARM_A3, ORC_NEON_ALIGNED_DEST_CUTOFF);
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_GT, LABEL_REGION0_SKIP);
+
+    orc_arm_emit_asr_imm (compiler, ORC_ARM_A2, ORC_ARM_A3,
+        compiler->loop_shift);
+    orc_arm_emit_store_reg (compiler, ORC_ARM_A2, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
+
+    orc_arm_emit_and_imm (compiler, ORC_ARM_A3, ORC_ARM_A3,
+        (1<<compiler->loop_shift)-1);
+    orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3));
+
+    orc_neon_load_constants_inner (compiler);
+    orc_arm_emit_load_reg (compiler, ORC_ARM_IP, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
+    orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, LABEL_REGION2_SKIP);
+
+    compiler->size_region = 0;
+    orc_arm_emit_label (compiler, LABEL_REGION0_LOOP);
+
+    orc_neon_emit_loop (compiler, -1);
+    orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION0_LOOP);
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, LABEL_REGION2_SKIP);
+    orc_arm_emit_label (compiler, LABEL_REGION0_SKIP);
+  }
+
+  if (compiler->loop_shift > 0) {
+    orc_arm_emit_load_imm (compiler, ORC_ARM_IP, 1<<align_shift);
+
+    orc_arm_emit_load_reg (compiler, ORC_ARM_A2, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,arrays[align_var]));
+    orc_arm_emit_sub (compiler, ORC_ARM_IP, ORC_ARM_IP, ORC_ARM_A2);
+    orc_arm_emit_and_imm (compiler, ORC_ARM_IP, ORC_ARM_IP,
+        (1<<align_shift)-1);
+    if (var_size_shift > 0) {
+      orc_arm_emit_asr_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, var_size_shift);
+    }
+
+    orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
+    orc_arm_emit_cmp (compiler, ORC_ARM_A3, ORC_ARM_IP);
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_LE, LABEL_ONE_REGION);
+
+    orc_arm_emit_store_reg (compiler, ORC_ARM_IP, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1));
+    orc_arm_emit_sub (compiler, ORC_ARM_A2, ORC_ARM_A3, ORC_ARM_IP);
+
+    orc_arm_emit_asr_imm (compiler, ORC_ARM_A3, ORC_ARM_A2,
+        compiler->loop_shift + compiler->unroll_shift);
+    orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
+
+    orc_arm_emit_and_imm (compiler, ORC_ARM_A3, ORC_ARM_A2,
+        (1<<(compiler->loop_shift + compiler->unroll_shift))-1);
+    orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3));
+
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, LABEL_ONE_REGION_AFTER);
+    orc_arm_emit_label (compiler, LABEL_ONE_REGION);
+
+    orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1));
+
+    orc_arm_emit_load_imm (compiler, ORC_ARM_A3, 0);
+    orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
+    orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3));
+
+    orc_arm_emit_label (compiler, LABEL_ONE_REGION_AFTER);
+  }
+
+  orc_neon_load_constants_inner (compiler);
+
+  if (compiler->loop_shift > 0) {
+    int save_loop_shift = compiler->loop_shift;
+    compiler->loop_shift = 0;
+
+    orc_arm_emit_load_reg (compiler, ORC_ARM_IP, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter1));
+
+    orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, LABEL_REGION1_SKIP);
+
+    orc_arm_emit_label (compiler, LABEL_REGION1_LOOP);
+    orc_neon_emit_loop (compiler, -1);
+    orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION1_LOOP);
+    orc_arm_emit_label (compiler, LABEL_REGION1_SKIP);
+
+    compiler->loop_shift = save_loop_shift;
+    compiler->vars[align_var].is_aligned = TRUE;
+  }
+
+  if (compiler->loop_shift > 0) {
+    orc_arm_emit_load_reg (compiler, ORC_ARM_IP, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
+  } else {
+    orc_arm_emit_load_reg (compiler, ORC_ARM_IP, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
+  }
+
+  orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
+  orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, LABEL_REGION2_SKIP);
+
+  orc_arm_emit_asr_imm (compiler, compiler->gp_tmpreg, ORC_ARM_IP,
+      17 + var_size_shift - compiler->loop_shift - compiler->unroll_shift);
+  orc_arm_emit_cmp_imm (compiler, compiler->gp_tmpreg, 0);
+  orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, LABEL_REGION2_MEDIUM);
+
+  /* N is larger than L2 cache size */
+  compiler->size_region = 3;
+  orc_arm_emit_label (compiler, LABEL_REGION2_LOOP_LARGE);
+  for(i=0;i<(1<<compiler->unroll_shift);i++){
+    orc_neon_emit_loop (compiler, i);
+  }
+  orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
+  orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION2_LOOP_LARGE);
+  orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, LABEL_REGION2_SKIP);
+
+  orc_arm_emit_label (compiler, LABEL_REGION2_MEDIUM);
+  orc_arm_emit_asr_imm (compiler, compiler->gp_tmpreg, ORC_ARM_IP,
+      13 + var_size_shift - compiler->loop_shift - compiler->unroll_shift);
+  orc_arm_emit_cmp_imm (compiler, compiler->gp_tmpreg, 0);
+  orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, LABEL_REGION2_SMALL);
+
+  /* N is smaller than L2 cache size */
+  compiler->size_region = 2;
+  orc_arm_emit_label (compiler, LABEL_REGION2_LOOP_MEDIUM);
+  for(i=0;i<(1<<compiler->unroll_shift);i++){
+    orc_neon_emit_loop (compiler, i);
+  }
+  orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
+  orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION2_LOOP_MEDIUM);
+  orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, LABEL_REGION2_SKIP);
+
+  orc_arm_emit_label (compiler, LABEL_REGION2_SMALL);
+  /* N is smaller than L2 cache size */
+  compiler->size_region = 1;
+  orc_arm_emit_label (compiler, LABEL_REGION2_LOOP_SMALL);
+  for(i=0;i<(1<<compiler->unroll_shift);i++){
+    orc_neon_emit_loop (compiler, i);
+  }
+  orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
+  orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION2_LOOP_SMALL);
+
+  orc_arm_emit_label (compiler, LABEL_REGION2_SKIP);
+
+  if (compiler->loop_shift > 0) {
+    int save_loop_shift = compiler->loop_shift;
+
+    compiler->loop_shift = 0;
+
+    compiler->vars[align_var].is_aligned = FALSE;
+
+    orc_arm_emit_load_reg (compiler, ORC_ARM_IP, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3));
+
+    orc_arm_emit_cmp_imm (compiler, ORC_ARM_IP, 0);
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, LABEL_REGION3_SKIP);
+
+    orc_arm_emit_label (compiler, LABEL_REGION3_LOOP);
+    orc_neon_emit_loop (compiler, -1);
+    orc_arm_emit_sub_imm (compiler, ORC_ARM_IP, ORC_ARM_IP, 1, TRUE);
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION3_LOOP);
+    orc_arm_emit_label (compiler, LABEL_REGION3_SKIP);
+
+    compiler->loop_shift = save_loop_shift;
+  }
+
+  if (compiler->program->is_2d) {
+    neon_add_strides (compiler);
+
+    orc_arm_emit_load_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A2]));
+    orc_arm_emit_sub_imm (compiler, ORC_ARM_A3, ORC_ARM_A3, 1, TRUE);
+    orc_arm_emit_store_reg (compiler, ORC_ARM_A3, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]));
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_OUTER_LOOP);
+  }
+
+  orc_neon_save_accumulators (compiler);
+
+  if (set_fpscr) {
+    ORC_ASM_CODE (compiler,"  pop %s\n", orc_arm_reg_name (compiler->gp_tmpreg));
+    orc_arm_emit (compiler, 0xe49d0004 | ((compiler->gp_tmpreg&0xf)<<12));
+
+    ORC_ASM_CODE (compiler,"  vmsr fpscr, %s\n", orc_arm_reg_name (compiler->gp_tmpreg));
+    orc_arm_emit (compiler, 0xeee10a10 | ((compiler->gp_tmpreg&0xf)<<12));
+  }
+
+  orc_neon_emit_epilogue (compiler);
+
+  orc_arm_emit_align (compiler, 4);
+
+  orc_arm_emit_label (compiler, 20);
+  orc_arm_emit_data (compiler, 0x07060706);
+  orc_arm_emit_data (compiler, 0x07060706);
+  orc_arm_emit_data (compiler, 0x0f0e0f0e);
+  orc_arm_emit_data (compiler, 0x0f0e0f0e);
+
+  orc_arm_do_fixups (compiler);
+}
+
+static void
+orc_compiler_neon_assemble_64 (OrcCompiler *compiler)
+{
+  int align_var;
+
+  align_var = get_align_var (compiler);
+  if (compiler->error) return;
+
+  compiler->vars[align_var].is_aligned = FALSE;
+
+  orc_neon_emit_prologue (compiler);
+
+  orc_neon_load_constants_outer (compiler);
+
+  if (compiler->program->is_2d) {
+    if (compiler->program->constant_m > 0) {
+      orc_arm64_emit_mov_imm (compiler, 32, ORC_ARM64_IP1, compiler->program->constant_m);
+      orc_arm64_emit_store_reg (compiler, 32, ORC_ARM64_IP1, compiler->exec_reg,
+          (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]));
+    } else {
+      orc_arm64_emit_load_reg (compiler, 32, ORC_ARM64_IP1, compiler->exec_reg,
+          (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A1]));
+      orc_arm64_emit_store_reg (compiler, 32, ORC_ARM64_IP1, compiler->exec_reg,
+          (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A2]));
+    }
+
+    orc_arm_emit_label (compiler, LABEL_OUTER_LOOP);
+  }
+
+  if (compiler->loop_shift > 0) {
+    orc_neon64_loop_shift (compiler);
+
+    orc_neon_load_constants_inner (compiler);
+
+    orc_neon64_loop_shift_remainder (compiler, counter1,
+        LABEL_REGION1_LOOP, LABEL_REGION1_SKIP);
+    compiler->vars[align_var].is_aligned = TRUE;
+
+    orc_arm64_emit_load_reg (compiler, 32, ORC_ARM64_IP0, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
+
+    orc_neon64_loop_caches (compiler);
+
+    compiler->vars[align_var].is_aligned = FALSE;
+    orc_neon64_loop_shift_remainder (compiler, counter3,
+        LABEL_REGION3_LOOP, LABEL_REGION3_SKIP);
+  } else {
+    orc_neon_load_constants_inner (compiler);
+
+    orc_arm64_emit_load_reg (compiler, 32, ORC_ARM64_IP0, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
+
+    orc_neon64_loop_caches (compiler);
+  }
+
+  if (compiler->program->is_2d) {
+    neon_add_strides (compiler);
+
+    orc_arm64_emit_load_reg (compiler, 32, ORC_ARM64_IP1, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor, params[ORC_VAR_A2]));
+    orc_arm64_emit_subs_imm (compiler, 32, ORC_ARM64_IP1, ORC_ARM64_IP1, 1);
+    orc_arm64_emit_store_reg (compiler, 32, ORC_ARM64_IP1, compiler->exec_reg,
+        (int)ORC_STRUCT_OFFSET(OrcExecutor,params[ORC_VAR_A2]));
+    orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_OUTER_LOOP);
+  }
+
+  orc_neon_save_accumulators (compiler);
+
+  orc_neon_emit_epilogue (compiler);
+
+  orc_arm_emit_align (compiler, 4);
+
+  orc_arm_do_fixups (compiler);
 }
 
 #define NEON_BINARY(code,a,b,c) \
