@@ -27,6 +27,8 @@ static void orc_compiler_neon_assemble (OrcCompiler *compiler);
 static void orc_compiler_neon_assemble_32 (OrcCompiler *compiler);
 static void orc_compiler_neon_assemble_64 (OrcCompiler *compiler);
 
+static void orc_neon64_short_unaligned_loop (OrcCompiler *compiler);
+
 static void orc_neon_save_accumulators (OrcCompiler *compiler);
 static void neon_add_strides (OrcCompiler *compiler);
 
@@ -597,6 +599,7 @@ enum {
 };
 
 #define ORC_NEON_ALIGNED_DEST_CUTOFF 64
+#define ORC_NEON_LONG_PROGRAM_CUTOFF 5
 
 static void
 orc_neon64_loop_shift (OrcCompiler *compiler)
@@ -608,51 +611,6 @@ orc_neon64_loop_shift (OrcCompiler *compiler)
   align_var = get_align_var (compiler);
   if (compiler->error) return;
   var_size_shift = get_shift (compiler->vars[align_var].size);
-
-  if (compiler->n_insns < 5) {
-    /** Get the number of loops (N) from OrcExecutor */
-    orc_arm64_emit_load_reg (compiler, 32, ORC_ARM64_R2, compiler->exec_reg,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
-
-    /** if N > ORC_NEON_ALIGNED_DEST_CUTOFF, go to LABEL_REGION0_SKIP */
-    orc_arm64_emit_cmp_imm (compiler, 32, ORC_ARM64_R2, ORC_NEON_ALIGNED_DEST_CUTOFF);
-    orc_arm_emit_branch (compiler, ORC_ARM_COND_GT, LABEL_REGION0_SKIP);
-
-    /** counter2 = N >> loop shift */
-    orc_arm64_emit_asr_imm (compiler, 32, ORC_ARM64_R1, ORC_ARM64_R2,
-        compiler->loop_shift);
-    orc_arm64_emit_store_reg (compiler, 32, ORC_ARM64_R1, compiler->exec_reg,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
-
-    /** counter3 = N & loop shift */
-    orc_arm64_emit_and_imm (compiler, 32, ORC_ARM64_R2, ORC_ARM64_R2,
-        (1<<compiler->loop_shift)-1);
-    orc_arm64_emit_store_reg (compiler, 32, ORC_ARM64_R2, compiler->exec_reg,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3));
-
-    /** load function arguments */
-    orc_neon_load_constants_inner (compiler);
-
-    /** if counter2 == zero, go to LABEL_REGION2_SKIP */
-    orc_arm64_emit_load_reg (compiler, 32, ORC_ARM64_IP0, compiler->exec_reg,
-        (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
-    orc_arm64_emit_cmp_imm (compiler, 32, ORC_ARM64_IP0, 0);
-    orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, LABEL_REGION2_SKIP);
-
-    /** vector calculation loop */
-    compiler->size_region = 0;
-    orc_arm_emit_label (compiler, LABEL_REGION0_LOOP);
-    orc_arm64_emit_subs_imm (compiler, 32, ORC_ARM64_IP0, ORC_ARM64_IP0, 1);
-
-    /** vector instructions: @todo port to aarch64 */
-    orc_neon_emit_loop (compiler, -1);
-
-    /** if counter2 != zero, repeat loop */
-    orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION0_LOOP);
-    /** else go to LABEL_REGION2_SKIP */
-    orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, LABEL_REGION2_SKIP);
-    orc_arm_emit_label (compiler, LABEL_REGION0_SKIP);
-  }
 
   /** IP0 = 1 << align_shift */
   orc_arm64_emit_mov_imm (compiler, 32, ORC_ARM64_IP0, 1<<align_shift);
@@ -712,6 +670,53 @@ orc_neon64_loop_shift (OrcCompiler *compiler)
       (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3));
 
   orc_arm_emit_label (compiler, LABEL_ONE_REGION_AFTER);
+}
+
+static void
+orc_neon64_short_unaligned_loop (OrcCompiler *compiler)
+{
+  /** Get the number of loops (N) from OrcExecutor */
+  orc_arm64_emit_load_reg (compiler, 32, ORC_ARM64_R2, compiler->exec_reg,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,n));
+
+  /** if N > ORC_NEON_ALIGNED_DEST_CUTOFF, go to LABEL_REGION0_SKIP */
+  orc_arm64_emit_cmp_imm (compiler, 32, ORC_ARM64_R2, ORC_NEON_ALIGNED_DEST_CUTOFF);
+  orc_arm_emit_branch (compiler, ORC_ARM_COND_GT, LABEL_REGION0_SKIP);
+
+  /** counter2 = N >> loop shift */
+  orc_arm64_emit_asr_imm (compiler, 32, ORC_ARM64_R1, ORC_ARM64_R2,
+      compiler->loop_shift);
+  orc_arm64_emit_store_reg (compiler, 32, ORC_ARM64_R1, compiler->exec_reg,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
+
+  /** counter3 = N & loop shift */
+  orc_arm64_emit_and_imm (compiler, 32, ORC_ARM64_R2, ORC_ARM64_R2,
+      (1<<compiler->loop_shift)-1);
+  orc_arm64_emit_store_reg (compiler, 32, ORC_ARM64_R2, compiler->exec_reg,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,counter3));
+
+  /** load function arguments */
+  orc_neon_load_constants_inner (compiler);
+
+  /** if counter2 == zero, go to LABEL_REGION2_SKIP */
+  orc_arm64_emit_load_reg (compiler, 32, ORC_ARM64_IP0, compiler->exec_reg,
+      (int)ORC_STRUCT_OFFSET(OrcExecutor,counter2));
+  orc_arm64_emit_cmp_imm (compiler, 32, ORC_ARM64_IP0, 0);
+  orc_arm_emit_branch (compiler, ORC_ARM_COND_EQ, LABEL_REGION2_SKIP);
+
+  /** vector calculation loop */
+  compiler->size_region = 0;
+  orc_arm_emit_label (compiler, LABEL_REGION0_LOOP);
+  orc_arm64_emit_subs_imm (compiler, 32, ORC_ARM64_IP0, ORC_ARM64_IP0, 1);
+
+  /** vector instructions: @todo port to aarch64 */
+  orc_neon_emit_loop (compiler, -1);
+
+  /** if counter2 != zero, repeat loop */
+  orc_arm_emit_branch (compiler, ORC_ARM_COND_NE, LABEL_REGION0_LOOP);
+  /** else go to LABEL_REGION2_SKIP */
+  orc_arm_emit_branch (compiler, ORC_ARM_COND_AL, LABEL_REGION2_SKIP);
+  orc_arm_emit_label (compiler, LABEL_REGION0_SKIP);
 }
 
 static void
@@ -1211,6 +1216,9 @@ orc_compiler_neon_assemble_64 (OrcCompiler *compiler)
   }
 
   if (compiler->loop_shift > 0) {
+    if (compiler->n_insns < ORC_NEON_LONG_PROGRAM_CUTOFF)
+      orc_neon64_short_unaligned_loop (compiler);
+
     orc_neon64_loop_shift (compiler);
 
     orc_neon_load_constants_inner (compiler);
