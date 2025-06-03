@@ -602,7 +602,7 @@ enum {
 #define ORC_NEON_LONG_PROGRAM_CUTOFF 5
 
 static void
-orc_neon64_loop_shift (OrcCompiler *compiler)
+orc_neon64_set_region_counters (OrcCompiler *compiler)
 {
   int align_var;
   int var_size_shift;
@@ -1219,7 +1219,7 @@ orc_compiler_neon_assemble_64 (OrcCompiler *compiler)
     if (compiler->n_insns < ORC_NEON_LONG_PROGRAM_CUTOFF)
       orc_neon64_short_unaligned_loop (compiler);
 
-    orc_neon64_loop_shift (compiler);
+    orc_neon64_set_region_counters (compiler);
 
     orc_neon_load_constants_inner (compiler);
 
