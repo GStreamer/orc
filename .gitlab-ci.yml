@@ -234,9 +234,9 @@ msys2:
         meson test -C build &&
         meson test -C build --benchmark"
 
-macos arm64:
-  image: "registry.freedesktop.org/gstreamer/gstreamer/macos-arm64/14-sonoma:2023-10-25.0"
+.build darwin:
   stage: 'build'
+  image: "registry.freedesktop.org/gstreamer/gstreamer/macos-arm64/15-sequoia:2024-10-28.0"
   tags:
     - gst-mac-arm
   artifacts:
@@ -249,19 +249,79 @@ macos arm64:
       - "build/*.S"
   before_script:
     - pip3 install --upgrade pip
-    - export PATH=${PATH}:/Users/gst-ci/Library/Python/3.9/bin
-    # Need to install certificates for python
-    - pip3 install --upgrade certifi
-    # Make sure meson and ninja are up to date
     - pip3 install -U meson ninja
+
+macos arm64:
+  extends: '.build darwin'
+  stage: 'build'
   script:
-    - export PATH=${PATH}:/Users/gst-ci/Library/Python/3.9/bin
-    - CERT_PATH=$(python3 -m certifi) && export SSL_CERT_FILE=${CERT_PATH} && export REQUESTS_CA_BUNDLE=${CERT_PATH}
     - meson setup build --werror -Dc_args='-Werror=unguarded-availability-new'
     - meson compile --verbose -C build
     - meson test -C build
     - meson test -C build --benchmark
     - ORC_DEBUG=2 ./build/tools/orc-bugreport
+
+macos cross x86_64:
+  extends: '.build darwin'
+  stage: 'build'
+  script:
+    - |
+      cat > cross-file.txt <<EOF
+        [host_machine]
+        system = 'darwin'
+        subsystem = 'macos'
+        cpu_family = 'x86_64'
+        cpu = 'x86_64'
+        endian = 'little'
+
+        [built-in options]
+        c_args =      ['-arch', 'x86_64', '--sysroot=$(xcrun --sdk macosx --show-sdk-path)', '-mmacosx-version-min=12.0']
+        c_link_args = ['-arch', 'x86_64', '--sysroot=$(xcrun --sdk macosx --show-sdk-path)', '-mmacosx-version-min=12.0']
+
+        [properties]
+        needs_exe_wrapper = false
+
+        [binaries]
+        ar        = '$(xcrun --find --sdk macosx ar)'
+        c         = '$(xcrun --find --sdk macosx clang)'
+        cpp       = '$(xcrun --find --sdk macosx clang++)'
+        ranlib    = '$(xcrun --find --sdk macosx ranlib)'
+        strip     = '$(xcrun --find --sdk macosx strip)'
+        pkg-config = 'false'
+        EOF
+    - meson setup build --cross-file=cross-file.txt --werror -Dc_args='-Werror=unguarded-availability-new'
+    - meson compile --verbose -C build
+    - meson test -C build
+    - meson test -C build --benchmark
+    - env ORC_DEBUG=2 ./build/tools/orc-bugreport
+
+ios cross-arm64:
+  extends: '.build darwin'
+  stage: 'build'
+  script:
+    - |
+      cat > ios-cross-file.txt <<EOF
+      [host_machine]
+      system = 'darwin'
+      subsystem = 'ios'
+      cpu_family = 'aarch64'
+      cpu = 'aarch64'
+      endian = 'little'
+
+      [built-in options]
+      c_args      = ['-arch', 'arm64', '--sysroot=$(xcrun --sdk iphoneos --show-sdk-path)', '-miphoneos-version-min=12.0', '-Werror=unguarded-availability-new']
+      c_link_args = ['-arch', 'arm64', '--sysroot=$(xcrun --sdk iphoneos --show-sdk-path)', '-miphoneos-version-min=12.0']
+
+      [binaries]
+      ar        = '$(xcrun --find --sdk iphoneos ar)'
+      c         = '$(xcrun --find --sdk iphoneos clang)'
+      cpp       = '$(xcrun --find --sdk iphoneos clang++)'
+      ranlib    = '$(xcrun --find --sdk iphoneos ranlib)'
+      strip     = '$(xcrun --find --sdk iphoneos strip)'
+      pkg-config = 'false'
+      EOF
+    - meson setup --werror -Dorc-test=disabled -Db_bitcode=false --cross-file ios-cross-file.txt build
+    - meson compile --verbose -C build
 
 .build android:
   image: 'registry.freedesktop.org/gstreamer/cerbero/android:2023-05-31.0'
