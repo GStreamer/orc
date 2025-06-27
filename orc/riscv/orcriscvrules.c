@@ -133,6 +133,46 @@ orc_riscv_rule_loadX (OrcCompiler *c, void *user, OrcInstruction *insn)
 }
 
 static void
+orc_riscv_rule_loadoffX (OrcCompiler *c, void *user, OrcInstruction *insn)
+{
+  const OrcVariable src1 = c->vars[insn->src_args[0]];
+  const OrcVariable src2 = c->vars[insn->src_args[1]];
+  const OrcVariable dest = c->vars[insn->dest_args[0]];
+
+  /* FIXME this should be fixed at a higher level */
+  if (src1.vartype != ORC_VAR_TYPE_SRC && src1.vartype != ORC_VAR_TYPE_DEST) {
+    ORC_COMPILER_ERROR (c, "loadoffX used with non src/dest");
+    return;
+  }
+  if (src2.vartype != ORC_VAR_TYPE_CONST) {
+    ORC_COMPILER_ERROR (c, "loadoffX offset must be const");
+    return;
+  }
+
+  orc_riscv_insn_emit_load_immediate (c, c->gp_tmpreg,
+      src2.value.i * src1.size);
+  orc_riscv_insn_emit_add (c, c->gp_tmpreg, c->gp_tmpreg, src1.ptr_register);
+
+  switch (dest.size) {
+    case 1:
+      orc_riscv_insn_emit_vle8 (c, dest.alloc, c->gp_tmpreg);
+      break;
+    case 2:
+      orc_riscv_insn_emit_vle16 (c, dest.alloc, c->gp_tmpreg);
+      break;
+    case 4:
+      orc_riscv_insn_emit_vle32 (c, dest.alloc, c->gp_tmpreg);
+      break;
+    case 8:
+      orc_riscv_insn_emit_vle64 (c, dest.alloc, c->gp_tmpreg);
+      break;
+    default:
+      ORC_COMPILER_ERROR (c, "loadX used with wrong size %d", dest.size);
+      break;
+  }
+}
+
+static void
 orc_riscv_rule_storeb (OrcCompiler *c, void *user, OrcInstruction *insn)
 {
   const OrcRiscvRegister src = c->vars[insn->src_args[0]].alloc;
@@ -1193,6 +1233,10 @@ orc_riscv_rules_init (OrcTarget *target)
   REG (loadw, loadX, NOT_APPLICABLE, FALSE);
   REG (loadl, loadX, NOT_APPLICABLE, FALSE);
   REG (loadq, loadX, NOT_APPLICABLE, FALSE);
+
+  REG (loadoffb, loadoffX, NOT_APPLICABLE, FALSE);
+  REG (loadoffw, loadoffX, NOT_APPLICABLE, FALSE);
+  REG (loadoffl, loadoffX, NOT_APPLICABLE, FALSE);
 
   REG (storeb, storeb, NOT_APPLICABLE, FALSE);
   REG (storew, storew, NOT_APPLICABLE, FALSE);
