@@ -1510,3 +1510,29 @@ orc_riscv_insn_emit_load_immediate (OrcCompiler *c,
     orc_riscv_insn_emit_shift_add (c, rd, lower);
   }
 }
+
+void
+orc_riscv_insn_emit_flush_subnormals (OrcCompiler *c, int element_width,
+    OrcRiscvRegister vs, OrcRiscvRegister vd)
+{
+  const orc_uint64 upper =
+      element_width ==
+      ORC_RISCV_SEW_32 ? 0xff800000 : ORC_UINT64_C (0xfff) << 52;
+  const orc_uint64 exponent = upper & (upper >> 1);
+
+  orc_riscv_insn_emit_load_immediate (c, c->gp_tmpreg, exponent);
+  orc_riscv_insn_emit_vand_vx (c, ORC_RISCV_V0, c->gp_tmpreg, vs);
+  orc_riscv_insn_emit_load_immediate (c, c->gp_tmpreg, upper);
+
+  if (vs != vd) {
+    orc_riscv_insn_emit_vmsne_vx (c, ORC_RISCV_V0, ORC_RISCV_V0,
+        ORC_RISCV_ZERO);
+    orc_riscv_insn_emit_vand_vx (c, vd, c->gp_tmpreg, vs);
+    orc_riscv_insn_emit_vadd_vim (c, vd, vs, 0);
+  } else {
+    orc_riscv_insn_emit_vmseq_vx (c, ORC_RISCV_V0, ORC_RISCV_V0,
+        ORC_RISCV_ZERO);
+    orc_riscv_insn_emit_vand_vx (c, ORC_RISCV_V1, c->gp_tmpreg, vs);
+    orc_riscv_insn_emit_vadd_vim (c, vd, ORC_RISCV_V1, 0);
+  }
+}
