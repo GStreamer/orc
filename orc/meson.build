@@ -118,22 +118,32 @@ if host_os != 'windows'
   orc_dependencies += threads
 endif
 
+orc_lib_args = orc_c_args + ['-DBUILDING_ORC']
+orc_static_cargs = ['-DORC_STATIC_COMPILATION']
+
 orc_lib = library ('orc-' + orc_api,
   orc_sources,
   version : libversion,
   soversion : soversion,
   darwin_versions : osxversion,
   include_directories : orc_inc,
-  c_args : orc_c_args + ['-DBUILDING_ORC'],
+  c_args : orc_lib_args,
+  c_static_args : orc_lib_args + orc_static_cargs,
   dependencies : orc_dependencies,
   install : true)
 
+# https://github.com/mesonbuild/meson/pull/12632
 orc_dep_cargs = []
-if get_option('default_library') == 'static'
-  orc_dep_cargs += ['-DORC_STATIC_COMPILATION']
+if get_option('default_library') == 'both'
+  orc_dep_lib = orc_lib.get_shared_lib()
+else
+  orc_dep_lib = orc_lib
+  if get_option('default_library') == 'static'
+    orc_dep_cargs = orc_static_cargs
+  endif
 endif
 
 orc_dep = declare_dependency(include_directories : orc_inc,
                              dependencies : orc_dependencies,
                              compile_args : orc_dep_cargs,
-                             link_with : orc_lib)
+                             link_with : orc_dep_lib)
