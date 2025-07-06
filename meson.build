@@ -36,11 +36,6 @@ if cc.has_link_argument('-Wl,-Bsymbolic-functions')
   add_project_link_arguments('-Wl,-Bsymbolic-functions', language : 'c')
 endif
 
-# Symbol visibility
-if cc.has_argument('-fvisibility=hidden')
-  add_project_arguments('-fvisibility=hidden', language: 'c')
-endif
-
 all_targets = ['avx', 'sse', 'mmx']
 extra_targets = ['altivec', 'neon', 'mips', 'c64x'] # 'arm'
 enabled_targets = []

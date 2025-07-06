@@ -130,6 +130,7 @@ orc_lib = library ('orc-' + orc_api,
   c_args : orc_lib_args,
   c_static_args : orc_lib_args + orc_static_cargs,
   dependencies : orc_dependencies,
+  gnu_symbol_visibility: 'inlineshidden',
   install : true)
 
 # https://github.com/mesonbuild/meson/pull/12632

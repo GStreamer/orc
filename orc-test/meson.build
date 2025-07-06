@@ -14,6 +14,7 @@ orc_test_lib = library ('orc-test-' + orc_api,
   include_directories : orc_inc,
   c_args : orc_test_lib_args,
   c_static_args : orc_test_lib_args + orc_test_static_cargs,
+  gnu_symbol_visibility: 'inlineshidden',
   dependencies : [libm, orc_dep],
   install : true)
 

@@ -24,6 +24,7 @@ endif
 
 foreach test : tests
   t = executable(test, test + '.c',
+                 gnu_symbol_visibility: 'inlineshidden',
                  install: false,
                  dependencies: [libm, orc_dep, orc_test_dep])
 
@@ -66,6 +67,7 @@ endif
 
 foreach bin : noinst_bins
   b = executable(bin, bin + '.c',
+                 gnu_symbol_visibility: 'inlineshidden',
                  install: false,
                  dependencies: [libm, orc_dep, orc_test_dep])
 endforeach
