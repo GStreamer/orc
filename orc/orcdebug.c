@@ -50,26 +50,59 @@ static void orc_debug_print_valist (int level, const char *file,
     const char *func, int line, const char *format, va_list args);
 
 static int _orc_debug_level = ORC_DEBUG_ERROR;
+static int _orc_debug_fatal_level = ORC_DEBUG_NONE;
 
 static OrcDebugPrintFunc _orc_debug_print_func = orc_debug_print_valist;
+
+static int
+_orc_debug_getenv_level (const char *envvar_name)
+{
+  if (!envvar_name)
+    return -1;
+
+  const char *envvar = _orc_getenv (envvar_name);
+  if (!envvar)
+    return -1;
+
+  char *end = NULL;
+  const int level = strtol (envvar, &end, 0);
+  // Workaround for a false -Wuse-after-free
+  const int ret = (end <= envvar) ? -1 : level;
+  free ((char *)envvar);
+
+  return ret;
+}
 
 void
 _orc_debug_init(void)
 {
-  char *envvar;
+  int level;
 
-  envvar = _orc_getenv ("ORC_DEBUG");
-  if (envvar != NULL) {
-    char *end = NULL;
-    int level;
-    level = strtol (envvar, &end, 0);
-    if (end > envvar) {
-      _orc_debug_level = level;
-    }
-    free (envvar);
-  }
+  level = _orc_debug_getenv_level ("ORC_DEBUG_FATAL");
+  if (level != -1)
+    _orc_debug_fatal_level = level;
+
+  level = _orc_debug_getenv_level ("ORC_DEBUG");
+  if (level != -1)
+    _orc_debug_level = level;
 
   ORC_INFO ("orc-" VERSION " debug init");
+}
+
+static void
+_orc_abort_if_debug_fatal_level (int level)
+{
+  if (level > _orc_debug_fatal_level)
+    return;
+
+  fprintf (stderr, "Logging with level %d and fatal level is %d. Abort.\n",
+      level, _orc_debug_fatal_level);
+
+#if defined(_MSC_VER)
+  __debugbreak();
+#else
+  __builtin_trap();
+#endif
 }
 
 #ifdef HAVE_ANDROID_LIBLOG
@@ -103,13 +136,13 @@ orc_debug_print_valist (int level, const char *file, const char *func,
 
   if (vasprintf (&dbg, format, args) < 0) {
     __android_log_print (android_log_level, "Orc", "Failed to alloc debug string....");
-    return;
+  } else {
+    __android_log_print (android_log_level, "Orc",
+          "%s:%d:%s %s\n", file, line, func, dbg);
+    free (dbg);
   }
 
-  __android_log_print (android_log_level, "Orc",
-        "%s:%d:%s %s\n", file, line, func, dbg);
-
-  free (dbg);
+  _orc_abort_if_debug_fatal_level (level);
 }
 #else
 static void
@@ -129,6 +162,8 @@ orc_debug_print_valist (int level, const char *file, const char *func,
   fprintf (stderr, "ORC: %s: %s(%d): %s(): ", level_name, file, line, func);
   vfprintf (stderr, format, args);
   fprintf (stderr, "\n");
+
+  _orc_abort_if_debug_fatal_level (level);
 }
 #endif
 
