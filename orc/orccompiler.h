@@ -22,7 +22,7 @@ ORC_BEGIN_DECLS
 
 #define ORC_COMPILER_ERROR(compiler, fmt, ...) do { \
   orc_compiler_error (compiler, fmt, ##__VA_ARGS__); \
-  orc_debug_print(ORC_DEBUG_WARNING, __FILE__, ORC_FUNCTION, __LINE__, fmt, ##__VA_ARGS__); \
+  ORC_WARNING (fmt, ##__VA_ARGS__); \
 } while (0)
 
 #if 0
