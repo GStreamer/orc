@@ -281,7 +281,7 @@ orc_compiler_allocate_register (OrcCompiler *compiler, int data_reg)
   }
 
   if (data_reg || !compiler->allow_gp_on_stack) {
-    orc_compiler_error (compiler, "register overflow for %s register",
+    ORC_COMPILER_ERROR (compiler, "register overflow for %s register",
         data_reg ? "vector" : "gp");
     compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
@@ -455,7 +455,7 @@ orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTar
   }
 
   if (program->backup_func && (_orc_compiler_flag_backup || target == NULL)) {
-    orc_compiler_error (compiler, "Compilation disabled, using backup");
+    ORC_COMPILER_ERROR (compiler, "Compilation disabled, using backup");
     compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
     goto error;
   }
@@ -463,7 +463,7 @@ orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTar
   if (_orc_compiler_flag_emulate || target == NULL) {
     program->code_exec = (void *)orc_executor_emulate;
     program->orccode->exec = (void *)orc_executor_emulate;
-    orc_compiler_error (compiler, "Compilation disabled, using emulation");
+    ORC_COMPILER_ERROR (compiler, "Compilation disabled, using emulation");
     compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
     goto error;
   }
@@ -589,7 +589,7 @@ orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTar
   if (program->orccode->chunk == NULL) {
     program->code_exec = (void *)orc_executor_emulate;
     program->orccode->exec = (void *)orc_executor_emulate;
-    orc_compiler_error (compiler, "Cannot reserve executable memory, using emulation");
+    ORC_COMPILER_ERROR (compiler, "Cannot reserve executable memory, using emulation");
     compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
     goto error;
   }
@@ -961,7 +961,7 @@ orc_compiler_assign_rules (OrcCompiler *compiler)
         compiler->target_flags);
 
     if (insn->rule == NULL || insn->rule->emit == NULL) {
-      orc_compiler_error (compiler, "no code generation rule for %s on "
+      ORC_COMPILER_ERROR (compiler, "no code generation rule for %s on "
           "target %s", insn->opcode->name, compiler->target->name);
       compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
       return;
@@ -1016,7 +1016,7 @@ orc_compiler_get_temp_reg (OrcCompiler *compiler)
   ORC_ERROR("No temporary register available at insn %d %s",
       compiler->insn_index,
       compiler->insns[compiler->insn_index].opcode->name);
-  orc_compiler_error (compiler, "no temporary register available");
+  ORC_COMPILER_ERROR (compiler, "no temporary register available");
   compiler->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
 
   return 0;
@@ -1187,7 +1187,7 @@ orc_compiler_global_reg_alloc (OrcCompiler *compiler)
       case ORC_VAR_TYPE_TEMP:
         break;
       default:
-        orc_compiler_error (compiler, "bad vartype");
+        ORC_COMPILER_ERROR (compiler, "bad vartype");
         compiler->result = ORC_COMPILE_RESULT_UNKNOWN_PARSE;
         break;
     }
@@ -1509,7 +1509,7 @@ orc_compiler_get_temp_constant (OrcCompiler *compiler, int size, int value)
  *
  * In case a constant can not be generated, due to missing temporary
  * registers, or too many compiler constants #ORC_REG_INVALID will
- * be returned. Failing will trigger an orc_compiler_error()
+ * be returned. Failing will trigger an ORC_COMPILER_ERROR()
  *
  * This function is deprecated and orc_compiler_get_constant_full()
  * should be used.
@@ -1540,7 +1540,7 @@ orc_compiler_get_constant (OrcCompiler *compiler, int size, int value)
  *
  * In case a constant can not be generated, due to missing temporary
  * registers, or too many compiler constants #ORC_REG_INVALID will
- * be returned. Failing will trigger an orc_compiler_error()
+ * be returned. Failing will trigger an ORC_COMPILER_ERROR()
  *
  * This function is deprecated and orc_compiler_get_constant_full()
  * should be used. Note that @a, @b, @c, and @d are stored in little-endian
@@ -1571,7 +1571,7 @@ orc_compiler_get_constant_long (OrcCompiler *compiler,
  * @returns: The register with the constant stored or #ORC_REG_INVALID
  *
  * Similar to orc_compiler_get_constant_long() but will not trigger
- * an orc_compiler_error() if failing. This is useful for rules that
+ * an ORC_COMPILER_ERROR() if failing. This is useful for rules that
  * have different altrnatives of implementation depending if the constant
  * can be loaded or not.
  *
@@ -1624,7 +1624,7 @@ orc_compiler_get_temp_constant_full (OrcCompiler *c, OrcConstant *cnst)
  * @returns: The register with the constant stored or #ORC_REG_INVALID
  *
  * Similar to orc_compiler_get_constant_full() but will not trigger
- * an orc_compiler_error() if failing. This is useful for rules that
+ * an ORC_COMPILER_ERROR() if failing. This is useful for rules that
  * have different altrnatives of implementation depending if the constant
  * can be loaded or not.
  *
@@ -1794,7 +1794,7 @@ orc_compiler_emit_invariants (OrcCompiler *compiler)
     if (rule && rule->emit) {
       rule->emit (compiler, rule->emit_user, insn);
     } else {
-      orc_compiler_error (compiler, "no code generation rule for %s",
+      ORC_COMPILER_ERROR (compiler, "no code generation rule for %s",
           opcode->name);
     }
   }

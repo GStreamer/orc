@@ -1792,7 +1792,7 @@ orc_x86_emit_mov_reg_reg (OrcCompiler *compiler, int size, int reg1, int reg2)
       orc_x86_emit_cpuinsn_size (compiler, ORC_X86_mov_r_rm, 8, reg1, reg2);
       break;
     default:
-      orc_compiler_error(compiler, "bad size");
+      ORC_COMPILER_ERROR(compiler, "bad size");
       break;
   }
 }
@@ -1816,7 +1816,7 @@ orc_x86_emit_mov_memoffset_reg (OrcCompiler *compiler, int size, int offset,
       orc_x86_emit_cpuinsn_memoffset_reg (compiler, ORC_X86_mov_rm_r, size, offset, reg1, reg2);
       break;
     default:
-      orc_compiler_error(compiler, "bad size");
+      ORC_COMPILER_ERROR(compiler, "bad size");
       break;
   }
 }
@@ -1843,7 +1843,7 @@ orc_x86_emit_mov_reg_memoffset (OrcCompiler *compiler, int size, int reg1, int o
           reg1, offset, reg2);
       break;
     default:
-      orc_compiler_error(compiler, "bad size");
+      ORC_COMPILER_ERROR(compiler, "bad size");
       break;
   }
 }

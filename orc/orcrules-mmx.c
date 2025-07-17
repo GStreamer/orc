@@ -104,7 +104,7 @@ mmx_rule_loadX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
           dest->alloc, src->is_aligned);
       break;
     default:
-      orc_compiler_error (compiler, "bad load size %d",
+      ORC_COMPILER_ERROR (compiler, "bad load size %d",
           src->size << compiler->loop_shift);
       break;
   }
@@ -121,7 +121,7 @@ mmx_rule_loadoffX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int offset = 0;
 
   if (compiler->vars[insn->src_args[1]].vartype != ORC_VAR_TYPE_CONST) {
-    orc_compiler_error (compiler, "code generation rule for %s only works with constant offset",
+    ORC_COMPILER_ERROR (compiler, "code generation rule for %s only works with constant offset",
         insn->opcode->name);
     return;
   }
@@ -161,7 +161,7 @@ mmx_rule_loadoffX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
           dest->alloc, src->is_aligned);
       break;
     default:
-      orc_compiler_error (compiler,"bad load size %d",
+      ORC_COMPILER_ERROR (compiler,"bad load size %d",
           src->size << compiler->loop_shift);
       break;
   }
@@ -222,7 +222,7 @@ mmx_rule_loadupib (OrcCompiler *compiler, void *user, OrcInstruction *insn)
           tmp, FALSE);
       break;
     default:
-      orc_compiler_error(compiler,"bad load size %d",
+      ORC_COMPILER_ERROR(compiler,"bad load size %d",
           src->size << compiler->loop_shift);
       break;
   }
@@ -275,7 +275,7 @@ mmx_rule_loadupdb (OrcCompiler *compiler, void *user, OrcInstruction *insn)
           dest->alloc, src->is_aligned);
       break;
     default:
-      orc_compiler_error(compiler,"bad load size %d",
+      ORC_COMPILER_ERROR(compiler,"bad load size %d",
           src->size << compiler->loop_shift);
       break;
   }
@@ -314,7 +314,7 @@ mmx_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     case 1:
       /* FIXME we might be using ecx twice here */
       if (ptr_reg == compiler->gp_tmpreg) {
-        orc_compiler_error (compiler, "unimplemented corner case in %s",
+        ORC_COMPILER_ERROR (compiler, "unimplemented corner case in %s",
             insn->opcode->name);
       }
       orc_mmx_emit_movd_store_register (compiler, src->alloc, compiler->gp_tmpreg);
@@ -324,7 +324,7 @@ mmx_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
     case 2:
       /* FIXME we might be using ecx twice here */
       if (ptr_reg == compiler->gp_tmpreg) {
-        orc_compiler_error(compiler, "unimplemented corner case in %s",
+        ORC_COMPILER_ERROR(compiler, "unimplemented corner case in %s",
             insn->opcode->name);
       } 
       orc_mmx_emit_movd_store_register (compiler, src->alloc, compiler->gp_tmpreg);
@@ -344,7 +344,7 @@ mmx_rule_storeX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
           dest->is_aligned, dest->is_uncached);
       break;
     default:
-      orc_compiler_error (compiler, "bad size");
+      ORC_COMPILER_ERROR (compiler, "bad size");
       break;
   }
 
@@ -712,7 +712,7 @@ mmx_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_mmx_emit_cpuinsn_mmx (p, opcodes[type], tmp, dest);
     orc_compiler_release_temp_reg (p, tmp);
   } else {
-    orc_compiler_error (p, "code generation rule for %s only works with "
+    ORC_COMPILER_ERROR (p, "code generation rule for %s only works with "
         "constant or parameter shifts", insn->opcode->name);
     p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
@@ -734,7 +734,7 @@ mmx_rule_shlb (OrcCompiler *p, void *user, OrcInstruction *insn)
         0xff & (0xff << p->vars[insn->src_args[1]].value.i));
     orc_mmx_emit_pand (p, tmp, dest);
   } else {
-    orc_compiler_error (p, "code generation rule for %s only works with "
+    ORC_COMPILER_ERROR (p, "code generation rule for %s only works with "
         "constant shifts", insn->opcode->name);
     p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
@@ -762,7 +762,7 @@ mmx_rule_shrsb (OrcCompiler *p, void *user, OrcInstruction *insn)
 
     orc_mmx_emit_por (p, tmp, dest);
   } else {
-    orc_compiler_error (p, "code generation rule for %s only works with "
+    ORC_COMPILER_ERROR (p, "code generation rule for %s only works with "
         "constant shifts", insn->opcode->name);
     p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
@@ -785,7 +785,7 @@ mmx_rule_shrub (OrcCompiler *p, void *user, OrcInstruction *insn)
         (0xff >> p->vars[insn->src_args[1]].value.i));
     orc_mmx_emit_pand (p, tmp, dest);
   } else {
-    orc_compiler_error (p, "code generation rule for %s only works with "
+    ORC_COMPILER_ERROR (p, "code generation rule for %s only works with "
         "constant shifts", insn->opcode->name);
     p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }
@@ -810,7 +810,7 @@ mmx_rule_shrsq (OrcCompiler *p, void *user, OrcInstruction *insn)
     orc_mmx_emit_psrlq_imm (p, p->vars[insn->src_args[1]].value.i, dest);
     orc_mmx_emit_por (p, tmp, dest);
   } else {
-    orc_compiler_error (p, "code generation rule for %s only works with "
+    ORC_COMPILER_ERROR (p, "code generation rule for %s only works with "
         "constant shifts", insn->opcode->name);
     p->result = ORC_COMPILE_RESULT_UNKNOWN_COMPILE;
   }

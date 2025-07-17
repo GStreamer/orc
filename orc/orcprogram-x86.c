@@ -310,7 +310,7 @@ orc_x86_load_constants_inner (OrcCompiler *c)
       case ORC_VAR_TYPE_TEMP:
         break;
       default:
-        orc_compiler_error (c, "bad vartype");
+        ORC_COMPILER_ERROR (c, "bad vartype");
         break;
     }
   }
@@ -336,7 +336,7 @@ orc_x86_add_strides (OrcCompiler *c)
             c->exec_reg);
 
         if (c->vars[i].ptr_register == 0) {
-          orc_compiler_error (c,
+          ORC_COMPILER_ERROR (c,
               "unimplemented: stride on pointer stored in memory");
         }
         break;
@@ -346,7 +346,7 @@ orc_x86_add_strides (OrcCompiler *c)
       case ORC_VAR_TYPE_TEMP:
         break;
       default:
-        orc_compiler_error (c, "bad vartype");
+        ORC_COMPILER_ERROR (c, "bad vartype");
         break;
     }
   }
@@ -423,7 +423,7 @@ orc_x86_get_max_alignment_var (OrcX86Target *t, OrcCompiler *c)
     return i;
   }
 
-  orc_compiler_error (c, "could not find alignment variable");
+  ORC_COMPILER_ERROR (c, "could not find alignment variable");
   return -1;
 }
 
@@ -733,7 +733,7 @@ orc_x86_emit_loop (OrcX86Target *t, OrcCompiler *compiler, int offset,
     if (rule && rule->emit) {
       rule->emit (compiler, rule->emit_user, insn);
     } else {
-      orc_compiler_error (compiler, "no code generation rule for %s",
+      ORC_COMPILER_ERROR (compiler, "no code generation rule for %s",
           opcode->name);
     }
   }
@@ -916,7 +916,7 @@ orc_x86_do_fixups (OrcCompiler *compiler)
 
       diff = ((orc_int8)ptr[0]) + (label - ptr);
       if (diff != (orc_int8)diff) {
-        orc_compiler_error (compiler, "short jump too long %d", diff);
+        ORC_COMPILER_ERROR (compiler, "short jump too long %d", diff);
       }
 
       ptr[0] = diff;

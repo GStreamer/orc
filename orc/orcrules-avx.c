@@ -104,7 +104,7 @@ avx_rule_loadoffX (OrcCompiler *compiler, void *user, OrcInstruction *insn)
   int ptr_reg = 0;
 
   if (compiler->vars[insn->src_args[1]].vartype != ORC_VAR_TYPE_CONST) {
-    orc_compiler_error (compiler,
+    ORC_COMPILER_ERROR (compiler,
         "code generation rule for %s only works with constant offset",
         insn->opcode->name);
     return;
@@ -920,7 +920,7 @@ avx_rule_shift (OrcCompiler *p, void *user, OrcInstruction *insn)
       orc_vex_emit_cpuinsn_avx (p, opcodes_sse[type], ORC_AVX_SSE_REG (src), ORC_AVX_SSE_REG (tmp), 0, ORC_AVX_SSE_REG (dest));
     }
   } else {
-    orc_compiler_error (p,
+    ORC_COMPILER_ERROR (p,
         "code generation rule for %s only works with "
         "constant or parameter shifts",
         insn->opcode->name);
@@ -946,7 +946,7 @@ avx_rule_shlb (OrcCompiler *p, void *user, OrcInstruction *insn)
       orc_avx_sse_emit_pand (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     }
   } else {
-    orc_compiler_error (p,
+    ORC_COMPILER_ERROR (p,
         "code generation rule for %s only works with "
         "constant shifts",
         insn->opcode->name);
@@ -987,7 +987,7 @@ avx_rule_shrsb (OrcCompiler *p, void *user, OrcInstruction *insn)
       orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     }
   } else {
-    orc_compiler_error (p,
+    ORC_COMPILER_ERROR (p,
         "code generation rule for %s only works with "
         "constant shifts",
         insn->opcode->name);
@@ -1014,7 +1014,7 @@ avx_rule_shrub (OrcCompiler *p, void *user, OrcInstruction *insn)
       orc_avx_sse_emit_pand (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     }
   } else {
-    orc_compiler_error (p,
+    ORC_COMPILER_ERROR (p,
         "code generation rule for %s only works with "
         "constant shifts",
         insn->opcode->name);
@@ -1050,7 +1050,7 @@ avx_rule_shrsq (OrcCompiler *p, void *user, OrcInstruction *insn)
       orc_avx_sse_emit_por (p, ORC_AVX_SSE_REG (dest), ORC_AVX_SSE_REG (tmp), ORC_AVX_SSE_REG (dest));
     }
   } else {
-    orc_compiler_error (p,
+    ORC_COMPILER_ERROR (p,
         "code generation rule for %s only works with "
         "constant shifts",
         insn->opcode->name);

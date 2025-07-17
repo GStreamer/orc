@@ -198,7 +198,7 @@ powerpc_load_constants_outer (OrcCompiler *compiler)
       case ORC_VAR_TYPE_TEMP:
         break;
       default:
-        orc_compiler_error(compiler,"bad vartype");
+        ORC_COMPILER_ERROR(compiler,"bad vartype");
         break;
     }
   }
@@ -281,7 +281,7 @@ orc_powerpc_emit_loop (OrcCompiler* compiler, int update)
     if (rule && rule->emit) {
       rule->emit (compiler, rule->emit_user, insn);
     } else {
-      orc_compiler_error (compiler, "no code generation rule for %s",
+      ORC_COMPILER_ERROR (compiler, "no code generation rule for %s",
           opcode->name);
     }
   }
