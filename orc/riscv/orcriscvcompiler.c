@@ -26,6 +26,7 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <orc/orcvariable.h>
 #include <orc/orccompiler.h>
 #include <orc/orcdebug.h>
 #include <orc/orcinternal.h>
@@ -414,9 +415,77 @@ orc_riscv_compiler_save_accumulators (OrcCompiler *c)
   }
 }
 
+static int
+orc_riscv_compiler_var_priority_comp (const void *var_x, const void *var_y)
+{
+  const OrcVariable *x = *(OrcVariable **) var_x, *y = *(OrcVariable **) var_y;
+  if (x->size == y->size)
+    return x->first_use - y->first_use;
+  else
+    return x->size - y->size;
+}
+
+static void
+orc_riscv_compiler_reallocate_registers (OrcCompiler *c)
+{
+  OrcVariable *vars[ORC_N_COMPILER_VARIABLES] = { NULL };
+
+  int n_vars = 0;
+  for (int i = 0; i < ORC_N_COMPILER_VARIABLES; i++)
+    if (c->vars[i].alloc >= ORC_RISCV_V0 && c->vars[i].alloc <= ORC_RISCV_V31)
+      vars[n_vars++] = &c->vars[i];
+
+  qsort (vars, n_vars, sizeof (&vars[0]), orc_riscv_compiler_var_priority_comp);
+
+  for (int i = 0; i < n_vars; i++) {
+    orc_uint32 cost[ORC_N_REGS] = { 0 };
+
+    for (int j = 0; j < 32; j++)
+      for (int k = 1; k <= 3; k++)
+        if (j & ((1 << k) - 1))
+          cost[ORC_VEC_REG_BASE + j]++;
+
+    for (int j = 0; j < c->n_insns; j++)
+      if (j >= vars[i]->first_use
+          && (j <= vars[i]->last_use || vars[i]->first_use == -1))
+        if (((OrcRiscvRuleInfo *) c->insns[j].rule->emit_user)->needs_mask_reg)
+          cost[ORC_RISCV_V0] = 1000;
+
+    /* FIXME: remove this */
+    for (int i = ORC_RISCV_V0; i <= ORC_RISCV_V7; i++)
+      cost[i] = 1000;
+
+    for (int j = 0; j < i; j++) {
+      if ((vars[i]->first_use > vars[j]->last_use ||
+              vars[j]->first_use > vars[i]->last_use) &&
+          vars[i]->first_use != -1 && vars[j]->first_use != -1)
+        continue;
+
+      cost[vars[j]->alloc] = 1000;
+
+      for (int k = 0; 1 << k <= vars[j]->size * 8 / c->max_var_size; k++)
+        for (int w = 1; w < 1 << k; w++)
+          cost[vars[j]->alloc + w] += 10;
+
+      for (int k = 0; 1 << k <= vars[i]->size * 8 / c->max_var_size; k++)
+        for (int w = 1; w < 1 << k; w++)
+          cost[vars[j]->alloc - w] += 10;
+    }
+
+    for (int j = ORC_RISCV_V0; j <= ORC_RISCV_V31; j++)
+      if (cost[j] < cost[vars[i]->alloc])
+        vars[i]->alloc = j;
+
+    if (cost[vars[i]->alloc] >= 1000)
+      ORC_COMPILER_ERROR (c, "cannot allocate register for var %s",
+          vars[i]->name);
+  }
+}
+
 void
 orc_riscv_compiler_assemble (OrcCompiler *c)
 {
+  orc_riscv_compiler_reallocate_registers (c);
   c->loop_shift = 3 - orc_riscv_bytes_to_sew (c->max_var_size);
   orc_riscv_compiler_emit_prologue (c);
   orc_riscv_compiler_load_constants (c);
