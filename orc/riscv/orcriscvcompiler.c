@@ -482,11 +482,39 @@ orc_riscv_compiler_reallocate_registers (OrcCompiler *c)
   }
 }
 
+static void
+orc_riscv_compiler_compute_loop_shift (OrcCompiler *c)
+{
+  OrcRiscvLMUL lmul = ORC_RISCV_LMUL_8;
+
+  for (OrcVariable * x = c->vars; x < c->vars + ORC_N_COMPILER_VARIABLES; x++) {
+    if (x->alloc < ORC_RISCV_V0 || x->alloc > ORC_RISCV_V31)
+      continue;
+
+    while ((x->alloc - ORC_RISCV_V0) & ((1 << lmul) - 1))
+      lmul--;
+
+    for (OrcVariable * y = c->vars; y < c->vars + ORC_N_COMPILER_VARIABLES; y++) {
+      if (y->alloc <= x->alloc || y->alloc > ORC_RISCV_V31)
+        continue;
+
+      if ((x->first_use > y->last_use || y->first_use > x->last_use)
+          && x->first_use != -1 && y->first_use != -1)
+        continue;
+
+      while ((x->size << lmul) / c->max_var_size > y->alloc - x->alloc)
+        lmul--;
+    }
+  }
+
+  c->loop_shift = lmul + 3 - orc_riscv_compiler_bytes_to_sew (c->max_var_size);
+}
+
 void
 orc_riscv_compiler_assemble (OrcCompiler *c)
 {
   orc_riscv_compiler_reallocate_registers (c);
-  c->loop_shift = 3 - orc_riscv_bytes_to_sew (c->max_var_size);
+  orc_riscv_compiler_compute_loop_shift (c);
   orc_riscv_compiler_emit_prologue (c);
   orc_riscv_compiler_load_constants (c);
   orc_riscv_compiler_emit_full_loop (c);

@@ -62,7 +62,8 @@ orc_riscv_rule_loadpX (OrcCompiler *c, void *user, OrcInstruction *insn)
   const OrcVariable *src = c->vars + insn->src_args[0];
   const OrcVariable *dest = c->vars + insn->dest_args[0];
   const OrcRiscvVtype vtype = {.vsew = info->element_width,.vlmul =
-        ORC_RISCV_LMUL_1,.vma = TRUE,.vta = TRUE
+        c->loop_shift + orc_riscv_compiler_bytes_to_sew (c->max_var_size) -
+        3,.vma = TRUE,.vta = TRUE
   };
 
   orc_riscv_insn_emit_vsetvli (c, c->gp_tmpreg, ORC_RISCV_ZERO, vtype);
