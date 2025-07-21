@@ -188,8 +188,8 @@ orc_riscv_compiler_emit_epilogue (OrcCompiler *c)
   orc_riscv_insn_emit_ret (c);
 }
 
-static OrcRiscvSEW
-orc_riscv_bytes_to_sew (int bytes)
+OrcRiscvSEW
+orc_riscv_compiler_bytes_to_sew (int bytes)
 {
   switch (bytes) {
     case 1:
@@ -222,7 +222,7 @@ orc_riscv_compiler_load_constants (OrcCompiler *c)
       case ORC_VAR_TYPE_ACCUMULATOR:
         orc_riscv_insn_emit_vsetvli (c, c->gp_tmpreg, ORC_RISCV_ZERO,
             orc_riscv_compiler_compute_vtype (c,
-                orc_riscv_bytes_to_sew (c->vars[i].size), 0));
+                orc_riscv_compiler_bytes_to_sew (c->vars[i].size), 0));
         orc_riscv_insn_emit_vmv_vx (c, var->alloc, ORC_RISCV_ZERO);
         break;
       default:
@@ -334,7 +334,7 @@ orc_riscv_compiler_add_strides (OrcCompiler *c)
 
         if (c->vars[i].size != 1)
           orc_riscv_insn_emit_slli (c, c->gp_tmpreg, c->gp_tmpreg,
-              orc_riscv_bytes_to_sew (c->vars[i].size));
+              orc_riscv_compiler_bytes_to_sew (c->vars[i].size));
 
         orc_riscv_insn_emit_sub (c, c->vars[i].ptr_register,
             c->vars[i].ptr_register, c->gp_tmpreg);
@@ -395,7 +395,7 @@ orc_riscv_compiler_save_accumulators (OrcCompiler *c)
 {
   for (int i = 0; i < ORC_N_COMPILER_VARIABLES; i++) {
     if (c->vars[i].vartype == ORC_VAR_TYPE_ACCUMULATOR) {
-      const OrcRiscvSEW sew = orc_riscv_bytes_to_sew (c->vars[i].size);
+      const OrcRiscvSEW sew = orc_riscv_compiler_bytes_to_sew (c->vars[i].size);
       const OrcRiscvVtype vtype = orc_riscv_compiler_compute_vtype (c, sew, 0);
       const OrcRiscvRegister reg = c->vars[i].alloc;
       const int offset =
