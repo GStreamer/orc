@@ -820,7 +820,7 @@ orc_riscv_rule_swapwl (OrcCompiler *c, void *user, OrcInstruction *insn)
 }
 
 static void
-orc_riscv_rule_swalq (OrcCompiler *c, void *user, OrcInstruction *insn)
+orc_riscv_rule_swaplq (OrcCompiler *c, void *user, OrcInstruction *insn)
 {
   const OrcRiscvRegister src = ORC_SRC_ARG (c, insn, 0);
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
@@ -1355,7 +1355,7 @@ orc_riscv_rules_init (OrcTarget *target)
   REG (swapl, swapl, 32, FALSE);
   REG (swapq, swapq, 64, FALSE);
   REG (swapwl, swapwl, 32, FALSE);
-  REG (swaplq, swalq, 64, FALSE);
+  REG (swaplq, swaplq, 64, FALSE);
 
   REG (mullb, mullX, 8, FALSE);
   REG (mullw, mullX, 16, FALSE);
