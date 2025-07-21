@@ -1014,7 +1014,7 @@ orc_riscv_rule_convusswb (OrcCompiler *c, void *user, OrcInstruction *insn)
 
   orc_riscv_insn_emit_vnclipu_vi (c, dest, src, 0);
   orc_riscv_insn_emit_load_immediate (c, c->gp_tmpreg, 0x7f);
-  orc_riscv_insn_emit_vminu_vx (c, src, c->gp_tmpreg, src);
+  orc_riscv_insn_emit_vminu_vx (c, dest, c->gp_tmpreg, dest);
 }
 
 static void
