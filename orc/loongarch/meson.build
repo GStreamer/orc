@@ -6,5 +6,6 @@ if 'lsx' in enabled_targets
     'orclsxrules.c',
     'orclsxtarget.c',
     'orcloongarchinsn.c',
+    'orcloongarchcompiler.c',
   )
 endif

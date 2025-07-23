@@ -30,6 +30,7 @@
 #include <orc/orcinternal.h>
 #include <orc/loongarch/orcloongarchinsn.h>
 #include <orc/loongarch/orcloongarch.h>
+#include <orc/loongarch/orcloongarch-internal.h>
 
 //implement scalar functions
 void
@@ -112,21 +113,21 @@ orc_loongarch_insn_emit_ld_d (OrcCompiler *c,
 void
 orc_loongarch_insn_emit_beqz (OrcCompiler *c, OrcLoongRegister rj, int label, int type) {
   ORC_ASM_CODE (c, "  beqz %s, .L%s_%d\n", NAME (rj), c->program->name, label);
-  //add fixup
+  orc_loongarch_compiler_add_fixup (c, label, type);
   orc_loongarch_insn_emit32 (c, LOONG_1RI21_INSTRUCTION(0x10,GREG(rj),0));
 }
 
 void
 orc_loongarch_insn_emit_bnez (OrcCompiler *c, OrcLoongRegister rj, int label, int type) {
   ORC_ASM_CODE (c, "  bnez %s, .L%s_%d\n", NAME (rj), c->program->name, label);
-  //add fixup
+  orc_loongarch_compiler_add_fixup (c, label, type);
   orc_loongarch_insn_emit32 (c, LOONG_1RI21_INSTRUCTION(0x11,GREG(rj),0));
 }
 
 void
 orc_loongarch_insn_emit_blt (OrcCompiler *c, OrcLoongRegister rj, OrcLoongRegister rd, int label, int type) {
   ORC_ASM_CODE (c, "  blt %s, %s, .L%s_%d\n", NAME(rj), NAME (rd), c->program->name, label);
-  //add fixup
+  orc_loongarch_compiler_add_fixup (c, label, type);
   orc_loongarch_insn_emit32 (c, LOONG_2RI16_INSTRUCTION(0x18,GREG(rd),GREG(rj),0));
 }
 
