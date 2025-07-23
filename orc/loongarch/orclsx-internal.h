@@ -36,6 +36,8 @@ ORC_BEGIN_DECLS
 /* orclsxcompiler.c */
 ORC_INTERNAL void orc_lsx_compiler_init (OrcCompiler *c);
 ORC_INTERNAL void orc_lsx_compiler_assemble (OrcCompiler * c);
+ORC_INTERNAL void orc_lsx_compiler_emit_prologue (OrcCompiler *c);
+ORC_INTERNAL void orc_lsx_compiler_emit_epilogue (OrcCompiler *c);
 /* orclsxrules.c */
 ORC_INTERNAL void orc_lsx_rules_init (OrcTarget * target);
 /* orclsxtarget.c */
