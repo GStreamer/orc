@@ -59,6 +59,7 @@ orc_headers = [
   'orcmips.h',
   'orc-stdint.h',
   'loongarch/orcloongarch.h',
+  'loongarch/orcloongarchinsn.h',
 ]
 install_headers(orc_headers, subdir : 'orc-' + orc_api + '/orc')
 
