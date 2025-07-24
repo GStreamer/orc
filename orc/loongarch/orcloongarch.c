@@ -32,6 +32,17 @@
 #include <orc/orcinternal.h>
 #include <orc/loongarch/orcloongarch.h>
 
+#if defined(__linux__)
+#include <sys/auxv.h>
+#endif
+
+#ifndef LA_HWCAP_LSX
+#define LA_HWCAP_LSX (1u << 4)
+#endif
+#ifndef LA_HWCAP_LASX
+#define LA_HWCAP_LASX (1u << 5)
+#endif
+
 const char *
 orc_loongarch_reg_name (OrcLoongRegister reg)
 {
@@ -58,9 +69,14 @@ orc_loongarch_reg_name (OrcLoongRegister reg)
 orc_uint32
 orc_loongarch_get_cpu_flags (void)
 {
-  orc_uint32 ret = 0;
-  //TODO
-  return ret;
+  orc_uint32 flags = 0;
+#if __linux__
+  orc_uint32 flag = getauxval(AT_HWCAP);
+
+  if (flag & LA_HWCAP_LSX)
+      flags |= ORC_TARGET_LOONGARCH_LSX;
+#endif
+  return flags;
 }
 
 void
