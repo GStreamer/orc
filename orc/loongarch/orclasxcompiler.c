@@ -31,8 +31,10 @@
 #include <orc/orcdebug.h>
 #include <orc/orcutils.h>
 #include <orc/loongarch/orcloongarch-internal.h>
+#include <orc/loongarch/orcloongarchinsn.h>
 #include <orc/loongarch/orcloongarch.h>
 #include <orc/loongarch/orclasx-internal.h>
+#include <orc/loongarch/orclasxinsn.h>
 
 void
 orc_lasx_compiler_init (OrcCompiler *c)
@@ -105,7 +107,63 @@ orc_lasx_compiler_compute_loop_shift (OrcCompiler *c)
 }
 
 void
+orc_lasx_compiler_emit_prologue (OrcCompiler *c)
+{
+  int stack_size = 0;
+
+  orc_compiler_append_code (c, ".section .text\n");
+  orc_compiler_append_code (c, ".global %s\n", c->program->name);
+  orc_compiler_append_code (c, "%s:\n", c->program->name);
+
+  for (int i = 0; i < 32; i++) {
+    if (c->used_regs[ORC_GP_REG_BASE + i] && c->save_regs[ORC_GP_REG_BASE + i]) {
+      stack_size += 8;
+      orc_loongarch_insn_emit_st_d (c, ORC_LOONG_SP, ORC_GP_REG_BASE + i, -stack_size);
+    }
+  }
+
+  for (int i = 0; i < 32; i++) {
+    if (c->used_regs[ORC_VEC_REG_BASE + 32 + i] && c->save_regs[ORC_VEC_REG_BASE + 32 + i]) {
+      stack_size += 8;
+      orc_lasx_insn_emit_xvstelmd (c, ORC_VEC_REG_BASE + 32 + i, ORC_LOONG_SP, -stack_size, 0);
+    }
+  }
+
+  if (stack_size > 0) {
+    orc_loongarch_insn_emit_addi_d (c, ORC_LOONG_SP, ORC_LOONG_SP, -stack_size);
+  }
+}
+
+void
+orc_lasx_compiler_emit_epilogue (OrcCompiler *c)
+{
+  int stack_size = 0;
+
+  for (int i = 31; i >= 0; i--) {
+    if (c->used_regs[ORC_GP_REG_BASE + i] && c->save_regs[ORC_GP_REG_BASE + i]) {
+      orc_loongarch_insn_emit_ld_d (c, ORC_GP_REG_BASE + i, ORC_LOONG_SP, stack_size);
+      stack_size += 8;
+    }
+  }
+
+  for (int i = 31; i >= 0; i--) {
+    if (c->used_regs[ORC_VEC_REG_BASE + 32 + i] && c->save_regs[ORC_VEC_REG_BASE + 32 + i]) {
+      orc_lasx_insn_emit_xvldrepld (c, ORC_GP_REG_BASE + 32 + i, ORC_LOONG_SP, stack_size);
+      stack_size += 8;
+    }
+  }
+
+  if (stack_size > 0) {
+    orc_loongarch_insn_emit_addi_d (c, ORC_LOONG_SP, ORC_LOONG_SP, stack_size);
+  }
+
+  orc_loongarch_insn_emit_ret (c);
+}
+
+void
 orc_lasx_compiler_assemble (OrcCompiler *c)
 {
   orc_lasx_compiler_compute_loop_shift (c);
+  orc_lasx_compiler_emit_prologue (c);
+  orc_lasx_compiler_emit_epilogue (c);
 }

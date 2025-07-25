@@ -37,6 +37,8 @@ ORC_BEGIN_DECLS
 ORC_INTERNAL void orc_lasx_compiler_init (OrcCompiler * c);
 ORC_INTERNAL void orc_lasx_compiler_assemble (OrcCompiler * c);
 ORC_INTERNAL void orc_lasx_compiler_compute_loop_shift (OrcCompiler *c);
+ORC_INTERNAL void orc_lasx_compiler_emit_prologue (OrcCompiler *c);
+ORC_INTERNAL void orc_lasx_compiler_emit_epilogue (OrcCompiler *c);
 /* orclasxrules.c */
 ORC_INTERNAL void orc_lasx_rules_init (OrcTarget * target);
 /* orclasxtarget.c */
