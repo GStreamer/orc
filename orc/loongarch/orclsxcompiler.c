@@ -178,11 +178,37 @@ orc_lsx_compiler_load_constants (OrcCompiler *c)
         orc_loongarch_insn_emit_ld_d (c, var->ptr_register, c->exec_reg,
             ORC_STRUCT_OFFSET (OrcExecutor, arrays[i]));
         break;
+      case ORC_VAR_TYPE_ACCUMULATOR:
+        orc_lsx_insn_emit_vxorv (c, var->alloc, var->alloc, var->alloc);
+        break;
       default:
         break;
     }
   }
   orc_compiler_emit_invariants (c);
+}
+
+void
+orc_lsx_compiler_save_accumulators (OrcCompiler *c)
+{
+  for (int i = 0; i < ORC_N_COMPILER_VARIABLES; i++) {
+    if (c->vars[i].vartype == ORC_VAR_TYPE_ACCUMULATOR) {
+      const OrcLoongRegister reg = c->vars[i].alloc;
+      const int offset = ORC_STRUCT_OFFSET (OrcExecutor, accumulators[i - ORC_VAR_A1]);
+      orc_loongarch_insn_emit_addi_d (c, c->gp_tmpreg, c->exec_reg, offset);
+      if (c->vars[i].size == 2) {
+        orc_lsx_insn_emit_vhaddwwh (c, reg, reg, reg);
+        orc_lsx_insn_emit_vhaddwdw (c, reg, reg, reg);
+        orc_lsx_insn_emit_vhaddwqd (c, reg, reg, reg);
+        orc_lsx_insn_emit_vstelmh (c, reg, c->gp_tmpreg, 0, 0);
+      }
+      if (c->vars[i].size == 4) {
+        orc_lsx_insn_emit_vhaddwduwu (c, reg, reg, reg);
+        orc_lsx_insn_emit_vhaddwqudu (c, reg, reg, reg);
+        orc_lsx_insn_emit_vstelmw (c, reg, c->gp_tmpreg, 0, 0);
+      }
+    }
+  }
 }
 
 void
@@ -193,5 +219,6 @@ orc_lsx_compiler_assemble (OrcCompiler *c)
   orc_lsx_compiler_load_constants (c);
   orc_loongarch_compiler_emit_full_loop (c);
   orc_loongarch_compiler_do_fixups (c);
+  orc_lsx_compiler_save_accumulators (c);
   orc_lsx_compiler_emit_epilogue (c);
 }

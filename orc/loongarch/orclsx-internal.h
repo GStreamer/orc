@@ -40,6 +40,7 @@ ORC_INTERNAL void orc_lsx_compiler_emit_prologue (OrcCompiler *c);
 ORC_INTERNAL void orc_lsx_compiler_emit_epilogue (OrcCompiler *c);
 ORC_INTERNAL void orc_lsx_compiler_compute_loop_shift (OrcCompiler *c);
 ORC_INTERNAL void orc_lsx_compiler_load_constants (OrcCompiler *c);
+ORC_INTERNAL void orc_lsx_compiler_save_accumulators (OrcCompiler *c);
 /* orclsxrules.c */
 ORC_INTERNAL void orc_lsx_rules_init (OrcTarget * target);
 /* orclsxtarget.c */
