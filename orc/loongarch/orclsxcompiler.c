@@ -32,6 +32,7 @@
 #include <orc/orcutils.h>
 #include <orc/loongarch/orclsx-internal.h>
 #include <orc/loongarch/orclsxinsn.h>
+#include <orc/loongarch/orcloongarch-internal.h>
 #include <orc/loongarch/orcloongarchinsn.h>
 #include <orc/loongarch/orcloongarch.h>
 
@@ -78,6 +79,11 @@ orc_lsx_compiler_init (OrcCompiler *c)
   /* SIMD registers vr24-vr31 are callee-saved */
   for (i = 24; i < 32; i++) {
     c->save_regs[ORC_VEC_REG_BASE + i] = 1;
+  }
+
+  /*Small functions may run faster when unrolled.*/
+  if (c->n_insns <= 10) {
+    c->unroll_shift = 1;
   }
 
   c->load_params = TRUE;
@@ -160,9 +166,32 @@ orc_lsx_compiler_compute_loop_shift (OrcCompiler *c)
 }
 
 void
+orc_lsx_compiler_load_constants (OrcCompiler *c)
+{
+  for (int i = 0; i < ORC_N_COMPILER_VARIABLES; i++) {
+    OrcVariable *var = c->vars + i;
+    if (var->name == NULL)
+      continue;
+    switch (var->vartype) {
+      case ORC_VAR_TYPE_SRC:
+      case ORC_VAR_TYPE_DEST:
+        orc_loongarch_insn_emit_ld_d (c, var->ptr_register, c->exec_reg,
+            ORC_STRUCT_OFFSET (OrcExecutor, arrays[i]));
+        break;
+      default:
+        break;
+    }
+  }
+  orc_compiler_emit_invariants (c);
+}
+
+void
 orc_lsx_compiler_assemble (OrcCompiler *c)
 {
   orc_lsx_compiler_compute_loop_shift (c);
   orc_lsx_compiler_emit_prologue (c);
+  orc_lsx_compiler_load_constants (c);
+  orc_loongarch_compiler_emit_full_loop (c);
+  orc_loongarch_compiler_do_fixups (c);
   orc_lsx_compiler_emit_epilogue (c);
 }

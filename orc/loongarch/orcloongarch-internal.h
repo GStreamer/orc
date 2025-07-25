@@ -36,6 +36,10 @@ ORC_BEGIN_DECLS
 ORC_INTERNAL void orc_loongarch_compiler_add_label (OrcCompiler *c, int label);
 ORC_INTERNAL void orc_loongarch_compiler_do_fixups (OrcCompiler *c);
 ORC_INTERNAL void orc_loongarch_compiler_add_fixup (OrcCompiler *c, int label, int type);
+ORC_INTERNAL orc_uint32 orc_loongarch_compiler_get_shift (orc_uint32 bytes);
+ORC_INTERNAL void orc_loongarch_compiler_add_strides (OrcCompiler *c);
+ORC_INTERNAL void orc_loongarch_compiler_emit_loop (OrcCompiler *c, int update);
+ORC_INTERNAL void orc_loongarch_compiler_emit_full_loop (OrcCompiler *c);
 
 ORC_END_DECLS
 
