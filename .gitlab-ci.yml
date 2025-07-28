@@ -31,7 +31,7 @@ default:
   interruptible: true
 
 .debian:
-  image: 'debian:stable-slim'
+  image: 'debian:testing-slim' # to ensure up-to-date Meson
   stage: build
   variables:
     DEPENDENCIES: >
@@ -77,30 +77,9 @@ alpine 3.20 ppc64le:
       - "build/*.bin"
       - "build/*.S"
 
-debian sid:
+debian stable gcc11 arm64:
   extends: '.debian'
-  image: 'debian:sid-slim'
-
-debian sid arm64:
-  extends: '.debian'
-  image: 'debian:sid-slim'
-  tags:
-    - 'gstreamer-arm64-linux-docker'
-  variables:
-    DEPENDENCIES: >
-      pipx
-      build-essential
-  before_script:
-    - apt-get update
-    - apt-get install --yes ${DEPENDENCIES}
-    # Make sure meson is up to date, so we don't need to rebuild the image with each release
-    - export PATH="$HOME/.local/bin:$PATH"
-    - pipx install meson
-    - pipx install ninja
-
-debian bookworm arm64:
-  extends: '.debian'
-  image: 'debian:bookworm-slim'
+  image: 'debian:stable-slim'
   tags:
     - 'gstreamer-arm64-linux-docker'
   # https://gitlab.freedesktop.org/gstreamer/orc/-/issues/41
@@ -119,6 +98,24 @@ debian bookworm arm64:
     - export PATH="$HOME/.local/bin:$PATH"
     - pipx install meson
     - pipx install ninja
+
+debian testing:
+  extends: '.debian'
+
+debian testing arm64:
+  extends: '.debian'
+  tags:
+    - 'gstreamer-arm64-linux-docker'
+
+debian unstable:
+  extends: '.debian'
+  image: 'debian:unstable-slim'
+
+debian unstable arm64:
+  extends: '.debian'
+  image: 'debian:unstable-slim'
+  tags:
+    - 'gstreamer-arm64-linux-docker'
 
 .build windows:
   image: 'registry.freedesktop.org/gstreamer/gstreamer/amd64/windows:2023-04-21.0-main'
