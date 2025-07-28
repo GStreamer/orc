@@ -98,25 +98,6 @@ debian sid arm64:
     - pipx install meson
     - pipx install ninja
 
-debian bullseye arm64:
-  extends: '.debian'
-  image: 'debian:bullseye-slim'
-  tags:
-    - 'gstreamer-arm64-linux-docker'
-  variables:
-    DEPENDENCIES: >
-      pipx
-      build-essential
-  before_script:
-    # In bullseye, pipx is not available, only in the backports
-    - echo "deb http://deb.debian.org/debian bullseye-backports main" >> /etc/apt/sources.list
-    - apt-get update
-    - apt-get install --yes ${DEPENDENCIES}
-    # Make sure meson is up to date, so we don't need to rebuild the image with each release
-    - export PATH="$HOME/.local/bin:$PATH"
-    - pipx install meson
-    - pipx install ninja
-
 debian bookworm arm64:
   extends: '.debian'
   image: 'debian:bookworm-slim'
