@@ -35,6 +35,7 @@
 #include <orc/loongarch/orcloongarch.h>
 #include <orc/loongarch/orclasx-internal.h>
 #include <orc/loongarch/orclasxinsn.h>
+#include <orc/loongarch/orclsxinsn.h>
 
 void
 orc_lasx_compiler_init (OrcCompiler *c)
@@ -178,11 +179,41 @@ orc_lasx_compiler_load_constants (OrcCompiler *c)
         orc_loongarch_insn_emit_ld_d (c, var->ptr_register, c->exec_reg,
             ORC_STRUCT_OFFSET (OrcExecutor, arrays[i]));
         break;
+      case ORC_VAR_TYPE_ACCUMULATOR:
+        orc_lasx_insn_emit_xvxorv (c, var->alloc, var->alloc, var->alloc);
+        break;
       default:
         break;
     }
   }
   orc_compiler_emit_invariants (c);
+}
+
+void
+orc_lasx_compiler_save_accumulators (OrcCompiler *c)
+{
+  for (int i = 0; i < ORC_N_COMPILER_VARIABLES; i++) {
+    if (c->vars[i].vartype == ORC_VAR_TYPE_ACCUMULATOR) {
+      const OrcLoongRegister reg = c->vars[i].alloc;
+      const OrcLoongRegister low_reg = ORC_LOONG_VR0;
+      const int offset = ORC_STRUCT_OFFSET (OrcExecutor, accumulators[i - ORC_VAR_A1]);
+      orc_loongarch_insn_emit_addi_d (c, c->gp_tmpreg, c->exec_reg, offset);
+      orc_lasx_insn_emit_xvpermiq (c, c->tmpreg, reg, 0x1);
+      if (c->vars[i].size == 2) {
+        orc_lsx_insn_emit_vaddh (c, low_reg, reg - 32, low_reg);
+        orc_lsx_insn_emit_vhaddwwh (c, low_reg, low_reg, low_reg);
+        orc_lsx_insn_emit_vhaddwdw (c, low_reg, low_reg, low_reg);
+        orc_lsx_insn_emit_vhaddwqd (c, low_reg, low_reg, low_reg);
+        orc_lsx_insn_emit_vstelmh (c, low_reg, c->gp_tmpreg, 0, 0);
+      }
+      if (c->vars[i].size == 4) {
+        orc_lsx_insn_emit_vaddw (c, low_reg, reg - 32, low_reg);
+        orc_lsx_insn_emit_vhaddwduwu (c, low_reg, low_reg, low_reg);
+        orc_lsx_insn_emit_vhaddwqudu (c, low_reg, low_reg, low_reg);
+        orc_lsx_insn_emit_vstelmw (c, low_reg, c->gp_tmpreg, 0, 0);
+      }
+    }
+  }
 }
 
 void
@@ -193,5 +224,6 @@ orc_lasx_compiler_assemble (OrcCompiler *c)
   orc_lasx_compiler_load_constants (c);
   orc_loongarch_compiler_emit_full_loop (c);
   orc_loongarch_compiler_do_fixups (c);
+  orc_lasx_compiler_save_accumulators (c);
   orc_lasx_compiler_emit_epilogue (c);
 }
