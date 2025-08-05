@@ -57,7 +57,13 @@ orc_loongarch_reg_name (OrcLoongRegister reg)
     "$vr1", "$vr2", "$vr3", "$vr4", "$vr5", "$vr6", "$vr7", "$vr8",
     "$vr9", "$vr10", "$vr11", "$vr12", "$vr13", "$vr14", "$vr15", "$vr16",
     "$vr17", "$vr18", "$vr19", "$vr20", "$vr21", "$vr22", "$vr23", "$vr24",
-    "$vr25", "$vr26", "$vr27", "$vr28", "$vr29", "$vr30", "$vr31"
+    "$vr25", "$vr26", "$vr27", "$vr28", "$vr29", "$vr30", "$vr31",
+
+    [ORC_VEC_REG_BASE + 32] = "$xr0",
+    "$xr1", "$xr2", "$xr3", "$xr4", "$xr5", "$xr6", "$xr7", "$xr8",
+    "$xr9", "$xr10", "$xr11", "$xr12", "$xr13", "$xr14", "$xr15", "$xr16",
+    "$xr17", "$xr18", "$xr19", "$xr20", "$xr21", "$xr22", "$xr23", "$xr24",
+    "$xr25", "$xr26", "$xr27", "$xr28", "$xr29", "$xr30", "$xr31"
   };
 
   ORC_ASSERT (reg < ARRAY_SIZE (names));

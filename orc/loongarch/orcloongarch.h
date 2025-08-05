@@ -104,6 +104,40 @@ typedef enum {
   ORC_LOONG_VR29,
   ORC_LOONG_VR30,
   ORC_LOONG_VR31,
+
+  /* Vector registers (ALSX) */
+  ORC_LOONG_XR0 = ORC_VEC_REG_BASE + 32,
+  ORC_LOONG_XR1,
+  ORC_LOONG_XR2,
+  ORC_LOONG_XR3,
+  ORC_LOONG_XR4,
+  ORC_LOONG_XR5,
+  ORC_LOONG_XR6,
+  ORC_LOONG_XR7,
+  ORC_LOONG_XR8,
+  ORC_LOONG_XR9,
+  ORC_LOONG_XR10,
+  ORC_LOONG_XR11,
+  ORC_LOONG_XR12,
+  ORC_LOONG_XR13,
+  ORC_LOONG_XR14,
+  ORC_LOONG_XR15,
+  ORC_LOONG_XR16,
+  ORC_LOONG_XR17,
+  ORC_LOONG_XR18,
+  ORC_LOONG_XR19,
+  ORC_LOONG_XR20,
+  ORC_LOONG_XR21,
+  ORC_LOONG_XR22,
+  ORC_LOONG_XR23,
+  ORC_LOONG_XR24,
+  ORC_LOONG_XR25,
+  ORC_LOONG_XR26,
+  ORC_LOONG_XR27,
+  ORC_LOONG_XR28,
+  ORC_LOONG_XR29,
+  ORC_LOONG_XR30,
+  ORC_LOONG_XR31,
 } OrcLoongRegister;
 
 /* Instruction encoding formats on LoongArch
@@ -167,8 +201,16 @@ orc_loongarch_lsx_reg (OrcLoongRegister reg)
   return reg - ORC_VEC_REG_BASE;
 }
 
+static inline orc_uint32
+orc_loongarch_lasx_reg (OrcLoongRegister reg)
+{
+  ORC_ASSERT (reg >= ORC_VEC_REG_BASE + 32 && reg < ORC_VEC_REG_BASE + 64);
+  return reg - ORC_VEC_REG_BASE;
+}
+
 #define GREG(reg) orc_loongarch_gp_reg(reg)
 #define VREG(reg) orc_loongarch_lsx_reg(reg)
+#define XREG(reg) orc_loongarch_lasx_reg(reg)
 #define NAME(reg) orc_loongarch_reg_name(reg)
 
 ORC_API orc_uint32 orc_loongarch_get_cpu_flags (void);
