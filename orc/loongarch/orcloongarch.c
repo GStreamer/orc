@@ -32,6 +32,29 @@
 #include <orc/orcinternal.h>
 #include <orc/loongarch/orcloongarch.h>
 
+const char *
+orc_loongarch_reg_name (OrcLoongRegister reg)
+{
+  static const char *names[] = {
+    [ORC_GP_REG_BASE] = "$zero",
+    "$ra", "$tp", "$sp", "$a0", "$a1", "$a2", "$a3",
+    "$a4", "$a5", "$a6", "$a7", "$t0", "$t1", "$t2", "$t3",
+    "$t4", "$t5", "$t6", "$t7", "$t8", "$r21", "$fp", "$s0",
+    "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$s8",
+
+    [ORC_VEC_REG_BASE] = "$vr0",
+    "$vr1", "$vr2", "$vr3", "$vr4", "$vr5", "$vr6", "$vr7", "$vr8",
+    "$vr9", "$vr10", "$vr11", "$vr12", "$vr13", "$vr14", "$vr15", "$vr16",
+    "$vr17", "$vr18", "$vr19", "$vr20", "$vr21", "$vr22", "$vr23", "$vr24",
+    "$vr25", "$vr26", "$vr27", "$vr28", "$vr29", "$vr30", "$vr31"
+  };
+
+  ORC_ASSERT (reg < ARRAY_SIZE (names));
+  ORC_ASSERT (names[reg] != NULL);
+
+  return names[reg];
+}
+
 orc_uint32
 orc_loongarch_get_cpu_flags (void)
 {
