@@ -27,16 +27,59 @@
 */
 
 #include <orc/orccompiler.h>
+#include <orc/orcinternal.h>
 #include <orc/orcdebug.h>
 #include <orc/orcutils.h>
-#include <orc/orccompiler.h>
 #include <orc/loongarch/orcloongarch-internal.h>
+#include <orc/loongarch/orcloongarch.h>
 #include <orc/loongarch/orclasx-internal.h>
 
 void
 orc_lasx_compiler_init (OrcCompiler *c)
 {
-  ORC_ASSERT (FALSE);           /* TODO */
+  int i;
+
+  if (c->target_flags & ORC_TARGET_LOONGARCH_64BIT) {
+    c->is_64bit = TRUE;
+  } else {
+    ORC_COMPILER_ERROR (c, "LoongArch32 is currently unsupported");
+    return;
+  }
+
+  for (i = 0; i < 32; i++) {
+    c->valid_regs[ORC_LOONG_XR0 + i] = 1;
+    c->valid_regs[ORC_LOONG_ZERO + i] = 1;
+  }
+
+  c->valid_regs[ORC_LOONG_ZERO] = 0;
+  c->valid_regs[ORC_LOONG_RA] = 0;
+  c->valid_regs[ORC_LOONG_TP] = 0;
+  c->valid_regs[ORC_LOONG_SP] = 0;
+  c->valid_regs[ORC_LOONG_FP] = 0;
+  c->valid_regs[ORC_LOONG_R21] = 0;
+  c->valid_regs[ORC_LOONG_T1] = 0;
+  c->valid_regs[ORC_LOONG_T2] = 0;
+  c->valid_regs[ORC_LOONG_T3] = 0;
+
+  c->tmpreg = ORC_LOONG_XR0;
+  c->gp_tmpreg = ORC_LOONG_T0;
+  c->valid_regs[c->tmpreg] = 0;
+  c->valid_regs[c->gp_tmpreg] = 0;
+
+  c->exec_reg = ORC_LOONG_A0;
+  c->valid_regs[c->exec_reg] = 0;
+
+  /* r23 to r31 are callee-saved */
+  for (i = 23; i < 32; i++) {
+    c->save_regs[ORC_GP_REG_BASE + i] = 1;
+  }
+
+  /* SIMD registers xr24-xr31 are callee-saved */
+  for (i = 24; i < 32; i++) {
+    c->save_regs[ORC_VEC_REG_BASE + 32 + i] = 1;
+  }
+
+  c->load_params = TRUE;
 }
 
 void
