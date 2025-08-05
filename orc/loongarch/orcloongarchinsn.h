@@ -31,6 +31,7 @@
 
 #include <orc/orc.h>
 #include <orc/orcutils.h>
+#include <orc/orcinternal.h>
 #include <orc/loongarch/orcloongarch.h>
 
 ORC_BEGIN_DECLS
@@ -53,6 +54,12 @@ ORC_API void orc_loongarch_insn_emit_bnez (OrcCompiler *c, OrcLoongRegister rj, 
 ORC_API void orc_loongarch_insn_emit_blt (OrcCompiler *c, OrcLoongRegister rj, OrcLoongRegister rd, int label, int type);
 ORC_API void orc_loongarch_insn_emit_st_d (OrcCompiler *c, OrcLoongRegister rd, OrcLoongRegister rj, int offset);
 ORC_API void orc_loongarch_insn_emit_ret (OrcCompiler *c);
+ORC_API void orc_loongarch_insn_emit_lu12i_w (OrcCompiler *p, OrcLoongRegister rd, int imm20);
+ORC_API void orc_loongarch_insn_emit_lu32i_d (OrcCompiler *p, OrcLoongRegister rd, int imm20);
+ORC_API void orc_loongarch_insn_emit_lu52i_d (OrcCompiler *p, OrcLoongRegister rd, OrcLoongRegister rj, int imm12);
+ORC_API void orc_loongarch_insn_emit_ori (OrcCompiler *p, OrcLoongRegister rd, OrcLoongRegister rj, int imm12);
+ORC_API void orc_loongarch_insn_emit_load_word (OrcCompiler *p, OrcLoongRegister rd, orc_uint32 imm);
+ORC_API void orc_loongarch_insn_emit_load_imm (OrcCompiler *p, OrcLoongRegister rd, orc_uint64 imm);
 
 #endif /* ORC_ENABLE_UNSTABLE_API */
 

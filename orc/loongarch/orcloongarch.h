@@ -129,6 +129,9 @@ I26-TYPE  |---opcode--|------------I26[15:0]----------|----I26[25:16]-----|
 #define LOONG_4R_INSTRUCTION(opcode,rd,rj,rk,ra) \
     (((opcode) & 0xfff) << 20 | ((ra) & 0x1f) << 15 | ((rk) & 0x1f) << 10 | ((rj) & 0x1f) << 5 | (rd & 0x1f))
 
+#define LOONG_2RI5_INSTRUCTION(opcode,rd,rj,imm5) \
+    (((opcode) & 0x1ffff) << 15 | ((imm5) & 0x1f) << 10 | ((rj) & 0x1f) << 5 | (rd & 0x1f))
+
 #define LOONG_2RI8_INSTRUCTION(opcode,rd,rj,imm8) \
     (((opcode) & 0x3fff) << 18 | ((imm8) & 0xff) << 10 | ((rj) & 0x1f) << 5 | (rd & 0x1f))
 
@@ -143,6 +146,9 @@ I26-TYPE  |---opcode--|------------I26[15:0]----------|----I26[25:16]-----|
 
 #define LOONG_1RI21_INSTRUCTION(opcode,rj,imm21) \
     (((opcode) & 0x3f) << 26 | ((imm21) & 0xffff) << 10 | ((rj) & 0x1f) << 5 | ((imm21 >> 16) & 0x1f))
+
+#define LOONG_1RI25_INSTRUCTION(opcode,rd,imm20) \
+    (((opcode) & 0x7f) << 25 | ((imm20) & 0xfffff) << 5 | (rd & 0x1f))
 
 #define LOONG_I26_INSTRUCTION(opcode,imm26) \
     (((opcode) & 0x3f) << 26 | ((imm26) & 0xffff) << 10 | ((imm26 >> 16) & 0x3ff))
