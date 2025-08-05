@@ -96,3 +96,10 @@ orc_loongarch_target_get_default_flags (void)
 
   return flags;
 }
+
+void
+orc_loongarch_insn_emit32 (OrcCompiler *const c, const orc_uint32 insn)
+{
+  ORC_WRITE_UINT32_LE (c->codeptr, insn);
+  c->codeptr+=4;
+}

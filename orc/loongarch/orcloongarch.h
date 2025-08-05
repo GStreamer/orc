@@ -106,10 +106,70 @@ typedef enum {
   ORC_LOONG_VR31,
 } OrcLoongRegister;
 
+/* Instruction encoding formats on LoongArch
+           3 3 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0
+           1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
+2R-TYPE   |--------------------opcode-----------------|----rj---|---rd----|
+3R-TYPE   |-------------opcode--------------|---rk----|----rj---|---rd----|
+4R-TYPE   |-------------opcode----|----ra---|---rk----|----rj---|---rd----|
+2RI8-TYPE |-------------opcode--------|-------I8------|----rj---|---rd----|
+2RI12-TYPE|-----opcode--------|---------I12-----------|----rj---|---rd----|
+2RI14-TYPE|-----opcode----|-----------I14-------------|----rj---|---rd----|
+2RI16-TYPE|---opcode--|---------I16-------------------|----rj---|---rd----|
+1RI21-TYPE|---opcode--|------------I21[15:0]----------|----rj---|-I21[20:16]-|
+I26-TYPE  |---opcode--|------------I26[15:0]----------|----I26[25:16]-----|
+*/
+
+#define LOONG_2R_INSTRUCTION(opcode,rd,rj) \
+    (((opcode) & 0x3fffff) << 10 | ((rj) & 0x1f) << 5 | (rd & 0x1f))
+
+#define LOONG_3R_INSTRUCTION(opcode,rd,rj,rk) \
+    (((opcode) & 0x1ffff) << 15 | ((rk) & 0x1f) << 10 | ((rj) & 0x1f) << 5 | (rd & 0x1f))
+
+#define LOONG_4R_INSTRUCTION(opcode,rd,rj,rk,ra) \
+    (((opcode) & 0xfff) << 20 | ((ra) & 0x1f) << 15 | ((rk) & 0x1f) << 10 | ((rj) & 0x1f) << 5 | (rd & 0x1f))
+
+#define LOONG_2RI8_INSTRUCTION(opcode,rd,rj,imm8) \
+    (((opcode) & 0x3fff) << 18 | ((imm8) & 0xff) << 10 | ((rj) & 0x1f) << 5 | (rd & 0x1f))
+
+#define LOONG_2RI12_INSTRUCTION(opcode,rd,rj,imm12) \
+    (((opcode) & 0x3ff) << 22 | ((imm12) & 0xfff) << 10 | ((rj) & 0x1f) << 5 | (rd & 0x1f))
+
+#define LOONG_2RI14_INSTRUCTION(opcode,rd,rj,imm14) \
+    (((opcode) & 0xff) << 24 | ((imm14) & 0x3fff) << 10 | ((rj) & 0x1f) << 5 | (rd & 0x1f))
+
+#define LOONG_2RI16_INSTRUCTION(opcode,rd,rj,imm16) \
+    (((opcode) & 0x3f) << 26 | ((imm16) & 0xffff) << 10 | ((rj) & 0x1f) << 5 | (rd & 0x1f))
+
+#define LOONG_1RI21_INSTRUCTION(opcode,rj,imm21) \
+    (((opcode) & 0x3f) << 26 | ((imm21) & 0xffff) << 10 | ((rj) & 0x1f) << 5 | ((imm21 >> 16) & 0x1f))
+
+#define LOONG_I26_INSTRUCTION(opcode,imm26) \
+    (((opcode) & 0x3f) << 26 | ((imm26) & 0xffff) << 10 | ((imm26 >> 16) & 0x3ff))
+
+static inline orc_uint32
+orc_loongarch_gp_reg (OrcLoongRegister reg)
+{
+  ORC_ASSERT (reg >= ORC_GP_REG_BASE && reg < ORC_VEC_REG_BASE);
+  return reg - ORC_GP_REG_BASE;
+}
+
+static inline orc_uint32
+orc_loongarch_lsx_reg (OrcLoongRegister reg)
+{
+  ORC_ASSERT (reg >= ORC_VEC_REG_BASE && reg < ORC_VEC_REG_BASE + 32);
+  return reg - ORC_VEC_REG_BASE;
+}
+
+#define GREG(reg) orc_loongarch_gp_reg(reg)
+#define VREG(reg) orc_loongarch_lsx_reg(reg)
+#define NAME(reg) orc_loongarch_reg_name(reg)
+
 ORC_API orc_uint32 orc_loongarch_get_cpu_flags (void);
 ORC_API void orc_loongarch_flush_cache (OrcCode *code);
 ORC_API orc_uint32 orc_loongarch_target_get_default_flags (void);
 ORC_API const char * orc_loongarch_reg_name (OrcLoongRegister reg);
+ORC_API void orc_loongarch_insn_emit32 (OrcCompiler *const c, const orc_uint32 insn);
 
 #endif /* ORC_ENABLE_UNSTABLE_API */
 
