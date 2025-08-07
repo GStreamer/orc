@@ -69,6 +69,10 @@ if enabled_targets.contains('riscv')
   noinst_bins += ['compile_opcodes_sys_riscv', 'compile_parse_riscv']
 endif
 
+if enabled_targets.contains('lsx') or enabled_targets.contains('lasx')
+  noinst_bins += ['compile_opcodes_sys_loongarch', 'compile_parse_loongarch']
+endif
+
 foreach bin : noinst_bins
   b = executable(bin, bin + '.c',
                  gnu_symbol_visibility: 'inlineshidden',

@@ -499,6 +499,102 @@ orc_test_gcc_compile_riscv (OrcProgram *p)
   return ORC_TEST_OK;
 }
 
+OrcTestResult
+orc_test_gcc_compile_loongarch (OrcProgram *p)
+{
+  char cmd[400];
+  char *base;
+  char source_filename[100];
+  char obj_filename[100];
+  char dis_filename[100];
+  char dump_filename[100];
+  char dump_dis_filename[100];
+  int ret;
+  FILE *file;
+  OrcCompileResult result;
+  OrcTarget *target;
+  unsigned int flags;
+
+  base = "temp-orc-test";
+
+  sprintf(source_filename, "%s-source.s", base);
+  sprintf(obj_filename, "%s.o", base);
+  sprintf(dis_filename, "%s-source.dis", base);
+  sprintf(dump_filename, "%s-dump.bin", base);
+  sprintf(dump_dis_filename, "%s-dump.dis", base);
+
+  target = orc_target_get_default ();
+  flags = orc_target_get_default_flags (target);
+  flags |= ORC_TARGET_CLEAN_COMPILE;
+
+  result = orc_program_compile_full (p, target, flags);
+  if (!ORC_COMPILE_RESULT_IS_SUCCESSFUL(result)) {
+    /* printf ("  no code generated: %s\n", orc_program_get_error (p)); */
+    return ORC_TEST_INDETERMINATE;
+  }
+
+  fflush (stdout);
+
+  file = fopen (source_filename, "w");
+  fprintf(file, "%s", orc_program_get_asm_code (p));
+  fclose (file);
+
+  file = fopen (dump_filename, "w");
+  ret = fwrite(p->asm_code, p->orccode->code_size, 1, file);
+  fclose (file);
+
+  sprintf (cmd, "gcc -march=loongarch64 -Wall "
+      "-c %s -o %s", source_filename, obj_filename);
+  ret = system (cmd);
+  if (ret != 0) {
+    ORC_ERROR ("gcc failed");
+    printf("%s\n", orc_program_get_asm_code (p));
+    return ORC_TEST_INDETERMINATE;
+  }
+
+  sprintf (cmd, "objcopy "
+  "-O binary -j .text "
+  "%s %s", obj_filename, dump_filename);
+  ret = system (cmd);
+  if (ret != 0) {
+    ORC_ERROR ("objcopy failed");
+    return ORC_TEST_INDETERMINATE;
+  }
+
+  sprintf (cmd, "xxd %s >%s", dump_filename, dis_filename);
+  ret = system (cmd);
+  if (ret != 0) {
+    ORC_ERROR ("xxd failed");
+    return ORC_TEST_INDETERMINATE;
+  }
+
+  file = fopen (dump_filename, "w");
+  ret = fwrite(p->orccode->code, p->orccode->code_size, 1, file);
+  fclose (file);
+
+  sprintf (cmd, "xxd %s >%s", dump_filename, dump_dis_filename);
+  ret = system (cmd);
+  if (ret != 0) {
+    ORC_ERROR ("xxd failed");
+    return ORC_TEST_INDETERMINATE;
+  }
+
+  sprintf (cmd, "diff -u %s %s", dis_filename, dump_dis_filename);
+  ret = system (cmd);
+  if (ret != 0) {
+    printf("diff failed\n");
+    return ORC_TEST_FAILED;
+  }
+
+  remove (source_filename);
+  remove (obj_filename);
+  remove (dis_filename);
+  remove (dump_filename);
+  remove (dump_dis_filename);
+
+  return ORC_TEST_OK;
+}
+
 void
 orc_test_random_bits (void *data, int n_bytes)
 {
