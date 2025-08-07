@@ -1212,11 +1212,13 @@ orc_riscv_rule_maxF (OrcCompiler *c, void *user, OrcInstruction *insn)
   }
 }
 
-#define REG(opcode, rule, sew, mask) \
+#define REG(opcode, rule, sew, mask, temps, normals) \
   static OrcRiscvRuleInfo opcode##_info; \
   orc_rule_register (rule_set, #opcode, orc_riscv_rule_##rule, (void*)&opcode##_info); \
   opcode##_info.element_width = ORC_RISCV_SEW_##sew; \
-  opcode##_info.needs_mask_reg = mask;
+  opcode##_info.needs_mask_reg = mask; \
+  opcode##_info.temp_regs_needed = temps; \
+  opcode##_info.normalized_inputs = normals;
 
 
 void
@@ -1225,244 +1227,244 @@ orc_riscv_rules_init (OrcTarget *target)
   OrcRuleSet *rule_set =
       orc_rule_set_new (orc_opcode_set_get ("sys"), target, 0);
 
-  REG (loadpb, loadpX, 8, FALSE);
-  REG (loadpw, loadpX, 16, FALSE);
-  REG (loadpl, loadpX, 32, FALSE);
-  REG (loadpq, loadpX, 64, FALSE);
+  REG (loadpb, loadpX, 8, FALSE, 0, 0);
+  REG (loadpw, loadpX, 16, FALSE, 0, 0);
+  REG (loadpl, loadpX, 32, FALSE, 0, 0);
+  REG (loadpq, loadpX, 64, FALSE, 0, 0);
 
-  REG (loadb, loadX, NOT_APPLICABLE, FALSE);
-  REG (loadw, loadX, NOT_APPLICABLE, FALSE);
-  REG (loadl, loadX, NOT_APPLICABLE, FALSE);
-  REG (loadq, loadX, NOT_APPLICABLE, FALSE);
+  REG (loadb, loadX, NOT_APPLICABLE, FALSE, 0, 0);
+  REG (loadw, loadX, NOT_APPLICABLE, FALSE, 0, 0);
+  REG (loadl, loadX, NOT_APPLICABLE, FALSE, 0, 0);
+  REG (loadq, loadX, NOT_APPLICABLE, FALSE, 0, 0);
 
-  REG (loadoffb, loadoffX, NOT_APPLICABLE, FALSE);
-  REG (loadoffw, loadoffX, NOT_APPLICABLE, FALSE);
-  REG (loadoffl, loadoffX, NOT_APPLICABLE, FALSE);
+  REG (loadoffb, loadoffX, NOT_APPLICABLE, FALSE, 0, 0);
+  REG (loadoffw, loadoffX, NOT_APPLICABLE, FALSE, 0, 0);
+  REG (loadoffl, loadoffX, NOT_APPLICABLE, FALSE, 0, 0);
 
-  REG (storeb, storeb, NOT_APPLICABLE, FALSE);
-  REG (storew, storew, NOT_APPLICABLE, FALSE);
-  REG (storel, storel, NOT_APPLICABLE, FALSE);
-  REG (storeq, storeq, NOT_APPLICABLE, FALSE);
+  REG (storeb, storeb, NOT_APPLICABLE, FALSE, 0, 0);
+  REG (storew, storew, NOT_APPLICABLE, FALSE, 0, 0);
+  REG (storel, storel, NOT_APPLICABLE, FALSE, 0, 0);
+  REG (storeq, storeq, NOT_APPLICABLE, FALSE, 0, 0);
 
-  REG (copyb, copyX, 8, FALSE);
-  REG (copyw, copyX, 16, FALSE);
-  REG (copyl, copyX, 32, FALSE);
-  REG (copyq, copyX, 64, FALSE);
+  REG (copyb, copyX, 8, FALSE, 0, 0);
+  REG (copyw, copyX, 16, FALSE, 0, 0);
+  REG (copyl, copyX, 32, FALSE, 0, 0);
+  REG (copyq, copyX, 64, FALSE, 0, 0);
 
-  REG (addb, addX, 8, FALSE);
-  REG (addw, addX, 16, FALSE);
-  REG (addl, addX, 32, FALSE);
-  REG (addq, addX, 64, FALSE);
+  REG (addb, addX, 8, FALSE, 0, 0);
+  REG (addw, addX, 16, FALSE, 0, 0);
+  REG (addl, addX, 32, FALSE, 0, 0);
+  REG (addq, addX, 64, FALSE, 0, 0);
 
-  REG (addssb, addssX, 8, FALSE);
-  REG (addssw, addssX, 16, FALSE);
-  REG (addssl, addssX, 32, FALSE);
+  REG (addssb, addssX, 8, FALSE, 0, 0);
+  REG (addssw, addssX, 16, FALSE, 0, 0);
+  REG (addssl, addssX, 32, FALSE, 0, 0);
 
-  REG (addusb, addusX, 8, FALSE);
-  REG (addusw, addusX, 16, FALSE);
-  REG (addusl, addusX, 32, FALSE);
+  REG (addusb, addusX, 8, FALSE, 0, 0);
+  REG (addusw, addusX, 16, FALSE, 0, 0);
+  REG (addusl, addusX, 32, FALSE, 0, 0);
 
-  REG (subb, subX, 8, FALSE);
-  REG (subw, subX, 16, FALSE);
-  REG (subl, subX, 32, FALSE);
-  REG (subq, subX, 64, FALSE);
+  REG (subb, subX, 8, FALSE, 0, 0);
+  REG (subw, subX, 16, FALSE, 0, 0);
+  REG (subl, subX, 32, FALSE, 0, 0);
+  REG (subq, subX, 64, FALSE, 0, 0);
 
-  REG (subssb, subssX, 8, FALSE);
-  REG (subssw, subssX, 16, FALSE);
-  REG (subssl, subssX, 32, FALSE);
+  REG (subssb, subssX, 8, FALSE, 0, 0);
+  REG (subssw, subssX, 16, FALSE, 0, 0);
+  REG (subssl, subssX, 32, FALSE, 0, 0);
 
-  REG (subusb, subusX, 8, FALSE);
-  REG (subusw, subusX, 16, FALSE);
-  REG (subusl, subusX, 32, FALSE);
+  REG (subusb, subusX, 8, FALSE, 0, 0);
+  REG (subusw, subusX, 16, FALSE, 0, 0);
+  REG (subusl, subusX, 32, FALSE, 0, 0);
 
-  REG (andb, andX, 8, FALSE);
-  REG (andw, andX, 16, FALSE);
-  REG (andl, andX, 32, FALSE);
-  REG (andq, andX, 64, FALSE);
-  REG (andf, andX, 32, FALSE);
+  REG (andb, andX, 8, FALSE, 0, 0);
+  REG (andw, andX, 16, FALSE, 0, 0);
+  REG (andl, andX, 32, FALSE, 0, 0);
+  REG (andq, andX, 64, FALSE, 0, 0);
+  REG (andf, andX, 32, FALSE, 0, 0);
 
-  REG (andnb, andnX, 8, FALSE);
-  REG (andnw, andnX, 16, FALSE);
-  REG (andnl, andnX, 32, FALSE);
-  REG (andnq, andnX, 64, FALSE);
+  REG (andnb, andnX, 8, FALSE, 1, 0);
+  REG (andnw, andnX, 16, FALSE, 1, 0);
+  REG (andnl, andnX, 32, FALSE, 1, 0);
+  REG (andnq, andnX, 64, FALSE, 1, 0);
 
-  REG (orb, orX, 8, FALSE);
-  REG (orw, orX, 16, FALSE);
-  REG (orl, orX, 32, FALSE);
-  REG (orq, orX, 64, FALSE);
-  REG (orf, orX, 32, FALSE);
+  REG (orb, orX, 8, FALSE, 0, 0);
+  REG (orw, orX, 16, FALSE, 0, 0);
+  REG (orl, orX, 32, FALSE, 0, 0);
+  REG (orq, orX, 64, FALSE, 0, 0);
+  REG (orf, orX, 32, FALSE, 0, 0);
 
-  REG (xorb, xorX, 8, FALSE);
-  REG (xorw, xorX, 16, FALSE);
-  REG (xorl, xorX, 32, FALSE);
-  REG (xorq, xorX, 64, FALSE);
+  REG (xorb, xorX, 8, FALSE, 0, 0);
+  REG (xorw, xorX, 16, FALSE, 0, 0);
+  REG (xorl, xorX, 32, FALSE, 0, 0);
+  REG (xorq, xorX, 64, FALSE, 0, 0);
 
-  REG (shlb, shlX, 8, FALSE);
-  REG (shlw, shlX, 16, FALSE);
-  REG (shll, shlX, 32, FALSE);
-  REG (shlq, shlX, 64, FALSE);
+  REG (shlb, shlX, 8, FALSE, 0, 0);
+  REG (shlw, shlX, 16, FALSE, 0, 0);
+  REG (shll, shlX, 32, FALSE, 0, 0);
+  REG (shlq, shlX, 64, FALSE, 0, 0);
 
-  REG (shrsb, shrsX, 8, FALSE);
-  REG (shrsw, shrsX, 16, FALSE);
-  REG (shrsl, shrsX, 32, FALSE);
-  REG (shrsq, shrsX, 64, FALSE);
+  REG (shrsb, shrsX, 8, FALSE, 0, 0);
+  REG (shrsw, shrsX, 16, FALSE, 0, 0);
+  REG (shrsl, shrsX, 32, FALSE, 0, 0);
+  REG (shrsq, shrsX, 64, FALSE, 0, 0);
 
-  REG (shrub, shruX, 8, FALSE);
-  REG (shruw, shruX, 16, FALSE);
-  REG (shrul, shruX, 32, FALSE);
-  REG (shruq, shruX, 64, FALSE);
+  REG (shrub, shruX, 8, FALSE, 0, 0);
+  REG (shruw, shruX, 16, FALSE, 0, 0);
+  REG (shrul, shruX, 32, FALSE, 0, 0);
+  REG (shruq, shruX, 64, FALSE, 0, 0);
 
-  REG (minsb, minX, 8, FALSE);
-  REG (minsw, minX, 16, FALSE);
-  REG (minsl, minX, 32, FALSE);
+  REG (minsb, minX, 8, FALSE, 0, 0);
+  REG (minsw, minX, 16, FALSE, 0, 0);
+  REG (minsl, minX, 32, FALSE, 0, 0);
 
-  REG (minub, minuX, 8, FALSE);
-  REG (minuw, minuX, 16, FALSE);
-  REG (minul, minuX, 32, FALSE);
+  REG (minub, minuX, 8, FALSE, 0, 0);
+  REG (minuw, minuX, 16, FALSE, 0, 0);
+  REG (minul, minuX, 32, FALSE, 0, 0);
 
-  REG (maxsb, maxX, 8, FALSE);
-  REG (maxsw, maxX, 16, FALSE);
-  REG (maxsl, maxX, 32, FALSE);
+  REG (maxsb, maxX, 8, FALSE, 0, 0);
+  REG (maxsw, maxX, 16, FALSE, 0, 0);
+  REG (maxsl, maxX, 32, FALSE, 0, 0);
 
-  REG (maxub, maxuX, 8, FALSE);
-  REG (maxuw, maxuX, 16, FALSE);
-  REG (maxul, maxuX, 32, FALSE);
+  REG (maxub, maxuX, 8, FALSE, 0, 0);
+  REG (maxuw, maxuX, 16, FALSE, 0, 0);
+  REG (maxul, maxuX, 32, FALSE, 0, 0);
 
-  REG (absb, absX, 8, FALSE);
-  REG (absw, absX, 16, FALSE);
-  REG (absl, absX, 32, FALSE);
+  REG (absb, absX, 8, FALSE, 1, 0);
+  REG (absw, absX, 16, FALSE, 1, 0);
+  REG (absl, absX, 32, FALSE, 1, 0);
 
-  REG (avgsb, avgX, 8, FALSE);
-  REG (avgsw, avgX, 16, FALSE);
-  REG (avgsl, avgX, 32, FALSE);
-  REG (avgub, avguX, 8, FALSE);
-  REG (avguw, avguX, 16, FALSE);
-  REG (avgul, avguX, 32, FALSE);
+  REG (avgsb, avgX, 8, FALSE, 0, 0);
+  REG (avgsw, avgX, 16, FALSE, 0, 0);
+  REG (avgsl, avgX, 32, FALSE, 0, 0);
+  REG (avgub, avguX, 8, FALSE, 0, 0);
+  REG (avguw, avguX, 16, FALSE, 0, 0);
+  REG (avgul, avguX, 32, FALSE, 0, 0);
 
-  REG (cmpgtsb, cmpgtsX, 8, TRUE);
-  REG (cmpgtsw, cmpgtsX, 16, TRUE);
-  REG (cmpgtsl, cmpgtsX, 32, TRUE);
-  REG (cmpgtsq, cmpgtsX, 64, TRUE);
-  REG (cmpeqb, cmpeqX, 8, TRUE);
-  REG (cmpeqw, cmpeqX, 16, TRUE);
-  REG (cmpeql, cmpeqX, 32, TRUE);
-  REG (cmpeqq, cmpeqX, 64, TRUE);
+  REG (cmpgtsb, cmpgtsX, 8, TRUE, 1, 0);
+  REG (cmpgtsw, cmpgtsX, 16, TRUE, 1, 0);
+  REG (cmpgtsl, cmpgtsX, 32, TRUE, 1, 0);
+  REG (cmpgtsq, cmpgtsX, 64, TRUE, 1, 0);
+  REG (cmpeqb, cmpeqX, 8, TRUE, 1, 0);
+  REG (cmpeqw, cmpeqX, 16, TRUE, 1, 0);
+  REG (cmpeql, cmpeqX, 32, TRUE, 1, 0);
+  REG (cmpeqq, cmpeqX, 64, TRUE, 1, 0);
 
-  REG (signb, signX, 8, TRUE);
-  REG (signw, signX, 16, TRUE);
-  REG (signl, signX, 32, TRUE);
+  REG (signb, signX, 8, TRUE, 1, 0);
+  REG (signw, signX, 16, TRUE, 1, 0);
+  REG (signl, signX, 32, TRUE, 1, 0);
 
-  REG (swapw, swapw, 16, FALSE);
-  REG (swapl, swapl, 32, FALSE);
-  REG (swapq, swapq, 64, FALSE);
-  REG (swapwl, swapwl, 32, FALSE);
-  REG (swaplq, swaplq, 64, FALSE);
+  REG (swapw, swapw, 16, FALSE, 2, 0);
+  REG (swapl, swapl, 32, FALSE, 2, 0);
+  REG (swapq, swapq, 64, FALSE, 3, 0);
+  REG (swapwl, swapwl, 32, FALSE, 2, 0);
+  REG (swaplq, swaplq, 64, FALSE, 2, 0);
 
-  REG (mullb, mullX, 8, FALSE);
-  REG (mullw, mullX, 16, FALSE);
-  REG (mulll, mullX, 32, FALSE);
+  REG (mullb, mullX, 8, FALSE, 0, 0);
+  REG (mullw, mullX, 16, FALSE, 0, 0);
+  REG (mulll, mullX, 32, FALSE, 0, 0);
 
-  REG (mulhsb, mulhsX, 8, FALSE);
-  REG (mulhsw, mulhsX, 16, FALSE);
-  REG (mulhsl, mulhsX, 32, FALSE);
+  REG (mulhsb, mulhsX, 8, FALSE, 0, 0);
+  REG (mulhsw, mulhsX, 16, FALSE, 0, 0);
+  REG (mulhsl, mulhsX, 32, FALSE, 0, 0);
 
-  REG (mulhub, mulhuX, 8, FALSE);
-  REG (mulhuw, mulhuX, 16, FALSE);
-  REG (mulhul, mulhuX, 32, FALSE);
+  REG (mulhub, mulhuX, 8, FALSE, 0, 0);
+  REG (mulhuw, mulhuX, 16, FALSE, 0, 0);
+  REG (mulhul, mulhuX, 32, FALSE, 0, 0);
 
-  REG (mulsbw, mulsX, 16, FALSE);
-  REG (mulswl, mulsX, 32, FALSE);
-  REG (mulslq, mulsX, 64, FALSE);
+  REG (mulsbw, mulsX, 16, FALSE, 2, 0);
+  REG (mulswl, mulsX, 32, FALSE, 2, 0);
+  REG (mulslq, mulsX, 64, FALSE, 2, 0);
 
-  REG (mulubw, muluX, 16, FALSE);
-  REG (muluwl, muluX, 32, FALSE);
-  REG (mululq, muluX, 64, FALSE);
+  REG (mulubw, muluX, 16, FALSE, 2, 0);
+  REG (muluwl, muluX, 32, FALSE, 2, 0);
+  REG (mululq, muluX, 64, FALSE, 2, 0);
 
-  REG (accw, accX, 16, FALSE);
-  REG (accl, accX, 32, FALSE);
-  REG (accsadubl, accsadubl, 32, TRUE);
+  REG (accw, accX, 16, FALSE, 0, 0);
+  REG (accl, accX, 32, FALSE, 0, 0);
+  REG (accsadubl, accsadubl, 32, TRUE, 2, 0);
 
-  REG (splatw3q, splatw3q, 64, FALSE);
-  REG (splatbw, splatbw, 16, FALSE);
-  REG (splatbl, splatbl, 32, FALSE);
-  REG (mergebw, mergebw, 16, FALSE);
-  REG (mergewl, mergewl, 32, FALSE);
-  REG (mergelq, mergelq, 64, FALSE);
-  REG (select0wb, select0X, 8, FALSE);
-  REG (select0lw, select0X, 16, FALSE);
-  REG (select0ql, select0X, 32, FALSE);
+  REG (splatw3q, splatw3q, 64, FALSE, 2, 0);
+  REG (splatbw, splatbw, 16, FALSE, 1, 0);
+  REG (splatbl, splatbl, 32, FALSE, 1, 0);
+  REG (mergebw, mergebw, 16, FALSE, 2, 0);
+  REG (mergewl, mergewl, 32, FALSE, 2, 0);
+  REG (mergelq, mergelq, 64, FALSE, 2, 0);
+  REG (select0wb, select0X, 8, FALSE, 0, 0);
+  REG (select0lw, select0X, 16, FALSE, 0, 0);
+  REG (select0ql, select0X, 32, FALSE, 0, 0);
 
-  REG (select1wb, select1wb, 8, FALSE);
-  REG (select1lw, select1lw, 16, FALSE);
-  REG (select1ql, select1ql, 32, FALSE);
+  REG (select1wb, select1wb, 8, FALSE, 0, 0);
+  REG (select1lw, select1lw, 16, FALSE, 0, 0);
+  REG (select1ql, select1ql, 32, FALSE, 0, 0);
 
-  REG (splitwb, splitwb, 8, FALSE);
-  REG (splitlw, splitlw, 16, FALSE);
-  REG (splitql, splitql, 32, FALSE);
+  REG (splitwb, splitwb, 8, FALSE, 0, 0);
+  REG (splitlw, splitlw, 16, FALSE, 0, 0);
+  REG (splitql, splitql, 32, FALSE, 0, 0);
 
-  REG (convwb, convn, 8, FALSE);
-  REG (convlw, convn, 16, FALSE);
-  REG (convql, convn, 32, FALSE);
+  REG (convwb, convn, 8, FALSE, 0, 0);
+  REG (convlw, convn, 16, FALSE, 0, 0);
+  REG (convql, convn, 32, FALSE, 0, 0);
 
-  REG (convsbw, convw, 16, FALSE);
-  REG (convswl, convw, 32, FALSE);
-  REG (convslq, convw, 64, FALSE);
+  REG (convsbw, convw, 16, FALSE, 1, 0);
+  REG (convswl, convw, 32, FALSE, 1, 0);
+  REG (convslq, convw, 64, FALSE, 1, 0);
 
-  REG (convssswb, convsssn, 8, FALSE);
-  REG (convssslw, convsssn, 16, FALSE);
-  REG (convsssql, convsssn, 32, FALSE);
+  REG (convssswb, convsssn, 8, FALSE, 0, 0);
+  REG (convssslw, convsssn, 16, FALSE, 0, 0);
+  REG (convsssql, convsssn, 32, FALSE, 0, 0);
 
-  REG (convubw, convuX, 16, FALSE);
-  REG (convuwl, convuX, 32, FALSE);
-  REG (convulq, convuX, 64, FALSE);
+  REG (convubw, convuX, 16, FALSE, 1, 0);
+  REG (convuwl, convuX, 32, FALSE, 1, 0);
+  REG (convulq, convuX, 64, FALSE, 1, 0);
 
-  REG (convuuswb, convuusn, 8, FALSE);
-  REG (convuuslw, convuusn, 16, FALSE);
-  REG (convuusql, convuusn, 32, FALSE);
+  REG (convuuswb, convuusn, 8, FALSE, 0, 0);
+  REG (convuuslw, convuusn, 16, FALSE, 0, 0);
+  REG (convuusql, convuusn, 32, FALSE, 0, 0);
 
-  REG (convsuswb, convsusX, 16, FALSE);
-  REG (convsusql, convsusX, 64, FALSE);
-  REG (convsuslw, convsusX, 32, FALSE);
+  REG (convsuswb, convsusX, 16, FALSE, 0, 0);
+  REG (convsusql, convsusX, 64, FALSE, 0, 0);
+  REG (convsuslw, convsusX, 32, FALSE, 0, 0);
 
-  REG (convusswb, convusswb, 8, FALSE);
-  REG (convusslw, convusslw, 16, FALSE);
-  REG (convussql, convussql, 32, FALSE);
+  REG (convusswb, convusswb, 8, FALSE, 0, 0);
+  REG (convusslw, convusslw, 16, FALSE, 0, 0);
+  REG (convussql, convussql, 32, FALSE, 0, 0);
 
-  REG (convhlw, convhlw, 16, FALSE);
-  REG (convhwb, convhwb, 8, FALSE);
+  REG (convhlw, convhlw, 16, FALSE, 0, 0);
+  REG (convhwb, convhwb, 8, FALSE, 0, 0);
 
-  REG (div255w, div255w, 16, FALSE);
-  REG (divluw, divluw, 16, FALSE);
+  REG (div255w, div255w, 16, FALSE, 0, 0);
+  REG (divluw, divluw, 16, FALSE, 1, 0);
 
-  REG (cmpeqf, cmpeqF, 32, TRUE);
-  REG (cmpeqd, cmpeqF, 64, TRUE);
-  REG (cmpltf, cmpltF, 32, TRUE);
-  REG (cmpltd, cmpltF, 64, TRUE);
-  REG (cmplef, cmpleF, 32, TRUE);
-  REG (cmpled, cmpleF, 64, TRUE);
+  REG (cmpeqf, cmpeqF, 32, TRUE, 1, 0);
+  REG (cmpeqd, cmpeqF, 64, TRUE, 1, 0);
+  REG (cmpltf, cmpltF, 32, TRUE, 1, 0);
+  REG (cmpltd, cmpltF, 64, TRUE, 1, 0);
+  REG (cmplef, cmpleF, 32, TRUE, 1, 0);
+  REG (cmpled, cmpleF, 64, TRUE, 1, 0);
 
-  REG (convdl, convdl, 32, FALSE);
-  REG (convdf, convdf, 32, FALSE);
-  REG (convld, convld, 32, FALSE);
-  REG (convfd, convfd, 32, FALSE);
+  REG (convdl, convdl, 32, FALSE, 0, 0);
+  REG (convdf, convdf, 32, TRUE, 1, 0);
+  REG (convld, convld, 32, FALSE, 1, 0);
+  REG (convfd, convfd, 32, TRUE, 1, 0);
 
-  REG (addf, addF, 32, FALSE);
-  REG (addd, addF, 64, FALSE);
+  REG (addf, addF, 32, TRUE, 0, 2);
+  REG (addd, addF, 64, TRUE, 0, 2);
 
-  REG (subf, subF, 32, FALSE);
-  REG (subd, subF, 64, FALSE);
+  REG (subf, subF, 32, TRUE, 0, 2);
+  REG (subd, subF, 64, TRUE, 0, 2);
 
-  REG (mulf, mulF, 32, FALSE);
-  REG (muld, mulF, 64, FALSE);
+  REG (mulf, mulF, 32, TRUE, 0, 2);
+  REG (muld, mulF, 64, TRUE, 0, 2);
 
-  REG (divf, divF, 32, FALSE);
-  REG (divd, divF, 64, FALSE);
+  REG (divf, divF, 32, TRUE, 0, 2);
+  REG (divd, divF, 64, TRUE, 0, 2);
 
-  REG (sqrtf, sqrtF, 32, FALSE);
-  REG (sqrtd, sqrtF, 64, FALSE);
+  REG (sqrtf, sqrtF, 32, TRUE, 0, 1);
+  REG (sqrtd, sqrtF, 64, TRUE, 0, 1);
 
-  REG (minf, minF, 32, FALSE);
-  REG (mind, minF, 64, FALSE);
-  REG (maxf, maxF, 32, FALSE);
-  REG (maxd, maxF, 64, FALSE);
+  REG (minf, minF, 32, TRUE, 1, 2);
+  REG (mind, minF, 64, TRUE, 1, 2);
+  REG (maxf, maxF, 32, TRUE, 1, 2);
+  REG (maxd, maxF, 64, TRUE, 1, 2);
 }

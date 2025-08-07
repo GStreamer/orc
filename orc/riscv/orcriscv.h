@@ -140,6 +140,8 @@ typedef struct {
 typedef struct {
   OrcRiscvSEW element_width;
   orc_bool needs_mask_reg;
+  int temp_regs_needed;
+  orc_bool normalized_inputs;
 } OrcRiscvRuleInfo;
 
 #endif /* ORC_ENABLE_UNSTABLE_API */
