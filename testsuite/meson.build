@@ -22,6 +22,15 @@ if cpu_family == 'x86' or cpu_family == 'x86_64'
   endforeach
 endif
 
+# Enable per-target runs for LoongArch
+if cpu_family == 'loongarch64'
+  foreach i : enabled_targets
+    if ['lsx', 'lasx'].contains(i)
+      runnable_targets += [i]
+    endif
+  endforeach
+endif
+
 foreach test : tests
   t = executable(test, test + '.c',
                  gnu_symbol_visibility: 'inlineshidden',
