@@ -15,6 +15,8 @@ if 'lasx' in enabled_targets
   orc_sources += files(
     'orclasx.c',
     'orclasxcompiler.c',
+    'orclasxrules.c',
+    'orclasxinsn.c',
     'orclasxtarget.c',
   )
 endif
