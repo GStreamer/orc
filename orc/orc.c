@@ -77,6 +77,9 @@ orc_init (void)
 #ifdef ENABLE_TARGET_RISCV
       orc_riscv_init();
 #endif
+#ifdef ENABLE_TARGET_LSX
+      orc_lsx_init();
+#endif
 
       inited = TRUE;
     }

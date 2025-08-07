@@ -86,6 +86,12 @@ typedef enum _OrcTargetAVXFlags {
   ORC_TARGET_AVX_AVX2 = (1<<11),
 } OrcTargetAVXFlags;
 
+typedef enum {
+  ORC_TARGET_LOONGARCH_64BIT = (1<<0),
+  ORC_TARGET_LOONGARCH_LSX = (1<<1),
+  ORC_TARGET_LOONGARCH_FRAME_POINTER = (1<<2),
+} OrcTargetLSXFlags;
+
 
 ORC_API OrcRule *    orc_target_get_rule (OrcTarget *target,
                                           OrcStaticOpcode *opcode,
