@@ -92,6 +92,10 @@ typedef enum {
   ORC_TARGET_LOONGARCH_FRAME_POINTER = (1<<2),
 } OrcTargetLSXFlags;
 
+typedef enum {
+  ORC_TARGET_LOONGARCH_LASX = (1<<3),
+} OrcTargetLASXFlags;
+
 
 ORC_API OrcRule *    orc_target_get_rule (OrcTarget *target,
                                           OrcStaticOpcode *opcode,

@@ -80,6 +80,9 @@ orc_init (void)
 #ifdef ENABLE_TARGET_LSX
       orc_lsx_init();
 #endif
+#ifdef ENABLE_TARGET_LASX
+      orc_lasx_init();
+#endif
 
       inited = TRUE;
     }

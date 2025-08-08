@@ -75,6 +75,9 @@ orc_loongarch_get_cpu_flags (void)
 
   if (flag & LA_HWCAP_LSX)
       flags |= ORC_TARGET_LOONGARCH_LSX;
+
+  if (flag & LA_HWCAP_LASX)
+      flags |= ORC_TARGET_LOONGARCH_LASX;
 #endif
   return flags;
 }

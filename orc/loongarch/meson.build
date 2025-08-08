@@ -10,3 +10,11 @@ if 'lsx' in enabled_targets
     'orcloongarchcompiler.c',
   )
 endif
+
+if 'lasx' in enabled_targets
+  orc_sources += files(
+    'orclasx.c',
+    'orclasxcompiler.c',
+    'orclasxtarget.c',
+  )
+endif

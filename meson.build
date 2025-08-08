@@ -37,7 +37,7 @@ if cc.has_link_argument('-Wl,-Bsymbolic-functions')
 endif
 
 all_targets = ['avx', 'sse', 'mmx']
-extra_targets = ['altivec', 'neon', 'mips', 'c64x', 'riscv', 'lsx'] # 'arm'
+extra_targets = ['altivec', 'neon', 'mips', 'c64x', 'riscv', 'lsx', 'lasx'] # 'arm'
 enabled_targets = []
 
 host_system = host_machine.system()
@@ -264,6 +264,7 @@ summary({
   'Altivec': 'altivec' in enabled_targets,
   'RISCV': 'riscv' in enabled_targets,
   'LSX': 'lsx' in enabled_targets,
+  'LASX': 'lasx' in enabled_targets,
   }, section: 'Targets', bool_yn: true)
 
 if not have_docs
