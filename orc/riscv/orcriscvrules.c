@@ -946,26 +946,19 @@ orc_riscv_rule_convn (OrcCompiler *c, void *user, OrcInstruction *insn)
 static void
 orc_riscv_rule_convw (OrcCompiler *c, void *user, OrcInstruction *insn)
 {
-  GET_TEMP_REGS (temp, c, insn);
   const OrcRiscvRegister src = ORC_SRC_ARG (c, insn, 0);
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
 
-  /* Operand overlap restriction, see RVV Spec chapter 5.2 */
-  ORC_ASSERT (src != dest);
-  orc_riscv_insn_emit_vmv_vv (c, *temp, src);
-  orc_riscv_insn_emit_vext_s2 (c, dest, *temp);
+  orc_riscv_insn_emit_vext_s2 (c, dest, src);
 }
 
 static void
 orc_riscv_rule_convuX (OrcCompiler *c, void *user, OrcInstruction *insn)
 {
-  GET_TEMP_REGS (temp, c, insn);
   const OrcRiscvRegister src = ORC_SRC_ARG (c, insn, 0);
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
 
-  /* Operand overlap restriction, see RVV Spec chapter 5.2 */
-  orc_riscv_insn_emit_vmv_vv (c, *temp, src);
-  orc_riscv_insn_emit_vext_z2 (c, dest, *temp);
+  orc_riscv_insn_emit_vext_z2 (c, dest, src);
 }
 
 static void
@@ -1090,25 +1083,19 @@ orc_riscv_rule_convdf (OrcCompiler *c, void *user, OrcInstruction *insn)
 static void
 orc_riscv_rule_convld (OrcCompiler *c, void *user, OrcInstruction *insn)
 {
-  GET_TEMP_REGS (temp, c, insn);
   const OrcRiscvRegister src = ORC_SRC_ARG (c, insn, 0);
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
 
-  /* Operand overlap restriction, see RVV Spec chapter 5.2 */
-  orc_riscv_insn_emit_vmv_vv (c, *temp, src);
-  orc_riscv_insn_emit_vxfncvt_vv (c, dest, *temp);
+  orc_riscv_insn_emit_vxfncvt_vv (c, dest, src);
 }
 
 static void
 orc_riscv_rule_convfd (OrcCompiler *c, void *user, OrcInstruction *insn)
 {
-  GET_TEMP_REGS (temp, c, insn);
   const OrcRiscvRegister src = NORMALIZE_SRC_ARG (c, insn, 0);
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
 
-  /* Operand overlap restriction, see RVV Spec chapter 5.2 */
-  orc_riscv_insn_emit_vmv_vv (c, *temp, src);
-  orc_riscv_insn_emit_vffwcvt_vv (c, dest, *temp);
+  orc_riscv_insn_emit_vffwcvt_vv (c, dest, src);
 }
 
 static void
@@ -1418,17 +1405,17 @@ orc_riscv_rules_init (OrcTarget *target)
   REG (convlw, convn, 16, FALSE, 0, 0);
   REG (convql, convn, 32, FALSE, 0, 0);
 
-  REG (convsbw, convw, 16, FALSE, 1, 0);
-  REG (convswl, convw, 32, FALSE, 1, 0);
-  REG (convslq, convw, 64, FALSE, 1, 0);
+  REG (convsbw, convw, 16, FALSE, 0, 0);
+  REG (convswl, convw, 32, FALSE, 0, 0);
+  REG (convslq, convw, 64, FALSE, 0, 0);
 
   REG (convssswb, convsssn, 8, FALSE, 0, 0);
   REG (convssslw, convsssn, 16, FALSE, 0, 0);
   REG (convsssql, convsssn, 32, FALSE, 0, 0);
 
-  REG (convubw, convuX, 16, FALSE, 1, 0);
-  REG (convuwl, convuX, 32, FALSE, 1, 0);
-  REG (convulq, convuX, 64, FALSE, 1, 0);
+  REG (convubw, convuX, 16, FALSE, 0, 0);
+  REG (convuwl, convuX, 32, FALSE, 0, 0);
+  REG (convulq, convuX, 64, FALSE, 0, 0);
 
   REG (convuuswb, convuusn, 8, FALSE, 0, 0);
   REG (convuuslw, convuusn, 16, FALSE, 0, 0);
@@ -1457,7 +1444,7 @@ orc_riscv_rules_init (OrcTarget *target)
 
   REG (convdl, convdl, 32, FALSE, 0, 0);
   REG (convdf, convdf, 32, TRUE, 1, 0);
-  REG (convld, convld, 32, FALSE, 1, 0);
+  REG (convld, convld, 32, FALSE, 0, 0);
   REG (convfd, convfd, 32, TRUE, 1, 0);
 
   REG (addf, addF, 32, TRUE, 0, 2);
