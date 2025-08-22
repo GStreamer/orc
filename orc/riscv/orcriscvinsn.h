@@ -191,7 +191,7 @@ ORC_API void orc_riscv_insn_emit_vmv_sx (OrcCompiler *c, OrcRiscvRegister vd, Or
 ORC_API void orc_riscv_insn_emit_shift_add (OrcCompiler *c, OrcRiscvRegister rd, orc_uint32 imm);
 ORC_API void orc_riscv_insn_emit_load_word (OrcCompiler *c, OrcRiscvRegister rd, orc_uint32 imm);
 ORC_API void orc_riscv_insn_emit_load_immediate (OrcCompiler *c, OrcRiscvRegister rd, orc_uint64 imm);
-ORC_API void orc_riscv_insn_emit_flush_subnormals(OrcCompiler *c, int element_width, OrcRiscvRegister vs, OrcRiscvRegister vd);
+ORC_API void orc_riscv_insn_emit_flush_subnormals(OrcCompiler *c, int element_width, OrcRiscvRegister vs, OrcRiscvRegister vd, OrcRiscvRegister vtemp);
 
 #endif /* ORC_ENABLE_UNSTABLE_API */
 

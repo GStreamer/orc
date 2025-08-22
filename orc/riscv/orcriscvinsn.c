@@ -1513,7 +1513,7 @@ orc_riscv_insn_emit_load_immediate (OrcCompiler *c,
 
 void
 orc_riscv_insn_emit_flush_subnormals (OrcCompiler *c, int element_width,
-    OrcRiscvRegister vs, OrcRiscvRegister vd)
+    OrcRiscvRegister vs, OrcRiscvRegister vd, OrcRiscvRegister vtemp)
 {
   const orc_uint64 upper =
       element_width ==
@@ -1532,7 +1532,7 @@ orc_riscv_insn_emit_flush_subnormals (OrcCompiler *c, int element_width,
   } else {
     orc_riscv_insn_emit_vmseq_vx (c, ORC_RISCV_V0, ORC_RISCV_V0,
         ORC_RISCV_ZERO);
-    orc_riscv_insn_emit_vand_vx (c, ORC_RISCV_V1, c->gp_tmpreg, vs);
-    orc_riscv_insn_emit_vadd_vim (c, vd, ORC_RISCV_V1, 0);
+    orc_riscv_insn_emit_vand_vx (c, vtemp, c->gp_tmpreg, vs);
+    orc_riscv_insn_emit_vadd_vim (c, vd, vtemp, 0);
   }
 }

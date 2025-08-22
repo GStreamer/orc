@@ -415,6 +415,73 @@ orc_riscv_compiler_save_accumulators (OrcCompiler *c)
   }
 }
 
+static OrcRiscvLMUL
+orc_riscv_compiler_sew_to_lmul (OrcCompiler *c, OrcRiscvSEW sew)
+{
+  return MAX (0, c->loop_shift + (int) sew - 3);
+}
+
+static OrcRiscvLMUL
+orc_riscv_compiler_bytes_to_lmul (OrcCompiler *c, int bytes)
+{
+  return orc_riscv_compiler_sew_to_lmul (c,
+      orc_riscv_compiler_bytes_to_sew (bytes));
+}
+
+static int
+orc_riscv_compiler_temp_reg_count (OrcCompiler *c, OrcInstruction *insn)
+{
+  const OrcRiscvRuleInfo *info = insn->rule->emit_user;
+  int count = info->temp_regs_needed;
+  if (!(c->target_flags & ORC_TARGET_FAST_DENORMAL))
+    count += info->normalized_inputs;
+  return count;
+}
+
+orc_bool
+orc_riscv_compiler_get_temp_regs (OrcCompiler *c, OrcInstruction *insn,
+    OrcRiscvRegister *result)
+{
+  ORC_ASSERT (insn >= c->insns && insn < c->insns + c->n_insns);
+  const OrcRiscvRuleInfo *info = insn->rule->emit_user;
+
+  int size = MAX (insn->opcode->dest_size[0], insn->opcode->dest_size[1]);
+  for (int i = 0; i < ARRAY_SIZE (insn->opcode->src_size); i++) {
+    size = MAX (size, insn->opcode->src_size[i]);
+  }
+  if (insn->flags & ORC_INSTRUCTION_FLAG_X2)
+    size *= 2;
+  if (insn->flags & ORC_INSTRUCTION_FLAG_X4)
+    size *= 4;
+  const int step = 1 << orc_riscv_compiler_bytes_to_lmul (c, size);
+
+  orc_bool used[ORC_N_REGS] = { FALSE };
+  if (info->needs_mask_reg)
+    used[ORC_RISCV_V0] = TRUE;
+
+  for (int i = 0; i < ORC_N_COMPILER_VARIABLES; i++) {
+    if (c->vars[i].alloc < ORC_RISCV_V0 || c->vars[i].alloc > ORC_RISCV_V31)
+      continue;
+    if (c->vars[i].first_use != -1 &&
+        (c->insns + c->vars[i].first_use > insn ||
+            c->insns + c->vars[i].last_use < insn))
+      continue;
+
+    for (int j = 0;
+        j < (1 << orc_riscv_compiler_bytes_to_lmul (c, c->vars[i].size)); j++) {
+      used[c->vars[i].alloc + j] = TRUE;
+    }
+  }
+
+  int n = orc_riscv_compiler_temp_reg_count (c, insn);
+  for (OrcRiscvRegister reg = ORC_RISCV_V0; reg <= ORC_RISCV_V31; reg += step) {
+    if (n > 0 && !used[reg])
+      result[--n] = reg;
+  }
+
+  return n == 0;
+}
+
 static int
 orc_riscv_compiler_var_priority_comp (const void *var_x, const void *var_y)
 {
@@ -450,10 +517,6 @@ orc_riscv_compiler_reallocate_registers (OrcCompiler *c)
           && (j <= vars[i]->last_use || vars[i]->first_use == -1))
         if (((OrcRiscvRuleInfo *) c->insns[j].rule->emit_user)->needs_mask_reg)
           cost[ORC_RISCV_V0] = 1000;
-
-    /* FIXME: remove this */
-    for (int i = ORC_RISCV_V0; i <= ORC_RISCV_V7; i++)
-      cost[i] = 1000;
 
     for (int j = 0; j < i; j++) {
       if ((vars[i]->first_use > vars[j]->last_use ||
@@ -508,6 +571,17 @@ orc_riscv_compiler_compute_loop_shift (OrcCompiler *c)
   }
 
   c->loop_shift = lmul + 3 - orc_riscv_compiler_bytes_to_sew (c->max_var_size);
+
+  OrcRiscvRegister temps[32] = { 0 };
+  for (OrcInstruction * insn = c->insns; insn < c->insns + c->n_insns; insn++) {
+    while (!orc_riscv_compiler_get_temp_regs (c, insn, temps)) {
+      if (c->loop_shift == 0) {
+        ORC_COMPILER_ERROR (c, "cannot allocate temporary registers");
+        return;
+      }
+      c->loop_shift--;
+    }
+  }
 }
 
 void
