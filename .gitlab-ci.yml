@@ -31,7 +31,7 @@ default:
   interruptible: true
 
 .debian:
-  image: 'debian:testing-slim' # to ensure up-to-date Meson
+  image: 'debian:stable-slim'
   stage: build
   variables:
     DEPENDENCIES: >
@@ -77,9 +77,12 @@ alpine 3.20 ppc64le:
       - "build/*.bin"
       - "build/*.S"
 
-debian stable gcc11 arm64:
+debian stable:
   extends: '.debian'
-  image: 'debian:stable-slim'
+
+debian sid gcc11 arm64:
+  extends: '.debian'
+  image: 'debian:sid-slim'
   tags:
     - 'gstreamer-arm64-linux-docker'
   # https://gitlab.freedesktop.org/gstreamer/orc/-/issues/41
@@ -99,11 +102,15 @@ debian stable gcc11 arm64:
     - pipx install meson
     - pipx install ninja
 
-debian testing:
+.debian testing:
   extends: '.debian'
+  image: 'debian:testing-slim'
+
+debian testing:
+  extends: '.debian testing'
 
 debian testing arm64:
-  extends: '.debian'
+  extends: '.debian testing'
   tags:
     - 'gstreamer-arm64-linux-docker'
 
