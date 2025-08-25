@@ -935,7 +935,7 @@ orc_riscv_rule_shruX (OrcCompiler *c, void *user, OrcInstruction *insn)
 }
 
 static void
-orc_riscv_rule_convn (OrcCompiler *c, void *user, OrcInstruction *insn)
+orc_riscv_rule_convN (OrcCompiler *c, void *user, OrcInstruction *insn)
 {
   const OrcRiscvRegister src = ORC_SRC_ARG (c, insn, 0);
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
@@ -944,7 +944,7 @@ orc_riscv_rule_convn (OrcCompiler *c, void *user, OrcInstruction *insn)
 }
 
 static void
-orc_riscv_rule_convw (OrcCompiler *c, void *user, OrcInstruction *insn)
+orc_riscv_rule_convW (OrcCompiler *c, void *user, OrcInstruction *insn)
 {
   const OrcRiscvRegister src = ORC_SRC_ARG (c, insn, 0);
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
@@ -953,7 +953,7 @@ orc_riscv_rule_convw (OrcCompiler *c, void *user, OrcInstruction *insn)
 }
 
 static void
-orc_riscv_rule_convuX (OrcCompiler *c, void *user, OrcInstruction *insn)
+orc_riscv_rule_convuW (OrcCompiler *c, void *user, OrcInstruction *insn)
 {
   const OrcRiscvRegister src = ORC_SRC_ARG (c, insn, 0);
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
@@ -980,7 +980,7 @@ orc_riscv_rule_convhwb (OrcCompiler *c, void *user, OrcInstruction *insn)
 }
 
 static void
-orc_riscv_rule_convsssn (OrcCompiler *c, void *user, OrcInstruction *insn)
+orc_riscv_rule_convsssN (OrcCompiler *c, void *user, OrcInstruction *insn)
 {
   const OrcRiscvRegister src = ORC_SRC_ARG (c, insn, 0);
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
@@ -989,7 +989,7 @@ orc_riscv_rule_convsssn (OrcCompiler *c, void *user, OrcInstruction *insn)
 }
 
 static void
-orc_riscv_rule_convsusX (OrcCompiler *c, void *user, OrcInstruction *insn)
+orc_riscv_rule_convsusN (OrcCompiler *c, void *user, OrcInstruction *insn)
 {
   OrcRiscvRuleInfo *info = user;
 
@@ -1006,7 +1006,7 @@ orc_riscv_rule_convsusX (OrcCompiler *c, void *user, OrcInstruction *insn)
 }
 
 static void
-orc_riscv_rule_convuusn (OrcCompiler *c, void *user, OrcInstruction *insn)
+orc_riscv_rule_convuusN (OrcCompiler *c, void *user, OrcInstruction *insn)
 {
   const OrcRiscvRegister src = ORC_SRC_ARG (c, insn, 0);
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
@@ -1401,29 +1401,29 @@ orc_riscv_rules_init (OrcTarget *target)
   REG (splitlw, splitlw, 16, FALSE, 0, 0);
   REG (splitql, splitql, 32, FALSE, 0, 0);
 
-  REG (convwb, convn, 8, FALSE, 0, 0);
-  REG (convlw, convn, 16, FALSE, 0, 0);
-  REG (convql, convn, 32, FALSE, 0, 0);
+  REG (convwb, convN, 8, FALSE, 0, 0);
+  REG (convlw, convN, 16, FALSE, 0, 0);
+  REG (convql, convN, 32, FALSE, 0, 0);
 
-  REG (convsbw, convw, 16, FALSE, 0, 0);
-  REG (convswl, convw, 32, FALSE, 0, 0);
-  REG (convslq, convw, 64, FALSE, 0, 0);
+  REG (convsbw, convW, 16, FALSE, 0, 0);
+  REG (convswl, convW, 32, FALSE, 0, 0);
+  REG (convslq, convW, 64, FALSE, 0, 0);
 
-  REG (convssswb, convsssn, 8, FALSE, 0, 0);
-  REG (convssslw, convsssn, 16, FALSE, 0, 0);
-  REG (convsssql, convsssn, 32, FALSE, 0, 0);
+  REG (convssswb, convsssN, 8, FALSE, 0, 0);
+  REG (convssslw, convsssN, 16, FALSE, 0, 0);
+  REG (convsssql, convsssN, 32, FALSE, 0, 0);
 
-  REG (convubw, convuX, 16, FALSE, 0, 0);
-  REG (convuwl, convuX, 32, FALSE, 0, 0);
-  REG (convulq, convuX, 64, FALSE, 0, 0);
+  REG (convubw, convuW, 16, FALSE, 0, 0);
+  REG (convuwl, convuW, 32, FALSE, 0, 0);
+  REG (convulq, convuW, 64, FALSE, 0, 0);
 
-  REG (convuuswb, convuusn, 8, FALSE, 0, 0);
-  REG (convuuslw, convuusn, 16, FALSE, 0, 0);
-  REG (convuusql, convuusn, 32, FALSE, 0, 0);
+  REG (convuuswb, convuusN, 8, FALSE, 0, 0);
+  REG (convuuslw, convuusN, 16, FALSE, 0, 0);
+  REG (convuusql, convuusN, 32, FALSE, 0, 0);
 
-  REG (convsuswb, convsusX, 16, FALSE, 0, 0);
-  REG (convsusql, convsusX, 64, FALSE, 0, 0);
-  REG (convsuslw, convsusX, 32, FALSE, 0, 0);
+  REG (convsuswb, convsusN, 16, FALSE, 0, 0);
+  REG (convsusql, convsusN, 64, FALSE, 0, 0);
+  REG (convsuslw, convsusN, 32, FALSE, 0, 0);
 
   REG (convusswb, convusswb, 8, FALSE, 0, 0);
   REG (convusslw, convusslw, 16, FALSE, 0, 0);
