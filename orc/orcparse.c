@@ -634,7 +634,7 @@ orc_parse_handle_dest (OrcParser *parser, const OrcLine *line)
   for(i=3;i<line->n_tokens;i++){
     if (strcmp (line->tokens[i], "align") == 0) {
       if (i == line->n_tokens - 1) {
-        orc_parse_add_error (parser, ".source align requires alignment value");
+        orc_parse_add_error (parser, ".dest align requires alignment value");
       } else {
         int alignment = strtol (line->tokens[i+1], NULL, 0);
         orc_program_set_var_alignment (parser->program, var, alignment);
