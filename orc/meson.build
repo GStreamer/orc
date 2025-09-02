@@ -118,6 +118,9 @@ orc_dependencies = [libm, librt, liblog, atomic_dep]
 if host_os != 'windows'
   # winpthread may be detected but we don't use it
   orc_dependencies += threads
+elif cc.get_id() == 'msvc'
+  # Enabling the conforming preprocessor gives support to the '##' token within macros
+  orc_c_args += '-Zc:preprocessor'
 endif
 
 orc_lib_args = orc_c_args + ['-DBUILDING_ORC']
