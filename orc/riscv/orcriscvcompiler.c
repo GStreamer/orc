@@ -234,6 +234,24 @@ orc_riscv_compiler_load_constants (OrcCompiler *c)
   }
 
   orc_compiler_emit_invariants (c);
+
+  for (int i = 0; i < c->n_constants; i++) {
+    OrcConstant *const constant = &c->constants[i];
+    orc_riscv_insn_emit_load_immediate (c, constant->alloc_reg, constant->v->i);
+  }
+}
+
+OrcRiscvRegister
+orc_riscv_compiler_get_constant (OrcCompiler *c, orc_uint64 n)
+{
+  for (int i = 0; i < c->n_constants; i++) {
+    const OrcRiscvRegister reg = c->constants[i].alloc_reg;
+    if (c->constants[i].v->i == n && ((reg - ORC_GP_REG_BASE) & ~0b11111) == 0)
+      return reg;
+  }
+
+  orc_riscv_insn_emit_load_immediate (c, c->gp_tmpreg, n);
+  return c->gp_tmpreg;
 }
 
 static void
@@ -584,11 +602,45 @@ orc_riscv_compiler_compute_loop_shift (OrcCompiler *c)
   }
 }
 
+static void
+orc_riscv_compiler_allocate_constants (OrcCompiler *c)
+{
+  for (int i = 0; i < c->n_insns; i++) {
+    const OrcRiscvRuleInfo *info = c->insns[i].rule->emit_user;
+    for (const orc_uint64 * value = info->constants; value && *value; value++) {
+      orc_bool found = FALSE;
+      for (int j = 0; j < c->n_constants; j++) {
+        if (c->constants[j].v->i == *value) {
+          found = TRUE;
+        }
+      }
+
+      if (found)
+        continue;
+
+      OrcConstant *const constant = &c->constants[c->n_constants++];
+
+      for (int j = 0; j < 32; j++) {
+        const OrcRiscvRegister current = ORC_GP_REG_BASE + j;
+        if (!c->valid_regs[current] || c->used_regs[current])
+          continue;
+        if (constant->alloc_reg && c->save_regs[current])
+          continue;
+        constant->alloc_reg = current;
+      }
+
+      constant->v->i = *value;
+      c->used_regs[constant->alloc_reg] = TRUE;
+    }
+  }
+}
+
 void
 orc_riscv_compiler_assemble (OrcCompiler *c)
 {
   orc_riscv_compiler_reallocate_registers (c);
   orc_riscv_compiler_compute_loop_shift (c);
+  orc_riscv_compiler_allocate_constants (c);
   orc_riscv_compiler_emit_prologue (c);
   orc_riscv_compiler_load_constants (c);
   orc_riscv_compiler_emit_full_loop (c);

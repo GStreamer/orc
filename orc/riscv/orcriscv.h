@@ -142,6 +142,7 @@ typedef struct {
   orc_bool needs_mask_reg;
   int temp_regs_needed;
   orc_bool normalized_inputs;
+  const orc_uint64 *constants;
 } OrcRiscvRuleInfo;
 
 #endif /* ORC_ENABLE_UNSTABLE_API */
