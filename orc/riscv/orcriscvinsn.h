@@ -154,6 +154,7 @@ ORC_API void orc_riscv_insn_emit_vmul_vv (OrcCompiler *c, OrcRiscvRegister vd, O
 ORC_API void orc_riscv_insn_emit_vmul_vx (OrcCompiler *c, OrcRiscvRegister vd, OrcRiscvRegister rs1, OrcRiscvRegister vs2);
 ORC_API void orc_riscv_insn_emit_vmulh_vv (OrcCompiler *c, OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2);
 ORC_API void orc_riscv_insn_emit_vmulhu_vv (OrcCompiler *c, OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2);
+ORC_API void orc_riscv_insn_emit_vmulhu_vx (OrcCompiler *c, OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister rs2);
 ORC_API void orc_riscv_insn_emit_vnclip_vi (OrcCompiler *c, OrcRiscvRegister vd, OrcRiscvRegister vs1, int imm);
 ORC_API void orc_riscv_insn_emit_vnclip_vx (OrcCompiler *c, OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister rs2);
 ORC_API void orc_riscv_insn_emit_vnclipu_vx (OrcCompiler *c, OrcRiscvRegister vd, OrcRiscvRegister rs1, OrcRiscvRegister vs2);

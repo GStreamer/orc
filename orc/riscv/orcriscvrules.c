@@ -400,9 +400,10 @@ orc_riscv_rule_div255w (OrcCompiler *c, void *user, OrcInstruction *insn)
   const OrcRiscvRegister src = ORC_SRC_ARG (c, insn, 0);
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
 
-  /* FIXME: should be implemented by multiplication and shift */
-  const OrcRiscvRegister const255 = orc_riscv_compiler_get_constant (c, 255);
-  orc_riscv_insn_emit_vdivu_vx (c, dest, src, const255);
+  const OrcRiscvRegister const0x8081 =
+      orc_riscv_compiler_get_constant (c, 0x8081);
+  orc_riscv_insn_emit_vmulhu_vx (c, dest, src, const0x8081);
+  orc_riscv_insn_emit_vsrl_vi (c, dest, dest, 7);
 }
 
 static void
@@ -1444,7 +1445,7 @@ orc_riscv_rules_init (OrcTarget *target)
   REG (convhwb, convhwb, 8, FALSE, 0, 0);
 
   REG (div255w, div255w, 16, FALSE, 0, 0);
-  REG_CONSTS (div255w, 255);
+  REG_CONSTS (div255w, 0x8081);
   REG (divluw, divluw, 16, FALSE, 1, 0);
   REG_CONSTS (divluw, 255);
 

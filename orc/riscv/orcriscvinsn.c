@@ -1189,6 +1189,15 @@ orc_riscv_insn_emit_vmulhu_vv (OrcCompiler *c,
 }
 
 void
+orc_riscv_insn_emit_vmulhu_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vmulhu.vx %s, %s, %s\n",
+      NAME (vd), NAME (vs2), NAME (rs1));
+  orc_riscv_insn_vop (c, 0b100100, 1, VREG (vs2), XREG (rs1), OPMVX, VREG (vd));
+}
+
+void
 orc_riscv_insn_emit_vnclip_vi (OrcCompiler *c,
     OrcRiscvRegister vd, OrcRiscvRegister vs1, int imm)
 {
