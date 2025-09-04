@@ -898,6 +898,15 @@ orc_riscv_insn_emit_vsub_vx (OrcCompiler *c,
 }
 
 void
+orc_riscv_insn_emit_vrsub_vx (OrcCompiler *c,
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister rs1)
+{
+  ORC_ASM_CODE (c, "  vrsub.vx %s, %s, %s\n", NAME (vd), NAME (vs2),
+      NAME (rs1));
+  orc_riscv_insn_vop (c, 0b000011, 1, VREG (vs2), XREG (rs1), OPIVX, VREG (vd));
+}
+
+void
 orc_riscv_insn_emit_vssubu_vv (OrcCompiler *c,
     OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
 {

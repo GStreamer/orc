@@ -370,9 +370,7 @@ orc_riscv_rule_absX (OrcCompiler *c, void *user, OrcInstruction *insn)
   const OrcRiscvRegister src = ORC_SRC_ARG (c, insn, 0);
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
 
-  /* FIXME: use vrsub instead */
-  orc_riscv_insn_emit_load_immediate (c, c->gp_tmpreg, -1);
-  orc_riscv_insn_emit_vmul_vx (c, *temp, c->gp_tmpreg, src);
+  orc_riscv_insn_emit_vrsub_vx (c, *temp, src, ORC_RISCV_ZERO);
   orc_riscv_insn_emit_vmax_vv (c, dest, *temp, src);
 }
 
