@@ -409,20 +409,14 @@ orc_riscv_rule_div255w (OrcCompiler *c, void *user, OrcInstruction *insn)
 static void
 orc_riscv_rule_signX (OrcCompiler *c, void *user, OrcInstruction *insn)
 {
-  GET_TEMP_REGS (temp, c, insn);
   const OrcRiscvRegister src = ORC_SRC_ARG (c, insn, 0);
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
 
-  /* FIXME: optimize this */
+  const OrcRiscvRegister const1s = orc_riscv_compiler_get_constant (c, -1ll);
+  orc_riscv_insn_emit_vmax_vx (c, dest, const1s, src);
 
-  orc_riscv_insn_emit_vmv_vv (c, *temp, src);
-  orc_riscv_insn_emit_vmv_vx (c, dest, ORC_RISCV_ZERO);
-
-  orc_riscv_insn_emit_vmsgt_vx (c, ORC_RISCV_V0, *temp, ORC_RISCV_ZERO);
-  orc_riscv_insn_emit_vadd_vim (c, dest, dest, 1);
-
-  orc_riscv_insn_emit_vmslt_vx (c, ORC_RISCV_V0, *temp, ORC_RISCV_ZERO);
-  orc_riscv_insn_emit_vadd_vim (c, dest, dest, -1);
+  const OrcRiscvRegister const1 = orc_riscv_compiler_get_constant (c, 1);
+  orc_riscv_insn_emit_vmin_vx (c, dest, const1, dest);
 }
 
 static void
@@ -1353,9 +1347,12 @@ orc_riscv_rules_init (OrcTarget *target)
   REG (cmpeql, cmpeqX, 32, TRUE, 1, 0);
   REG (cmpeqq, cmpeqX, 64, TRUE, 1, 0);
 
-  REG (signb, signX, 8, TRUE, 1, 0);
-  REG (signw, signX, 16, TRUE, 1, 0);
-  REG (signl, signX, 32, TRUE, 1, 0);
+  REG (signb, signX, 8, TRUE, 0, 0);
+  REG_CONSTS (signb, 1, -1ll);
+  REG (signw, signX, 16, TRUE, 0, 0);
+  REG_CONSTS (signw, 1, -1ll);
+  REG (signl, signX, 32, TRUE, 0, 0);
+  REG_CONSTS (signl, 1, -1ll);
 
   REG (swapw, swapw, 16, FALSE, 2, 0);
   REG (swapl, swapl, 32, FALSE, 2, 0);
