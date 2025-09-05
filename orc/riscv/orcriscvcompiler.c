@@ -361,8 +361,13 @@ orc_riscv_compiler_add_strides (OrcCompiler *c)
         orc_riscv_insn_emit_add (c, c->vars[i].ptr_register,
             c->vars[i].ptr_register, c->gp_tmpreg);
         break;
+      case ORC_VAR_TYPE_ACCUMULATOR:
+      case ORC_VAR_TYPE_CONST:
+      case ORC_VAR_TYPE_PARAM:
+      case ORC_VAR_TYPE_TEMP:
+        break;
       default:
-        ORC_COMPILER_ERROR (c, "bad vartype");
+        ORC_COMPILER_ERROR (c, "bad vartype: %s", c->vars[i].name);
         break;
     }
   }
