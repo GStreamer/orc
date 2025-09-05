@@ -1395,11 +1395,11 @@ orc_riscv_insn_emit_vmfeq_vv (OrcCompiler *c,
 }
 
 void
-orc_riscv_insn_emit_vfcvt_vv (OrcCompiler *c,
+orc_riscv_insn_emit_vfcvt_rtz_vv (OrcCompiler *c,
     OrcRiscvRegister vd, OrcRiscvRegister vs2)
 {
-  ORC_ASM_CODE (c, "  vfcvt.x.f.v %s, %s\n", NAME (vd), NAME (vs2));
-  orc_riscv_insn_vop (c, 0b010010, 1, VREG (vs2), 0b00001, OPFVV, VREG (vd));
+  ORC_ASM_CODE (c, "  vfcvt.rtz.x.f.v %s, %s\n", NAME (vd), NAME (vs2));
+  orc_riscv_insn_vop (c, 0b010010, 1, VREG (vs2), 0b00111, OPFVV, VREG (vd));
 }
 
 void
