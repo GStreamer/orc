@@ -839,8 +839,12 @@ orc_riscv_rule_shlX (OrcCompiler *c, void *user, OrcInstruction *insn)
               1));
       orc_riscv_insn_emit_vsll_vx (c, dest, src1, c->gp_tmpreg);
       break;
+    case ORC_VAR_TYPE_PARAM:
+    case ORC_VAR_TYPE_TEMP:
+      orc_riscv_insn_emit_vsll_vv (c, dest, src1, ORC_SRC_ARG (c, insn, 1));
+      break;
     default:
-      ORC_PROGRAM_ERROR (c, "shift rule only works with constants");
+      ORC_PROGRAM_ERROR (c, "shift rule only works with constants and params");
       break;
   }
 }
@@ -857,8 +861,12 @@ orc_riscv_rule_shrsX (OrcCompiler *c, void *user, OrcInstruction *insn)
               1));
       orc_riscv_insn_emit_vsra_vx (c, dest, src1, c->gp_tmpreg);
       break;
+    case ORC_VAR_TYPE_PARAM:
+    case ORC_VAR_TYPE_TEMP:
+      orc_riscv_insn_emit_vsra_vv (c, dest, src1, ORC_SRC_ARG (c, insn, 1));
+      break;
     default:
-      ORC_PROGRAM_ERROR (c, "shift rule only works with constants");
+      ORC_PROGRAM_ERROR (c, "shift rule only works with constants and params");
       break;
   }
 }
@@ -875,8 +883,12 @@ orc_riscv_rule_shruX (OrcCompiler *c, void *user, OrcInstruction *insn)
               1));
       orc_riscv_insn_emit_vsrl_vx (c, dest, src1, c->gp_tmpreg);
       break;
+    case ORC_VAR_TYPE_PARAM:
+    case ORC_VAR_TYPE_TEMP:
+      orc_riscv_insn_emit_vsrl_vv (c, dest, src1, ORC_SRC_ARG (c, insn, 1));
+      break;
     default:
-      ORC_PROGRAM_ERROR (c, "shift rule only works with constants");
+      ORC_PROGRAM_ERROR (c, "shift rule only works with constants and params");
       break;
   }
 }

@@ -750,7 +750,7 @@ orc_riscv_insn_emit_vwsll_vi (OrcCompiler *c,
 
 void
 orc_riscv_insn_emit_vsrl_vv (OrcCompiler *c,
-    OrcRiscvRegister vd, OrcRiscvRegister vs1, OrcRiscvRegister vs2)
+    OrcRiscvRegister vd, OrcRiscvRegister vs2, OrcRiscvRegister vs1)
 {
   ORC_ASM_CODE (c, "  vsrl.vv %s, %s, %s\n", NAME (vd), NAME (vs2), NAME (vs1));
   orc_riscv_insn_vop (c, 0b101000, 1, VREG (vs2), VREG (vs1), OPIVV, VREG (vd));
