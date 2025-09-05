@@ -174,7 +174,7 @@ orc_riscv_compiler_emit_epilogue (OrcCompiler *c)
 {
   int stack_size = 0;
 
-  for (int i = 31, stack_size = 0; i >= 0; i--) {
+  for (int i = 31; i >= 0; i--) {
     if (c->used_regs[ORC_GP_REG_BASE + i] && c->save_regs[ORC_GP_REG_BASE + i]) {
       orc_riscv_insn_emit_ld (c, ORC_GP_REG_BASE + i, ORC_RISCV_SP, stack_size);
       stack_size += c->is_64bit ? 8 : 4;
