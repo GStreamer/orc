@@ -706,9 +706,9 @@ orc_riscv_rule_swapw (OrcCompiler *c, void *user, OrcInstruction *insn)
   } else {
     GET_TEMP_REGS (temp, c, insn);
 
-    orc_riscv_insn_emit_vsrl_vi (c, temp[0], src, 8);
-    orc_riscv_insn_emit_vsll_vi (c, temp[1], src, 8);
-    orc_riscv_insn_emit_vor_vv (c, dest, temp[1], temp[0]);
+    orc_riscv_insn_emit_vsrl_vi (c, *temp, src, 8);
+    orc_riscv_insn_emit_vsll_vi (c, dest, src, 8);
+    orc_riscv_insn_emit_vor_vv (c, dest, dest, *temp);
   }
 }
 
@@ -723,21 +723,17 @@ orc_riscv_rule_swapl (OrcCompiler *c, void *user, OrcInstruction *insn)
   } else {
     GET_TEMP_REGS (temp, c, insn);
 
-    /* FIXME: optimize this */
+    const OrcRiscvRegister templ =
+        orc_riscv_compiler_get_constant (c, 0x00FF00FF00FF00FFll);
+    orc_riscv_insn_emit_vand_vx (c, *temp, templ, src);
+    orc_riscv_insn_emit_vsll_vi (c, *temp, *temp, 8);
+    orc_riscv_insn_emit_vsrl_vi (c, dest, src, 8);
+    orc_riscv_insn_emit_vand_vx (c, dest, templ, dest);
+    orc_riscv_insn_emit_vor_vv (c, dest, dest, *temp);
 
-    orc_riscv_insn_emit_vsll_vi (c, temp[0], src, 24);
-    orc_riscv_insn_emit_vsrl_vi (c, temp[1], src, 24);
-    orc_riscv_insn_emit_vor_vv (c, temp[1], temp[1], temp[0]);
-
-    orc_riscv_insn_emit_vsrl_vi (c, temp[0], src, 8);
-    orc_riscv_insn_emit_vsll_vi (c, temp[0], temp[0], 24);
-    orc_riscv_insn_emit_vsrl_vi (c, temp[0], temp[0], 8);
-    orc_riscv_insn_emit_vor_vv (c, temp[1], temp[1], temp[0]);
-
-    orc_riscv_insn_emit_vsll_vi (c, temp[0], src, 8);
-    orc_riscv_insn_emit_vsrl_vi (c, temp[0], temp[0], 24);
-    orc_riscv_insn_emit_vsll_vi (c, temp[0], temp[0], 8);
-    orc_riscv_insn_emit_vor_vv (c, dest, temp[0], temp[1]);
+    orc_riscv_insn_emit_vsll_vi (c, *temp, dest, 16);
+    orc_riscv_insn_emit_vsrl_vi (c, dest, dest, 16);
+    orc_riscv_insn_emit_vor_vv (c, dest, dest, *temp);
   }
 }
 
@@ -752,60 +748,26 @@ orc_riscv_rule_swapq (OrcCompiler *c, void *user, OrcInstruction *insn)
   } else {
     GET_TEMP_REGS (temp, c, insn);
 
-    /* FIXME: optimize this */
+    const OrcRiscvRegister templ1 =
+        orc_riscv_compiler_get_constant (c, 0x00FF00FF00FF00FFll);
+    orc_riscv_insn_emit_vand_vx (c, *temp, templ1, src);
+    orc_riscv_insn_emit_vsll_vi (c, *temp, *temp, 8);
+    orc_riscv_insn_emit_vsrl_vi (c, dest, src, 8);
+    orc_riscv_insn_emit_vand_vx (c, dest, templ1, dest);
+    orc_riscv_insn_emit_vor_vv (c, dest, dest, *temp);
 
-    orc_riscv_insn_emit_load_immediate (c, c->gp_tmpreg, -1);
-    orc_riscv_insn_emit_vmv_vx (c, temp[0], c->gp_tmpreg);
+    const OrcRiscvRegister templ2 =
+        orc_riscv_compiler_get_constant (c, 0x0000FFFF0000FFFFll);
+    orc_riscv_insn_emit_vand_vx (c, *temp, templ2, dest);
+    orc_riscv_insn_emit_vsll_vi (c, *temp, *temp, 16);
+    orc_riscv_insn_emit_vsrl_vi (c, dest, dest, 16);
+    orc_riscv_insn_emit_vand_vx (c, dest, templ2, dest);
+    orc_riscv_insn_emit_vor_vv (c, dest, dest, *temp);
 
-    orc_riscv_insn_emit_load_immediate (c, c->gp_tmpreg, 56);
-    orc_riscv_insn_emit_vsrl_vx (c, temp[0], temp[0], c->gp_tmpreg);
-
-    orc_riscv_insn_emit_vand_vv (c, temp[1], src, temp[0]);
-    orc_riscv_insn_emit_vsll_vx (c, temp[2], temp[1], c->gp_tmpreg);
-
-    orc_riscv_insn_emit_vsll_vi (c, temp[0], temp[0], 8);
-    orc_riscv_insn_emit_vand_vv (c, temp[1], src, temp[0]);
-    orc_riscv_insn_emit_load_immediate (c, c->gp_tmpreg, 40);
-    orc_riscv_insn_emit_vsll_vx (c, temp[1], temp[1], c->gp_tmpreg);
-    orc_riscv_insn_emit_vor_vv (c, temp[2], temp[2], temp[1]);
-
-    orc_riscv_insn_emit_vsll_vi (c, temp[0], temp[0], 8);
-    orc_riscv_insn_emit_vand_vv (c, temp[1], src, temp[0]);
-    orc_riscv_insn_emit_vsll_vi (c, temp[1], temp[1], 24);
-    orc_riscv_insn_emit_vor_vv (c, temp[2], temp[2], temp[1]);
-
-    orc_riscv_insn_emit_vsll_vi (c, temp[0], temp[0], 8);
-    orc_riscv_insn_emit_vand_vv (c, temp[1], src, temp[0]);
-    orc_riscv_insn_emit_vsll_vi (c, temp[1], temp[1], 8);
-    orc_riscv_insn_emit_vor_vv (c, temp[2], temp[2], temp[1]);
-
-    orc_riscv_insn_emit_vsll_vi (c, temp[0], temp[0], 8);
-    orc_riscv_insn_emit_vand_vv (c, temp[1], src, temp[0]);
-    orc_riscv_insn_emit_vsrl_vi (c, temp[1], temp[1], 8);
-    orc_riscv_insn_emit_vor_vv (c, temp[2], temp[2], temp[1]);
-
-    orc_riscv_insn_emit_vsll_vi (c, temp[0], temp[0], 8);
-    orc_riscv_insn_emit_vand_vv (c, temp[1], src, temp[0]);
-    orc_riscv_insn_emit_vsrl_vi (c, temp[1], temp[1], 24);
-    orc_riscv_insn_emit_vor_vv (c, temp[2], temp[2], temp[1]);
-
-    orc_riscv_insn_emit_vsll_vi (c, temp[0], temp[0], 8);
-    orc_riscv_insn_emit_vand_vv (c, temp[1], src, temp[0]);
-    orc_riscv_insn_emit_load_immediate (c, c->gp_tmpreg, 40);
-    orc_riscv_insn_emit_vsrl_vx (c, temp[1], temp[1], c->gp_tmpreg);
-    orc_riscv_insn_emit_vor_vv (c, temp[2], temp[2], temp[1]);
-
-    orc_riscv_insn_emit_vsll_vi (c, temp[0], temp[0], 8);
-    orc_riscv_insn_emit_vand_vv (c, temp[1], src, temp[0]);
-    orc_riscv_insn_emit_load_immediate (c, c->gp_tmpreg, 56);
-    orc_riscv_insn_emit_vsrl_vx (c, temp[1], temp[1], c->gp_tmpreg);
-    orc_riscv_insn_emit_vor_vv (c, temp[2], temp[2], temp[1]);
-
-    orc_riscv_insn_emit_vsll_vi (c, temp[0], temp[0], 8);
-    orc_riscv_insn_emit_vand_vv (c, temp[1], src, temp[0]);
-    orc_riscv_insn_emit_vor_vv (c, temp[2], temp[2], temp[1]);
-
-    orc_riscv_insn_emit_vor_vv (c, dest, temp[2], temp[1]);
+    const OrcRiscvRegister const32 = orc_riscv_compiler_get_constant (c, 32);
+    orc_riscv_insn_emit_vsll_vx (c, *temp, dest, const32);
+    orc_riscv_insn_emit_vsrl_vx (c, dest, dest, const32);
+    orc_riscv_insn_emit_vor_vv (c, dest, dest, *temp);
   }
 }
 
@@ -816,9 +778,9 @@ orc_riscv_rule_swapwl (OrcCompiler *c, void *user, OrcInstruction *insn)
   const OrcRiscvRegister src = ORC_SRC_ARG (c, insn, 0);
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
 
-  orc_riscv_insn_emit_vsrl_vi (c, temp[0], src, 16);
-  orc_riscv_insn_emit_vsll_vi (c, temp[1], src, 16);
-  orc_riscv_insn_emit_vor_vv (c, dest, temp[1], temp[0]);
+  orc_riscv_insn_emit_vsrl_vi (c, *temp, src, 16);
+  orc_riscv_insn_emit_vsll_vi (c, dest, src, 16);
+  orc_riscv_insn_emit_vor_vv (c, dest, dest, *temp);
 }
 
 static void
@@ -829,9 +791,9 @@ orc_riscv_rule_swaplq (OrcCompiler *c, void *user, OrcInstruction *insn)
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
   const OrcRiscvRegister const32 = orc_riscv_compiler_get_constant (c, 32);
 
-  orc_riscv_insn_emit_vsrl_vx (c, temp[0], src, const32);
-  orc_riscv_insn_emit_vsll_vx (c, temp[1], src, const32);
-  orc_riscv_insn_emit_vor_vv (c, dest, temp[1], temp[0]);
+  orc_riscv_insn_emit_vsrl_vx (c, *temp, src, const32);
+  orc_riscv_insn_emit_vsll_vx (c, dest, src, const32);
+  orc_riscv_insn_emit_vor_vv (c, dest, dest, *temp);
 }
 
 static void
@@ -1349,11 +1311,13 @@ orc_riscv_rules_init (OrcTarget *target)
   REG (signl, signX, 32, TRUE, 0, 0);
   REG_CONSTS (signl, 1, -1ll);
 
-  REG (swapw, swapw, 16, FALSE, 2, 0);
-  REG (swapl, swapl, 32, FALSE, 2, 0);
-  REG (swapq, swapq, 64, FALSE, 3, 0);
-  REG (swapwl, swapwl, 32, FALSE, 2, 0);
-  REG (swaplq, swaplq, 64, FALSE, 2, 0);
+  REG (swapw, swapw, 16, FALSE, 1, 0);
+  REG (swapl, swapl, 32, FALSE, 1, 0);
+  REG_CONSTS (swapl, 0x00FF00FF00FF00FFll);
+  REG (swapq, swapq, 64, FALSE, 1, 0);
+  REG_CONSTS (swapq, 0x00FF00FF00FF00FFll, 0x0000FFFF0000FFFFll, 32);
+  REG (swapwl, swapwl, 32, FALSE, 1, 0);
+  REG (swaplq, swaplq, 64, FALSE, 1, 0);
   REG_CONSTS (swaplq, 32);
 
   REG (mullb, mullX, 8, FALSE, 0, 0);
