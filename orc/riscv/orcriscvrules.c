@@ -568,8 +568,7 @@ orc_riscv_rule_cmpgtsX (OrcCompiler *c, void *user, OrcInstruction *insn)
 
   orc_riscv_insn_emit_vmslt_vv (c, ORC_RISCV_V0, src2, src1);
   orc_riscv_insn_emit_vmv_vx (c, dest, ORC_RISCV_ZERO);
-  orc_riscv_insn_emit_vneg (c, *temp, dest);
-  orc_riscv_insn_emit_vadd_vvm (c, dest, dest, *temp);
+  orc_riscv_insn_emit_vadd_vim (c, dest, dest, -1);
 }
 
 static void
@@ -582,8 +581,7 @@ orc_riscv_rule_cmpeqX (OrcCompiler *c, void *user, OrcInstruction *insn)
 
   orc_riscv_insn_emit_vmseq_vv (c, ORC_RISCV_V0, src1, src2);
   orc_riscv_insn_emit_vmv_vx (c, dest, ORC_RISCV_ZERO);
-  orc_riscv_insn_emit_vneg (c, *temp, dest);
-  orc_riscv_insn_emit_vadd_vvm (c, dest, dest, *temp);
+  orc_riscv_insn_emit_vadd_vim (c, dest, dest, -1);
 }
 
 static void
@@ -1008,8 +1006,7 @@ orc_riscv_rule_cmpeqF (OrcCompiler *c, void *user, OrcInstruction *insn)
 
   orc_riscv_insn_emit_vmfeq_vv (c, ORC_RISCV_V0, src1, src2);
   orc_riscv_insn_emit_vmv_vx (c, dest, ORC_RISCV_ZERO);
-  orc_riscv_insn_emit_vneg (c, *temp, dest);
-  orc_riscv_insn_emit_vadd_vvm (c, dest, dest, *temp);
+  orc_riscv_insn_emit_vadd_vim (c, dest, dest, -1);
 }
 
 static void
@@ -1110,8 +1107,7 @@ orc_riscv_rule_cmpltF (OrcCompiler *c, void *user, OrcInstruction *insn)
 
   orc_riscv_insn_emit_vmflt_vv (c, ORC_RISCV_V0, src1, src2);
   orc_riscv_insn_emit_vmv_vx (c, dest, ORC_RISCV_ZERO);
-  orc_riscv_insn_emit_vneg (c, *temp, dest);
-  orc_riscv_insn_emit_vadd_vvm (c, dest, dest, *temp);
+  orc_riscv_insn_emit_vadd_vim (c, dest, dest, -1);
 }
 
 static void
@@ -1124,8 +1120,7 @@ orc_riscv_rule_cmpleF (OrcCompiler *c, void *user, OrcInstruction *insn)
 
   orc_riscv_insn_emit_vmfle_vv (c, ORC_RISCV_V0, src1, src2);
   orc_riscv_insn_emit_vmv_vx (c, dest, ORC_RISCV_ZERO);
-  orc_riscv_insn_emit_vneg (c, *temp, dest);
-  orc_riscv_insn_emit_vadd_vvm (c, dest, dest, *temp);
+  orc_riscv_insn_emit_vadd_vim (c, dest, dest, -1);
 }
 
 static void
