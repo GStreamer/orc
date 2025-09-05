@@ -626,44 +626,39 @@ orc_riscv_rule_select1ql (OrcCompiler *c, void *user, OrcInstruction *insn)
 static void
 orc_riscv_rule_splatw3q (OrcCompiler *c, void *user, OrcInstruction *insn)
 {
-  GET_TEMP_REGS (temp, c, insn);
   const OrcRiscvRegister src = ORC_SRC_ARG (c, insn, 0);
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
+
   const OrcRiscvRegister const48 = orc_riscv_compiler_get_constant (c, 48);
+  orc_riscv_insn_emit_vsrl_vx (c, dest, src, const48);
 
-  orc_riscv_insn_emit_vsrl_vx (c, temp[1], src, const48);
-  orc_riscv_insn_emit_vsll_vi (c, temp[0], temp[1], 16);
-  orc_riscv_insn_emit_vor_vv (c, temp[0], temp[1], temp[0]);
-
-  const OrcRiscvRegister const32 = orc_riscv_compiler_get_constant (c, 32);
-  orc_riscv_insn_emit_vsll_vx (c, temp[1], temp[0], const32);
-  orc_riscv_insn_emit_vor_vv (c, dest, temp[1], temp[0]);
+  const OrcRiscvRegister templ =
+      orc_riscv_compiler_get_constant (c, 0x0001000100010001ll);
+  orc_riscv_insn_emit_vmul_vx (c, dest, templ, dest);
 }
 
 static void
 orc_riscv_rule_splatbw (OrcCompiler *c, void *user, OrcInstruction *insn)
 {
-  GET_TEMP_REGS (temp, c, insn);
   const OrcRiscvRegister src = ORC_SRC_ARG (c, insn, 0);
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
 
-  orc_riscv_insn_emit_vext_z2 (c, *temp, src);
-  orc_riscv_insn_emit_vsll_vi (c, dest, *temp, 8);
-  orc_riscv_insn_emit_vor_vv (c, dest, dest, *temp);
+  const OrcRiscvRegister templ =
+      orc_riscv_compiler_get_constant (c, 0x0101010101010101ll);
+  orc_riscv_insn_emit_vext_z2 (c, dest, src);
+  orc_riscv_insn_emit_vmul_vx (c, dest, templ, dest);
 }
 
 static void
 orc_riscv_rule_splatbl (OrcCompiler *c, void *user, OrcInstruction *insn)
 {
-  GET_TEMP_REGS (temp, c, insn);
   const OrcRiscvRegister src = ORC_SRC_ARG (c, insn, 0);
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
 
-  orc_riscv_insn_emit_vext_z4 (c, *temp, src);
-  orc_riscv_insn_emit_vsll_vi (c, dest, *temp, 8);
-  orc_riscv_insn_emit_vor_vv (c, dest, dest, *temp);
-  orc_riscv_insn_emit_vsll_vi (c, *temp, dest, 16);
-  orc_riscv_insn_emit_vor_vv (c, dest, dest, *temp);
+  const OrcRiscvRegister templ =
+      orc_riscv_compiler_get_constant (c, 0x0101010101010101ll);
+  orc_riscv_insn_emit_vext_z4 (c, dest, src);
+  orc_riscv_insn_emit_vmul_vx (c, dest, templ, dest);
 }
 
 static void
@@ -1385,10 +1380,12 @@ orc_riscv_rules_init (OrcTarget *target)
   REG (accl, accX, 32, FALSE, 0, 0);
   REG (accsadubl, accsadubl, 32, TRUE, 2, 0);
 
-  REG (splatw3q, splatw3q, 64, FALSE, 2, 0);
-  REG_CONSTS (splatw3q, 32, 48);
-  REG (splatbw, splatbw, 16, FALSE, 1, 0);
-  REG (splatbl, splatbl, 32, FALSE, 1, 0);
+  REG (splatw3q, splatw3q, 64, FALSE, 0, 0);
+  REG_CONSTS (splatw3q, 48, 0x0001000100010001ll);
+  REG (splatbw, splatbw, 16, FALSE, 0, 0);
+  REG_CONSTS (splatbw, 0x0101010101010101ll);
+  REG (splatbl, splatbl, 32, FALSE, 0, 0);
+  REG_CONSTS (splatbl, 0x0101010101010101ll);
   REG (mergebw, mergebw, 16, FALSE, 2, 0);
   REG (mergewl, mergewl, 32, FALSE, 2, 0);
   REG (mergelq, mergelq, 64, FALSE, 2, 0);
