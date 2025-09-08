@@ -375,19 +375,25 @@ android armv7 cross:
     CLANG_ARCH: 'armv7a'
     ANDROID_HOST: 'androideabi'
 
-# This is a local runner test for code reviews, triggered by author manually.
-linux loongarch64:
-  stage: 'build'
-  when: 'manual'
+alpine 3.21 loongarch64:
+  stage: build
   tags:
-    - 'loongarch64-shell-runner'
+    - 'orc-alpine-loongarch64'
   script:
-    #- apk add git build-base meson
+    - apk add git build-base linux-headers meson
     - meson setup $MESON_ARGS build/
-    - meson compile --verbose -C build
-    - meson test -C build
-    - meson test -C build --benchmark
+    - meson compile --verbose -C build/
+    - meson test -C build/
     - ORC_DEBUG=2 ./build/tools/orc-bugreport
+    - meson install -C build/
+  artifacts:
+    name: "${CI_JOB_NAME}_${CI_COMMIT_SHA}"
+    expire_in: '5 days'
+    when: 'always'
+    paths:
+      - "build/meson-logs/*txt"
+      - "build/*.bin"
+      - "build/*.S"
 
 # https://docs.gitlab.com/ee/user/project/pages/#how-it-works
 # GitLab automatically deploys the `public/` folder from an
