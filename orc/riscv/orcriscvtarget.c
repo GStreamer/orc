@@ -44,8 +44,6 @@
 #include <ctype.h>
 
 #if defined(HAVE_RISCV) && defined(__linux__)
-#include <sys/cachectl.h>
-
 static int
 orc_riscv_target_detect_extension (const char *exts, const char *ext)
 {
@@ -117,7 +115,15 @@ static void
 orc_riscv_target_flush_cache (OrcCode *code)
 {
 #if defined(HAVE_RISCV) && defined(__linux__)
-  __riscv_flush_icache (code->code, code->code + code->code_size, 0);
+#if __has_builtin(__builtin___clear_cache)
+  __builtin___clear_cache ((char*)code->code, (char*)code->code + code->code_size);
+  if ((void *) code->exec != (void *) code->code)
+    __builtin___clear_cache ((char*)code->exec, (char*)code->exec + code->code_size);
+#else
+  __clear_cache (code->code, code->code + code->code_size);
+  if ((void *) code->exec != (void *) code->code)
+    __clear_cache (code->exec, code->exec + code->code_size);
+#endif // __builtin___clear_cache
 #else
   ORC_ERROR ("Couldn't flush icache");
   ORC_ASSERT (0);
