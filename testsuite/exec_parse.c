@@ -54,6 +54,7 @@ main (int argc, char *argv[])
     orc_program_free (programs[i]);
   }
 
+  free (programs);
   free (code);
   if (error) return 1;
   return 0;

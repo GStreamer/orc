@@ -329,6 +329,7 @@ orc_compiler_compile_program (OrcCompiler *compiler, OrcProgram *program, OrcTar
   if (error_msg && strcmp (error_msg, "")) {
     ORC_WARNING ("program %s failed to compile, reason: %s",
         program->name, error_msg);
+    free (compiler);
     return ORC_COMPILE_RESULT_UNKNOWN_PARSE;
   }
 

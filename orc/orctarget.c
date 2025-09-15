@@ -61,6 +61,7 @@ orc_target_get_default (void)
   if (envvar != NULL) {
     OrcTarget *const target = orc_target_get_by_name (envvar);
 
+    free ((char *)envvar);
     if (target != NULL)
       return target;
   }
