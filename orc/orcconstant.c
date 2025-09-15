@@ -15,20 +15,22 @@ orc_constant_resolve (const OrcConstant *c, OrcConstant *r, int reg_size)
     ORC_ERROR ("Register size %d does not fit on a constant", reg_size);
     return FALSE;
   }
-  
+
+  if (c->type == ORC_CONST_FULL) {
+    memcpy (r, c, sizeof (OrcConstant));
+    return TRUE;
+  }
+
   r->type = ORC_CONST_FULL;
   r->alloc_reg = 0;
   r->label = 0;
   r->use_count = 0;
+  memset (r->v, 0, sizeof (r->v));
   switch (c->type) {
     case ORC_CONST_ZERO:
-      memset (r->v, 0, sizeof (r->v));
-      break;
-    case ORC_CONST_FULL:
-      memcpy (r, c, sizeof (OrcConstant));
       break;
     case ORC_CONST_SPLAT_B:
-      memset (r->v, c->v[0].x8[0], sizeof (r->v)); 
+      memset (r->v, c->v[0].x8[0], reg_size);
       break;
     case ORC_CONST_SPLAT_W:
       for (i = 0; i < count_64; i++) {

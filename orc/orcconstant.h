@@ -45,7 +45,7 @@ struct _OrcConstant {
   int use_count;
   int is_long; // unused
   int label;
-  orc_union64 v[8]; // A total of 8*64 = 512 bytes
+  orc_union64 v[8]; // A total of 8*8 bytes = 512 bits
 };
 
 #ifdef ORC_ENABLE_UNSTABLE_API
