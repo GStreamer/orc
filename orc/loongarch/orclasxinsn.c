@@ -138,14 +138,26 @@ typedef enum
   OPCODE_XVSLLIH       = 0b01110111001011,
   OPCODE_XVSLLIW       = 0b01110111001011,
   OPCODE_XVSLLID       = 0b01110111001011,
+  OPCODE_XVSLLB        = 0b01110100111010000,
+  OPCODE_XVSLLH        = 0b01110100111010001,
+  OPCODE_XVSLLW        = 0b01110100111010010,
+  OPCODE_XVSLLD        = 0b01110100111010011,
   OPCODE_XVSRAIB       = 0b01110111001101,
   OPCODE_XVSRAIH       = 0b01110111001101,
   OPCODE_XVSRAIW       = 0b01110111001101,
   OPCODE_XVSRAID       = 0b01110111001101,
+  OPCODE_XVSRAB        = 0b01110100111011000,
+  OPCODE_XVSRAH        = 0b01110100111011001,
+  OPCODE_XVSRAW        = 0b01110100111011010,
+  OPCODE_XVSRAD        = 0b01110100111011011,
   OPCODE_XVSRLIB       = 0b01110111001100,
   OPCODE_XVSRLIH       = 0b01110111001100,
   OPCODE_XVSRLIW       = 0b01110111001100,
   OPCODE_XVSRLID       = 0b01110111001100,
+  OPCODE_XVSRLB        = 0b01110100111010100,
+  OPCODE_XVSRLH        = 0b01110100111010101,
+  OPCODE_XVSRLW        = 0b01110100111010110,
+  OPCODE_XVSRLD        = 0b01110100111010111,
   OPCODE_XVSRARNIBH    = 0b01110111010111,
   OPCODE_XVSRARNIHW    = 0b01110111010111,
   OPCODE_XVSRARNIWD    = 0b01110111010111,
@@ -1031,6 +1043,38 @@ orc_lasx_insn_emit_xvsllid (OrcCompiler *c,
 }
 
 void
+orc_lasx_insn_emit_xvsllb (OrcCompiler *c,
+    OrcLoongRegister xd, OrcLoongRegister xj, OrcLoongRegister xk)
+{
+  ORC_ASM_CODE (c, "  xvsll.b %s, %s, %s\n", NAME (xd), NAME (xj), NAME (xk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_XVSLLB, XREG(xd), XREG(xj), XREG(xk)));
+}
+
+void
+orc_lasx_insn_emit_xvsllh (OrcCompiler *c,
+    OrcLoongRegister xd, OrcLoongRegister xj, OrcLoongRegister xk)
+{
+  ORC_ASM_CODE (c, "  xvsll.h %s, %s, %s\n", NAME (xd), NAME (xj), NAME (xk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_XVSLLH, XREG(xd), XREG(xj), XREG(xk)));
+}
+
+void
+orc_lasx_insn_emit_xvsllw (OrcCompiler *c,
+    OrcLoongRegister xd, OrcLoongRegister xj, OrcLoongRegister xk)
+{
+  ORC_ASM_CODE (c, "  xvsll.w %s, %s, %s\n", NAME (xd), NAME (xj), NAME (xk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_XVSLLW, XREG(xd), XREG(xj), XREG(xk)));
+}
+
+void
+orc_lasx_insn_emit_xvslld (OrcCompiler *c,
+    OrcLoongRegister xd, OrcLoongRegister xj, OrcLoongRegister xk)
+{
+  ORC_ASM_CODE (c, "  xvsll.d %s, %s, %s\n", NAME (xd), NAME (xj), NAME (xk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_XVSLLD, XREG(xd), XREG(xj), XREG(xk)));
+}
+
+void
 orc_lasx_insn_emit_xvsrlib (OrcCompiler *c,
     OrcLoongRegister xd, OrcLoongRegister xj, int imm)
 {
@@ -1063,6 +1107,38 @@ orc_lasx_insn_emit_xvsrlid (OrcCompiler *c,
 }
 
 void
+orc_lasx_insn_emit_xvsrlb (OrcCompiler *c,
+    OrcLoongRegister xd, OrcLoongRegister xj, OrcLoongRegister xk)
+{
+  ORC_ASM_CODE (c, "  xvsrl.b %s, %s, %s\n", NAME (xd), NAME (xj), NAME (xk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_XVSRLB, XREG(xd), XREG(xj), XREG(xk)));
+}
+
+void
+orc_lasx_insn_emit_xvsrlh (OrcCompiler *c,
+    OrcLoongRegister xd, OrcLoongRegister xj, OrcLoongRegister xk)
+{
+  ORC_ASM_CODE (c, "  xvsrl.h %s, %s, %s\n", NAME (xd), NAME (xj), NAME (xk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_XVSRLH, XREG(xd), XREG(xj), XREG(xk)));
+}
+
+void
+orc_lasx_insn_emit_xvsrlw (OrcCompiler *c,
+    OrcLoongRegister xd, OrcLoongRegister xj, OrcLoongRegister xk)
+{
+  ORC_ASM_CODE (c, "  xvsrl.w %s, %s, %s\n", NAME (xd), NAME (xj), NAME (xk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_XVSRLW, XREG(xd), XREG(xj), XREG(xk)));
+}
+
+void
+orc_lasx_insn_emit_xvsrld (OrcCompiler *c,
+    OrcLoongRegister xd, OrcLoongRegister xj, OrcLoongRegister xk)
+{
+  ORC_ASM_CODE (c, "  xvsrl.d %s, %s, %s\n", NAME (xd), NAME (xj), NAME (xk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_XVSRLD, XREG(xd), XREG(xj), XREG(xk)));
+}
+
+void
 orc_lasx_insn_emit_xvsraib (OrcCompiler *c,
     OrcLoongRegister xd, OrcLoongRegister xj, int imm)
 {
@@ -1092,6 +1168,38 @@ orc_lasx_insn_emit_xvsraid (OrcCompiler *c,
 {
   ORC_ASM_CODE (c, "  xvsrai.d %s, %s, %d\n", NAME (xd), NAME (xj), imm);
   orc_loongarch_insn_emit32 (c, LOONG_2RI8_INSTRUCTION(OPCODE_XVSRAID, XREG(xd), XREG(xj), imm | 0b01000000));
+}
+
+void
+orc_lasx_insn_emit_xvsrab (OrcCompiler *c,
+    OrcLoongRegister xd, OrcLoongRegister xj, OrcLoongRegister xk)
+{
+  ORC_ASM_CODE (c, "  xvsra.b %s, %s, %s\n", NAME (xd), NAME (xj), NAME (xk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_XVSRAB, XREG(xd), XREG(xj), XREG(xk)));
+}
+
+void
+orc_lasx_insn_emit_xvsrah (OrcCompiler *c,
+    OrcLoongRegister xd, OrcLoongRegister xj, OrcLoongRegister xk)
+{
+  ORC_ASM_CODE (c, "  xvsra.h %s, %s, %s\n", NAME (xd), NAME (xj), NAME (xk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_XVSRAH, XREG(xd), XREG(xj), XREG(xk)));
+}
+
+void
+orc_lasx_insn_emit_xvsraw (OrcCompiler *c,
+    OrcLoongRegister xd, OrcLoongRegister xj, OrcLoongRegister xk)
+{
+  ORC_ASM_CODE (c, "  xvsra.w %s, %s, %s\n", NAME (xd), NAME (xj), NAME (xk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_XVSRAW, XREG(xd), XREG(xj), XREG(xk)));
+}
+
+void
+orc_lasx_insn_emit_xvsrad (OrcCompiler *c,
+    OrcLoongRegister xd, OrcLoongRegister xj, OrcLoongRegister xk)
+{
+  ORC_ASM_CODE (c, "  xvsra.d %s, %s, %s\n", NAME (xd), NAME (xj), NAME (xk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_XVSRAD, XREG(xd), XREG(xj), XREG(xk)));
 }
 
 void

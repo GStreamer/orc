@@ -153,14 +153,26 @@ typedef enum
   OPCODE_VSLLIH      = 0b01110011001011,
   OPCODE_VSLLIW      = 0b01110011001011,
   OPCODE_VSLLID      = 0b01110011001011,
+  OPCODE_VSLLB       = 0b01110000111010000,
+  OPCODE_VSLLH       = 0b01110000111010001,
+  OPCODE_VSLLW       = 0b01110000111010010,
+  OPCODE_VSLLD       = 0b01110000111010011,
   OPCODE_VSRLIB      = 0b01110011001100,
   OPCODE_VSRLIH      = 0b01110011001100,
   OPCODE_VSRLIW      = 0b01110011001100,
   OPCODE_VSRLID      = 0b01110011001100,
+  OPCODE_VSRLB       = 0b01110000111010100,
+  OPCODE_VSRLH       = 0b01110000111010101,
+  OPCODE_VSRLW       = 0b01110000111010110,
+  OPCODE_VSRLD       = 0b01110000111010111,
   OPCODE_VSRAIB      = 0b01110011001101,
   OPCODE_VSRAIH      = 0b01110011001101,
   OPCODE_VSRAIW      = 0b01110011001101,
   OPCODE_VSRAID      = 0b01110011001101,
+  OPCODE_VSRAB       = 0b01110000111011000,
+  OPCODE_VSRAH       = 0b01110000111011001,
+  OPCODE_VSRAW       = 0b01110000111011010,
+  OPCODE_VSRAD       = 0b01110000111011011,
   OPCODE_VBSLLV      = 0b01110010100011,
   OPCODE_VBSRLV      = 0b01110010100011,
   OPCODE_VSRANIBH    = 0b01110011010110,
@@ -1141,6 +1153,38 @@ orc_lsx_insn_emit_vsllid (OrcCompiler *c,
 }
 
 void
+orc_lsx_insn_emit_vsllb (OrcCompiler *c,
+    OrcLoongRegister vd, OrcLoongRegister vj, OrcLoongRegister vk)
+{
+  ORC_ASM_CODE (c, "  vsll.b %s, %s, %s\n", NAME (vd), NAME (vj), NAME (vk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_VSLLB, VREG(vd), VREG(vj), VREG(vk)));
+}
+
+void
+orc_lsx_insn_emit_vsllh (OrcCompiler *c,
+    OrcLoongRegister vd, OrcLoongRegister vj, OrcLoongRegister vk)
+{
+  ORC_ASM_CODE (c, "  vsll.h %s, %s, %s\n", NAME (vd), NAME (vj), NAME (vk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_VSLLH, VREG(vd), VREG(vj), VREG(vk)));
+}
+
+void
+orc_lsx_insn_emit_vsllw (OrcCompiler *c,
+    OrcLoongRegister vd, OrcLoongRegister vj, OrcLoongRegister vk)
+{
+  ORC_ASM_CODE (c, "  vsll.w %s, %s, %s\n", NAME (vd), NAME (vj), NAME (vk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_VSLLW, VREG(vd), VREG(vj), VREG(vk)));
+}
+
+void
+orc_lsx_insn_emit_vslld (OrcCompiler *c,
+    OrcLoongRegister vd, OrcLoongRegister vj, OrcLoongRegister vk)
+{
+  ORC_ASM_CODE (c, "  vsll.d %s, %s, %s\n", NAME (vd), NAME (vj), NAME (vk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_VSLLD, VREG(vd), VREG(vj), VREG(vk)));
+}
+
+void
 orc_lsx_insn_emit_vsrlib (OrcCompiler *c,
     OrcLoongRegister vd, OrcLoongRegister vj, int imm8)
 {
@@ -1173,6 +1217,38 @@ orc_lsx_insn_emit_vsrlid (OrcCompiler *c,
 }
 
 void
+orc_lsx_insn_emit_vsrlb (OrcCompiler *c,
+    OrcLoongRegister vd, OrcLoongRegister vj, OrcLoongRegister vk)
+{
+  ORC_ASM_CODE (c, "  vsrl.b %s, %s, %s\n", NAME (vd), NAME (vj), NAME (vk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_VSRLB, VREG(vd), VREG(vj), VREG(vk)));
+}
+
+void
+orc_lsx_insn_emit_vsrlh (OrcCompiler *c,
+    OrcLoongRegister vd, OrcLoongRegister vj, OrcLoongRegister vk)
+{
+  ORC_ASM_CODE (c, "  vsrl.h %s, %s, %s\n", NAME (vd), NAME (vj), NAME (vk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_VSRLH, VREG(vd), VREG(vj), VREG(vk)));
+}
+
+void
+orc_lsx_insn_emit_vsrlw (OrcCompiler *c,
+    OrcLoongRegister vd, OrcLoongRegister vj, OrcLoongRegister vk)
+{
+  ORC_ASM_CODE (c, "  vsrl.w %s, %s, %s\n", NAME (vd), NAME (vj), NAME (vk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_VSRLW, VREG(vd), VREG(vj), VREG(vk)));
+}
+
+void
+orc_lsx_insn_emit_vsrld (OrcCompiler *c,
+    OrcLoongRegister vd, OrcLoongRegister vj, OrcLoongRegister vk)
+{
+  ORC_ASM_CODE (c, "  vsrl.d %s, %s, %s\n", NAME (vd), NAME (vj), NAME (vk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_VSRLD, VREG(vd), VREG(vj), VREG(vk)));
+}
+
+void
 orc_lsx_insn_emit_vsraib (OrcCompiler *c,
     OrcLoongRegister vd, OrcLoongRegister vj, int imm8)
 {
@@ -1202,6 +1278,38 @@ orc_lsx_insn_emit_vsraid (OrcCompiler *c,
 {
   ORC_ASM_CODE (c, "  vsrai.d %s, %s, %d\n", NAME (vd), NAME (vj), imm8);
   orc_loongarch_insn_emit32 (c, LOONG_2RI8_INSTRUCTION(OPCODE_VSRAID, VREG(vd), VREG(vj), imm8 | 0b01000000));
+}
+
+void
+orc_lsx_insn_emit_vsrab (OrcCompiler *c,
+    OrcLoongRegister vd, OrcLoongRegister vj, OrcLoongRegister vk)
+{
+  ORC_ASM_CODE (c, "  vsra.b %s, %s, %s\n", NAME (vd), NAME (vj), NAME (vk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_VSRAB, VREG(vd), VREG(vj), VREG(vk)));
+}
+
+void
+orc_lsx_insn_emit_vsrah (OrcCompiler *c,
+    OrcLoongRegister vd, OrcLoongRegister vj, OrcLoongRegister vk)
+{
+  ORC_ASM_CODE (c, "  vsra.h %s, %s, %s\n", NAME (vd), NAME (vj), NAME (vk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_VSRAH, VREG(vd), VREG(vj), VREG(vk)));
+}
+
+void
+orc_lsx_insn_emit_vsraw (OrcCompiler *c,
+    OrcLoongRegister vd, OrcLoongRegister vj, OrcLoongRegister vk)
+{
+  ORC_ASM_CODE (c, "  vsra.w %s, %s, %s\n", NAME (vd), NAME (vj), NAME (vk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_VSRAW, VREG(vd), VREG(vj), VREG(vk)));
+}
+
+void
+orc_lsx_insn_emit_vsrad (OrcCompiler *c,
+    OrcLoongRegister vd, OrcLoongRegister vj, OrcLoongRegister vk)
+{
+  ORC_ASM_CODE (c, "  vsra.d %s, %s, %s\n", NAME (vd), NAME (vj), NAME (vk));
+  orc_loongarch_insn_emit32 (c, LOONG_3R_INSTRUCTION(OPCODE_VSRAD, VREG(vd), VREG(vj), VREG(vk)));
 }
 
 void

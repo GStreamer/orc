@@ -1878,13 +1878,21 @@ orc_lasx_rule_shlb (OrcCompiler *c, void *user, OrcInstruction *insn)
   switch (ORC_SRC_TYPE (c, insn, 1)) {
     case ORC_VAR_TYPE_CONST:
       if (size >= 32) {
-        orc_lasx_insn_emit_xvsllib (c, dest, src1, c->vars[insn->src_args[1]].value.i);
+        orc_lasx_insn_emit_xvsllib (c, dest, src1, ORC_SRC_VAL (c, insn, 1));
       } else {
-        orc_lsx_insn_emit_vsllib (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), c->vars[insn->src_args[1]].value.i);
+        orc_lsx_insn_emit_vsllib (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_SRC_VAL (c, insn, 1));
+      }
+      break;
+    case ORC_VAR_TYPE_TEMP:
+    case ORC_VAR_TYPE_PARAM:
+      if (size >= 32) {
+        orc_lasx_insn_emit_xvsllb (c, dest, src1, ORC_SRC_ARG (c, insn, 1));
+      } else {
+        orc_lsx_insn_emit_vsllb (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_LASX_TO_LSX_REG(ORC_SRC_ARG (c, insn, 1)));
       }
       break;
     default:
-      ORC_PROGRAM_ERROR (c, "shift rule only works with constants");
+      ORC_PROGRAM_ERROR (c, "shift rule only works with constants, temps and params");
       break;
   }
 }
@@ -1899,13 +1907,21 @@ orc_lasx_rule_shlw (OrcCompiler *c, void *user, OrcInstruction *insn)
   switch (ORC_SRC_TYPE (c, insn, 1)) {
     case ORC_VAR_TYPE_CONST:
       if (size >= 32) {
-        orc_lasx_insn_emit_xvsllih (c, dest, src1, c->vars[insn->src_args[1]].value.i);
+        orc_lasx_insn_emit_xvsllih (c, dest, src1, ORC_SRC_VAL (c, insn, 1));
       } else {
-        orc_lsx_insn_emit_vsllih (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), c->vars[insn->src_args[1]].value.i);
+        orc_lsx_insn_emit_vsllih (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_SRC_VAL (c, insn, 1));
+      }
+      break;
+    case ORC_VAR_TYPE_TEMP:
+    case ORC_VAR_TYPE_PARAM:
+      if (size >= 32) {
+        orc_lasx_insn_emit_xvsllh (c, dest, src1, ORC_SRC_ARG (c, insn, 1));
+      } else {
+        orc_lsx_insn_emit_vsllh (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_LASX_TO_LSX_REG(ORC_SRC_ARG (c, insn, 1)));
       }
       break;
     default:
-      ORC_PROGRAM_ERROR (c, "shift rule only works with constants");
+      ORC_PROGRAM_ERROR (c, "shift rule only works with constants, temps and params");
       break;
   }
 }
@@ -1920,13 +1936,21 @@ orc_lasx_rule_shll (OrcCompiler *c, void *user, OrcInstruction *insn)
   switch (ORC_SRC_TYPE (c, insn, 1)) {
     case ORC_VAR_TYPE_CONST:
       if (size >= 32) {
-        orc_lasx_insn_emit_xvslliw (c, dest, src1, c->vars[insn->src_args[1]].value.i);
+        orc_lasx_insn_emit_xvslliw (c, dest, src1, ORC_SRC_VAL (c, insn, 1));
       } else {
-        orc_lsx_insn_emit_vslliw (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), c->vars[insn->src_args[1]].value.i);
+        orc_lsx_insn_emit_vslliw (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_SRC_VAL (c, insn, 1));
+      }
+      break;
+    case ORC_VAR_TYPE_TEMP:
+    case ORC_VAR_TYPE_PARAM:
+      if (size >= 32) {
+        orc_lasx_insn_emit_xvsllw (c, dest, src1, ORC_SRC_ARG (c, insn, 1));
+      } else {
+        orc_lsx_insn_emit_vsllw (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_LASX_TO_LSX_REG(ORC_SRC_ARG (c, insn, 1)));
       }
       break;
     default:
-      ORC_PROGRAM_ERROR (c, "shift rule only works with constants");
+      ORC_PROGRAM_ERROR (c, "shift rule only works with constants, temps and params");
       break;
   }
 }
@@ -1941,13 +1965,21 @@ orc_lasx_rule_shlq (OrcCompiler *c, void *user, OrcInstruction *insn)
   switch (ORC_SRC_TYPE (c, insn, 1)) {
     case ORC_VAR_TYPE_CONST:
       if (size >= 32) {
-        orc_lasx_insn_emit_xvsllid (c, dest, src1, c->vars[insn->src_args[1]].value.i);
+        orc_lasx_insn_emit_xvsllid (c, dest, src1, ORC_SRC_VAL (c, insn, 1));
       } else {
-        orc_lsx_insn_emit_vsllid (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), c->vars[insn->src_args[1]].value.i);
+        orc_lsx_insn_emit_vsllid (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_SRC_VAL (c, insn, 1));
+      }
+      break;
+    case ORC_VAR_TYPE_TEMP:
+    case ORC_VAR_TYPE_PARAM:
+      if (size >= 32) {
+        orc_lasx_insn_emit_xvslld (c, dest, src1, ORC_SRC_ARG (c, insn, 1));
+      } else {
+        orc_lsx_insn_emit_vslld (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_LASX_TO_LSX_REG(ORC_SRC_ARG (c, insn, 1)));
       }
       break;
     default:
-      ORC_PROGRAM_ERROR (c, "shift rule only works with constants");
+      ORC_PROGRAM_ERROR (c, "shift rule only works with constants, temps and params");
       break;
   }
 }
@@ -1967,8 +1999,16 @@ orc_lasx_rule_shrsb (OrcCompiler *c, void *user, OrcInstruction *insn)
         orc_lsx_insn_emit_vsraib (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_SRC_VAL (c, insn, 1));
       }
       break;
+    case ORC_VAR_TYPE_TEMP:
+    case ORC_VAR_TYPE_PARAM:
+      if (size >= 32) {
+        orc_lasx_insn_emit_xvsrab (c, dest, src1, ORC_SRC_ARG (c, insn, 1));
+      } else {
+        orc_lsx_insn_emit_vsrab (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_LASX_TO_LSX_REG(ORC_SRC_ARG (c, insn, 1)));
+      }
+      break;
     default:
-      ORC_PROGRAM_ERROR (c, "shift rule only works with constants");
+      ORC_PROGRAM_ERROR (c, "shift rule only works with constants, temps and params");
       break;
   }
 }
@@ -1988,8 +2028,16 @@ orc_lasx_rule_shrsw (OrcCompiler *c, void *user, OrcInstruction *insn)
         orc_lsx_insn_emit_vsraih (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_SRC_VAL (c, insn, 1));
       }
       break;
+    case ORC_VAR_TYPE_TEMP:
+    case ORC_VAR_TYPE_PARAM:
+      if (size >= 32) {
+        orc_lasx_insn_emit_xvsrah (c, dest, src1, ORC_SRC_ARG (c, insn, 1));
+      } else {
+        orc_lsx_insn_emit_vsrah (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_LASX_TO_LSX_REG(ORC_SRC_ARG (c, insn, 1)));
+      }
+      break;
     default:
-      ORC_PROGRAM_ERROR (c, "shift rule only works with constants");
+      ORC_PROGRAM_ERROR (c, "shift rule only works with constants, temps and params");
       break;
   }
 }
@@ -2009,8 +2057,16 @@ orc_lasx_rule_shrsl (OrcCompiler *c, void *user, OrcInstruction *insn)
         orc_lsx_insn_emit_vsraiw (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_SRC_VAL (c, insn, 1));
       }
       break;
+    case ORC_VAR_TYPE_TEMP:
+    case ORC_VAR_TYPE_PARAM:
+      if (size >= 32) {
+        orc_lasx_insn_emit_xvsraw (c, dest, src1, ORC_SRC_ARG (c, insn, 1));
+      } else {
+        orc_lsx_insn_emit_vsraw (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_LASX_TO_LSX_REG(ORC_SRC_ARG (c, insn, 1)));
+      }
+      break;
     default:
-      ORC_PROGRAM_ERROR (c, "shift rule only works with constants");
+      ORC_PROGRAM_ERROR (c, "shift rule only works with constants, temps and params");
       break;
   }
 }
@@ -2030,8 +2086,16 @@ orc_lasx_rule_shrsq (OrcCompiler *c, void *user, OrcInstruction *insn)
         orc_lsx_insn_emit_vsraid (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_SRC_VAL (c, insn, 1));
       }
       break;
+    case ORC_VAR_TYPE_TEMP:
+    case ORC_VAR_TYPE_PARAM:
+      if (size >= 32) {
+        orc_lasx_insn_emit_xvsrad (c, dest, src1, ORC_SRC_ARG (c, insn, 1));
+      } else {
+        orc_lsx_insn_emit_vsrad (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_LASX_TO_LSX_REG(ORC_SRC_ARG (c, insn, 1)));
+      }
+      break;
     default:
-      ORC_PROGRAM_ERROR (c, "shift rule only works with constants");
+      ORC_PROGRAM_ERROR (c, "shift rule only works with constants, temps and params");
       break;
   }
 }
@@ -2051,8 +2115,16 @@ orc_lasx_rule_shrub (OrcCompiler *c, void *user, OrcInstruction *insn)
         orc_lsx_insn_emit_vsrlib (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_SRC_VAL (c, insn, 1));
       }
       break;
+    case ORC_VAR_TYPE_TEMP:
+    case ORC_VAR_TYPE_PARAM:
+      if (size >= 32) {
+        orc_lasx_insn_emit_xvsrlb (c, dest, src1, ORC_SRC_ARG (c, insn, 1));
+      } else {
+        orc_lsx_insn_emit_vsrlb (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_LASX_TO_LSX_REG(ORC_SRC_ARG (c, insn, 1)));
+      }
+      break;
     default:
-      ORC_PROGRAM_ERROR (c, "shift rule only works with constants");
+      ORC_PROGRAM_ERROR (c, "shift rule only works with constants, temps and params");
       break;
   }
 }
@@ -2072,8 +2144,16 @@ orc_lasx_rule_shruw (OrcCompiler *c, void *user, OrcInstruction *insn)
         orc_lsx_insn_emit_vsrlih (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_SRC_VAL (c, insn, 1));
       }
       break;
+    case ORC_VAR_TYPE_TEMP:
+    case ORC_VAR_TYPE_PARAM:
+      if (size >= 32) {
+        orc_lasx_insn_emit_xvsrlh (c, dest, src1, ORC_SRC_ARG (c, insn, 1));
+      } else {
+        orc_lsx_insn_emit_vsrlh (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_LASX_TO_LSX_REG(ORC_SRC_ARG (c, insn, 1)));
+      }
+      break;
     default:
-      ORC_PROGRAM_ERROR (c, "shift rule only works with constants");
+      ORC_PROGRAM_ERROR (c, "shift rule only works with constants, temps and params");
       break;
   }
 }
@@ -2093,8 +2173,16 @@ orc_lasx_rule_shrul (OrcCompiler *c, void *user, OrcInstruction *insn)
         orc_lsx_insn_emit_vsrliw (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_SRC_VAL (c, insn, 1));
       }
       break;
+    case ORC_VAR_TYPE_TEMP:
+    case ORC_VAR_TYPE_PARAM:
+      if (size >= 32) {
+        orc_lasx_insn_emit_xvsrlw (c, dest, src1, ORC_SRC_ARG (c, insn, 1));
+      } else {
+        orc_lsx_insn_emit_vsrlw (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_LASX_TO_LSX_REG(ORC_SRC_ARG (c, insn, 1)));
+      }
+      break;
     default:
-      ORC_PROGRAM_ERROR (c, "shift rule only works with constants");
+      ORC_PROGRAM_ERROR (c, "shift rule only works with constants, temps and params");
       break;
   }
 }
@@ -2114,8 +2202,16 @@ orc_lasx_rule_shruq (OrcCompiler *c, void *user, OrcInstruction *insn)
         orc_lsx_insn_emit_vsrlid (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_SRC_VAL (c, insn, 1));
       }
       break;
+    case ORC_VAR_TYPE_TEMP:
+    case ORC_VAR_TYPE_PARAM:
+      if (size >= 32) {
+        orc_lasx_insn_emit_xvsrld (c, dest, src1, ORC_SRC_ARG (c, insn, 1));
+      } else {
+        orc_lsx_insn_emit_vsrld (c, ORC_LASX_TO_LSX_REG(dest), ORC_LASX_TO_LSX_REG(src1), ORC_LASX_TO_LSX_REG(ORC_SRC_ARG (c, insn, 1)));
+      }
+      break;
     default:
-      ORC_PROGRAM_ERROR (c, "shift rule only works with constants");
+      ORC_PROGRAM_ERROR (c, "shift rule only works with constants, temps and params");
       break;
   }
 }
