@@ -39,11 +39,52 @@
 #include <orc/riscv/orcriscv-internal.h>
 
 #include <unistd.h>
-#include <fcntl.h>
-#include <string.h>
-#include <ctype.h>
 
-#if defined(HAVE_RISCV) && defined(__linux__)
+#ifdef HAVE_LINUX_RVV
+#include <sys/auxv.h>
+#include <asm/hwcap.h>
+#include <asm/hwprobe.h>
+#include <asm/unistd.h>
+#elif defined(__linux__)
+#include <string.h>
+#include <fcntl.h>
+#include <ctype.h>
+#endif
+
+#if defined(HAVE_RISCV)
+#if defined(HAVE_LINUX_RVV)
+static orc_uint32
+orc_check_riscv_hwprobe_getauxval (void)
+{
+  unsigned long flags = 0;
+  struct riscv_hwprobe pair = {
+    { RISCV_HWPROBE_KEY_IMA_EXT_0, 0},
+  };
+
+  if (__riscv_hwprobe(pair, 1, 0, NULL, 0) < 0)
+    return 0;
+
+  if (pair[0].value & RISCV_HWPROBE_IMA_C)
+    flags |= ORC_TARGET_RISCV_C;
+  if (getauxval (AT_HWCAP) & COMPAT_HWCAP_ISA_V) {
+    if (pair[0].value & RISCV_HWPROBE_IMA_V)
+      flags |= ORC_TARGET_RISCV_V;
+  }
+#ifdef RISCV_HWPROBE_EXT_ZVKB
+  if (pair[0].value & RISCV_HWPROBE_EXT_ZVKB)
+    flags |= ORC_TARGET_RISCV_ZVKB;
+#endif
+#ifdef RISCV_HWPROBE_EXT_ZVBB
+  if (pair[0].value & RISCV_HWPROBE_EXT_ZVBB)
+    flags |= ORC_TARGET_RISCV_ZVBB;
+#endif
+
+  /* ORC_TARGET_RISCV_ZVKN */
+  /* ORC_TARGET_RISCV_ZVKS */
+
+  return flags;
+}
+#elif defined(__linux__)
 static int
 orc_riscv_target_detect_extension (const char *exts, const char *ext)
 {
@@ -104,6 +145,7 @@ orc_check_riscv_proc_cpuinfo (void)
   return flags;
 }
 #endif
+#endif // HAVE_RISCV
 
 static orc_uint32
 orc_riscv_target_get_cpu_flags (void)
@@ -114,9 +156,13 @@ orc_riscv_target_get_cpu_flags (void)
   flags |= ORC_TARGET_RISCV_64BIT;
 #endif
 
-#if defined(HAVE_RISCV) && defined(__linux__)
+#if defined(HAVE_RISCV)
+#if defined(HAVE_LINUX_RVV)
+  flags |= orc_check_riscv_hwprobe_getauxval ();
+#elif defined(__linux__)
   flags |= orc_check_riscv_proc_cpuinfo ();
 #endif
+#endif // HAVE_RISCV
 
   return flags;
 }

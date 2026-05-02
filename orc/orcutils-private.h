@@ -30,8 +30,9 @@
 
 ORC_BEGIN_DECLS
 
-#if defined(__linux__) && (defined(__mips__) || defined(__riscv)) || \
-  (defined(__arm__) || defined(__aarch64__) && !defined(HAVE_GETAUXVAL))
+#if defined(__linux__) && (defined(__mips__) || \
+  ((defined(__arm__) || defined(__aarch64__)) && !defined(HAVE_GETAUXVAL)) || \
+  (defined(__riscv) && !defined(HAVE_LINUX_RVV)))
 char * get_proc_cpuinfo (void);
 #endif
 

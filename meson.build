@@ -178,6 +178,25 @@ cdata.set('HAVE_SYS_TIME_H', cc.has_header('sys/time.h'))
 cdata.set('HAVE_UNISTD_H', cc.has_header('unistd.h'))
 cdata.set('HAVE_VALGRIND_VALGRIND_H', cc.has_header('valgrind/valgrind.h'))
 
+if cpu_family.startswith('riscv')
+  linux_riscv_test = '''
+  #include <sys/auxv.h>
+  #include <asm/hwcap.h>
+  #include <asm/hwprobe.h>
+  #include <asm/unistd.h>
+  int main() {
+    struct riscv_hwprobe pair = {
+      { RISCV_HWPROBE_KEY_IMA_EXT_0, 0},
+    };
+    if (__riscv_hwprobe(pair, 1, 0, NULL, 0) < 0)
+      return 0;
+    if (pair[0].value & RISCV_HWPROBE_IMA_V) {}
+    return 0;
+  }
+  '''
+  cdata.set('HAVE_LINUX_RVV', cc.compiles(linux_riscv_test))
+endif
+
 cdata.set_quoted('PACKAGE_VERSION', meson.project_version())
 cdata.set_quoted('VERSION', meson.project_version())
 
