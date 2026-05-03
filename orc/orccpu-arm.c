@@ -170,7 +170,7 @@ orc_check_neon_proc_cpuinfo ()
   unsigned long flags = 0;
   char *cpuinfo;
   char *cpuinfo_line;
-  char **flags;
+  char **entries;
   char **f;
 
   cpuinfo = get_proc_cpuinfo();
@@ -198,8 +198,8 @@ orc_check_neon_proc_cpuinfo ()
     return 0;
   }
 
-  flags = strsplit(cpuinfo_line, ' ');
-  for (f = flags; *f; f++) {
+  entries = strsplit(cpuinfo_line, ' ');
+  for (f = entries; *f; f++) {
     if (strcmp (*f, "edsp") == 0)
       flags |= ORC_TARGET_ARM_EDSP;
     else if (strcmp (*f, "neon") == 0)
@@ -207,7 +207,7 @@ orc_check_neon_proc_cpuinfo ()
     free (*f);
   }
 
-  free (flags);
+  free (entries);
 
 out:
   free (cpuinfo_line);
