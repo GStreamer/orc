@@ -178,6 +178,17 @@ cdata.set('HAVE_SYS_TIME_H', cc.has_header('sys/time.h'))
 cdata.set('HAVE_UNISTD_H', cc.has_header('unistd.h'))
 cdata.set('HAVE_VALGRIND_VALGRIND_H', cc.has_header('valgrind/valgrind.h'))
 
+if cpu_family == 'mips'
+  linux_mips_test = '''
+  #include <sys/auxv.h>
+  #include <asm/hwcap.h>
+  int main() {
+    unsigned long auxv = HWCAP_MIPS_DSP2;
+  }
+  '''
+  cdata.set('HAVE_LINUX_MIPS', cc.compiles(linux_mips_test, name: 'Supports getauxval on MIPS'))
+endif
+
 if cpu_family.startswith('riscv')
   linux_riscv_test = '''
   #include <sys/auxv.h>

@@ -37,17 +37,37 @@
 #include <fcntl.h>
 #include <string.h>
 
+#ifdef HAVE_LINUX_MIPS
+#include <sys/auxv.h>
+#include <asm/hwcap.h>
+#endif
+
 /***** mips *****/
 
 #ifdef __mips__
 
-unsigned long
-orc_mips_get_cpu_flags (void)
+#ifdef HAVE_LINUX_MIPS
+static unsigned long
+orc_check_mips_getauxval (void)
 {
-  unsigned long ret = 0;
+  unsigned long flags = 0;
+  unsigned long auxv;
+
+  auxv = getauxval(AT_HWCAP);
+
+  if (auxv & HWCAP_MIPS_DSP2)
+    flags |= ORC_TARGET_MIPS_DSP2;
+
+  return flags;
+}
+#elif defined(__linux__)
+static unsigned long
+orc_check_mips_proc_cpuinfo (void)
+{
+  unsigned long flags = 0;
   char *cpuinfo;
   char *cpuinfo_line;
-  char **flags;
+  char **entries;
   char **f;
 
   cpuinfo = get_proc_cpuinfo();
@@ -62,17 +82,33 @@ orc_mips_get_cpu_flags (void)
     return 0;
   }
 
-  flags = strsplit(cpuinfo_line, ' ');
-  for (f = flags; *f; f++) {
+  entries = strsplit(cpuinfo_line, ' ');
+  for (f = entries; *f; f++) {
     if (strcmp (*f, "dsp2") == 0)
-      ret |= ORC_TARGET_MIPS_DSP2;
+      flags |= ORC_TARGET_MIPS_DSP2;
     free (*f);
   }
 
-  free (flags);
+  free (entries);
   free (cpuinfo_line);
   free (cpuinfo);
 
-  return ret;
+  return flags;
 }
+#endif
+
+unsigned long
+orc_mips_get_cpu_flags (void)
+{
+  unsigned long flags = 0;
+
+#ifdef HAVE_LINUX_MIPS
+  flags |= orc_check_mips_getauxval ();
+#elif defined(__linux__)
+  flags |= orc_check_mips_proc_cpuinfo ();
+#endif
+
+  return flags;
+}
+
 #endif
