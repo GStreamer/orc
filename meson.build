@@ -181,11 +181,12 @@ cdata.set('HAVE_VALGRIND_VALGRIND_H', cc.has_header('valgrind/valgrind.h'))
 if cpu_family.startswith('riscv')
   linux_riscv_test = '''
   #include <sys/auxv.h>
+  #include <sys/hwprobe.h>
   #include <asm/hwcap.h>
   #include <asm/hwprobe.h>
   #include <asm/unistd.h>
   int main() {
-    struct riscv_hwprobe pair = {
+    struct riscv_hwprobe pair[] = {
       { RISCV_HWPROBE_KEY_IMA_EXT_0, 0},
     };
     if (__riscv_hwprobe(pair, 1, 0, NULL, 0) < 0)

@@ -42,6 +42,7 @@
 
 #ifdef HAVE_LINUX_RVV
 #include <sys/auxv.h>
+#include <sys/hwprobe.h>
 #include <asm/hwcap.h>
 #include <asm/hwprobe.h>
 #include <asm/unistd.h>
@@ -57,7 +58,7 @@ static orc_uint32
 orc_check_riscv_hwprobe_getauxval (void)
 {
   unsigned long flags = 0;
-  struct riscv_hwprobe pair = {
+  struct riscv_hwprobe pair[] = {
     { RISCV_HWPROBE_KEY_IMA_EXT_0, 0},
   };
 
