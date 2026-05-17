@@ -195,7 +195,7 @@ if cpu_family.startswith('riscv')
     return 0;
   }
   '''
-  cdata.set('HAVE_LINUX_RVV', cc.compiles(linux_riscv_test))
+  cdata.set('HAVE_LINUX_RVV', cc.compiles(linux_riscv_test, name: 'Supports hwprobe and getauxval on RISC-V'))
 endif
 
 cdata.set_quoted('PACKAGE_VERSION', meson.project_version())
