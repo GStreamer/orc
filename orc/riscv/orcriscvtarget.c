@@ -40,8 +40,11 @@
 
 #include <unistd.h>
 
-#ifdef HAVE_LINUX_RVV
+#if defined(HAVE_LINUX_RVV) || defined(HAVE_ELF_AUX_INFO)
 #include <sys/auxv.h>
+#endif
+
+#ifdef HAVE_LINUX_RVV
 #include <sys/hwprobe.h>
 #include <asm/hwcap.h>
 #include <asm/hwprobe.h>
@@ -53,7 +56,35 @@
 #endif
 
 #if defined(HAVE_RISCV)
-#if defined(HAVE_LINUX_RVV)
+#if defined(HAVE_ELF_AUX_INFO)
+static orc_uint32
+orc_check_riscv_elf_aux_info (void)
+{
+  unsigned long flags = 0;
+  unsigned long hwcap = 0;
+#ifdef HWCAP2_ISA_ZVBB
+  unsigned long hwcap2 = 0;
+#endif
+
+  elf_aux_info(AT_HWCAP, &hwcap, sizeof(hwcap));
+#ifdef HWCAP2_ISA_ZVBB
+  elf_aux_info(AT_HWCAP2, &hwcap2, sizeof(hwcap2));
+#endif
+
+  if (hwcap & HWCAP_ISA_C)
+    flags |= ORC_TARGET_RISCV_C;
+#ifdef HWCAP_ISA_V
+  if (hwcap & HWCAP_ISA_V)
+    flags |= ORC_TARGET_RISCV_V;
+#endif
+#ifdef HWCAP2_ISA_ZVBB
+  if (hwcap2 & HWCAP2_ISA_ZVBB)
+    flags |= ORC_TARGET_RISCV_ZVBB;
+#endif
+
+  return flags;
+}
+#elif defined(HAVE_LINUX_RVV)
 static orc_uint32
 orc_check_riscv_hwprobe_getauxval (void)
 {
@@ -158,7 +189,9 @@ orc_riscv_target_get_cpu_flags (void)
 #endif
 
 #if defined(HAVE_RISCV)
-#if defined(HAVE_LINUX_RVV)
+#if defined(HAVE_ELF_AUX_INFO)
+  flags |= orc_check_riscv_elf_aux_info ();
+#elif defined(HAVE_LINUX_RVV)
   flags |= orc_check_riscv_hwprobe_getauxval ();
 #elif defined(__linux__)
   flags |= orc_check_riscv_proc_cpuinfo ();
