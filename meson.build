@@ -178,6 +178,8 @@ cdata.set('HAVE_SYS_TIME_H', cc.has_header('sys/time.h'))
 cdata.set('HAVE_UNISTD_H', cc.has_header('unistd.h'))
 cdata.set('HAVE_VALGRIND_VALGRIND_H', cc.has_header('valgrind/valgrind.h'))
 
+if host_os == 'linux'
+
 if cpu_family == 'mips'
   linux_mips_test = '''
   #include <sys/auxv.h>
@@ -207,6 +209,8 @@ if cpu_family.startswith('riscv')
   }
   '''
   cdata.set('HAVE_LINUX_RVV', cc.compiles(linux_riscv_test, name: 'Supports hwprobe and getauxval on RISC-V'))
+endif
+
 endif
 
 cdata.set_quoted('PACKAGE_VERSION', meson.project_version())
