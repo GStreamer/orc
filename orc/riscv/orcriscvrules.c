@@ -1084,6 +1084,7 @@ orc_riscv_rule_addF (OrcCompiler *c, void *user, OrcInstruction *insn)
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
 
   orc_riscv_insn_emit_vfadd_vv (c, dest, src1, src2);
+  orc_riscv_rule_normalize_result (c, insn);
 }
 
 static void
