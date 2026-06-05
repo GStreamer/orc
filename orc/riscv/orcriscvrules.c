@@ -1076,6 +1076,16 @@ orc_riscv_rule_convfl (OrcCompiler *c, void *user, OrcInstruction *insn)
   orc_riscv_insn_emit_vfcvt_rtz_vv (c, dest, src);
 }
 
+
+static void
+orc_riscv_rule_convwf (OrcCompiler *c, void *user, OrcInstruction *insn)
+{
+  const OrcRiscvRegister src = ORC_SRC_ARG (c, insn, 0);
+  const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
+
+  orc_riscv_insn_emit_vxfwcvt_vv (c, dest, src);
+}
+
 static void
 orc_riscv_rule_addF (OrcCompiler *c, void *user, OrcInstruction *insn)
 {
@@ -1447,6 +1457,7 @@ orc_riscv_rules_init (OrcTarget *target)
   REG (convld, convld, 32, FALSE, 0, 0);
   REG (convfd, convfd, 32, TRUE, 1, 0);
   REG (convfl, convfl, 32, FALSE, 0, 0);
+  REG (convwf, convwf, 16, FALSE, 0, 0);
 
   REG (addf, addF, 32, TRUE, 0, 2);
   REG (addd, addF, 64, TRUE, 0, 2);
