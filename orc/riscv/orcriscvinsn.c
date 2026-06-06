@@ -1427,7 +1427,7 @@ orc_riscv_insn_emit_vffncvt_vv (OrcCompiler *c,
 }
 
 void
-orc_riscv_insn_emit_vxfncvt_vv (OrcCompiler *c,
+orc_riscv_insn_emit_vxfwcvt_vv (OrcCompiler *c,
     OrcRiscvRegister vd, OrcRiscvRegister vs2)
 {
   ORC_ASSERT (vs2 != vd);

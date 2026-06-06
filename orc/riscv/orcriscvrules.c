@@ -1055,7 +1055,7 @@ orc_riscv_rule_convld (OrcCompiler *c, void *user, OrcInstruction *insn)
   const OrcRiscvRegister src = ORC_SRC_ARG (c, insn, 0);
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
 
-  orc_riscv_insn_emit_vxfncvt_vv (c, dest, src);
+  orc_riscv_insn_emit_vxfwcvt_vv (c, dest, src);
 }
 
 static void
