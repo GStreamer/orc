@@ -40,7 +40,7 @@
 
 #include <unistd.h>
 
-#if defined(HAVE_LINUX_RVV) || defined(HAVE_ELF_AUX_INFO)
+#if defined(HAVE_LINUX_RVV) || defined(HAVE_ELF_AUX_INFO) || defined(HAVE_GETAUXVAL)
 #include <sys/auxv.h>
 #endif
 
@@ -49,13 +49,44 @@
 #include <asm/hwcap.h>
 #include <asm/hwprobe.h>
 #include <asm/unistd.h>
-#elif defined(__linux__)
+#elif defined(HAVE_GETAUXVAL) && defined(__riscv)
+#include <asm/hwcap.h>
+#endif
+
+#if defined(HAVE_LINUX_RVV) || defined(HAVE_GETAUXVAL) || defined(__linux__)
 #include <string.h>
 #include <fcntl.h>
 #include <ctype.h>
 #endif
 
 #if defined(HAVE_RISCV)
+
+#if defined(HAVE_LINUX_RVV) || defined(HAVE_GETAUXVAL) || defined(__linux__)
+static int
+orc_riscv_target_detect_extension (const char *exts, const char *ext)
+{
+  while (isspace (*exts))
+    exts++;
+
+  ORC_ASSERT (strncmp (exts, "rv", 2) == 0);
+
+  const int n = strlen (ext);
+  char *sep = strchr (exts, '_');
+
+  if (n == 1) {
+    char *found = strstr (exts + 2, ext);
+    return found && (found < sep || sep == NULL);
+  }
+
+  for (; sep; sep = strchr (sep + 1, '_')) {
+    if (strncmp (sep + 1, ext, n) && !isalnum (exts[n]))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+#endif
+
 #if defined(HAVE_ELF_AUX_INFO)
 static orc_uint32
 orc_check_riscv_elf_aux_info (void)
@@ -116,31 +147,38 @@ orc_check_riscv_hwprobe_getauxval (void)
 
   return flags;
 }
-#elif defined(__linux__)
-static int
-orc_riscv_target_detect_extension (const char *exts, const char *ext)
+#elif defined(HAVE_GETAUXVAL)
+static orc_uint32
+orc_check_riscv_getauxval (void)
 {
-  while (isspace (*exts))
-    exts++;
+  orc_uint32 flags = 0;
+  unsigned long hwcap = getauxval (AT_HWCAP);
 
-  ORC_ASSERT (strncmp (exts, "rv", 2) == 0);
+  if (hwcap & COMPAT_HWCAP_ISA_V)
+    flags |= ORC_TARGET_RISCV_V;
 
-  const int n = strlen (ext);
-  char *sep = strchr (exts, '_');
-
-  if (n == 1) {
-    char *found = strstr (exts + 2, ext);
-    return found && (found < sep || sep == NULL);
+  /* Other extensions (ZVKB, ZVBB, ZVKN, ZVKS) have no hwcap bits,
+   * fall back to parsing /proc/cpuinfo */
+  char *cpuinfo = get_proc_cpuinfo ();
+  if (cpuinfo) {
+    char *cpuinfo_line = get_tag_value (cpuinfo, "isa");
+    if (cpuinfo_line) {
+      if (orc_riscv_target_detect_extension (cpuinfo_line, "zvkb"))
+        flags |= ORC_TARGET_RISCV_ZVKB;
+      if (orc_riscv_target_detect_extension (cpuinfo_line, "zvbb"))
+        flags |= ORC_TARGET_RISCV_ZVBB;
+      if (orc_riscv_target_detect_extension (cpuinfo_line, "zvkn"))
+        flags |= ORC_TARGET_RISCV_ZVKN;
+      if (orc_riscv_target_detect_extension (cpuinfo_line, "zvks"))
+        flags |= ORC_TARGET_RISCV_ZVKS;
+      free (cpuinfo_line);
+    }
+    free (cpuinfo);
   }
 
-  for (; sep; sep = strchr (sep + 1, '_')) {
-    if (strncmp (sep + 1, ext, n) && !isalnum (exts[n]))
-      return TRUE;
-  }
-
-  return FALSE;
+  return flags;
 }
-
+#elif defined(__linux__)
 static orc_uint32
 orc_check_riscv_proc_cpuinfo (void)
 {
@@ -193,6 +231,8 @@ orc_riscv_target_get_cpu_flags (void)
   flags |= orc_check_riscv_elf_aux_info ();
 #elif defined(HAVE_LINUX_RVV)
   flags |= orc_check_riscv_hwprobe_getauxval ();
+#elif defined(HAVE_GETAUXVAL)
+  flags |= orc_check_riscv_getauxval ();
 #elif defined(__linux__)
   flags |= orc_check_riscv_proc_cpuinfo ();
 #endif
