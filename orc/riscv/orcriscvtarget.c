@@ -53,7 +53,7 @@
 #include <asm/hwcap.h>
 #endif
 
-#if defined(HAVE_LINUX_RVV) || defined(HAVE_GETAUXVAL) || defined(__linux__)
+#if defined(HAVE_GETAUXVAL) || defined(__linux__)
 #include <string.h>
 #include <fcntl.h>
 #include <ctype.h>
@@ -61,7 +61,7 @@
 
 #if defined(HAVE_RISCV)
 
-#if defined(HAVE_LINUX_RVV) || defined(HAVE_GETAUXVAL) || defined(__linux__)
+#if defined(HAVE_GETAUXVAL) || defined(__linux__)
 static int
 orc_riscv_target_detect_extension (const char *exts, const char *ext)
 {
@@ -154,6 +154,8 @@ orc_check_riscv_getauxval (void)
   orc_uint32 flags = 0;
   unsigned long hwcap = getauxval (AT_HWCAP);
 
+  if (hwcap & COMPAT_HWCAP_ISA_C)
+    flags |= ORC_TARGET_RISCV_C;
   if (hwcap & COMPAT_HWCAP_ISA_V)
     flags |= ORC_TARGET_RISCV_V;
 
