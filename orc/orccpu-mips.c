@@ -37,7 +37,7 @@
 #include <fcntl.h>
 #include <string.h>
 
-#ifdef HAVE_LINUX_MIPS
+#ifdef HAVE_GETAUXVAL_MIPS
 #include <sys/auxv.h>
 #include <asm/hwcap.h>
 #endif
@@ -46,7 +46,7 @@
 
 #ifdef __mips__
 
-#ifdef HAVE_LINUX_MIPS
+#ifdef HAVE_GETAUXVAL_MIPS
 static unsigned long
 orc_check_mips_getauxval (void)
 {
@@ -102,7 +102,7 @@ orc_mips_get_cpu_flags (void)
 {
   unsigned long flags = 0;
 
-#ifdef HAVE_LINUX_MIPS
+#ifdef HAVE_GETAUXVAL_MIPS
   flags |= orc_check_mips_getauxval ();
 #elif defined(__linux__)
   flags |= orc_check_mips_proc_cpuinfo ();

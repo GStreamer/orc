@@ -64,7 +64,7 @@ orc_malloc(size_t size)
 
 #if defined(__linux__) && (defined(__mips__) || \
   ((defined(__arm__) || defined(__aarch64__)) && !defined(HAVE_GETAUXVAL)) || \
-  (defined(__riscv) && !defined(HAVE_LINUX_RVV)))
+  (defined(__riscv) && !defined(HAVE_HWPROBE_GETAUXVAL)))
 char *
 get_proc_cpuinfo (void)
 {

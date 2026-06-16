@@ -188,7 +188,7 @@ if cpu_family == 'mips'
     unsigned long auxv = HWCAP_MIPS_DSP2;
   }
   '''
-  cdata.set('HAVE_LINUX_MIPS', cc.compiles(linux_mips_test, name: 'Supports getauxval on MIPS'))
+  cdata.set('HAVE_GETAUXVAL_MIPS', cc.compiles(linux_mips_test, name: 'Supports getauxval on MIPS'))
 endif
 
 if cpu_family.startswith('riscv')
@@ -208,7 +208,7 @@ if cpu_family.startswith('riscv')
     return 0;
   }
   '''
-  cdata.set('HAVE_LINUX_RVV', cc.compiles(linux_riscv_test, name: 'Supports hwprobe and getauxval on RISC-V'))
+  cdata.set('HAVE_HWPROBE_GETAUXVAL', cc.compiles(linux_riscv_test, name: 'Supports hwprobe and getauxval on RISC-V'))
 endif
 
 endif

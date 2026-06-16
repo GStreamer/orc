@@ -40,11 +40,11 @@
 
 #include <unistd.h>
 
-#if defined(HAVE_LINUX_RVV) || defined(HAVE_ELF_AUX_INFO) || defined(HAVE_GETAUXVAL)
+#if defined(HAVE_ELF_AUX_INFO) || defined(HAVE_HWPROBE_GETAUXVAL) || defined(HAVE_GETAUXVAL)
 #include <sys/auxv.h>
 #endif
 
-#ifdef HAVE_LINUX_RVV
+#ifdef HAVE_HWPROBE_GETAUXVAL
 #include <sys/hwprobe.h>
 #include <asm/hwcap.h>
 #include <asm/hwprobe.h>
@@ -115,7 +115,7 @@ orc_check_riscv_elf_aux_info (void)
 
   return flags;
 }
-#elif defined(HAVE_LINUX_RVV)
+#elif defined(HAVE_HWPROBE_GETAUXVAL)
 static orc_uint32
 orc_check_riscv_hwprobe_getauxval (void)
 {
@@ -231,7 +231,7 @@ orc_riscv_target_get_cpu_flags (void)
 #if defined(HAVE_RISCV)
 #if defined(HAVE_ELF_AUX_INFO)
   flags |= orc_check_riscv_elf_aux_info ();
-#elif defined(HAVE_LINUX_RVV)
+#elif defined(HAVE_HWPROBE_GETAUXVAL)
   flags |= orc_check_riscv_hwprobe_getauxval ();
 #elif defined(HAVE_GETAUXVAL)
   flags |= orc_check_riscv_getauxval ();
