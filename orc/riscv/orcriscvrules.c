@@ -956,11 +956,11 @@ orc_riscv_rule_convsusN (OrcCompiler *c, void *user, OrcInstruction *insn)
   const OrcRiscvRegister dest = ORC_DEST_ARG (c, insn, 0);
 
   orc_riscv_insn_emit_vmax_vx (c, dest, ORC_RISCV_ZERO, src);
-  orc_riscv_insn_emit_vsetvli (c, ORC_RISCV_ZERO, ORC_RISCV_ZERO,
+  orc_riscv_insn_emit_vsetvli (c, ORC_RISCV_ZERO, ORC_RISCV_VECTOR_LENGTH,
       orc_riscv_compiler_compute_vtype (c, info->element_width - 1, 0));
 
   orc_riscv_insn_emit_vnclipu_vi (c, dest, dest, 0);
-  orc_riscv_insn_emit_vsetvli (c, ORC_RISCV_ZERO, ORC_RISCV_ZERO,
+  orc_riscv_insn_emit_vsetvli (c, ORC_RISCV_ZERO, ORC_RISCV_VECTOR_LENGTH,
       orc_riscv_compiler_compute_vtype (c, info->element_width, 0));
 }
 
