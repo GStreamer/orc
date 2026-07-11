@@ -1414,8 +1414,8 @@ void
 orc_riscv_insn_emit_vfxncvt_vv (OrcCompiler *c,
     OrcRiscvRegister vd, OrcRiscvRegister vs2)
 {
-  ORC_ASM_CODE (c, "  vfncvt.x.f.w %s, %s\n", NAME (vd), NAME (vs2));
-  orc_riscv_insn_vop (c, 0b010010, 1, VREG (vs2), 0b10001, OPFVV, VREG (vd));
+  ORC_ASM_CODE (c, "  vfncvt.rtz.x.f.w %s, %s\n", NAME (vd), NAME (vs2));
+  orc_riscv_insn_vop (c, 0b010010, 1, VREG (vs2), 0b10111, OPFVV, VREG (vd));
 }
 
 void
