@@ -37,6 +37,7 @@
 #include <orc/riscv/orcriscv-internal.h>
 #include <orc/riscv/orcriscv.h>
 #include <orc/riscv/orcriscvinsn.h>
+#include <string.h>
 
 typedef enum
 {
@@ -91,6 +92,21 @@ orc_riscv_compiler_init (OrcCompiler *c)
   c->min_temp_reg = ORC_VEC_REG_BASE;
 
   c->load_params = TRUE;
+
+  /* FIXME ldresnearl, ldreslinl are special opcodes that need ptr_offset.
+   * Same as x86 backend (orcprogram-x86.c:165-182). Must be set here
+   * BEFORE orc_compiler_global_reg_alloc() allocates registers. */
+  {
+    for (int i = 0; i < c->n_insns; i++) {
+      OrcInstruction *insn = c->insns + i;
+      OrcStaticOpcode *opcode = insn->opcode;
+
+      if (strcmp (opcode->name, "ldresnearl") == 0
+          || strcmp (opcode->name, "ldreslinl") == 0) {
+        c->vars[insn->src_args[0]].need_offset_reg = TRUE;
+      }
+    }
+  }
 }
 
 static void
@@ -233,6 +249,26 @@ orc_riscv_compiler_load_constants (OrcCompiler *c)
       orc_riscv_insn_emit_addi (c, var->ptr_offset, ORC_RISCV_ZERO, 0);
   }
 
+  /* Load initial offset for ldres opcodes (same as x86 backend) */
+  {
+    for (int i = 0; i < c->n_insns; i++) {
+      OrcInstruction *insn = c->insns + i;
+      OrcStaticOpcode *opcode = insn->opcode;
+
+      if (strcmp (opcode->name, "ldresnearl") == 0
+          || strcmp (opcode->name, "ldreslinl") == 0) {
+        OrcVariable *src = c->vars + insn->src_args[0];
+        if (c->vars[insn->src_args[1]].vartype == ORC_VAR_TYPE_PARAM) {
+          orc_riscv_insn_emit_lw (c, src->ptr_offset, c->exec_reg,
+              ORC_STRUCT_OFFSET (OrcExecutor, params[insn->src_args[1]]));
+        } else {
+          orc_riscv_insn_emit_load_immediate (c, src->ptr_offset,
+              c->vars[insn->src_args[1]].value.i);
+        }
+      }
+    }
+  }
+
   orc_compiler_emit_invariants (c);
 
   for (int i = 0; i < c->n_constants; i++) {
@@ -257,6 +293,14 @@ orc_riscv_compiler_get_constant (OrcCompiler *c, orc_uint64 n)
 static void
 orc_riscv_compiler_emit_loop (OrcCompiler *c, OrcRiscvVtype vtype)
 {
+  /* Detect gather/load-resample opcodes. For these, SRC pointers must NOT be
+   * advanced in the loop tail because vluxei32/scatter ops handle indexing. */
+  int has_gather = 0;
+  for (int i = 0; i < c->n_insns && !has_gather; i++) {
+    if (strstr (c->insns[i].opcode->name, "ldres") != NULL)
+      has_gather = 1;
+  }
+
   for (int i = 0; i < c->n_insns; i++) {
     OrcInstruction *insn = c->insns + i;
 
@@ -311,6 +355,10 @@ orc_riscv_compiler_emit_loop (OrcCompiler *c, OrcRiscvVtype vtype)
       if (!var->ptr_register)
         continue;
       if (var->vartype != ORC_VAR_TYPE_SRC && var->vartype != ORC_VAR_TYPE_DEST)
+        continue;
+      /* For gather/load-resample ops the SRC pointer must stay fixed
+       * because vluxei32/scatter handles all indexing internally. */
+      if (var->vartype == ORC_VAR_TYPE_SRC && has_gather)
         continue;
 
       if (length_shift != i) {

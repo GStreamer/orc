@@ -1199,6 +1199,139 @@ orc_riscv_rule_maxF (OrcCompiler *c, void *user, OrcInstruction *insn)
   }
 }
 
+static void
+orc_riscv_rule_ldresnearl (OrcCompiler *c, void *user, OrcInstruction *insn)
+{
+  OrcVariable *src = c->vars + insn->src_args[0];
+  const OrcVariable *dest = c->vars + insn->dest_args[0];
+  const int increment_var = insn->src_args[2];
+  GET_TEMP_REGS (temp, c, insn);
+
+  if (c->vars[increment_var].vartype == ORC_VAR_TYPE_PARAM) {
+    orc_riscv_insn_emit_lw (c, c->gp_tmpreg, c->exec_reg,
+        ORC_STRUCT_OFFSET (OrcExecutor, params[increment_var]));
+  } else {
+    orc_riscv_insn_emit_load_immediate (c, c->gp_tmpreg,
+        c->vars[increment_var].value.i);
+  }
+
+  orc_riscv_insn_emit_vid_v (c, temp[0]);
+  orc_riscv_insn_emit_vmul_vx (c, temp[0], c->gp_tmpreg, temp[0]);
+  orc_riscv_insn_emit_vmv_vx (c, temp[1], src->ptr_offset);
+  orc_riscv_insn_emit_vadd_vv (c, temp[0], temp[0], temp[1]);
+  orc_riscv_insn_emit_vsrl_vi (c, temp[0], temp[0], 16);
+
+  orc_riscv_insn_emit_vsll_vi (c, temp[1], temp[0], 2);
+  orc_riscv_insn_emit_vluxei32_v (c, dest->alloc, src->ptr_register, temp[1]);
+
+  orc_riscv_insn_emit_mul (c, c->gp_tmpreg, c->gp_tmpreg,
+      ORC_RISCV_VECTOR_LENGTH);
+  orc_riscv_insn_emit_add (c, src->ptr_offset, src->ptr_offset, c->gp_tmpreg);
+
+  src->update_type = ORC_VARIABLE_UPDATE_TYPE_NONE;
+}
+
+static void
+orc_riscv_rule_ldreslinl (OrcCompiler *c, void *user, OrcInstruction *insn)
+{
+  OrcVariable *src = c->vars + insn->src_args[0];
+  const OrcVariable *dest = c->vars + insn->dest_args[0];
+  const int increment_var = insn->src_args[2];
+  GET_TEMP_REGS (temp, c, insn);
+
+  if (c->vars[increment_var].vartype == ORC_VAR_TYPE_PARAM) {
+    orc_riscv_insn_emit_lw (c, c->gp_tmpreg, c->exec_reg,
+        ORC_STRUCT_OFFSET (OrcExecutor, params[increment_var]));
+  } else {
+    orc_riscv_insn_emit_load_immediate (c, c->gp_tmpreg,
+        c->vars[increment_var].value.i);
+  }
+
+  /* Phase 1: compute t = ptr_offset + i * inc, gather a and b */
+  orc_riscv_insn_emit_vid_v (c, temp[0]);
+  orc_riscv_insn_emit_vmul_vx (c, temp[0], c->gp_tmpreg, temp[0]);
+  /* Load 0xFF into gp_tmpreg for byte extraction (vand.vi imm is broken) */
+  orc_riscv_insn_emit_addi (c, c->gp_tmpreg, ORC_RISCV_ZERO, 0xFF);
+  orc_riscv_insn_emit_vmv_vx (c, temp[1], src->ptr_offset);
+  orc_riscv_insn_emit_vadd_vv (c, temp[2], temp[0], temp[1]);
+
+  orc_riscv_insn_emit_vsrl_vi (c, temp[0], temp[2], 8);
+  orc_riscv_insn_emit_vand_vx (c, temp[0], c->gp_tmpreg, temp[0]);
+
+  orc_riscv_insn_emit_vsrl_vi (c, temp[1], temp[2], 16);
+  orc_riscv_insn_emit_vsll_vi (c, temp[2], temp[1], 2);
+  orc_riscv_insn_emit_vluxei32_v (c, dest->alloc, src->ptr_register, temp[2]);
+
+  orc_riscv_insn_emit_vadd_vi (c, temp[1], temp[1], 1);
+  orc_riscv_insn_emit_vsll_vi (c, temp[1], temp[1], 2);
+  orc_riscv_insn_emit_vluxei32_v (c, temp[2], src->ptr_register, temp[1]);
+
+  /*
+   * After Phase 1: dest->alloc = a, temp[2] = b, temp[0] = frac
+   * Phase 2 remaps: temp[0]=a, temp[3]=frac, temp[1]=accumulator
+   * temp[4]=working, dest->alloc=working
+   */
+  orc_riscv_insn_emit_vmv_vv (c, temp[3], temp[0]);
+  orc_riscv_insn_emit_vmv_vv (c, temp[0], dest->alloc);
+  orc_riscv_insn_emit_vxor_vv (c, temp[1], temp[1], temp[1]);
+
+#define LDRESLINL_BYTE_LANE(j) \
+  do { \
+    if (j == 0) { \
+      orc_riscv_insn_emit_vand_vx (c, dest->alloc, c->gp_tmpreg, temp[2]); \
+    } else { \
+      orc_riscv_insn_emit_vsrl_vi (c, dest->alloc, temp[2], (j) * 8); \
+      orc_riscv_insn_emit_vand_vx (c, dest->alloc, c->gp_tmpreg, dest->alloc); \
+    } \
+    if (j == 0) { \
+      orc_riscv_insn_emit_vand_vx (c, temp[4], c->gp_tmpreg, temp[0]); \
+    } else { \
+      orc_riscv_insn_emit_vsrl_vi (c, temp[4], temp[0], (j) * 8); \
+      orc_riscv_insn_emit_vand_vx (c, temp[4], c->gp_tmpreg, temp[4]); \
+    } \
+    orc_riscv_insn_emit_vsub_vv (c, temp[4], dest->alloc, temp[4]); \
+    orc_riscv_insn_emit_vmul_vv (c, dest->alloc, temp[4], temp[3]); \
+    orc_riscv_insn_emit_vmulh_vv (c, temp[4], temp[4], temp[3]); \
+    orc_riscv_insn_emit_vsll_vi (c, temp[4], temp[4], 8); \
+    orc_riscv_insn_emit_vsrl_vi (c, dest->alloc, dest->alloc, 8); \
+    orc_riscv_insn_emit_vor_vv (c, dest->alloc, dest->alloc, temp[4]); \
+    if (j == 0) { \
+      orc_riscv_insn_emit_vand_vx (c, temp[4], c->gp_tmpreg, temp[0]); \
+    } else { \
+      orc_riscv_insn_emit_vsrl_vi (c, temp[4], temp[0], (j) * 8); \
+      orc_riscv_insn_emit_vand_vx (c, temp[4], c->gp_tmpreg, temp[4]); \
+    } \
+    orc_riscv_insn_emit_vadd_vv (c, dest->alloc, dest->alloc, temp[4]); \
+    if (j > 0) { \
+      orc_riscv_insn_emit_vsll_vi (c, dest->alloc, dest->alloc, (j) * 8); \
+    } \
+    orc_riscv_insn_emit_vor_vv (c, temp[1], temp[1], dest->alloc); \
+  } while (0)
+
+  LDRESLINL_BYTE_LANE (0);
+  LDRESLINL_BYTE_LANE (1);
+  LDRESLINL_BYTE_LANE (2);
+  LDRESLINL_BYTE_LANE (3);
+
+#undef LDRESLINL_BYTE_LANE
+
+  orc_riscv_insn_emit_vmv_vv (c, dest->alloc, temp[1]);
+
+  /* Reload inc (clobbered by 0xFF load above) for ptr_offset update */
+  if (c->vars[increment_var].vartype == ORC_VAR_TYPE_PARAM) {
+    orc_riscv_insn_emit_lw (c, c->gp_tmpreg, c->exec_reg,
+        ORC_STRUCT_OFFSET (OrcExecutor, params[increment_var]));
+  } else {
+    orc_riscv_insn_emit_load_immediate (c, c->gp_tmpreg,
+        c->vars[increment_var].value.i);
+  }
+  orc_riscv_insn_emit_mul (c, c->gp_tmpreg, c->gp_tmpreg,
+      ORC_RISCV_VECTOR_LENGTH);
+  orc_riscv_insn_emit_add (c, src->ptr_offset, src->ptr_offset, c->gp_tmpreg);
+
+  src->update_type = ORC_VARIABLE_UPDATE_TYPE_NONE;
+}
+
 #define REG(opcode, rule, sew, mask, temps, normals) \
   static OrcRiscvRuleInfo opcode##_info; \
   orc_rule_register (rule_set, #opcode, orc_riscv_rule_##rule, (void*)&opcode##_info); \
@@ -1236,6 +1369,8 @@ orc_riscv_rules_init (OrcTarget *target)
   REG (storel, storel, NOT_APPLICABLE, FALSE, 0, 0);
   REG (storeq, storeq, NOT_APPLICABLE, FALSE, 0, 0);
 
+  REG (ldresnearl, ldresnearl, 32, FALSE, 2, 0);
+  REG (ldreslinl, ldreslinl, 32, FALSE, 5, 0);
   REG (copyb, copyX, 8, FALSE, 0, 0);
   REG (copyw, copyX, 16, FALSE, 0, 0);
   REG (copyl, copyX, 32, FALSE, 0, 0);
