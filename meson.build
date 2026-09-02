@@ -36,13 +36,18 @@ if cc.has_link_argument('-Wl,-Bsymbolic-functions')
   add_project_link_arguments('-Wl,-Bsymbolic-functions', language : 'c')
 endif
 
-all_targets = ['avx512', 'avx', 'sse', 'mmx']
+all_targets = ['avx', 'sse', 'mmx']
 extra_targets = ['altivec', 'neon', 'mips', 'c64x', 'riscv', 'lsx', 'lasx'] # 'arm'
 enabled_targets = []
 
 host_system = host_machine.system()
 if host_system != 'windows'
   all_targets += extra_targets
+endif
+
+# Filter out avx512 if the host machine is x86
+if host_machine.cpu_family() != 'x86'
+  all_targets += ['avx512']
 endif
 
 # To be removed once the orc-target option becomes mainstream
@@ -151,7 +156,7 @@ if host_os == 'windows'
   # Windows SDK 10.0.22621.0. A simple check is to validate if it's usable.
   if cc.has_function('RtlAddFunctionTable', prefix: '#include <windows.h>') \
     and cc.has_function('RtlLookupFunctionEntry', prefix: '#include <windows.h>') \
-    and cc.has_function('RtlDeleteFunctionTable', prefix: '#include <windows.h>') 
+    and cc.has_function('RtlDeleteFunctionTable', prefix: '#include <windows.h>')
     cdata.set('ORC_SUPPORTS_BACKTRACE_FROM_JIT', true)
   endif
 else
