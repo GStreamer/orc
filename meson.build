@@ -87,6 +87,14 @@ else
   warning(cpu_family + ' with ' + host_system + ' isn\'t a supported configuration for optimization')
 endif
 
+# Ensure that on e.g. Debian the compiler roundtrips floats correctly
+# to/from the x87 registers
+# See https://gitlab.freedesktop.org/gstreamer/orc/-/work_items/113
+# See https://stackoverflow.com/a/74730646
+if cc.get_id() == 'gcc' and cpu_family == 'x86'
+  add_project_arguments('-fexcess-precision=standard', language : 'c')
+endif
+
 threads = dependency('threads')
 
 libm = cc.find_library('m', required : false)
