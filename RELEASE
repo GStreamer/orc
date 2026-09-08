@@ -1,3 +1,13 @@
+0.4.44
+======
+
+ - Fix various i386-related regressions
+ - avx512: Disable target on x86 (L. E. Segovia)
+ - avx512: Implement the missing memoff-reg moves (Jorge Zapata, Marc Leeman)
+ - Fix Debian gcc miscompiling the backup float conversion functions (L. E. Segovia)
+
+Details: https://gitlab.freedesktop.org/gstreamer/orc/-/milestones/16
+
 0.4.43
 ======
 
